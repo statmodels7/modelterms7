@@ -1,5 +1,15 @@
 # Changelog
 
+## modelterms7 0.9.0
+
+- regime(): a latent Markov chain of regimes, each shifting the
+  predictor by a level of its own, with the likelihood evaluated by the
+  normalized forward recursion and its derivative propagated beside the
+  state. Built on parameters7::transition_matrix(), which had no
+  consumer until now.
+- term_loglik(): the second shape of the structural branch, for a term
+  whose contribution is a likelihood rather than a predictor.
+
 ## modelterms7 0.8.0
 
 - nl(): the nonlinear parametric term. The design block is the Jacobian

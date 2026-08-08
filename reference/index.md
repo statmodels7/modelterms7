@@ -75,12 +75,18 @@
   : Score-Driven Dynamics
 - [`GasTerm()`](https://statmodels7.github.io/modelterms7/reference/GasTerm.md)
   : S7 Class for Score-Driven Dynamics
+- [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  : Markov Regime Switching
+- [`RegimeTerm()`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md)
+  : S7 Class for Markov Regime Terms
 - [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
   : Parameters of a Structural Term
 - [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
   : Links of a Structural Term's Parameters
 - [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
   : Apply a Structural Term to a Linear Predictor
+- [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
+  : Log-Likelihood Contributions of a Structural Term
 
 ## The formula layer
 

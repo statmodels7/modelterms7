@@ -9,6 +9,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/NlTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/RandomTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/SmoothTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/additive_term.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/cens.html</loc></url>
@@ -25,6 +26,8 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/modelterms7-package.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/nl.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/random.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/regime.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/regime_stationary.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/ridge.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/s.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/structural_term.html</loc></url>
@@ -35,6 +38,8 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_filter.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_is_built.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_links.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_loglik.RegimeTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_loglik.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_matrix.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_npar.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_params.html</loc></url>

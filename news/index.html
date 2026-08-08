@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.8.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,11 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.9.0" id="modelterms7-090">modelterms7 0.9.0<a class="anchor" aria-label="anchor" href="#modelterms7-090"></a></h2>
+<ul><li>regime(): a latent Markov chain of regimes, each shifting the predictor by a level of its own, with the likelihood evaluated by the normalized forward recursion and its derivative propagated beside the state. Built on parameters7::transition_matrix(), which had no consumer until now.</li>
+<li>term_loglik(): the second shape of the structural branch, for a term whose contribution is a likelihood rather than a predictor.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.8.0" id="modelterms7-080">modelterms7 0.8.0<a class="anchor" aria-label="anchor" href="#modelterms7-080"></a></h2>
 <ul><li>nl(): the nonlinear parametric term. The design block is the Jacobian of the contribution in its parameters, refreshed by term_refresh() as they move, and term_value() reports the contribution a Gauss-Newton step needs beside it. The function may be a formula, read symbolically where deriv() manages it and differenced where it does not, or an opaque function, always differenced. Links per parameter; covariate submodels on the formula route, which is the only one that says where a parameter enters.</li>
