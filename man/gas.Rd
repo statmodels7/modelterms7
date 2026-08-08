@@ -59,6 +59,26 @@ for the chart it lives on, \code{pacf1} and so on, following the
 convention of \pkg{parameters7}.
 }
 
+\subsection{One parameter at a time}{
+The level this term drives is a scalar, so it enters the predictor of
+one distribution parameter. In the general formulation the level is a
+vector with one entry per modeled parameter, \eqn{\omega} a vector and
+the loadings \eqn{A_i} and \eqn{B_j} matrices, which lets the scale
+respond to the score of the location and the other way round. The
+recursion generalizes mechanically, and so does the derivative
+propagated with it; what is missing is a way to say that one filter
+spans several parameters, since a term written inside the formula of
+one parameter has no place to declare it. That belongs to the model
+layer. The persistence would also need a different chart: the
+partial-autocorrelation construction below is a scalar one, and the
+stationary region of a matrix autoregression is a bound on the
+spectral radius of its companion matrix rather than a box.
+
+The score driving the recursion is used unscaled. The general
+formulation carries a scaling matrix, usually an inverse information,
+which the curvature this term already receives would supply.
+}
+
 \subsection{Groups and time}{
 \code{by} filters each group independently, which is what a panel of
 short series needs, and \code{time} gives the order within a group.
