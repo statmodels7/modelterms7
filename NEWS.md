@@ -1,3 +1,18 @@
+# modelterms7 0.4.0
+
+* random(~ 1 | g): grouped random intercepts with the effect
+  distribution as the penalty -- independent Gaussian by default, a
+  parameters7 precision structure, or a distributions7 object applied
+  coordinatewise. Random slopes are rejected pending the
+  block-diagonal composition in parameters7.
+
+# modelterms7 0.3.0
+
+* edf() with the counting rule per penalty (exact count, trace of the
+  penalized smoother block, nonzero count), the penalty shown by
+  print() on a built penalized term, and plot() at fitted
+  coefficients.
+
 # modelterms7 0.2.0
 
 * The penalized terms ridge(), lasso(), scad() and mcp(), over formula

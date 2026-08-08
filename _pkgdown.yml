@@ -37,6 +37,10 @@ reference:
   contents:
   - ridge
   - PenalizedTerm
+- title: The random-effect term
+  contents:
+  - random
+  - RandomTerm
 - title: The formula layer
   contents:
   - interpret_formula
@@ -44,6 +48,9 @@ reference:
   contents:
   - cens
   - censored_response
+- title: Fitted views
+  contents:
+  - edf
 - title: Validation
   contents:
   - check_term

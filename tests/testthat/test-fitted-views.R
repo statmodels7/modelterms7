@@ -1,0 +1,70 @@
+# edf and the fitted-point displays.
+
+set.seed(11)
+dd <- data.frame(x1 = rnorm(30), x2 = rnorm(30), x3 = rnorm(30))
+
+test_that("an unpenalized term counts its coefficients exactly", {
+  built <- term_build(linpar(~ x1 + x2), dd)
+  expect_identical(edf(built), 3)
+})
+
+test_that("a ridge term's edf is the eigenvalue shrinkage of its block", {
+  built <- term_build(ridge(~ x1 + x2 + x3), dd)
+  H <- crossprod(term_matrix(built))
+  beta <- c(0.4, -1, 2)
+  sigma <- 1.7
+
+  got <- edf(built, coef = beta, hessian = H, theta = list(sigma = sigma))
+  # independent route: the gaussian penalty's Hessian is I/sigma^2, so the
+  # trace is sum d_i / (d_i + 1/sigma^2) over the eigenvalues of H
+  d <- eigen(H, symmetric = TRUE, only.values = TRUE)$values
+  expect_equal(got, sum(d / (d + 1 / sigma^2)), tolerance = 1e-12)
+
+  # the limits: no penalty recovers the count, a hard one removes it
+  expect_equal(edf(built, beta, H, list(sigma = 1e6)), 3, tolerance = 1e-6)
+  expect_lt(edf(built, beta, H, list(sigma = 1e-4)), 1e-4)
+})
+
+test_that("a non-smooth term counts its nonzero coefficients", {
+  built <- term_build(lasso(~ x1 + x2 + x3), dd)
+  expect_identical(edf(built, coef = c(0.5, 0, -2)), 2)
+  expect_identical(edf(built, coef = c(0.5, 1e-12, -2)), 2)
+  expect_identical(edf(built, coef = c(0, 0, 0)), 0)
+  built_scad <- term_build(scad(~ x1 + x2), dd)
+  expect_identical(edf(built_scad, coef = c(1, 0)), 1)
+})
+
+test_that("edf refuses what it cannot compute and says what is missing", {
+  expect_error(edf(linpar(~x1)), "not been built")
+  br <- term_build(ridge(~ x1 + x2), dd)
+  expect_error(edf(br, coef = c(1, 2)), "'hessian'")
+  expect_error(edf(br, coef = 1, hessian = diag(2), theta = list(sigma = 1)),
+               "length 2")
+  expect_error(edf(br, coef = c(1, 2), hessian = diag(3),
+                   theta = list(sigma = 1)), "2 x 2")
+  bl <- term_build(lasso(~x1), dd)
+  expect_error(edf(bl), "'coef'")
+})
+
+test_that("print shows the penalty of a built penalized term", {
+  expect_output(print(lasso(~x1)), "specification")
+  built <- term_build(lasso(~ x1 + x2), dd)
+  expect_output(print(built),
+                "2 coefficients; penalty separable \\[fixed laplace2 \\[mu=0\\]\\] \\(lambda\\)")
+  bs <- term_build(scad(~x1), dd)
+  expect_output(print(bs), "penalty SCAD \\(lambda, a\\)")
+})
+
+test_that("plot draws a built term at supplied coefficients", {
+  built <- term_build(ridge(~ x1 + x2), dd)
+  tf <- tempfile(fileext = ".pdf")
+  grDevices::pdf(tf)
+  on.exit({
+    grDevices::dev.off()
+    unlink(tf)
+  })
+  expect_silent(plot(built, coef = c(0.5, -1)))
+  expect_error(plot(built), "'coef' is required")
+  expect_error(plot(built, coef = 1), "length 2")
+  expect_error(plot(linpar(~x1)), "not been built")
+})
