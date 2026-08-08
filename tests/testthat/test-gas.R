@@ -140,3 +140,43 @@ test_that("the term is routed, printed, and refuses what it cannot do", {
   # a structural term has no design block
   expect_error(term_build(gas(), data.frame(z = 1:3)), NA)
 })
+
+test_that("the compiled filter and the R twin agree exactly", {
+  # A mechanical transcription is the one reference the compiled route can
+  # be held to: the two share no code, so agreement at machine precision
+  # says the port changed nothing.
+  for (cfg in list(c(1, 1), c(2, 2), c(3, 1))) {
+    term <- term_build(gas(p = cfg[1], q = cfg[2], time = t, by = g), dd)
+    nm <- term_params(term)
+    psi <- as.list(stats::setNames(
+      c(0.12, rep(0.22, cfg[1]), c(0.5, -0.3, 0.2)[seq_len(cfg[2])]), nm))
+
+    got <- term_filter(term, rep(0.05, n), dd$y, gauss_score(dd$y),
+                       gauss_curv(dd$y), psi)
+
+    # the twin, driven with the pieces the method computes
+    p_ <- cfg[1]; q_ <- cfg[2]
+    v <- unlist(psi[nm])
+    ld <- gas_levinson(if (q_ > 0) v[paste0("pacf", seq_len(q_))] else numeric(0))
+    np <- length(nm)
+    db <- matrix(0, max(q_, 1L), np)
+    if (q_ > 0) db[seq_len(q_), 1L + p_ + seq_len(q_)] <- ld$jacobian
+    sb <- sum(ld$phi)
+    f0 <- v[["omega"]] / (1 - sb)
+    df0 <- numeric(np); df0[1L] <- 1 / (1 - sb)
+    if (q_ > 0) {
+      df0 <- df0 + (v[["omega"]] / (1 - sb)^2) *
+        colSums(db[seq_len(q_), , drop = FALSE])
+    }
+    ref <- gas_filter_r(rep(0.05, n), term@blueprint$order, p_, q_,
+                        v[["omega"]],
+                        if (p_ > 0) v[paste0("a", seq_len(p_))] else numeric(0),
+                        ld$phi, db, f0, df0, 1L + seq_len(p_), np,
+                        gauss_score(dd$y), gauss_curv(dd$y))
+
+    expect_equal(got$eta, ref$eta, tolerance = 1e-14,
+                 info = sprintf("p = %d, q = %d", cfg[1], cfg[2]))
+    expect_equal(unname(got$jacobian), ref$jacobian, tolerance = 1e-14,
+                 info = sprintf("p = %d, q = %d", cfg[1], cfg[2]))
+  }
+})

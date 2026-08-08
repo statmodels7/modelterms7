@@ -255,10 +255,52 @@ S7::method(term_filter, GasTerm) <- function(term, eta, y, score, curvature,
   df0[i_om] <- 1 / (1 - sb)
   if (q > 0L) df0 <- df0 + (omega / (1 - sb)^2) * colSums(db[seq_len(q), , drop = FALSE])
 
+  out <- gas_filter_cpp(eta, bp$order, p, q, omega, a, b, db, f0, df0,
+                        i_a, np, score, curvature)
+  eta_out <- out$eta
+  jac <- out$jacobian
+
+  colnames(jac) <- nm
+  list(eta = eta_out, jacobian = jac)
+}
+
+S7::method(print, GasTerm) <- function(x, ...) {
+  built <- length(x@blueprint) > 0L
+  cat(sprintf("<GasTerm> '%s': score-driven, p = %d, q = %d%s\n",
+              x@label, x@p, x@q,
+              if (built) sprintf("; %d group(s)", length(x@blueprint$order))
+              else " (specification)"))
+  cat("  parameters: ", paste(term_params(x), collapse = ", "), "\n", sep = "")
+  invisible(x)
+}
+
+#' The Score-Driven Recursion in R
+#'
+#' @description
+#' The loop \code{\link{gas_filter_cpp}} replaces, kept so the compiled
+#' route has something to be compared against that shares none of its code.
+#'
+#' @param eta The static predictor.
+#' @param order A list of row indices, one entry per group, in time order.
+#' @param p,q The score and autoregressive orders.
+#' @param omega The level.
+#' @param a,b The score loadings and the autoregressive coefficients.
+#' @param db The derivative of the coefficients in the parameters.
+#' @param f0,df0 The starting level and its derivative.
+#' @param i_a The positions of the score loadings among the parameters.
+#' @param np The number of parameters.
+#' @param score,curvature The callbacks of \code{\link{term_filter}}.
+#'
+#' @return A list with \code{eta} and \code{jacobian}.
+#'
+#' @keywords internal
+gas_filter_r <- function(eta, order, p, q, omega, a, b, db, f0, df0,
+                         i_a, np, score, curvature) {
+  n <- length(eta)
   eta_out <- numeric(n)
   jac <- matrix(0, n, np)
 
-  for (rows in bp$order) {
+  for (rows in order) {
     m <- length(rows)
     f <- numeric(m)
     df <- matrix(0, m, np)
@@ -268,7 +310,7 @@ S7::method(term_filter, GasTerm) <- function(term, eta, y, score, curvature,
     for (t in seq_len(m)) {
       f[t] <- omega
       df[t, ] <- 0
-      df[t, i_om] <- 1
+      df[t, 1L] <- 1
       if (p > 0L) {
         for (i in seq_len(p)) {
           s_lag <- if (t - i >= 1L) s[t - i] else 0
@@ -286,8 +328,6 @@ S7::method(term_filter, GasTerm) <- function(term, eta, y, score, curvature,
           df[t, ] <- df[t, ] + b[[j]] * df_lag + db[j, ] * f_lag
         }
       }
-      # the score is read at the predictor this step just produced, so the
-      # state and its derivative advance together
       e_t <- eta[rows[t]] + f[t]
       s[t] <- score(e_t, rows[t])
       ds[t, ] <- curvature(e_t, rows[t]) * df[t, ]
@@ -296,17 +336,5 @@ S7::method(term_filter, GasTerm) <- function(term, eta, y, score, curvature,
     eta_out[rows] <- eta[rows] + f
     jac[rows, ] <- df
   }
-
-  colnames(jac) <- nm
   list(eta = eta_out, jacobian = jac)
-}
-
-S7::method(print, GasTerm) <- function(x, ...) {
-  built <- length(x@blueprint) > 0L
-  cat(sprintf("<GasTerm> '%s': score-driven, p = %d, q = %d%s\n",
-              x@label, x@p, x@q,
-              if (built) sprintf("; %d group(s)", length(x@blueprint$order))
-              else " (specification)"))
-  cat("  parameters: ", paste(term_params(x), collapse = ", "), "\n", sep = "")
-  invisible(x)
 }

@@ -1,4 +1,6 @@
 #' @keywords internal
+#' @useDynLib modelterms7, .registration = TRUE
+#' @importFrom Rcpp sourceCpp
 "_PACKAGE"
 
 # Registers the S7 methods written on base generics (print) with the S3
