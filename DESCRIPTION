@@ -1,6 +1,6 @@
 Package: modelterms7
 Title: Model Terms as Objects for Formula-Based Modeling
-Version: 0.8.0
+Version: 0.9.0
 Authors@R:
     person("Giovanni", "Tinervia", , "giovannitinervia9@gmail.com", role = c("aut", "cre"))
 Description: Model terms as 'S7' objects: the mapping from a data frame to
@@ -57,5 +57,6 @@ Collate:
     'modelterms7-package.R'
     'nonlinear.R'
     'random.R'
+    'regime.R'
     'response.R'
     'smooth.R'

@@ -56,9 +56,12 @@ reference:
   contents:
   - gas
   - GasTerm
+  - regime
+  - RegimeTerm
   - term_params
   - term_links
   - term_filter
+  - term_loglik
 - title: The formula layer
   contents:
   - interpret_formula
