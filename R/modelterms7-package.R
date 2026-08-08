@@ -1,6 +1,7 @@
 #' @keywords internal
 #' @useDynLib modelterms7, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
+#' @importFrom graphics abline axis par plot segments
 "_PACKAGE"
 
 # Registers the S7 methods written on base generics (print) with the S3

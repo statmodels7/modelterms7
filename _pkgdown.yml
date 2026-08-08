@@ -52,6 +52,11 @@ reference:
   - NlTerm
   - term_refresh
   - term_value
+- title: Segmented terms
+  contents:
+  - seg
+  - SegTerm
+  - seg_psi
 - title: Structural terms
   contents:
   - gas
