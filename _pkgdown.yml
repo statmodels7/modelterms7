@@ -46,6 +46,12 @@ reference:
   - s
   - te
   - SmoothTerm
+- title: Nonlinear terms
+  contents:
+  - nl
+  - NlTerm
+  - term_refresh
+  - term_value
 - title: Structural terms
   contents:
   - gas

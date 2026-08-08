@@ -1,3 +1,15 @@
+# modelterms7 0.8.0
+
+* nl(): the nonlinear parametric term. The design block is the
+  Jacobian of the contribution in its parameters, refreshed by
+  term_refresh() as they move, and term_value() reports the
+  contribution a Gauss-Newton step needs beside it. The function may
+  be a formula, read symbolically where deriv() manages it and
+  differenced where it does not, or an opaque function, always
+  differenced. Links per parameter; covariate submodels on the
+  formula route, which is the only one that says where a parameter
+  enters.
+
 # modelterms7 0.7.0
 
 * The score-driven recursion is compiled. The two callbacks into R
