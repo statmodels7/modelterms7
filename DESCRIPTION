@@ -1,6 +1,6 @@
 Package: modelterms7
 Title: Model Terms as Objects for Formula-Based Modeling
-Version: 0.4.0
+Version: 0.5.0
 Authors@R:
     person("Giovanni", "Tinervia", , "giovannitinervia9@gmail.com", role = c("aut", "cre"))
 Description: Model terms as 'S7' objects: the mapping from a data frame to
@@ -18,13 +18,13 @@ URL: https://github.com/statmodels7/modelterms7, https://statmodels7.github.io/m
 BugReports: https://github.com/statmodels7/modelterms7/issues
 Imports:
     graphics,
+    parameters7,
     penalties7,
     S7,
     stats
 Suggests:
     distributions7,
     grDevices,
-    parameters7,
     pkgdown,
     rmarkdown,
     testthat (>= 3.0.0)

@@ -6,6 +6,7 @@
 \usage{
 random(
   formula,
+  correlated = TRUE,
   precision = NULL,
   distrib = NULL,
   kinks = numeric(0),
@@ -13,14 +14,18 @@ random(
 )
 }
 \arguments{
-\item{formula}{A bar formula, \code{~ 1 | g}, with \code{g} evaluating
-to the grouping variable in the data.}
+\item{formula}{A bar formula, \code{~ lhs | g}, with \code{g}
+evaluating to the grouping variable in the data.}
 
-\item{precision}{A \pkg{parameters7} matrix parameter of dimension
-equal to the number of levels, or \code{NULL}.}
+\item{correlated}{Logical; whether the default Gaussian lets the
+within-group effects correlate. Ignored when \code{precision} or
+\code{distrib} is given.}
+
+\item{precision}{A \pkg{parameters7} matrix parameter of the
+within-group dimension, or \code{NULL}.}
 
 \item{distrib}{A univariate \pkg{distributions7} object for the
-effects, or \code{NULL}.}
+effects, or \code{NULL}; exclusive with \code{precision}.}
 
 \item{kinks}{The kink set of \code{distrib}'s log-density in its
 argument, passed to \code{\link[penalties7]{distrib_penalty}}.}
@@ -33,41 +38,50 @@ An object of class \code{\link{RandomTerm}} (a specification;
   see \code{\link{term_build}}).
 }
 \description{
-Random intercepts for a grouping factor: \code{random(~ 1 | g)} builds
-the indicator block of \code{g}, one coefficient per level, and
-attaches the distribution of the effects as the penalty on those
+Random intercepts and slopes for a grouping factor:
+\code{random(~ 1 | g)} builds one coefficient per level of \code{g},
+and \code{random(~ x | g)} one intercept and one slope per level, with
+the distribution of the effects attached as the penalty on those
 coefficients -- which is what a random effect is under penalized
 likelihood.
 }
 \details{
-Three choices of effect distribution are available, mutually exclusive.
-With neither argument the effects are independent Gaussians with one
-free scale (the effects' standard deviation), through
-\code{\link[penalties7]{ridge_penalty}}. With \code{precision}, a
-\pkg{parameters7} matrix parameter of dimension equal to the number of
-levels enters as the precision of a joint Gaussian on the effects,
-through \code{\link[penalties7]{structured_penalty}}: the
-hyperparameters are the structure's free values, so correlated effects
-(an AR(1) over ordered groups, a compound symmetry) come from the
-structure and not from the term. With \code{distrib}, a univariate
+The left side of the bar is an ordinary one-sided formula for the
+within-group design, with the usual intercept convention:
+\code{~ x | g} carries an intercept and a slope per group and
+\code{~ 0 + x | g} the slope alone. The block interacts that design
+with the group indicators, ordered group by group, so the coefficients
+of one group are adjacent.
+
+Three choices of effect distribution are available. By default the
+effects are Gaussian with one covariance shared by every group:
+unstructured over the within-group coefficients when
+\code{correlated = TRUE} (a \code{\link[parameters7]{log_cholesky}}
+chart, so intercepts and slopes may correlate), diagonal when
+\code{correlated = FALSE} (independent effects, one variance per
+within-group column), and a single scale when the bar's left side is
+the intercept alone. With \code{precision}, a \pkg{parameters7} matrix
+parameter of the within-group dimension replaces that default (an
+AR(1) over ordered within-group columns, a compound symmetry); it
+enters as the per-group precision, replicated across groups by
+\code{\link[parameters7]{kron_identity}} into
+\code{\link[penalties7]{structured_penalty}}, and its hyperparameters
+are the structure's free values. With \code{distrib}, a univariate
 \pkg{distributions7} object -- holding its own location, typically
 through \code{\link[distributions7]{fixed}} at zero -- is applied
-coordinatewise through \code{\link[penalties7]{distrib_penalty}}. A
-distribution used as a penalty gives joint-mode (penalized likelihood)
-estimation of the effects; the marginal likelihood, which integrates
-them out, is not provided here.
-
-Only random intercepts are implemented. A bar formula with covariates
-on its left side (\code{~ x | g}) needs the block-diagonal composition
-of per-group covariance structures, which \pkg{parameters7} does not
-provide yet, and is rejected with that reason.
+coordinatewise to every effect through
+\code{\link[penalties7]{distrib_penalty}}. A distribution used as a
+penalty gives joint-mode (penalized likelihood) estimation of the
+effects; the marginal likelihood, which integrates them out, is not
+provided here.
 
 Prediction maps new data onto the levels seen at build time; a level
 the term has not seen is rejected.
 }
 \examples{
-dd <- data.frame(y = rnorm(9), g = factor(rep(c("a", "b", "c"), 3)))
-built <- term_build(random(~ 1 | g), dd)
+dd <- data.frame(y = rnorm(9), x = rnorm(9),
+                 g = factor(rep(c("a", "b", "c"), 3)))
+built <- term_build(random(~ x | g), dd)
 term_coef_names(built)
 term_penalty(built)@params
 

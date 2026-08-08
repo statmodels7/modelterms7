@@ -11,6 +11,7 @@ RandomTerm(
   blueprint = list(),
   penalty = NULL,
   formula = NULL,
+  correlated = logical(0),
   precision = NULL,
   distrib = NULL,
   kinks = integer(0)
@@ -30,10 +31,13 @@ data, filled by \code{\link{term_build}}.}
 
 \item{penalty}{The penalty on the term's coefficients, or \code{NULL}.}
 
-\item{formula}{The bar formula, e.g. \code{~ 1 | g}.}
+\item{formula}{The bar formula, e.g. \code{~ 1 | g} or \code{~ x | g}.}
 
-\item{precision}{A \pkg{parameters7} matrix parameter for the effects'
-precision, or \code{NULL}.}
+\item{correlated}{Logical; whether the default Gaussian lets the
+within-group effects correlate.}
+
+\item{precision}{A \pkg{parameters7} matrix parameter for the
+per-group precision, or \code{NULL}.}
 
 \item{distrib}{A univariate \pkg{distributions7} object for the
 effects, or \code{NULL}.}
@@ -45,9 +49,10 @@ An object of class \code{RandomTerm}.
 }
 \description{
 A subclass of \code{\link{additive_term}} for grouped coefficients with
-a distribution on the effects: the indicator block of a grouping factor,
-one coefficient per level, with the penalty carrying the effects'
-distribution. Constructed by \code{\link{random}}.
+a distribution on the effects: the within-group design interacted with
+the grouping indicators, one coefficient per group and per within-group
+column, with the penalty carrying the effects' distribution.
+Constructed by \code{\link{random}}.
 }
 \examples{
 S7::S7_inherits(random(~ 1 | g), RandomTerm)

@@ -1,3 +1,11 @@
+# modelterms7 0.5.0
+
+* random() accepts slopes (~ x | g) beside intercepts, with the
+  within-group Gaussian unstructured or diagonal by `correlated`, a
+  per-group precision structure replicated across groups through
+  parameters7::kron_identity(), or a distribution applied
+  coordinatewise.
+
 # modelterms7 0.4.0
 
 * random(~ 1 | g): grouped random intercepts with the effect
