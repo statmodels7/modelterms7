@@ -1,5 +1,16 @@
 # Changelog
 
+## modelterms7 0.6.0
+
+- The structural branch is real: term_params(), term_links() and
+  term_filter() define what a term that rewrites the likelihood must
+  provide, and gas() implements score-driven dynamics over groups and
+  time, with the persistence carried on a partial-autocorrelation chart
+  and the derivative of the filter propagated alongside its state.
+- s() and te(): penalized smooths of one and several covariates, the
+  first under the Demmler-Reinsch reparametrization that separates the
+  linear effect from the nonlinear deviation, both accepting `by`.
+
 ## modelterms7 0.5.0
 
 - random() accepts slopes (~ x \| g) beside intercepts, with the

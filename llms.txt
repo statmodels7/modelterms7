@@ -116,6 +116,28 @@ computes effective degrees of freedom from the pieces a fit supplies.
 - [`RandomTerm()`](https://statmodels7.github.io/modelterms7/reference/RandomTerm.md)
   : S7 Class for Grouped Random-Effect Terms
 
+## Smooth terms
+
+- [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) :
+  Penalized Smooth of One Covariate
+- [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md) :
+  Penalized Smooth of Several Covariates
+- [`SmoothTerm()`](https://statmodels7.github.io/modelterms7/reference/SmoothTerm.md)
+  : S7 Class for Smooth Terms
+
+## Structural terms
+
+- [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  : Score-Driven Dynamics
+- [`GasTerm()`](https://statmodels7.github.io/modelterms7/reference/GasTerm.md)
+  : S7 Class for Score-Driven Dynamics
+- [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
+  : Parameters of a Structural Term
+- [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
+  : Links of a Structural Term's Parameters
+- [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+  : Apply a Structural Term to a Linear Predictor
+
 ## The formula layer
 
 - [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
