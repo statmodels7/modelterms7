@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,10 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.7.0" id="modelterms7-070">modelterms7 0.7.0<a class="anchor" aria-label="anchor" href="#modelterms7-070"></a></h2>
+<ul><li>The score-driven recursion is compiled. The two callbacks into R remain, the score and the curvature belonging to the model’s distribution, but the arithmetic around them was 73 to 83 per cent of the loop’s time: measured 2.3x to 3.2x faster, and the R loop stays as the twin the kernel is compared against.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.6.0" id="modelterms7-060">modelterms7 0.6.0<a class="anchor" aria-label="anchor" href="#modelterms7-060"></a></h2>
 <ul><li>The structural branch is real: term_params(), term_links() and term_filter() define what a term that rewrites the likelihood must provide, and gas() implements score-driven dynamics over groups and time, with the persistence carried on a partial-autocorrelation chart and the derivative of the filter propagated alongside its state.</li>

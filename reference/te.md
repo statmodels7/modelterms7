@@ -7,7 +7,15 @@ with a roughness penalty on the product coefficients.
 ## Usage
 
 ``` r
-te(..., by = NULL, k = 5, degree = 3, bases = NULL, label = NULL)
+te(
+  ...,
+  by = NULL,
+  k = 5,
+  degree = 3,
+  bases = NULL,
+  anisotropic = TRUE,
+  label = NULL
+)
 ```
 
 ## Arguments
@@ -36,6 +44,10 @@ te(..., by = NULL, k = 5, degree = 3, bases = NULL, label = NULL)
   An optional list of basis7 bases, one per covariate, used in place of
   the default B-splines.
 
+- anisotropic:
+
+  Keep a smoothing parameter per margin? Defaults to `TRUE`.
+
 - label:
 
   A single non-empty string prefixed to the coefficient names. Defaults
@@ -51,13 +63,17 @@ An object of class
 ## Details
 
 The block is the tensor basis evaluated at the covariates, and the
-penalty is the sum of the marginal roughness penalties carried into the
-product, \\P = \sum_v I \otimes \cdots \otimes P_v \otimes \cdots
-\otimes I\\, which penalizes curvature in each direction. One smoothing
-parameter governs the sum, so the smoothing is isotropic across the
-margins after each has been scaled to a common size; a separate
-parameter per margin needs a penalty that is a sum of quadratics with
-its own coefficient on each, which penalties7 does not provide.
+penalty is built from the marginal roughness penalties carried into the
+product, \\P_v = I \otimes \cdots \otimes P_v \otimes \cdots \otimes
+I\\, each penalizing curvature in one direction.
+
+With `anisotropic = TRUE`, the default, those components enter
+[`additive_penalty`](https://statmodels7.github.io/penalties7/reference/additive_penalty.html)
+and keep a smoothing parameter each, so the surface may be rough in one
+direction and smooth in another – which is the usual reason for fitting
+a tensor smooth rather than an isotropic one. With `anisotropic = FALSE`
+they are summed first and one parameter governs the total, which costs
+one hyperparameter instead of one per margin.
 
 The marginal bases are not reparametrized, so unlike
 [`s`](https://statmodels7.github.io/modelterms7/reference/s.md) the

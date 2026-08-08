@@ -11,7 +11,7 @@ penalty on the product coefficients."><meta property="og:image" content="https:/
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.7.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,7 +45,15 @@ penalty on the product coefficients.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">te</span><span class="op">(</span><span class="va">...</span>, by <span class="op">=</span> <span class="cn">NULL</span>, k <span class="op">=</span> <span class="fl">5</span>, degree <span class="op">=</span> <span class="fl">3</span>, bases <span class="op">=</span> <span class="cn">NULL</span>, label <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">te</span><span class="op">(</span></span>
+<span>  <span class="va">...</span>,</span>
+<span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  k <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  degree <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  bases <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  anisotropic <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  label <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -75,6 +83,11 @@ covariates. Defaults to 5.</p></dd>
 used in place of the default B-splines.</p></dd>
 
 
+<dt id="arg-anisotropic">anisotropic<a class="anchor" aria-label="anchor" href="#arg-anisotropic"></a></dt>
+<dd><p>Keep a smoothing parameter per margin? Defaults to
+<code>TRUE</code>.</p></dd>
+
+
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
 <dd><p>A single non-empty string prefixed to the coefficient
 names. Defaults to a name built from the covariates.</p></dd>
@@ -88,13 +101,16 @@ names. Defaults to a name built from the covariates.</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The block is the tensor basis evaluated at the covariates, and the
-penalty is the sum of the marginal roughness penalties carried into the
-product, \(P = \sum_v I \otimes \cdots \otimes P_v \otimes \cdots
-\otimes I\), which penalizes curvature in each direction. One smoothing
-parameter governs the sum, so the smoothing is isotropic across the
-margins after each has been scaled to a common size; a separate
-parameter per margin needs a penalty that is a sum of quadratics with
-its own coefficient on each, which <span class="pkg">penalties7</span> does not provide.</p>
+penalty is built from the marginal roughness penalties carried into the
+product, \(P_v = I \otimes \cdots \otimes P_v \otimes \cdots
+\otimes I\), each penalizing curvature in one direction.</p>
+<p>With <code>anisotropic = TRUE</code>, the default, those components enter
+<code><a href="https://statmodels7.github.io/penalties7/reference/additive_penalty.html" class="external-link">additive_penalty</a></code> and keep a smoothing
+parameter each, so the surface may be rough in one direction and smooth
+in another – which is the usual reason for fitting a tensor smooth
+rather than an isotropic one. With <code>anisotropic = FALSE</code> they are
+summed first and one parameter governs the total, which costs one
+hyperparameter instead of one per margin.</p>
 <p>The marginal bases are not reparametrized, so unlike <code><a href="s.html">s</a></code>
 the linear effects are not separated out: the null space of the tensor
 penalty contains the constant and the marginal linear terms, and a

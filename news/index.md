@@ -1,5 +1,13 @@
 # Changelog
 
+## modelterms7 0.7.0
+
+- The score-driven recursion is compiled. The two callbacks into R
+  remain, the score and the curvature belonging to the model’s
+  distribution, but the arithmetic around them was 73 to 83 per cent of
+  the loop’s time: measured 2.3x to 3.2x faster, and the R loop stays as
+  the twin the kernel is compared against.
+
 ## modelterms7 0.6.0
 
 - The structural branch is real: term_params(), term_links() and
