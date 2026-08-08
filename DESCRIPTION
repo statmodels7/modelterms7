@@ -1,6 +1,6 @@
 Package: modelterms7
 Title: Model Terms as Objects for Formula-Based Modeling
-Version: 0.1.0
+Version: 0.2.0
 Authors@R:
     person("Giovanni", "Tinervia", , "giovannitinervia9@gmail.com", role = c("aut", "cre"))
 Description: Model terms as 'S7' objects: the mapping from a data frame to
@@ -17,12 +17,20 @@ RoxygenNote: 7.3.3
 URL: https://github.com/statmodels7/modelterms7, https://statmodels7.github.io/modelterms7/
 BugReports: https://github.com/statmodels7/modelterms7/issues
 Imports:
+    penalties7,
     S7,
     stats
 Suggests:
     pkgdown,
     rmarkdown,
     testthat (>= 3.0.0)
+Remotes:
+    statmodels7/penalties7,
+    statmodels7/distributions7,
+    statmodels7/parameters7,
+    statmodels7/linkfunctions7,
+    statmodels7/numericals7,
+    statmodels7/optimizers7
 Config/testthat/edition: 3
 Collate: 
     'term_classes.R'
@@ -31,4 +39,5 @@ Collate:
     'linpar.R'
     'formula.R'
     'modelterms7-package.R'
+    'penalized.R'
     'response.R'

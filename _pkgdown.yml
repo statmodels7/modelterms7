@@ -33,6 +33,10 @@ reference:
   contents:
   - linpar
   - LinparTerm
+- title: The penalized terms
+  contents:
+  - ridge
+  - PenalizedTerm
 - title: The formula layer
   contents:
   - interpret_formula

@@ -186,13 +186,23 @@ S7::method(term_coef_names, additive_term) <- function(term, ...) {
 term_smooth <- S7::new_generic("term_smooth", "term",
   function(term, ...) S7::S7_dispatch())
 
+# a hyperparameter value inside each domain, at which the kink set is asked
+# for; the kinks are structural, so any admissible value answers the question
+.penalty_probe_theta <- function(pen) {
+  stats::setNames(lapply(pen@params, function(p) {
+    b <- pen@params_bounds[[p]]
+    if (is.finite(b[1L]) && is.finite(b[2L])) return(mean(b))
+    if (is.finite(b[1L])) return(b[1L] + 1)
+    if (is.finite(b[2L])) return(b[2L] - 1)
+    0
+  }), pen@params)
+}
+
 S7::method(term_smooth, additive_term) <- function(term, ...) {
   pen <- term@penalty
   if (is.null(pen)) return(TRUE)
-  if (S7::S7_inherits(pen) && "kinks" %in% S7::prop_names(pen)) {
-    return(length(pen@kinks) == 0L)
-  }
-  TRUE
+  kinks <- penalties7::penalty_kinks(pen, .penalty_probe_theta(pen))
+  length(kinks) == 0L
 }
 
 #' @title Design Block on New Data
