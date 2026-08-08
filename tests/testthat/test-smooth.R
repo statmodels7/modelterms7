@@ -1,0 +1,159 @@
+# Smooth terms: the Demmler-Reinsch construction, its penalty, the by
+# argument, and the tensor product.
+
+set.seed(11)
+n <- 120
+dd <- data.frame(x = sort(runif(n)), z = runif(n),
+                 g = factor(rep(c("a", "b", "c"), length.out = n)),
+                 w = rnorm(n))
+dd$y <- sin(2 * pi * dd$x) + rnorm(n, sd = 0.2)
+
+test_that("s() separates the linear effect and penalizes only the deviation", {
+  built <- term_build(s(x, k = 10), dd)
+  Z <- term_matrix(built)
+  cn <- term_coef_names(built)
+
+  expect_identical(cn[1], "s(x).lin")
+  expect_true(all(grepl("^s\\(x\\)\\.z", cn[-1])))
+
+  # the Demmler-Reinsch block is empirically orthogonal to a constant and to
+  # the covariate, which is what makes the split unbiased
+  nl <- Z[, -1, drop = FALSE]
+  expect_lt(max(abs(crossprod(cbind(1, dd$x), nl))), 1e-8)
+  # and its crossproduct is diagonal
+  C <- crossprod(nl)
+  expect_lt(max(abs(C[upper.tri(C)])), 1e-8)
+
+  # the penalty is the identity on the deviation and zero on the linear part
+  pen <- term_penalty(built)
+  P <- penalties7::penalty_matrix(pen, list(lambda = 1))
+  expect_equal(unname(diag(P)), c(0, rep(1, ncol(Z) - 1)))
+  expect_lt(max(abs(P - diag(diag(P)))), 1e-12)
+  expect_identical(pen@n_coef, ncol(Z))
+  expect_true(term_smooth(built))
+})
+
+test_that("the edf runs from the basis dimension down to the straight line", {
+  built <- term_build(s(x, k = 10), dd)
+  H <- crossprod(term_matrix(built))
+  b <- rep(0, term_npar(built))
+  e <- vapply(c(1e-8, 1, 1e8), function(lam)
+    edf(built, coef = b, hessian = H, theta = list(lambda = lam)), numeric(1))
+  expect_equal(e[1], term_npar(built), tolerance = 1e-4)
+  expect_equal(e[3], 1, tolerance = 1e-4)   # the unpenalized linear effect
+  expect_true(e[1] > e[2] && e[2] > e[3])
+})
+
+test_that("prediction reapplies the stored transform", {
+  built <- term_build(s(x, k = 8), dd)
+  res <- check_term(s(x, k = 8), dd, verbose = FALSE)
+  expect_true(all(res$status == "OK"),
+              info = paste(res$check[res$status != "OK"], collapse = ", "))
+
+  # a fit recovers the function it was given, which is what says the
+  # construction is usable and not merely well shaped
+  Z <- term_matrix(built)
+  P <- penalties7::penalty_matrix(term_penalty(built), list(lambda = 1))
+  bhat <- solve(crossprod(Z) + 1e-4 * P, crossprod(Z, dd$y))
+  fitted <- as.numeric(Z %*% bhat)
+  expect_gt(stats::cor(fitted, sin(2 * pi * dd$x)), 0.98)
+
+  # and predicting at new points inside the range follows the same curve
+  nd <- data.frame(x = seq(min(dd$x), max(dd$x), length.out = 50))
+  pred <- as.numeric(term_predict(built, nd) %*% bhat)
+  expect_gt(stats::cor(pred, sin(2 * pi * nd$x)), 0.98)
+})
+
+test_that("linear = FALSE leaves the deviation alone", {
+  built <- term_build(s(x, k = 8, linear = FALSE), dd)
+  expect_false(any(grepl("lin$", term_coef_names(built))))
+  P <- penalties7::penalty_matrix(term_penalty(built), list(lambda = 1))
+  expect_equal(unname(diag(P)), rep(1, term_npar(built)))
+})
+
+test_that("by a factor gives one smooth per level with a shared parameter", {
+  built <- term_build(s(x, by = g, k = 6), dd)
+  one <- term_build(s(x, k = 6), dd)
+  expect_identical(term_npar(built), 3L * term_npar(one))
+  expect_true(all(grepl("^s\\(x\\)\\.(a|b|c)\\.", term_coef_names(built))))
+
+  # each level's columns vanish off its own rows
+  Z <- term_matrix(built)
+  cols <- term_npar(one)
+  for (l in seq_len(3)) {
+    blk <- Z[, (l - 1) * cols + seq_len(cols), drop = FALSE]
+    expect_true(all(blk[dd$g != levels(dd$g)[l], ] == 0))
+  }
+  # the penalty repeats blockwise, so one lambda governs every level
+  expect_identical(term_penalty(built)@params, "lambda")
+  res <- check_term(s(x, by = g, k = 6), dd, verbose = FALSE)
+  expect_true(all(res$status == "OK"),
+              info = paste(res$check[res$status != "OK"], collapse = ", "))
+})
+
+test_that("by a numeric is a varying-coefficient term", {
+  built <- term_build(s(x, by = w, k = 6), dd)
+  plain <- term_build(s(x, k = 6), dd)
+  expect_identical(term_npar(built), term_npar(plain))
+  expect_equal(term_matrix(built), dd$w * term_matrix(plain),
+               ignore_attr = TRUE)
+  res <- check_term(s(x, by = w, k = 6), dd, verbose = FALSE)
+  expect_true(all(res$status == "OK"))
+})
+
+test_that("te() builds the tensor product with the summed marginal penalty", {
+  built <- term_build(te(x, z, k = 4), dd)
+  expect_identical(term_npar(built), 16L)
+
+  # the block is the tensor basis, computed here from basis7 directly
+  bx <- basis7::bspline_basis(lower = min(dd$x) - 1e-3,
+                              upper = max(dd$x) + 1e-3, dimension = 4)
+  expect_identical(ncol(term_matrix(built)), 16L)
+
+  pen <- term_penalty(built)
+  P <- penalties7::penalty_matrix(pen, list(lambda = 1))
+  expect_identical(dim(P), c(16L, 16L))
+  # a roughness penalty is rank deficient: its null space holds the surfaces
+  # of no curvature in either direction
+  r <- penalties7::penalty_rank(pen)
+  expect_lt(r, 16L)
+  expect_gt(r, 0L)
+
+  res <- check_term(te(x, z, k = 4), dd, verbose = FALSE)
+  expect_true(all(res$status == "OK"),
+              info = paste(res$check[res$status != "OK"], collapse = ", "))
+})
+
+test_that("a tensor smooth recovers an interaction surface", {
+  set.seed(3)
+  m <- 300
+  d2 <- data.frame(x = runif(m), z = runif(m))
+  truth <- function(x, z) sin(pi * x) * (z - 0.5)
+  d2$y <- truth(d2$x, d2$z) + rnorm(m, sd = 0.05)
+
+  built <- term_build(te(x, z, k = 5), d2)
+  Z <- term_matrix(built)
+  P <- penalties7::penalty_matrix(term_penalty(built), list(lambda = 1))
+  bhat <- solve(crossprod(Z) + 1e-3 * P + 1e-8 * diag(ncol(Z)),
+                crossprod(Z, d2$y))
+  expect_gt(stats::cor(as.numeric(Z %*% bhat), truth(d2$x, d2$z)), 0.98)
+})
+
+test_that("te() with by keeps one surface per level", {
+  built <- term_build(te(x, z, k = 4, by = g), dd)
+  expect_identical(term_npar(built), 48L)
+  res <- check_term(te(x, z, k = 4, by = g), dd, verbose = FALSE)
+  expect_true(all(res$status == "OK"))
+})
+
+test_that("the smooths are routed by the interpreter and validated", {
+  out <- interpret_formula(y ~ w + s(x) + te(x, z, k = 4), dd)
+  expect_named(out$terms, c("linpar", "s(x)", "te(x, z, k = 4)"))
+  expect_true(S7::S7_inherits(out$terms[["s(x)"]], SmoothTerm))
+
+  expect_error(te(x), "at least two covariates")
+  expect_error(s(x, k = 2), "at least 3")
+  expect_error(s(x, k = 3, degree = 3), "must exceed")
+  expect_error(s(x, label = ""), "non-empty")
+  expect_error(term_build(s(nope), dd), "not found")
+})

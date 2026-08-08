@@ -41,6 +41,18 @@ reference:
   contents:
   - random
   - RandomTerm
+- title: Smooth terms
+  contents:
+  - s
+  - te
+  - SmoothTerm
+- title: Structural terms
+  contents:
+  - gas
+  - GasTerm
+  - term_params
+  - term_links
+  - term_filter
 - title: The formula layer
   contents:
   - interpret_formula
