@@ -1,0 +1,8 @@
+pandoc: 3.8.3
+pkgdown: 2.2.1
+pkgdown_sha: ~
+articles: {}
+last_built: 2026-08-08T14:22Z
+urls:
+  reference: https://statmodels7.github.io/modelterms7/reference
+  article: https://statmodels7.github.io/modelterms7/articles
