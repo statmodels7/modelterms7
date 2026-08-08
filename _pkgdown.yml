@@ -1,0 +1,45 @@
+url: https://statmodels7.github.io/modelterms7
+
+template:
+  bootstrap: 5
+
+navbar:
+  structure:
+    left:  [reference]
+    right: [search, book, statmodels7, github]
+  components:
+    book:
+      text: book
+      href: https://statmodels7.github.io/book/
+    statmodels7:
+      text: statmodels7
+      href: https://statmodels7.github.io
+
+reference:
+- title: The classes and the generics
+  contents:
+  - model_term
+  - additive_term
+  - structural_term
+  - term_build
+  - term_is_built
+  - term_matrix
+  - term_penalty
+  - term_npar
+  - term_coef_names
+  - term_smooth
+  - term_predict
+- title: The parametric term
+  contents:
+  - linpar
+  - LinparTerm
+- title: The formula layer
+  contents:
+  - interpret_formula
+- title: The response
+  contents:
+  - cens
+  - censored_response
+- title: Validation
+  contents:
+  - check_term
