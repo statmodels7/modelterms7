@@ -46,7 +46,7 @@ gas_filter_r(
 A list with \code{eta} and \code{jacobian}.
 }
 \description{
-The loop \code{\link{gas_filter_cpp}} replaces, kept so the compiled
+The loop \code{gas_filter_cpp()} replaces, kept so the compiled
 route has something to be compared against that shares none of its code.
 }
 \keyword{internal}

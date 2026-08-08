@@ -277,7 +277,7 @@ S7::method(print, GasTerm) <- function(x, ...) {
 #' The Score-Driven Recursion in R
 #'
 #' @description
-#' The loop \code{\link{gas_filter_cpp}} replaces, kept so the compiled
+#' The loop \code{gas_filter_cpp()} replaces, kept so the compiled
 #' route has something to be compared against that shares none of its code.
 #'
 #' @param eta The static predictor.

@@ -4,7 +4,15 @@
 \alias{te}
 \title{Penalized Smooth of Several Covariates}
 \usage{
-te(..., by = NULL, k = 5, degree = 3, bases = NULL, label = NULL)
+te(
+  ...,
+  by = NULL,
+  k = 5,
+  degree = 3,
+  bases = NULL,
+  anisotropic = TRUE,
+  label = NULL
+)
 }
 \arguments{
 \item{...}{The covariates, expressions evaluated in the data, at least
@@ -20,6 +28,9 @@ covariates. Defaults to 5.}
 \item{bases}{An optional list of \pkg{basis7} bases, one per covariate,
 used in place of the default B-splines.}
 
+\item{anisotropic}{Keep a smoothing parameter per margin? Defaults to
+\code{TRUE}.}
+
 \item{label}{A single non-empty string prefixed to the coefficient
 names. Defaults to a name built from the covariates.}
 }
@@ -34,13 +45,17 @@ penalty on the product coefficients.
 }
 \details{
 The block is the tensor basis evaluated at the covariates, and the
-penalty is the sum of the marginal roughness penalties carried into the
-product, \eqn{P = \sum_v I \otimes \cdots \otimes P_v \otimes \cdots
-\otimes I}, which penalizes curvature in each direction. One smoothing
-parameter governs the sum, so the smoothing is isotropic across the
-margins after each has been scaled to a common size; a separate
-parameter per margin needs a penalty that is a sum of quadratics with
-its own coefficient on each, which \pkg{penalties7} does not provide.
+penalty is built from the marginal roughness penalties carried into the
+product, \eqn{P_v = I \otimes \cdots \otimes P_v \otimes \cdots
+\otimes I}, each penalizing curvature in one direction.
+
+With \code{anisotropic = TRUE}, the default, those components enter
+\code{\link[penalties7]{additive_penalty}} and keep a smoothing
+parameter each, so the surface may be rough in one direction and smooth
+in another -- which is the usual reason for fitting a tensor smooth
+rather than an isotropic one. With \code{anisotropic = FALSE} they are
+summed first and one parameter governs the total, which costs one
+hyperparameter instead of one per margin.
 
 The marginal bases are not reparametrized, so unlike \code{\link{s}}
 the linear effects are not separated out: the null space of the tensor

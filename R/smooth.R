@@ -115,13 +115,17 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #'
 #' @details
 #' The block is the tensor basis evaluated at the covariates, and the
-#' penalty is the sum of the marginal roughness penalties carried into the
-#' product, \eqn{P = \sum_v I \otimes \cdots \otimes P_v \otimes \cdots
-#' \otimes I}, which penalizes curvature in each direction. One smoothing
-#' parameter governs the sum, so the smoothing is isotropic across the
-#' margins after each has been scaled to a common size; a separate
-#' parameter per margin needs a penalty that is a sum of quadratics with
-#' its own coefficient on each, which \pkg{penalties7} does not provide.
+#' penalty is built from the marginal roughness penalties carried into the
+#' product, \eqn{P_v = I \otimes \cdots \otimes P_v \otimes \cdots
+#' \otimes I}, each penalizing curvature in one direction.
+#'
+#' With \code{anisotropic = TRUE}, the default, those components enter
+#' \code{\link[penalties7]{additive_penalty}} and keep a smoothing
+#' parameter each, so the surface may be rough in one direction and smooth
+#' in another -- which is the usual reason for fitting a tensor smooth
+#' rather than an isotropic one. With \code{anisotropic = FALSE} they are
+#' summed first and one parameter governs the total, which costs one
+#' hyperparameter instead of one per margin.
 #'
 #' The marginal bases are not reparametrized, so unlike \code{\link{s}}
 #' the linear effects are not separated out: the null space of the tensor
@@ -137,6 +141,8 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #' @param degree The spline degree per margin, recycled. Defaults to 3.
 #' @param bases An optional list of \pkg{basis7} bases, one per covariate,
 #'   used in place of the default B-splines.
+#' @param anisotropic Keep a smoothing parameter per margin? Defaults to
+#'   \code{TRUE}.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names. Defaults to a name built from the covariates.
 #'
@@ -152,16 +158,22 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #'
 #' @export
 te <- function(..., by = NULL, k = 5, degree = 3, bases = NULL,
-               label = NULL) {
+               anisotropic = TRUE, label = NULL) {
   vars <- as.list(substitute(list(...)))[-1L]
   if (length(vars) < 2L) {
     stop("'te' needs at least two covariates; use s() for one.",
          call. = FALSE)
   }
-  .smooth_spec(vars, substitute(by), k, degree, bases, FALSE, label,
-               sprintf("te(%s)",
-                       paste(vapply(vars, deparse, character(1)),
-                             collapse = ",")))
+  if (!is.logical(anisotropic) || length(anisotropic) != 1L ||
+      is.na(anisotropic)) {
+    stop("'anisotropic' must be TRUE or FALSE.", call. = FALSE)
+  }
+  sp <- .smooth_spec(vars, substitute(by), k, degree, bases, FALSE, label,
+                     sprintf("te(%s)",
+                             paste(vapply(vars, deparse, character(1)),
+                                   collapse = ",")))
+  sp@spec$anisotropic <- anisotropic
+  sp
 }
 
 .smooth_spec <- function(vars, by, k, degree, bases, linear, label,
@@ -275,19 +287,16 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
     # the marginal roughness penalties carried into the product: the second
     # derivative Gram of each margin, the identity in the others
     dims <- vapply(marg, function(b) b@dimension, integer(1))
-    P <- matrix(0, prod(dims), prod(dims))
-    for (j in seq_len(nv)) {
-      ord <- integer(nv)
-      ord[j] <- 2L
+    comps <- lapply(seq_len(nv), function(j) {
       Pj <- basis7::basis_gram(marg[[j]], order = 2L)
       Pj <- Pj / max(1, max(abs(Pj)))
       blocks <- lapply(seq_len(nv), function(i)
         if (i == j) Pj else diag(dims[i]))
       # tensor_basis varies the FIRST margin fastest, so the Kronecker
       # product is taken in reverse order
-      Pk <- Reduce(kronecker, rev(blocks))
-      P <- P + Pk
-    }
+      Reduce(kronecker, rev(blocks))
+    })
+    P <- if (isTRUE(sp$anisotropic)) comps else Reduce(`+`, comps)
     core <- list(kind = "tensor", basis = tb)
   }
 
@@ -304,7 +313,8 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
       nm <- as.character(t(outer(levels(by$value), nm,
                                  function(a, b) paste(a, b, sep = "."))))
       Z <- Zb
-      P <- kronecker(diag(m), P)
+      P <- if (is.list(P)) lapply(P, function(Pk) kronecker(diag(m), Pk))
+           else kronecker(diag(m), P)
     } else {
       Z <- by$value * Z
     }
@@ -321,7 +331,8 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
                                          identical(by$kind, "factor"))
                            by$levels else NULL,
                          nblock = ncol(Z))
-  term@penalty <- penalties7::quadratic_penalty(P)
+  term@penalty <- if (is.list(P)) penalties7::additive_penalty(P)
+                  else penalties7::quadratic_penalty(P)
   term
 }
 

@@ -101,27 +101,43 @@ test_that("by a numeric is a varying-coefficient term", {
   expect_true(all(res$status == "OK"))
 })
 
-test_that("te() builds the tensor product with the summed marginal penalty", {
+test_that("te() smooths each margin with a parameter of its own", {
   built <- term_build(te(x, z, k = 4), dd)
   expect_identical(term_npar(built), 16L)
 
-  # the block is the tensor basis, computed here from basis7 directly
-  bx <- basis7::bspline_basis(lower = min(dd$x) - 1e-3,
-                              upper = max(dd$x) + 1e-3, dimension = 4)
-  expect_identical(ncol(term_matrix(built)), 16L)
-
   pen <- term_penalty(built)
-  P <- penalties7::penalty_matrix(pen, list(lambda = 1))
+  # one smoothing parameter per margin: that is what anisotropic means
+  expect_identical(pen@params, c("lambda1", "lambda2"))
+  P <- penalties7::penalty_matrix(pen, list(lambda1 = 1, lambda2 = 1))
   expect_identical(dim(P), c(16L, 16L))
-  # a roughness penalty is rank deficient: its null space holds the surfaces
-  # of no curvature in either direction
+
+  # a roughness penalty is rank deficient: its null space holds the
+  # surfaces of no curvature in either direction
   r <- penalties7::penalty_rank(pen)
   expect_lt(r, 16L)
   expect_gt(r, 0L)
 
+  # and the two directions really are penalized apart
+  b <- rnorm(16)
+  v1 <- penalties7::penalty_value(pen, b, list(lambda1 = 1e3, lambda2 = 1e-3))
+  v2 <- penalties7::penalty_value(pen, b, list(lambda1 = 1e-3, lambda2 = 1e3))
+  expect_false(isTRUE(all.equal(v1, v2)))
+
   res <- check_term(te(x, z, k = 4), dd, verbose = FALSE)
   expect_true(all(res$status == "OK"),
               info = paste(res$check[res$status != "OK"], collapse = ", "))
+})
+
+test_that("anisotropic = FALSE sums the margins under one parameter", {
+  iso <- term_build(te(x, z, k = 4, anisotropic = FALSE), dd)
+  expect_identical(term_penalty(iso)@params, "lambda")
+  # the isotropic matrix is the anisotropic one at equal parameters
+  ani <- term_build(te(x, z, k = 4), dd)
+  expect_equal(penalties7::penalty_matrix(term_penalty(iso), list(lambda = 1)),
+               penalties7::penalty_matrix(term_penalty(ani),
+                                          list(lambda1 = 1, lambda2 = 1)),
+               ignore_attr = TRUE)
+  expect_error(te(x, z, anisotropic = NA), "TRUE or FALSE")
 })
 
 test_that("a tensor smooth recovers an interaction surface", {
@@ -133,7 +149,8 @@ test_that("a tensor smooth recovers an interaction surface", {
 
   built <- term_build(te(x, z, k = 5), d2)
   Z <- term_matrix(built)
-  P <- penalties7::penalty_matrix(term_penalty(built), list(lambda = 1))
+  P <- penalties7::penalty_matrix(term_penalty(built),
+                                  list(lambda1 = 1, lambda2 = 1))
   bhat <- solve(crossprod(Z) + 1e-3 * P + 1e-8 * diag(ncol(Z)),
                 crossprod(Z, d2$y))
   expect_gt(stats::cor(as.numeric(Z %*% bhat), truth(d2$x, d2$z)), 0.98)
