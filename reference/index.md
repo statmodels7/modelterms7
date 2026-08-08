@@ -58,6 +58,17 @@
 - [`SmoothTerm()`](https://statmodels7.github.io/modelterms7/reference/SmoothTerm.md)
   : S7 Class for Smooth Terms
 
+## Nonlinear terms
+
+- [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) :
+  Nonlinear Parametric Term
+- [`NlTerm()`](https://statmodels7.github.io/modelterms7/reference/NlTerm.md)
+  : S7 Class for Nonlinear Parametric Terms
+- [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
+  : Refresh a Term at New Coefficients
+- [`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
+  : The Contribution of a Term at Its Current Coefficients
+
 ## Structural terms
 
 - [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
