@@ -13,7 +13,7 @@ seg(
   by = NULL,
   linear = TRUE,
   penalty = c("none", "lasso", "ridge"),
-  band = 0.02,
+  c0 = 0.05,
   label = "seg"
 )
 
@@ -24,7 +24,7 @@ jump(
   by = NULL,
   linear = TRUE,
   penalty = c("none", "lasso", "ridge"),
-  band = 0.02,
+  c0 = 0.05,
   label = "jump"
 )
 
@@ -35,7 +35,7 @@ jseg(
   by = NULL,
   linear = TRUE,
   penalty = c("none", "lasso", "ridge"),
-  band = 0.02,
+  c0 = 0.05,
   label = "jseg"
 )
 }
@@ -56,10 +56,10 @@ break-points per level.}
 \item{penalty}{One of \code{"none"} (default), \code{"lasso"} or
 \code{"ridge"}, applied to the changes.}
 
-\item{band}{For a discontinuous term, the half-width of the band
-around a break-point over which the step is replaced by a ramp, as a
-fraction of the covariate's range. Defaults to \code{0.02}; see
-Details.}
+\item{c0}{For a discontinuous term, the starting value of the scaling
+factor that separates the observations from the break-point, as a
+fraction of the distance to the ends of the range. Defaults to
+\code{0.05}, the value \cite{fasola2018} recommend; see Details.}
 
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}
@@ -111,20 +111,30 @@ iterate. Writing \eqn{W = 1/(2\lvert x-\psi^{0}\rvert)} and
 here but a quantity read off two of them, which is why refreshing the
 term recovers it before rebuilding the weights.
 
-The weight is unbounded as \eqn{x} approaches \eqn{\psi}, and that
-matters more than it looks. Since \eqn{Z - \psi W} is the step
-itself, \eqn{Z} is \eqn{\psi W} plus a quantity of order one: let
-\eqn{W} grow without bound and the two columns become numerically
-collinear, drowning the very signal the fit is meant to read. The
-denominator is therefore held at or above \code{band} times the
-covariate's range, which caps \eqn{W}.
+The weight is unbounded as \eqn{x} approaches \eqn{\psi}, and since
+\eqn{Z - \psi W} is the step itself, \eqn{Z} is \eqn{\psi W} plus a
+quantity of order one: an unbounded \eqn{W} makes the two columns
+numerically collinear and drowns the signal the fit reads. The remedy
+of \cite{fasola2018} is to move the observations rather than to cap
+the weight. With a scaling factor \eqn{c} the two intervals
+\eqn{[x_{(1)}, \psi]} and \eqn{(\psi, x_{(n)}]} are mapped onto
+\deqn{[x_{(1)},\, \psi - c(\psi - x_{(1)})]
+  \quad	ext{and}\quad
+  (\psi + c(x_{(n)} - \psi),\, x_{(n)}],}
+which leaves a gap of relative width \eqn{c} around \eqn{\psi} and
+bounds \eqn{W} without altering the model: the working covariates are
+computed on the rescaled covariate, while the truncated line, the
+linear column and the reported contribution stay on the original one.
 
-That is a bandwidth and not a guard. Within the band the step is
-replaced by a ramp, so the fixed point of the iteration is that of a
-slightly smoothed problem; a narrower band is more faithful and worse
-conditioned. The segmented literature makes the same trade by
-displacing the observations nearest a break-point instead of capping
-the weight.
+The factor is not a constant. It governs how far the break-point may
+travel in one step, so a large value lets the estimate leave a
+spurious optimum and a small one is faithful to the step function.
+\code{c0} is its starting value, and \code{\link{term_refresh}}
+halves it whenever the break-point reverses direction, which is the
+signal that the iteration has begun to circle an optimum rather than
+travel towards one. The run has converged when the change in every
+break-point falls below a hundredth of the smallest distance between
+distinct observations, which \code{\link{seg_converged}} reports.
 }
 
 \subsection{What the term carries}{
@@ -147,18 +157,15 @@ are all three columns. A run that ends against the limit has not
 located a break-point, and \code{\link{seg_psi}} then returns the
 limit itself.
 
-The objective has local optima in the break-points, and the iteration
-converges from within a basin around the true position rather than
-from anywhere. On a joint jump and change of slope at \eqn{x = 5} in
-500 observations, swept over eight samples and damping factors from
-0.05 to 1, every start at 4 or above recovers the break-point at
-every damping below 1, every start at 2 or below fails at all of
-them, and a start at 3 succeeds for some samples and not others. The
-step also has to be damped for its own sake: taken whole it
-overshoots even from a good start. A run should therefore be started
-from several positions, which is what
-\code{\link[optimizers7]{multistart}} does and what the bootstrap
-restarting of the segmented literature is for.
+The objective has local optima in the break-points, and the scaling
+schedule widens the basin the iteration converges from rather than
+removing the problem: a run should still be started from several
+positions, which is what \code{\link[optimizers7]{multistart}} does
+and what the bootstrap restarting of the segmented literature is for.
+A continuous term has no scaling factor, its working block being
+bounded already; where its iteration alternates between two values
+the remedy is to shrink the increment, as \code{segmented}'s
+\code{h} does.
 }
 }
 \examples{

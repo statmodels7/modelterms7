@@ -57,6 +57,7 @@ reference:
   - seg
   - SegTerm
   - seg_psi
+  - seg_step
 - title: Structural terms
   contents:
   - gas

@@ -86,20 +86,30 @@ SegTerm <- S7::new_class(
 #' here but a quantity read off two of them, which is why refreshing the
 #' term recovers it before rebuilding the weights.
 #'
-#' The weight is unbounded as \eqn{x} approaches \eqn{\psi}, and that
-#' matters more than it looks. Since \eqn{Z - \psi W} is the step
-#' itself, \eqn{Z} is \eqn{\psi W} plus a quantity of order one: let
-#' \eqn{W} grow without bound and the two columns become numerically
-#' collinear, drowning the very signal the fit is meant to read. The
-#' denominator is therefore held at or above \code{band} times the
-#' covariate's range, which caps \eqn{W}.
+#' The weight is unbounded as \eqn{x} approaches \eqn{\psi}, and since
+#' \eqn{Z - \psi W} is the step itself, \eqn{Z} is \eqn{\psi W} plus a
+#' quantity of order one: an unbounded \eqn{W} makes the two columns
+#' numerically collinear and drowns the signal the fit reads. The remedy
+#' of \cite{fasola2018} is to move the observations rather than to cap
+#' the weight. With a scaling factor \eqn{c} the two intervals
+#' \eqn{[x_{(1)}, \psi]} and \eqn{(\psi, x_{(n)}]} are mapped onto
+#' \deqn{[x_{(1)},\, \psi - c(\psi - x_{(1)})]
+#'   \quad	ext{and}\quad
+#'   (\psi + c(x_{(n)} - \psi),\, x_{(n)}],}
+#' which leaves a gap of relative width \eqn{c} around \eqn{\psi} and
+#' bounds \eqn{W} without altering the model: the working covariates are
+#' computed on the rescaled covariate, while the truncated line, the
+#' linear column and the reported contribution stay on the original one.
 #'
-#' That is a bandwidth and not a guard. Within the band the step is
-#' replaced by a ramp, so the fixed point of the iteration is that of a
-#' slightly smoothed problem; a narrower band is more faithful and worse
-#' conditioned. The segmented literature makes the same trade by
-#' displacing the observations nearest a break-point instead of capping
-#' the weight.
+#' The factor is not a constant. It governs how far the break-point may
+#' travel in one step, so a large value lets the estimate leave a
+#' spurious optimum and a small one is faithful to the step function.
+#' \code{c0} is its starting value, and \code{\link{term_refresh}}
+#' halves it whenever the break-point reverses direction, which is the
+#' signal that the iteration has begun to circle an optimum rather than
+#' travel towards one. The run has converged when the change in every
+#' break-point falls below a hundredth of the smallest distance between
+#' distinct observations, which \code{\link{seg_converged}} reports.
 #' }
 #'
 #' \subsection{What the term carries}{
@@ -122,18 +132,15 @@ SegTerm <- S7::new_class(
 #' located a break-point, and \code{\link{seg_psi}} then returns the
 #' limit itself.
 #'
-#' The objective has local optima in the break-points, and the iteration
-#' converges from within a basin around the true position rather than
-#' from anywhere. On a joint jump and change of slope at \eqn{x = 5} in
-#' 500 observations, swept over eight samples and damping factors from
-#' 0.05 to 1, every start at 4 or above recovers the break-point at
-#' every damping below 1, every start at 2 or below fails at all of
-#' them, and a start at 3 succeeds for some samples and not others. The
-#' step also has to be damped for its own sake: taken whole it
-#' overshoots even from a good start. A run should therefore be started
-#' from several positions, which is what
-#' \code{\link[optimizers7]{multistart}} does and what the bootstrap
-#' restarting of the segmented literature is for.
+#' The objective has local optima in the break-points, and the scaling
+#' schedule widens the basin the iteration converges from rather than
+#' removing the problem: a run should still be started from several
+#' positions, which is what \code{\link[optimizers7]{multistart}} does
+#' and what the bootstrap restarting of the segmented literature is for.
+#' A continuous term has no scaling factor, its working block being
+#' bounded already; where its iteration alternates between two values
+#' the remedy is to shrink the increment, as \code{segmented}'s
+#' \code{h} does.
 #' }
 #'
 #' @param x The covariate, an expression evaluated in the data.
@@ -146,10 +153,10 @@ SegTerm <- S7::new_class(
 #'   \code{TRUE}.
 #' @param penalty One of \code{"none"} (default), \code{"lasso"} or
 #'   \code{"ridge"}, applied to the changes.
-#' @param band For a discontinuous term, the half-width of the band
-#'   around a break-point over which the step is replaced by a ramp, as a
-#'   fraction of the covariate's range. Defaults to \code{0.02}; see
-#'   Details.
+#' @param c0 For a discontinuous term, the starting value of the scaling
+#'   factor that separates the observations from the break-point, as a
+#'   fraction of the distance to the ends of the range. Defaults to
+#'   \code{0.05}, the value \cite{fasola2018} recommend; see Details.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names.
 #'
@@ -175,35 +182,35 @@ SegTerm <- S7::new_class(
 #'
 #' @export
 seg <- function(x, npsi = 1, psi = NULL, by = NULL, linear = TRUE,
-                penalty = c("none", "lasso", "ridge"), band = 0.02,
+                penalty = c("none", "lasso", "ridge"), c0 = 0.05,
                 label = "seg") {
   .seg_spec("seg", substitute(x), npsi, psi, substitute(by), linear,
-            match.arg(penalty), band, label)
+            match.arg(penalty), c0, label)
 }
 
 #' @rdname seg
 #' @export
 jump <- function(x, npsi = 1, psi = NULL, by = NULL, linear = TRUE,
-                 penalty = c("none", "lasso", "ridge"), band = 0.02,
+                 penalty = c("none", "lasso", "ridge"), c0 = 0.05,
                  label = "jump") {
   .seg_spec("jump", substitute(x), npsi, psi, substitute(by), linear,
-            match.arg(penalty), band, label)
+            match.arg(penalty), c0, label)
 }
 
 #' @rdname seg
 #' @export
 jseg <- function(x, npsi = 1, psi = NULL, by = NULL, linear = TRUE,
-                 penalty = c("none", "lasso", "ridge"), band = 0.02,
+                 penalty = c("none", "lasso", "ridge"), c0 = 0.05,
                  label = "jseg") {
   .seg_spec("jseg", substitute(x), npsi, psi, substitute(by), linear,
-            match.arg(penalty), band, label)
+            match.arg(penalty), c0, label)
 }
 
-.seg_spec <- function(kind, var, npsi, psi, by, linear, penalty, band,
+.seg_spec <- function(kind, var, npsi, psi, by, linear, penalty, c0,
                       label) {
-  if (!is.numeric(band) || length(band) != 1L || is.na(band) ||
-      band <= 0 || band >= 0.5) {
-    stop("'band' must be a single number strictly between 0 and 0.5.",
+  if (!is.numeric(c0) || length(c0) != 1L || is.na(c0) ||
+      c0 <= 0 || c0 >= 1) {
+    stop("'c0' must be a single number strictly between 0 and 1.",
          call. = FALSE)
   }
   if (!is.numeric(npsi) || length(npsi) != 1L || is.na(npsi) || npsi < 1 ||
@@ -225,7 +232,7 @@ jseg <- function(x, npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   }
   SegTerm(label = label, kind = kind, var = var, npsi = as.integer(npsi),
           by = by, linear = linear, penalty_kind = penalty,
-          spec = list(psi = psi, band = band),
+          spec = list(psi = psi, c0 = c0),
           X = NULL, coef_names = character(0),
           blueprint = list(), penalty = NULL)
 }
@@ -272,25 +279,34 @@ jseg <- function(x, npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   pmin(pmax(psi, lim[1L]), lim[2L])
 }
 
+# The rescaled covariate of Fasola, Muggeo and Kuchenhoff: the two
+# intervals on either side of the break-point are shrunk towards the
+# ends of the range, leaving a gap of width c around psi.
+.seg_rescale <- function(xv, psi, cs, lo, hi) {
+  keep <- 1 - cs
+  ifelse(xv <= psi, lo + (xv - lo) * keep,
+         (psi + cs * (hi - psi)) + (xv - psi) * keep)
+}
+
 # The working block and the true contribution of one level. The
 # arithmetic is elementwise and is compiled (src/seg_block.cpp), which
 # measures 1.2 to 3.2 times the R form below over n from 1e3 to 1e6 and
 # one to five break-points. The operations are the same in the same
 # order, so the two agree to a rounding; .seg_block_r is kept as the
 # twin the tests compare against.
-.seg_block <- function(kind, xv, cf, npsi, linear, floor_w, lim) {
+.seg_block <- function(kind, xv, cf, npsi, linear, cs, lo, hi, lim) {
   psi <- .seg_psi_of(kind, cf, npsi, linear, lim)
   off <- if (linear) 1L else 0L
   del <- if (kind %in% c("seg", "jseg")) cf[off + seq_len(npsi)] else numeric(0)
   d <- if (kind == "jseg") npsi else 0L
   kap <- if (kind == "seg") numeric(0) else cf[off + d + seq_len(npsi)]
   out <- seg_block_cpp(switch(kind, seg = 0L, jump = 1L, jseg = 2L),
-                       xv, psi, del, kap,
-                       if (linear) cf[1L] else 0, linear, floor_w)
+                       xv, psi, del, kap, cs,
+                       if (linear) cf[1L] else 0, linear, lo, hi)
   list(X = out$X, value = out$value, psi = psi)
 }
 
-.seg_block_r <- function(kind, xv, cf, npsi, linear, floor_w, lim) {
+.seg_block_r <- function(kind, xv, cf, npsi, linear, cs, lo, hi, lim) {
   n <- length(xv)
   off <- if (linear) 1L else 0L
   psi <- .seg_psi_of(kind, cf, npsi, linear, lim)
@@ -317,10 +333,11 @@ jseg <- function(x, npsi = 1, psi = NULL, by = NULL, linear = TRUE,
     kap <- cf[off + d + seq_len(npsi)]
     for (j in seq_len(npsi)) {
       # the identity of Fasola et al.: exact at x != psi, and linear in
-      # the break-point once the weight is frozen
-      den <- pmax(2 * abs(xv - psi[j]), floor_w)
-      W <- 1 / den
-      cols[[length(cols) + 1L]] <- xv * W + 0.5
+      # the break-point once the weight is frozen. It is applied to the
+      # rescaled covariate, which is what keeps the weight bounded.
+      xs <- .seg_rescale(xv, psi[j], cs[j], lo, hi)
+      W <- 1 / (2 * abs(xs - psi[j]))
+      cols[[length(cols) + 1L]] <- xs * W + 0.5
       cols[[length(cols) + 1L]] <- W
       value <- value + kap[j] * (xv > psi[j])
     }
@@ -360,7 +377,7 @@ jseg <- function(x, npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 }
 
 # the block over every level of by, and the contribution
-.seg_assemble <- function(bp, xv, grp, coef) {
+.seg_assemble <- function(bp, xv, grp, coef, cscale = bp$cscale) {
   per <- bp$per_level
   m <- length(bp$levels)
   n <- length(xv)
@@ -369,9 +386,10 @@ jseg <- function(x, npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   psi <- numeric(0)
   for (l in seq_len(m)) {
     idx <- (l - 1L) * per + seq_len(per)
+    cs <- cscale[(l - 1L) * bp$npsi + seq_len(bp$npsi)]
     rows <- if (is.null(grp)) rep(TRUE, n) else grp == bp$levels[l]
     b <- .seg_block(bp$kind, xv[rows], coef[idx], bp$npsi, bp$linear,
-                    bp$floor_w, bp$lim)
+                    cs, bp$lo, bp$hi, bp$lim)
     X[rows, idx] <- b$X
     value[rows] <- b$value
     psi <- c(psi, b$psi)
@@ -386,19 +404,24 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
   nmi <- .seg_names(term@kind, term@npsi, term@linear)
   per <- length(nmi$names)
 
-  rng <- diff(range(xv))
-  if (rng <= 0) {
+  rr <- range(xv)
+  if (diff(rr) <= 0) {
     stop("the covariate of a segmented term must vary.", call. = FALSE)
   }
-  # the cap on the weight of a jump. Z is psi * W plus a quantity of
-  # order one, so an unbounded W makes the two columns collinear and the
-  # fit unreadable; the band is what keeps them apart, at the price of a
-  # ramp instead of a step within it
-  floor_w <- 2 * term@spec$band * rng
 
   # the interval a break-point is held in: far enough inside the data
   # that both sides carry observations
   lim <- as.numeric(stats::quantile(xv, c(0.05, 0.95), names = FALSE))
+
+  # The convergence tolerance of Fasola et al., a hundredth of the
+  # distance between consecutive distinct observations: below it the
+  # objective, a step function, cannot change. They write the SMALLEST
+  # such distance, which is the same number on the evenly spaced
+  # covariates of their examples and is of order n^-2 on a random one,
+  # so the median is taken instead and the two rules agree wherever
+  # theirs is usable.
+  ux <- sort(unique(xv))
+  delta <- 0.01 * if (length(ux) > 1L) stats::median(diff(ux)) else diff(rr)
 
   start_psi <- if (!is.null(term@spec$psi)) term@spec$psi else {
     as.numeric(stats::quantile(xv, seq_len(term@npsi) / (term@npsi + 1),
@@ -424,9 +447,12 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
     }
   }
 
+  npt <- length(levs) * term@npsi
   bp <- list(kind = term@kind, npsi = term@npsi, linear = term@linear,
-             per_level = per, levels = levs, floor_w = floor_w,
-             lim = lim,
+             per_level = per, levels = levs,
+             lo = rr[1L], hi = rr[2L], lim = lim, delta = delta,
+             cscale = rep(term@spec$c0, npt), sgn = rep(0, npt),
+             step = rep(NA_real_, npt), nref = 0L,
              var = term@var, by = term@by, coef = coef0,
              xv = xv, grp = grp,
              names_one = nmi$names, changes_one = nmi$changes)
@@ -462,6 +488,16 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
   term
 }
 
+# the break-points of every level, read off the coefficients without
+# building the block
+.seg_psi_all <- function(bp, coef) {
+  per <- bp$per_level
+  unlist(lapply(seq_along(bp$levels), function(l) {
+    .seg_psi_of(bp$kind, coef[(l - 1L) * per + seq_len(per)], bp$npsi,
+                bp$linear, bp$lim)
+  }), use.names = FALSE)
+}
+
 S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   .assert_built(term)
   bp <- term@blueprint
@@ -469,6 +505,38 @@ S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   if (length(coef) != ncol(term@X)) {
     stop(sprintf("'coef' must have length %d.", ncol(term@X)), call. = FALSE)
   }
+
+  # The scaling schedule of Fasola et al.: the factor is halved whenever
+  # the break-point reverses direction, which is the signal that the
+  # iteration has begun to circle an optimum rather than travel towards
+  # one. A large factor moves the estimate far and lets it leave a
+  # spurious optimum; a small one is faithful to the step function.
+  psi_new <- .seg_psi_all(bp, coef)
+  d <- psi_new - bp$psi
+  s <- sign(d)
+  flip <- s != 0 & bp$sgn != 0 & s != bp$sgn
+  bp$cscale[flip] <- bp$cscale[flip] / 2
+  # The factor is not allowed to collapse. Writing D and d for the
+  # distances from the break-point to the further and the nearer end of
+  # the range, the weight spans D/(c d) and Z = psi W + 1(x > psi) shears
+  # the pair by a further |psi|/D, so the condition number of the block
+  # is of order max(D, |psi|)/(c d). Holding that below eps^-1/2, which
+  # leaves half the digits of a double to a QR of the design, is
+  #     c >= sqrt(eps) * max(D, |psi|) / d.
+  # The bound is on the DESIGN: a caller forming the normal equations
+  # squares it and needs a factor a thousand times larger, which is why
+  # the working model is fitted by a QR of X, as `segmented` does.
+  dfar <- pmax(psi_new - bp$lo, bp$hi - psi_new)
+  dnear <- pmin(psi_new - bp$lo, bp$hi - psi_new)
+  cmin <- sqrt(.Machine$double.eps) * pmax(dfar, abs(psi_new)) / dnear
+  bp$cscale <- pmax(bp$cscale, cmin)
+  bp$sgn[s != 0] <- s[s != 0]
+  # The first refresh evaluates the block at the starting coefficients,
+  # so the break-point has not moved and the difference is zero by
+  # construction rather than because the iteration has finished.
+  bp$nref <- bp$nref + 1L
+  bp$step <- if (bp$nref > 1L) abs(d) else rep(NA_real_, length(d))
+
   asm <- .seg_assemble(bp, bp$xv, bp$grp, coef)
   X <- asm$X
   colnames(X) <- term@coef_names
@@ -524,6 +592,67 @@ seg_psi <- function(term, coef = NULL) {
   .assert_built(term)
   if (is.null(coef)) return(term@blueprint$psi)
   term_refresh(term, coef)@blueprint$psi
+}
+
+#' The Progress of a Break-Point Iteration
+#'
+#' @description
+#' \code{seg_step} returns how far each break-point moved at the last
+#' call to \code{\link{term_refresh}}, and \code{seg_converged} compares
+#' the largest of those with the tolerance of \cite{fasola2018}, a
+#' hundredth of the distance between consecutive distinct observations of
+#' the covariate. A term that has been built but not yet refreshed has
+#' taken no step, so \code{seg_step} returns \code{NA} and
+#' \code{seg_converged} returns \code{FALSE}.
+#'
+#' @details
+#' The rule is one of resolution: below that distance the objective of a
+#' discontinuous term, a step function of the break-point, cannot change.
+#' It therefore tightens as the sample grows while the precision the
+#' fixed point is reached at does not, so on a large sample the last
+#' iterations move the break-point by a little more than the rule allows
+#' and the run continues past the point where the estimate has settled.
+#' A caller that can evaluate the objective should stop on its relative
+#' change instead, which is what \code{segmented} does and what costs a
+#' continuous term nothing: its iteration can settle into a cycle of
+#' period two in the break-point, in which case this rule is never met
+#' while the objective has long since stopped moving.
+#'
+#' @param term A built \code{\link{SegTerm}}.
+#'
+#' @return \code{seg_step} returns a numeric vector with one entry per
+#'   break-point and per level of \code{by}; \code{seg_converged} returns
+#'   a single logical.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(x = sort(runif(100, 0, 10)))
+#' dd$y <- 2 * (dd$x > 6) + rnorm(100, sd = 0.3)
+#' b <- term_build(jump(x, psi = 4, linear = FALSE), dd)
+#' cf <- b@blueprint$coef
+#' for (it in 1:30) {
+#'   b <- term_refresh(b, cf)
+#'   X <- term_matrix(b)
+#'   cf <- as.numeric(qr.solve(crossprod(X), crossprod(X, dd$y)))
+#'   if (seg_converged(b)) break
+#' }
+#' c(psi = seg_psi(b, cf), step = seg_step(b))
+#'
+#' @seealso \code{\link{seg}}, \code{\link{seg_psi}}
+#' @export
+seg_step <- function(term) {
+  if (!S7::S7_inherits(term, SegTerm)) {
+    stop("'term' must be a segmented term.", call. = FALSE)
+  }
+  .assert_built(term)
+  term@blueprint$step
+}
+
+#' @rdname seg_step
+#' @export
+seg_converged <- function(term) {
+  st <- seg_step(term)
+  !anyNA(st) && max(st) < term@blueprint$delta
 }
 
 S7::method(print, SegTerm) <- function(x, ...) {

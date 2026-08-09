@@ -5,7 +5,7 @@ gas_filter_cpp <- function(eta, order, p, q, omega, a, b, db, f0, df0, i_a, np, 
     .Call(`_modelterms7_gas_filter_cpp`, eta, order, p, q, omega, a, b, db, f0, df0, i_a, np, score, curvature)
 }
 
-seg_block_cpp <- function(kind, xv, psi, del, kap, lin, linear, floor_w) {
-    .Call(`_modelterms7_seg_block_cpp`, kind, xv, psi, del, kap, lin, linear, floor_w)
+seg_block_cpp <- function(kind, xv, psi, del, kap, cvec, lin, linear, lo, hi) {
+    .Call(`_modelterms7_seg_block_cpp`, kind, xv, psi, del, kap, cvec, lin, linear, lo, hi)
 }
 

@@ -35,8 +35,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // seg_block_cpp
-List seg_block_cpp(int kind, NumericVector xv, NumericVector psi, NumericVector del, NumericVector kap, double lin, bool linear, double floor_w);
-RcppExport SEXP _modelterms7_seg_block_cpp(SEXP kindSEXP, SEXP xvSEXP, SEXP psiSEXP, SEXP delSEXP, SEXP kapSEXP, SEXP linSEXP, SEXP linearSEXP, SEXP floor_wSEXP) {
+List seg_block_cpp(int kind, NumericVector xv, NumericVector psi, NumericVector del, NumericVector kap, NumericVector cvec, double lin, bool linear, double lo, double hi);
+RcppExport SEXP _modelterms7_seg_block_cpp(SEXP kindSEXP, SEXP xvSEXP, SEXP psiSEXP, SEXP delSEXP, SEXP kapSEXP, SEXP cvecSEXP, SEXP linSEXP, SEXP linearSEXP, SEXP loSEXP, SEXP hiSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -45,17 +45,19 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type psi(psiSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type del(delSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type kap(kapSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type cvec(cvecSEXP);
     Rcpp::traits::input_parameter< double >::type lin(linSEXP);
     Rcpp::traits::input_parameter< bool >::type linear(linearSEXP);
-    Rcpp::traits::input_parameter< double >::type floor_w(floor_wSEXP);
-    rcpp_result_gen = Rcpp::wrap(seg_block_cpp(kind, xv, psi, del, kap, lin, linear, floor_w));
+    Rcpp::traits::input_parameter< double >::type lo(loSEXP);
+    Rcpp::traits::input_parameter< double >::type hi(hiSEXP);
+    rcpp_result_gen = Rcpp::wrap(seg_block_cpp(kind, xv, psi, del, kap, cvec, lin, linear, lo, hi));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"_modelterms7_gas_filter_cpp", (DL_FUNC) &_modelterms7_gas_filter_cpp, 14},
-    {"_modelterms7_seg_block_cpp", (DL_FUNC) &_modelterms7_seg_block_cpp, 8},
+    {"_modelterms7_seg_block_cpp", (DL_FUNC) &_modelterms7_seg_block_cpp, 10},
     {NULL, NULL, 0}
 };
 

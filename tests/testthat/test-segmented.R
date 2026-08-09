@@ -6,10 +6,13 @@
 # That loop IS Muggeo's iteration for the continuous case and Fasola's
 # for the discontinuous one -- the term supplies the block, nothing here
 # knows which construction it is looking at.
-seg_iterate <- function(built, y, iters = 40, damp = 1) {
+seg_iterate <- function(built, y, iters = 40, damp = 1, stop_early = TRUE) {
   b <- built@blueprint$coef
+  cur <- built
   for (it in seq_len(iters)) {
-    cur <- term_refresh(built, b)
+    # the term is chained rather than rebuilt, because the scaling
+    # factor of a discontinuous term is a state of the iteration
+    cur <- term_refresh(cur, b)
     X <- term_matrix(cur)
     # for the continuous case the block is a Jacobian, so the fit gives
     # an increment; for the jump it gives the coefficients themselves
@@ -18,10 +21,13 @@ seg_iterate <- function(built, y, iters = 40, damp = 1) {
       step <- qr.solve(crossprod(X) + 1e-10 * diag(ncol(X)), crossprod(X, r))
       b <- b + damp * as.numeric(step)
     } else {
-      nb <- qr.solve(crossprod(X) + 1e-10 * diag(ncol(X)), crossprod(X, y))
-      b <- as.numeric(b + damp * (nb - b))
+      b <- as.numeric(qr.solve(crossprod(X) + 1e-10 * diag(ncol(X)),
+                               crossprod(X, y)))
     }
+    if (stop_early && seg_converged(cur)) break
   }
+  attr(b, "iters") <- it
+  attr(b, "converged") <- seg_converged(cur)
   b
 }
 
@@ -59,9 +65,11 @@ test_that("the seg block is the jacobian of the contribution", {
                numDeriv::jacobian(f, b)[ok, ], tolerance = 1e-5)
 })
 
-test_that("the jump identity is exact away from the break-point", {
-  # kappa * Z + g * W IS the step, exactly, when the weight is evaluated
-  # at the same psi the coefficients imply
+test_that("the jump identity is exact at every observation", {
+  # kappa * Z + g * W IS the step, with no exceptions: the rescaling
+  # moves the observations off the break-point, so the weight is finite
+  # everywhere and the identity holds row for row. Capping the weight
+  # instead would have made this true only away from the break-point.
   set.seed(3)
   dd <- data.frame(x = sort(runif(80, 0, 10)))
   built <- term_build(jump(x, psi = 4), dd)
@@ -71,21 +79,19 @@ test_that("the jump identity is exact away from the break-point", {
   cur <- term_refresh(built, b)
   X <- term_matrix(cur)
 
-  lin <- as.numeric(X %*% b)
-  # exact outside the band, where the weight is not capped; inside it the
-  # step is deliberately a ramp
-  band <- 0.02 * diff(range(dd$x))
-  away <- abs(dd$x - psi) > band
-  expect_true(sum(away) > 0.8 * length(away))
-  expect_equal(lin[away], (kappa * (dd$x > psi))[away], tolerance = 1e-8)
-  # and inside the band it is a ramp, not the step
-  near <- !away
-  if (any(near)) {
-    expect_false(isTRUE(all.equal(lin[near], (kappa * (dd$x > psi))[near])))
-  }
+  expect_equal(as.numeric(X %*% b), kappa * (dd$x > psi), tolerance = 1e-12)
+  expect_true(all(is.finite(X)))
   # and term_value reports the true step, not the linearization
   expect_equal(term_value(cur), kappa * (dd$x > psi), tolerance = 1e-12)
   expect_equal(seg_psi(cur), psi, tolerance = 1e-12)
+
+  # an observation sitting exactly on the break-point is the case a cap
+  # exists for, and the rescaling handles it without one
+  d2 <- data.frame(x = c(sort(runif(40, 0, 10)), 4))
+  c2 <- term_refresh(term_build(jump(x, psi = 4), d2), b)
+  expect_true(all(is.finite(term_matrix(c2))))
+  expect_equal(as.numeric(term_matrix(c2) %*% b), kappa * (d2$x > psi),
+               tolerance = 1e-12)
 })
 
 test_that("jump recovers a discontinuity, from a start well away from it", {
@@ -97,7 +103,7 @@ test_that("jump recovers a discontinuity, from a start well away from it", {
   built <- term_build(jump(x, psi = 3, linear = FALSE), dd)
   expect_identical(term_coef_names(built),
                    c("jump.kappa1", "jump.g1"))
-  b <- seg_iterate(built, dd$y, iters = 60, damp = 0.5)
+  b <- seg_iterate(built, dd$y, iters = 60)
   expect_equal(seg_psi(built, b), 6.5, tolerance = 0.2)
   expect_equal(b[1], 3, tolerance = 0.3)   # the size of the jump
 })
@@ -109,39 +115,58 @@ test_that("jseg recovers a jump and a change of slope at the same point", {
   dd$y <- 0.3 * dd$x + 1.5 * pmax(dd$x - 5, 0) + 2 * (dd$x > 5) +
     rnorm(n, sd = 0.3)
 
-  built <- term_build(jseg(x, psi = 3), dd)
+  built <- term_build(jseg(x, psi = 6), dd)
   expect_identical(term_coef_names(built),
                    c("jseg.lin", "jseg.delta1", "jseg.kappa1", "jseg.g1"))
-  b <- seg_iterate(built, dd$y, iters = 120, damp = 0.2)
+  b <- seg_iterate(built, dd$y, iters = 120)
   expect_equal(seg_psi(built, b), 5, tolerance = 0.2)
   expect_equal(b[3], 2, tolerance = 0.4)    # the jump
   expect_equal(b[2], 1.5, tolerance = 0.4)  # the change of slope
   expect_equal(b[1], 0.3, tolerance = 0.2)  # the slope before it
 })
 
-test_that("a run can end at the limit, and that is the signal it failed", {
-  # The objective has local optima in the break-point, and this start at
-  # 3 is outside the basin for most damping factors: swept over eight
-  # samples, a start at 4 or above recovers the truth at every damping
-  # below 1 while a start at 2 or below never does. Here 0.2 arrives and
-  # 0.4 walks out of the data and stops where it is held, with a residual
-  # sum of squares tens of times worse -- which is why the segmented
-  # literature restarts from several positions, and why multistart()
-  # belongs around this iteration.
+test_that("a distant start reaches a real local optimum, not a failure", {
+  # The profile objective of a joint term is riddled with local minima,
+  # and from outside the basin the iteration converges to one of them
+  # rather than diverging. That is worth telling apart from a broken
+  # run, so the test profiles the EXACT objective at the point reached
+  # and asserts it really is a minimum of it -- which is the evidence
+  # that the algorithm is right and the starting position is not. It is
+  # also the argument for multistart() around this iteration.
   set.seed(5)
   n <- 500
   dd <- data.frame(x = sort(runif(n, 0, 10)))
   dd$y <- 0.3 * dd$x + 1.5 * pmax(dd$x - 5, 0) + 2 * (dd$x > 5) +
     rnorm(n, sd = 0.3)
-  built <- term_build(jseg(x, psi = 3), dd)
 
-  rss <- function(b) sum((dd$y - term_value(built, b))^2)
-  good <- seg_iterate(built, dd$y, iters = 120, damp = 0.2)
-  bad <- seg_iterate(built, dd$y, iters = 120, damp = 0.4)
+  # the exact profile: psi held fixed, the three linear coefficients out
+  prof <- function(psi) {
+    Z <- cbind(dd$x, pmax(dd$x - psi, 0), as.numeric(dd$x > psi))
+    sum(qr.resid(qr(Z), dd$y)^2)
+  }
 
-  lim <- as.numeric(stats::quantile(dd$x, c(0.05, 0.95), names = FALSE))
-  expect_equal(seg_psi(built, bad), lim[1], tolerance = 1e-8)
-  expect_gt(rss(bad), 10 * rss(good))
+  near <- seg_iterate(term_build(jseg(x, psi = 6), dd), dd$y, iters = 200)
+  far <- seg_iterate(term_build(jseg(x, psi = 3), dd), dd$y, iters = 200)
+  p_near <- seg_psi(term_build(jseg(x, psi = 6), dd), near)
+  p_far <- seg_psi(term_build(jseg(x, psi = 3), dd), far)
+
+  expect_equal(p_near, 5, tolerance = 0.2)
+  expect_gt(abs(p_far - 5), 0.5)
+  # the distant run STOPPED, on the scaling schedule's own rule, rather
+  # than running out of iterations: what it reached is an optimum of the
+  # problem and not the point a budget happened to leave it at
+  expect_true(attr(far, "converged"))
+  expect_lt(attr(far, "iters"), 200)
+  # and it is a worse one, on a plateau of the exact profile: the
+  # objective barely moves for a third of a unit either side, which is
+  # the shape Fasola et al. display and the reason spurious solutions
+  # are so easy to reach
+  expect_gt(prof(p_far), 1.5 * prof(p_near))
+  swing <- function(p) {
+    v <- vapply(p + c(-0.3, -0.1, 0.1, 0.3), prof, numeric(1))
+    max(abs(v / prof(p) - 1))
+  }
+  expect_gt(swing(p_near), 10 * swing(p_far))
 })
 
 test_that("the compiled block agrees with the R twin", {
@@ -156,7 +181,8 @@ test_that("the compiled block agrees with the R twin", {
   for (n in c(37L, 1000L)) {
     xv <- sort(runif(n, 0, 10))
     lim <- as.numeric(stats::quantile(xv, c(0.05, 0.95), names = FALSE))
-    floor_w <- 2 * 0.02 * diff(range(xv))
+    rr <- range(xv)
+    cs <- rep(0.05, 3L)
     for (kind in c("seg", "jump", "jseg")) {
       for (npsi in c(1L, 3L)) {
         for (linear in c(TRUE, FALSE)) {
@@ -164,9 +190,11 @@ test_that("the compiled block agrees with the R twin", {
             (if (kind == "jseg") 3L else 2L) * npsi
           cf <- runif(npar, 0.5, 2) * sample(c(-1, 1), npar, TRUE)
           a <- modelterms7:::.seg_block_r(kind, xv, cf, npsi, linear,
-                                          floor_w, lim)
+                                          cs[seq_len(npsi)], rr[1], rr[2],
+                                          lim)
           b <- modelterms7:::.seg_block(kind, xv, cf, npsi, linear,
-                                        floor_w, lim)
+                                        cs[seq_len(npsi)], rr[1], rr[2],
+                                        lim)
           info <- paste(kind, npsi, linear, n)
           expect_equal(b$X, a$X, tolerance = 1e-15, info = info)
           expect_equal(b$value, a$value, tolerance = 1e-15, info = info)
@@ -180,7 +208,7 @@ test_that("the compiled block agrees with the R twin", {
   # reaches this: taking the address of the first element of a matrix
   # with no rows is out of bounds.
   e <- modelterms7:::.seg_block("jseg", numeric(0), c(1, 1, 2, -4), 1L,
-                                TRUE, 0.2, c(0, 10))
+                                TRUE, 0.05, 0, 10, c(0, 10))
   expect_identical(dim(e$X), c(0L, 4L))
   expect_identical(e$value, numeric(0))
 })
