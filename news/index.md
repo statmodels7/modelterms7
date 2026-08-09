@@ -1,5 +1,27 @@
 # Changelog
 
+## modelterms7 0.11.0
+
+- The discontinuous terms follow Fasola, Muggeo and Kuchenhoff’s
+  algorithm as published. The weight is no longer capped: the covariate
+  is rescaled away from the break-point by a factor `c0`, which leaves a
+  gap around it, and
+  [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
+  halves the factor whenever the break-point reverses direction. `band`
+  is gone and no damping is needed, the factor governing the step.
+  Measured over eight samples,
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  now recovers the break-point from every starting position tried, where
+  the capped form recovered it only from within a narrow basin.
+- seg_step() and seg_converged() report the progress of the iteration
+  and Fasola et al.’s stopping rule.
+- Measured against the segmented package, on one covariate with one and
+  two break-points and n from 200 to 20000: the continuous case agrees
+  to four significant figures on the residual sum of squares and runs
+  2.1 to 5.5 times faster in 4 to 7 iterations; the discontinuous case
+  agrees where both start inside the basin and runs 1.1 to 1.8 times
+  faster.
+
 ## modelterms7 0.10.0
 
 - seg(), jump() and jseg(): break-points estimated with everything else.

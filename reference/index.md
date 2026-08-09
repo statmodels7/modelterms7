@@ -79,6 +79,9 @@
   : S7 Class for Segmented and Stepmented Terms
 - [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
   : The Break-Points of a Segmented Term
+- [`seg_step()`](https://statmodels7.github.io/modelterms7/reference/seg_step.md)
+  [`seg_converged()`](https://statmodels7.github.io/modelterms7/reference/seg_step.md)
+  : The Progress of a Break-Point Iteration
 
 ## Structural terms
 

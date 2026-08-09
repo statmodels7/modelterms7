@@ -15,7 +15,7 @@ same points."><meta property="og:image" content="https://statmodels7.github.io/m
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.11.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,7 +58,7 @@ same points.</p>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  linear <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"lasso"</span>, <span class="st">"ridge"</span><span class="op">)</span>,</span>
-<span>  band <span class="op">=</span> <span class="fl">0.02</span>,</span>
+<span>  c0 <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  label <span class="op">=</span> <span class="st">"seg"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -69,7 +69,7 @@ same points.</p>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  linear <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"lasso"</span>, <span class="st">"ridge"</span><span class="op">)</span>,</span>
-<span>  band <span class="op">=</span> <span class="fl">0.02</span>,</span>
+<span>  c0 <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  label <span class="op">=</span> <span class="st">"jump"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
@@ -80,7 +80,7 @@ same points.</p>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  linear <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"lasso"</span>, <span class="st">"ridge"</span><span class="op">)</span>,</span>
-<span>  band <span class="op">=</span> <span class="fl">0.02</span>,</span>
+<span>  c0 <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  label <span class="op">=</span> <span class="st">"jseg"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -117,11 +117,11 @@ break-points per level.</p></dd>
 <code>"ridge"</code>, applied to the changes.</p></dd>
 
 
-<dt id="arg-band">band<a class="anchor" aria-label="anchor" href="#arg-band"></a></dt>
-<dd><p>For a discontinuous term, the half-width of the band
-around a break-point over which the step is replaced by a ramp, as a
-fraction of the covariate's range. Defaults to <code>0.02</code>; see
-Details.</p></dd>
+<dt id="arg-c-">c0<a class="anchor" aria-label="anchor" href="#arg-c-"></a></dt>
+<dd><p>For a discontinuous term, the starting value of the scaling
+factor that separates the observations from the break-point, as a
+fraction of the distance to the ends of the range. Defaults to
+<code>0.05</code>, the value <cite>fasola2018</cite> recommend; see Details.</p></dd>
 
 
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
@@ -171,19 +171,29 @@ iterate. Writing \(W = 1/(2\lvert x-\psi^{0}\rvert)\) and
 (<cite>fasola2018</cite>). The break-point is therefore not a coefficient
 here but a quantity read off two of them, which is why refreshing the
 term recovers it before rebuilding the weights.</p>
-<p>The weight is unbounded as \(x\) approaches \(\psi\), and that
-matters more than it looks. Since \(Z - \psi W\) is the step
-itself, \(Z\) is \(\psi W\) plus a quantity of order one: let
-\(W\) grow without bound and the two columns become numerically
-collinear, drowning the very signal the fit is meant to read. The
-denominator is therefore held at or above <code>band</code> times the
-covariate's range, which caps \(W\).</p>
-<p>That is a bandwidth and not a guard. Within the band the step is
-replaced by a ramp, so the fixed point of the iteration is that of a
-slightly smoothed problem; a narrower band is more faithful and worse
-conditioned. The segmented literature makes the same trade by
-displacing the observations nearest a break-point instead of capping
-the weight.</p>
+<p>The weight is unbounded as \(x\) approaches \(\psi\), and since
+\(Z - \psi W\) is the step itself, \(Z\) is \(\psi W\) plus a
+quantity of order one: an unbounded \(W\) makes the two columns
+numerically collinear and drowns the signal the fit reads. The remedy
+of <cite>fasola2018</cite> is to move the observations rather than to cap
+the weight. With a scaling factor \(c\) the two intervals
+\([x_{(1)}, \psi]\) and \((\psi, x_{(n)}]\) are mapped onto
+$$[x_{(1)},\, \psi - c(\psi - x_{(1)})]
+  \quad	ext{and}\quad
+  (\psi + c(x_{(n)} - \psi),\, x_{(n)}],$$
+which leaves a gap of relative width \(c\) around \(\psi\) and
+bounds \(W\) without altering the model: the working covariates are
+computed on the rescaled covariate, while the truncated line, the
+linear column and the reported contribution stay on the original one.</p>
+<p>The factor is not a constant. It governs how far the break-point may
+travel in one step, so a large value lets the estimate leave a
+spurious optimum and a small one is faithful to the step function.
+<code>c0</code> is its starting value, and <code><a href="term_refresh.html">term_refresh</a></code>
+halves it whenever the break-point reverses direction, which is the
+signal that the iteration has begun to circle an optimum rather than
+travel towards one. The run has converged when the change in every
+break-point falls below a hundredth of the smallest distance between
+distinct observations, which <code><a href="seg_step.html">seg_converged</a></code> reports.</p>
 </div>
 
 <div class="section">
@@ -205,18 +215,15 @@ constant are linearly dependent, and with the linear effect present so
 are all three columns. A run that ends against the limit has not
 located a break-point, and <code><a href="seg_psi.html">seg_psi</a></code> then returns the
 limit itself.</p>
-<p>The objective has local optima in the break-points, and the iteration
-converges from within a basin around the true position rather than
-from anywhere. On a joint jump and change of slope at \(x = 5\) in
-500 observations, swept over eight samples and damping factors from
-0.05 to 1, every start at 4 or above recovers the break-point at
-every damping below 1, every start at 2 or below fails at all of
-them, and a start at 3 succeeds for some samples and not others. The
-step also has to be damped for its own sake: taken whole it
-overshoots even from a good start. A run should therefore be started
-from several positions, which is what
-<code><a href="https://statmodels7.github.io/optimizers7/reference/multistart.html" class="external-link">multistart</a></code> does and what the bootstrap
-restarting of the segmented literature is for.</p>
+<p>The objective has local optima in the break-points, and the scaling
+schedule widens the basin the iteration converges from rather than
+removing the problem: a run should still be started from several
+positions, which is what <code><a href="https://statmodels7.github.io/optimizers7/reference/multistart.html" class="external-link">multistart</a></code> does
+and what the bootstrap restarting of the segmented literature is for.
+A continuous term has no scaling factor, its working block being
+bounded already; where its iteration alternates between two values
+the remedy is to shrink the increment, as <code>segmented</code>'s
+<code>h</code> does.</p>
 </div>
 
     </div>
