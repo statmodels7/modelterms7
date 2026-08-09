@@ -155,3 +155,96 @@ test_that("the degenerate cases are rejected and the term is routed", {
                            gauss_sc(dd$y), gauss_sc(dd$y), psi2),
                "does not implement term_filter")
 })
+
+test_that("the compiled recursion agrees with the R twin", {
+  # Same operations in the same order, to a rounding: the kernel
+  # accumulates sums the R form accumulates too, and a compiler free to
+  # contract a multiply-add moves the last bit.
+  set.seed(51)
+  for (k in c(2L, 3L)) {
+    n <- 200L; np <- (k - 1L) + k * (k - 1L) + 1L
+    LF <- matrix(rnorm(n * k, -1, 0.5), n, k)
+    SC <- matrix(rnorm(n * k), n, k)
+    dmu <- matrix(0, k, np); dmu[, 1L] <- 1
+    for (j in seq_len(k)) if (j > 1L) dmu[j, 1L + seq_len(j - 1L)] <- 1
+    ch <- parameters7::transition_matrix(k)
+    fv <- stats::setNames(runif(length(ch@free_names), -0.5, 0.5),
+                          ch@free_names)
+    P <- unclass(parameters7::param_value(ch, fv))
+    d1 <- parameters7::param_d1(ch, fv)
+    dP <- lapply(seq_len(np), function(i) matrix(0, k, k))
+    off <- k - 1L
+    for (i in seq_along(ch@free_names)) dP[[off + i]] <- d1[[ch@free_names[i]]]
+    st <- modelterms7:::regime_stationary(P, dP)
+    ddm <- do.call(rbind, st$ddelta)
+    ord <- list(seq_len(120L), seq.int(121L, n))
+
+    a <- modelterms7:::.regime_forward_r(ord, LF, SC, dmu, P, dP,
+                                         st$delta, ddm)
+    b <- modelterms7:::regime_forward_cpp(ord, LF, SC, dmu, P, dP,
+                                          st$delta, ddm)
+    expect_equal(b$loglik, a$loglik, tolerance = 1e-13, info = paste("k", k))
+    expect_equal(b$jacobian, a$jacobian, tolerance = 1e-13,
+                 info = paste("k", k))
+  }
+  # no rows is a legal group after a subset
+  e <- modelterms7:::regime_forward_cpp(list(integer(0)),
+                                        matrix(0, 0, 2), matrix(0, 0, 2),
+                                        matrix(1, 2, 2), diag(2),
+                                        list(diag(2), diag(2)),
+                                        c(0.5, 0.5), matrix(0, 2, 2))
+  expect_identical(length(e$loglik), 0L)
+})
+
+test_that("the recursion equals the sum over every state path", {
+  # A hidden Markov likelihood IS a sum over paths, and at this length it
+  # can be taken in full: a reference the recursion shares no arithmetic
+  # with, and the one that would catch a wrong normalization.
+  set.seed(52)
+  K <- 2L; Tn <- 11L
+  dd <- data.frame(y = rnorm(Tn, sd = 1.5), t = seq_len(Tn))
+  br <- term_build(regime(K, time = t), dd)
+  psi <- list(level1 = -0.6, gap2 = 2.1, alr1.1 = 0.8, alr2.1 = -0.5)
+  eta <- seq(0, 0.5, length.out = Tn)
+  got <- term_loglik(br, eta, dd$y,
+                     logdens = function(e, i) dnorm(dd$y[i], e, 1, log = TRUE),
+                     score = function(e, i) dd$y[i] - e, psi = psi)
+
+  mu <- cumsum(c(psi$level1, psi$gap2))
+  ch <- parameters7::transition_matrix(K)
+  P <- unclass(parameters7::param_value(ch, unlist(psi[ch@free_names])))
+  ev <- eigen(t(P))
+  p0 <- Re(ev$vectors[, which.max(Re(ev$values))])
+  p0 <- p0 / sum(p0)
+  paths <- as.matrix(expand.grid(rep(list(seq_len(K)), Tn)))
+  lp <- apply(paths, 1, function(sq) {
+    l <- log(p0[sq[1]]) + dnorm(dd$y[1], eta[1] + mu[sq[1]], 1, log = TRUE)
+    for (t in 2:Tn) {
+      l <- l + log(P[sq[t - 1], sq[t]]) +
+        dnorm(dd$y[t], eta[t] + mu[sq[t]], 1, log = TRUE)
+    }
+    l
+  })
+  expect_equal(sum(got$loglik), log(sum(exp(lp - max(lp)))) + max(lp),
+               tolerance = 1e-10)
+})
+
+test_that("the closures are called with the whole index vector", {
+  set.seed(53)
+  dd <- data.frame(y = rnorm(30), t = 1:30)
+  br <- term_build(regime(2, time = t), dd)
+  psi <- list(level1 = 0, gap2 = 1, alr1.1 = 0.2, alr2.1 = -0.2)
+  calls <- 0L
+  ld <- function(e, i) { calls <<- calls + 1L; dnorm(dd$y[i], e, log = TRUE) }
+  term_loglik(br, rep(0, 30), dd$y, logdens = ld,
+              score = function(e, i) dd$y[i] - e, psi = psi)
+  # one call per regime, not one per observation and regime
+  expect_identical(calls, 2L)
+
+  # and a closure that ignores the index is refused where it happens
+  expect_error(
+    term_loglik(br, rep(0, 30), dd$y,
+                logdens = function(e, i) dnorm(dd$y[1], e[1], log = TRUE),
+                score = function(e, i) dd$y[i] - e, psi = psi),
+    "one value per observation")
+})

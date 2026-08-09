@@ -34,6 +34,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// regime_forward_cpp
+List regime_forward_cpp(const List& order, const NumericMatrix& LF, const NumericMatrix& SC, const NumericMatrix& dmu, const NumericMatrix& P, const List& dP, const NumericVector& delta, const NumericMatrix& ddelta);
+RcppExport SEXP _modelterms7_regime_forward_cpp(SEXP orderSEXP, SEXP LFSEXP, SEXP SCSEXP, SEXP dmuSEXP, SEXP PSEXP, SEXP dPSEXP, SEXP deltaSEXP, SEXP ddeltaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const List& >::type order(orderSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type LF(LFSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type SC(SCSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type dmu(dmuSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type P(PSEXP);
+    Rcpp::traits::input_parameter< const List& >::type dP(dPSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type delta(deltaSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type ddelta(ddeltaSEXP);
+    rcpp_result_gen = Rcpp::wrap(regime_forward_cpp(order, LF, SC, dmu, P, dP, delta, ddelta));
+    return rcpp_result_gen;
+END_RCPP
+}
 // seg_block_cpp
 List seg_block_cpp(int kind, NumericVector xv, NumericVector psi, NumericVector del, NumericVector kap, NumericVector cvec, double lin, bool linear, double lo, double hi);
 RcppExport SEXP _modelterms7_seg_block_cpp(SEXP kindSEXP, SEXP xvSEXP, SEXP psiSEXP, SEXP delSEXP, SEXP kapSEXP, SEXP cvecSEXP, SEXP linSEXP, SEXP linearSEXP, SEXP loSEXP, SEXP hiSEXP) {
@@ -57,6 +75,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_modelterms7_gas_filter_cpp", (DL_FUNC) &_modelterms7_gas_filter_cpp, 14},
+    {"_modelterms7_regime_forward_cpp", (DL_FUNC) &_modelterms7_regime_forward_cpp, 8},
     {"_modelterms7_seg_block_cpp", (DL_FUNC) &_modelterms7_seg_block_cpp, 10},
     {NULL, NULL, 0}
 };

@@ -289,25 +289,65 @@ S7::method(term_loglik, RegimeTerm) <- function(term, eta, y, logdens, score,
 
   st <- regime_stationary(P, dP)
 
+  # A regime shifts the predictor by a level of its own, so the density
+  # and the score of every observation under every regime are known
+  # before the recursion starts: k vectorized calls replace the 2nk
+  # scalar ones the loop used to make. The closures must therefore
+  # accept the whole index vector, which the generic's contract -- one
+  # value per observation -- already asks of them.
+  idx <- seq_len(n)
+  LF <- matrix(0, n, k)
+  SC <- matrix(0, n, k)
+  for (jj in seq_len(k)) {
+    e <- eta + mu[jj]
+    a <- as.numeric(logdens(e, idx))
+    b <- as.numeric(score(e, idx))
+    if (length(a) != n || length(b) != n) {
+      stop(paste0("'logdens' and 'score' must return one value per ",
+                  "observation when given the whole index vector."),
+           call. = FALSE)
+    }
+    LF[, jj] <- a
+    SC[, jj] <- b
+  }
+
+  ddm <- do.call(rbind, st$ddelta)
+  out <- regime_forward_cpp(bp$order, LF, SC, dmu, unclass(P), dP,
+                            st$delta, ddm)
+  loglik <- out$loglik
+  jac <- out$jacobian
+
+  colnames(jac) <- nm
+  list(loglik = loglik, jacobian = jac)
+}
+
+S7::method(print, RegimeTerm) <- function(x, ...) {
+  built <- length(x@blueprint) > 0L
+  cat(sprintf("<RegimeTerm> '%s': %d regimes%s\n", x@label, x@k,
+              if (built) sprintf("; %d group(s)", length(x@blueprint$order))
+              else " (specification)"))
+  cat("  parameters: ", paste(term_params(x), collapse = ", "), "\n", sep = "")
+  invisible(x)
+}
+
+# The recursion the compiled kernel replaces, kept as the twin the tests
+# hold it to. The arithmetic is written the way the derivation reads:
+# the state is normalized at every step and the density factored by its
+# largest value, without either of which the unnormalized quantities
+# underflow within a few hundred observations.
+.regime_forward_r <- function(order, LF, SC, dmu, P, dP, delta, ddelta) {
+  n <- nrow(LF); k <- ncol(LF); np <- ncol(dmu)
   loglik <- numeric(n)
   jac <- matrix(0, n, np)
-
-  for (rows in bp$order) {
-    m <- length(rows)
-    a <- st$delta
-    da <- do.call(rbind, st$ddelta)   # np x k
-
-    for (t in seq_len(m)) {
+  for (rows in order) {
+    a <- delta
+    da <- ddelta
+    for (t in seq_along(rows)) {
       row <- rows[t]
-      lf <- vapply(seq_len(k), function(j) logdens(eta[row] + mu[j], row),
-                   numeric(1))
-      sc <- vapply(seq_len(k), function(j) score(eta[row] + mu[j], row),
-                   numeric(1))
-      # the recursion is normalized at every step, and the density is
-      # factored by its largest value: without either, the unnormalized
-      # quantities underflow within a few dozen observations
+      lf <- LF[row, ]
       mx <- max(lf)
       w <- exp(lf - mx)
+      sc <- SC[row, ]
       # element (i, j) is w_j * s_j * dmu[j, i]: the recycling has to run
       # DOWN the columns of the np x k result, which rep(..., each = np)
       # does and a bare vector product does not
@@ -336,16 +376,5 @@ S7::method(term_loglik, RegimeTerm) <- function(term, eta, y, logdens, score,
       da <- (datil - outer(dct, a)) / ct
     }
   }
-
-  colnames(jac) <- nm
   list(loglik = loglik, jacobian = jac)
-}
-
-S7::method(print, RegimeTerm) <- function(x, ...) {
-  built <- length(x@blueprint) > 0L
-  cat(sprintf("<RegimeTerm> '%s': %d regimes%s\n", x@label, x@k,
-              if (built) sprintf("; %d group(s)", length(x@blueprint$order))
-              else " (specification)"))
-  cat("  parameters: ", paste(term_params(x), collapse = ", "), "\n", sep = "")
-  invisible(x)
 }
