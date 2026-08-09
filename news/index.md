@@ -1,5 +1,17 @@
 # Changelog
 
+## modelterms7 0.10.0
+
+- seg(), jump() and jseg(): break-points estimated with everything else.
+  The continuous case is the Jacobian of Muggeo (2003); the
+  discontinuous one uses the identity of Fasola, Muggeo and Kuchenhoff
+  (2018), which is linear in the break-point once the weight is frozen,
+  so the break-point is read off two coefficients rather than searched
+  for. Both run under the existing term_refresh() contract, with by and
+  an optional penalty on the changes. The working block is compiled
+  (1.2x to 3.2x the R form over n from 1e3 to 1e6, agreeing bit for
+  bit); the linear fit around it is BLAS in either language.
+
 ## modelterms7 0.9.0
 
 - regime(): a latent Markov chain of regimes, each shifting the

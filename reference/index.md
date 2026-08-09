@@ -69,6 +69,17 @@
 - [`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
   : The Contribution of a Term at Its Current Coefficients
 
+## Segmented terms
+
+- [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  : Segmented, Stepmented and Segmented-with-Jump Terms
+- [`SegTerm()`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md)
+  : S7 Class for Segmented and Stepmented Terms
+- [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
+  : The Break-Points of a Segmented Term
+
 ## Structural terms
 
 - [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
