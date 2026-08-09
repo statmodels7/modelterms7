@@ -31,6 +31,16 @@ An object of class
 
 ## Details
 
+The block is the model matrix \\X\\ of the formula and the term's
+contribution to the predictor is linear in its coefficients,
+
+\$\$\eta = X\beta,\$\$
+
+with no penalty attached, so all \\p = \operatorname{ncol}(X)\\
+coefficients are free and
+[`edf`](https://statmodels7.github.io/modelterms7/reference/edf.md)
+counts every one of them.
+
 [`interpret_formula`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
 collects the bare covariates of a model formula into one term of this
 kind, so `y ~ x1 + x2` and `y ~ linpar(~ x1 + x2)` produce the same

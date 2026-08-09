@@ -37,6 +37,22 @@ check_term(term, data, verbose = TRUE)
 Invisibly, a data frame with columns `check`, `status` (`"OK"` or
 `"FAILED"`) and `info`.
 
+## Details
+
+Writing \\X = \\ `term_matrix(term_build(term, data))`, the two
+identities checked are
+
+\$\$\texttt{term\\predict}(\text{term}, \text{data}) = X, \qquad
+\texttt{term\\predict}(\text{term}, \text{data}\[S, \]) = X\[S, \],\$\$
+
+for a row subset \\S\\. The second does not follow from the first: a
+term that rebuilds its encoding from the rows it is given satisfies the
+first, since the rows are then the same, and fails the second as soon as
+\\S\\ omits a factor level or narrows the range a basis is placed on.
+The subset is dropped of its unused levels before it is passed, so a
+plain row subset cannot pass by carrying the original levels along with
+it.
+
 ## Examples
 
 ``` r

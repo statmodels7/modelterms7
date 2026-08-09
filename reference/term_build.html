@@ -74,6 +74,22 @@ filled; the specification itself is unchanged.</p>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A built term of the same class as <code>term</code>.</p>
     </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>An additive term contributes to the linear predictor through a design
+block and, when it is penalized, a penalty on the coefficients of that
+block:</p>
+<p>$$\eta = \sum_{t} X_t \beta_t,
+  \qquad \text{penalized objective} \quad
+  -\ell(\beta) + \sum_{t} \rho_t(\beta_t; \theta_t),$$</p>
+<p>and building the term is what produces \(X_t\) from the data and
+attaches \(\rho_t\). <code><a href="term_matrix.html">term_matrix</a></code> reads the block,
+<code><a href="term_penalty.html">term_penalty</a></code> the penalty and <code><a href="term_predict.html">term_predict</a></code>
+reproduces \(X_t\) on new rows through the blueprint. A structural
+term is the exception: its contribution cannot be written as a block of
+columns, and it reports itself through <code><a href="term_filter.html">term_filter</a></code> or
+<code><a href="term_loglik.html">term_loglik</a></code> instead.</p>
+    </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>

@@ -30,6 +30,17 @@ per level of `by`; `seg_converged` returns a single logical.
 
 ## Details
 
+With \\x\_{(1)} \< \cdots \< x\_{(m)}\\ the distinct covariate values,
+the run stops at
+
+\$\$\max_k \lvert \psi_k^{(t)} - \psi_k^{(t-1)} \rvert \< \Delta, \qquad
+\Delta = 0.01 \cdot \operatorname{median}\_{i}\\ (x\_{(i+1)} -
+x\_{(i)}).\$\$
+
+fasola2018 take the smallest of those gaps rather than their median,
+which agrees with this on the evenly spaced covariates of their examples
+and is of order \\m^{-2}\\ on a random one, hence unreachable.
+
 The rule is one of resolution: below that distance the objective of a
 discontinuous term, a step function of the break-point, cannot change.
 It therefore tightens as the sample grows while the precision the fixed

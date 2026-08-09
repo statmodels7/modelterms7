@@ -30,6 +30,27 @@ term_refresh(term, coef, ...)
 
 A built term, refreshed.
 
+## Details
+
+A term whose contribution \\f(x; \theta)\\ is nonlinear in its
+parameters is carried by the linearization
+
+\$\$f(x; \theta + h) \approx f(x; \theta) + J(\theta) h, \qquad
+J(\theta)\_{ij} = \frac{\partial f(x_i; \theta)}{\partial \theta_j},\$\$
+
+so the design block at the current \\\theta\\ is \\J(\theta)\\ and the
+coefficient it multiplies is the increment \\h\\. Refreshing at the new
+\\\theta\\ and solving the linear problem again is the Gauss-Newton
+iteration;
+[`term_value`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
+reports \\f(x; \theta)\\ itself, which is the other half a step needs.
+For a break-point term the same shape holds with a different block: the
+Jacobian for
+[`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md), and
+the frozen-weight columns of
+[`jump`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+from which the break-point is read rather than incremented.
+
 ## See also
 
 [`nl`](https://statmodels7.github.io/modelterms7/reference/nl.md),

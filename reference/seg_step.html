@@ -78,7 +78,15 @@ taken no step, so <code>seg_step</code> returns <code>NA</code> and
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The rule is one of resolution: below that distance the objective of a
+    <p>With \(x_{(1)} &lt; \cdots &lt; x_{(m)}\) the distinct covariate values, the
+run stops at</p>
+<p>$$\max_k \lvert \psi_k^{(t)} - \psi_k^{(t-1)} \rvert &lt; \Delta,
+  \qquad \Delta = 0.01 \cdot
+    \operatorname{median}_{i}\, (x_{(i+1)} - x_{(i)}).$$</p>
+<p><cite>fasola2018</cite> take the smallest of those gaps rather than their
+median, which agrees with this on the evenly spaced covariates of their
+examples and is of order \(m^{-2}\) on a random one, hence unreachable.</p>
+<p>The rule is one of resolution: below that distance the objective of a
 discontinuous term, a step function of the break-point, cannot change.
 It therefore tightens as the sample grows while the precision the
 fixed point is reached at does not, so on a large sample the last

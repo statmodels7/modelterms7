@@ -32,6 +32,16 @@ term_predict(term, newdata, ...)
 A numeric matrix with `nrow(newdata)` rows and one column per
 coefficient.
 
+## Details
+
+The block returned is \\\tilde{X}\_t\\ such that \\\tilde{\eta} =
+\tilde{X}\_t \beta_t\\ is the term's contribution at the new rows,
+evaluated at the coefficients the model already carries. Reapplying the
+recorded mapping rather than rebuilding it is what makes that identity
+hold: a rebuilt factor encoding, spline knot placement or basis
+reparametrization would give a block of the same shape multiplying the
+same coefficients and meaning something else.
+
 ## Examples
 
 ``` r

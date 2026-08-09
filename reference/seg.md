@@ -134,7 +134,7 @@ collinear and drowns the signal the fit reads. The remedy of fasola2018
 is to move the observations rather than to cap the weight. With a
 scaling factor \\c\\ the two intervals \\\[x\_{(1)}, \psi\]\\ and
 \\(\psi, x\_{(n)}\]\\ are mapped onto \$\$\[x\_{(1)},\\ \psi - c(\psi -
-x\_{(1)})\] \quad ext{and}\quad (\psi + c(x\_{(n)} - \psi),\\
+x\_{(1)})\] \quad\text{and}\quad (\psi + c(x\_{(n)} - \psi),\\
 x\_{(n)}\],\$\$ which leaves a gap of relative width \\c\\ around
 \\\psi\\ and bounds \\W\\ without altering the model: the working
 covariates are computed on the rescaled covariate, while the truncated

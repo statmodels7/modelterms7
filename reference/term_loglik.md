@@ -54,6 +54,22 @@ A list with `loglik`, one contribution per observation summing to the
 term's log-likelihood, and `jacobian`, an `n` by `length(psi)` matrix of
 its derivatives.
 
+## Details
+
+The contribution of observation \\t\\ is the logarithm of its one-step
+predictive density given everything before it,
+
+\$\$\ell_t(\psi) = \log f(y_t \mid y_1, \dots, y\_{t-1}; \psi), \qquad
+\sum\_{t=1}^{n} \ell_t(\psi) = \log f(y_1, \dots, y_n; \psi),\$\$
+
+so the vector returned sums to the term's log-likelihood by the chain
+rule of probability whatever the dependence between observations. For
+[`regime`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+it is the normalizing constant of the forward recursion, \\\ell_t = \log
+\sum\_{k} \pi\_{t \mid t-1, k} f(y_t \mid S_t = k)\\, and the Jacobian
+\\\partial \ell_t / \partial \psi_j\\ is propagated beside the filtered
+distribution rather than differenced.
+
 ## See also
 
 [`regime`](https://statmodels7.github.io/modelterms7/reference/regime.md),

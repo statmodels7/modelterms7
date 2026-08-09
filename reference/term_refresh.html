@@ -75,6 +75,23 @@ the parameters currently are.</p>
     <p>A built term, refreshed.</p>
     </div>
     <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>A term whose contribution \(f(x; \theta)\) is nonlinear in its
+parameters is carried by the linearization</p>
+<p>$$f(x; \theta + h) \approx f(x; \theta) + J(\theta) h,
+  \qquad J(\theta)_{ij}
+    = \frac{\partial f(x_i; \theta)}{\partial \theta_j},$$</p>
+<p>so the design block at the current \(\theta\) is \(J(\theta)\) and
+the coefficient it multiplies is the increment \(h\). Refreshing at
+the new \(\theta\) and solving the linear problem again is the
+Gauss-Newton iteration; <code><a href="term_value.html">term_value</a></code> reports
+\(f(x; \theta)\) itself, which is the other half a step needs. For a
+break-point term the same shape holds with a different block: the
+Jacobian for <code><a href="seg.html">seg</a></code>, and the frozen-weight columns of
+<code><a href="seg.html">jump</a></code>, from which the break-point is read rather than
+incremented.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="nl.html">nl</a></code>, <code><a href="term_value.html">term_value</a></code></p></div>
     </div>

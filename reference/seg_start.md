@@ -49,6 +49,18 @@ observations, over eight samples, the fraction of runs recovering the
 break-point is 0 to 0.5 depending on where a single start is placed and
 1 from the grid.
 
+Writing \\X(\psi)\\ for the design the term produces at a candidate
+position, the position chosen is
+
+\$\$\hat\psi = \arg\min\_{\psi \in \mathcal{G}} \bigl\lVert y -
+X(\psi)\\ \widehat{\beta}(\psi) \bigr\rVert^{2}, \qquad
+\widehat{\beta}(\psi) = \arg\min\_{\beta} \lVert y - X(\psi)\beta
+\rVert^{2},\$\$
+
+over an equally spaced grid \\\mathcal{G}\\ of `k` points in the range
+of the covariate. The inner minimization is a linear fit, so the whole
+rule costs `k` of them.
+
 The grid is scored on the residual sum of squares of an intercept, the
 term's columns at each candidate position and, where the term carries
 one, the linear effect. That is the exact profile for a gaussian

@@ -52,6 +52,19 @@ A list with `eta`, the predictor the term produces, and `jacobian`, an
 
 ## Details
 
+Writing \\\eta_t^{0}\\ for the static predictor supplied in `eta` and
+\\\psi\\ for the term's parameters, the filter returns the pair
+
+\$\$\eta_t = \eta_t^{0} + f_t(\psi), \qquad J\_{tj} = \frac{\partial
+\eta_t}{\partial \psi_j},\$\$
+
+where \\f_t\\ is the term's own recursion, driven by `score` and
+`curvature` evaluated at the predictor already produced. Both are read
+at \\\eta_t\\, so `curvature` is the second derivative \\\partial^{2}
+\ell_t / \partial \eta^{2}\\ and is negative at an ordinary observation;
+passing the information, its negative, gives a predictor and a Jacobian
+that are internally consistent and wrong.
+
 The derivative is returned because the recursion is the only place it
 can be computed. A model layer differencing the filter would pay one
 pass per parameter and inherit the error of the difference; propagating

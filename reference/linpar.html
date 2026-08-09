@@ -68,7 +68,12 @@ coefficient names as <code>label.name</code>.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><code><a href="interpret_formula.html">interpret_formula</a></code> collects the bare covariates of a model
+    <p>The block is the model matrix \(X\) of the formula and the term's
+contribution to the predictor is linear in its coefficients,</p>
+<p>$$\eta = X\beta,$$</p>
+<p>with no penalty attached, so all \(p = \operatorname{ncol}(X)\)
+coefficients are free and <code><a href="edf.html">edf</a></code> counts every one of them.</p>
+<p><code><a href="interpret_formula.html">interpret_formula</a></code> collects the bare covariates of a model
 formula into one term of this kind, so <code>y ~ x1 + x2</code> and
 <code>y ~ linpar(~ x1 + x2)</code> produce the same block; the explicit
 constructor exists for callers who want several parametric blocks with

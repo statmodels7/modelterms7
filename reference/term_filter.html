@@ -98,7 +98,18 @@ derivative of the log-likelihood with respect to it.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The derivative is returned because the recursion is the only place it
+    <p>Writing \(\eta_t^{0}\) for the static predictor supplied in <code>eta</code>
+and \(\psi\) for the term's parameters, the filter returns the pair</p>
+<p>$$\eta_t = \eta_t^{0} + f_t(\psi),
+  \qquad J_{tj} = \frac{\partial \eta_t}{\partial \psi_j},$$</p>
+<p>where \(f_t\) is the term's own recursion, driven by
+<code>score</code> and <code>curvature</code> evaluated at the predictor already
+produced. Both are read at \(\eta_t\), so <code>curvature</code> is the
+second derivative \(\partial^{2} \ell_t / \partial \eta^{2}\) and is
+negative at an ordinary observation; passing the information, its
+negative, gives a predictor and a Jacobian that are internally
+consistent and wrong.</p>
+<p>The derivative is returned because the recursion is the only place it
 can be computed. A model layer differencing the filter would pay one
 pass per parameter and inherit the error of the difference; propagating
 the derivative alongside the state costs one extra vector per parameter
