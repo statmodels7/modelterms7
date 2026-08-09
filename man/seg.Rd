@@ -146,15 +146,18 @@ constant are linearly dependent, and with the linear effect present so
 are all three columns. A run that ends against the limit has not
 located a break-point, and the reported position says so.
 
-The objective has local optima in the break-points, so a run should be
-started from several positions; \code{\link[optimizers7]{multistart}}
-is the toolkit's version of the bootstrap restarting the segmented
-literature uses. The step also has to be damped, and how much is a
-property of the construction: on a joint jump and change of slope at
-\eqn{x = 5} in 500 observations, a step of 0.2 reaches 5.01 while one
-of 0.4 leaves the data and stops at the lower limit with a residual
-sum of squares thirty-seven times larger. The continuous case is the
-least demanding of the three, the discontinuous one the most.
+The objective has local optima in the break-points, and the iteration
+converges from within a basin around the true position rather than
+from anywhere. On a joint jump and change of slope at \eqn{x = 5} in
+500 observations, swept over eight samples and damping factors from
+0.05 to 1, every start at 4 or above recovers the break-point at
+every damping below 1, every start at 2 or below fails at all of
+them, and a start at 3 succeeds for some samples and not others. The
+step also has to be damped for its own sake: taken whole it
+overshoots even from a good start. A run should therefore be started
+from several positions, which is what
+\code{\link[optimizers7]{multistart}} does and what the bootstrap
+restarting of the segmented literature is for.
 }
 }
 \examples{

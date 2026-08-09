@@ -120,11 +120,14 @@ test_that("jseg recovers a jump and a change of slope at the same point", {
 })
 
 test_that("a run can end at the limit, and that is the signal it failed", {
-  # The objective has local optima in the break-point. Taken too fast the
-  # same problem walks out of the data and stops where it is held, with a
-  # residual sum of squares tens of times worse -- which is why the
-  # segmented literature restarts from several positions, and why
-  # multistart() belongs around this iteration.
+  # The objective has local optima in the break-point, and this start at
+  # 3 is outside the basin for most damping factors: swept over eight
+  # samples, a start at 4 or above recovers the truth at every damping
+  # below 1 while a start at 2 or below never does. Here 0.2 arrives and
+  # 0.4 walks out of the data and stops where it is held, with a residual
+  # sum of squares tens of times worse -- which is why the segmented
+  # literature restarts from several positions, and why multistart()
+  # belongs around this iteration.
   set.seed(5)
   n <- 500
   dd <- data.frame(x = sort(runif(n, 0, 10)))
