@@ -97,6 +97,7 @@ SmoothTerm <- S7::new_class(
 #' term_npar(built)
 #' term_penalty(built)@params
 #'
+#' @seealso \code{\link{te}}, \code{\link{random}}, \code{\link{nl}}
 #' @export
 s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
               linear = TRUE, label = NULL) {
@@ -163,6 +164,7 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #' Wood, S. N. (2017). \emph{Generalized Additive Models: An Introduction
 #' with R}, 2nd edition. Chapman and Hall/CRC.
 #'
+#' @seealso \code{\link{s}}, \code{\link{random}}, \code{\link{nl}}
 #' @export
 te <- function(..., by = NULL, k = 5, degree = 3, bases = NULL,
                anisotropic = TRUE, label = NULL) {

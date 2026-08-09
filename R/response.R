@@ -80,6 +80,7 @@ censored_response <- S7::new_class(
 #' r <- cens(c(0, 0.7, 2.4), lwr = 0)
 #' r@status
 #'
+#' @seealso \code{\link{interpret_formula}}, \code{\link{check_term}}
 #' @export
 cens <- function(y, lwr = -Inf, upr = Inf) {
   y <- as.numeric(y)

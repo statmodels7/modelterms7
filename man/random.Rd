@@ -116,3 +116,6 @@ term_penalty(built)@params
 Laird, N. M. and Ware, J. H. (1982). Random-effects models for
 longitudinal data. \emph{Biometrics} 38, 963-974.
 }
+\seealso{
+\code{\link{s}}, \code{\link{te}}, \code{\link{nl}}
+}

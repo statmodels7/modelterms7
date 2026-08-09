@@ -44,6 +44,7 @@ NULL
 #' term_matrix(built)
 #' term_coef_names(built)
 #'
+#' @seealso \code{\link{ridge}}, \code{\link{lasso}}, \code{\link{scad}}, \code{\link{mcp}}, \code{\link{enet}}
 #' @export
 linpar <- function(formula, label = "") {
   if (!inherits(formula, "formula")) {

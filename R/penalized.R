@@ -146,6 +146,7 @@ PenalizedTerm <- S7::new_class(
 #' term_penalty(built)@params
 #' term_smooth(built)
 #'
+#' @seealso \code{\link{linpar}}, \code{\link{s}}, \code{\link{random}}, \code{\link{term_penalty}}, \code{\link{edf}}
 #' @export
 ridge <- function(x, label = "ridge", by = NULL) {
   .penalized_spec(x, substitute(x), label, by,

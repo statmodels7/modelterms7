@@ -102,3 +102,6 @@ term_coef_names(built)
 dim(term_matrix(built))
 
 }
+\seealso{
+\code{\link{s}}, \code{\link{te}}, \code{\link{random}}
+}

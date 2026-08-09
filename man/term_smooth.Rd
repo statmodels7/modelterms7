@@ -27,3 +27,6 @@ optimizers handle and the block that needs non-smooth strategies.
 term_smooth(linpar(~x))
 
 }
+\seealso{
+\code{\link{term_penalty}}, \code{\link{edf}}
+}

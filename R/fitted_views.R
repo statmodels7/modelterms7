@@ -41,6 +41,7 @@ NULL
 #' H <- crossprod(term_matrix(built))
 #' edf(built, coef = c(0.5, -0.2), hessian = H, theta = list(sigma = 2))
 #'
+#' @seealso \code{\link{term_penalty}}, \code{\link{term_smooth}}
 #' @export
 edf <- S7::new_generic("edf", "term",
   function(term, coef = NULL, hessian = NULL, theta = NULL,

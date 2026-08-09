@@ -60,6 +60,7 @@ NULL
 #' res <- check_term(linpar(~ x + g), dd, verbose = FALSE)
 #' all(res$status == "OK")
 #'
+#' @seealso \code{\link{interpret_formula}}, \code{\link{cens}}
 #' @export
 check_term <- function(term, data, verbose = TRUE) {
   if (!S7::S7_inherits(term, model_term)) {

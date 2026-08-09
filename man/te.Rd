@@ -78,3 +78,6 @@ generalized additive mixed models. \emph{Biometrics} 62, 1025-1036.
 Wood, S. N. (2017). \emph{Generalized Additive Models: An Introduction
 with R}, 2nd edition. Chapman and Hall/CRC.
 }
+\seealso{
+\code{\link{s}}, \code{\link{random}}, \code{\link{nl}}
+}

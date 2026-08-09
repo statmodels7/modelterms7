@@ -97,3 +97,6 @@ Econometrics}, 28(5), 777--795.
 Harvey, A. C. (2013). \emph{Dynamic Models for Volatility and Heavy
 Tails}. Cambridge University Press.
 }
+\seealso{
+\code{\link{regime}}
+}

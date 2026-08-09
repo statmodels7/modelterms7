@@ -47,6 +47,7 @@ NULL
 #' out <- interpret_formula(y ~ x1 + log(x2), dd)
 #' names(out$terms)
 #'
+#' @seealso \code{\link{cens}}, \code{\link{check_term}}
 #' @export
 interpret_formula <- function(formula, data) {
   if (!inherits(formula, "formula")) {

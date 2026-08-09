@@ -121,6 +121,7 @@ GasTerm <- S7::new_class(
 #' @examples
 #' term_params(gas(p = 1, q = 2))
 #'
+#' @seealso \code{\link{regime}}
 #' @export
 gas <- function(p = 1, q = 1, by = NULL, time = NULL, label = "gas") {
   chk <- function(v, nm, lo) {

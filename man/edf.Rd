@@ -52,3 +52,6 @@ Zou, H., Hastie, T. and Tibshirani, R. (2007). On the "degrees of
 freedom" of the lasso. \emph{The Annals of Statistics}, 35(5),
 2173--2192.
 }
+\seealso{
+\code{\link{term_penalty}}, \code{\link{term_smooth}}
+}

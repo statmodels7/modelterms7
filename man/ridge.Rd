@@ -105,3 +105,6 @@ term_penalty(built)@params
 term_smooth(built)
 
 }
+\seealso{
+\code{\link{linpar}}, \code{\link{s}}, \code{\link{random}}, \code{\link{term_penalty}}, \code{\link{edf}}
+}

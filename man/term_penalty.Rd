@@ -24,3 +24,6 @@ object's, not the term's.
 term_penalty(linpar(~x))
 
 }
+\seealso{
+\code{\link{term_smooth}}, \code{\link{edf}}
+}

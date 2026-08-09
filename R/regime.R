@@ -162,6 +162,7 @@ RegimeTerm <- S7::new_class(
 #' @examples
 #' term_params(regime(2))
 #'
+#' @seealso \code{\link{gas}}
 #' @export
 regime <- function(k = 2, by = NULL, time = NULL, label = "regime") {
   if (!is.numeric(k) || length(k) != 1L || is.na(k) || k < 2 ||

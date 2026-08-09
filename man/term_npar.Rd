@@ -21,3 +21,6 @@ The number of columns of the term's design block.
 term_npar(term_build(linpar(~x), data.frame(x = 1:4)))
 
 }
+\seealso{
+\code{\link{term_build}}, \code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_coef_names}}, \code{\link{term_is_built}}
+}

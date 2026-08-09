@@ -45,3 +45,6 @@ built <- term_build(linpar(~x), data.frame(x = 1:4))
 term_matrix(built)
 
 }
+\seealso{
+\code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_coef_names}}, \code{\link{term_npar}}, \code{\link{term_is_built}}
+}

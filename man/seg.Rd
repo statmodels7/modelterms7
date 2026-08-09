@@ -189,3 +189,6 @@ Fasola, S., Muggeo, V. M. R. and Kuchenhoff, H. (2018). A heuristic,
 iterative algorithm for change-point detection in abrupt change
 models. \emph{Computational Statistics}, 33, 997--1015.
 }
+\seealso{
+\code{\link{seg_psi}}, \code{\link{seg_start}}, \code{\link{seg_step}}, \code{\link{nl}}
+}

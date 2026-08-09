@@ -37,6 +37,7 @@ NULL
 #' built <- term_build(linpar(~x), data.frame(x = 1:4))
 #' term_matrix(built)
 #'
+#' @seealso \code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_coef_names}}, \code{\link{term_npar}}, \code{\link{term_is_built}}
 #' @export
 term_build <- S7::new_generic("term_build", "term",
   function(term, data, ...) {
@@ -73,6 +74,7 @@ S7::method(term_build, structural_term) <- function(term, data, ...) {
 #' term_is_built(linpar(~x))
 #' term_is_built(term_build(linpar(~x), data.frame(x = 1:4)))
 #'
+#' @seealso \code{\link{term_build}}, \code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_coef_names}}, \code{\link{term_npar}}
 #' @export
 term_is_built <- function(term) {
   if (!S7::S7_inherits(term, model_term)) {
@@ -103,6 +105,7 @@ term_is_built <- function(term) {
 #' @examples
 #' term_matrix(term_build(linpar(~x), data.frame(x = 1:4)))
 #'
+#' @seealso \code{\link{term_build}}, \code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_coef_names}}, \code{\link{term_npar}}, \code{\link{term_is_built}}
 #' @export
 term_matrix <- S7::new_generic("term_matrix", "term",
   function(term, ...) S7::S7_dispatch())
@@ -128,6 +131,7 @@ S7::method(term_matrix, additive_term) <- function(term, ...) {
 #' @examples
 #' term_penalty(linpar(~x))
 #'
+#' @seealso \code{\link{term_smooth}}, \code{\link{edf}}
 #' @export
 term_penalty <- S7::new_generic("term_penalty", "term",
   function(term, ...) S7::S7_dispatch())
@@ -148,6 +152,7 @@ S7::method(term_penalty, additive_term) <- function(term, ...) {
 #' @examples
 #' term_npar(term_build(linpar(~x), data.frame(x = 1:4)))
 #'
+#' @seealso \code{\link{term_build}}, \code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_coef_names}}, \code{\link{term_is_built}}
 #' @export
 term_npar <- S7::new_generic("term_npar", "term",
   function(term, ...) S7::S7_dispatch())
@@ -171,6 +176,7 @@ S7::method(term_npar, additive_term) <- function(term, ...) {
 #' @examples
 #' term_coef_names(term_build(linpar(~x), data.frame(x = 1:4)))
 #'
+#' @seealso \code{\link{term_build}}, \code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_npar}}, \code{\link{term_is_built}}
 #' @export
 term_coef_names <- S7::new_generic("term_coef_names", "term",
   function(term, ...) S7::S7_dispatch())
@@ -199,6 +205,7 @@ S7::method(term_coef_names, additive_term) <- function(term, ...) {
 #' @examples
 #' term_smooth(linpar(~x))
 #'
+#' @seealso \code{\link{term_penalty}}, \code{\link{edf}}
 #' @export
 term_smooth <- S7::new_generic("term_smooth", "term",
   function(term, ...) S7::S7_dispatch())
@@ -251,6 +258,7 @@ S7::method(term_smooth, additive_term) <- function(term, ...) {
 #' built <- term_build(linpar(~x), data.frame(x = 1:4))
 #' term_predict(built, data.frame(x = c(0.5, 2.5)))
 #'
+#' @seealso \code{\link{term_build}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_coef_names}}, \code{\link{term_npar}}, \code{\link{term_is_built}}
 #' @export
 term_predict <- S7::new_generic("term_predict", "term",
   function(term, newdata, ...) {

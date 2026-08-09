@@ -183,6 +183,7 @@ SegTerm <- S7::new_class(
 #' term_coef_names(built)
 #' seg_psi(built)
 #'
+#' @seealso \code{\link{seg_psi}}, \code{\link{seg_start}}, \code{\link{seg_step}}, \code{\link{nl}}
 #' @export
 seg <- function(x, npsi = 1, psi = NULL, by = NULL, linear = TRUE,
                 penalty = c("none", "lasso", "ridge"), c0 = 0.05,
@@ -690,7 +691,7 @@ seg_psi <- function(term, coef = NULL) {
 #' }
 #' c(psi = seg_psi(b, cf), step = seg_step(b))
 #'
-#' @seealso \code{\link{seg}}, \code{\link{seg_psi}},
+#' @seealso \code{\link{seg}}, \code{\link{seg_psi}}, \code{\link{seg_start}}
 #'   \code{\link{seg_start}}
 #' @export
 seg_step <- function(term) {

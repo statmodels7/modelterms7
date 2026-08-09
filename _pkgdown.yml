@@ -17,6 +17,11 @@ navbar:
 
 reference:
 - title: The classes and the generics
+  desc: >
+    The contract a term implements: how it builds a block from data,
+    how it reproduces that block on new rows, what it carries in
+    the way of coefficients, hyperparameters and penalties, and
+    the two shapes a structural term takes instead.
   contents:
   - model_term
   - additive_term
@@ -30,29 +35,53 @@ reference:
   - term_smooth
   - term_predict
 - title: The parametric term
+  desc: >
+    The unpenalized block of a one-sided formula, with the usual
+    model.matrix conventions for factors, contrasts and the
+    intercept.
   contents:
   - linpar
   - LinparTerm
 - title: The penalized terms
+  desc: >
+    A block with a penalties7 object attached to its coefficients:
+    ridge, lasso, SCAD, MCP and the elastic net, over a formula or
+    over a matrix column of the data.
   contents:
   - ridge
   - PenalizedTerm
 - title: The random-effect term
+  desc: >
+    Grouped intercepts and slopes, the effects' distribution attached
+    as the penalty, which is what a random effect is under
+    penalized likelihood.
   contents:
   - random
   - RandomTerm
 - title: Smooth terms
+  desc: >
+    The penalized smooths of one and of several covariates, built on
+    basis7: a Demmler-Reinsch reparametrization for one variable
+    and a tensor product, anisotropic by default, for more.
   contents:
   - s
   - te
   - SmoothTerm
 - title: Nonlinear terms
+  desc: >
+    A contribution nonlinear in its own parameters, whose block is
+    the Jacobian recomputed as they move, so a linear fit on it is
+    a Gauss-Newton step.
   contents:
   - nl
   - NlTerm
   - term_refresh
   - term_value
 - title: Segmented terms
+  desc: >
+    The break-points at which an effect changes slope, level or both,
+    each written as a working linear model in the break-point
+    position, with the grid rule that chooses where to start.
   contents:
   - seg
   - SegTerm
@@ -60,6 +89,10 @@ reference:
   - seg_step
   - seg_start
 - title: Structural terms
+  desc: >
+    Terms that rewrite the likelihood rather than adding to the
+    predictor: score-driven dynamics and a latent Markov chain,
+    both propagating their exact derivative beside the state.
   contents:
   - gas
   - GasTerm
@@ -70,15 +103,30 @@ reference:
   - term_filter
   - term_loglik
 - title: The formula layer
+  desc: >
+    Reading a model formula into terms, by what each call evaluates
+    to rather than by its name, so a term class defined outside
+    the package needs no registration.
   contents:
   - interpret_formula
 - title: The response
+  desc: >
+    Marking a censored response on the left side of a formula, the
+    status of each observation derived from the values given.
   contents:
   - cens
   - censored_response
 - title: Fitted views
+  desc: >
+    What a fitted term reports: effective degrees of freedom counted
+    per penalty, the printed summary, and the plot at supplied
+    coefficients.
   contents:
   - edf
 - title: Validation
+  desc: >
+    The structural checks a term must pass against a data frame,
+    including the one a term that rebuilds instead of reapplying
+    its blueprint fails.
   contents:
   - check_term

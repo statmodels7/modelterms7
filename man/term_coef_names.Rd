@@ -22,3 +22,6 @@ the label is non-empty.
 term_coef_names(term_build(linpar(~x), data.frame(x = 1:4)))
 
 }
+\seealso{
+\code{\link{term_build}}, \code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_npar}}, \code{\link{term_is_built}}
+}

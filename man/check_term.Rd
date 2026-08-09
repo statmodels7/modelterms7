@@ -52,3 +52,6 @@ res <- check_term(linpar(~ x + g), dd, verbose = FALSE)
 all(res$status == "OK")
 
 }
+\seealso{
+\code{\link{interpret_formula}}, \code{\link{cens}}
+}
