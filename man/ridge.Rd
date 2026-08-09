@@ -3,6 +3,7 @@
 \name{ridge}
 \alias{ridge}
 \alias{lasso}
+\alias{enet}
 \alias{scad}
 \alias{mcp}
 \title{Penalized Parametric Terms}
@@ -10,6 +11,8 @@
 ridge(x, label = "ridge", by = NULL)
 
 lasso(x, label = "lasso", by = NULL)
+
+enet(x, label = "enet", by = NULL)
 
 scad(x, label = "scad", by = NULL)
 
@@ -33,6 +36,7 @@ and MCP. Each takes its block as a one-sided formula or as a numeric
 matrix, and attaches the corresponding \pkg{penalties7} object to the
 block's coefficients at build time -- \code{\link[penalties7]{ridge_penalty}},
 \code{\link[penalties7]{lasso_penalty}},
+\code{\link[penalties7]{elasticnet_penalty}},
 \code{\link[penalties7]{scad_penalty}},
 \code{\link[penalties7]{mcp_penalty}} -- so the hyperparameters, their
 bounds and links, the derivatives and the kink set are the penalty's,

@@ -72,6 +72,7 @@ PenalizedTerm <- S7::new_class(
 #' matrix, and attaches the corresponding \pkg{penalties7} object to the
 #' block's coefficients at build time -- \code{\link[penalties7]{ridge_penalty}},
 #' \code{\link[penalties7]{lasso_penalty}},
+#' \code{\link[penalties7]{elasticnet_penalty}},
 #' \code{\link[penalties7]{scad_penalty}},
 #' \code{\link[penalties7]{mcp_penalty}} -- so the hyperparameters, their
 #' bounds and links, the derivatives and the kink set are the penalty's,
@@ -125,6 +126,13 @@ ridge <- function(x, label = "ridge", by = NULL) {
 lasso <- function(x, label = "lasso", by = NULL) {
   .penalized_spec(x, substitute(x), label, by,
                   function(k) penalties7::lasso_penalty(n_coef = k))
+}
+
+#' @rdname ridge
+#' @export
+enet <- function(x, label = "enet", by = NULL) {
+  .penalized_spec(x, substitute(x), label, by,
+                  function(k) penalties7::elasticnet_penalty(n_coef = k))
 }
 
 #' @rdname ridge

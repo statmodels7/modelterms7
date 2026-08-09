@@ -88,3 +88,37 @@ test_that("the formula interpreter routes the penalized terms", {
   built <- term_build(out$terms[["lasso(R)"]], dd)
   expect_identical(term_npar(built), 3L)
 })
+
+test_that("enet() carries the elastic-net penalty and both hyperparameters", {
+  spec <- interpret_formula(~ enet(R), dd)$terms[["enet(R)"]]
+  b <- term_build(spec, dd)
+  expect_identical(term_coef_names(b), c("enet.r1", "enet.r2", "enet.r3"))
+  pen <- term_penalty(b)
+  expect_identical(pen@params, c("lambda", "alpha"))
+  expect_identical(pen@n_coef, 3L)
+  # it mixes a kink with a quadratic, so the penalized objective is not
+  # differentiable and the term says so
+  expect_false(term_smooth(b))
+
+  # the value is the elastic net of the block's coefficients
+  cf <- c(0.9, -1.4, 0.2)
+  th <- list(lambda = 1.1, alpha = 0.35)
+  got <- penalties7::penalty_value(pen, cf, th) -
+    penalties7::penalty_value(pen, rep(0, 3), th)
+  expect_equal(got, 1.1 * (0.35 * sum(abs(cf)) + 0.65 * sum(cf^2) / 2),
+               tolerance = 1e-12)
+
+  # and edf counts the nonzero coefficients, as it does for the lasso
+  expect_identical(edf(b, coef = c(0.9, -1.4, 0)), 2)
+
+  res <- check_term(spec, dd, verbose = FALSE)
+  expect_true(all(res$status == "OK"),
+              info = paste(res$check[res$status != "OK"], collapse = ", "))
+})
+
+test_that("the interpreter routes enet beside the other four", {
+  out <- interpret_formula(x1 ~ x2 + enet(R), dd)
+  expect_named(out$terms, c("linpar", "enet(R)"))
+  b <- term_build(out$terms[["enet(R)"]], dd)
+  expect_output(print(b), "enet")
+})
