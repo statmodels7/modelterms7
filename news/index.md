@@ -1,5 +1,20 @@
 # Changelog
 
+## modelterms7 0.12.0
+
+- regime()’s forward recursion is compiled (src/regime_forward.cpp), and
+  the density and score of every observation under every regime are
+  computed once by k vectorized calls instead of 2nk scalar ones. Unlike
+  the score-driven filter, nothing has to call back into R: a regime
+  shifts the predictor by a level of its own, so none of those values
+  depends on the filtered state. Measured against the R form, kept as
+  the twin .regime_forward_r: 4.5x at k = 5, 13x at k = 3 and 28x at k =
+  2, over T from 1e3 to 1e5, agreeing to 1.8e-15. End to end the term
+  costs 2.04 microseconds per observation at k = 3, against 40 before.
+- term_loglik()’s closures are called with the whole index vector. A
+  closure returning one value where n were asked is rejected with a
+  message saying so.
+
 ## modelterms7 0.11.1
 
 - interpret_formula() rejects a call that evaluates to neither a model

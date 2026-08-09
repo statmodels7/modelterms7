@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.11.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.12.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,11 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.12.0" id="modelterms7-0120">modelterms7 0.12.0<a class="anchor" aria-label="anchor" href="#modelterms7-0120"></a></h2>
+<ul><li>regime()’s forward recursion is compiled (src/regime_forward.cpp), and the density and score of every observation under every regime are computed once by k vectorized calls instead of 2nk scalar ones. Unlike the score-driven filter, nothing has to call back into R: a regime shifts the predictor by a level of its own, so none of those values depends on the filtered state. Measured against the R form, kept as the twin .regime_forward_r: 4.5x at k = 5, 13x at k = 3 and 28x at k = 2, over T from 1e3 to 1e5, agreeing to 1.8e-15. End to end the term costs 2.04 microseconds per observation at k = 3, against 40 before.</li>
+<li>term_loglik()’s closures are called with the whole index vector. A closure returning one value where n were asked is rejected with a message saying so.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.11.1" id="modelterms7-0111">modelterms7 0.11.1<a class="anchor" aria-label="anchor" href="#modelterms7-0111"></a></h2>
 <ul><li>interpret_formula() rejects a call that evaluates to neither a model term nor a covariate, naming the call, its class and – when the function that was called is not the one modelterms7 exports under that name – the package that masked it. mgcv exports s() and te() and segmented exports seg(), so a user with either attached wrote our formula and got theirs; the value used to travel to model.matrix and fail there, naming neither the call nor the mask.</li>
