@@ -119,7 +119,8 @@ SegTerm <- S7::new_class(
 #' observation the indicator is constant, so the truncated line and that
 #' constant are linearly dependent, and with the linear effect present so
 #' are all three columns. A run that ends against the limit has not
-#' located a break-point, and the reported position says so.
+#' located a break-point, and \code{\link{seg_psi}} then returns the
+#' limit itself.
 #'
 #' The objective has local optima in the break-points, and the iteration
 #' converges from within a basin around the true position rather than
