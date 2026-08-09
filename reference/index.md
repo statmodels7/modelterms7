@@ -36,6 +36,7 @@
 
 - [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
   [`lasso()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
+  [`enet()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
   [`scad()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
   [`mcp()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
   : Penalized Parametric Terms

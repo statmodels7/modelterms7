@@ -1,5 +1,11 @@
 # Changelog
 
+## modelterms7 0.13.0
+
+- enet(): the elastic-net term, beside ridge, lasso, scad and mcp,
+  carrying penalties7::elasticnet_penalty(). Like the lasso it is not
+  smooth, and its effective degrees of freedom are the nonzero count.
+
 ## modelterms7 0.12.0
 
 - regime()’s forward recursion is compiled (src/regime_forward.cpp), and

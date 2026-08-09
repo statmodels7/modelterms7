@@ -4,6 +4,7 @@ and MCP. Each takes its block as a one-sided formula or as a numeric
 matrix, and attaches the corresponding penalties7 object to the
 block's coefficients at build time – ridge_penalty,
 lasso_penalty,
+elasticnet_penalty,
 scad_penalty,
 mcp_penalty – so the hyperparameters, their
 bounds and links, the derivatives and the kink set are the penalty's,
@@ -12,6 +13,7 @@ and MCP. Each takes its block as a one-sided formula or as a numeric
 matrix, and attaches the corresponding penalties7 object to the
 block's coefficients at build time – ridge_penalty,
 lasso_penalty,
+elasticnet_penalty,
 scad_penalty,
 mcp_penalty – so the hyperparameters, their
 bounds and links, the derivatives and the kink set are the penalty's,
@@ -23,7 +25,7 @@ never restated by the term."><meta property="og:image" content="https://statmode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.12.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,6 +57,7 @@ and MCP. Each takes its block as a one-sided formula or as a numeric
 matrix, and attaches the corresponding <span class="pkg">penalties7</span> object to the
 block's coefficients at build time – <code><a href="https://statmodels7.github.io/penalties7/reference/ridge_penalty.html" class="external-link">ridge_penalty</a></code>,
 <code><a href="https://statmodels7.github.io/penalties7/reference/ridge_penalty.html" class="external-link">lasso_penalty</a></code>,
+<code><a href="https://statmodels7.github.io/penalties7/reference/ridge_penalty.html" class="external-link">elasticnet_penalty</a></code>,
 <code><a href="https://statmodels7.github.io/penalties7/reference/scad_penalty.html" class="external-link">scad_penalty</a></code>,
 <code><a href="https://statmodels7.github.io/penalties7/reference/scad_penalty.html" class="external-link">mcp_penalty</a></code> – so the hyperparameters, their
 bounds and links, the derivatives and the kink set are the penalty's,
@@ -66,6 +69,8 @@ never restated by the term.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ridge</span><span class="op">(</span><span class="va">x</span>, label <span class="op">=</span> <span class="st">"ridge"</span>, by <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">lasso</span><span class="op">(</span><span class="va">x</span>, label <span class="op">=</span> <span class="st">"lasso"</span>, by <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">enet</span><span class="op">(</span><span class="va">x</span>, label <span class="op">=</span> <span class="st">"enet"</span>, by <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">scad</span><span class="op">(</span><span class="va">x</span>, label <span class="op">=</span> <span class="st">"scad"</span>, by <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span>
 <span></span>

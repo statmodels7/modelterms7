@@ -6,6 +6,7 @@ matrix, and attaches the corresponding penalties7 object to the block's
 coefficients at build time –
 [`ridge_penalty`](https://statmodels7.github.io/penalties7/reference/ridge_penalty.html),
 [`lasso_penalty`](https://statmodels7.github.io/penalties7/reference/ridge_penalty.html),
+[`elasticnet_penalty`](https://statmodels7.github.io/penalties7/reference/ridge_penalty.html),
 [`scad_penalty`](https://statmodels7.github.io/penalties7/reference/scad_penalty.html),
 [`mcp_penalty`](https://statmodels7.github.io/penalties7/reference/scad_penalty.html)
 – so the hyperparameters, their bounds and links, the derivatives and
@@ -17,6 +18,8 @@ the kink set are the penalty's, never restated by the term.
 ridge(x, label = "ridge", by = NULL)
 
 lasso(x, label = "lasso", by = NULL)
+
+enet(x, label = "enet", by = NULL)
 
 scad(x, label = "scad", by = NULL)
 
