@@ -58,6 +58,11 @@ A single number.
 Zou, H., Hastie, T. and Tibshirani, R. (2007). On the "degrees of
 freedom" of the lasso. *The Annals of Statistics*, 35(5), 2173–2192.
 
+## See also
+
+[`term_penalty`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md),
+[`term_smooth`](https://statmodels7.github.io/modelterms7/reference/term_smooth.md)
+
 ## Examples
 
 ``` r

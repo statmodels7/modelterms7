@@ -90,6 +90,12 @@ generalized additive mixed models. *Biometrics* 62, 1025-1036.
 Wood, S. N. (2017). *Generalized Additive Models: An Introduction with
 R*, 2nd edition. Chapman and Hall/CRC.
 
+## See also
+
+[`s`](https://statmodels7.github.io/modelterms7/reference/s.md),
+[`random`](https://statmodels7.github.io/modelterms7/reference/random.md),
+[`nl`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+
 ## Examples
 
 ``` r

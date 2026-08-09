@@ -108,6 +108,10 @@ Econometrics*, 28(5), 777–795.
 Harvey, A. C. (2013). *Dynamic Models for Volatility and Heavy Tails*.
 Cambridge University Press.
 
+## See also
+
+[`regime`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+
 ## Examples
 
 ``` r

@@ -29,6 +29,11 @@ term_smooth(term, ...)
 
 A logical scalar.
 
+## See also
+
+[`term_penalty`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md),
+[`edf`](https://statmodels7.github.io/modelterms7/reference/edf.md)
+
 ## Examples
 
 ``` r

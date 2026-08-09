@@ -104,6 +104,12 @@ a covariate; the coefficients are then the \\\gamma_j\\, and the
 Jacobian carries the chain rule \\\partial f/\partial\theta_j \cdot
 (g_j^{-1})' \cdot Z\\.
 
+## See also
+
+[`s`](https://statmodels7.github.io/modelterms7/reference/s.md),
+[`te`](https://statmodels7.github.io/modelterms7/reference/te.md),
+[`random`](https://statmodels7.github.io/modelterms7/reference/random.md)
+
 ## Examples
 
 ``` r

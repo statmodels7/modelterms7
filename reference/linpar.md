@@ -56,6 +56,14 @@ blueprint does not know is rejected rather than re-encoded. Missing
 values are propagated (`na.pass`), never dropped, so the block stays
 row-aligned with the response.
 
+## See also
+
+[`ridge`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+[`lasso`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+[`scad`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+[`mcp`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+[`enet`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
+
 ## Examples
 
 ``` r

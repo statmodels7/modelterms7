@@ -34,7 +34,7 @@
     <div class="section level2">
       <h2 id="the-classes-and-the-generics">The classes and the generics<a class="anchor" aria-label="anchor" href="#the-classes-and-the-generics"></a></h2>
 
-
+      <div class="section-desc"><p>The contract a term implements: how it builds a block from data, how it reproduces that block on new rows, what it carries in the way of coefficients, hyperparameters and penalties, and the two shapes a structural term takes instead.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -120,7 +120,7 @@
       </dl></div><div class="section level2">
       <h2 id="the-parametric-term">The parametric term<a class="anchor" aria-label="anchor" href="#the-parametric-term"></a></h2>
 
-
+      <div class="section-desc"><p>The unpenalized block of a one-sided formula, with the usual model.matrix conventions for factors, contrasts and the intercept.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -143,7 +143,7 @@
       </dl></div><div class="section level2">
       <h2 id="the-penalized-terms">The penalized terms<a class="anchor" aria-label="anchor" href="#the-penalized-terms"></a></h2>
 
-
+      <div class="section-desc"><p>A block with a penalties7 object attached to its coefficients: ridge, lasso, SCAD, MCP and the elastic net, over a formula or over a matrix column of the data.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -166,7 +166,7 @@
       </dl></div><div class="section level2">
       <h2 id="the-random-effect-term">The random-effect term<a class="anchor" aria-label="anchor" href="#the-random-effect-term"></a></h2>
 
-
+      <div class="section-desc"><p>Grouped intercepts and slopes, the effects’ distribution attached as the penalty, which is what a random effect is under penalized likelihood.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -189,7 +189,7 @@
       </dl></div><div class="section level2">
       <h2 id="smooth-terms">Smooth terms<a class="anchor" aria-label="anchor" href="#smooth-terms"></a></h2>
 
-
+      <div class="section-desc"><p>The penalized smooths of one and of several covariates, built on basis7: a Demmler-Reinsch reparametrization for one variable and a tensor product, anisotropic by default, for more.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -219,7 +219,7 @@
       </dl></div><div class="section level2">
       <h2 id="nonlinear-terms">Nonlinear terms<a class="anchor" aria-label="anchor" href="#nonlinear-terms"></a></h2>
 
-
+      <div class="section-desc"><p>A contribution nonlinear in its own parameters, whose block is the Jacobian recomputed as they move, so a linear fit on it is a Gauss-Newton step.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -256,7 +256,7 @@
       </dl></div><div class="section level2">
       <h2 id="segmented-terms">Segmented terms<a class="anchor" aria-label="anchor" href="#segmented-terms"></a></h2>
 
-
+      <div class="section-desc"><p>The break-points at which an effect changes slope, level or both, each written as a working linear model in the break-point position, with the grid rule that chooses where to start.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -300,7 +300,7 @@
       </dl></div><div class="section level2">
       <h2 id="structural-terms">Structural terms<a class="anchor" aria-label="anchor" href="#structural-terms"></a></h2>
 
-
+      <div class="section-desc"><p>Terms that rewrite the likelihood rather than adding to the predictor: score-driven dynamics and a latent Markov chain, both propagating their exact derivative beside the state.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -365,7 +365,7 @@
       </dl></div><div class="section level2">
       <h2 id="the-formula-layer">The formula layer<a class="anchor" aria-label="anchor" href="#the-formula-layer"></a></h2>
 
-
+      <div class="section-desc"><p>Reading a model formula into terms, by what each call evaluates to rather than by its name, so a term class defined outside the package needs no registration.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -381,7 +381,7 @@
       </dl></div><div class="section level2">
       <h2 id="the-response">The response<a class="anchor" aria-label="anchor" href="#the-response"></a></h2>
 
-
+      <div class="section-desc"><p>Marking a censored response on the left side of a formula, the status of each observation derived from the values given.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -404,7 +404,7 @@
       </dl></div><div class="section level2">
       <h2 id="fitted-views">Fitted views<a class="anchor" aria-label="anchor" href="#fitted-views"></a></h2>
 
-
+      <div class="section-desc"><p>What a fitted term reports: effective degrees of freedom counted per penalty, the printed summary, and the plot at supplied coefficients.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -420,7 +420,7 @@
       </dl></div><div class="section level2">
       <h2 id="validation">Validation<a class="anchor" aria-label="anchor" href="#validation"></a></h2>
 
-
+      <div class="section-desc"><p>The structural checks a term must pass against a data frame, including the one a term that rebuilds instead of reapplying its blueprint fails.</p></div>
 
       <dl></dl></div><div class="section level2">
 

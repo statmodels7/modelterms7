@@ -53,6 +53,11 @@ The subset is dropped of its unused levels before it is passed, so a
 plain row subset cannot pass by carrying the original levels along with
 it.
 
+## See also
+
+[`interpret_formula`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
+[`cens`](https://statmodels7.github.io/modelterms7/reference/cens.md)
+
 ## Examples
 
 ``` r

@@ -102,6 +102,14 @@ marginal criterion; the last two are improper by construction and have
 none. All five, and the arithmetic behind them, belong to penalties7:
 the term attaches the object and restates nothing.
 
+## See also
+
+[`linpar`](https://statmodels7.github.io/modelterms7/reference/linpar.md),
+[`s`](https://statmodels7.github.io/modelterms7/reference/s.md),
+[`random`](https://statmodels7.github.io/modelterms7/reference/random.md),
+[`term_penalty`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md),
+[`edf`](https://statmodels7.github.io/modelterms7/reference/edf.md)
+
 ## Examples
 
 ``` r

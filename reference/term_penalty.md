@@ -26,6 +26,11 @@ term_penalty(term, ...)
 
 A penalty object, or `NULL`.
 
+## See also
+
+[`term_smooth`](https://statmodels7.github.io/modelterms7/reference/term_smooth.md),
+[`edf`](https://statmodels7.github.io/modelterms7/reference/edf.md)
+
 ## Examples
 
 ``` r

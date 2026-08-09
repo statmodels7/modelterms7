@@ -42,6 +42,11 @@ bounds is observed exactly, and one with `y = NA` and both bounds finite
 is interval-censored (\\Y \in \[lwr, upr\]\\). An `NA` value without two
 finite bounds carries no information and is rejected.
 
+## See also
+
+[`interpret_formula`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
+[`check_term`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
+
 ## Examples
 
 ``` r

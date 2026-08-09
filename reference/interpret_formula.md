@@ -50,6 +50,11 @@ own, carried into the collected parametric block, so `y ~ ridge_like(R)`
 still produces an intercept-only `linpar` block and
 `y ~ ridge_like(R) - 1` produces none.
 
+## See also
+
+[`cens`](https://statmodels7.github.io/modelterms7/reference/cens.md),
+[`check_term`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
+
 ## Examples
 
 ``` r

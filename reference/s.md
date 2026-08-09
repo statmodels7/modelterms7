@@ -88,6 +88,12 @@ smoothing. *Numerische Mathematik*, 24, 375–382.
 Bach, P. and Klein, N. (2024). Bayesian effect selection in additive
 models with an application to time-to-event data.
 
+## See also
+
+[`te`](https://statmodels7.github.io/modelterms7/reference/te.md),
+[`random`](https://statmodels7.github.io/modelterms7/reference/random.md),
+[`nl`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+
 ## Examples
 
 ``` r

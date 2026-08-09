@@ -42,6 +42,15 @@ hold: a rebuilt factor encoding, spline knot placement or basis
 reparametrization would give a block of the same shape multiplying the
 same coefficients and meaning something else.
 
+## See also
+
+[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md),
+[`term_refresh`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md),
+[`term_matrix`](https://statmodels7.github.io/modelterms7/reference/term_matrix.md),
+[`term_coef_names`](https://statmodels7.github.io/modelterms7/reference/term_coef_names.md),
+[`term_npar`](https://statmodels7.github.io/modelterms7/reference/term_npar.md),
+[`term_is_built`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
+
 ## Examples
 
 ``` r

@@ -24,6 +24,15 @@ term_matrix(term, ...)
 
 A numeric matrix.
 
+## See also
+
+[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md),
+[`term_predict`](https://statmodels7.github.io/modelterms7/reference/term_predict.md),
+[`term_refresh`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md),
+[`term_coef_names`](https://statmodels7.github.io/modelterms7/reference/term_coef_names.md),
+[`term_npar`](https://statmodels7.github.io/modelterms7/reference/term_npar.md),
+[`term_is_built`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
+
 ## Examples
 
 ``` r

@@ -23,6 +23,15 @@ term_npar(term, ...)
 
 An integer.
 
+## See also
+
+[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md),
+[`term_predict`](https://statmodels7.github.io/modelterms7/reference/term_predict.md),
+[`term_refresh`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md),
+[`term_matrix`](https://statmodels7.github.io/modelterms7/reference/term_matrix.md),
+[`term_coef_names`](https://statmodels7.github.io/modelterms7/reference/term_coef_names.md),
+[`term_is_built`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
+
 ## Examples
 
 ``` r

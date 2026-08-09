@@ -2,6 +2,11 @@
 
 ## The classes and the generics
 
+The contract a term implements: how it builds a block from data, how it
+reproduces that block on new rows, what it carries in the way of
+coefficients, hyperparameters and penalties, and the two shapes a
+structural term takes instead.
+
 - [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)
   : S7 Base Class for Model Terms
 - [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
@@ -27,12 +32,19 @@
 
 ## The parametric term
 
+The unpenalized block of a one-sided formula, with the usual
+model.matrix conventions for factors, contrasts and the intercept.
+
 - [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
   : Unpenalized Parametric Term
 - [`LinparTerm()`](https://statmodels7.github.io/modelterms7/reference/LinparTerm.md)
   : S7 Class for the Unpenalized Parametric Term
 
 ## The penalized terms
+
+A block with a penalties7 object attached to its coefficients: ridge,
+lasso, SCAD, MCP and the elastic net, over a formula or over a matrix
+column of the data.
 
 - [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
   [`lasso()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
@@ -45,12 +57,19 @@
 
 ## The random-effect term
 
+Grouped intercepts and slopes, the effects’ distribution attached as the
+penalty, which is what a random effect is under penalized likelihood.
+
 - [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
   : Grouped Random-Effect Term
 - [`RandomTerm()`](https://statmodels7.github.io/modelterms7/reference/RandomTerm.md)
   : S7 Class for Grouped Random-Effect Terms
 
 ## Smooth terms
+
+The penalized smooths of one and of several covariates, built on basis7:
+a Demmler-Reinsch reparametrization for one variable and a tensor
+product, anisotropic by default, for more.
 
 - [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) :
   Penalized Smooth of One Covariate
@@ -60,6 +79,10 @@
   : S7 Class for Smooth Terms
 
 ## Nonlinear terms
+
+A contribution nonlinear in its own parameters, whose block is the
+Jacobian recomputed as they move, so a linear fit on it is a
+Gauss-Newton step.
 
 - [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) :
   Nonlinear Parametric Term
@@ -71,6 +94,10 @@
   : The Contribution of a Term at Its Current Coefficients
 
 ## Segmented terms
+
+The break-points at which an effect changes slope, level or both, each
+written as a working linear model in the break-point position, with the
+grid rule that chooses where to start.
 
 - [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
   [`jump()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
@@ -87,6 +114,10 @@
   : Starting Positions for a Break-Point Term
 
 ## Structural terms
+
+Terms that rewrite the likelihood rather than adding to the predictor:
+score-driven dynamics and a latent Markov chain, both propagating their
+exact derivative beside the state.
 
 - [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
   : Score-Driven Dynamics
@@ -107,10 +138,17 @@
 
 ## The formula layer
 
+Reading a model formula into terms, by what each call evaluates to
+rather than by its name, so a term class defined outside the package
+needs no registration.
+
 - [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
   : Interpret a Model Formula Into Terms
 
 ## The response
+
+Marking a censored response on the left side of a formula, the status of
+each observation derived from the values given.
 
 - [`cens()`](https://statmodels7.github.io/modelterms7/reference/cens.md)
   : Censored Response Constructor
@@ -119,10 +157,16 @@
 
 ## Fitted views
 
+What a fitted term reports: effective degrees of freedom counted per
+penalty, the printed summary, and the plot at supplied coefficients.
+
 - [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
   : Effective Degrees of Freedom of a Term
 
 ## Validation
+
+The structural checks a term must pass against a data frame, including
+the one a term that rebuilds instead of reapplying its blueprint fails.
 
 - [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
   : Numerical Validation of a Model Term
