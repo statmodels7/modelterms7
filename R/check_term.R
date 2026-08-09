@@ -31,6 +31,22 @@ NULL
 #' a level, which is why the subset is chosen to drop one whenever the
 #' data carry a factor.
 #'
+#' @details
+#' Writing \eqn{X = } \code{term_matrix(term_build(term, data))}, the two
+#' identities checked are
+#'
+#' \deqn{\texttt{term\_predict}(\text{term}, \text{data}) = X,
+#'   \qquad
+#'   \texttt{term\_predict}(\text{term}, \text{data}[S, ]) = X[S, ],}
+#'
+#' for a row subset \eqn{S}. The second does not follow from the first: a
+#' term that rebuilds its encoding from the rows it is given satisfies the
+#' first, since the rows are then the same, and fails the second as soon as
+#' \eqn{S} omits a factor level or narrows the range a basis is placed on.
+#' The subset is dropped of its unused levels before it is passed, so a
+#' plain row subset cannot pass by carrying the original levels along with
+#' it.
+#'
 #' @param term A term specification (an object inheriting from
 #'   \code{\link{model_term}}).
 #' @param data A data frame.

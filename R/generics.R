@@ -10,6 +10,23 @@ NULL
 #' returned object is a copy of the specification with those properties
 #' filled; the specification itself is unchanged.
 #'
+#' @details
+#' An additive term contributes to the linear predictor through a design
+#' block and, when it is penalized, a penalty on the coefficients of that
+#' block:
+#'
+#' \deqn{\eta = \sum_{t} X_t \beta_t,
+#'   \qquad \text{penalized objective} \quad
+#'   -\ell(\beta) + \sum_{t} \rho_t(\beta_t; \theta_t),}
+#'
+#' and building the term is what produces \eqn{X_t} from the data and
+#' attaches \eqn{\rho_t}. \code{\link{term_matrix}} reads the block,
+#' \code{\link{term_penalty}} the penalty and \code{\link{term_predict}}
+#' reproduces \eqn{X_t} on new rows through the blueprint. A structural
+#' term is the exception: its contribution cannot be written as a block of
+#' columns, and it reports itself through \code{\link{term_filter}} or
+#' \code{\link{term_loglik}} instead.
+#'
 #' @param term An object inheriting from class \code{\link{model_term}}.
 #' @param data A data frame.
 #' @param ... Passed to methods.
@@ -213,6 +230,15 @@ S7::method(term_smooth, additive_term) <- function(term, ...) {
 #' data: factor levels, contrasts and any constants recorded in the
 #' blueprint at build time are reused, never recomputed. New data carrying
 #' a factor level unknown to the blueprint is rejected.
+#'
+#' @details
+#' The block returned is \eqn{\tilde{X}_t} such that
+#' \eqn{\tilde{\eta} = \tilde{X}_t \beta_t} is the term's contribution at
+#' the new rows, evaluated at the coefficients the model already carries.
+#' Reapplying the recorded mapping rather than rebuilding it is what makes
+#' that identity hold: a rebuilt factor encoding, spline knot placement or
+#' basis reparametrization would give a block of the same shape multiplying
+#' the same coefficients and meaning something else.
 #'
 #' @param term A built term (see \code{\link{term_build}}).
 #' @param newdata A data frame.

@@ -23,6 +23,24 @@ block being a function of the data alone; for a nonlinear term the
 block is the Jacobian of its contribution, which is a function of where
 the parameters currently are.
 }
+\details{
+A term whose contribution \eqn{f(x; \theta)} is nonlinear in its
+parameters is carried by the linearization
+
+\deqn{f(x; \theta + h) \approx f(x; \theta) + J(\theta) h,
+  \qquad J(\theta)_{ij}
+    = \frac{\partial f(x_i; \theta)}{\partial \theta_j},}
+
+so the design block at the current \eqn{\theta} is \eqn{J(\theta)} and
+the coefficient it multiplies is the increment \eqn{h}. Refreshing at
+the new \eqn{\theta} and solving the linear problem again is the
+Gauss-Newton iteration; \code{\link{term_value}} reports
+\eqn{f(x; \theta)} itself, which is the other half a step needs. For a
+break-point term the same shape holds with a different block: the
+Jacobian for \code{\link{seg}}, and the frozen-weight columns of
+\code{\link{jump}}, from which the break-point is read rather than
+incremented.
+}
 \examples{
 dd <- data.frame(x = seq(0, 2, length.out = 20))
 built <- term_build(nl(~ a * exp(-r * x), start = list(a = 1, r = 1)), dd)

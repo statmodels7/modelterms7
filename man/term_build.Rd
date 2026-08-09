@@ -23,6 +23,23 @@ blueprint that reproduces the mapping on new data is recorded. The
 returned object is a copy of the specification with those properties
 filled; the specification itself is unchanged.
 }
+\details{
+An additive term contributes to the linear predictor through a design
+block and, when it is penalized, a penalty on the coefficients of that
+block:
+
+\deqn{\eta = \sum_{t} X_t \beta_t,
+  \qquad \text{penalized objective} \quad
+  -\ell(\beta) + \sum_{t} \rho_t(\beta_t; \theta_t),}
+
+and building the term is what produces \eqn{X_t} from the data and
+attaches \eqn{\rho_t}. \code{\link{term_matrix}} reads the block,
+\code{\link{term_penalty}} the penalty and \code{\link{term_predict}}
+reproduces \eqn{X_t} on new rows through the blueprint. A structural
+term is the exception: its contribution cannot be written as a block of
+columns, and it reports itself through \code{\link{term_filter}} or
+\code{\link{term_loglik}} instead.
+}
 \examples{
 built <- term_build(linpar(~x), data.frame(x = 1:4))
 term_matrix(built)
