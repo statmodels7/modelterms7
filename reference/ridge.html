@@ -117,8 +117,36 @@ builds, since its value was captured, but prediction is rejected –
 resolving it outside the new data would silently reuse the build-time
 rows.</p>
 <p><code><a href="term_smooth.html">term_smooth</a></code> is <code>TRUE</code> for <code>ridge</code> and
-<code>FALSE</code> for <code>lasso</code>, <code>scad</code> and <code>mcp</code>, read from
-each penalty's kink set.</p>
+<code>FALSE</code> for <code>lasso</code>, <code>enet</code>, <code>scad</code> and
+<code>mcp</code>, read from each penalty's kink set.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="the-penalties">The penalties<a class="anchor" aria-label="anchor" href="#the-penalties"></a></h2>
+
+
+<p>Writing \(\beta\) for the block's coefficients and \(p\) for their
+number, the five attach</p>
+<p>$$\rho_{\mathrm{ridge}}(\beta) =
+  \frac{\lVert\beta\rVert_2^2}{2\sigma^2}
+  + p\log\!\left(\sigma\sqrt{2\pi}\right),$$</p>
+<p>$$\rho_{\mathrm{lasso}}(\beta) = \lambda\lVert\beta\rVert_1
+  - p\log\!\left(\frac{\lambda}{2}\right),$$</p>
+<p>$$\rho_{\mathrm{enet}}(\beta) = \lambda\left\{
+  \alpha\lVert\beta\rVert_1
+  + \frac{1-\alpha}{2}\lVert\beta\rVert_2^2\right\}
+  + p\log Z(\lambda, \alpha),$$</p>
+<p>and the two non-convex ones, which are defined by their derivative
+rather than by their value,</p>
+<p>$$\rho'_{\mathrm{scad}}(t) = \lambda\min\!\left\{1,
+  \frac{(a\lambda - t)_+}{(a-1)\lambda}\right\},
+  \qquad
+  \rho'_{\mathrm{mcp}}(t) = \left(\lambda - \frac{t}{\gamma}\right)_+ ,$$</p>
+<p>for \(t = \lvert\beta_j\rvert \ge 0\), summed over the coefficients.
+The first three are negative log-priors and keep their normalizing
+constants, which is what makes their hyperparameters estimable by a
+marginal criterion; the last two are improper by construction and have
+none. All five, and the arithmetic behind them, belong to
+<span class="pkg">penalties7</span>: the term attaches the object and restates nothing.</p>
     </div>
 
     <div class="section level2">
