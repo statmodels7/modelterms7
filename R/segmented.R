@@ -271,9 +271,9 @@ jseg <- function(x, npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 # The working block and the true contribution of one level. The
 # arithmetic is elementwise and is compiled (src/seg_block.cpp), which
 # measures 1.2 to 3.2 times the R form below over n from 1e3 to 1e6 and
-# one to five break-points; the two agree bit for bit, the operations
-# being the same in the same order, and .seg_block_r is kept as the twin
-# the tests compare against.
+# one to five break-points. The operations are the same in the same
+# order, so the two agree to a rounding; .seg_block_r is kept as the
+# twin the tests compare against.
 .seg_block <- function(kind, xv, cf, npsi, linear, floor_w, lim) {
   psi <- .seg_psi_of(kind, cf, npsi, linear, lim)
   off <- if (linear) 1L else 0L

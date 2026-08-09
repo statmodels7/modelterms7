@@ -14,8 +14,15 @@ corresponding [penalties7](https://statmodels7.github.io/penalties7/)
 object to their block; `random()` builds grouped intercepts and slopes
 with the effect distribution as the penalty, correlated or not through a
 [parameters7](https://statmodels7.github.io/parameters7/) structure
-replicated across groups; `cens()` marks a censored response on the left
-side of the formula. Part of the
+replicated across groups; `s()` and `te()` are the penalized smooths of
+one and of several covariates, built on
+[basis7](https://statmodels7.github.io/basis7/); `nl()` carries a
+contribution nonlinear in its own parameters, its block the Jacobian
+refreshed as they move; `seg()`, `jump()` and `jseg()` estimate the
+break-points at which an effect changes slope, level, or both; `gas()`
+and `regime()` rewrite the likelihood rather than adding to it, with
+score-driven dynamics and a latent Markov chain; `cens()` marks a
+censored response on the left side of the formula. Part of the
 [statmodels7](https://statmodels7.github.io) toolkit.
 
 ## Installation

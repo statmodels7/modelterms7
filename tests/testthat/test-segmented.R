@@ -142,8 +142,12 @@ test_that("a run can end at the limit, and that is the signal it failed", {
 })
 
 test_that("the compiled block agrees with the R twin", {
-  # Same operations in the same order, so the two are bit for bit; a
-  # tolerance here would hide a reordering.
+  # The same operations in the same order, so the two agree to one
+  # rounding and no more: the tolerance is tight enough that a
+  # reordering would fail it. They are NOT bit for bit everywhere --
+  # a compiler free to contract `v += d * u` into a fused multiply-add
+  # drops the intermediate rounding, which macOS does and this machine
+  # does not.
   set.seed(11)
   code <- c(seg = 0L, jump = 1L, jseg = 2L)
   for (n in c(37L, 1000L)) {
@@ -161,8 +165,8 @@ test_that("the compiled block agrees with the R twin", {
           b <- modelterms7:::.seg_block(kind, xv, cf, npsi, linear,
                                         floor_w, lim)
           info <- paste(kind, npsi, linear, n)
-          expect_identical(b$X, a$X, info = info)
-          expect_identical(b$value, a$value, info = info)
+          expect_equal(b$X, a$X, tolerance = 1e-15, info = info)
+          expect_equal(b$value, a$value, tolerance = 1e-15, info = info)
           expect_identical(b$psi, a$psi, info = info)
         }
       }
