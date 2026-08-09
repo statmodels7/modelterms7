@@ -1,3 +1,13 @@
+# modelterms7 0.11.1
+
+* interpret_formula() rejects a call that evaluates to neither a model
+  term nor a covariate, naming the call, its class and -- when the
+  function that was called is not the one modelterms7 exports under
+  that name -- the package that masked it. mgcv exports s() and te()
+  and segmented exports seg(), so a user with either attached wrote
+  our formula and got theirs; the value used to travel to
+  model.matrix and fail there, naming neither the call nor the mask.
+
 # modelterms7 0.11.0
 
 * The discontinuous terms follow Fasola, Muggeo and Kuchenhoff's

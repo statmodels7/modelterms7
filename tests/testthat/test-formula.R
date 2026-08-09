@@ -90,3 +90,31 @@ test_that("a term class without term_build is told which class is missing it", {
             blueprint = list(), penalty = NULL)
   expect_error(term_build(b, data.frame(x = 1)), "BareTerm")
 })
+
+test_that("a call that is neither a term nor a covariate names itself", {
+  # Recognition by evaluation has a third case besides term and
+  # covariate, and it is the one a masked name lands in: mgcv exports
+  # s() and te() and segmented exports seg(), so a user with either
+  # attached writes our formula and gets theirs. Before this the value
+  # travelled to model.matrix and failed there, naming neither the call
+  # nor the mask.
+  dd <- data.frame(y = rnorm(20), x = runif(20))
+  foreign <- function(x) list(kind = "not a term", var = substitute(x))
+  e <- new.env(parent = environment())
+  assign("foreign", foreign, envir = e)
+  f <- y ~ foreign(x)
+  environment(f) <- e
+  expect_error(interpret_formula(f, dd), "neither a model term nor a covariate")
+  expect_error(interpret_formula(f, dd), "foreign", fixed = TRUE)
+
+  # and when the masked name is one of ours, it says so
+  masking <- function(x) list(1)
+  e2 <- new.env(parent = environment())
+  assign("s", masking, envir = e2)
+  f2 <- y ~ s(x)
+  environment(f2) <- e2
+  expect_error(interpret_formula(f2, dd), "modelterms7::s()", fixed = TRUE)
+
+  # a covariate that happens to be a call is untouched
+  expect_no_error(interpret_formula(y ~ log(x) + poly(x, 2), dd))
+})

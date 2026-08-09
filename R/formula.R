@@ -72,13 +72,16 @@ interpret_formula <- function(formula, data) {
   for (lb in labels) {
     ex <- str2lang(lb)
     res <- NULL
+    ok <- FALSE
     if (is.call(ex) &&
         !as.character(ex[[1L]])[1L] %in% .formula_operators) {
-      res <- tryCatch(eval(ex, data, env), error = function(e) NULL)
+      res <- tryCatch({ v <- eval(ex, data, env); ok <- TRUE; v },
+                      error = function(e) NULL)
     }
     if (S7::S7_inherits(res, model_term)) {
       specials[[lb]] <- res
     } else {
+      if (ok) .reject_unusable(res, ex, lb, env)
       ordinary <- c(ordinary, lb)
     }
   }
@@ -98,3 +101,35 @@ interpret_formula <- function(formula, data) {
   list(response = response, terms = terms_list,
        intercept = intercept, formula = formula)
 }
+# A call in a formula is a term when its value inherits model_term and a
+# covariate otherwise, which leaves a third case: a value that is neither.
+# It reaches model.matrix and fails there, several frames from the cause
+# and without naming it. The commonest way to arrive is a masked name --
+# s() and te() are also exported by mgcv, seg() by segmented -- so the
+# message says which package supplied the function that was called.
+.reject_unusable <- function(res, ex, lb, env) {
+  usable <- is.numeric(res) || is.logical(res) || is.character(res) ||
+    is.factor(res) || is.matrix(res) || inherits(res, "Date") ||
+    inherits(res, "difftime")
+  if (usable) return(invisible(NULL))
+  fn <- as.character(ex[[1L]])[1L]
+  ours <- tryCatch(get(fn, envir = asNamespace("modelterms7"),
+                       mode = "function"),
+                   error = function(e) NULL)
+  theirs <- tryCatch(get(fn, envir = env, mode = "function"),
+                     error = function(e) NULL)
+  extra <- ""
+  if (!is.null(ours) && !is.null(theirs) && !identical(ours, theirs)) {
+    where <- environmentName(environment(theirs))
+    extra <- sprintf(
+      paste0(" The name '%s' is masked here%s, and modelterms7 exports a",
+             " term of that name: write modelterms7::%s()."),
+      fn, if (nzchar(where)) sprintf(" by '%s'", where) else "", fn)
+  }
+  stop(sprintf(
+    paste0("the term '%s' evaluated to an object of class %s, which is",
+           " neither a model term nor a covariate.%s"),
+    lb, paste(sQuote(class(res), FALSE), collapse = "/"), extra),
+    call. = FALSE)
+}
+
