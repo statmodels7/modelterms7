@@ -12,6 +12,22 @@ NULL
 #' over latent states, say -- implements this, because its contribution is
 #' not a predictor and cannot be reported as one.
 #'
+#' @details
+#' The contribution of observation \eqn{t} is the logarithm of its one-step
+#' predictive density given everything before it,
+#'
+#' \deqn{\ell_t(\psi) = \log f(y_t \mid y_1, \dots, y_{t-1}; \psi),
+#'   \qquad \sum_{t=1}^{n} \ell_t(\psi)
+#'     = \log f(y_1, \dots, y_n; \psi),}
+#'
+#' so the vector returned sums to the term's log-likelihood by the chain
+#' rule of probability whatever the dependence between observations. For
+#' \code{\link{regime}} it is the normalizing constant of the forward
+#' recursion, \eqn{\ell_t = \log \sum_{k} \pi_{t \mid t-1, k}
+#' f(y_t \mid S_t = k)}, and the Jacobian
+#' \eqn{\partial \ell_t / \partial \psi_j} is propagated beside the
+#' filtered distribution rather than differenced.
+#'
 #' @param term A built structural term.
 #' @param eta The static part of the linear predictor.
 #' @param y The response.

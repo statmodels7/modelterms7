@@ -9,6 +9,14 @@ NULL
 #' conventions for factors, contrasts, interactions and the intercept.
 #'
 #' @details
+#' The block is the model matrix \eqn{X} of the formula and the term's
+#' contribution to the predictor is linear in its coefficients,
+#'
+#' \deqn{\eta = X\beta,}
+#'
+#' with no penalty attached, so all \eqn{p = \operatorname{ncol}(X)}
+#' coefficients are free and \code{\link{edf}} counts every one of them.
+#'
 #' \code{\link{interpret_formula}} collects the bare covariates of a model
 #' formula into one term of this kind, so \code{y ~ x1 + x2} and
 #' \code{y ~ linpar(~ x1 + x2)} produce the same block; the explicit

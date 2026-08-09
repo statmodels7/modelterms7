@@ -119,7 +119,7 @@ of \cite{fasola2018} is to move the observations rather than to cap
 the weight. With a scaling factor \eqn{c} the two intervals
 \eqn{[x_{(1)}, \psi]} and \eqn{(\psi, x_{(n)}]} are mapped onto
 \deqn{[x_{(1)},\, \psi - c(\psi - x_{(1)})]
-  \quad	ext{and}\quad
+  \quad\text{and}\quad
   (\psi + c(x_{(n)} - \psi),\, x_{(n)}],}
 which leaves a gap of relative width \eqn{c} around \eqn{\psi} and
 bounds \eqn{W} without altering the model: the working covariates are

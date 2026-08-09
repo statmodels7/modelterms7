@@ -94,7 +94,7 @@ SegTerm <- S7::new_class(
 #' the weight. With a scaling factor \eqn{c} the two intervals
 #' \eqn{[x_{(1)}, \psi]} and \eqn{(\psi, x_{(n)}]} are mapped onto
 #' \deqn{[x_{(1)},\, \psi - c(\psi - x_{(1)})]
-#'   \quad	ext{and}\quad
+#'   \quad\text{and}\quad
 #'   (\psi + c(x_{(n)} - \psi),\, x_{(n)}],}
 #' which leaves a gap of relative width \eqn{c} around \eqn{\psi} and
 #' bounds \eqn{W} without altering the model: the working covariates are
@@ -647,6 +647,17 @@ seg_psi <- function(term, coef = NULL) {
 #' \code{seg_converged} returns \code{FALSE}.
 #'
 #' @details
+#' With \eqn{x_{(1)} < \cdots < x_{(m)}} the distinct covariate values, the
+#' run stops at
+#'
+#' \deqn{\max_k \lvert \psi_k^{(t)} - \psi_k^{(t-1)} \rvert < \Delta,
+#'   \qquad \Delta = 0.01 \cdot
+#'     \operatorname{median}_{i}\, (x_{(i+1)} - x_{(i)}).}
+#'
+#' \cite{fasola2018} take the smallest of those gaps rather than their
+#' median, which agrees with this on the evenly spaced covariates of their
+#' examples and is of order \eqn{m^{-2}} on a random one, hence unreachable.
+#'
 #' The rule is one of resolution: below that distance the objective of a
 #' discontinuous term, a step function of the break-point, cannot change.
 #' It therefore tightens as the sample grows while the precision the

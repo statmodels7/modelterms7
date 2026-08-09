@@ -52,6 +52,20 @@ term_links <- S7::new_generic("term_links", "term",
 #' the others, so it cannot be written as a block of columns.
 #'
 #' @details
+#' Writing \eqn{\eta_t^{0}} for the static predictor supplied in \code{eta}
+#' and \eqn{\psi} for the term's parameters, the filter returns the pair
+#'
+#' \deqn{\eta_t = \eta_t^{0} + f_t(\psi),
+#'   \qquad J_{tj} = \frac{\partial \eta_t}{\partial \psi_j},}
+#'
+#' where \eqn{f_t} is the term's own recursion, driven by
+#' \code{score} and \code{curvature} evaluated at the predictor already
+#' produced. Both are read at \eqn{\eta_t}, so \code{curvature} is the
+#' second derivative \eqn{\partial^{2} \ell_t / \partial \eta^{2}} and is
+#' negative at an ordinary observation; passing the information, its
+#' negative, gives a predictor and a Jacobian that are internally
+#' consistent and wrong.
+#'
 #' The derivative is returned because the recursion is the only place it
 #' can be computed. A model layer differencing the filter would pay one
 #' pass per parameter and inherit the error of the difference; propagating
