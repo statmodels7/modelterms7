@@ -82,6 +82,30 @@ RandomTerm <- S7::new_class(
 #' Prediction maps new data onto the levels seen at build time; a level
 #' the term has not seen is rejected.
 #'
+#' @section The block and its penalty:
+#' With \eqn{m} levels and a within-group design \eqn{Z_i} of \eqn{d}
+#' columns, the block is the interaction of that design with the group
+#' indicators, ordered group by group,
+#'
+#' \deqn{Z = \operatorname{diag}(Z_1, \dots, Z_m),
+#'   \qquad b = (b_1', \dots, b_m')',}
+#'
+#' so the \eqn{d} coefficients of one group occupy adjacent positions.
+#' Under the default Gaussian the penalty is the negative log-density of
+#' \eqn{b} at a precision replicated across groups,
+#'
+#' \deqn{\rho(b; \eta) = \tfrac{1}{2} b'
+#'   \left(I_m \otimes \Omega_d(\eta)\right) b
+#'   - \tfrac{m}{2}\log\lvert \Omega_d(\eta)\rvert
+#'   + \tfrac{md}{2}\log(2\pi),}
+#'
+#' whose hyperparameters are the free values \eqn{\eta} of the
+#' within-group parameter. Minimizing the penalized least squares in
+#' \eqn{(\beta, b)} is the mixed-model equation at the variance ratio the
+#' precision encodes, so the minimizer is the best linear unbiased
+#' predictor; \eqn{\Omega_d = I_d/\sigma_b^2} recovers the ordinary random
+#' intercept, where the penalty is exactly the ridge.
+#'
 #' @param formula A bar formula, \code{~ lhs | g}, with \code{g}
 #'   evaluating to the grouping variable in the data.
 #' @param correlated Logical; whether the default Gaussian lets the

@@ -61,9 +61,42 @@ resolving it outside the new data would silently reuse the build-time
 rows.
 
 \code{\link{term_smooth}} is \code{TRUE} for \code{ridge} and
-\code{FALSE} for \code{lasso}, \code{scad} and \code{mcp}, read from
-each penalty's kink set.
+\code{FALSE} for \code{lasso}, \code{enet}, \code{scad} and
+\code{mcp}, read from each penalty's kink set.
 }
+\section{The penalties}{
+
+Writing \eqn{\beta} for the block's coefficients and \eqn{p} for their
+number, the five attach
+
+\deqn{\rho_{\mathrm{ridge}}(\beta) =
+  \frac{\lVert\beta\rVert_2^2}{2\sigma^2}
+  + p\log\!\left(\sigma\sqrt{2\pi}\right),}
+
+\deqn{\rho_{\mathrm{lasso}}(\beta) = \lambda\lVert\beta\rVert_1
+  - p\log\!\left(\frac{\lambda}{2}\right),}
+
+\deqn{\rho_{\mathrm{enet}}(\beta) = \lambda\left\{
+  \alpha\lVert\beta\rVert_1
+  + \frac{1-\alpha}{2}\lVert\beta\rVert_2^2\right\}
+  + p\log Z(\lambda, \alpha),}
+
+and the two non-convex ones, which are defined by their derivative
+rather than by their value,
+
+\deqn{\rho'_{\mathrm{scad}}(t) = \lambda\min\!\left\{1,
+  \frac{(a\lambda - t)_+}{(a-1)\lambda}\right\},
+  \qquad
+  \rho'_{\mathrm{mcp}}(t) = \left(\lambda - \frac{t}{\gamma}\right)_+ ,}
+
+for \eqn{t = \lvert\beta_j\rvert \ge 0}, summed over the coefficients.
+The first three are negative log-priors and keep their normalizing
+constants, which is what makes their hyperparameters estimable by a
+marginal criterion; the last two are improper by construction and have
+none. All five, and the arithmetic behind them, belong to
+\pkg{penalties7}: the term attaches the object and restates nothing.
+}
+
 \examples{
 dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
 built <- term_build(lasso(~ x1 + x2), dd)
