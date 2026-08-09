@@ -177,13 +177,16 @@ then returns the limit itself.
 
 The objective has local optima in the break-points, and the scaling
 schedule widens the basin the iteration converges from rather than
-removing the problem: a run should still be started from several
-positions, which is what
-[`multistart`](https://statmodels7.github.io/optimizers7/reference/multistart.html)
-does and what the bootstrap restarting of the segmented literature is
-for. A continuous term has no scaling factor, its working block being
-bounded already; where its iteration alternates between two values the
-remedy is to shrink the increment, as `segmented`'s `h` does.
+removing the problem. Where the run begins therefore decides what it
+finds, and
+[`seg_start`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
+is the answer: it scores an equally spaced grid on the least-squares
+profile and returns the specification with `psi` set to the best of it,
+which is what fasola2018 recommend and what measurement supports over
+both a conventional single start and bootstrap restarting. A continuous
+term has no scaling factor, its working block being bounded already;
+where its iteration alternates between two values the remedy is to
+shrink the increment, as `segmented`'s `h` does.
 
 ## References
 

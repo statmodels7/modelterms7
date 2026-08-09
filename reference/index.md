@@ -82,6 +82,8 @@
 - [`seg_step()`](https://statmodels7.github.io/modelterms7/reference/seg_step.md)
   [`seg_converged()`](https://statmodels7.github.io/modelterms7/reference/seg_step.md)
   : The Progress of a Break-Point Iteration
+- [`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
+  : Starting Positions for a Break-Point Term
 
 ## Structural terms
 

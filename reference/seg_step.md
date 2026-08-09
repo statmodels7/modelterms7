@@ -45,7 +45,8 @@ stopped moving.
 ## See also
 
 [`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md),
-[`seg_psi`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
+[`seg_psi`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md),
+[`seg_start`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
 
 ## Examples
 
