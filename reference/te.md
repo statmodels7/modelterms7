@@ -82,6 +82,14 @@ penalty contains the constant and the marginal linear terms, and a model
 carrying an intercept should constrain the smooth or accept that the
 constant is shared.
 
+## References
+
+Wood, S. N. (2006). Low-rank scale-invariant tensor product smooths for
+generalized additive mixed models. *Biometrics* 62, 1025-1036.
+
+Wood, S. N. (2017). *Generalized Additive Models: An Introduction with
+R*, 2nd edition. Chapman and Hall/CRC.
+
 ## Examples
 
 ``` r

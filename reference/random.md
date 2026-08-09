@@ -117,6 +117,11 @@ the minimizer is the best linear unbiased predictor; \\\Omega_d =
 I_d/\sigma_b^2\\ recovers the ordinary random intercept, where the
 penalty is exactly the ridge.
 
+## References
+
+Laird, N. M. and Ware, J. H. (1982). Random-effects models for
+longitudinal data. *Biometrics* 38, 963-974.
+
 ## Examples
 
 ``` r
