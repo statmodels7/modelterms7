@@ -112,3 +112,7 @@ term_coef_names(built)
 term_penalty(built)@params
 
 }
+\references{
+Laird, N. M. and Ware, J. H. (1982). Random-effects models for
+longitudinal data. \emph{Biometrics} 38, 963-974.
+}

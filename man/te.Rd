@@ -71,3 +71,10 @@ built <- term_build(te(x, z, k = 4), dd)
 term_npar(built)
 
 }
+\references{
+Wood, S. N. (2006). Low-rank scale-invariant tensor product smooths for
+generalized additive mixed models. \emph{Biometrics} 62, 1025-1036.
+
+Wood, S. N. (2017). \emph{Generalized Additive Models: An Introduction
+with R}, 2nd edition. Chapman and Hall/CRC.
+}

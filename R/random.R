@@ -130,6 +130,10 @@ RandomTerm <- S7::new_class(
 #' term_coef_names(built)
 #' term_penalty(built)@params
 #'
+#' @references
+#' Laird, N. M. and Ware, J. H. (1982). Random-effects models for
+#' longitudinal data. \emph{Biometrics} 38, 963-974.
+#'
 #' @export
 random <- function(formula, correlated = TRUE, precision = NULL,
                    distrib = NULL, kinks = numeric(0), label = "random") {
