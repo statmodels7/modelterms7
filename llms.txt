@@ -24,6 +24,24 @@ builds grouped intercepts and slopes with the effect distribution as the
 penalty, correlated or not through a
 [parameters7](https://statmodels7.github.io/parameters7/) structure
 replicated across groups;
+[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
+[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md) are
+the penalized smooths of one and of several covariates, built on
+[basis7](https://statmodels7.github.io/basis7/);
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+carries a contribution nonlinear in its own parameters, its block the
+Jacobian refreshed as they move;
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+and
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+estimate the break-points at which an effect changes slope, level, or
+both;
+[`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+and
+[`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+rewrite the likelihood rather than adding to it, with score-driven
+dynamics and a latent Markov chain;
 [`cens()`](https://statmodels7.github.io/modelterms7/reference/cens.md)
 marks a censored response on the left side of the formula. Part of the
 [statmodels7](https://statmodels7.github.io) toolkit.

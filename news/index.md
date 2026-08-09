@@ -9,8 +9,8 @@
   so the break-point is read off two coefficients rather than searched
   for. Both run under the existing term_refresh() contract, with by and
   an optional penalty on the changes. The working block is compiled
-  (1.2x to 3.2x the R form over n from 1e3 to 1e6, agreeing bit for
-  bit); the linear fit around it is BLAS in either language.
+  (1.2x to 3.2x the R form over n from 1e3 to 1e6, agreeing to a
+  rounding); the linear fit around it is BLAS in either language.
 
 ## modelterms7 0.9.0
 
