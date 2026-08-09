@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.11.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.11.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,10 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.11.1" id="modelterms7-0111">modelterms7 0.11.1<a class="anchor" aria-label="anchor" href="#modelterms7-0111"></a></h2>
+<ul><li>interpret_formula() rejects a call that evaluates to neither a model term nor a covariate, naming the call, its class and – when the function that was called is not the one modelterms7 exports under that name – the package that masked it. mgcv exports s() and te() and segmented exports seg(), so a user with either attached wrote our formula and got theirs; the value used to travel to model.matrix and fail there, naming neither the call nor the mask.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.11.0" id="modelterms7-0110">modelterms7 0.11.0<a class="anchor" aria-label="anchor" href="#modelterms7-0110"></a></h2>
 <ul><li>The discontinuous terms follow Fasola, Muggeo and Kuchenhoff’s algorithm as published. The weight is no longer capped: the covariate is rescaled away from the break-point by a factor <code>c0</code>, which leaves a gap around it, and <code><a href="../reference/term_refresh.html">term_refresh()</a></code> halves the factor whenever the break-point reverses direction. <code>band</code> is gone and no damping is needed, the factor governing the step. Measured over eight samples, <code><a href="../reference/seg.html">jump()</a></code> now recovers the break-point from every starting position tried, where the capped form recovered it only from within a narrow basin.</li>
