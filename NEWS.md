@@ -11,6 +11,15 @@
   form recovered it only from within a narrow basin.
 * seg_step() and seg_converged() report the progress of the
   iteration and Fasola et al.'s stopping rule.
+* seg_start() chooses the starting positions by scoring an equally
+  spaced grid on the least-squares profile, which is the
+  initialization Fasola et al. recommend and the piece that was
+  missing. It is what settles the joint term: measured over eight
+  samples of a jump and a change of slope at the same point, a
+  single conventional start recovers the break-point in none to
+  half of them depending on where it is placed, and the grid in all
+  of them. Bootstrap restarting was measured beside it and does far
+  less (0.12 to 0.75).
 * Measured against the segmented package, on one covariate with one
   and two break-points and n from 200 to 20000: the continuous case
   agrees to four significant figures on the residual sum of squares

@@ -55,5 +55,6 @@ c(psi = seg_psi(b, cf), step = seg_step(b))
 
 }
 \seealso{
-\code{\link{seg}}, \code{\link{seg_psi}}
+\code{\link{seg}}, \code{\link{seg_psi}},
+  \code{\link{seg_start}}
 }

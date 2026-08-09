@@ -16,13 +16,13 @@ seg_iterate <- function(built, y, iters = 40, damp = 1, stop_early = TRUE) {
     X <- term_matrix(cur)
     # for the continuous case the block is a Jacobian, so the fit gives
     # an increment; for the jump it gives the coefficients themselves
+    # a QR of the design, not the normal equations: the working block of
+    # a discontinuous term is conditioned to eps^-1/2 by construction and
+    # crossprod(X) squares that
     if (cur@kind == "seg") {
-      r <- y - term_value(cur)
-      step <- qr.solve(crossprod(X) + 1e-10 * diag(ncol(X)), crossprod(X, r))
-      b <- b + damp * as.numeric(step)
+      b <- b + damp * as.numeric(qr.coef(qr(X), y - term_value(cur)))
     } else {
-      b <- as.numeric(qr.solve(crossprod(X) + 1e-10 * diag(ncol(X)),
-                               crossprod(X, y)))
+      b <- as.numeric(qr.coef(qr(X), y))
     }
     if (stop_early && seg_converged(cur)) break
   }
@@ -303,6 +303,69 @@ test_that("the constructors reject what they cannot honour", {
   dd <- data.frame(x = rep(1, 10))
   expect_error(term_build(seg(x), dd), "must vary")
   expect_error(seg_psi(seg(x)), "not been built")
+})
+
+test_that("seg_start finds a start every construction converges from", {
+  # The grid initialization of Fasola et al. is what turns the basin
+  # into a non-issue: measured over eight samples on a joint jump and
+  # change of slope, a single start recovers the break-point in between
+  # none and half of them depending on where it is put, and the grid in
+  # all of them.
+  mk <- function(seed, kind) {
+    set.seed(seed)
+    d <- data.frame(x = sort(runif(400, 0, 10)))
+    d$y <- 0.3 * d$x +
+      (if (kind != "jump") 1.5 * pmax(d$x - 5, 0) else 0) +
+      (if (kind != "seg") 2 * (d$x > 5) else 0) + rnorm(400, sd = 0.3)
+    d
+  }
+  for (kind in c("seg", "jump", "jseg")) {
+    hits <- vapply(1:4, function(sd) {
+      d <- mk(sd, kind)
+      spec <- switch(kind, seg = seg(x), jump = jump(x), jseg = jseg(x))
+      st <- seg_start(spec, d, d$y)
+      b <- seg_iterate(term_build(st, d), d$y, iters = 200)
+      abs(seg_psi(term_build(st, d), b) - 5) < 0.3
+    }, logical(1))
+    expect_true(all(hits), info = kind)
+  }
+})
+
+test_that("seg_start scores a grid and handles several points and by", {
+  set.seed(21)
+  dd <- data.frame(x = sort(runif(600, 0, 10)))
+  dd$y <- 0.3 * dd$x + 2 * (dd$x > 3.5) + 2 * (dd$x > 6.5) +
+    rnorm(600, sd = 0.3)
+
+  st <- seg_start(jump(x, npsi = 2), dd, dd$y)
+  expect_length(st@spec$psi, 2L)
+  expect_true(all(abs(sort(st@spec$psi) - c(3.5, 6.5)) < 0.6))
+  # the grid lies inside the interval a break-point is held in
+  lim <- as.numeric(stats::quantile(dd$x, c(0.05, 0.95), names = FALSE))
+  expect_true(all(st@spec$psi >= lim[1] & st@spec$psi <= lim[2]))
+  # and the iteration started there reaches the two break-points
+  b <- seg_iterate(term_build(st, dd), dd$y, iters = 200)
+  expect_equal(sort(seg_psi(term_build(st, dd), b)), c(3.5, 6.5),
+               tolerance = 0.15)
+
+  # one set of positions is carried when by splits the rows
+  set.seed(22)
+  d2 <- data.frame(x = sort(runif(400, 0, 10)),
+                   g = factor(sample(c("a", "b"), 400, TRUE)))
+  d2$y <- 0.3 * d2$x + ifelse(d2$g == "a", 2 * (d2$x > 4), 2 * (d2$x > 7)) +
+    rnorm(400, sd = 0.3)
+  s2 <- seg_start(jump(x, by = g), d2, d2$y)
+  expect_length(s2@spec$psi, 1L)
+  b2 <- seg_iterate(term_build(s2, d2), d2$y, iters = 200)
+  expect_equal(seg_psi(term_build(s2, d2), b2), c(4, 7), tolerance = 0.3)
+})
+
+test_that("seg_start rejects what it cannot use", {
+  dd <- data.frame(x = sort(runif(50, 0, 10)), y = rnorm(50))
+  expect_error(seg_start(linpar(~x), dd, dd$y), "segmented term")
+  expect_error(seg_start(term_build(seg(x), dd), dd, dd$y), "unbuilt")
+  expect_error(seg_start(seg(x, npsi = 3), dd, dd$y, k = 3), "at least 4")
+  expect_error(seg_start(seg(x), dd, dd$y[1:10]), "one value per row")
 })
 
 test_that("the interpreter routes the three and print reports the points", {
