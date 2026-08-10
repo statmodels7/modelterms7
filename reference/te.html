@@ -11,7 +11,7 @@ penalty on the product coefficients."><meta property="og:image" content="https:/
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -112,10 +112,28 @@ rather than an isotropic one. With <code>anisotropic = FALSE</code> they are
 summed first and one parameter governs the total, which costs one
 hyperparameter instead of one per margin.</p>
 <p>The marginal bases are not reparametrized, so unlike <code><a href="s.html">s</a></code>
-the linear effects are not separated out: the null space of the tensor
-penalty contains the constant and the marginal linear terms, and a
-model carrying an intercept should constrain the smooth or accept that
-the constant is shared.</p>
+the marginal linear effects are not separated out: the null space of
+the tensor penalty contains them, and they are shrunk towards no
+surface at all rather than towards a plane.</p>
+<div class="section">
+<h3 id="centering">Centering<a class="anchor" aria-label="anchor" href="#centering"></a></h3>
+<p>The tensor product of the marginal bases contains the constant, which
+the penalty's null space contains as well, so beside an intercept the
+block would be rank deficient by exactly one and the penalty would not
+cover the deficiency. The block therefore carries the sum-to-zero
+constraint over the observed covariates
+(<code><a href="https://statmodels7.github.io/basis7/reference/constrain_basis.html" class="external-link">constrain_basis</a></code>): the term has one column fewer
+than the product of its marginal dimensions, every column sums to zero
+over the data it was built on, and the penalty follows by congruence
+with its rank unchanged, the direction removed having been one of its
+null directions. The transform is stored in the blueprint and reapplied
+by <code><a href="term_predict.html">term_predict</a></code>, as the Demmler-Reinsch transform of
+<code><a href="s.html">s</a></code> is.</p>
+<p>The level of the surface is then the model's intercept, so a formula
+that removes it (<code>y ~ te(x, z) - 1</code>) fits a surface constrained to
+average zero over the data.</p>
+</div>
+
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -136,7 +154,7 @@ with R</em>, 2nd edition. Chapman and Hall/CRC.</p>
 <span class="r-in"><span><span class="va">dd</span><span class="op">$</span><span class="va">y</span> <span class="op">&lt;-</span> <span class="va">dd</span><span class="op">$</span><span class="va">x</span> <span class="op">*</span> <span class="va">dd</span><span class="op">$</span><span class="va">z</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">120</span>, sd <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">built</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">te</span><span class="op">(</span><span class="va">x</span>, <span class="va">z</span>, k <span class="op">=</span> <span class="fl">4</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="term_npar.html">term_npar</a></span><span class="op">(</span><span class="va">built</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 16</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 15</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

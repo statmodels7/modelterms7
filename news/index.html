@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.13.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,12 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.14.0" id="modelterms7-0140">modelterms7 0.14.0<a class="anchor" aria-label="anchor" href="#modelterms7-0140"></a></h2>
+<ul><li>te() centers its block: the tensor product of the marginal bases contains the constant, and the null space of the tensor penalty contains it too, so beside an intercept the design was rank deficient by exactly one with no penalty covering the deficiency. Measured on 300 observations of te(a, b, k = 5), the design of y ~ te(a, b, k = 5) had 25 of 26 columns, a smallest singular value of 2.2e-15 and a condition number of 8.0e15, and the penalized information a smallest eigenvalue at the rounding floor – which chol() accepts or rejects by the luck of rounding, so vcov(), confint() and the outer criterion returned numbers computed on a singular matrix. The block now carries the sum-to-zero constraint over the observed covariates, through basis7::constrain_basis() applied to the product basis, as mgcv does for a smooth. The same design is 25 of 25 columns at a condition number of 138.5, and the penalized information has a smallest eigenvalue of 0.93. A tensor term has one column fewer than the product of its marginal dimensions: te(x, z, k = 4) reports 15 parameters where it reported
+<ol start="16" style="list-style-type: decimal"><li>The penalty follows by congruence and its rank does not move, the direction removed having been one of its null directions (21 of 24 where it was 21 of 25). The transform is stored in the blueprint and reapplied by term_predict(), as the Demmler-Reinsch transform of s() is. The level of the surface is the model’s intercept, so a formula removing it fits a surface constrained to average zero.</li>
+</ol></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.13.0" id="modelterms7-0130">modelterms7 0.13.0<a class="anchor" aria-label="anchor" href="#modelterms7-0130"></a></h2>
 <ul><li>enet(): the elastic-net term, beside ridge, lasso, scad and mcp, carrying penalties7::elasticnet_penalty(). Like the lasso it is not smooth, and its effective degrees of freedom are the nonzero count.</li>
