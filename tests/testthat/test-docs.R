@@ -42,7 +42,8 @@ documentable <- function() {
   ns <- asNamespace("modelterms7")
   nms <- setdiff(ls(ns, all.names = FALSE),
                  c("print", "plot", "summary", "mean", "simulate",
-                   "coef", "confint", "logLik", "vcov"))
+                   "coef", "confint", "logLik", "vcov",
+                   "predict", "fitted"))
   nms <- grep("^_modelterms7_", nms, invert = TRUE, value = TRUE)
   keep <- vapply(nms, function(n) {
     o <- get(n, envir = ns)
