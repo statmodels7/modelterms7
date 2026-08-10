@@ -129,10 +129,28 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #' hyperparameter instead of one per margin.
 #'
 #' The marginal bases are not reparametrized, so unlike \code{\link{s}}
-#' the linear effects are not separated out: the null space of the tensor
-#' penalty contains the constant and the marginal linear terms, and a
-#' model carrying an intercept should constrain the smooth or accept that
-#' the constant is shared.
+#' the marginal linear effects are not separated out: the null space of
+#' the tensor penalty contains them, and they are shrunk towards no
+#' surface at all rather than towards a plane.
+#'
+#' \subsection{Centering}{
+#' The tensor product of the marginal bases contains the constant, which
+#' the penalty's null space contains as well, so beside an intercept the
+#' block would be rank deficient by exactly one and the penalty would not
+#' cover the deficiency. The block therefore carries the sum-to-zero
+#' constraint over the observed covariates
+#' (\code{\link[basis7]{constrain_basis}}): the term has one column fewer
+#' than the product of its marginal dimensions, every column sums to zero
+#' over the data it was built on, and the penalty follows by congruence
+#' with its rank unchanged, the direction removed having been one of its
+#' null directions. The transform is stored in the blueprint and reapplied
+#' by \code{\link{term_predict}}, as the Demmler-Reinsch transform of
+#' \code{\link{s}} is.
+#'
+#' The level of the surface is then the model's intercept, so a formula
+#' that removes it (\code{y ~ te(x, z) - 1}) fits a surface constrained to
+#' average zero over the data.
+#' }
 #'
 #' @param ... The covariates, expressions evaluated in the data, at least
 #'   two of them.
@@ -291,8 +309,7 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
     core <- list(kind = "dr", dr = d, lin = lin)
   } else {
     tb <- basis7::tensor_basis(marg)
-    Z <- basis7::basis_eval(tb, do.call(cbind, xs))
-    nm <- paste0("z", seq_len(ncol(Z)))
+    xm <- do.call(cbind, xs)
     # the marginal roughness penalties carried into the product: the second
     # derivative Gram of each margin, the identity in the others
     dims <- vapply(marg, function(b) b@dimension, integer(1))
@@ -305,6 +322,21 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
       # product is taken in reverse order
       Reduce(kronecker, rev(blocks))
     })
+    # The tensor product contains the constant, which the penalty's null space
+    # also contains, so a model carrying an intercept would be rank deficient
+    # by exactly one and nothing in the penalty would cover it. The sum-to-zero
+    # constraint over the observed covariates removes that direction: every
+    # column of the constrained block sums to zero, hence is orthogonal to an
+    # intercept column. The penalty follows by congruence, and since the
+    # direction removed lies in its null space the rank is unchanged.
+    tb <- basis7::constrain_basis(tb, colSums(basis7::basis_eval(tb, xm)))
+    tmat <- tb@transform
+    comps <- lapply(comps, function(Pk) {
+      M <- crossprod(tmat, Pk %*% tmat)
+      (M + t(M)) / 2
+    })
+    Z <- basis7::basis_eval(tb, xm)
+    nm <- paste0("z", seq_len(ncol(Z)))
     P <- if (isTRUE(sp$anisotropic)) comps else Reduce(`+`, comps)
     core <- list(kind = "tensor", basis = tb)
   }

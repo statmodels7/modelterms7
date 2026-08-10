@@ -103,22 +103,23 @@ test_that("by a numeric is a varying-coefficient term", {
 
 test_that("te() smooths each margin with a parameter of its own", {
   built <- term_build(te(x, z, k = 4), dd)
-  expect_identical(term_npar(built), 16L)
+  # the product of the marginal dimensions less the centering constraint
+  expect_identical(term_npar(built), 15L)
 
   pen <- term_penalty(built)
   # one smoothing parameter per margin: that is what anisotropic means
   expect_identical(pen@params, c("lambda1", "lambda2"))
   P <- penalties7::penalty_matrix(pen, list(lambda1 = 1, lambda2 = 1))
-  expect_identical(dim(P), c(16L, 16L))
+  expect_identical(dim(P), c(15L, 15L))
 
   # a roughness penalty is rank deficient: its null space holds the
   # surfaces of no curvature in either direction
   r <- penalties7::penalty_rank(pen)
-  expect_lt(r, 16L)
+  expect_lt(r, 15L)
   expect_gt(r, 0L)
 
   # and the two directions really are penalized apart
-  b <- rnorm(16)
+  b <- rnorm(15)
   v1 <- penalties7::penalty_value(pen, b, list(lambda1 = 1e3, lambda2 = 1e-3))
   v2 <- penalties7::penalty_value(pen, b, list(lambda1 = 1e-3, lambda2 = 1e3))
   expect_false(isTRUE(all.equal(v1, v2)))
@@ -158,9 +159,60 @@ test_that("a tensor smooth recovers an interaction surface", {
 
 test_that("te() with by keeps one surface per level", {
   built <- term_build(te(x, z, k = 4, by = g), dd)
-  expect_identical(term_npar(built), 48L)
+  expect_identical(term_npar(built), 45L)
   res <- check_term(te(x, z, k = 4, by = g), dd, verbose = FALSE)
   expect_true(all(res$status == "OK"))
+})
+
+test_that("te() is centered, so a design carrying an intercept has full rank", {
+  # the tensor product contains the constant and the penalty's null space
+  # contains it too, so without the constraint the design beside an intercept
+  # is rank deficient by exactly one and nothing covers the deficiency
+  built <- term_build(te(x, z, k = 5), dd)
+  Z <- term_matrix(built)
+  expect_identical(ncol(Z), 24L)
+  expect_lt(max(abs(colSums(Z))), 1e-10)
+
+  X <- cbind(1, Z)
+  expect_identical(qr(X)$rank, ncol(X))
+  sv <- svd(X)$d
+  # the unconstrained block gives a condition number at the reciprocal of the
+  # machine epsilon; this one is a design that can be solved
+  expect_lt(sv[1] / sv[length(sv)], 1e6)
+
+  # the direction removed was one of the penalty's null directions, so the
+  # rank of the penalty does not move with the dimension
+  marg <- lapply(list(dd$x, dd$z), function(v) {
+    r <- range(v); pad <- diff(r) * 0.001 + .Machine$double.eps
+    basis7::bspline_basis(lower = r[1] - pad, upper = r[2] + pad,
+                          dimension = 5L, degree = 3L)
+  })
+  comps <- lapply(1:2, function(j) {
+    Pj <- basis7::basis_gram(marg[[j]], order = 2L)
+    Pj <- Pj / max(1, max(abs(Pj)))
+    Reduce(kronecker, rev(lapply(1:2, function(i)
+      if (i == j) Pj else diag(5L))))
+  })
+  expect_identical(penalties7::penalty_rank(term_penalty(built)),
+                   penalties7::penalty_rank(penalties7::additive_penalty(comps)))
+})
+
+test_that("the penalized information of a centered tensor is definite", {
+  # chol() is not a rank test: on the unconstrained block it succeeded or
+  # failed by the luck of rounding while the smallest eigenvalue sat at the
+  # rounding floor, so vcov(), confint() and the outer criterion were computed
+  # on a singular matrix. The eigenvalue is what has to be asserted.
+  built <- term_build(te(x, z, k = 5), dd)
+  Z <- term_matrix(built)
+  X <- cbind(1, Z)
+  pen <- term_penalty(built)
+  S <- matrix(0, ncol(X), ncol(X))
+  idx <- 1L + seq_len(ncol(Z))
+  S[idx, idx] <- penalties7::penalty_hessian(pen, numeric(ncol(Z)),
+                                             list(lambda1 = 1, lambda2 = 1))
+  ev <- eigen(crossprod(X) + S, symmetric = TRUE, only.values = TRUE)$values
+  expect_gt(min(ev), sqrt(.Machine$double.eps) * max(ev))
+  expect_silent(chol(crossprod(X) + S))
 })
 
 test_that("the smooths are routed by the interpreter and validated", {

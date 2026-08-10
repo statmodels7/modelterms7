@@ -1,3 +1,29 @@
+# modelterms7 0.14.0
+
+* te() centers its block: the tensor product of the marginal bases
+  contains the constant, and the null space of the tensor penalty
+  contains it too, so beside an intercept the design was rank deficient
+  by exactly one with no penalty covering the deficiency. Measured on
+  300 observations of te(a, b, k = 5), the design of y ~ te(a, b, k = 5)
+  had 25 of 26 columns, a smallest singular value of 2.2e-15 and a
+  condition number of 8.0e15, and the penalized information a smallest
+  eigenvalue at the rounding floor -- which chol() accepts or rejects by
+  the luck of rounding, so vcov(), confint() and the outer criterion
+  returned numbers computed on a singular matrix.
+  The block now carries the sum-to-zero constraint over the observed
+  covariates, through basis7::constrain_basis() applied to the product
+  basis, as mgcv does for a smooth. The same design is 25 of 25 columns
+  at a condition number of 138.5, and the penalized information has a
+  smallest eigenvalue of 0.93.
+  A tensor term has one column fewer than the product of its marginal
+  dimensions: te(x, z, k = 4) reports 15 parameters where it reported
+  16. The penalty follows by congruence and its rank does not move, the
+  direction removed having been one of its null directions (21 of 24
+  where it was 21 of 25). The transform is stored in the blueprint and
+  reapplied by term_predict(), as the Demmler-Reinsch transform of s()
+  is. The level of the surface is the model's intercept, so a formula
+  removing it fits a surface constrained to average zero.
+
 # modelterms7 0.13.0
 
 * enet(): the elastic-net term, beside ridge, lasso, scad and mcp,
