@@ -122,3 +122,37 @@ test_that("the interpreter routes enet beside the other four", {
   b <- term_build(out$terms[["enet(R)"]], dd)
   expect_output(print(b), "enet")
 })
+
+
+test_that("a term reports every penalty it carries", {
+  # term_penalty() answers for one penalty over a whole design block, which is
+  # every term shipped here. term_penalties() generalizes it in the two
+  # directions a model layer needs: several penalties on one term, and
+  # penalties over parameters that are not coefficients of a block -- the
+  # persistence of a gas(), the nonlinear parameters of nl(), the break-point
+  # of seg(). The base method answers from term_penalty(), so nothing here
+  # needs a method of its own and nothing downstream sees a change.
+  d <- data.frame(x = stats::rnorm(30), z = stats::rnorm(30),
+                  g = factor(rep(1:3, 10)))
+  for (tm in list(ridge(~x), lasso(~ x + z), s(x, k = 5), random(~ 1 | g))) {
+    b <- term_build(tm, d)
+    ps <- term_penalties(b)
+    expect_length(ps, 1L)
+    expect_identical(ps[[1L]]$name, "")
+    expect_identical(ps[[1L]]$index, seq_len(term_npar(b)))
+    expect_identical(ps[[1L]]$penalty, term_penalty(b))
+  }
+  # an unpenalized term carries none
+  expect_length(term_penalties(term_build(linpar(~x), d)), 0L)
+  # and a structural term answers rather than raising, which is what lets a
+  # caller enumerate over every term without knowing which kind it has
+  expect_length(term_penalties(gas(p = 1, q = 1)), 0L)
+
+  # the name is the entry's WITHIN the term and never the term's own: two
+  # ridge() terms in one formula are two terms with two hyperparameters, and
+  # it is the caller that knows what it called each one
+  a <- term_build(ridge(~x), d)
+  b2 <- term_build(ridge(~z), d)
+  expect_identical(term_penalties(a)[[1L]]$name,
+                   term_penalties(b2)[[1L]]$name)
+})

@@ -30,6 +30,7 @@ reference:
   - term_is_built
   - term_matrix
   - term_penalty
+  - term_penalties
   - term_npar
   - term_coef_names
   - term_smooth

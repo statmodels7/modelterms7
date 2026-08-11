@@ -140,6 +140,59 @@ S7::method(term_penalty, additive_term) <- function(term, ...) {
   term@penalty
 }
 
+#' @title Every Penalty a Term Carries
+#'
+#' @description
+#' What a term declares it wants penalized: a list of entries, each naming a
+#' subset of the term's own parameters and the penalty over them.
+#'
+#' @details
+#' \code{\link{term_penalty}} answers for the common case, one penalty over the
+#' whole of a term's design block, and this generalizes it in two directions a
+#' model layer needs.
+#'
+#' A term may carry \strong{more than one} penalty, over different parameters of
+#' its own. A panel model with a population value and a deviation per group
+#' wants the population value free and the deviations shrunk, which is one
+#' penalty over part of the parameters and none over the rest.
+#'
+#' The parameters need \strong{not be coefficients of a design block}. The
+#' persistence of a score-driven term, the nonlinear parameters of
+#' \code{\link{nl}}, the break-point of \code{\link{seg}} are parameters of the
+#' term and nothing else, and everything a penalty needs from them is a vector
+#' of numbers and their positions.
+#'
+#' The base method answers from \code{term_penalty()}, so a term that carries
+#' one penalty over its whole block -- every term shipped here -- needs no
+#' method of its own and behaves exactly as before. Its single entry is named
+#' with the empty string, meaning the whole term, so a caller that keys the
+#' hyperparameters by term name keys them exactly as it did.
+#'
+#' @param term A built term.
+#' @param ... Passed to methods.
+#'
+#' @return A list, possibly empty. Each entry has \code{name} (a label unique
+#'   WITHIN the term, empty for a penalty over the whole of it), \code{index}
+#'   (positions among the term's parameters) and \code{penalty} (a
+#'   \pkg{penalties7} object). The name is not the term's: two \code{ridge()}
+#'   terms in one formula are two terms with their own hyperparameters, and it
+#'   is the caller that knows what it called each one.
+#'
+#' @examples
+#' term_penalties(term_build(ridge(~x), data.frame(x = rnorm(20))))
+#' term_penalties(term_build(linpar(~x), data.frame(x = rnorm(20))))
+#'
+#' @seealso \code{\link{term_penalty}}, \code{\link{term_npar}}
+#' @export
+term_penalties <- S7::new_generic("term_penalties", "term",
+  function(term, ...) S7::S7_dispatch())
+
+S7::method(term_penalties, model_term) <- function(term, ...) {
+  pen <- tryCatch(term_penalty(term), error = function(e) NULL)
+  if (is.null(pen)) return(list())
+  list(list(name = "", index = seq_len(term_npar(term)), penalty = pen))
+}
+
 #' @title Number of Coefficients of a Built Term
 #'
 #' @description The number of columns of the term's design block.

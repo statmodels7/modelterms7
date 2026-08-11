@@ -1,3 +1,28 @@
+# modelterms7 0.15.0
+
+* `term_penalties()` is what a term declares it wants penalized: a list of
+  entries, each naming a subset of the term's own parameters and the penalty
+  over them. It generalizes `term_penalty()` in the two directions a model
+  layer needs.
+
+  A term may carry MORE THAN ONE penalty, over different parameters of its
+  own -- a panel model with a population value free and a deviation per group
+  shrunk is one penalty over part of the parameters and none over the rest.
+  And the parameters need NOT be coefficients of a design block: the
+  persistence of a score-driven term, the nonlinear parameters of `nl()`, the
+  break-point of `seg()` are parameters of the term and nothing else, and all
+  a penalty needs of them is a vector of numbers and their positions.
+
+  The base method answers from `term_penalty()`, so every term shipped here
+  needs no method of its own and behaves exactly as before, and a structural
+  term answers with an empty list rather than raising, which is what lets a
+  caller enumerate over every term without knowing which kind it has.
+
+  The entry's name is unique WITHIN the term and is empty for a penalty over
+  the whole of it. It is not the term's name: two `ridge()` terms in one
+  formula are two terms with their own hyperparameters, and it is the caller
+  that knows what it called each one.
+
 # modelterms7 0.14.0
 
 * te() centers its block: the tensor product of the marginal bases
