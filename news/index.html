@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.14.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.15.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,15 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.15.0" id="modelterms7-0150">modelterms7 0.15.0<a class="anchor" aria-label="anchor" href="#modelterms7-0150"></a></h2>
+<ul><li>
+<p><code><a href="../reference/term_penalties.html">term_penalties()</a></code> is what a term declares it wants penalized: a list of entries, each naming a subset of the term’s own parameters and the penalty over them. It generalizes <code><a href="../reference/term_penalty.html">term_penalty()</a></code> in the two directions a model layer needs.</p>
+<p>A term may carry MORE THAN ONE penalty, over different parameters of its own – a panel model with a population value free and a deviation per group shrunk is one penalty over part of the parameters and none over the rest. And the parameters need NOT be coefficients of a design block: the persistence of a score-driven term, the nonlinear parameters of <code><a href="../reference/nl.html">nl()</a></code>, the break-point of <code><a href="../reference/seg.html">seg()</a></code> are parameters of the term and nothing else, and all a penalty needs of them is a vector of numbers and their positions.</p>
+<p>The base method answers from <code><a href="../reference/term_penalty.html">term_penalty()</a></code>, so every term shipped here needs no method of its own and behaves exactly as before, and a structural term answers with an empty list rather than raising, which is what lets a caller enumerate over every term without knowing which kind it has.</p>
+<p>The entry’s name is unique WITHIN the term and is empty for a penalty over the whole of it. It is not the term’s name: two <code><a href="../reference/ridge.html">ridge()</a></code> terms in one formula are two terms with their own hyperparameters, and it is the caller that knows what it called each one.</p>
+</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.14.0" id="modelterms7-0140">modelterms7 0.14.0<a class="anchor" aria-label="anchor" href="#modelterms7-0140"></a></h2>
 <ul><li>te() centers its block: the tensor product of the marginal bases contains the constant, and the null space of the tensor penalty contains it too, so beside an intercept the design was rank deficient by exactly one with no penalty covering the deficiency. Measured on 300 observations of te(a, b, k = 5), the design of y ~ te(a, b, k = 5) had 25 of 26 columns, a smallest singular value of 2.2e-15 and a condition number of 8.0e15, and the penalized information a smallest eigenvalue at the rounding floor – which chol() accepts or rejects by the luck of rounding, so vcov(), confint() and the outer criterion returned numbers computed on a singular matrix. The block now carries the sum-to-zero constraint over the observed covariates, through basis7::constrain_basis() applied to the product basis, as mgcv does for a smooth. The same design is 25 of 25 columns at a condition number of 138.5, and the penalized information has a smallest eigenvalue of 0.93. A tensor term has one column fewer than the product of its marginal dimensions: te(x, z, k = 4) reports 15 parameters where it reported

@@ -21,6 +21,8 @@ structural term takes instead.
   : Design Block of a Built Term
 - [`term_penalty()`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md)
   : Penalty of a Term
+- [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+  : Every Penalty a Term Carries
 - [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
   : Number of Coefficients of a Built Term
 - [`term_coef_names()`](https://statmodels7.github.io/modelterms7/reference/term_coef_names.md)
