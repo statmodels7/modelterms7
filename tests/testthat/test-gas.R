@@ -215,11 +215,17 @@ test_that("deviations at zero reproduce the shared-parameter filter", {
                    score = gauss_score(dd$y), curvature = gauss_curv(dd$y),
                    psi = c(psi, stats::setNames(as.list(rep(0, 6)),
                                                 term_params(dev)[4:9])))
-  expect_identical(b$eta, a$eta)
-  # and the population columns are the shared ones exactly: at a zero
-  # deviation the two chain factors are reciprocal, by the inverse
-  # function theorem, so nothing is scaled
-  expect_identical(unname(b$jacobian[, 1:3]), unname(a$jacobian))
+  # At a zero deviation the two chain factors are reciprocal by the inverse
+  # function theorem, so the deviations change nothing. They are reciprocal in
+  # the MATHEMATICS: computing h'(g(psi)) * g'(psi) gives 1 within a rounding,
+  # not 1 exactly, and multiplying by that is not the same as not multiplying.
+  # Whether the last bit survives depends on the platform's libm -- the
+  # identity held on Windows and macOS and failed on all three Linux jobs by
+  # 3e-16 relative -- so what is asserted is a tolerance tight enough that
+  # scaling the wrong way round, which is off by the factor itself, fails it.
+  expect_equal(b$eta, a$eta, tolerance = 1e-13)
+  expect_equal(unname(b$jacobian[, 1:3]), unname(a$jacobian),
+               tolerance = 1e-13)
 })
 
 test_that("a shift shared by the population and the deviations does nothing", {
