@@ -1,3 +1,225 @@
+# modelterms7 0.20.0
+
+* `term_hessian()` returns the exact Hessian of a likelihood mixed over
+  latent states, in the whole of a caller's unknown vector: the
+  coefficients of every equation together with the term's own parameters.
+
+  What a caller could assemble from `term_posterior()` alone is the
+  COMPLETE-DATA information, the ordinary one averaged over the smoothed
+  states. That is the matrix an EM step inverts and it is not the observed
+  information: by the missing-information principle the two differ by the
+  conditional variance of the complete-data score, so the complete-data one
+  is the larger and a standard error read off it is too small. Measured on
+  a two-regime gaussian, the difference reaches 30 per cent of a standard
+  error where the regimes overlap and vanishes as they separate and the
+  states become known.
+
+  Louis's identity is one route to it and is not the one taken. The scaled
+  forward recursion computes the observed log-likelihood exactly, as a sum
+  of the logarithms of its normalizing constants, so differentiating that
+  arithmetic twice gives the observed Hessian with no identity, no pairwise
+  smoothed probabilities and no second-moment recursion. The first and
+  second derivatives of the filtered distribution are propagated beside it
+  and renormalized by the quotient rule. Louis's identity becomes the
+  check instead: the difference between the two matrices must be positive
+  semidefinite, and it is measured to be, strictly, wherever the states
+  carry any uncertainty.
+
+  The cost is `O(n K^2 m^2)`, and the computation is meant to run once at a
+  fitted point. `regime_stationary()` gained the second derivative of the
+  stationary distribution, from the same linear system as its first.
+
+# modelterms7 0.19.0
+
+* `term_posterior()` returns the smoothed state probabilities of a latent
+  Markov term, which is everything a model layer needs to differentiate a
+  likelihood mixed over states. By Fisher's identity the derivative of that
+  likelihood in ANY predictor the model carries is the posterior-weighted
+  derivative of the ordinary one, so a caller differentiates its own
+  log-density K times vectorized and weights, and needs no callback per
+  observation. That is the property that made the forward pass compilable
+  read once more: a regime shifts a predictor known before the recursion
+  starts.
+
+  The probabilities come from the forward pass this term already runs and a
+  backward pass beside it, both normalized -- without which the quantities
+  are products of t densities and reach zero in double precision within a
+  few hundred observations. Validated against `numDeriv`: the rows sum to
+  one to 1.1e-16 and Fisher's identity holds to 8.1e-09, 1.3e-07 and
+  7.7e-10 over one series, three regimes and groups, where the score at the
+  marginal mean is out by 1.4.
+
+* `term_level_param()` says which of a term's parameters shifts its
+  equation's predictor by a constant: `"omega"` for `gas()`, `"level1"` for
+  `regime()`, and `character(0)` for everything else. It exists so that a
+  fitting layer can resolve the confounding with an intercept rather than
+  refuse the model. Which parameter is the level is the term's answer;
+  which one is dropped is the layer's, since only the layer knows what else
+  the equation carries.
+
+# modelterms7 0.18.0
+
+* `term_curvature()` is the second-order companion of `term_adjoint()`: the
+  forward Jacobian of the predictor a structural term produces in a caller's
+  unknowns, and the second derivative of that predictor contracted against
+  the caller's weights. It is what an observed information needs and what
+  the reverse recursion alone does not give.
+
+  The contract keeps the split the adjoint already uses. `seed` is the
+  derivative of the static predictor in the caller's unknowns, so the term
+  learns nothing else about them; `blocks` is a callback returning, at an
+  observation and the Jacobian the recursion has reached, the two model
+  quantities that seed the first and second derivatives of the score --
+  `sum_q l_pq C_q` and `sum_{r,r'} l_prr' V_r' V_r'`. A model of one
+  equation supplies zero and `l_ppp D'D`.
+
+  Against numDeriv at p, q in {1,2}^2: the Jacobian 1.05e-10 and the
+  contracted second derivative 1.0e-09 on a matrix of scale 24.6.
+
+  Deviations are refused rather than silently mishandled: the per-group
+  chain adds a factor to every derivative and is not written.
+
+* `gas_levinson2()` carries the second derivatives of the autoregressive
+  coefficients in the partial autocorrelations, which the curvature needs
+  because the persistence reaches the predictor through that map. The
+  recursion is bilinear, so differentiating twice adds no new kind of term,
+  only the two places the product rule puts the first derivative. Against
+  numDeriv: 3.8e-12, 2.9e-12 and 9.4e-11 at q = 2, 3 and 4. The value and
+  the jacobian are bit-identical to `gas_levinson()`, which is what says
+  this is not a second route to them, and the last coefficient's second
+  derivative is exactly zero at every order, it being the last partial
+  autocorrelation.
+
+# modelterms7 0.17.0
+
+* `nl()`'s numerical route uses numericals7's stencil library. It wrote out a
+  three-point central difference with its own step, and modelterms7 did not
+  import numericals7 at all -- the nodes, the weights and the step are
+  `fd_offsets()`, `fd_weights()` and `fd_step()` now, at accuracy four, which
+  is the five-point rule. Measured against the exact symbolic Jacobian of the
+  same function, on the route an opaque `f(x, theta)` takes: 3.7e-13 against
+  the three-point rule's 2.7e-11. This Jacobian is the design block, so its
+  accuracy is the accuracy of every step such a fit takes; the two extra
+  evaluations are the trade distributions7 measured for the skew t.
+
+* `term_adjoint()` is the reverse recursion of a structural term: the
+  derivative of a caller's objective with respect to the static predictor the
+  term was handed, and with respect to the sequence of scores it was given.
+
+  `term_filter()` returns the derivative of the predictor in the term's OWN
+  parameters, which is what estimating those needs, and it is not what
+  estimating the coefficients of the same equation needs. A score-driven
+  level at one time is driven by the scores at earlier ones, read at
+  predictors those coefficients also enter, so the derivative of the
+  predictor in a coefficient carries a term the block does not. Measured
+  against `numDeriv` on the derivative in the static predictor: the reverse
+  recursion agrees to 1e-8 and the direct score alone is wrong by 0.6 to 1.05
+  in every configuration tried -- one series, p = 2 and q = 2, groups, and
+  groups with deviations.
+
+  Propagating that forward would cost one derivative array per coefficient;
+  the reverse pass costs one whatever their number. Two derivatives are
+  returned rather than one because the score depends on more than the
+  predictor it is read at: multiplying `dscore` by the mixed second
+  derivative of a log-density gives the derivative in ANOTHER equation's
+  predictor, which is what a model layer with several distribution parameters
+  needs.
+
+* `term_value()` takes `newdata`, so a fitting layer can compute a term's
+  contribution on other rows. Where the block is a Jacobian, `term_predict()`
+  times the coefficients is the linearization and not the contribution: for
+  `seg()` the two differ by a step at the break-point in a construction that
+  is continuous. Rows are treated as `term_predict()` treats them, through
+  the levels and constants the blueprint recorded.
+
+* `term_converged()` asks whether a term's own iteration has settled, which a
+  score cannot always answer. Where the block is the Jacobian of the
+  contribution the gradient of the model's objective is the model's and its
+  vanishing is the test; where the block is a working linearization with a
+  frozen weight, as in `jump()` and `jseg()`, the profile objective is a step
+  function in the break-point and has no gradient to vanish. The base method
+  is `TRUE`, and the segmented method is `seg_converged()`.
+
+# modelterms7 0.16.0
+
+* `gas()` carries a population value and a deviation per group. With
+  `by` and `deviations` each group of a panel is filtered with parameters
+  of its own, written as
+
+      psi[j, i] = g_j^-1( g_j(psi_j) + delta[j, i] ),
+
+  the deviation acting on the unconstrained scale of the chart the
+  parameter lives on, so a persistence stays inside (-1, 1) whatever the
+  deviation is. `deviations` takes TRUE for every parameter or the names
+  of the ones that carry one, and needs `by`. The deviations are
+  parameters of the term, named after the parameter and the level
+  (`omega.dev.a`), and carry the identity link, being unconstrained
+  already.
+
+  They are parameters and NOT a penalty on the per-group values through a
+  difference matrix, which is the same model written the other way. The
+  difference decides what can be fitted: a penalty over a general map is
+  the generalized-lasso problem, whose proximal operator does not split by
+  coordinate, while a deviation named as a coordinate is reached by a soft
+  threshold and by a coordinate descent unchanged.
+
+  The filter runs once per group and chains the columns of its jacobian
+  onto the population values, exactly, `d psi[j,i] / d psi_j` being
+  `g^-1'(g(psi_j) + delta) g'(psi_j)` and the derivative in the deviation
+  the same without the second factor. At a zero deviation the two are
+  reciprocal by the inverse function theorem, so the filter and every
+  population column are then bit for bit the shared-parameter ones. The
+  jacobian agrees with `numDeriv` to 1e-10 with deviations on one
+  parameter and on all of them.
+
+  The deviations are identified by their penalty and not otherwise. A
+  parameter and its m deviations are m+1 numbers describing m group values,
+  so a constant added to the population value on the unconstrained scale and
+  subtracted from every deviation leaves the filter exactly unchanged, and
+  the likelihood is flat along one direction per parameter carrying them.
+  That is the parametrization of a random effect, identified there by a
+  variance component and here by the penalty, which selects the deviations
+  of smallest size among the descriptions of the same panel.
+
+* `gas(penalty =)`, `nl(penalty =, penalize =)` and `seg(penalty =)`
+  declare the parameters they penalize through `term_penalties()`, naming
+  the coordinates each penalty covers instead of selecting them from the
+  block with a map. The map was the defect: a separable penalty under a
+  selection map is the generalized lasso, so `penalties7::has_prox()` was
+  FALSE for a `seg(penalty = "lasso")` and neither a proximal step nor a
+  coordinate descent could be taken on it. Named as coordinates the map is
+  the identity and both are available.
+
+  - `gas()` penalizes the deviations, one penalty per parameter carrying
+    them, and rejects a penalty without them: the population parameters of
+    a filter are not shrunk towards zero.
+  - `nl()` penalizes one parameter at a time, the whole coefficient vector
+    where the parameter carries a subformula, so a lasso there selects
+    which covariates a parameter depends on. What is shrunk is the
+    coefficient, so with a link the target is `g^-1(0)` and not zero.
+  - `seg()` penalizes the changes as before, and `jseg()` now declares two
+    penalties rather than one over their union: a slope change and a jump
+    are not comparable quantities and cannot share a hyperparameter.
+
+* `edf()` counts a term parameter by parameter rather than reading one
+  penalty for the whole block. A parameter no penalty reaches counts one;
+  a parameter under a kinked penalty counts one when it is away from zero;
+  the rest are counted together by `tr[(H+S)^-1 H]` over the sub-block they
+  occupy, with `S` carrying each smooth penalty's Hessian at the parameters
+  it covers and zero elsewhere. Each rule reduces to what the term reported
+  before when one penalty covers the whole block. `theta` is that penalty's
+  hyperparameters for a term carrying one, and a list keyed by the penalty
+  names for a term carrying several.
+
+* `term_smooth()` reads `term_penalties()` too, so a term penalized over
+  part of its parameters answers for the part: `seg(x, penalty = "lasso")`
+  is not smooth although its linear effect and its break-points are
+  unpenalized.
+
+* `term_npar()` answers for a structural term as well, counting the
+  entries of `term_params()`, which is the vector `term_penalties()`
+  indexes into there.
+
 # modelterms7 0.15.0
 
 * `term_penalties()` is what a term declares it wants penalized: a list of

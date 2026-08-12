@@ -4,13 +4,16 @@
 \alias{term_value}
 \title{The Contribution of a Term at Its Current Coefficients}
 \usage{
-term_value(term, coef = NULL, ...)
+term_value(term, coef = NULL, newdata = NULL, ...)
 }
 \arguments{
 \item{term}{A built term.}
 
 \item{coef}{The coefficients. Optional for a nonlinear term, which
 carries the ones it was last refreshed at.}
+
+\item{newdata}{An optional data frame; the contribution is returned on
+its rows instead of on the ones the term was built from.}
 
 \item{...}{Passed to methods.}
 }
@@ -24,12 +27,23 @@ information the block does not; for a nonlinear one it is
 \eqn{f(x;\theta)}, which the Jacobian alone does not give, and which a
 Gauss-Newton step needs beside it.
 }
+\details{
+\code{newdata} asks for the same contribution on other rows, and is what
+a predictor needs where the block is a Jacobian: there
+\code{term_predict()} times the coefficients is the linearization and
+not the contribution, and the two differ by whatever the linearization
+drops. For \code{\link{seg}} that difference is a step at the
+break-point in a construction that is continuous. Rows arriving here are
+treated as \code{\link{term_predict}} treats them, through the levels
+and constants the blueprint recorded, never rebuilt.
+}
 \examples{
 dd <- data.frame(x = seq(0, 2, length.out = 20))
 built <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1)), dd)
 head(term_value(built), 3)
+head(term_value(built, newdata = data.frame(x = c(0, 1, 2))), 3)
 
 }
 \seealso{
-\code{\link{term_refresh}}
+\code{\link{term_refresh}}, \code{\link{term_predict}}
 }

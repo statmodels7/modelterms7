@@ -118,10 +118,23 @@ SegTerm <- S7::new_class(
 #' \code{by} gives an independent set of break-points and changes per
 #' level of a factor. \code{penalty} puts a penalty on the changes
 #' themselves -- the slope changes for \code{seg}, the jump sizes for
-#' \code{jump} -- through a map that selects those coefficients and
-#' leaves the linear effect and the break-points alone; with
-#' \code{"lasso"} that is a selection of how many break-points are
-#' really there.
+#' \code{jump}, both for \code{jseg} -- and leaves the linear effect and
+#' the break-points alone; with \code{"lasso"} that is a selection of how
+#' many break-points are really there.
+#'
+#' The penalty is declared through \code{\link{term_penalties}}, which
+#' names the coefficients it covers, rather than attached to the whole
+#' block through a map that selects them. The two describe the same
+#' function of the same coefficients and are not interchangeable to a
+#' fitting layer: a separable penalty under a selection map is the
+#' generalized-lasso problem, whose proximal operator does not split by
+#' coordinate, so \code{\link[penalties7]{has_prox}} is \code{FALSE} for
+#' it and neither a proximal step nor a coordinate descent can be taken.
+#' Named as coordinates the map is the identity and both are available
+#' unchanged. \code{jseg} declares two penalties, one over the slope
+#' changes and one over the jump sizes, since a change of slope and a
+#' change of level are not comparable quantities and cannot share a
+#' hyperparameter.
 #'
 #' A break-point is confined to the interval between the 5th and the 95th
 #' percentile of the covariate. Outside it the block is singular rather
@@ -241,23 +254,26 @@ jseg <- function(x, npsi = 1, psi = NULL, by = NULL, linear = TRUE,
           blueprint = list(), penalty = NULL)
 }
 
-# the coefficient names of one level, and which of them are the changes
-# a penalty may reach
+# the coefficient names of one level, and which of them are the changes a
+# penalty may reach, grouped by what the change is: a slope change and a
+# jump are different quantities, so a term carrying both carries two
+# penalties rather than one over their union
 .seg_names <- function(kind, npsi, linear) {
   k <- seq_len(npsi)
   nm <- if (linear) "lin" else character(0)
-  chg <- character(0)
+  groups <- list()
   if (kind %in% c("seg", "jseg")) {
     nm <- c(nm, paste0("delta", k))
-    chg <- c(chg, paste0("delta", k))
+    groups$delta <- paste0("delta", k)
   }
   if (kind == "seg") {
     nm <- c(nm, paste0("psi", k))
   } else {
     nm <- c(nm, paste0("kappa", k), paste0("g", k))
-    chg <- c(chg, paste0("kappa", k))
+    groups$kappa <- paste0("kappa", k)
   }
-  list(names = nm, changes = chg)
+  list(names = nm, changes = unlist(groups, use.names = FALSE),
+       groups = groups)
 }
 
 # The break-points implied by one level's coefficients.
@@ -508,16 +524,19 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
   X <- asm$X
   colnames(X) <- cn
 
-  pen <- NULL
+  # The penalty names the coefficients it covers instead of selecting them
+  # with a map: over its own coordinates it is separable, and a fitting
+  # layer can take a proximal step or a coordinate descent on it, which a
+  # selection map would deny it. One penalty per kind of change, shared
+  # across the levels of `by`.
+  bp$penalties <- list()
   if (term@penalty_kind != "none") {
-    # a map selecting the changes: the linear effect and the break-points
-    # are not shrunk, only the sizes of the changes
-    keep <- which(rep(nmi$names %in% nmi$changes, times = length(levs)))
-    D <- matrix(0, length(keep), ncol(X))
-    D[cbind(seq_along(keep), keep)] <- 1
-    pen <- switch(term@penalty_kind,
-      lasso = penalties7::lasso_penalty(map = D),
-      ridge = penalties7::ridge_penalty(map = D))
+    factory <- .penalty_factory(term@penalty_kind)
+    for (g in names(nmi$groups)) {
+      keep <- which(rep(nmi$names %in% nmi$groups[[g]], times = length(levs)))
+      bp$penalties[[length(bp$penalties) + 1L]] <- list(
+        name = g, index = keep, penalty = factory(length(keep)))
+    }
   }
 
   bp$value <- asm$value
@@ -525,8 +544,26 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
   term@X <- X
   term@coef_names <- cn
   term@blueprint <- bp
-  term@penalty <- pen
+  term@penalty <- NULL
   term
+}
+
+#' @title Penalties of a Segmented Term
+#' @name term_penalties.SegTerm
+#' @description
+#' One entry per kind of change the term carries a penalty on, naming the
+#' coefficients it covers: \code{"delta"} for the slope changes,
+#' \code{"kappa"} for the jump sizes, shared across the levels of
+#' \code{by}. The list is empty when \code{penalty = "none"}, and for a
+#' specification, whose parameters there is nothing yet to index: a penalty
+#' is attached at build, as it is for every penalized term here.
+#' @param term A built \code{\link{SegTerm}}.
+#' @param ... Unused.
+#' @return A list of entries, as \code{\link{term_penalties}} documents.
+#' @keywords internal
+S7::method(term_penalties, SegTerm) <- function(term, ...) {
+  pens <- term@blueprint$penalties
+  if (is.null(pens)) list() else pens
 }
 
 # the break-points of every level, read off the coefficients without
@@ -590,9 +627,19 @@ S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   term
 }
 
-S7::method(term_value, SegTerm) <- function(term, coef = NULL, ...) {
+S7::method(term_value, SegTerm) <- function(term, coef = NULL, newdata = NULL,
+                                            ...) {
   .assert_built(term)
-  if (is.null(coef)) return(term@blueprint$value)
+  bp <- term@blueprint
+  if (!is.null(newdata)) {
+    # the break-points are the ones the term carries, as term_predict()
+    # reapplies them: refreshing here would read them off the new rows
+    xv <- .seg_x(bp$var, newdata)
+    grp <- if (is.null(bp$by)) NULL else .seg_by(bp$by, newdata, bp$levels)
+    cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
+    return(.seg_assemble(bp, xv, grp, cf)$value)
+  }
+  if (is.null(coef)) return(bp$value)
   term_refresh(term, coef)@blueprint$value
 }
 
@@ -707,6 +754,21 @@ seg_step <- function(term) {
 seg_converged <- function(term) {
   st <- seg_step(term)
   !anyNA(st) && max(st) < term@blueprint$delta
+}
+
+#' @title Whether a Segmented Term's Break-Points Have Settled
+#' @name term_converged.SegTerm
+#' @description
+#' \code{\link{seg_converged}}, so that a fitting layer reads the rule the
+#' construction is stopped on without knowing it is holding a break-point
+#' term. A term that has not been refreshed has not moved and reports
+#' \code{FALSE}, the first refresh being the one that measures nothing.
+#' @param term A built \code{\link{SegTerm}}.
+#' @param ... Unused.
+#' @return A single logical.
+#' @keywords internal
+S7::method(term_converged, SegTerm) <- function(term, ...) {
+  isTRUE(seg_converged(term))
 }
 
 #' Starting Positions for a Break-Point Term

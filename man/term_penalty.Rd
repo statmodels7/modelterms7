@@ -15,15 +15,26 @@ term_penalty(term, ...)
 A penalty object, or \code{NULL}.
 }
 \description{
-The penalty attached to the term's coefficients, or \code{NULL} for an
-unpenalized term. The hyperparameters, their bounds and links, and every
-derivative in the coefficients and the hyperparameters are the penalty
-object's, not the term's.
+The penalty attached to the whole of the term's coefficients, or
+\code{NULL} when there is none. The hyperparameters, their bounds and
+links, and every derivative in the coefficients and the hyperparameters
+are the penalty object's, not the term's.
+}
+\details{
+A term whose penalty reaches only part of its parameters returns
+\code{NULL} here and declares that penalty through
+\code{\link{term_penalties}}, which names the parameters it covers:
+\code{\link{seg}} penalizes the changes and not the linear effect or the
+break-points, \code{\link{nl}} penalizes one nonlinear parameter at a
+time, and \code{\link{gas}} penalizes the deviations of a panel. Reading
+a partial penalty here would say that it covers the block, so the
+question this generic asks is answered only where the answer is the whole
+of it.
 }
 \examples{
 term_penalty(linpar(~x))
 
 }
 \seealso{
-\code{\link{term_smooth}}, \code{\link{edf}}
+\code{\link{term_penalties}}, \code{\link{term_smooth}}, \code{\link{edf}}
 }

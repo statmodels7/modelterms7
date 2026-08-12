@@ -187,6 +187,20 @@ S7::method(term_params, RegimeTerm) <- function(term, ...) {
     term@chain@free_names)
 }
 
+#' @title The Level of a Regime Term
+#' @name term_level_param.RegimeTerm
+#' @description
+#' \code{"level1"}. The levels are ordered by construction, each the
+#' previous plus a positive gap, so the first one shifts EVERY regime and is
+#' the direction an intercept in the same equation also spans. The gaps are
+#' unaffected: what a constant cannot express is a difference between
+#' regimes.
+#' @param term A \code{\link{RegimeTerm}}.
+#' @param ... Unused.
+#' @return A single string.
+#' @keywords internal
+S7::method(term_level_param, RegimeTerm) <- function(term, ...) "level1"
+
 S7::method(term_links, RegimeTerm) <- function(term, ...) {
   nm <- term_params(term)
   stats::setNames(lapply(nm, function(p) {
@@ -227,14 +241,23 @@ S7::method(term_build, RegimeTerm) <- function(term, data, ...) {
 #' both the value and the derivative come from the same linear system with
 #' one column replaced by the normalization.
 #'
+#' Differentiating a second time gives
+#' \eqn{d^2\delta\,(I - P) = d_i\delta\,d_jP + d_j\delta\,d_iP
+#' + \delta\,d^2P} under \eqn{\sum_j d^2\delta_j = 0}, so the second
+#' derivative comes from the same system again.
+#'
 #' @param P A row-stochastic matrix.
 #' @param dP A list of derivative matrices of \code{P}.
+#' @param d2P Optionally, the second derivatives: one list per row of
+#'   \code{P} whose elements are the matrices of second derivatives of that
+#'   row's entries, indexed as \code{dP} is.
 #'
 #' @return A list with \code{delta} and \code{ddelta}, the latter one row
-#'   per element of \code{dP}.
+#'   per element of \code{dP}, and, when \code{d2P} is given,
+#'   \code{d2delta}, one square matrix per state.
 #'
 #' @keywords internal
-regime_stationary <- function(P, dP) {
+regime_stationary <- function(P, dP, d2P = NULL) {
   k <- nrow(P)
   A <- diag(k) - P
   A[, k] <- 1
@@ -244,7 +267,30 @@ regime_stationary <- function(P, dP) {
     rhs[k] <- 0
     as.numeric(solve(t(A), rhs))
   })
-  list(delta = delta, ddelta = ddelta)
+  out <- list(delta = delta, ddelta = ddelta)
+  if (!is.null(d2P)) {
+    np <- length(dP)
+    d2 <- rep(list(matrix(0, np, np)), k)
+    for (i in seq_len(np)) {
+      for (j in seq_len(i)) {
+        # the second derivative of P's entries in this pair of directions
+        D2 <- matrix(0, k, k)
+        for (a in seq_len(k)) for (b in seq_len(k)) {
+          D2[a, b] <- d2P[[a]][[b]][i, j]
+        }
+        rhs <- as.numeric(ddelta[[i]] %*% dP[[j]] + ddelta[[j]] %*% dP[[i]] +
+                            delta %*% D2)
+        rhs[k] <- 0
+        sol <- as.numeric(solve(t(A), rhs))
+        for (s in seq_len(k)) {
+          d2[[s]][i, j] <- sol[s]
+          d2[[s]][j, i] <- sol[s]
+        }
+      }
+    }
+    out$d2delta <- d2
+  }
+  out
 }
 
 #' @title Log-Likelihood of a Regime Term
@@ -336,6 +382,492 @@ S7::method(term_loglik, RegimeTerm) <- function(term, eta, y, logdens, score,
 
   colnames(jac) <- nm
   list(loglik = loglik, jacobian = jac)
+}
+
+#' @title The Smoothed State Probabilities of a Latent Markov Term
+#'
+#' @description
+#' The probability of each regime at each observation given the whole
+#' series, which is everything a model layer needs to differentiate a
+#' likelihood mixed over states.
+#'
+#' @details
+#' \code{\link{term_loglik}} returns the derivative of the mixed likelihood
+#' in the term's OWN parameters, which is what estimating those needs. It is
+#' not what estimating the coefficients needs, and for this term the missing
+#' piece is not a second recursion carrying derivatives: it is one quantity,
+#' by Fisher's identity. Writing \eqn{\gamma_t(k)} for the probability
+#' returned here and \eqn{\theta_t(k)} for the parameters the model has at
+#' observation \eqn{t} under regime \eqn{k},
+#'
+#' \deqn{\frac{\partial L}{\partial \eta_{q,t}}
+#'   = \sum_k \gamma_t(k)\,
+#'     \frac{\partial \ell(y_t; \theta_t(k))}{\partial \eta_q},}
+#'
+#' for EVERY predictor the model carries, not only the one the regimes
+#' shift. A caller therefore differentiates its own likelihood \eqn{K} times
+#' vectorized and weights the results, and needs no callback per
+#' observation: the regimes shift a predictor that is known before the
+#' recursion starts, which is the property that made the forward pass
+#' compilable and makes this cheap.
+#'
+#' The probabilities come from the forward pass this term already runs and a
+#' backward pass beside it, both normalized at every step. Without the
+#' normalization the quantities are products of \eqn{t} densities and reach
+#' zero in double precision within a few hundred observations.
+#'
+#' @param term A built \code{\link{RegimeTerm}}.
+#' @param eta The static predictor.
+#' @param y The response.
+#' @param logdens The log-density as a function of the predictor and the
+#'   observation index, as \code{\link{term_loglik}} takes it.
+#' @param psi The term's parameters, named as \code{\link{term_params}}.
+#' @param ... Passed to methods.
+#'
+#' @return A numeric matrix with one row per observation and one column per
+#'   regime, whose rows sum to one.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(t = 1:40, y = c(rnorm(20), rnorm(20, 3)))
+#' term <- term_build(regime(2, time = t), dd)
+#' g <- term_posterior(term, rep(0, 40), dd$y,
+#'                     logdens = function(e, i) dnorm(dd$y[i], e, log = TRUE),
+#'                     psi = list(level1 = 0, gap2 = 3,
+#'                                alr1.1 = 2, alr2.1 = -2))
+#' round(head(g, 3), 4)
+#'
+#' @seealso \code{\link{term_loglik}}
+#' @export
+term_posterior <- S7::new_generic("term_posterior", "term",
+  function(term, eta, y, logdens, psi, ...) S7::S7_dispatch())
+
+S7::method(term_posterior, structural_term) <- function(term, eta, y, logdens,
+                                                        psi, ...) {
+  stop(sprintf("the term class '%s' does not implement term_posterior().",
+               attr(S7::S7_class(term), "name")), call. = FALSE)
+}
+
+#' @title Smoothed State Probabilities of a Regime Term
+#' @name term_posterior.RegimeTerm
+#' @description
+#' The forward pass of \code{\link{term_loglik}} with a backward pass beside
+#' it, both normalized, giving the probability of each regime at each
+#' observation given the whole series.
+#' @param term A built \code{\link{RegimeTerm}}.
+#' @param eta The static predictor.
+#' @param y The response.
+#' @param logdens The log-density.
+#' @param psi The term's parameters.
+#' @param ... Unused.
+#' @return A numeric matrix, one row per observation and one column per
+#'   regime.
+#' @keywords internal
+S7::method(term_posterior, RegimeTerm) <- function(term, eta, y, logdens,
+                                                   psi, ...) {
+  bp <- term@blueprint
+  if (!length(bp)) {
+    stop("the term has not been built; call term_build(term, data) first.",
+         call. = FALSE)
+  }
+  nm <- term_params(term)
+  v <- unlist(psi[nm])
+  if (length(v) != length(nm) || anyNA(v)) {
+    stop(sprintf("'psi' must supply %s.", paste(nm, collapse = ", ")),
+         call. = FALSE)
+  }
+  k <- term@k
+  n <- bp$n
+
+  gaps <- if (k > 1L) v[paste0("gap", seq.int(2L, k))] else numeric(0)
+  if (any(gaps <= 0)) {
+    stop("every gap must be positive: the levels are ordered by construction.",
+         call. = FALSE)
+  }
+  mu <- cumsum(c(v[["level1"]], gaps))
+  P <- parameters7::param_value(term@chain, v[term@chain@free_names])
+  st <- regime_stationary(P, list())
+  delta <- st$delta
+
+  idx <- seq_len(n)
+  LF <- matrix(0, n, k)
+  for (jj in seq_len(k)) {
+    LF[, jj] <- as.numeric(logdens(eta + mu[jj], idx))
+  }
+
+  out <- matrix(0, n, k)
+  for (rows in bp$order) {
+    m <- length(rows)
+    lf <- LF[rows, , drop = FALSE]
+    mx <- apply(lf, 1L, max)
+    W <- exp(lf - mx)
+
+    # forward, normalized at every step
+    al <- matrix(0, m, k)
+    a <- delta
+    for (t in seq_len(m)) {
+      pred <- if (t == 1L) a else as.numeric(a %*% P)
+      atil <- W[t, ] * pred
+      a <- atil / sum(atil)
+      al[t, ] <- a
+    }
+    # backward, normalized the same way: the scale cancels in the product
+    be <- matrix(1, m, k)
+    b <- rep(1, k)
+    if (m > 1L) {
+      for (t in seq.int(m - 1L, 1L)) {
+        b <- as.numeric(P %*% (W[t + 1L, ] * b))
+        s <- sum(b)
+        if (s > 0) b <- b / s
+        be[t, ] <- b
+      }
+    }
+    g <- al * be
+    out[rows, ] <- g / rowSums(g)
+  }
+  out
+}
+
+#' @title The Observed Hessian of a Likelihood Mixed Over States
+#'
+#' @description
+#' The log-likelihood of a term that mixes over latent states, with its
+#' exact gradient and its exact Hessian in the whole of a caller's unknown
+#' vector: the coefficients of every equation together with the term's own
+#' parameters.
+#'
+#' @details
+#' \code{\link{term_posterior}} gives the gradient by Fisher's identity, and
+#' the matrix a caller can assemble from the same smoothed probabilities is
+#' the COMPLETE-DATA information, the ordinary one averaged over the states.
+#' That is the matrix an EM step inverts. It is not the observed information
+#' of the mixture, which is smaller by the information the unobserved states
+#' cost, and a standard error read off it is too small.
+#'
+#' Louis's identity expresses the difference as the conditional variance of
+#' the complete-data score, which needs the pairwise smoothed probabilities
+#' and a recursion carrying a second moment. The route taken here is
+#' shorter. The scaled forward recursion computes the observed
+#' log-likelihood exactly, as \eqn{\log L = \sum_t \log c_t} with \eqn{c_t}
+#' the normalizing constant of one step, so differentiating that arithmetic
+#' twice gives the observed Hessian with no identity involved. Carrying
+#' \eqn{a_t(k)} together with its first and second derivatives in the
+#' unknown vector \eqn{u},
+#'
+#' \deqn{\frac{\partial \log c_t}{\partial u} = \frac{\dot c_t}{c_t},
+#'   \qquad
+#'   \frac{\partial^2 \log c_t}{\partial u \partial u^\top}
+#'     = \frac{\ddot c_t}{c_t}
+#'       - \frac{\dot c_t}{c_t}\frac{\dot c_t^\top}{c_t},}
+#'
+#' and the state is renormalized by the quotient rule,
+#'
+#' \deqn{\ddot a = \bigl(\ddot{\tilde a} - \dot a \otimes \dot c
+#'   - \dot c \otimes \dot a - a\,\ddot c\bigr)/c.}
+#'
+#' The emission enters through \eqn{\ddot w = w(gg^\top + G)}, with \eqn{g}
+#' and \eqn{G} the score and the Hessian of the log-density in \eqn{u} at
+#' that state, which is where the caller's derivatives are used. Groups are
+#' independent series and their contributions add.
+#'
+#' The cost is \eqn{O(nK^2m^2)} in time and \eqn{O(Km^2)} in storage, and
+#' the computation is meant to be run once, at a fitted point, rather than
+#' per iteration.
+#'
+#' @param term A built \code{\link{RegimeTerm}}.
+#' @param eta The static part of the predictor the regimes shift.
+#' @param y The response.
+#' @param logdens A function of a predictor value and a row index returning
+#'   the log-density there, as \code{\link{term_loglik}} takes it.
+#' @param grad A function of the same two arguments returning a matrix with
+#'   one row per observation and one column per distribution parameter, the
+#'   derivative of the log-density in each predictor.
+#' @param hess A function of the same two arguments returning an array of
+#'   second derivatives in the predictors, one slice per observation.
+#' @param psi The term's parameters, named as \code{\link{term_params}}.
+#' @param seed A list with one matrix per distribution parameter, each with
+#'   one row per observation and one column per unknown, giving the
+#'   derivative of that predictor in the caller's unknowns with zeros in the
+#'   columns the term's own parameters occupy.
+#' @param cols The columns of the unknown vector the term's own parameters
+#'   occupy, in the order of \code{\link{term_params}}.
+#' @param level The index, among the distribution parameters, of the one the
+#'   regimes shift.
+#' @param weights Optional observation weights.
+#' @param ... Passed to methods.
+#'
+#' @return A list with \code{loglik}, the per-observation contributions,
+#'   \code{gradient}, their weighted sum's derivative, and \code{hessian},
+#'   the observed Hessian.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(t = 1:30, y = c(rnorm(15), rnorm(15, 3)))
+#' term <- term_build(regime(2, time = t), dd)
+#' # a gaussian mean of unit variance: one predictor, one unknown besides
+#' # the term's own four
+#' m <- 5L
+#' out <- term_hessian(
+#'   term, eta = rep(0, 30), y = dd$y,
+#'   logdens = function(e, i) dnorm(dd$y[i], e, log = TRUE),
+#'   grad = function(e, i) matrix(dd$y[i] - e, ncol = 1L),
+#'   hess = function(e, i) array(-1, c(length(i), 1L, 1L)),
+#'   psi = list(level1 = 0, gap2 = 3, alr1.1 = 2, alr2.1 = -2),
+#'   seed = list(matrix(c(rep(1, 30), rep(0, 30 * 4)), 30, m)),
+#'   cols = 2:5, level = 1L)
+#' dim(out$hessian)
+#'
+#' @seealso \code{\link{term_posterior}}, \code{\link{term_loglik}}
+#' @export
+term_hessian <- S7::new_generic("term_hessian", "term",
+  function(term, eta, y, logdens, grad, hess, psi, seed, cols, level,
+           weights = NULL, ...) S7::S7_dispatch())
+
+S7::method(term_hessian, structural_term) <- function(term, eta, y, logdens,
+                                                      grad, hess, psi, seed,
+                                                      cols, level,
+                                                      weights = NULL, ...) {
+  stop(sprintf("the term class '%s' does not implement term_hessian().",
+               attr(S7::S7_class(term), "name")), call. = FALSE)
+}
+
+# The chart of a regime's own parameters, on the unconstrained scale the
+# model layer optimizes on: the levels are cumulative sums of positive
+# gaps, so a gap under its log link contributes itself to both the first
+# and the second derivative, and the transition parameters are identity
+# linked, so the chain's own derivative arrays are already in zeta.
+.regime_chart <- function(v, k, nm, chain) {
+  np <- length(nm)
+  gaps <- if (k > 1L) v[paste0("gap", seq.int(2L, k))] else numeric(0)
+  if (any(gaps <= 0)) {
+    stop("every gap must be positive: the levels are ordered by construction.",
+         call. = FALSE)
+  }
+  mu <- cumsum(c(v[["level1"]], gaps))
+
+  dmu <- matrix(0, k, np)
+  dmu[, 1L] <- 1
+  d2mu <- rep(list(matrix(0, np, np)), k)
+  for (j in seq_len(k)) {
+    if (j > 1L) {
+      slot <- 1L + seq_len(j - 1L)
+      dmu[j, slot] <- gaps[seq_len(j - 1L)]
+      d2mu[[j]][cbind(slot, slot)] <- gaps[seq_len(j - 1L)]
+    }
+  }
+
+  i_tr <- k + seq_len(k * (k - 1L))
+  fn <- chain@free_names
+  eta_tr <- v[fn]
+  P <- parameters7::param_value(chain, eta_tr)
+  d1 <- parameters7::param_d1(chain, eta_tr)
+  d2 <- parameters7::param_d2(chain, eta_tr)
+
+  # dPz[j, l, i] = dP[j, l]/dzeta_i, and D2P[[j]][[l]] the np x np second
+  # derivative of that entry; both are zero outside the chain's own slots
+  dPz <- array(0, c(k, k, np))
+  for (i in seq_along(fn)) dPz[, , i_tr[i]] <- d1[[fn[i]]]
+  D2P <- lapply(seq_len(k), function(j) rep(list(matrix(0, np, np)), k))
+  for (i in seq_along(fn)) {
+    for (jj in seq_along(fn)) {
+      key <- if (paste0(fn[i], ":", fn[jj]) %in% names(d2)) {
+        paste0(fn[i], ":", fn[jj])
+      } else {
+        paste0(fn[jj], ":", fn[i])
+      }
+      M <- d2[[key]]
+      if (is.null(M)) next
+      for (a in seq_len(k)) for (b in seq_len(k)) {
+        D2P[[a]][[b]][i_tr[i], i_tr[jj]] <- M[a, b]
+      }
+    }
+  }
+
+  st <- regime_stationary(P, lapply(seq_len(np), function(i) dPz[, , i]),
+                          D2P)
+  list(mu = mu, dmu = dmu, d2mu = d2mu, P = P, dPz = dPz, D2P = D2P,
+       delta = st$delta, ddelta = st$ddelta, d2delta = st$d2delta, np = np)
+}
+
+#' @title Observed Hessian of a Regime Term
+#' @name term_hessian.RegimeTerm
+#' @description
+#' Forward-mode second-order propagation through the scaled forward
+#' recursion, giving the exact Hessian of the mixed log-likelihood.
+#' @param term A built \code{\link{RegimeTerm}}.
+#' @param eta The static predictor.
+#' @param y The response.
+#' @param logdens,grad,hess The log-density and its first two derivatives in
+#'   the predictors.
+#' @param psi The term's parameters.
+#' @param seed The derivative of each predictor in the caller's unknowns.
+#' @param cols The columns the term's own parameters occupy.
+#' @param level The distribution parameter the regimes shift.
+#' @param weights Observation weights.
+#' @param ... Unused.
+#' @return A list with \code{loglik}, \code{gradient} and \code{hessian}.
+#' @keywords internal
+S7::method(term_hessian, RegimeTerm) <- function(term, eta, y, logdens, grad,
+                                                 hess, psi, seed, cols, level,
+                                                 weights = NULL, ...) {
+  bp <- term@blueprint
+  if (!length(bp)) {
+    stop("the term has not been built; call term_build(term, data) first.",
+         call. = FALSE)
+  }
+  nm <- term_params(term)
+  v <- unlist(psi[nm])
+  if (length(v) != length(nm) || anyNA(v)) {
+    stop(sprintf("'psi' must supply %s.", paste(nm, collapse = ", ")),
+         call. = FALSE)
+  }
+  k <- term@k
+  n <- bp$n
+  if (!is.list(seed) || !length(seed)) {
+    stop("'seed' must be a list with one matrix per distribution parameter.",
+         call. = FALSE)
+  }
+  seed <- lapply(seed, as.matrix)
+  m <- ncol(seed[[1L]])
+  npar <- length(seed)
+  if (any(vapply(seed, nrow, 1L) != n) ||
+      any(vapply(seed, ncol, 1L) != m)) {
+    stop(sprintf("every element of 'seed' must be %d by %d.", n, m),
+         call. = FALSE)
+  }
+  cols <- as.integer(cols)
+  level <- as.integer(level)
+  if (length(cols) != length(nm) || any(cols < 1L) || any(cols > m)) {
+    stop(sprintf("'cols' must give the %d columns the term's parameters occupy.",
+                 length(nm)), call. = FALSE)
+  }
+  if (length(level) != 1L || level < 1L || level > npar) {
+    stop("'level' must index one of the distribution parameters.",
+         call. = FALSE)
+  }
+  w <- if (is.null(weights)) rep(1, n) else rep_len(as.numeric(weights), n)
+
+  ch <- .regime_chart(v, k, nm, term@chain)
+  np <- ch$np
+
+  # every regime shifts one predictor by a level of its own, so the
+  # density and its derivatives under every regime are known before the
+  # recursion starts, as they are for the first-order pass
+  idx <- seq_len(n)
+  LF <- matrix(0, n, k)
+  GP <- vector("list", k)
+  HP <- vector("list", k)
+  GM <- vector("list", k)
+  for (j in seq_len(k)) {
+    e <- eta + ch$mu[j]
+    LF[, j] <- as.numeric(logdens(e, idx))
+    g <- as.matrix(grad(e, idx))
+    h <- hess(e, idx)
+    if (nrow(g) != n || ncol(g) != npar) {
+      stop(sprintf("'grad' must return an %d by %d matrix.", n, npar),
+           call. = FALSE)
+    }
+    GP[[j]] <- g
+    HP[[j]] <- array(as.numeric(h), c(n, npar, npar))
+    # the emission score in the caller's unknowns, vectorized over rows
+    gm <- matrix(0, n, m)
+    for (q in seq_len(npar)) gm <- gm + g[, q] * seed[[q]]
+    gm[, cols] <- gm[, cols] + outer(g[, level], ch$dmu[j, ])
+    GM[[j]] <- gm
+  }
+
+  P <- ch$P
+  loglik <- numeric(n)
+  gradient <- numeric(m)
+  hessian <- matrix(0, m, m)
+
+  # the rows of the per-observation predictor derivative, shared by every
+  # regime except in the columns the term's own parameters occupy
+  Abase <- matrix(0, npar, m)
+
+  for (rows in bp$order) {
+    a <- ch$delta
+    da <- matrix(0, k, m)
+    da[, cols] <- t(do.call(rbind, ch$ddelta))
+    d2a <- vector("list", k)
+    for (j in seq_len(k)) {
+      M <- matrix(0, m, m)
+      M[cols, cols] <- ch$d2delta[[j]]
+      d2a[[j]] <- M
+    }
+
+    for (tt in seq_along(rows)) {
+      row <- rows[tt]
+      lf <- LF[row, ]
+      mx <- max(lf)
+      wv <- exp(lf - mx)
+
+      for (q in seq_len(npar)) Abase[q, ] <- seed[[q]][row, ]
+
+      if (tt == 1L) {
+        pred <- a
+        dpred <- da
+        d2pred <- d2a
+      } else {
+        pred <- as.numeric(a %*% P)
+        dpred <- crossprod(P, da)
+        d2pred <- vector("list", k)
+        for (l in seq_len(k)) {
+          Dl <- matrix(ch$dPz[, l, ], k, np)
+          # the chain's own contribution: supported on the term's columns
+          dpred[l, cols] <- dpred[l, cols] + as.numeric(a %*% Dl)
+          S1 <- matrix(0, m, m)
+          for (j in seq_len(k)) {
+            if (P[j, l] != 0) S1 <- S1 + P[j, l] * d2a[[j]]
+          }
+          V <- crossprod(da, Dl)   # m x np
+          S1[, cols] <- S1[, cols] + V
+          S1[cols, ] <- S1[cols, ] + t(V)
+          S2 <- matrix(0, np, np)
+          for (j in seq_len(k)) S2 <- S2 + a[j] * ch$D2P[[j]][[l]]
+          S1[cols, cols] <- S1[cols, cols] + S2
+          d2pred[[l]] <- S1
+        }
+      }
+
+      atil <- wv * pred
+      datil <- matrix(0, k, m)
+      d2atil <- vector("list", k)
+      for (l in seq_len(k)) {
+        gl <- GM[[l]][row, ]
+        datil[l, ] <- wv[l] * (gl * pred[l] + dpred[l, ])
+        Ak <- Abase
+        Ak[level, cols] <- Ak[level, cols] + ch$dmu[l, ]
+        Hk <- matrix(HP[[l]][row, , ], npar, npar)
+        G <- crossprod(Ak, Hk %*% Ak)
+        G[cols, cols] <- G[cols, cols] + GP[[l]][row, level] * ch$d2mu[[l]]
+        dp <- dpred[l, ]
+        M <- pred[l] * (outer(gl, gl) + G) + d2pred[[l]]
+        M <- M + outer(gl, dp) + outer(dp, gl)
+        d2atil[[l]] <- wv[l] * M
+      }
+
+      ct <- sum(atil)
+      dct <- colSums(datil)
+      d2ct <- matrix(0, m, m)
+      for (l in seq_len(k)) d2ct <- d2ct + d2atil[[l]]
+
+      gt <- dct / ct
+      loglik[row] <- log(ct) + mx
+      gradient <- gradient + w[row] * gt
+      hessian <- hessian + w[row] * (d2ct / ct - outer(gt, gt))
+
+      a <- atil / ct
+      da <- (datil - outer(atil, dct) / ct) / ct
+      for (l in seq_len(k)) {
+        d2a[[l]] <- (d2atil[[l]] - outer(da[l, ], dct) - outer(dct, da[l, ]) -
+                       a[l] * d2ct) / ct
+      }
+    }
+  }
+
+  hessian <- (hessian + t(hessian)) / 2
+  list(loglik = loglik, gradient = gradient, hessian = hessian)
 }
 
 S7::method(print, RegimeTerm) <- function(x, ...) {

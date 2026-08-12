@@ -118,10 +118,21 @@ S7::method(term_matrix, additive_term) <- function(term, ...) {
 #' @title Penalty of a Term
 #'
 #' @description
-#' The penalty attached to the term's coefficients, or \code{NULL} for an
-#' unpenalized term. The hyperparameters, their bounds and links, and every
-#' derivative in the coefficients and the hyperparameters are the penalty
-#' object's, not the term's.
+#' The penalty attached to the whole of the term's coefficients, or
+#' \code{NULL} when there is none. The hyperparameters, their bounds and
+#' links, and every derivative in the coefficients and the hyperparameters
+#' are the penalty object's, not the term's.
+#'
+#' @details
+#' A term whose penalty reaches only part of its parameters returns
+#' \code{NULL} here and declares that penalty through
+#' \code{\link{term_penalties}}, which names the parameters it covers:
+#' \code{\link{seg}} penalizes the changes and not the linear effect or the
+#' break-points, \code{\link{nl}} penalizes one nonlinear parameter at a
+#' time, and \code{\link{gas}} penalizes the deviations of a panel. Reading
+#' a partial penalty here would say that it covers the block, so the
+#' question this generic asks is answered only where the answer is the whole
+#' of it.
 #'
 #' @param term An object inheriting from class \code{\link{additive_term}}.
 #' @param ... Passed to methods.
@@ -131,7 +142,7 @@ S7::method(term_matrix, additive_term) <- function(term, ...) {
 #' @examples
 #' term_penalty(linpar(~x))
 #'
-#' @seealso \code{\link{term_smooth}}, \code{\link{edf}}
+#' @seealso \code{\link{term_penalties}}, \code{\link{term_smooth}}, \code{\link{edf}}
 #' @export
 term_penalty <- S7::new_generic("term_penalty", "term",
   function(term, ...) S7::S7_dispatch())
@@ -193,9 +204,14 @@ S7::method(term_penalties, model_term) <- function(term, ...) {
   list(list(name = "", index = seq_len(term_npar(term)), penalty = pen))
 }
 
-#' @title Number of Coefficients of a Built Term
+#' @title Number of Parameters of a Built Term
 #'
-#' @description The number of columns of the term's design block.
+#' @description
+#' How many parameters of its own a built term carries: the columns of the
+#' design block for an additive term, and the entries of
+#' \code{\link{term_params}} for a structural one, which contributes no
+#' block. It is the length of the vector \code{\link{term_penalties}}
+#' indexes into.
 #'
 #' @param term A built term (see \code{\link{term_build}}).
 #' @param ... Passed to methods.
@@ -213,6 +229,10 @@ term_npar <- S7::new_generic("term_npar", "term",
 S7::method(term_npar, additive_term) <- function(term, ...) {
   .assert_built(term)
   ncol(term@X)
+}
+
+S7::method(term_npar, structural_term) <- function(term, ...) {
+  length(term_params(term))
 }
 
 #' @title Coefficient Names of a Built Term
@@ -243,14 +263,22 @@ S7::method(term_coef_names, additive_term) <- function(term, ...) {
 #'
 #' @description
 #' \code{TRUE} when the term's contribution to the penalized objective is
-#' differentiable in the coefficients. The answer is read from the penalty
+#' differentiable in the coefficients. The answer is read from the penalties
 #' rather than declared by the term: an unpenalized term is smooth, and a
-#' penalized one is smooth exactly when its penalty declares no kinks, so a
-#' term cannot disagree with its own penalty. The model layer uses this
-#' flag to split the coefficient vector into the block the classical
-#' optimizers handle and the block that needs non-smooth strategies.
+#' penalized one is smooth exactly when no penalty it carries declares a
+#' kink, so a term cannot disagree with its own penalties. The model layer
+#' uses this flag to split the coefficient vector into the block the
+#' classical optimizers handle and the block that needs non-smooth
+#' strategies.
 #'
-#' @param term An object inheriting from class \code{\link{additive_term}}.
+#' @details
+#' The enumeration is \code{\link{term_penalties}}, so a term carrying one
+#' penalty over part of its parameters and none over the rest answers for
+#' the part: \code{seg(x, penalty = "lasso")} is not smooth, its slope
+#' changes sitting at a kink, although its linear effect and its
+#' break-points are unpenalized.
+#'
+#' @param term An object inheriting from class \code{\link{model_term}}.
 #' @param ... Passed to methods.
 #'
 #' @return A logical scalar.
@@ -258,10 +286,20 @@ S7::method(term_coef_names, additive_term) <- function(term, ...) {
 #' @examples
 #' term_smooth(linpar(~x))
 #'
-#' @seealso \code{\link{term_penalty}}, \code{\link{edf}}
+#' @seealso \code{\link{term_penalties}}, \code{\link{term_penalty}}, \code{\link{edf}}
 #' @export
 term_smooth <- S7::new_generic("term_smooth", "term",
   function(term, ...) S7::S7_dispatch())
+
+# the penalty a term's `penalty` argument names, over a given number of
+# coordinates: no map, so that the separable branch of penalties7 applies
+# and a fitting layer keeps its proximal step and its coordinate descent
+.penalty_factory <- function(kind) {
+  switch(kind,
+    lasso = function(k) penalties7::lasso_penalty(n_coef = k),
+    ridge = function(k) penalties7::ridge_penalty(n_coef = k),
+    stop(sprintf("unknown penalty '%s'.", kind), call. = FALSE))
+}
 
 # a hyperparameter value inside each domain, at which the kink set is asked
 # for; the kinks are structural, so any admissible value answers the question
@@ -275,11 +313,14 @@ term_smooth <- S7::new_generic("term_smooth", "term",
   }), pen@params)
 }
 
-S7::method(term_smooth, additive_term) <- function(term, ...) {
-  pen <- term@penalty
-  if (is.null(pen)) return(TRUE)
-  kinks <- penalties7::penalty_kinks(pen, .penalty_probe_theta(pen))
-  length(kinks) == 0L
+S7::method(term_smooth, model_term) <- function(term, ...) {
+  for (e in term_penalties(term)) {
+    pen <- e$penalty
+    if (length(penalties7::penalty_kinks(pen, .penalty_probe_theta(pen)))) {
+      return(FALSE)
+    }
+  }
+  TRUE
 }
 
 #' @title Design Block on New Data

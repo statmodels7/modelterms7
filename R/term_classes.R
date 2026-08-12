@@ -75,10 +75,13 @@ additive_term <- S7::new_class(
 #'
 #' @description
 #' The branch of \code{\link{model_term}} for terms that rewrite the
-#' likelihood contributions rather than adding a design block, such as
-#' score-driven dynamics. The class exists so the formula interpreter can
-#' route such terms; no structural term is implemented yet, and
-#' \code{\link{term_build}} on this branch signals an error saying so.
+#' likelihood contributions rather than adding a design block:
+#' \code{\link{gas}}, whose predictor is a recursion, and
+#' \code{\link{regime}}, whose contribution is a likelihood mixed over
+#' latent states. A term on this branch reports its own parameters through
+#' \code{\link{term_params}} rather than coefficients, so
+#' \code{\link{term_npar}} counts those and \code{\link{term_penalties}}
+#' indexes into them.
 #'
 #' @param label A character string naming the term.
 #'

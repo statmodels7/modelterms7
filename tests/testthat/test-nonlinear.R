@@ -140,3 +140,68 @@ test_that("the interpreter routes it and print says how it differentiates", {
   expect_output(print(built), "symbolic derivatives")
   expect_output(print(nl(~ a * x)), "specification")
 })
+
+test_that("a penalty names the parameter it reaches, one per parameter", {
+  spec <- nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3),
+             penalty = "lasso", penalize = "a")
+  built <- term_build(spec, dd)
+  ent <- term_penalties(built)
+  expect_length(ent, 1L)
+  expect_identical(ent[[1L]]$name, "a")
+  expect_identical(term_coef_names(built)[ent[[1L]]$index], "nl.a")
+  expect_null(ent[[1L]]$penalty@map)
+  expect_true(penalties7::has_prox(ent[[1L]]$penalty))
+  expect_false(term_smooth(built))
+  # the whole of the block is not penalized: the rate is left free
+  expect_null(term_penalty(built))
+
+  # by default every parameter carries one, and they do not share it
+  both <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3),
+                        penalty = "ridge"), dd)
+  eb <- term_penalties(both)
+  expect_length(eb, 2L)
+  expect_identical(vapply(eb, function(e) e$name, character(1)), c("a", "r"))
+  expect_true(term_smooth(both))
+
+  expect_length(term_penalties(term_build(nl(~ a * exp(-r * x)), dd)), 0L)
+})
+
+test_that("a penalized parameter with a submodel covers its whole vector", {
+  spec <- nl(~ a * exp(-r * x), subformulas = list(a = ~g),
+             start = list(r = 1.3), penalty = "lasso", penalize = "a")
+  built <- term_build(spec, dd)
+  ent <- term_penalties(built)
+  expect_length(ent, 1L)
+  expect_identical(term_coef_names(built)[ent[[1L]]$index],
+                   c("nl.a.(Intercept)", "nl.a.gb"))
+  expect_identical(ent[[1L]]$penalty@n_coef, 2L)
+})
+
+test_that("a penalty on a parameter that is not there is refused", {
+  expect_error(nl(~ a * x, penalize = 1), "character vector")
+  expect_error(term_build(nl(~ a * x, penalty = "lasso", penalize = "b"), dd),
+               "not a parameter")
+  expect_error(nl(~ a * x, penalty = "nope"), "should be one of")
+})
+
+test_that("term_value answers on other rows, where the block cannot", {
+  spec <- nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3))
+  built <- term_build(spec, dd)
+  cf <- c(2.1, 1.2)
+  nd <- data.frame(x = c(0, 0.5, 1.5, 3), g = factor(c("a", "b", "a", "b")))
+  got <- term_value(built, coef = cf, newdata = nd)
+  # the link is the identity here, so the contribution is the function
+  expect_equal(got, cf[1L] * exp(-cf[2L] * nd$x), tolerance = 1e-12)
+  # on the fitting rows it is the ordinary answer
+  expect_equal(term_value(built, coef = cf, newdata = dd),
+               term_value(built, coef = cf), tolerance = 1e-12)
+  # and a parameter with a submodel reapplies its levels rather than
+  # rebuilding them: a subset that drops one still gets the same value
+  bs <- term_build(nl(~ a * exp(-r * x), subformulas = list(a = ~g),
+                      start = list(r = 1.3)), dd)
+  cs <- c(2, 0.3, 1.1)
+  keep <- which(dd$g == "a")
+  expect_equal(term_value(bs, coef = cs,
+                          newdata = droplevels(dd[keep, , drop = FALSE])),
+               term_value(bs, coef = cs)[keep], tolerance = 1e-12)
+})

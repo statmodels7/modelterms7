@@ -7,7 +7,7 @@
 term_smooth(term, ...)
 }
 \arguments{
-\item{term}{An object inheriting from class \code{\link{additive_term}}.}
+\item{term}{An object inheriting from class \code{\link{model_term}}.}
 
 \item{...}{Passed to methods.}
 }
@@ -16,17 +16,25 @@ A logical scalar.
 }
 \description{
 \code{TRUE} when the term's contribution to the penalized objective is
-differentiable in the coefficients. The answer is read from the penalty
+differentiable in the coefficients. The answer is read from the penalties
 rather than declared by the term: an unpenalized term is smooth, and a
-penalized one is smooth exactly when its penalty declares no kinks, so a
-term cannot disagree with its own penalty. The model layer uses this
-flag to split the coefficient vector into the block the classical
-optimizers handle and the block that needs non-smooth strategies.
+penalized one is smooth exactly when no penalty it carries declares a
+kink, so a term cannot disagree with its own penalties. The model layer
+uses this flag to split the coefficient vector into the block the
+classical optimizers handle and the block that needs non-smooth
+strategies.
+}
+\details{
+The enumeration is \code{\link{term_penalties}}, so a term carrying one
+penalty over part of its parameters and none over the rest answers for
+the part: \code{seg(x, penalty = "lasso")} is not smooth, its slope
+changes sitting at a kink, although its linear effect and its
+break-points are unpenalized.
 }
 \examples{
 term_smooth(linpar(~x))
 
 }
 \seealso{
-\code{\link{term_penalty}}, \code{\link{edf}}
+\code{\link{term_penalties}}, \code{\link{term_penalty}}, \code{\link{edf}}
 }

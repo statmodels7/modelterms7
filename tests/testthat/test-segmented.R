@@ -257,23 +257,75 @@ test_that("a penalty reaches the changes and nothing else", {
   set.seed(8)
   dd <- data.frame(x = sort(runif(120, 0, 10)))
   built <- term_build(seg(x, npsi = 2, penalty = "lasso"), dd)
-  pen <- term_penalty(built)
-  expect_identical(pen@params, "lambda")
-  expect_identical(pen@n_coef, term_npar(built))
+  # the penalty is declared over the coefficients it covers, and is not
+  # attached to the whole block: term_penalty() answers for a penalty over
+  # all of it, and there is none
+  expect_null(term_penalty(built))
+  ent <- term_penalties(built)
+  expect_length(ent, 1L)
+  expect_identical(ent[[1L]]$name, "delta")
+  expect_identical(ent[[1L]]$penalty@params, "lambda")
   expect_false(term_smooth(built))
 
-  # the map selects the two slope changes out of the five coefficients
-  D <- pen@map
-  expect_identical(dim(D), c(2L, 5L))
-  expect_identical(which(D[1, ] == 1), 2L)
-  expect_identical(which(D[2, ] == 1), 3L)
+  # the two slope changes out of the five coefficients, by position
+  expect_identical(ent[[1L]]$index, 2:3)
+  expect_identical(term_coef_names(built)[ent[[1L]]$index],
+                   c("seg.delta1", "seg.delta2"))
+  expect_identical(ent[[1L]]$penalty@n_coef, 2L)
+
+  # named as coordinates the map is the identity, which is what keeps the
+  # proximal operator available: a selection map is the generalized lasso
+  expect_null(ent[[1L]]$penalty@map)
+  expect_true(penalties7::has_prox(ent[[1L]]$penalty))
 
   # ridge is the smooth alternative and reaches the same coefficients
   br <- term_build(seg(x, npsi = 2, penalty = "ridge"), dd)
   expect_true(term_smooth(br))
-  expect_identical(dim(term_penalty(br)@map), c(2L, 5L))
+  expect_identical(term_penalties(br)[[1L]]$index, 2:3)
   # with no penalty there is none
+  expect_length(term_penalties(term_build(seg(x), dd)), 0L)
   expect_null(term_penalty(term_build(seg(x), dd)))
+
+  # a specification has nothing to index yet and reports no penalty, as an
+  # unbuilt ridge() does, rather than raising
+  expect_length(term_penalties(seg(x, penalty = "lasso")), 0L)
+  expect_true(term_smooth(seg(x, penalty = "lasso")))
+})
+
+test_that("a joint term penalizes its two kinds of change separately", {
+  set.seed(81)
+  dd <- data.frame(x = sort(runif(120, 0, 10)))
+  # a slope change and a jump are not comparable and cannot share a
+  # hyperparameter, so jseg declares two penalties
+  built <- term_build(jseg(x, penalty = "lasso"), dd)
+  ent <- term_penalties(built)
+  expect_length(ent, 2L)
+  expect_identical(vapply(ent, function(e) e$name, character(1)),
+                   c("delta", "kappa"))
+  cn <- term_coef_names(built)
+  expect_identical(cn[ent[[1L]]$index], "jseg.delta1")
+  expect_identical(cn[ent[[2L]]$index], "jseg.kappa1")
+  # the break-point pair g is never penalized: psi is read off it
+  expect_false(any(grepl("\\.g", cn[unlist(lapply(ent, function(e) e$index))])))
+
+  # a pure jump has only the one kind
+  bj <- term_build(jump(x, npsi = 2, penalty = "lasso"), dd)
+  ej <- term_penalties(bj)
+  expect_length(ej, 1L)
+  expect_identical(ej[[1L]]$name, "kappa")
+  expect_identical(term_coef_names(bj)[ej[[1L]]$index],
+                   c("jump.kappa1", "jump.kappa2"))
+})
+
+test_that("a penalty covers the levels of by under one hyperparameter", {
+  set.seed(82)
+  dd <- data.frame(x = sort(runif(160, 0, 10)),
+                   g = factor(rep(c("a", "b"), length.out = 160)))
+  built <- term_build(seg(x, by = g, penalty = "lasso"), dd)
+  ent <- term_penalties(built)
+  expect_length(ent, 1L)
+  expect_identical(term_coef_names(built)[ent[[1L]]$index],
+                   c("seg.a.delta1", "seg.b.delta1"))
 })
 
 test_that("prediction reapplies the break-points and the terms validate", {
@@ -375,4 +427,30 @@ test_that("the interpreter routes the three and print reports the points", {
   expect_named(out$terms, c("linpar", "seg(x)", 'jump(x, label = "j")'))
   expect_output(print(out$terms[["seg(x)"]]), "specification")
   expect_output(print(term_build(out$terms[["seg(x)"]], dd)), "break-point")
+})
+
+test_that("term_value on other rows is the contribution, not the block", {
+  set.seed(14)
+  dd <- data.frame(x = sort(runif(200, 0, 10)))
+  dd$y <- 1 + 0.5 * dd$x + 2 * pmax(dd$x - 6, 0) + rnorm(200, sd = 0.3)
+  built <- term_build(seg(x, psi = 6), dd)
+  cf <- c(0.5, 2, 6)
+  nd <- data.frame(x = c(1, 5, 6.5, 9))
+
+  # the segmented function itself, which is continuous at the break-point
+  expect_equal(term_value(built, coef = cf, newdata = nd),
+               cf[1L] * nd$x + cf[2L] * pmax(nd$x - cf[3L], 0),
+               tolerance = 1e-12)
+  # the block times the coefficients is the LINEARIZATION and is not that:
+  # its third column is the Jacobian in the break-point, so it carries a
+  # step of -delta*psi where the construction is continuous
+  lin <- as.numeric(term_predict(built, nd) %*% cf)
+  expect_gt(max(abs(lin - term_value(built, coef = cf, newdata = nd))), 1)
+
+  # a discontinuous term has no such gap: there the block times the
+  # coefficients IS the contribution, the break-point being read off them
+  bj <- term_build(jump(x, psi = 6), dd)
+  cj <- bj@blueprint$coef
+  expect_equal(as.numeric(term_predict(bj, nd) %*% cj),
+               term_value(bj, coef = cj, newdata = nd), tolerance = 1e-10)
 })

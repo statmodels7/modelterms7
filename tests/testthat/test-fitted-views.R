@@ -34,6 +34,59 @@ test_that("a non-smooth term counts its nonzero coefficients", {
   expect_identical(edf(built_scad, coef = c(1, 0)), 1)
 })
 
+test_that("edf counts a partially penalized term parameter by parameter", {
+  set.seed(12)
+  dx <- data.frame(x = sort(runif(200, 0, 10)))
+  dx$y <- 1 + 0.5 * dx$x + 2 * pmax(dx$x - 6, 0) + rnorm(200, sd = 0.3)
+
+  # seg carries a lasso on its one slope change and nothing on its linear
+  # effect or its break-point, so those two count exactly
+  bl <- term_build(seg(x, penalty = "lasso"), dx)
+  expect_identical(edf(bl, coef = c(0.5, 2, 6)), 3)
+  expect_identical(edf(bl, coef = c(0.5, 0, 6)), 2)
+  # nothing is asked of the curvature: the count is read from coef alone
+  expect_identical(edf(bl, coef = c(0.5, 2, 6), hessian = NULL), 3)
+
+  # under a ridge the same two count exactly and the change is shrunk, so
+  # the answer sits between the two limits and reaches them
+  br <- term_build(seg(x, penalty = "ridge"), dx)
+  H <- crossprod(term_matrix(br))
+  expect_equal(edf(br, coef = c(0.5, 2, 6), hessian = H,
+                   theta = list(sigma = 1e6)), 3, tolerance = 1e-6)
+  expect_equal(edf(br, coef = c(0.5, 2, 6), hessian = H,
+                   theta = list(sigma = 1e-8)), 2, tolerance = 1e-6)
+
+  # and the trace is the one an independent assembly gives over the two
+  # unpenalized coordinates and the penalized one together
+  sig <- 1.3
+  S <- matrix(0, 3, 3)
+  S[2, 2] <- 1 / sig^2
+  expect_equal(edf(br, coef = c(0.5, 2, 6), hessian = H,
+                   theta = list(sigma = sig)),
+               sum(diag(solve(H + S, H))), tolerance = 1e-12)
+})
+
+test_that("a term carrying two penalties keys its hyperparameters by name", {
+  set.seed(13)
+  dx <- data.frame(x = sort(runif(200, 0, 10)))
+  bj <- term_build(jseg(x, penalty = "ridge"), dx)
+  H <- crossprod(term_matrix(bj))
+  cf <- c(0.5, 2, 1, -6)
+  ent <- term_penalties(bj)
+  expect_length(ent, 2L)
+
+  th <- list(delta = list(sigma = 1.1), kappa = list(sigma = 0.4))
+  got <- edf(bj, coef = cf, hessian = H, theta = th)
+  S <- matrix(0, 4, 4)
+  S[ent[[1L]]$index, ent[[1L]]$index] <- 1 / 1.1^2
+  S[ent[[2L]]$index, ent[[2L]]$index] <- 1 / 0.4^2
+  expect_equal(got, sum(diag(solve(H + S, H))), tolerance = 1e-12)
+
+  # a single list cannot say which penalty it belongs to, and is refused
+  expect_error(edf(bj, coef = cf, hessian = H, theta = list(sigma = 1.1)),
+               "keyed by the penalty names")
+})
+
 test_that("edf refuses what it cannot compute and says what is missing", {
   expect_error(edf(linpar(~x1)), "not been built")
   br <- term_build(ridge(~ x1 + x2), dd)

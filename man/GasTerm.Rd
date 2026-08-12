@@ -10,6 +10,8 @@ GasTerm(
   q = integer(0),
   by = NULL,
   time = NULL,
+  deviations = NULL,
+  penalty_kind = character(0),
   blueprint = list()
 )
 }
@@ -24,6 +26,10 @@ when non-empty.}
 \item{by}{An optional grouping expression, filtered independently.}
 
 \item{time}{An optional ordering expression.}
+
+\item{deviations}{Which parameters carry a deviation per group.}
+
+\item{penalty_kind}{The penalty on the deviations, if any.}
 
 \item{blueprint}{The resolved ordering and grouping.}
 }

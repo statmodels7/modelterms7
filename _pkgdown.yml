@@ -78,6 +78,7 @@ reference:
   - NlTerm
   - term_refresh
   - term_value
+  - term_converged
 - title: Segmented terms
   desc: >
     The break-points at which an effect changes slope, level or both,
@@ -103,6 +104,11 @@ reference:
   - term_links
   - term_filter
   - term_loglik
+  - term_adjoint
+  - term_curvature
+  - term_hessian
+  - term_posterior
+  - term_level_param
 - title: The formula layer
   desc: >
     Reading a model formula into terms, by what each call evaluates

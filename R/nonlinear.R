@@ -88,6 +88,25 @@ NlTerm <- S7::new_class(
 #' \eqn{\partial f/\partial\theta_j \cdot (g_j^{-1})' \cdot Z}.
 #' }
 #'
+#' \subsection{Penalizing a parameter}{
+#' \code{penalty} attaches a penalty to the coefficients of the
+#' parameters \code{penalize} names, one penalty per parameter and so one
+#' hyperparameter each, since two parameters of a nonlinear function are
+#' on scales of their own and have no reason to share one. They are
+#' declared through \code{\link{term_penalties}}, which names the
+#' coefficients each covers; the parameters left out are unpenalized.
+#'
+#' What is shrunk is the coefficient, not the parameter, so with a link
+#' the target is \eqn{g_j^{-1}(0)} rather than zero: a rate carried by a
+#' log link is shrunk towards one. Where the parameter carries a
+#' subformula, the whole vector \eqn{\gamma_j} is covered, so a lasso
+#' there selects which covariates a parameter depends on. A subformula of
+#' the form \code{~ g} with a factor \code{g} is the
+#' population-and-deviations pattern: the intercept is the population
+#' value and the remaining columns are deviations, penalized as the
+#' coordinates they are.
+#' }
+#'
 #' @param fn A one-sided formula in the covariates and the parameters, or
 #'   a function of \code{(x, theta)} vectorized in both.
 #' @param params The parameter names. Required when \code{fn} is a
@@ -101,6 +120,11 @@ NlTerm <- S7::new_class(
 #' @param start An optional named list of starting values for the
 #'   parameters, on the parameter scale. Defaults to the inverse link at
 #'   zero.
+#' @param penalty One of \code{"none"} (default), \code{"lasso"} or
+#'   \code{"ridge"}, applied to the coefficients of the parameters
+#'   \code{penalize} names.
+#' @param penalize The parameters the penalty reaches, as a character
+#'   vector. Defaults to all of them.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names.
 #'
@@ -123,8 +147,16 @@ NlTerm <- S7::new_class(
 #' @seealso \code{\link{s}}, \code{\link{te}}, \code{\link{random}}
 #' @export
 nl <- function(fn, params = NULL, x = NULL, links = NULL,
-               subformulas = NULL, start = NULL, label = "nl") {
+               subformulas = NULL, start = NULL,
+               penalty = c("none", "lasso", "ridge"), penalize = NULL,
+               label = "nl") {
   xe <- substitute(x)
+  penalty <- match.arg(penalty)
+  if (!is.null(penalize) && (!is.character(penalize) || !length(penalize) ||
+                             anyNA(penalize) || !all(nzchar(penalize)))) {
+    stop("'penalize' must be a character vector of parameter names.",
+         call. = FALSE)
+  }
   is_formula <- inherits(fn, "formula")
   if (!is_formula && !is.function(fn)) {
     stop("'fn' must be a one-sided formula or a function of (x, theta).",
@@ -164,7 +196,8 @@ nl <- function(fn, params = NULL, x = NULL, links = NULL,
          links = if (is.null(links)) list() else links,
          subformulas = if (is.null(subformulas)) list() else subformulas,
          deriv_mode = if (is_formula) "symbolic" else "numeric",
-         spec = list(x = xe, start = start, is_formula = is_formula),
+         spec = list(x = xe, start = start, is_formula = is_formula,
+                     penalty = penalty, penalize = penalize),
          X = NULL, coef_names = character(0),
          blueprint = list(), penalty = NULL)
 }
@@ -215,28 +248,50 @@ nl <- function(fn, params = NULL, x = NULL, links = NULL,
     val <- as.numeric(eval(bp$expr, env)) + 0 * bp$one
     list(value = val,
          grad = stats::setNames(lapply(bp$params, function(p) {
-           h <- .nl_step(th[[p]])
-           tp <- th; tm <- th
-           tp[[p]] <- th[[p]] + h
-           tm[[p]] <- th[[p]] - h
-           (as.numeric(eval(bp$expr, c(bp$data_vars, tp))) -
-              as.numeric(eval(bp$expr, c(bp$data_vars, tm)))) / (2 * h)
+           .nl_fd(function(v) {
+             tv <- th
+             tv[[p]] <- v
+             as.numeric(eval(bp$expr, c(bp$data_vars, tv)))
+           }, th[[p]], bp$one)
          }), bp$params))
   } else {
     val <- as.numeric(bp$fn(bp$xval, th)) + 0 * bp$one
     list(value = val,
          grad = stats::setNames(lapply(bp$params, function(p) {
-           h <- .nl_step(th[[p]])
-           tp <- th; tm <- th
-           tp[[p]] <- th[[p]] + h
-           tm[[p]] <- th[[p]] - h
-           (as.numeric(bp$fn(bp$xval, tp)) -
-              as.numeric(bp$fn(bp$xval, tm))) / (2 * h)
+           .nl_fd(function(v) {
+             tv <- th
+             tv[[p]] <- v
+             as.numeric(bp$fn(bp$xval, tv))
+           }, th[[p]], bp$one)
          }), bp$params))
   }
 }
 
-.nl_step <- function(v) .Machine$double.eps^(1 / 3) * pmax(1, abs(v))
+# The derivative of the contribution in ONE parameter, by a stencil from
+# numericals7 rather than a difference written out here: the nodes, the
+# weights and the step are that package's, so a five-point rule is a change
+# of one argument and the step is never a constant copied from somewhere
+# else. The parameter is a scalar or one value per observation while the
+# function returns one value per observation either way, which is why the
+# stencil is assembled here instead of calling fd_derivative(), whose f maps
+# a vector of points to the values at those points.
+#
+# The accuracy is four -- five nodes -- and not two. It costs two extra
+# evaluations of f and buys an order of magnitude, which is the trade
+# distributions7 measured for the skew t's degrees of freedom and the same
+# one applies here: this derivative IS the design block, so what it costs is
+# the accuracy of every step the fit takes.
+.nl_fd <- function(f, v, one, accuracy = 4L) {
+  s <- numericals7::fd_offsets(1L, accuracy)$central
+  w <- numericals7::fd_weights(s, 1L)
+  h <- numericals7::fd_step(v, 1L, accuracy)
+  acc <- 0 * one
+  for (k in seq_along(s)) {
+    if (w[k] == 0) next
+    acc <- acc + w[k] * f(v + s[k] * h)
+  }
+  acc / h
+}
 
 # the Jacobian in the coefficients and the value, at one coefficient vector
 .nl_jacobian <- function(bp, coef) {
@@ -329,6 +384,25 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
              subformulas = term@subformulas, sub_bp = sub_bp,
              is_formula = is_f)
 
+  # one penalty per penalized parameter, over that parameter's own
+  # coefficients: two parameters of a nonlinear function are on scales of
+  # their own and cannot share a hyperparameter
+  bp$penalties <- list()
+  if (!identical(term@spec$penalty, "none")) {
+    pz <- term@spec$penalize
+    if (is.null(pz)) pz <- params
+    bad <- setdiff(pz, params)
+    if (length(bad)) {
+      stop(sprintf("'penalize' names '%s', which is not a parameter.",
+                   bad[1L]), call. = FALSE)
+    }
+    factory <- .penalty_factory(term@spec$penalty)
+    for (p in pz) {
+      bp$penalties[[length(bp$penalties) + 1L]] <- list(
+        name = p, index = index[[p]], penalty = factory(length(index[[p]])))
+    }
+  }
+
   # the coefficients the block is built at: the link of the starting value,
   # or zero, which is the inverse link's own natural point
   start <- term@spec$start
@@ -356,8 +430,26 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
   term
 }
 
-S7::method(term_predict, NlTerm) <- function(term, newdata, ...) {
-  .assert_built(term)
+#' @title Penalties of a Nonlinear Term
+#' @name term_penalties.NlTerm
+#' @description
+#' One entry per penalized parameter, named after it and covering its own
+#' coefficients: the single coefficient of a plain parameter, or the whole
+#' vector of a parameter carrying a subformula. The list is empty when
+#' \code{penalty = "none"}, and for a specification, whose parameters a
+#' formula does not name until the data say which of them the data supply.
+#' @param term A built \code{\link{NlTerm}}.
+#' @param ... Unused.
+#' @return A list of entries, as \code{\link{term_penalties}} documents.
+#' @keywords internal
+S7::method(term_penalties, NlTerm) <- function(term, ...) {
+  pens <- term@blueprint$penalties
+  if (is.null(pens)) list() else pens
+}
+
+# the blueprint of the same term read on other rows: the submodel designs
+# are REAPPLIED through their recorded levels and contrasts, never rebuilt
+.nl_blueprint_at <- function(term, newdata) {
   bp <- term@blueprint
   nb <- bp
   nb$n <- nrow(newdata)
@@ -379,7 +471,12 @@ S7::method(term_predict, NlTerm) <- function(term, newdata, ...) {
       eval(term@spec$x, newdata, baseenv())
     } else newdata
   }
-  X <- .nl_jacobian(nb, bp$coef)$J
+  nb
+}
+
+S7::method(term_predict, NlTerm) <- function(term, newdata, ...) {
+  .assert_built(term)
+  X <- .nl_jacobian(.nl_blueprint_at(term, newdata), term@blueprint$coef)$J
   colnames(X) <- term@coef_names
   X
 }
@@ -431,6 +528,42 @@ term_refresh <- S7::new_generic("term_refresh", "term",
 
 S7::method(term_refresh, model_term) <- function(term, coef, ...) term
 
+#' @title Has a Term's Own Iteration Settled?
+#'
+#' @description
+#' \code{TRUE} when a term whose block is refreshed has nothing further to
+#' say about where its own parameters are. A term whose block does not move
+#' answers \code{TRUE}, having no iteration of its own.
+#'
+#' @details
+#' It exists because a score cannot always answer the question. Where the
+#' block is the Jacobian of the contribution -- \code{\link{nl}},
+#' \code{\link{seg}} -- the gradient of the model's objective is the block
+#' times the derivative of the log-likelihood in the predictor, and its
+#' vanishing is the test. Where the block is a working LINEARIZATION with a
+#' frozen weight -- \code{\link{jump}}, \code{\link{jseg}} -- it is not: the
+#' profile objective of a discontinuous term is a step function in the
+#' break-point, so it has no gradient to vanish, and the quantity the
+#' iteration actually drives to zero is the movement of the break-point.
+#' That movement is what \code{\link{seg_converged}} reads, and a fitting
+#' layer asks for it here without knowing which construction it holds.
+#'
+#' @param term A built term.
+#' @param ... Passed to methods.
+#'
+#' @return A single logical.
+#'
+#' @examples
+#' dd <- data.frame(x = seq(0, 2, length.out = 20))
+#' term_converged(term_build(linpar(~x), dd))
+#'
+#' @seealso \code{\link{term_refresh}}, \code{\link{seg_converged}}
+#' @export
+term_converged <- S7::new_generic("term_converged", "term",
+  function(term, ...) S7::S7_dispatch())
+
+S7::method(term_converged, model_term) <- function(term, ...) TRUE
+
 S7::method(term_refresh, NlTerm) <- function(term, coef, ...) {
   .assert_built(term)
   bp <- term@blueprint
@@ -457,37 +590,58 @@ S7::method(term_refresh, NlTerm) <- function(term, coef, ...) {
 #' \eqn{f(x;\theta)}, which the Jacobian alone does not give, and which a
 #' Gauss-Newton step needs beside it.
 #'
+#' @details
+#' \code{newdata} asks for the same contribution on other rows, and is what
+#' a predictor needs where the block is a Jacobian: there
+#' \code{term_predict()} times the coefficients is the linearization and
+#' not the contribution, and the two differ by whatever the linearization
+#' drops. For \code{\link{seg}} that difference is a step at the
+#' break-point in a construction that is continuous. Rows arriving here are
+#' treated as \code{\link{term_predict}} treats them, through the levels
+#' and constants the blueprint recorded, never rebuilt.
+#'
 #' @param term A built term.
 #' @param coef The coefficients. Optional for a nonlinear term, which
 #'   carries the ones it was last refreshed at.
+#' @param newdata An optional data frame; the contribution is returned on
+#'   its rows instead of on the ones the term was built from.
 #' @param ... Passed to methods.
 #'
 #' @return A numeric vector, one value per observation.
 #'
-#' @seealso \code{\link{term_refresh}}
+#' @seealso \code{\link{term_refresh}}, \code{\link{term_predict}}
 #'
 #' @examples
 #' dd <- data.frame(x = seq(0, 2, length.out = 20))
 #' built <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1)), dd)
 #' head(term_value(built), 3)
+#' head(term_value(built, newdata = data.frame(x = c(0, 1, 2))), 3)
 #'
 #' @export
 term_value <- S7::new_generic("term_value", "term",
-  function(term, coef = NULL, ...) S7::S7_dispatch())
+  function(term, coef = NULL, newdata = NULL, ...) S7::S7_dispatch())
 
-S7::method(term_value, additive_term) <- function(term, coef = NULL, ...) {
+S7::method(term_value, additive_term) <- function(term, coef = NULL,
+                                                  newdata = NULL, ...) {
   .assert_built(term)
   if (is.null(coef)) {
     stop("'coef' is required: a linear term contributes the block times it.",
          call. = FALSE)
   }
-  as.numeric(term@X %*% coef)
+  X <- if (is.null(newdata)) term@X else term_predict(term, newdata)
+  as.numeric(X %*% coef)
 }
 
-S7::method(term_value, NlTerm) <- function(term, coef = NULL, ...) {
+S7::method(term_value, NlTerm) <- function(term, coef = NULL, newdata = NULL,
+                                           ...) {
   .assert_built(term)
-  if (is.null(coef)) return(term@blueprint$value)
-  .nl_jacobian(term@blueprint, as.numeric(coef))$value
+  bp <- if (is.null(newdata)) term@blueprint else
+    .nl_blueprint_at(term, newdata)
+  if (is.null(coef)) {
+    if (is.null(newdata)) return(bp$value)
+    coef <- term@blueprint$coef
+  }
+  .nl_jacobian(bp, as.numeric(coef))$value
 }
 
 S7::method(print, NlTerm) <- function(x, ...) {

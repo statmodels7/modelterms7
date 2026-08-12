@@ -2,7 +2,7 @@
 % Please edit documentation in R/generics.R
 \name{term_npar}
 \alias{term_npar}
-\title{Number of Coefficients of a Built Term}
+\title{Number of Parameters of a Built Term}
 \usage{
 term_npar(term, ...)
 }
@@ -15,7 +15,11 @@ term_npar(term, ...)
 An integer.
 }
 \description{
-The number of columns of the term's design block.
+How many parameters of its own a built term carries: the columns of the
+design block for an additive term, and the entries of
+\code{\link{term_params}} for a structural one, which contributes no
+block. It is the length of the vector \code{\link{term_penalties}}
+indexes into.
 }
 \examples{
 term_npar(term_build(linpar(~x), data.frame(x = 1:4)))
