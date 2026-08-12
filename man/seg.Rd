@@ -12,7 +12,7 @@ seg(
   psi = NULL,
   by = NULL,
   linear = TRUE,
-  penalty = c("none", "lasso", "ridge"),
+  penalty = "none",
   c0 = 0.05,
   label = "seg"
 )
@@ -23,7 +23,7 @@ jump(
   psi = NULL,
   by = NULL,
   linear = TRUE,
-  penalty = c("none", "lasso", "ridge"),
+  penalty = "none",
   c0 = 0.05,
   label = "jump"
 )
@@ -34,7 +34,7 @@ jseg(
   psi = NULL,
   by = NULL,
   linear = TRUE,
-  penalty = c("none", "lasso", "ridge"),
+  penalty = "none",
   c0 = 0.05,
   label = "jseg"
 )
@@ -53,8 +53,12 @@ break-points per level.}
 \item{linear}{Whether the block carries the linear effect. Defaults to
 \code{TRUE}.}
 
-\item{penalty}{One of \code{"none"} (default), \code{"lasso"} or
-\code{"ridge"}, applied to the changes.}
+\item{penalty}{The penalty on the changes: \code{"none"} (default),
+\code{"lasso"}, \code{"ridge"}, a \pkg{penalties7} penalty over as many
+coefficients as there are changes, or a function of that count
+returning one. A joint term declares two penalties, one on the slope
+changes and one on the jumps, and a penalty given as an object is used
+for both.}
 
 \item{c0}{For a discontinuous term, the starting value of the scaling
 factor that separates the observations from the break-point, as a

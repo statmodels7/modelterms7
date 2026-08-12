@@ -109,6 +109,7 @@ reference:
   - term_hessian
   - term_posterior
   - term_level_param
+  - term_readable
 - title: The formula layer
   desc: >
     Reading a model formula into terms, by what each call evaluates

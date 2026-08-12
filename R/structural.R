@@ -97,7 +97,7 @@ term_links <- S7::new_generic("term_links", "term",
 #' out <- term_filter(term, eta = rep(0, 20), y = dd$y,
 #'                    score = function(e, i) dd$y[i] - e,
 #'                    curvature = function(e, i) -1,
-#'                    psi = list(omega = 0.1, a1 = 0.3, pacf1 = 0.5))
+#'                    psi = list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.5))
 #' head(out$eta, 3)
 #' dim(out$jacobian)
 #'
@@ -141,6 +141,64 @@ term_level_param <- S7::new_generic("term_level_param", "term",
   function(term, ...) S7::S7_dispatch())
 
 S7::method(term_level_param, model_term) <- function(term, ...) character(0)
+
+
+#' @title The Quantities a Fitted Term Reports
+#'
+#' @description
+#' What a reader reads, with the Jacobian from the term's own parameters on
+#' the unconstrained scale, so that a caller holding their variance matrix
+#' can carry it across by the delta method.
+#'
+#' @details
+#' A term's parameters are the coordinates it is ESTIMATED on, chosen so
+#' that a search runs unconstrained, and they are not always the quantities
+#' the model is about. The clearest case is a score-driven persistence,
+#' which rides a partial autocorrelation because the stationary region is
+#' not a box: what the literature writes as \eqn{\beta_1} is the
+#' autoregressive coefficient, which is a function of the whole chart and
+#' coincides with it only at \eqn{q = 1}. Reporting the coordinate under the
+#' coefficient's name would promise one quantity and print another.
+#'
+#' Each row gives a value and the row of \eqn{\partial(\text{value}) /
+#' \partial\zeta} at the current parameters, so a standard error is
+#' \eqn{\sqrt{J V J^\top}} and an interval is built on whichever scale keeps
+#' the quantity in its own set, exactly as \pkg{parameters7}'s
+#' \code{param_readable()} does for a matrix parameter.
+#'
+#' The base method reports the parameters themselves on the PARAMETER scale,
+#' with the diagonal Jacobian of their links, which is what every term whose
+#' coordinates are already its quantities wants.
+#'
+#' @param term A built term.
+#' @param zeta The term's parameters on the unconstrained scale, named as
+#'   \code{\link{term_params}}.
+#' @param ... Passed to methods.
+#'
+#' @return A list with \code{name}, \code{value}, \code{jacobian} (one row
+#'   per quantity and one column per parameter) and \code{scale}, the link
+#'   an interval for each quantity is built on.
+#'
+#' @examples
+#' term_readable(gas(p = 1, q = 1), c(omega = 0.3, alpha1 = 0.4, pacf1 = 0.8))
+#'
+#' @seealso \code{\link{term_params}}, \code{\link{term_links}}
+#' @export
+term_readable <- S7::new_generic("term_readable", "term",
+  function(term, zeta, ...) S7::S7_dispatch())
+
+S7::method(term_readable, model_term) <- function(term, zeta, ...) {
+  nm <- term_params(term)
+  links <- term_links(term)
+  z <- unlist(zeta[nm])
+  val <- vapply(nm, function(j)
+    linkfunctions7::linkinv(links[[j]], z[[j]]), numeric(1))
+  J <- diag(vapply(nm, function(j)
+    linkfunctions7::dlinkinv(links[[j]], z[[j]]), numeric(1)),
+    nrow = length(nm))
+  dimnames(J) <- list(nm, nm)
+  list(name = nm, value = unname(val), jacobian = J, scale = links[nm])
+}
 
 
 #' @title Differentiate a Structural Term Backwards
@@ -196,7 +254,7 @@ S7::method(term_level_param, model_term) <- function(term, ...) character(0)
 #' out <- term_adjoint(term, eta = rep(0, 20), y = dd$y,
 #'                     score = function(e, i) dd$y[i] - e,
 #'                     curvature = function(e, i) -1,
-#'                     psi = list(omega = 0.1, a1 = 0.3, pacf1 = 0.5),
+#'                     psi = list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.5),
 #'                     g = rep(1, 20))
 #' head(out$deta, 3)
 #'
@@ -280,7 +338,7 @@ S7::method(term_adjoint, structural_term) <- function(term, eta, y, score,
 #'   term, eta = rep(0, 20), y = dd$y,
 #'   score = function(e, i) dd$y[i] - e,
 #'   curvature = function(e, i) -1,
-#'   psi = list(omega = 0.1, a1 = 0.3, pacf1 = 0.5),
+#'   psi = list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.5),
 #'   g = rep(1, 20), seed = matrix(0, 20, m),
 #'   blocks = function(e, i, D) list(cross = numeric(m),
 #'                                   M = matrix(0, m, m)))

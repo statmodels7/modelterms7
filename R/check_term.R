@@ -1,6 +1,17 @@
 #' @include term_classes.R generics.R
 NULL
 
+# What counts as a design block. A term's `X` is `class_any` on purpose, and
+# a grouping indicator is built SPARSE -- a row belongs to one group, so the
+# density is 1/m and the dense form is quadratic in the wrong place. So the
+# question a validator may ask is whether the object is two-dimensional and
+# numeric, not whether it is a base matrix: `is.matrix()` is FALSE for every
+# Matrix class and would fail a term for being efficient.
+.is_block <- function(x) {
+  (is.matrix(x) && is.numeric(x)) ||
+    (isS4(x) && length(dim(x)) == 2L)
+}
+
 # Rows whose removal is most likely to expose a blueprint defect: when the
 # data carry a factor, dropping every row of one level makes a rebuilt (as
 # opposed to reapplied) encoding lose a column, so the subset check below
@@ -95,8 +106,9 @@ check_term <- function(term, data, verbose = TRUE) {
   }
   X <- term_matrix(built)
   add("build",
-      is.matrix(X) && is.numeric(X) && nrow(X) == nrow(data),
-      sprintf("%d x %d block", nrow(X), ncol(X)))
+      .is_block(X) && nrow(X) == nrow(data),
+      sprintf("%d x %d block%s", nrow(X), ncol(X),
+              if (isS4(X)) ", sparse" else ""))
 
   cn <- term_coef_names(built)
   add("names", length(cn) == ncol(X) && anyDuplicated(cn) == 0L)
@@ -119,7 +131,7 @@ check_term <- function(term, data, verbose = TRUE) {
   nd <- droplevels(data[idx, , drop = FALSE])
   Xs <- tryCatch(term_predict(built, nd), error = function(e) e)
   add("subset",
-      !inherits(Xs, "error") && is.matrix(Xs) &&
+      !inherits(Xs, "error") && .is_block(Xs) &&
         nrow(Xs) == length(idx) && ncol(Xs) == ncol(X) &&
         isTRUE(all.equal(bare(Xs), bare(X[idx, , drop = FALSE]),
                          tolerance = 1e-12)),

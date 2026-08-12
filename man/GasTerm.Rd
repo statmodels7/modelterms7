@@ -11,7 +11,7 @@ GasTerm(
   by = NULL,
   time = NULL,
   deviations = NULL,
-  penalty_kind = character(0),
+  penalty_kind = NULL,
   blueprint = list()
 )
 }

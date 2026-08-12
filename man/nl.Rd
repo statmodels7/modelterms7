@@ -11,7 +11,7 @@ nl(
   links = NULL,
   subformulas = NULL,
   start = NULL,
-  penalty = c("none", "lasso", "ridge"),
+  penalty = "none",
   penalize = NULL,
   label = "nl"
 )
@@ -36,9 +36,10 @@ per parameter to be modeled with covariates. Formula input only.}
 parameters, on the parameter scale. Defaults to the inverse link at
 zero.}
 
-\item{penalty}{One of \code{"none"} (default), \code{"lasso"} or
-\code{"ridge"}, applied to the coefficients of the parameters
-\code{penalize} names.}
+\item{penalty}{The penalty on the coefficients of the parameters
+\code{penalize} names: \code{"none"} (default), \code{"lasso"},
+\code{"ridge"}, a \pkg{penalties7} penalty over as many coefficients as
+those parameters number, or a function of that count returning one.}
 
 \item{penalize}{The parameters the penalty reaches, as a character
 vector. Defaults to all of them.}

@@ -7,7 +7,12 @@ dd <- data.frame(y = rnorm(12), x = rnorm(12),
 test_that("random intercepts build the indicator block with a gaussian default", {
   built <- term_build(random(~ 1 | g), dd)
   ref <- stats::model.matrix(~ 0 + g, dd)
-  expect_equal(unname(term_matrix(built)), unname(ref), ignore_attr = TRUE)
+  # the block is SPARSE by construction: a row belongs to one group, so the
+  # density is 1/m whatever the data, and the dense form was the whole cost
+  # of a random effect. It is compared against the dense reference by value
+  Z <- term_matrix(built)
+  expect_s4_class(Z, "sparseMatrix")
+  expect_equal(unname(as.matrix(Z)), unname(ref), ignore_attr = TRUE)
   expect_identical(term_coef_names(built),
                    c("random.a", "random.b", "random.c"))
 
@@ -29,7 +34,7 @@ test_that("random slopes interact the within-group design with the groups", {
                      "random.c.(Intercept)", "random.c.x"))
 
   # reference construction: indicator times within-group column, group-major
-  Z <- term_matrix(built)
+  Z <- as.matrix(term_matrix(built))
   G <- stats::model.matrix(~ 0 + g, dd)
   expect_equal(unname(Z[, 1]), unname(G[, 1]), ignore_attr = TRUE)
   expect_equal(unname(Z[, 2]), unname(G[, 1] * dd$x), ignore_attr = TRUE)

@@ -462,6 +462,6 @@ test_that("term_hessian rejects what it cannot use", {
   # a filter is not a mixture and says so rather than answering
   gt <- term_build(gas(p = 1, q = 1, time = t), d2)
   expect_error(term_hessian(gt, rep(0, 20), d2$y, ld, gr, he,
-                            list(omega = 0, a1 = 0, pacf1 = 0), sd, 2:4, 1L),
+                            list(omega = 0, alpha1 = 0, pacf1 = 0), sd, 2:4, 1L),
                "does not implement term_hessian")
 })

@@ -36,7 +36,7 @@ SegTerm <- S7::new_class(
     npsi = S7::class_integer,
     by = S7::class_any,
     linear = S7::class_logical,
-    penalty_kind = S7::class_character,
+    penalty_kind = S7::class_any,
     spec = S7::class_list
   )
 )
@@ -167,8 +167,12 @@ SegTerm <- S7::new_class(
 #'   break-points per level.
 #' @param linear Whether the block carries the linear effect. Defaults to
 #'   \code{TRUE}.
-#' @param penalty One of \code{"none"} (default), \code{"lasso"} or
-#'   \code{"ridge"}, applied to the changes.
+#' @param penalty The penalty on the changes: \code{"none"} (default),
+#'   \code{"lasso"}, \code{"ridge"}, a \pkg{penalties7} penalty over as many
+#'   coefficients as there are changes, or a function of that count
+#'   returning one. A joint term declares two penalties, one on the slope
+#'   changes and one on the jumps, and a penalty given as an object is used
+#'   for both.
 #' @param c0 For a discontinuous term, the starting value of the scaling
 #'   factor that separates the observations from the break-point, as a
 #'   fraction of the distance to the ends of the range. Defaults to
@@ -199,28 +203,28 @@ SegTerm <- S7::new_class(
 #' @seealso \code{\link{seg_psi}}, \code{\link{seg_start}}, \code{\link{seg_step}}, \code{\link{nl}}
 #' @export
 seg <- function(x, npsi = 1, psi = NULL, by = NULL, linear = TRUE,
-                penalty = c("none", "lasso", "ridge"), c0 = 0.05,
+                penalty = "none", c0 = 0.05,
                 label = "seg") {
   .seg_spec("seg", substitute(x), npsi, psi, substitute(by), linear,
-            match.arg(penalty), c0, label)
+            .penalty_arg(penalty), c0, label)
 }
 
 #' @rdname seg
 #' @export
 jump <- function(x, npsi = 1, psi = NULL, by = NULL, linear = TRUE,
-                 penalty = c("none", "lasso", "ridge"), c0 = 0.05,
+                 penalty = "none", c0 = 0.05,
                  label = "jump") {
   .seg_spec("jump", substitute(x), npsi, psi, substitute(by), linear,
-            match.arg(penalty), c0, label)
+            .penalty_arg(penalty), c0, label)
 }
 
 #' @rdname seg
 #' @export
 jseg <- function(x, npsi = 1, psi = NULL, by = NULL, linear = TRUE,
-                 penalty = c("none", "lasso", "ridge"), c0 = 0.05,
+                 penalty = "none", c0 = 0.05,
                  label = "jseg") {
   .seg_spec("jseg", substitute(x), npsi, psi, substitute(by), linear,
-            match.arg(penalty), c0, label)
+            .penalty_arg(penalty), c0, label)
 }
 
 .seg_spec <- function(kind, var, npsi, psi, by, linear, penalty, c0,
@@ -530,7 +534,7 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
   # selection map would deny it. One penalty per kind of change, shared
   # across the levels of `by`.
   bp$penalties <- list()
-  if (term@penalty_kind != "none") {
+  if (!.penalty_is_none(term@penalty_kind)) {
     factory <- .penalty_factory(term@penalty_kind)
     for (g in names(nmi$groups)) {
       keep <- which(rep(nmi$names %in% nmi$groups[[g]], times = length(levs)))
@@ -890,8 +894,9 @@ S7::method(print, SegTerm) <- function(x, ...) {
   if (term_is_built(x)) {
     cat(sprintf("<SegTerm> '%s': %s, %d break-point%s%s\n", x@label, x@kind,
                 x@npsi, if (x@npsi == 1L) "" else "s",
-                if (x@penalty_kind != "none")
-                  sprintf("; %s on the changes", x@penalty_kind) else ""))
+                if (!.penalty_is_none(x@penalty_kind))
+                  sprintf("; %s on the changes",
+                          .penalty_label(x@penalty_kind)) else ""))
     cat("  at: ", paste(format(x@blueprint$psi, digits = 4),
                         collapse = ", "), "\n", sep = "")
   } else {

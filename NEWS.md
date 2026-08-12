@@ -1,3 +1,116 @@
+# modelterms7 0.24.0
+
+* A grouping indicator is built SPARSE. `.random_block()` assembled a dense
+  `n x (m*d)` block, and its intermediate `outer(g, levels(g), ==)` was a
+  dense `n x m` besides. A row belongs to one group, so the density is `1/m`
+  whatever the data. At `n = 20000` and `m = 1000`: **152.6 MB against 0.23
+  MB**, built in 1.76 s against 0.0011 s, and the crossproduct every fitting
+  iteration takes in **0.0006 s against 12.77 s**.
+
+  `check_term()` asks `.is_block()` rather than `is.matrix()`, which is FALSE
+  for every `Matrix` class and would have failed a term for being efficient.
+  A term's `X` was already `class_any`, so the contract needed no change.
+
+* `term_curvature()` accumulates PER GROUP and never forms the square over
+  all the unknowns. A group's rows reach the coefficients, the population
+  parameters and that group's own deviations, and nothing else, so the active
+  set has the same size whether the panel has ten groups or a thousand.
+  Measured against the full square, which it reproduces EXACTLY:
+
+  | groups | unknowns | full square | per group | speedup |
+  |---|---|---|---|---|
+  | 25 | 79 | 0.31 s | 0.100 s | 3.1x |
+  | 50 | 154 | 1.89 s | 0.060 s | 31.5x |
+  | 100 | 304 | 12.48 s | 0.130 s | 96.0x |
+  | 200 | 604 | 53.51 s | 0.390 s | 137.2x |
+
+  `max|W_full - W_group|` is 0 at every size, not merely small: it is the
+  same sum over the same terms, restricted where the rest is zero by
+  construction. The cost per observation is now flat in the group count (37
+  to 43 microseconds at 100, 250 and 500 groups), and what remains is the
+  `n x m` jacobian, which is the return value and is O(n m) rather than the
+  O(n m^2) the square cost.
+
+  `blocks` is called with the row of the jacobian RESTRICTED to the active
+  set and with that set, returning its pieces in the same coordinates. A
+  three-argument callback of the earlier shape still works and is given the
+  full row, paying the quadratic allocation the restriction avoids.
+
+# modelterms7 0.23.0
+
+* A score-driven term carries the names its literature uses. The score
+  loadings are `alpha1`, `alpha2`, ... where they were `a1`, `a2`: they are
+  the quantities themselves, each on the identity link, so the name can
+  promise what it reports.
+
+  The persistence is a different matter and keeps its own name. It rides a
+  PARTIAL AUTOCORRELATION, the stationary region of an autoregression not
+  being a box, so a free coordinate called `beta1` would promise the
+  coefficient and report the chart -- and above `q = 1` the two are
+  different numbers.
+
+* `term_readable()` is the new generic that reports what a fitted term is
+  about, with the Jacobian from the term's own parameters, in the shape
+  `parameters7::param_readable()` already uses for a matrix parameter. The
+  base method answers with the parameters themselves on the parameter
+  scale, so every existing term is unchanged.
+
+  A score-driven term answers with `omega`, the loadings, and the
+  AUTOREGRESSIVE COEFFICIENTS `beta1`, `beta2`, ..., taken through the
+  Levinson-Durbin recursion whose Jacobian the filter already computes and
+  chained onto the rhobit link of each coordinate. Against `numDeriv` the
+  Jacobian agrees to 1e-11 at every order tried; at `q = 1` the coefficient
+  is exactly the link's inverse, which is the case where the two coincide.
+
+# modelterms7 0.22.0
+
+* A penalty is an object, not a string. `gas()`, `nl()`, `seg()`, `jump()`
+  and `jseg()` took `"none"`, `"lasso"` or `"ridge"` through `match.arg()`,
+  which put a term's reach at two of the penalties `penalties7` offers and
+  made every other one need a name invented for it here. They now also take
+
+  * a `penalties7` penalty, used as it stands, so an elastic net, a
+    heavy-tailed prior or a structured precision reaches a term directly;
+  * a function of the number of coefficients returning one, which is what a
+    penalty whose WIDTH the data decide needs -- a panel's deviations exist
+    only once the groups are counted, so a specification cannot name one.
+
+  The two shorthands keep working and remain the defaults. A penalty given
+  as an object is checked against the count where that count first exists,
+  at `term_build()`, rather than being evaluated at a coefficient vector of
+  another length and recycled in silence.
+
+  `.penalty_factory()` is the one place that reads the argument and
+  `.penalty_arg()` the one that validates it, so the three constructors
+  cannot drift apart.
+
+# modelterms7 0.21.0
+
+* `term_curvature()` carries deviations, where it used to reject them.
+
+  A group's parameters are the population values plus that group's
+  deviations ON THE UNCONSTRAINED SCALE, which is the scale a deviation is
+  defined on. That map is affine: its Jacobian is a matrix of ones and
+  zeros and its second derivative is exactly zero. So the recursion is
+  unchanged and only the lift widens, a base coordinate reaching two
+  columns of the caller's unknowns instead of one, the population value
+  and that group's own deviation. Nothing had to be derived.
+
+  Against `numDeriv` on the filter itself, over deviations on every
+  parameter, on the level alone and on a mixed pair, at `p` and `q` up to
+  two: the Jacobian agrees to 3e-10 and the curvature to 5e-10 relative.
+  Where the gap looks larger the reference is the weaker side -- at
+  `q = 2` two Richardson settings disagree with each other by 4.4e-4 while
+  the closed form sits 2.8e-7 from one of them, which is 2e-10 of the
+  matrix's own size. Two structural claims are asserted as well: at a zero
+  deviation the population block reproduces the shared-parameter term's
+  curvature, and whatever the deviations are, one parameter's deviation
+  columns sum to its population column, which is the affine lift.
+
+  This is what a penalty over a panel's deviations needed: with it,
+  `statmodels7` fits such a term, inverts its information and estimates
+  its hyperparameters.
+
 # modelterms7 0.20.0
 
 * `term_hessian()` returns the exact Hessian of a likelihood mixed over

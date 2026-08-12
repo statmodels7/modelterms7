@@ -120,9 +120,10 @@ NlTerm <- S7::new_class(
 #' @param start An optional named list of starting values for the
 #'   parameters, on the parameter scale. Defaults to the inverse link at
 #'   zero.
-#' @param penalty One of \code{"none"} (default), \code{"lasso"} or
-#'   \code{"ridge"}, applied to the coefficients of the parameters
-#'   \code{penalize} names.
+#' @param penalty The penalty on the coefficients of the parameters
+#'   \code{penalize} names: \code{"none"} (default), \code{"lasso"},
+#'   \code{"ridge"}, a \pkg{penalties7} penalty over as many coefficients as
+#'   those parameters number, or a function of that count returning one.
 #' @param penalize The parameters the penalty reaches, as a character
 #'   vector. Defaults to all of them.
 #' @param label A single non-empty string prefixed to the coefficient
@@ -148,10 +149,10 @@ NlTerm <- S7::new_class(
 #' @export
 nl <- function(fn, params = NULL, x = NULL, links = NULL,
                subformulas = NULL, start = NULL,
-               penalty = c("none", "lasso", "ridge"), penalize = NULL,
+               penalty = "none", penalize = NULL,
                label = "nl") {
   xe <- substitute(x)
-  penalty <- match.arg(penalty)
+  penalty <- .penalty_arg(penalty)
   if (!is.null(penalize) && (!is.character(penalize) || !length(penalize) ||
                              anyNA(penalize) || !all(nzchar(penalize)))) {
     stop("'penalize' must be a character vector of parameter names.",
@@ -388,7 +389,7 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
   # coefficients: two parameters of a nonlinear function are on scales of
   # their own and cannot share a hyperparameter
   bp$penalties <- list()
-  if (!identical(term@spec$penalty, "none")) {
+  if (!.penalty_is_none(term@spec$penalty)) {
     pz <- term@spec$penalize
     if (is.null(pz)) pz <- params
     bad <- setdiff(pz, params)

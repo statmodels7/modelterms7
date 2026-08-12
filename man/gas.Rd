@@ -10,7 +10,7 @@ gas(
   by = NULL,
   time = NULL,
   deviations = FALSE,
-  penalty = c("none", "lasso", "ridge"),
+  penalty = "none",
   label = "gas"
 )
 }
@@ -29,8 +29,13 @@ population parameters: \code{FALSE} (default), \code{TRUE} for every
 parameter, or a character vector naming the parameters that carry
 one. Requires \code{by}.}
 
-\item{penalty}{One of \code{"none"} (default), \code{"lasso"} or
-\code{"ridge"}, applied to the deviations. Requires them.}
+\item{penalty}{The penalty on the deviations, which requires them:
+\code{"none"} (default), \code{"lasso"}, \code{"ridge"}, a
+\pkg{penalties7} penalty over as many coefficients as the deviations
+number, or a function of that count returning one. The count is a
+property of the data, so a penalty given as an object is checked
+against it at \code{\link{term_build}} and a function is the spelling
+for a specification written before the groups are known.}
 
 \item{label}{A single non-empty string naming the term.}
 }

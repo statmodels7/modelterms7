@@ -164,6 +164,22 @@ test_that("a penalty names the parameter it reaches, one per parameter", {
   expect_true(term_smooth(both))
 
   expect_length(term_penalties(term_build(nl(~ a * exp(-r * x)), dd)), 0L)
+
+  # a penalties7 penalty and a function of the coefficient count are the
+  # general spellings the two names are a shorthand for
+  obj <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3),
+                       penalty = penalties7::elasticnet_penalty(n_coef = 1),
+                       penalize = "a"), dd)
+  expect_identical(term_penalties(obj)[[1L]]$penalty@n_coef, 1L)
+  fac <- term_build(nl(~ a * exp(-r * x), subformulas = list(a = ~g),
+                       start = list(r = 1.3), penalize = "a",
+                       penalty = function(k)
+                         penalties7::ridge_penalty(n_coef = k)), dd)
+  expect_identical(term_penalties(fac)[[1L]]$penalty@n_coef, 2L)
+  expect_error(term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3),
+                             penalty = penalties7::ridge_penalty(n_coef = 4),
+                             penalize = "a"), dd),
+               "covers 4 coefficients and the term has 1")
 })
 
 test_that("a penalized parameter with a submodel covers its whole vector", {

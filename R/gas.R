@@ -34,7 +34,7 @@ GasTerm <- S7::new_class(
     by = S7::class_any,
     time = S7::class_any,
     deviations = S7::class_any,
-    penalty_kind = S7::class_character,
+    penalty_kind = S7::class_any,
     blueprint = S7::class_list
   )
 )
@@ -151,8 +151,13 @@ GasTerm <- S7::new_class(
 #'   population parameters: \code{FALSE} (default), \code{TRUE} for every
 #'   parameter, or a character vector naming the parameters that carry
 #'   one. Requires \code{by}.
-#' @param penalty One of \code{"none"} (default), \code{"lasso"} or
-#'   \code{"ridge"}, applied to the deviations. Requires them.
+#' @param penalty The penalty on the deviations, which requires them:
+#'   \code{"none"} (default), \code{"lasso"}, \code{"ridge"}, a
+#'   \pkg{penalties7} penalty over as many coefficients as the deviations
+#'   number, or a function of that count returning one. The count is a
+#'   property of the data, so a penalty given as an object is checked
+#'   against it at \code{\link{term_build}} and a function is the spelling
+#'   for a specification written before the groups are known.
 #' @param label A single non-empty string naming the term.
 #'
 #' @return An object of class \code{\link{GasTerm}} (a specification; see
@@ -172,7 +177,7 @@ GasTerm <- S7::new_class(
 #' @seealso \code{\link{regime}}
 #' @export
 gas <- function(p = 1, q = 1, by = NULL, time = NULL, deviations = FALSE,
-                penalty = c("none", "lasso", "ridge"), label = "gas") {
+                penalty = "none", label = "gas") {
   chk <- function(v, nm, lo) {
     if (!is.numeric(v) || length(v) != 1L || is.na(v) || v < lo ||
         v != round(v)) {
@@ -183,7 +188,7 @@ gas <- function(p = 1, q = 1, by = NULL, time = NULL, deviations = FALSE,
   }
   p <- chk(p, "p", 1L)
   q <- chk(q, "q", 0L)
-  penalty <- match.arg(penalty)
+  penalty <- .penalty_arg(penalty)
   if (!is.character(label) || length(label) != 1L || is.na(label) ||
       !nzchar(label)) {
     stop("'label' must be a single non-empty character string.",
@@ -207,7 +212,7 @@ gas <- function(p = 1, q = 1, by = NULL, time = NULL, deviations = FALSE,
       stop(sprintf("'deviations' names '%s'; the parameters are %s.",
                    bad[1L], paste(base, collapse = ", ")), call. = FALSE)
     }
-  } else if (penalty != "none") {
+  } else if (!.penalty_is_none(penalty)) {
     stop(paste("'penalty' reaches the deviations of a panel, so it needs",
                "'deviations'; the population parameters of a filter are not",
                "shrunk towards zero."), call. = FALSE)
@@ -220,8 +225,15 @@ gas <- function(p = 1, q = 1, by = NULL, time = NULL, deviations = FALSE,
 
 # the parameters of the filter itself, before any deviation
 .gas_base_params <- function(p, q) {
+  # The level and the score loadings carry the names the score-driven
+  # literature gives them, spelled out: they are the quantities themselves,
+  # each on the identity link, so a name can promise what it reports. The
+  # persistence cannot be named `beta`: it rides a partial autocorrelation,
+  # the stationary region not being a box, and a free coordinate named after
+  # the coefficient would promise the coefficient and report the chart. The
+  # coefficient is what a fitted model REPORTS, through `term_readable()`.
   c("omega",
-    if (p > 0L) paste0("a", seq_len(p)),
+    if (p > 0L) paste0("alpha", seq_len(p)),
     if (q > 0L) paste0("pacf", seq_len(q)))
 }
 
@@ -252,6 +264,58 @@ S7::method(term_params, GasTerm) <- function(term, ...) {
 #' @keywords internal
 S7::method(term_level_param, GasTerm) <- function(term, ...) "omega"
 
+#' @title What a Fitted Score-Driven Term Reports
+#' @name term_readable.GasTerm
+#' @description
+#' The level, the score loadings and the AUTOREGRESSIVE COEFFICIENTS of the
+#' literature -- \code{omega}, \code{alpha1}, \code{beta1} -- with the
+#' Jacobian from the term's own parameters.
+#' @details
+#' The level and the loadings are the coordinates themselves. The
+#' persistence is not: it is carried on a partial autocorrelation, and the
+#' coefficients come from the Levinson-Durbin recursion, whose Jacobian the
+#' term already computes for the filter. Chained onto the rhobit link of
+#' each coordinate, that Jacobian is what a delta-method standard error for
+#' \eqn{\beta_j} needs. At \eqn{q = 1} the two coincide and the chain factor
+#' is the link's alone; above it they do not.
+#'
+#' A deviation is reported as it stands, being unconstrained and defined on
+#' the scale of the parameter it departs from.
+#' @param term A \code{\link{GasTerm}}.
+#' @param zeta The parameters on the unconstrained scale.
+#' @param ... Unused.
+#' @return A list, as \code{\link{term_readable}} documents.
+#' @keywords internal
+S7::method(term_readable, GasTerm) <- function(term, zeta, ...) {
+  nm <- term_params(term)
+  links <- term_links(term)
+  z <- unlist(zeta[nm])
+  q <- term@q
+  base <- .gas_base_params(term@p, q)
+  out <- S7::method(term_readable, model_term)(term, zeta)
+  if (q == 0L) return(out)
+
+  i_pa <- match(paste0("pacf", seq_len(q)), nm)
+  lk <- links[[nm[i_pa[1L]]]]
+  rho <- linkfunctions7::linkinv(lk, z[i_pa])
+  k1 <- linkfunctions7::dlinkinv(lk, z[i_pa])
+  ld <- gas_levinson(rho)
+  out$name[i_pa] <- paste0("beta", seq_len(q))
+  out$value[i_pa] <- ld$phi
+  # the whole chart reaches every coefficient: row j of the recursion's
+  # jacobian scaled by the link's derivative, and NOT the diagonal entry the
+  # base method placed there
+  out$jacobian[i_pa, ] <- 0
+  out$jacobian[i_pa, i_pa] <- ld$jacobian * rep(k1, each = q)
+  rownames(out$jacobian)[i_pa] <- out$name[i_pa]
+  # a coefficient of a stationary autoregression is not confined to an
+  # interval a scalar link expresses, the region not being a box, so its
+  # interval is built on the identity scale
+  out$scale[i_pa] <- rep(list(linkfunctions7::identity_link()), q)
+  names(out$scale)[i_pa] <- out$name[i_pa]
+  out
+}
+
 S7::method(term_links, GasTerm) <- function(term, ...) {
   base <- .gas_base_params(term@p, term@q)
   nm <- term_params(term)
@@ -277,7 +341,7 @@ S7::method(term_links, GasTerm) <- function(term, ...) {
 #' @return A list of entries, as \code{\link{term_penalties}} documents.
 #' @keywords internal
 S7::method(term_penalties, GasTerm) <- function(term, ...) {
-  if (identical(term@penalty_kind, "none")) return(list())
+  if (.penalty_is_none(term@penalty_kind)) return(list())
   levs <- term@blueprint$levels
   if (is.null(levs)) return(list())
   base <- .gas_base_params(term@p, term@q)
@@ -413,6 +477,11 @@ S7::method(term_build, GasTerm) <- function(term, data, ...) {
   ord <- split(order(grp, tm), grp[order(grp, tm)])
   term@blueprint <- list(order = ord, n = n, levels = levels(gf),
                          by = term@by, time = term@time)
+  # a penalty supplied as an object covers a fixed number of coefficients and
+  # the deviations are counted here for the first time, so this is the
+  # earliest point at which the two can be compared, and the latest at which
+  # a caller can still read the mistake against what they wrote
+  term_penalties(term)
   term
 }
 
@@ -708,6 +777,28 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' The forward Jacobian of the filter's predictor in a caller's unknowns and
 #' the second derivative contracted against the caller's weights, both
 #' propagated through the recursion beside the state.
+#' @details
+#' With deviations the recursion runs once per group on that group's own
+#' parameters, which are the population values plus the group's deviations
+#' on the unconstrained scale. That map is affine, so its second derivative
+#' is zero and the only change is the lift carrying a base coordinate into
+#' two columns of the caller's unknowns, the population value and the
+#' group's own deviation.
+#'
+#' The second derivative is accumulated on that group's ACTIVE SET and never
+#' as a square over all the unknowns. A group's rows reach the coefficients,
+#' the population parameters and that group's own deviations, and nothing
+#' else, so the active set has the same size whether the panel has ten
+#' groups or a thousand: the per-observation work is constant in the number
+#' of groups where forming the full square made it quadratic. Measured, the
+#' square cost 0.39 s at 124 unknowns over 1600 rows and would have reached
+#' about twelve minutes at five hundred groups.
+#'
+#' \code{blocks} is therefore called with the row of the jacobian RESTRICTED
+#' to the active set and with that set, and returns its pieces in the same
+#' coordinates. A callback of the earlier three-argument shape is still
+#' accepted and given the full row, its result being subset here; it costs
+#' the quadratic allocation the restriction exists to avoid.
 #' @param term A built \code{GasTerm}.
 #' @param eta The static part of the predictor.
 #' @param y The response, unused directly.
@@ -729,24 +820,22 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
     stop("the term has not been built; call term_build(term, data) first.",
          call. = FALSE)
   }
-  if (length(.gas_dev_params(term))) {
-    stop(paste("term_curvature() does not carry deviations yet: the",
-               "per-group chain adds a factor to every derivative and is",
-               "not written."), call. = FALSE)
-  }
   nm <- term_params(term)
   links <- term_links(term)
   psiv <- unlist(psi[nm])
+  base <- .gas_base_params(term@p, term@q)
+  dv <- .gas_dev_params(term)
+  nb <- length(base)
+  ng <- length(bp$order)
   # the recursion is driven by the parameters, and the caller's unknowns
   # reach them through the links, so the chart is differentiated on the
   # UNCONSTRAINED scale, which is what the model estimates
-  zeta <- vapply(nm, function(j)
+  zeta <- vapply(base, function(j)
     linkfunctions7::linkfun(links[[j]], psiv[[j]]), numeric(1))
-  ch <- .gas_chart_derivs(zeta, term@p, term@q, links)
 
   seed <- as.matrix(seed)
   m <- ncol(seed)
-  np <- ch$np
+  np <- length(nm)
   if (nrow(seed) != bp$n) {
     stop(sprintf("'seed' must have one row per observation (%d).", bp$n),
          call. = FALSE)
@@ -763,44 +852,93 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
                  m, np), call. = FALSE)
   }
   zcol <- m - np + seq_len(np)
-  lift <- function(v) {
-    out <- numeric(m)
-    out[zcol] <- v
-    out
-  }
-  lift2 <- function(h) {
-    out <- matrix(0, m, m)
-    out[zcol, zcol] <- h
-    out
-  }
-  om_u <- lift(ch$d_omega)
-  a_u <- lapply(ch$d_a, lift)
-  b_u <- lapply(ch$d_b, lift)
-  b_uu <- lapply(ch$h_b, lift2)
-
   p <- term@p
   q <- term@q
-  a <- ch$a
-  b <- ch$b
-  sb <- if (q > 0L) sum(b) else 0
-  if (abs(1 - sb) < 1e-10) {
-    stop("the autoregressive polynomial is at the unit root; the filter has no starting level.",
-         call. = FALSE)
+
+  # A group's parameters are its population values plus its deviations ON THE
+  # UNCONSTRAINED SCALE, which is the scale a deviation is defined on, so the
+  # map from the caller's unknowns to a group's chart is AFFINE: its Jacobian
+  # is this matrix of ones and zeros and its second derivative is exactly
+  # zero, which is why a deviation adds no term to the recursion below and
+  # only widens the lift. One base coordinate reaches two columns, the
+  # population value and that group's own deviation.
+  # A group's rows reach the coefficients, the population parameters and that
+  # group's own deviations, and NOTHING else: no row of group l carries a
+  # derivative in group l's neighbour. Everything below is carried on this
+  # set, whose size does not grow with the number of groups.
+  active_of <- function(l) {
+    if (!length(dv)) return(seq_len(m))
+    dev <- vapply(seq_along(dv), function(i) zcol[nb + (i - 1L) * ng + l],
+                  integer(1))
+    c(seq_len(m - np), zcol[seq_len(nb)], dev)
   }
-  # the starting level and its two derivatives: f0 = omega/(1 - sum b)
-  db_sum <- if (q > 0L) Reduce(`+`, b_u) else numeric(m)
-  f0 <- ch$omega / (1 - sb)
-  f0_u <- om_u / (1 - sb) + ch$omega * db_sum / (1 - sb)^2
-  f0_uu <- (outer(om_u, db_sum) + outer(db_sum, om_u)) / (1 - sb)^2 +
-    2 * ch$omega * outer(db_sum, db_sum) / (1 - sb)^3
-  if (q > 0L) {
-    hb_sum <- Reduce(`+`, b_uu)
-    f0_uu <- f0_uu + ch$omega * hb_sum / (1 - sb)^2
+
+  lift_of <- function(l, act) {
+    A <- matrix(0, nb, length(act))
+    A[cbind(seq_len(nb), match(zcol[seq_len(nb)], act))] <- 1
+    for (i in seq_along(dv)) {
+      j <- match(dv[[i]], base)
+      A[j, match(zcol[nb + (i - 1L) * ng + l], act)] <- 1
+    }
+    A
   }
+
+  # the chart, the lifted derivative arrays and the starting level of one
+  # group; with no deviation every group shares them and they are built once
+  prep <- function(l, act) {
+    mk <- length(act)
+    z <- zeta
+    for (i in seq_along(dv)) {
+      z[[dv[[i]]]] <- z[[dv[[i]]]] + psiv[[nb + (i - 1L) * ng + l]]
+    }
+    ch <- .gas_chart_derivs(z, p, q, links)
+    A <- lift_of(l, act)
+    lift <- function(v) as.numeric(crossprod(A, v))
+    lift2 <- function(h) crossprod(A, h %*% A)
+    om_u <- lift(ch$d_omega)
+    a_u <- lapply(ch$d_a, lift)
+    b_u <- lapply(ch$d_b, lift)
+    b_uu <- lapply(ch$h_b, lift2)
+    sb <- if (q > 0L) sum(ch$b) else 0
+    if (abs(1 - sb) < 1e-10) {
+      stop("the autoregressive polynomial is at the unit root; the filter has no starting level.",
+           call. = FALSE)
+    }
+    # the starting level and its two derivatives: f0 = omega/(1 - sum b)
+    db_sum <- if (q > 0L) Reduce(`+`, b_u) else numeric(mk)
+    f0 <- ch$omega / (1 - sb)
+    f0_u <- om_u / (1 - sb) + ch$omega * db_sum / (1 - sb)^2
+    f0_uu <- (outer(om_u, db_sum) + outer(db_sum, om_u)) / (1 - sb)^2 +
+      2 * ch$omega * outer(db_sum, db_sum) / (1 - sb)^3
+    if (q > 0L) {
+      f0_uu <- f0_uu + ch$omega * Reduce(`+`, b_uu) / (1 - sb)^2
+    }
+    list(omega = ch$omega, a = ch$a, b = ch$b, om_u = om_u, a_u = a_u,
+         b_u = b_u, b_uu = b_uu, f0 = f0, f0_u = f0_u, f0_uu = f0_uu)
+  }
+  shared <- if (!length(dv)) prep(1L, seq_len(m)) else NULL
+
+  # does the caller take the active set? A three-argument callback is the
+  # earlier contract and is given the full row instead
+  wants_act <- length(formals(blocks)) >= 4L
 
   D <- matrix(0, bp$n, m)
   W <- matrix(0, m, m)
-  for (rows in bp$order) {
+  for (l in seq_len(ng)) {
+    rows <- bp$order[[l]]
+    act <- active_of(l)
+    mk <- length(act)
+    gp <- if (is.null(shared)) prep(l, act) else shared
+    Wl <- matrix(0, mk, mk)
+    a <- gp$a
+    b <- gp$b
+    om_u <- gp$om_u
+    a_u <- gp$a_u
+    b_u <- gp$b_u
+    b_uu <- gp$b_uu
+    f0 <- gp$f0
+    f0_u <- gp$f0_u
+    f0_uu <- gp$f0_uu
     k <- length(rows)
     f <- numeric(k)
     s <- numeric(k)
@@ -810,15 +948,15 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
     Sdd <- vector("list", k)
     for (t in seq_len(k)) {
       row <- rows[t]
-      ft <- ch$omega
+      ft <- gp$omega
       Ft <- om_u
-      Pt <- matrix(0, m, m)
+      Pt <- matrix(0, mk, mk)
       if (p > 0L) {
         for (i in seq_len(p)) {
           lag <- t - i
           s_l <- if (lag >= 1L) s[lag] else 0
-          Sd_l <- if (lag >= 1L) Sd[[lag]] else numeric(m)
-          Sdd_l <- if (lag >= 1L) Sdd[[lag]] else matrix(0, m, m)
+          Sd_l <- if (lag >= 1L) Sd[[lag]] else numeric(mk)
+          Sdd_l <- if (lag >= 1L) Sdd[[lag]] else matrix(0, mk, mk)
           ft <- ft + a[[i]] * s_l
           Ft <- Ft + a[[i]] * Sd_l + s_l * a_u[[i]]
           Pt <- Pt + a[[i]] * Sdd_l +
@@ -842,16 +980,24 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
       Phi[[t]] <- Pt
 
       e_t <- eta[row] + ft
-      Dt <- seed[row, ] + Ft
-      D[row, ] <- Dt
-      W <- W + g[row] * Pt
+      # the row of the jacobian on the active set; every other column of it
+      # is zero, the seed carrying no other group's parameters
+      Dt <- seed[row, act] + Ft
+      D[row, act] <- Dt
+      Wl <- Wl + g[row] * Pt
 
       s[t] <- score(e_t, row)
       cv <- curvature(e_t, row)
-      bl <- blocks(e_t, row, Dt)
+      bl <- if (wants_act) blocks(e_t, row, Dt, act) else {
+        full <- numeric(m)
+        full[act] <- Dt
+        b3 <- blocks(e_t, row, full)
+        list(cross = b3$cross[act], M = b3$M[act, act, drop = FALSE])
+      }
       Sd[[t]] <- cv * Dt + bl$cross
       Sdd[[t]] <- cv * Pt + bl$M
     }
+    W[act, act] <- W[act, act] + Wl
   }
   # The matrix is symmetric and the accumulation is not: an entry and its
   # transpose collect the same terms in a different ORDER, and (x + p) + q
@@ -871,8 +1017,8 @@ S7::method(print, GasTerm) <- function(x, ...) {
   dv <- .gas_dev_params(x)
   if (length(dv)) {
     cat(sprintf("  deviations on: %s%s\n", paste(dv, collapse = ", "),
-                if (x@penalty_kind != "none")
-                  sprintf("; %s", x@penalty_kind) else ""))
+                if (!.penalty_is_none(x@penalty_kind))
+                  sprintf("; %s", .penalty_label(x@penalty_kind)) else ""))
   }
   cat("  parameters: ", paste(term_params(x), collapse = ", "), "\n", sep = "")
   invisible(x)

@@ -13,12 +13,12 @@ gauss_curv <- function(y) function(e, i) -1
 
 test_that("the parameters are named for the chart they live on", {
   expect_identical(term_params(gas(p = 1, q = 1)),
-                   c("omega", "a1", "pacf1"))
+                   c("omega", "alpha1", "pacf1"))
   expect_identical(term_params(gas(p = 2, q = 3)),
-                   c("omega", "a1", "a2", "pacf1", "pacf2", "pacf3"))
+                   c("omega", "alpha1", "alpha2", "pacf1", "pacf2", "pacf3"))
   lk <- term_links(gas(p = 1, q = 2))
   expect_identical(vapply(lk, function(l) l@link_name, character(1)),
-                   c(omega = "identity", a1 = "identity",
+                   c(omega = "identity", alpha1 = "identity",
                      pacf1 = "rhobit", pacf2 = "rhobit"))
 })
 
@@ -39,7 +39,7 @@ test_that("the Levinson-Durbin map is stationary and its jacobian is right", {
 
 test_that("the filter reproduces the recursion written out by hand", {
   term <- term_build(gas(p = 1, q = 1, time = t), dd)
-  psi <- list(omega = 0.2, a1 = 0.3, pacf1 = 0.6)
+  psi <- list(omega = 0.2, alpha1 = 0.3, pacf1 = 0.6)
   out <- term_filter(term, eta = rep(0, n), y = dd$y,
                      score = gauss_score(dd$y), curvature = gauss_curv(dd$y),
                      psi = psi)
@@ -79,7 +79,7 @@ test_that("the jacobian of the filter is exact", {
 
 test_that("a static predictor shifts the filter and the groups stay apart", {
   term <- term_build(gas(p = 1, q = 1, by = g, time = t), dd)
-  psi <- list(omega = 0.1, a1 = 0.2, pacf1 = 0.5)
+  psi <- list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.5)
   out <- term_filter(term, eta = rep(0, n), y = dd$y,
                      score = gauss_score(dd$y), curvature = gauss_curv(dd$y),
                      psi = psi)
@@ -104,22 +104,22 @@ test_that("time orders the recursion and the result is scattered back", {
   a <- term_filter(term_build(gas(p = 1, q = 1, time = t), dd),
                    eta = rep(0, n), y = dd$y, score = gauss_score(dd$y),
                    curvature = gauss_curv(dd$y),
-                   psi = list(omega = 0.1, a1 = 0.2, pacf1 = 0.5))
+                   psi = list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.5))
   b <- term_filter(term_build(gas(p = 1, q = 1, time = t), shuffled),
                    eta = rep(0, n), y = shuffled$y,
                    score = gauss_score(shuffled$y),
                    curvature = gauss_curv(shuffled$y),
-                   psi = list(omega = 0.1, a1 = 0.2, pacf1 = 0.5))
+                   psi = list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.5))
   # the same series in a different row order gives the same values per row
   expect_equal(a$eta[shuffled$t], b$eta, tolerance = 1e-12)
 })
 
 test_that("a purely autoregressive term needs no score lag budget", {
   term <- term_build(gas(p = 1, q = 0, time = t), dd)
-  expect_identical(term_params(term), c("omega", "a1"))
+  expect_identical(term_params(term), c("omega", "alpha1"))
   out <- term_filter(term, eta = rep(0, n), y = dd$y,
                      score = gauss_score(dd$y), curvature = gauss_curv(dd$y),
-                     psi = list(omega = 0.3, a1 = 0.4))
+                     psi = list(omega = 0.3, alpha1 = 0.4))
   # with q = 0 the level is omega plus the score lag alone
   expect_equal(out$eta[1], 0.3)
 })
@@ -135,7 +135,7 @@ test_that("the term is routed, printed, and refuses what it cannot do", {
   expect_error(gas(p = 0), "at least 1")
   expect_error(gas(label = ""), "non-empty")
   expect_error(term_filter(gas(), rep(0, n), dd$y, gauss_score(dd$y),
-                           gauss_curv(dd$y), list(omega = 0, a1 = 0, pacf1 = 0)),
+                           gauss_curv(dd$y), list(omega = 0, alpha1 = 0, pacf1 = 0)),
                "not been built")
   # a structural term has no design block
   expect_error(term_build(gas(), data.frame(z = 1:3)), NA)
@@ -170,7 +170,8 @@ test_that("the compiled filter and the R twin agree exactly", {
     }
     ref <- gas_filter_r(rep(0.05, n), term@blueprint$order, p_, q_,
                         v[["omega"]],
-                        if (p_ > 0) v[paste0("a", seq_len(p_))] else numeric(0),
+                        if (p_ > 0) v[paste0("alpha", seq_len(p_))] else
+                          numeric(0),
                         ld$phi, db, f0, df0, 1L + seq_len(p_), np,
                         gauss_score(dd$y), gauss_curv(dd$y))
 
@@ -187,16 +188,16 @@ test_that("deviations are parameters of the term, named and charted", {
   spec <- gas(p = 1, q = 1, by = g, time = t, deviations = "omega")
   # a specification reports the population parameters alone: how many
   # groups there are is a property of the data
-  expect_identical(term_params(spec), c("omega", "a1", "pacf1"))
+  expect_identical(term_params(spec), c("omega", "alpha1", "pacf1"))
 
   built <- term_build(spec, dd)
   expect_identical(term_params(built),
-                   c("omega", "a1", "pacf1", "omega.dev.a", "omega.dev.b"))
+                   c("omega", "alpha1", "pacf1", "omega.dev.a", "omega.dev.b"))
   expect_identical(term_npar(built), 5L)
   # a deviation acts on the unconstrained scale and is unconstrained itself
   lk <- term_links(built)
   expect_identical(vapply(lk, function(l) l@link_name, character(1)),
-                   c(omega = "identity", a1 = "identity", pacf1 = "rhobit",
+                   c(omega = "identity", alpha1 = "identity", pacf1 = "rhobit",
                      omega.dev.a = "identity", omega.dev.b = "identity"))
 
   all_dev <- term_build(gas(p = 1, q = 2, by = g, deviations = TRUE), dd)
@@ -207,7 +208,7 @@ test_that("deviations at zero reproduce the shared-parameter filter", {
   shared <- term_build(gas(p = 1, q = 1, by = g, time = t), dd)
   dev <- term_build(gas(p = 1, q = 1, by = g, time = t, deviations = TRUE),
                     dd)
-  psi <- list(omega = 0.1, a1 = 0.2, pacf1 = 0.5)
+  psi <- list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.5)
   a <- term_filter(shared, eta = rep(0, n), y = dd$y,
                    score = gauss_score(dd$y), curvature = gauss_curv(dd$y),
                    psi = psi)
@@ -255,7 +256,7 @@ test_that("a shift shared by the population and the deviations does nothing", {
 
 test_that("the jacobian is exact in the population values and the deviations", {
   for (cfg in list(list(1L, 1L, "omega"), list(1L, 2L, TRUE),
-                   list(2L, 1L, c("a1", "a2")))) {
+                   list(2L, 1L, c("alpha1", "alpha2")))) {
     term <- term_build(gas(p = cfg[[1L]], q = cfg[[2L]], by = g, time = t,
                            deviations = cfg[[3L]]), dd)
     nm <- term_params(term)
@@ -295,15 +296,99 @@ test_that("the penalty reaches the deviations and the population is free", {
 
   # one penalty per parameter carrying deviations: two parameters of a
   # filter are on scales of their own
-  both <- term_build(gas(p = 1, q = 1, by = g, deviations = c("omega", "a1"),
+  both <- term_build(gas(p = 1, q = 1, by = g, deviations = c("omega", "alpha1"),
                          penalty = "ridge"), dd)
   eb <- term_penalties(both)
   expect_length(eb, 2L)
   expect_identical(vapply(eb, function(e) e$name, character(1)),
-                   c("omega", "a1"))
+                   c("omega", "alpha1"))
   expect_true(term_smooth(both))
 
   expect_length(term_penalties(term_build(gas(p = 1, q = 1, by = g), dd)), 0L)
+})
+
+test_that("the reported quantities are the literature's, with a jacobian", {
+  # omega and the loadings are the coordinates themselves, each on the
+  # identity link. The persistence is NOT: it rides a partial
+  # autocorrelation, and what the literature calls beta_j is the
+  # autoregressive coefficient, a function of the whole chart.
+  for (q in 1:3) {
+    tm <- gas(p = 1, q = q)
+    nmv <- term_params(tm)
+    set.seed(q)
+    z <- stats::setNames(c(0.3, 0.4, stats::runif(q, -0.6, 0.8)), nmv)
+    rd <- term_readable(tm, z)
+    expect_identical(rd$name,
+                     c("omega", "alpha1", paste0("beta", seq_len(q))))
+    # the coefficients are those of a stationary autoregression
+    expect_true(all(Mod(polyroot(c(1, -rd$value[-(1:2)]))) > 1 + 1e-8))
+    # and the jacobian is the one a delta method needs
+    num <- numDeriv::jacobian(function(v)
+      term_readable(tm, stats::setNames(v, nmv))$value, z)
+    expect_equal(unname(rd$jacobian), num, tolerance = 1e-7,
+                 info = sprintf("q = %d", q))
+  }
+
+  # at q = 1 the coefficient IS the partial autocorrelation, so the chain
+  # factor is the link's alone and the two coincide exactly
+  z1 <- c(omega = 0.2, alpha1 = 0.3, pacf1 = 0.9)
+  expect_equal(term_readable(gas(1, 1), z1)$value[[3L]],
+               linkfunctions7::linkinv(linkfunctions7::rhobit_link(), 0.9))
+  # above it they do not, which is the whole reason the coordinate is not
+  # named after the coefficient
+  z2 <- c(omega = 0.2, alpha1 = 0.3, pacf1 = 1.2, pacf2 = -0.4)
+  rho <- linkfunctions7::linkinv(linkfunctions7::rhobit_link(), c(1.2, -0.4))
+  expect_false(isTRUE(all.equal(term_readable(gas(1, 2), z2)$value[[3L]],
+                                rho[[1L]])))
+
+  # a term whose coordinates ARE its quantities reports them unchanged
+  base <- term_readable(gas(p = 1, q = 0), c(omega = 0.5, alpha1 = 0.2))
+  expect_identical(base$name, c("omega", "alpha1"))
+  expect_equal(base$value, c(0.5, 0.2))
+})
+
+test_that("a penalty is an object, a function of the count, or a name", {
+  # The two shorthands are a convenience over the general case, not the whole
+  # of it: a term takes any penalties7 penalty, so an elastic net or a
+  # heavy-tailed prior reaches one without a name having to be invented here.
+  net <- penalties7::elasticnet_penalty(n_coef = 2)
+  obj <- term_build(gas(p = 1, q = 1, by = g, deviations = "omega",
+                        penalty = net), dd)
+  ent <- term_penalties(obj)
+  expect_length(ent, 1L)
+  expect_identical(ent[[1L]]$penalty@penalty_name, net@penalty_name)
+  expect_false(term_smooth(obj))
+
+  # a function of the coefficient count is the spelling for a penalty whose
+  # SIZE the data decide: a panel's deviations exist once the groups are
+  # counted, so a specification cannot name a width
+  fac <- term_build(gas(p = 1, q = 1, by = g, deviations = c("omega", "alpha1"),
+                        penalty = function(k)
+                          penalties7::ridge_penalty(n_coef = k)), dd)
+  ef <- term_penalties(fac)
+  expect_length(ef, 2L)
+  expect_true(all(vapply(ef, function(e) e$penalty@n_coef == 2, logical(1))))
+
+  # the two named branches keep answering as they did
+  expect_identical(
+    term_penalties(term_build(gas(p = 1, q = 1, by = g,
+                                  deviations = "omega",
+                                  penalty = "ridge"), dd))[[1L]]$penalty@penalty_name,
+    penalties7::ridge_penalty(n_coef = 2)@penalty_name)
+
+  # a penalty of the wrong width is rejected where the count is finally
+  # known, rather than evaluated at a coefficient vector of another length
+  expect_error(term_build(gas(p = 1, q = 1, by = g, deviations = "omega",
+                              penalty = penalties7::ridge_penalty(n_coef = 5)),
+                          dd),
+               "covers 5 coefficients and the term has 2")
+  expect_error(gas(by = g, deviations = TRUE, penalty = "elastic"),
+               "should be one of")
+  expect_error(gas(by = g, deviations = TRUE, penalty = 3),
+               "must be one of")
+  expect_error(term_build(gas(p = 1, q = 1, by = g, deviations = "omega",
+                              penalty = function(k) k), dd),
+               "must give a penalties7 penalty")
 })
 
 test_that("the constructor refuses a deviation it cannot place", {
@@ -329,14 +414,14 @@ test_that("the adjoint is the derivative in the static predictor", {
 
   cfgs <- list(
     list(term = term_build(gas(p = 1, q = 1, time = t), dd),
-         psi = list(omega = 0.15, a1 = 0.3, pacf1 = 0.5),
+         psi = list(omega = 0.15, alpha1 = 0.3, pacf1 = 0.5),
          eta = rep(0.2, n)),
     list(term = term_build(gas(p = 2, q = 2, time = t), dd),
-         psi = list(omega = 0.1, a1 = 0.25, a2 = -0.15,
+         psi = list(omega = 0.1, alpha1 = 0.25, alpha2 = -0.15,
                     pacf1 = 0.4, pacf2 = -0.2),
          eta = sin(seq_len(n) / 5)),
     list(term = term_build(gas(p = 1, q = 1, by = g, time = t), dd),
-         psi = list(omega = 0.1, a1 = 0.2, pacf1 = 0.5),
+         psi = list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.5),
          eta = rep(0.1, n))
   )
   for (cf in cfgs) {
@@ -362,7 +447,7 @@ test_that("the adjoint carries the derivative through the score as well", {
   # ANOTHER by multiplying dscore by the mixed second derivative, so the
   # quantity is checked by perturbing the score the caller supplies
   term <- term_build(gas(p = 1, q = 1, time = t), dd)
-  psi <- list(omega = 0.15, a1 = 0.3, pacf1 = 0.5)
+  psi <- list(omega = 0.15, alpha1 = 0.3, pacf1 = 0.5)
   eta0 <- rep(0.2, n)
   set.seed(31)
   u <- stats::rnorm(n)
@@ -381,7 +466,7 @@ test_that("the adjoint carries the derivative through the score as well", {
 
 test_that("the adjoint refuses what it cannot answer", {
   term <- term_build(gas(p = 1, q = 1, time = t), dd)
-  psi <- list(omega = 0.1, a1 = 0.2, pacf1 = 0.5)
+  psi <- list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.5)
   expect_error(term_adjoint(term, rep(0, n), dd$y, gauss_score(dd$y),
                             gauss_curv(dd$y), psi, g = rep(1, 3)),
                "one value per observation")
@@ -476,22 +561,83 @@ test_that("the second-order recursion gives the exact curvature", {
 test_that("the curvature refuses what it does not carry", {
   term <- term_build(gas(p = 1, q = 1, time = t), dd)
   nm <- term_params(term)
-  psi <- list(omega = 0.1, a1 = 0.2, pacf1 = 0.5)
+  psi <- list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.5)
   sd0 <- matrix(0, n, 3)
   bl <- function(e, i, D) list(cross = numeric(3), M = matrix(0, 3, 3))
   expect_error(term_curvature(term, rep(0, n), dd$y, gauss_score(dd$y),
                               gauss_curv(dd$y), psi, rep(1, 3), sd0, bl),
                "one value per observation")
-  # deviations add a per-group chain to every derivative and are refused
-  # rather than silently dropped
-  dev <- term_build(gas(p = 1, q = 1, by = g, deviations = "omega"), dd)
-  nd <- length(term_params(dev))
-  expect_error(term_curvature(dev, rep(0, n), dd$y, gauss_score(dd$y),
-                              gauss_curv(dd$y),
-                              as.list(stats::setNames(rep(0.1, nd),
-                                                      term_params(dev))),
-                              rep(1, n), matrix(0, n, nd),
-                              function(e, i, D) list(cross = numeric(nd),
-                                                     M = matrix(0, nd, nd))),
-               "does not carry deviations")
+})
+
+test_that("the curvature carries deviations", {
+  X <- cbind(1, as.numeric(scale(seq_len(n))))
+  mb <- ncol(X)
+  sc <- gauss_score(dd$y)
+  cu <- gauss_curv(dd$y)
+
+  # every quantity of one term: the curvature, the jacobian, and the pieces a
+  # comparison with the shared-parameter term needs
+  at <- function(term, u) {
+    nm <- term_params(term)
+    lk <- term_links(term)
+    np <- length(nm)
+    m <- mb + np
+    psi_of <- function(z) as.list(stats::setNames(vapply(seq_along(nm),
+      function(j) linkfunctions7::linkinv(lk[[nm[j]]], z[j]), numeric(1)), nm))
+    e_of <- function(v) term_filter(term, as.numeric(X %*% v[seq_len(mb)]),
+                                    dd$y, sc, cu,
+                                    psi_of(v[mb + seq_len(np)]))$eta
+    got <- term_curvature(term, as.numeric(X %*% u[seq_len(mb)]), dd$y, sc, cu,
+                          psi_of(u[mb + seq_len(np)]), gw,
+                          cbind(X, matrix(0, n, np)),
+                          function(e, i, D) list(cross = numeric(m),
+                                                 M = matrix(0, m, m)))
+    list(nm = nm, np = np, got = got, e_of = e_of,
+         gsum = function(v) sum(gw * e_of(v)))
+  }
+
+  set.seed(11)
+  gw <- stats::rnorm(n)
+
+  for (spec in list(list(d = TRUE, lab = "every parameter"),
+                    list(d = "omega", lab = "omega alone"),
+                    list(d = c("omega", "pacf1"), lab = "omega and pacf1"))) {
+    term <- term_build(gas(p = 1, q = 1, by = g, deviations = spec$d), dd)
+    set.seed(3)
+    u <- c(0.3, -0.2, stats::runif(length(term_params(term)), -0.3, 0.4))
+    z <- at(term, u)
+    # the numerical reference is the weaker side here -- two Richardson
+    # settings disagree with each other by more than either disagrees with
+    # this -- so the tolerance is the reference's own accuracy
+    expect_equal(z$got$jacobian, numDeriv::jacobian(z$e_of, u),
+                 tolerance = 1e-6, info = spec$lab)
+    expect_equal(z$got$curvature, numDeriv::hessian(z$gsum, u),
+                 tolerance = 1e-6, info = spec$lab)
+    expect_identical(z$got$curvature, t(z$got$curvature))
+  }
+
+  # At a ZERO deviation every group runs on the population values, so the
+  # population block must be the shared-parameter term's own curvature. And
+  # whatever the deviations are, a base coordinate reaches its population
+  # column and its group's deviation column through the SAME lift, so the
+  # deviation columns of one parameter sum to its population column: that is
+  # the affine map, asserted rather than assumed.
+  plain <- term_build(gas(p = 1, q = 1, by = g), dd)
+  term <- term_build(gas(p = 1, q = 1, by = g, deviations = TRUE), dd)
+  ng <- length(term@blueprint$order)
+  base <- term_params(plain)
+  u0 <- c(0.3, -0.2, 0.15, 0.25, 0.4)
+  a <- at(plain, u0)$got$curvature
+  b <- at(term, c(u0, numeric(length(base) * ng)))$got$curvature
+  keep <- c(seq_len(mb), mb + seq_along(base))
+  expect_equal(b[keep, keep], a, tolerance = 1e-12)
+
+  set.seed(7)
+  b2 <- at(term, c(u0, stats::runif(length(base) * ng, -0.2, 0.2)))$got$curvature
+  for (j in seq_along(base)) {
+    dcol <- mb + length(base) + (j - 1L) * ng + seq_len(ng)
+    expect_equal(rowSums(b2[keep, dcol, drop = FALSE]),
+                 b2[keep, mb + j], tolerance = 1e-12,
+                 info = base[[j]])
+  }
 })

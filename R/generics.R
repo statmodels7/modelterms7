@@ -291,14 +291,75 @@ S7::method(term_coef_names, additive_term) <- function(term, ...) {
 term_smooth <- S7::new_generic("term_smooth", "term",
   function(term, ...) S7::S7_dispatch())
 
-# the penalty a term's `penalty` argument names, over a given number of
-# coordinates: no map, so that the separable branch of penalties7 applies
-# and a fitting layer keeps its proximal step and its coordinate descent
+# The penalty a term's `penalty` argument asks for, over a given number of
+# coordinates: no map, so that the separable branch of penalties7 applies and
+# a fitting layer keeps its proximal step and its coordinate descent.
+#
+# Three spellings, and the last two are why this is not a switch on a string.
+# "lasso" and "ridge" are the shorthands; a penalties7 penalty is used as it
+# stands, so anything that package offers -- an elastic net, a heavy-tailed
+# prior, a structured precision -- reaches a term without a name having to be
+# invented for it here; and a function of the coordinate count is what a
+# penalty whose SIZE is not known until the data are seen needs, a panel's
+# deviations existing only once the groups are counted.
 .penalty_factory <- function(kind) {
+  if (is.function(kind)) {
+    return(function(k) .penalty_check(kind(k), k, "the function"))
+  }
+  if (S7::S7_inherits(kind, penalties7::penalty)) {
+    return(function(k) .penalty_check(kind, k, "the penalty"))
+  }
   switch(kind,
     lasso = function(k) penalties7::lasso_penalty(n_coef = k),
     ridge = function(k) penalties7::ridge_penalty(n_coef = k),
     stop(sprintf("unknown penalty '%s'.", kind), call. = FALSE))
+}
+
+# what a supplied penalty has to be, checked where the coordinate count is
+# finally known: a penalty of the wrong width would be evaluated at a
+# coefficient vector of another length and R would recycle it in silence
+.penalty_check <- function(pen, k, what) {
+  if (!S7::S7_inherits(pen, penalties7::penalty)) {
+    stop(sprintf("%s must give a penalties7 penalty; it gave a %s.",
+                 what, paste(class(pen), collapse = "/")), call. = FALSE)
+  }
+  if (!identical(as.integer(pen@n_coef), as.integer(k))) {
+    stop(sprintf(paste("%s covers %d coefficients and the term has %d.",
+                       "Pass a function of the count where the term's size",
+                       "is not known in advance."),
+                 what, as.integer(pen@n_coef), as.integer(k)), call. = FALSE)
+  }
+  pen
+}
+
+# is a `penalty` argument the absence of one? The string "none" is the
+# default of every term that takes the argument, and NULL says the same
+.penalty_is_none <- function(kind) {
+  is.null(kind) || (is.character(kind) && length(kind) == 1L &&
+                      identical(kind, "none"))
+}
+
+# What a `penalty` argument may be, checked in the CONSTRUCTOR so that a
+# mistake is reported where it is written rather than at term_build().
+.penalty_arg <- function(kind, choices = c("none", "lasso", "ridge")) {
+  if (is.function(kind) || S7::S7_inherits(kind, penalties7::penalty)) {
+    return(kind)
+  }
+  if (is.null(kind)) return("none")
+  if (!is.character(kind)) {
+    stop(paste("'penalty' must be one of", paste(dQuote(choices, NULL),
+                                                 collapse = ", "),
+               "a penalties7 penalty, or a function of the number of",
+               "coefficients returning one."), call. = FALSE)
+  }
+  match.arg(kind, choices)
+}
+
+# how a penalty argument prints
+.penalty_label <- function(kind) {
+  if (is.function(kind)) return("a penalty per coefficient count")
+  if (S7::S7_inherits(kind, penalties7::penalty)) return(kind@penalty_name)
+  kind
 }
 
 # a hyperparameter value inside each domain, at which the kink set is asked

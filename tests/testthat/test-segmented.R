@@ -290,6 +290,22 @@ test_that("a penalty reaches the changes and nothing else", {
   # unbuilt ridge() does, rather than raising
   expect_length(term_penalties(seg(x, penalty = "lasso")), 0L)
   expect_true(term_smooth(seg(x, penalty = "lasso")))
+
+  # a penalties7 penalty is taken as it stands, so anything that package
+  # offers reaches a term without a name for it being invented here
+  net <- term_build(seg(x, npsi = 2,
+                        penalty = penalties7::elasticnet_penalty(n_coef = 2)),
+                    dd)
+  expect_identical(term_penalties(net)[[1L]]$penalty@n_coef, 2L)
+  expect_false(term_smooth(net))
+  # and a function of the coefficient count, for a width the data decide
+  fac <- term_build(seg(x, npsi = 2, penalty = function(k)
+    penalties7::ridge_penalty(n_coef = k)), dd)
+  expect_identical(term_penalties(fac)[[1L]]$penalty@n_coef, 2L)
+  expect_error(term_build(seg(x, npsi = 2,
+                              penalty = penalties7::ridge_penalty(n_coef = 7)),
+                          dd),
+               "covers 7 coefficients and the term has 2")
 })
 
 test_that("a joint term penalizes its two kinds of change separately", {
