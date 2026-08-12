@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.15.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.20.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -102,7 +102,7 @@
           <code><a href="term_npar.html">term_npar()</a></code>
 
         </dt>
-        <dd>Number of Coefficients of a Built Term</dd>
+        <dd>Number of Parameters of a Built Term</dd>
 
         <dt>
 
@@ -260,6 +260,13 @@
 
         </dt>
         <dd>The Contribution of a Term at Its Current Coefficients</dd>
+
+        <dt>
+
+          <code><a href="term_converged.html">term_converged()</a></code>
+
+        </dt>
+        <dd>Has a Term's Own Iteration Settled?</dd>
       </dl></div><div class="section level2">
       <h2 id="segmented-terms">Segmented terms<a class="anchor" aria-label="anchor" href="#segmented-terms"></a></h2>
 
@@ -369,6 +376,41 @@
 
         </dt>
         <dd>Log-Likelihood Contributions of a Structural Term</dd>
+
+        <dt>
+
+          <code><a href="term_adjoint.html">term_adjoint()</a></code>
+
+        </dt>
+        <dd>Differentiate a Structural Term Backwards</dd>
+
+        <dt>
+
+          <code><a href="term_curvature.html">term_curvature()</a></code>
+
+        </dt>
+        <dd>Second Derivatives of a Structural Term's Predictor</dd>
+
+        <dt>
+
+          <code><a href="term_hessian.html">term_hessian()</a></code>
+
+        </dt>
+        <dd>The Observed Hessian of a Likelihood Mixed Over States</dd>
+
+        <dt>
+
+          <code><a href="term_posterior.html">term_posterior()</a></code>
+
+        </dt>
+        <dd>The Smoothed State Probabilities of a Latent Markov Term</dd>
+
+        <dt>
+
+          <code><a href="term_level_param.html">term_level_param()</a></code>
+
+        </dt>
+        <dd>Which of a Term's Parameters Acts as an Intercept</dd>
       </dl></div><div class="section level2">
       <h2 id="the-formula-layer">The formula layer<a class="anchor" aria-label="anchor" href="#the-formula-layer"></a></h2>
 

@@ -15,6 +15,8 @@ nl(
   links = NULL,
   subformulas = NULL,
   start = NULL,
+  penalty = c("none", "lasso", "ridge"),
+  penalize = NULL,
   label = "nl"
 )
 ```
@@ -50,6 +52,16 @@ nl(
 
   An optional named list of starting values for the parameters, on the
   parameter scale. Defaults to the inverse link at zero.
+
+- penalty:
+
+  One of `"none"` (default), `"lasso"` or `"ridge"`, applied to the
+  coefficients of the parameters `penalize` names.
+
+- penalize:
+
+  The parameters the penalty reaches, as a character vector. Defaults to
+  all of them.
 
 - label:
 
@@ -103,6 +115,25 @@ one-sided formula, which gives a parameter that varies by group or with
 a covariate; the coefficients are then the \\\gamma_j\\, and the
 Jacobian carries the chain rule \\\partial f/\partial\theta_j \cdot
 (g_j^{-1})' \cdot Z\\.
+
+### Penalizing a parameter
+
+`penalty` attaches a penalty to the coefficients of the parameters
+`penalize` names, one penalty per parameter and so one hyperparameter
+each, since two parameters of a nonlinear function are on scales of
+their own and have no reason to share one. They are declared through
+[`term_penalties`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
+which names the coefficients each covers; the parameters left out are
+unpenalized.
+
+What is shrunk is the coefficient, not the parameter, so with a link the
+target is \\g_j^{-1}(0)\\ rather than zero: a rate carried by a log link
+is shrunk towards one. Where the parameter carries a subformula, the
+whole vector \\\gamma_j\\ is covered, so a lasso there selects which
+covariates a parameter depends on. A subformula of the form `~ g` with a
+factor `g` is the population-and-deviations pattern: the intercept is
+the population value and the remaining columns are deviations, penalized
+as the coordinates they are.
 
 ## See also
 

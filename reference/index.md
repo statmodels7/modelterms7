@@ -24,7 +24,7 @@ structural term takes instead.
 - [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
   : Every Penalty a Term Carries
 - [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
-  : Number of Coefficients of a Built Term
+  : Number of Parameters of a Built Term
 - [`term_coef_names()`](https://statmodels7.github.io/modelterms7/reference/term_coef_names.md)
   : Coefficient Names of a Built Term
 - [`term_smooth()`](https://statmodels7.github.io/modelterms7/reference/term_smooth.md)
@@ -94,6 +94,8 @@ Gauss-Newton step.
   : Refresh a Term at New Coefficients
 - [`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
   : The Contribution of a Term at Its Current Coefficients
+- [`term_converged()`](https://statmodels7.github.io/modelterms7/reference/term_converged.md)
+  : Has a Term's Own Iteration Settled?
 
 ## Segmented terms
 
@@ -137,6 +139,16 @@ exact derivative beside the state.
   : Apply a Structural Term to a Linear Predictor
 - [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
   : Log-Likelihood Contributions of a Structural Term
+- [`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
+  : Differentiate a Structural Term Backwards
+- [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
+  : Second Derivatives of a Structural Term's Predictor
+- [`term_hessian()`](https://statmodels7.github.io/modelterms7/reference/term_hessian.md)
+  : The Observed Hessian of a Likelihood Mixed Over States
+- [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)
+  : The Smoothed State Probabilities of a Latent Markov Term
+- [`term_level_param()`](https://statmodels7.github.io/modelterms7/reference/term_level_param.md)
+  : Which of a Term's Parameters Acts as an Intercept
 
 ## The formula layer
 

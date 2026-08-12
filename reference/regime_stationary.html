@@ -11,7 +11,7 @@ transition matrix depends on."><meta property="og:image" content="https://statmo
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.15.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.20.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,7 +45,7 @@ transition matrix depends on.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">regime_stationary</span><span class="op">(</span><span class="va">P</span>, <span class="va">dP</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">regime_stationary</span><span class="op">(</span><span class="va">P</span>, <span class="va">dP</span>, d2P <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -59,11 +59,18 @@ transition matrix depends on.</p>
 <dt id="arg-dp">dP<a class="anchor" aria-label="anchor" href="#arg-dp"></a></dt>
 <dd><p>A list of derivative matrices of <code>P</code>.</p></dd>
 
+
+<dt id="arg-d-p">d2P<a class="anchor" aria-label="anchor" href="#arg-d-p"></a></dt>
+<dd><p>Optionally, the second derivatives: one list per row of
+<code>P</code> whose elements are the matrices of second derivatives of that
+row's entries, indexed as <code>dP</code> is.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with <code>delta</code> and <code>ddelta</code>, the latter one row
-  per element of <code>dP</code>.</p>
+  per element of <code>dP</code>, and, when <code>d2P</code> is given,
+  <code>d2delta</code>, one square matrix per state.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -71,6 +78,10 @@ transition matrix depends on.</p>
 \(d\delta\,(I - P) = \delta\,dP\) with \(\sum_j d\delta_j = 0\), so
 both the value and the derivative come from the same linear system with
 one column replaced by the normalization.</p>
+<p>Differentiating a second time gives
+\(d^2\delta\,(I - P) = d_i\delta\,d_jP + d_j\delta\,d_iP
++ \delta\,d^2P\) under \(\sum_j d^2\delta_j = 0\), so the second
+derivative comes from the same system again.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

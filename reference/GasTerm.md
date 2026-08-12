@@ -16,6 +16,8 @@ GasTerm(
   q = integer(0),
   by = NULL,
   time = NULL,
+  deviations = NULL,
+  penalty_kind = character(0),
   blueprint = list()
 )
 ```
@@ -42,6 +44,14 @@ GasTerm(
 - time:
 
   An optional ordering expression.
+
+- deviations:
+
+  Which parameters carry a deviation per group.
+
+- penalty_kind:
+
+  The penalty on the deviations, if any.
 
 - blueprint:
 

@@ -3,11 +3,18 @@
 The branch of
 [`model_term`](https://statmodels7.github.io/modelterms7/reference/model_term.md)
 for terms that rewrite the likelihood contributions rather than adding a
-design block, such as score-driven dynamics. The class exists so the
-formula interpreter can route such terms; no structural term is
-implemented yet, and
-[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-on this branch signals an error saying so.
+design block:
+[`gas`](https://statmodels7.github.io/modelterms7/reference/gas.md),
+whose predictor is a recursion, and
+[`regime`](https://statmodels7.github.io/modelterms7/reference/regime.md),
+whose contribution is a likelihood mixed over latent states. A term on
+this branch reports its own parameters through
+[`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
+rather than coefficients, so
+[`term_npar`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
+counts those and
+[`term_penalties`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+indexes into them.
 
 ## Usage
 

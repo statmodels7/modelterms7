@@ -160,10 +160,25 @@ With `linear = TRUE` the block carries the linear effect too, so the
 term is the whole relationship rather than the change in it. `by` gives
 an independent set of break-points and changes per level of a factor.
 `penalty` puts a penalty on the changes themselves – the slope changes
-for `seg`, the jump sizes for `jump` – through a map that selects those
-coefficients and leaves the linear effect and the break-points alone;
-with `"lasso"` that is a selection of how many break-points are really
-there.
+for `seg`, the jump sizes for `jump`, both for `jseg` – and leaves the
+linear effect and the break-points alone; with `"lasso"` that is a
+selection of how many break-points are really there.
+
+The penalty is declared through
+[`term_penalties`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
+which names the coefficients it covers, rather than attached to the
+whole block through a map that selects them. The two describe the same
+function of the same coefficients and are not interchangeable to a
+fitting layer: a separable penalty under a selection map is the
+generalized-lasso problem, whose proximal operator does not split by
+coordinate, so
+[`has_prox`](https://statmodels7.github.io/penalties7/reference/has_prox.html)
+is `FALSE` for it and neither a proximal step nor a coordinate descent
+can be taken. Named as coordinates the map is the identity and both are
+available unchanged. `jseg` declares two penalties, one over the slope
+changes and one over the jump sizes, since a change of slope and a
+change of level are not comparable quantities and cannot share a
+hyperparameter.
 
 A break-point is confined to the interval between the 5th and the 95th
 percentile of the covariate. Outside it the block is singular rather

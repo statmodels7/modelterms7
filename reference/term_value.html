@@ -15,7 +15,7 @@ Gauss-Newton step needs beside it."><meta property="og:image" content="https://s
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.15.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.20.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,7 +51,7 @@ Gauss-Newton step needs beside it.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">term_value</span><span class="op">(</span><span class="va">term</span>, coef <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">term_value</span><span class="op">(</span><span class="va">term</span>, coef <span class="op">=</span> <span class="cn">NULL</span>, newdata <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -67,6 +67,11 @@ Gauss-Newton step needs beside it.</p>
 carries the ones it was last refreshed at.</p></dd>
 
 
+<dt id="arg-newdata">newdata<a class="anchor" aria-label="anchor" href="#arg-newdata"></a></dt>
+<dd><p>An optional data frame; the contribution is returned on
+its rows instead of on the ones the term was built from.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Passed to methods.</p></dd>
 
@@ -76,8 +81,19 @@ carries the ones it was last refreshed at.</p></dd>
     <p>A numeric vector, one value per observation.</p>
     </div>
     <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p><code>newdata</code> asks for the same contribution on other rows, and is what
+a predictor needs where the block is a Jacobian: there
+<code><a href="term_predict.html">term_predict()</a></code> times the coefficients is the linearization and
+not the contribution, and the two differ by whatever the linearization
+drops. For <code><a href="seg.html">seg</a></code> that difference is a step at the
+break-point in a construction that is continuous. Rows arriving here are
+treated as <code><a href="term_predict.html">term_predict</a></code> treats them, through the levels
+and constants the blueprint recorded, never rebuilt.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_refresh.html">term_refresh</a></code></p></div>
+    <div class="dont-index"><p><code><a href="term_refresh.html">term_refresh</a></code>, <code><a href="term_predict.html">term_predict</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -86,6 +102,8 @@ carries the ones it was last refreshed at.</p></dd>
 <span class="r-in"><span><span class="va">built</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="nl.html">nl</a></span><span class="op">(</span><span class="op">~</span> <span class="va">a</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">r</span> <span class="op">*</span> <span class="va">x</span><span class="op">)</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">2</span>, r <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu">term_value</span><span class="op">(</span><span class="va">built</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.000000 1.800175 1.620315</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu">term_value</span><span class="op">(</span><span class="va">built</span>, newdata <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, <span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.0000000 0.7357589 0.2706706</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

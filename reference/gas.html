@@ -21,7 +21,7 @@ evaluated at."><meta property="og:image" content="https://statmodels7.github.io/
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.15.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.20.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,15 @@ evaluated at.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">gas</span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span>, by <span class="op">=</span> <span class="cn">NULL</span>, time <span class="op">=</span> <span class="cn">NULL</span>, label <span class="op">=</span> <span class="st">"gas"</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">gas</span><span class="op">(</span></span>
+<span>  p <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  q <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  time <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  deviations <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  penalty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"lasso"</span>, <span class="st">"ridge"</span><span class="op">)</span>,</span>
+<span>  label <span class="op">=</span> <span class="st">"gas"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -82,6 +90,18 @@ group is filtered independently, from its own starting level.</p></dd>
 
 <dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
 <dd><p>An optional ordering variable, evaluated in the data.</p></dd>
+
+
+<dt id="arg-deviations">deviations<a class="anchor" aria-label="anchor" href="#arg-deviations"></a></dt>
+<dd><p>Whether each group carries a deviation from the
+population parameters: <code>FALSE</code> (default), <code>TRUE</code> for every
+parameter, or a character vector naming the parameters that carry
+one. Requires <code>by</code>.</p></dd>
+
+
+<dt id="arg-penalty">penalty<a class="anchor" aria-label="anchor" href="#arg-penalty"></a></dt>
+<dd><p>One of <code>"none"</code> (default), <code>"lasso"</code> or
+<code>"ridge"</code>, applied to the deviations. Requires them.</p></dd>
 
 
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
@@ -145,6 +165,42 @@ which the curvature this term already receives would supply.</p>
 <p><code>by</code> filters each group independently, which is what a panel of
 short series needs, and <code>time</code> gives the order within a group.
 Without <code>time</code> the rows are taken in the order they appear.</p>
+</div>
+
+<div class="section">
+<h3 id="a-population-value-and-a-deviation-per-group">A population value and a deviation per group<a class="anchor" aria-label="anchor" href="#a-population-value-and-a-deviation-per-group"></a></h3>
+<p>By default every group of a panel is filtered with the same parameters.
+<code>deviations</code> gives each group its own, written as a population
+value and a departure from it,
+$$\psi_{j,i} = g_j^{-1}\!\left(g_j(\psi_j) + \delta_{j,i}\right),$$
+the deviation acting on the unconstrained scale of the chart the
+parameter lives on, so that a persistence stays inside \((-1, 1)\)
+whatever the deviation is. The deviations are parameters of the term,
+named <code>omega.dev.1</code> and so on after the parameter and the level,
+and they carry the identity link, being unconstrained already.</p>
+<p>They are parameters and not a penalty on the per-group values through a
+difference matrix, which is what the same model looks like written the
+other way. The difference decides what can be fitted: a penalty over a
+general map is the generalized-lasso problem, whose proximal operator
+does not split by coordinate, whereas a deviation named as a coordinate
+is reached by a soft threshold and by a coordinate descent unchanged.
+<code>penalty</code> shrinks them towards zero, which is towards a panel that
+is homogeneous in that parameter, and <code>"lasso"</code> sets the
+deviations of the groups that do not need one exactly to it.</p>
+<p>The penalty is also what identifies them. A parameter and its \(m\)
+deviations are \(m+1\) numbers describing \(m\) group values, so
+adding a constant to \(g_j(\psi_j)\) and subtracting it from every
+\(\delta_{j,i}\) leaves the filter and its likelihood exactly
+unchanged: without a penalty on the deviations the likelihood is flat
+along one direction per parameter carrying them. This is the
+parametrization of a random effect, and it is identified in the same way
+– there by a variance component, here by the penalty, which selects the
+deviations of smallest size among those that describe the same panel.
+<code>penalty = "none"</code> is therefore for reading a filter at given
+parameters rather than for fitting one.</p>
+<p>The parameters a specification reports are the population ones alone:
+how many groups there are is a property of the data, so the deviations
+appear once the term is built.</p>
 </div>
 
     </div>

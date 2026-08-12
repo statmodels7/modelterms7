@@ -11,7 +11,15 @@ evaluated at.
 ## Usage
 
 ``` r
-gas(p = 1, q = 1, by = NULL, time = NULL, label = "gas")
+gas(
+  p = 1,
+  q = 1,
+  by = NULL,
+  time = NULL,
+  deviations = FALSE,
+  penalty = c("none", "lasso", "ridge"),
+  label = "gas"
+)
 ```
 
 ## Arguments
@@ -32,6 +40,17 @@ gas(p = 1, q = 1, by = NULL, time = NULL, label = "gas")
 - time:
 
   An optional ordering variable, evaluated in the data.
+
+- deviations:
+
+  Whether each group carries a deviation from the population parameters:
+  `FALSE` (default), `TRUE` for every parameter, or a character vector
+  naming the parameters that carry one. Requires `by`.
+
+- penalty:
+
+  One of `"none"` (default), `"lasso"` or `"ridge"`, applied to the
+  deviations. Requires them.
 
 - label:
 
@@ -98,6 +117,44 @@ which the curvature this term already receives would supply.
 `by` filters each group independently, which is what a panel of short
 series needs, and `time` gives the order within a group. Without `time`
 the rows are taken in the order they appear.
+
+### A population value and a deviation per group
+
+By default every group of a panel is filtered with the same parameters.
+`deviations` gives each group its own, written as a population value and
+a departure from it, \$\$\psi\_{j,i} = g_j^{-1}\\\left(g_j(\psi_j) +
+\delta\_{j,i}\right),\$\$ the deviation acting on the unconstrained
+scale of the chart the parameter lives on, so that a persistence stays
+inside \\(-1, 1)\\ whatever the deviation is. The deviations are
+parameters of the term, named `omega.dev.1` and so on after the
+parameter and the level, and they carry the identity link, being
+unconstrained already.
+
+They are parameters and not a penalty on the per-group values through a
+difference matrix, which is what the same model looks like written the
+other way. The difference decides what can be fitted: a penalty over a
+general map is the generalized-lasso problem, whose proximal operator
+does not split by coordinate, whereas a deviation named as a coordinate
+is reached by a soft threshold and by a coordinate descent unchanged.
+`penalty` shrinks them towards zero, which is towards a panel that is
+homogeneous in that parameter, and `"lasso"` sets the deviations of the
+groups that do not need one exactly to it.
+
+The penalty is also what identifies them. A parameter and its \\m\\
+deviations are \\m+1\\ numbers describing \\m\\ group values, so adding
+a constant to \\g_j(\psi_j)\\ and subtracting it from every
+\\\delta\_{j,i}\\ leaves the filter and its likelihood exactly
+unchanged: without a penalty on the deviations the likelihood is flat
+along one direction per parameter carrying them. This is the
+parametrization of a random effect, and it is identified in the same way
+– there by a variance component, here by the penalty, which selects the
+deviations of smallest size among those that describe the same panel.
+`penalty = "none"` is therefore for reading a filter at given parameters
+rather than for fitting one.
+
+The parameters a specification reports are the population ones alone:
+how many groups there are is a property of the data, so the deviations
+appear once the term is built.
 
 ## References
 

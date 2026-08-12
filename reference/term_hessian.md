@@ -1,0 +1,158 @@
+# The Observed Hessian of a Likelihood Mixed Over States
+
+The log-likelihood of a term that mixes over latent states, with its
+exact gradient and its exact Hessian in the whole of a caller's unknown
+vector: the coefficients of every equation together with the term's own
+parameters.
+
+## Usage
+
+``` r
+term_hessian(
+  term,
+  eta,
+  y,
+  logdens,
+  grad,
+  hess,
+  psi,
+  seed,
+  cols,
+  level,
+  weights = NULL,
+  ...
+)
+```
+
+## Arguments
+
+- term:
+
+  A built
+  [`RegimeTerm`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md).
+
+- eta:
+
+  The static part of the predictor the regimes shift.
+
+- y:
+
+  The response.
+
+- logdens:
+
+  A function of a predictor value and a row index returning the
+  log-density there, as
+  [`term_loglik`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
+  takes it.
+
+- grad:
+
+  A function of the same two arguments returning a matrix with one row
+  per observation and one column per distribution parameter, the
+  derivative of the log-density in each predictor.
+
+- hess:
+
+  A function of the same two arguments returning an array of second
+  derivatives in the predictors, one slice per observation.
+
+- psi:
+
+  The term's parameters, named as
+  [`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
+
+- seed:
+
+  A list with one matrix per distribution parameter, each with one row
+  per observation and one column per unknown, giving the derivative of
+  that predictor in the caller's unknowns with zeros in the columns the
+  term's own parameters occupy.
+
+- cols:
+
+  The columns of the unknown vector the term's own parameters occupy, in
+  the order of
+  [`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
+
+- level:
+
+  The index, among the distribution parameters, of the one the regimes
+  shift.
+
+- weights:
+
+  Optional observation weights.
+
+- ...:
+
+  Passed to methods.
+
+## Value
+
+A list with `loglik`, the per-observation contributions, `gradient`,
+their weighted sum's derivative, and `hessian`, the observed Hessian.
+
+## Details
+
+[`term_posterior`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)
+gives the gradient by Fisher's identity, and the matrix a caller can
+assemble from the same smoothed probabilities is the COMPLETE-DATA
+information, the ordinary one averaged over the states. That is the
+matrix an EM step inverts. It is not the observed information of the
+mixture, which is smaller by the information the unobserved states cost,
+and a standard error read off it is too small.
+
+Louis's identity expresses the difference as the conditional variance of
+the complete-data score, which needs the pairwise smoothed probabilities
+and a recursion carrying a second moment. The route taken here is
+shorter. The scaled forward recursion computes the observed
+log-likelihood exactly, as \\\log L = \sum_t \log c_t\\ with \\c_t\\ the
+normalizing constant of one step, so differentiating that arithmetic
+twice gives the observed Hessian with no identity involved. Carrying
+\\a_t(k)\\ together with its first and second derivatives in the unknown
+vector \\u\\,
+
+\$\$\frac{\partial \log c_t}{\partial u} = \frac{\dot c_t}{c_t}, \qquad
+\frac{\partial^2 \log c_t}{\partial u \partial u^\top} = \frac{\ddot
+c_t}{c_t} - \frac{\dot c_t}{c_t}\frac{\dot c_t^\top}{c_t},\$\$
+
+and the state is renormalized by the quotient rule,
+
+\$\$\ddot a = \bigl(\ddot{\tilde a} - \dot a \otimes \dot c - \dot c
+\otimes \dot a - a\\\ddot c\bigr)/c.\$\$
+
+The emission enters through \\\ddot w = w(gg^\top + G)\\, with \\g\\ and
+\\G\\ the score and the Hessian of the log-density in \\u\\ at that
+state, which is where the caller's derivatives are used. Groups are
+independent series and their contributions add.
+
+The cost is \\O(nK^2m^2)\\ in time and \\O(Km^2)\\ in storage, and the
+computation is meant to be run once, at a fitted point, rather than per
+iteration.
+
+## See also
+
+[`term_posterior`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md),
+[`term_loglik`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
+
+## Examples
+
+``` r
+set.seed(1)
+dd <- data.frame(t = 1:30, y = c(rnorm(15), rnorm(15, 3)))
+term <- term_build(regime(2, time = t), dd)
+# a gaussian mean of unit variance: one predictor, one unknown besides
+# the term's own four
+m <- 5L
+out <- term_hessian(
+  term, eta = rep(0, 30), y = dd$y,
+  logdens = function(e, i) dnorm(dd$y[i], e, log = TRUE),
+  grad = function(e, i) matrix(dd$y[i] - e, ncol = 1L),
+  hess = function(e, i) array(-1, c(length(i), 1L, 1L)),
+  psi = list(level1 = 0, gap2 = 3, alr1.1 = 2, alr2.1 = -2),
+  seed = list(matrix(c(rep(1, 30), rep(0, 30 * 4)), 30, m)),
+  cols = 2:5, level = 1L)
+dim(out$hessian)
+#> [1] 5 5
+```

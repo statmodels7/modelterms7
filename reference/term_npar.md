@@ -1,6 +1,12 @@
-# Number of Coefficients of a Built Term
+# Number of Parameters of a Built Term
 
-The number of columns of the term's design block.
+How many parameters of its own a built term carries: the columns of the
+design block for an additive term, and the entries of
+[`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
+for a structural one, which contributes no block. It is the length of
+the vector
+[`term_penalties`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+indexes into.
 
 ## Usage
 
