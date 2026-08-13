@@ -15,15 +15,15 @@ the kink set are the penalty's, never restated by the term.
 ## Usage
 
 ``` r
-ridge(x, label = "ridge", by = NULL)
+ridge(x, label = "ridge", by = NULL, standardize = FALSE)
 
-lasso(x, label = "lasso", by = NULL)
+lasso(x, label = "lasso", by = NULL, standardize = FALSE)
 
-enet(x, label = "enet", by = NULL)
+enet(x, label = "enet", by = NULL, standardize = FALSE)
 
-scad(x, label = "scad", by = NULL)
+scad(x, label = "scad", by = NULL, standardize = FALSE)
 
-mcp(x, label = "mcp", by = NULL)
+mcp(x, label = "mcp", by = NULL, standardize = FALSE)
 ```
 
 ## Arguments
@@ -39,6 +39,11 @@ mcp(x, label = "mcp", by = NULL)
 - by:
 
   Reserved for a later release; must be `NULL`.
+
+- standardize:
+
+  A single logical: whether to penalize each coefficient on the scale of
+  its own column. See the section below.
 
 ## Value
 
@@ -70,6 +75,48 @@ the new data would silently reuse the build-time rows.
 [`term_smooth`](https://statmodels7.github.io/modelterms7/reference/term_smooth.md)
 is `TRUE` for `ridge` and `FALSE` for `lasso`, `enet`, `scad` and `mcp`,
 read from each penalty's kink set.
+
+## Standardization
+
+A hyperparameter is comparable across coordinates only where the
+coordinates share a scale: without `standardize` a lasso penalizes a
+column measured in metres more than the same column measured in
+kilometres, and a reader of \\\lambda\\ has no way to know.
+
+`standardize = TRUE` divides each coefficient by the standard deviation
+of its own column, and it does so through the penalty's diagonal map
+rather than by touching the design. With \\z_j = x_j/s_j\\ the
+coefficient satisfies \\\beta\_{z,j} = s_j\beta\_{x,j}\\, so
+
+\$\$\lambda\sum_j \lvert\beta\_{z,j}\rvert = \lambda\sum_j
+s_j\lvert\beta\_{x,j}\rvert = \rho(S\beta_x), \qquad S =
+\mathrm{diag}(s),\$\$
+
+which is the standardized penalty read on the original scale. Three
+things follow. The design is never rescaled, so a sparse block stays
+sparse; \\\lambda\\ stays one number and the coefficients are already on
+the scale the data came in, with nothing to map back; and centring,
+which is what would destroy sparsity, is not needed, the fit being
+invariant to a translation of a penalized column wherever an intercept
+is free.
+
+The spread is computed from the built block and frozen in the blueprint,
+so the same term standardizes identically in every equation of a
+distributional model and does not move with the working weights of a
+fit. A constant column takes \\s_j = 1\\.
+[`print`](https://rdrr.io/r/base/print.html) shows the values, a number
+that changes the meaning of \\\lambda\\ having to be legible.
+
+For SCAD and MCP the diagonal map is not a rescaling of \\\lambda\\
+alone: substituting \\s_j\beta_j\\ gives \\\lambda_j = \lambda s_j\\ AND
+\\a_j = a/s_j\\ (or \\\gamma_j = \gamma/s_j\\), a composition of both
+hyperparameters per coordinate, which the map expresses exactly.
+
+[`random`](https://statmodels7.github.io/modelterms7/reference/random.md)
+does not standardize and takes no such argument. Its columns are
+grouping indicators and its penalty is a variance component with a
+meaning of its own; weighting it by the size of the groups would change
+the model rather than its parametrization.
 
 ## The penalties
 
@@ -121,4 +168,12 @@ term_penalty(built)@params
 #> [1] "lambda"
 term_smooth(built)
 #> [1] FALSE
+
+# the same block penalized on a common scale
+dd$x3 <- 1000 * dd$x2
+term_penalty(term_build(lasso(~ x1 + x3, standardize = TRUE), dd))@map
+#> 2 x 2 diagonal matrix of class "ddiMatrix"
+#>           [,1]    [,2]
+#> [1,] 0.8295156       .
+#> [2,]         . 665.294
 ```

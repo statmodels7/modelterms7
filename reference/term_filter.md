@@ -86,7 +86,7 @@ term <- term_build(gas(p = 1, q = 1, time = t), dd)
 out <- term_filter(term, eta = rep(0, 20), y = dd$y,
                    score = function(e, i) dd$y[i] - e,
                    curvature = function(e, i) -1,
-                   psi = list(omega = 0.1, a1 = 0.3, pacf1 = 0.5))
+                   psi = list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.5))
 head(out$eta, 3)
 #> [1]  0.20000000 -0.04793614  0.14550577
 dim(out$jacobian)

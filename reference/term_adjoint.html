@@ -11,7 +11,7 @@ it was given, both accounting for the recursion."><meta property="og:image" cont
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.20.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.26.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -124,7 +124,7 @@ equation, where the second factor is the curvature.</p>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">term_adjoint</span><span class="op">(</span><span class="va">term</span>, eta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">20</span><span class="op">)</span>, y <span class="op">=</span> <span class="va">dd</span><span class="op">$</span><span class="va">y</span>,</span></span>
 <span class="r-in"><span>                    score <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span>, <span class="va">i</span><span class="op">)</span> <span class="va">dd</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">-</span> <span class="va">e</span>,</span></span>
 <span class="r-in"><span>                    curvature <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span>, <span class="va">i</span><span class="op">)</span> <span class="op">-</span><span class="fl">1</span>,</span></span>
-<span class="r-in"><span>                    psi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>omega <span class="op">=</span> <span class="fl">0.1</span>, a1 <span class="op">=</span> <span class="fl">0.3</span>, pacf1 <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                    psi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>omega <span class="op">=</span> <span class="fl">0.1</span>, alpha1 <span class="op">=</span> <span class="fl">0.3</span>, pacf1 <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    g <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">deta</span>, <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.625 0.625 0.625</span>

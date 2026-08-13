@@ -17,7 +17,7 @@ likelihood."><meta property="og:image" content="https://statmodels7.github.io/mo
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.20.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.26.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -135,6 +135,14 @@ effects; the marginal likelihood, which integrates them out, is not
 provided here.</p>
 <p>Prediction maps new data onto the levels seen at build time; a level
 the term has not seen is rejected.</p>
+<p>A random effect is not standardized, and there is no <code>standardize</code>
+argument to ask for it with; passing one is an error. The term is a
+ridge where the effects are Gaussian and independent (see below), but
+its columns are grouping indicators rather than measured covariates, and
+its hyperparameter is a variance component with a meaning of its own.
+Dividing each coefficient by the spread of its indicator would weight
+the effects by the sizes of the groups, which changes the model rather
+than the scale its hyperparameter is read on.</p>
     </div>
     <div class="section level2">
     <h2 id="the-block-and-its-penalty">The block and its penalty<a class="anchor" aria-label="anchor" href="#the-block-and-its-penalty"></a></h2>

@@ -24,7 +24,8 @@ PenalizedTerm(
   penalty = NULL,
   input = NULL,
   input_expr = NULL,
-  factory = function() NULL
+  factory = function() NULL,
+  standardize = FALSE
 )
 ```
 
@@ -65,7 +66,15 @@ PenalizedTerm(
 
 - factory:
 
-  The function mapping a coefficient count to the penalty object.
+  The function mapping a coefficient count to the penalty object. It is
+  called with the diagonal map as a second argument where `standardize`
+  asks for one, so a factory that will never be standardized may take
+  the count alone.
+
+- standardize:
+
+  Whether the block's columns are put on a common scale by the penalty's
+  diagonal map.
 
 ## Value
 

@@ -28,7 +28,7 @@ SegTerm(
   npsi = integer(0),
   by = NULL,
   linear = logical(0),
-  penalty_kind = character(0),
+  penalty_kind = NULL,
   spec = list()
 )
 ```

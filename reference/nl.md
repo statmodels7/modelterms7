@@ -15,7 +15,7 @@ nl(
   links = NULL,
   subformulas = NULL,
   start = NULL,
-  penalty = c("none", "lasso", "ridge"),
+  penalty = "none",
   penalize = NULL,
   label = "nl"
 )
@@ -55,8 +55,10 @@ nl(
 
 - penalty:
 
-  One of `"none"` (default), `"lasso"` or `"ridge"`, applied to the
-  coefficients of the parameters `penalize` names.
+  The penalty on the coefficients of the parameters `penalize` names:
+  `"none"` (default), `"lasso"`, `"ridge"`, a penalties7 penalty over as
+  many coefficients as those parameters number, or a function of that
+  count returning one.
 
 - penalize:
 

@@ -17,7 +17,7 @@ gas(
   by = NULL,
   time = NULL,
   deviations = FALSE,
-  penalty = c("none", "lasso", "ridge"),
+  penalty = "none",
   label = "gas"
 )
 ```
@@ -49,8 +49,16 @@ gas(
 
 - penalty:
 
-  One of `"none"` (default), `"lasso"` or `"ridge"`, applied to the
-  deviations. Requires them.
+  The penalty on the deviations, which requires them: `"none"`
+  (default), `"lasso"`, `"ridge"`, a penalties7 penalty over as many
+  coefficients as the deviations number, or a function of that count
+  returning one. The count is a property of the data, so a penalty given
+  as an object is checked against it at
+  [`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+  and a function is the spelling for a specification written before the
+  groups are known. There is no `standardize` argument here and passing
+  one is an error: a deviation is a parameter of the recursion rather
+  than a coefficient on a column, so there is no spread to divide it by.
 
 - label:
 
@@ -173,5 +181,5 @@ Cambridge University Press.
 
 ``` r
 term_params(gas(p = 1, q = 2))
-#> [1] "omega" "a1"    "pacf1" "pacf2"
+#> [1] "omega"  "alpha1" "pacf1"  "pacf2" 
 ```

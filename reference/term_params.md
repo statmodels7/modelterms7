@@ -35,5 +35,5 @@ A character vector.
 
 ``` r
 term_params(gas(p = 1, q = 1))
-#> [1] "omega" "a1"    "pacf1"
+#> [1] "omega"  "alpha1" "pacf1" 
 ```

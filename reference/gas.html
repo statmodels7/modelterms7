@@ -21,7 +21,7 @@ evaluated at."><meta property="og:image" content="https://statmodels7.github.io/
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.20.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.26.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,7 +66,7 @@ evaluated at.</p>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  time <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  deviations <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  penalty <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"none"</span>, <span class="st">"lasso"</span>, <span class="st">"ridge"</span><span class="op">)</span>,</span>
+<span>  penalty <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  label <span class="op">=</span> <span class="st">"gas"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -100,8 +100,16 @@ one. Requires <code>by</code>.</p></dd>
 
 
 <dt id="arg-penalty">penalty<a class="anchor" aria-label="anchor" href="#arg-penalty"></a></dt>
-<dd><p>One of <code>"none"</code> (default), <code>"lasso"</code> or
-<code>"ridge"</code>, applied to the deviations. Requires them.</p></dd>
+<dd><p>The penalty on the deviations, which requires them:
+<code>"none"</code> (default), <code>"lasso"</code>, <code>"ridge"</code>, a
+<span class="pkg">penalties7</span> penalty over as many coefficients as the deviations
+number, or a function of that count returning one. The count is a
+property of the data, so a penalty given as an object is checked
+against it at <code><a href="term_build.html">term_build</a></code> and a function is the spelling
+for a specification written before the groups are known. There is no
+<code>standardize</code> argument here and passing one is an error: a
+deviation is a parameter of the recursion rather than a coefficient on
+a column, so there is no spread to divide it by.</p></dd>
 
 
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
@@ -220,7 +228,7 @@ Tails</em>. Cambridge University Press.</p>
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="term_params.html">term_params</a></span><span class="op">(</span><span class="fu">gas</span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega" "a1"    "pacf1" "pacf2"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"  "alpha1" "pacf1"  "pacf2" </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

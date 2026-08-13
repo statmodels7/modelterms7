@@ -1,5 +1,240 @@
 # Changelog
 
+## modelterms7 0.26.0
+
+- A sparse matrix handed to
+  [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+  [`enet()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+  [`scad()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
+  or
+  [`mcp()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
+  is no longer densified.
+
+  `.penalized_spec()` called
+  [`as.matrix()`](https://rdrr.io/r/base/matrix.html) on any non-formula
+  input, so a caller’s `dgCMatrix` was densified at SPECIFICATION time,
+  before anything had a chance to keep it. Measured on a 4000 x 60
+  indicator design at density 0.017: **0.050 MB became 1.920 MB**, a
+  factor of 1/density, and the block stayed dense from there on. A
+  penalized block is exactly where a sparse design turns up – indicators
+  over many levels are what a lasso is for – so this was the one input
+  the constructor had to preserve and the one it destroyed.
+  [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
+  did the same at new data.
+
+  Both keep the Matrix now, and a logical Matrix is carried to double
+  rather than rejected, an indicator being the commonest sparse input.
+  The infrastructure was already there and unused: `.is_block()` has
+  accepted sparse since 0.24.0 and
+  [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
+  already reported it.
+
+  End to end through `statmod()`, against the same design densified by
+  hand, with the coefficients identical:
+
+  |                       | sparse | dense   |           |
+  |-----------------------|--------|---------|-----------|
+  | ridge, n=20000 p=200  | 0.75 s | 4.73 s  | 6.3x      |
+  | ridge, n=20000 p=1000 | 2.37 s | 90.86 s | **38.3x** |
+  | lasso, n=20000 p=200  | 1.04 s | 3.39 s  | 3.3x      |
+  | lasso, n=20000 p=1000 | 3.61 s | 59.22 s | **16.4x** |
+
+  The coefficients agree to 2.4e-16 for the smooth branch and EXACTLY
+  for the kinked one.
+
+  ⚠️ The gap between the two branches is not noise and is worth reading:
+  the kinked branch reaches a compiled coordinate descent that takes an
+  `arma::mat`, so `statmodels7:::coord_fit()` still materializes the
+  penalized block dense at that one boundary. That is the remaining
+  densification in the chain, it is the whole of the difference between
+  38x and 16x, and closing it means a sparse path in the kernel – which
+  is also the natural algorithm, a coordinate update on a sparse column
+  touching only its nonzeros.
+
+## modelterms7 0.25.0
+
+- [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+  [`enet()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+  [`scad()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
+  and
+  [`mcp()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
+  take `standardize`.
+
+  A hyperparameter is comparable across coordinates only where the
+  coordinates share a scale, and without this a lasso penalizes a column
+  measured in metres more than the same column measured in kilometres.
+  `standardize = TRUE` divides each coefficient by the standard
+  deviation of its own column through the penalty’s DIAGONAL MAP, so the
+  design is never rescaled: a sparse block stays sparse, `lambda` stays
+  one number, and the coefficients come back on the scale the data
+  arrived in with nothing to map back. Centring, which is what would
+  destroy sparsity, is not needed, the fit being invariant to a
+  translation of a penalized column where an intercept is free.
+
+  The spread is computed from the BUILT block and frozen in the
+  blueprint, so the same term standardizes identically in every equation
+  of a distributional model and does not move with the working weights
+  of a fit. A constant column takes `s_j = 1`.
+  [`print()`](https://rdrr.io/r/base/print.html) shows the values, a
+  number that changes the meaning of `lambda` having to be legible.
+
+  ⚠️ For SCAD and MCP this is not a rescaling of `lambda`, and the naive
+  substitution is wrong by a wide margin. Measured against the published
+  piecewise forms transcribed independently, at spreads from 0.5 to 3:
+  `rho(s b)` differs from `rho(b; lambda*s, a)` by **11.2** for SCAD and
+  from `rho(b; lambda*s, gamma/s)` by **4.39** for MCP. The exact
+  relations are `s^2 rho(b; lambda/s, a)` and
+  `s^2 rho(b; lambda/s, gamma)` – an overall factor as well as both
+  hyperparameters – and SCAD is not a member of its own family at any
+  parameters without that factor. The diagonal map expresses `rho(s b)`
+  exactly (0), which is why no new arithmetic was needed; a test pins
+  all of it, including the two wrong answers.
+
+- [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
+  does not standardize and takes no such argument, its columns being
+  grouping indicators and its hyperparameter a variance component;
+  `gas(deviations =)` likewise, a deviation being a parameter of the
+  recursion rather than a coefficient on a column. Both reject the
+  argument by name.
+
+## modelterms7 0.24.0
+
+- A grouping indicator is built SPARSE. `.random_block()` assembled a
+  dense `n x (m*d)` block, and its intermediate
+  `outer(g, levels(g), ==)` was a dense `n x m` besides. A row belongs
+  to one group, so the density is `1/m` whatever the data. At
+  `n = 20000` and `m = 1000`: **152.6 MB against 0.23 MB**, built in
+  1.76 s against 0.0011 s, and the crossproduct every fitting iteration
+  takes in **0.0006 s against 12.77 s**.
+
+  [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
+  asks `.is_block()` rather than
+  [`is.matrix()`](https://rdrr.io/r/base/matrix.html), which is FALSE
+  for every `Matrix` class and would have failed a term for being
+  efficient. A term’s `X` was already `class_any`, so the contract
+  needed no change.
+
+- [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
+  accumulates PER GROUP and never forms the square over all the
+  unknowns. A group’s rows reach the coefficients, the population
+  parameters and that group’s own deviations, and nothing else, so the
+  active set has the same size whether the panel has ten groups or a
+  thousand. Measured against the full square, which it reproduces
+  EXACTLY:
+
+  | groups | unknowns | full square | per group | speedup |
+  |--------|----------|-------------|-----------|---------|
+  | 25     | 79       | 0.31 s      | 0.100 s   | 3.1x    |
+  | 50     | 154      | 1.89 s      | 0.060 s   | 31.5x   |
+  | 100    | 304      | 12.48 s     | 0.130 s   | 96.0x   |
+  | 200    | 604      | 53.51 s     | 0.390 s   | 137.2x  |
+
+  `max|W_full - W_group|` is 0 at every size, not merely small: it is
+  the same sum over the same terms, restricted where the rest is zero by
+  construction. The cost per observation is now flat in the group count
+  (37 to 43 microseconds at 100, 250 and 500 groups), and what remains
+  is the `n x m` jacobian, which is the return value and is O(n m)
+  rather than the O(n m^2) the square cost.
+
+  `blocks` is called with the row of the jacobian RESTRICTED to the
+  active set and with that set, returning its pieces in the same
+  coordinates. A three-argument callback of the earlier shape still
+  works and is given the full row, paying the quadratic allocation the
+  restriction avoids.
+
+## modelterms7 0.23.0
+
+- A score-driven term carries the names its literature uses. The score
+  loadings are `alpha1`, `alpha2`, … where they were `a1`, `a2`: they
+  are the quantities themselves, each on the identity link, so the name
+  can promise what it reports.
+
+  The persistence is a different matter and keeps its own name. It rides
+  a PARTIAL AUTOCORRELATION, the stationary region of an autoregression
+  not being a box, so a free coordinate called `beta1` would promise the
+  coefficient and report the chart – and above `q = 1` the two are
+  different numbers.
+
+- [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
+  is the new generic that reports what a fitted term is about, with the
+  Jacobian from the term’s own parameters, in the shape
+  [`parameters7::param_readable()`](https://statmodels7.github.io/parameters7/reference/param_readable.html)
+  already uses for a matrix parameter. The base method answers with the
+  parameters themselves on the parameter scale, so every existing term
+  is unchanged.
+
+  A score-driven term answers with `omega`, the loadings, and the
+  AUTOREGRESSIVE COEFFICIENTS `beta1`, `beta2`, …, taken through the
+  Levinson-Durbin recursion whose Jacobian the filter already computes
+  and chained onto the rhobit link of each coordinate. Against
+  `numDeriv` the Jacobian agrees to 1e-11 at every order tried; at
+  `q = 1` the coefficient is exactly the link’s inverse, which is the
+  case where the two coincide.
+
+## modelterms7 0.22.0
+
+- A penalty is an object, not a string.
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md),
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md),
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  took `"none"`, `"lasso"` or `"ridge"` through
+  [`match.arg()`](https://rdrr.io/r/base/match.arg.html), which put a
+  term’s reach at two of the penalties `penalties7` offers and made
+  every other one need a name invented for it here. They now also take
+
+  - a `penalties7` penalty, used as it stands, so an elastic net, a
+    heavy-tailed prior or a structured precision reaches a term
+    directly;
+  - a function of the number of coefficients returning one, which is
+    what a penalty whose WIDTH the data decide needs – a panel’s
+    deviations exist only once the groups are counted, so a
+    specification cannot name one.
+
+  The two shorthands keep working and remain the defaults. A penalty
+  given as an object is checked against the count where that count first
+  exists, at
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md),
+  rather than being evaluated at a coefficient vector of another length
+  and recycled in silence.
+
+  `.penalty_factory()` is the one place that reads the argument and
+  `.penalty_arg()` the one that validates it, so the three constructors
+  cannot drift apart.
+
+## modelterms7 0.21.0
+
+- [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
+  carries deviations, where it used to reject them.
+
+  A group’s parameters are the population values plus that group’s
+  deviations ON THE UNCONSTRAINED SCALE, which is the scale a deviation
+  is defined on. That map is affine: its Jacobian is a matrix of ones
+  and zeros and its second derivative is exactly zero. So the recursion
+  is unchanged and only the lift widens, a base coordinate reaching two
+  columns of the caller’s unknowns instead of one, the population value
+  and that group’s own deviation. Nothing had to be derived.
+
+  Against `numDeriv` on the filter itself, over deviations on every
+  parameter, on the level alone and on a mixed pair, at `p` and `q` up
+  to two: the Jacobian agrees to 3e-10 and the curvature to 5e-10
+  relative. Where the gap looks larger the reference is the weaker side
+  – at `q = 2` two Richardson settings disagree with each other by
+  4.4e-4 while the closed form sits 2.8e-7 from one of them, which is
+  2e-10 of the matrix’s own size. Two structural claims are asserted as
+  well: at a zero deviation the population block reproduces the
+  shared-parameter term’s curvature, and whatever the deviations are,
+  one parameter’s deviation columns sum to its population column, which
+  is the affine lift.
+
+  This is what a penalty over a panel’s deviations needed: with it,
+  `statmodels7` fits such a term, inverts its information and estimates
+  its hyperparameters.
+
 ## modelterms7 0.20.0
 
 - [`term_hessian()`](https://statmodels7.github.io/modelterms7/reference/term_hessian.md)

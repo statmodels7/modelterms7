@@ -14,7 +14,7 @@ seg(
   psi = NULL,
   by = NULL,
   linear = TRUE,
-  penalty = c("none", "lasso", "ridge"),
+  penalty = "none",
   c0 = 0.05,
   label = "seg"
 )
@@ -25,7 +25,7 @@ jump(
   psi = NULL,
   by = NULL,
   linear = TRUE,
-  penalty = c("none", "lasso", "ridge"),
+  penalty = "none",
   c0 = 0.05,
   label = "jump"
 )
@@ -36,7 +36,7 @@ jseg(
   psi = NULL,
   by = NULL,
   linear = TRUE,
-  penalty = c("none", "lasso", "ridge"),
+  penalty = "none",
   c0 = 0.05,
   label = "jseg"
 )
@@ -68,8 +68,11 @@ jseg(
 
 - penalty:
 
-  One of `"none"` (default), `"lasso"` or `"ridge"`, applied to the
-  changes.
+  The penalty on the changes: `"none"` (default), `"lasso"`, `"ridge"`,
+  a penalties7 penalty over as many coefficients as there are changes,
+  or a function of that count returning one. A joint term declares two
+  penalties, one on the slope changes and one on the jumps, and a
+  penalty given as an object is used for both.
 
 - c0:
 

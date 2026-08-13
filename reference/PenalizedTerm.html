@@ -17,7 +17,7 @@ link and kink is the penalty object's."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.20.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.26.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,8 @@ link and kink is the penalty object's.</p>
 <span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  input <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  input_expr <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  factory <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="cn">NULL</span></span>
+<span>  factory <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="cn">NULL</span>,</span>
+<span>  standardize <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -105,7 +106,14 @@ matrix.</p></dd>
 
 <dt id="arg-factory">factory<a class="anchor" aria-label="anchor" href="#arg-factory"></a></dt>
 <dd><p>The function mapping a coefficient count to the penalty
-object.</p></dd>
+object. It is called with the diagonal map as a second argument where
+<code>standardize</code> asks for one, so a factory that will never be
+standardized may take the count alone.</p></dd>
+
+
+<dt id="arg-standardize">standardize<a class="anchor" aria-label="anchor" href="#arg-standardize"></a></dt>
+<dd><p>Whether the block's columns are put on a common scale
+by the penalty's diagonal map.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -149,6 +149,8 @@ exact derivative beside the state.
   : The Smoothed State Probabilities of a Latent Markov Term
 - [`term_level_param()`](https://statmodels7.github.io/modelterms7/reference/term_level_param.md)
   : Which of a Term's Parameters Acts as an Intercept
+- [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
+  : The Quantities a Fitted Term Reports
 
 ## The formula layer
 

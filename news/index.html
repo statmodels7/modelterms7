@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.20.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.26.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,114 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.26.0" id="modelterms7-0260">modelterms7 0.26.0<a class="anchor" aria-label="anchor" href="#modelterms7-0260"></a></h2>
+<ul><li>
+<p>A sparse matrix handed to <code><a href="../reference/ridge.html">ridge()</a></code>, <code><a href="../reference/ridge.html">lasso()</a></code>, <code><a href="../reference/ridge.html">enet()</a></code>, <code><a href="../reference/ridge.html">scad()</a></code> or <code><a href="../reference/ridge.html">mcp()</a></code> is no longer densified.</p>
+<p><code>.penalized_spec()</code> called <code><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix()</a></code> on any non-formula input, so a caller’s <code>dgCMatrix</code> was densified at SPECIFICATION time, before anything had a chance to keep it. Measured on a 4000 x 60 indicator design at density 0.017: <strong>0.050 MB became 1.920 MB</strong>, a factor of 1/density, and the block stayed dense from there on. A penalized block is exactly where a sparse design turns up – indicators over many levels are what a lasso is for – so this was the one input the constructor had to preserve and the one it destroyed. <code><a href="../reference/term_predict.html">term_predict()</a></code> did the same at new data.</p>
+<p>Both keep the Matrix now, and a logical Matrix is carried to double rather than rejected, an indicator being the commonest sparse input. The infrastructure was already there and unused: <code>.is_block()</code> has accepted sparse since 0.24.0 and <code><a href="../reference/check_term.html">check_term()</a></code> already reported it.</p>
+<p>End to end through <code>statmod()</code>, against the same design densified by hand, with the coefficients identical:</p>
+<table class="table"><thead><tr><th></th>
+<th>sparse</th>
+<th>dense</th>
+<th></th>
+</tr></thead><tbody><tr><td>ridge, n=20000 p=200</td>
+<td>0.75 s</td>
+<td>4.73 s</td>
+<td>6.3x</td>
+</tr><tr><td>ridge, n=20000 p=1000</td>
+<td>2.37 s</td>
+<td>90.86 s</td>
+<td><strong>38.3x</strong></td>
+</tr><tr><td>lasso, n=20000 p=200</td>
+<td>1.04 s</td>
+<td>3.39 s</td>
+<td>3.3x</td>
+</tr><tr><td>lasso, n=20000 p=1000</td>
+<td>3.61 s</td>
+<td>59.22 s</td>
+<td><strong>16.4x</strong></td>
+</tr></tbody></table><p>The coefficients agree to 2.4e-16 for the smooth branch and EXACTLY for the kinked one.</p>
+<p>⚠️ The gap between the two branches is not noise and is worth reading: the kinked branch reaches a compiled coordinate descent that takes an <code>arma::mat</code>, so <code>statmodels7:::coord_fit()</code> still materializes the penalized block dense at that one boundary. That is the remaining densification in the chain, it is the whole of the difference between 38x and 16x, and closing it means a sparse path in the kernel – which is also the natural algorithm, a coordinate update on a sparse column touching only its nonzeros.</p>
+</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.25.0" id="modelterms7-0250">modelterms7 0.25.0<a class="anchor" aria-label="anchor" href="#modelterms7-0250"></a></h2>
+<ul><li>
+<p><code><a href="../reference/ridge.html">ridge()</a></code>, <code><a href="../reference/ridge.html">lasso()</a></code>, <code><a href="../reference/ridge.html">enet()</a></code>, <code><a href="../reference/ridge.html">scad()</a></code> and <code><a href="../reference/ridge.html">mcp()</a></code> take <code>standardize</code>.</p>
+<p>A hyperparameter is comparable across coordinates only where the coordinates share a scale, and without this a lasso penalizes a column measured in metres more than the same column measured in kilometres. <code>standardize = TRUE</code> divides each coefficient by the standard deviation of its own column through the penalty’s DIAGONAL MAP, so the design is never rescaled: a sparse block stays sparse, <code>lambda</code> stays one number, and the coefficients come back on the scale the data arrived in with nothing to map back. Centring, which is what would destroy sparsity, is not needed, the fit being invariant to a translation of a penalized column where an intercept is free.</p>
+<p>The spread is computed from the BUILT block and frozen in the blueprint, so the same term standardizes identically in every equation of a distributional model and does not move with the working weights of a fit. A constant column takes <code>s_j = 1</code>. <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the values, a number that changes the meaning of <code>lambda</code> having to be legible.</p>
+<p>⚠️ For SCAD and MCP this is not a rescaling of <code>lambda</code>, and the naive substitution is wrong by a wide margin. Measured against the published piecewise forms transcribed independently, at spreads from 0.5 to 3: <code>rho(s b)</code> differs from <code>rho(b; lambda*s, a)</code> by <strong>11.2</strong> for SCAD and from <code>rho(b; lambda*s, gamma/s)</code> by <strong>4.39</strong> for MCP. The exact relations are <code>s^2 rho(b; lambda/s, a)</code> and <code>s^2 rho(b; lambda/s, gamma)</code> – an overall factor as well as both hyperparameters – and SCAD is not a member of its own family at any parameters without that factor. The diagonal map expresses <code>rho(s b)</code> exactly (0), which is why no new arithmetic was needed; a test pins all of it, including the two wrong answers.</p>
+</li>
+<li><p><code><a href="../reference/random.html">random()</a></code> does not standardize and takes no such argument, its columns being grouping indicators and its hyperparameter a variance component; <code>gas(deviations =)</code> likewise, a deviation being a parameter of the recursion rather than a coefficient on a column. Both reject the argument by name.</p></li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.24.0" id="modelterms7-0240">modelterms7 0.24.0<a class="anchor" aria-label="anchor" href="#modelterms7-0240"></a></h2>
+<ul><li>
+<p>A grouping indicator is built SPARSE. <code>.random_block()</code> assembled a dense <code>n x (m*d)</code> block, and its intermediate <code>outer(g, levels(g), ==)</code> was a dense <code>n x m</code> besides. A row belongs to one group, so the density is <code>1/m</code> whatever the data. At <code>n = 20000</code> and <code>m = 1000</code>: <strong>152.6 MB against 0.23 MB</strong>, built in 1.76 s against 0.0011 s, and the crossproduct every fitting iteration takes in <strong>0.0006 s against 12.77 s</strong>.</p>
+<p><code><a href="../reference/check_term.html">check_term()</a></code> asks <code>.is_block()</code> rather than <code><a href="https://rdrr.io/r/base/matrix.html" class="external-link">is.matrix()</a></code>, which is FALSE for every <code>Matrix</code> class and would have failed a term for being efficient. A term’s <code>X</code> was already <code>class_any</code>, so the contract needed no change.</p>
+</li>
+<li>
+<p><code><a href="../reference/term_curvature.html">term_curvature()</a></code> accumulates PER GROUP and never forms the square over all the unknowns. A group’s rows reach the coefficients, the population parameters and that group’s own deviations, and nothing else, so the active set has the same size whether the panel has ten groups or a thousand. Measured against the full square, which it reproduces EXACTLY:</p>
+<table class="table"><thead><tr><th>groups</th>
+<th>unknowns</th>
+<th>full square</th>
+<th>per group</th>
+<th>speedup</th>
+</tr></thead><tbody><tr><td>25</td>
+<td>79</td>
+<td>0.31 s</td>
+<td>0.100 s</td>
+<td>3.1x</td>
+</tr><tr><td>50</td>
+<td>154</td>
+<td>1.89 s</td>
+<td>0.060 s</td>
+<td>31.5x</td>
+</tr><tr><td>100</td>
+<td>304</td>
+<td>12.48 s</td>
+<td>0.130 s</td>
+<td>96.0x</td>
+</tr><tr><td>200</td>
+<td>604</td>
+<td>53.51 s</td>
+<td>0.390 s</td>
+<td>137.2x</td>
+</tr></tbody></table><p><code>max|W_full - W_group|</code> is 0 at every size, not merely small: it is the same sum over the same terms, restricted where the rest is zero by construction. The cost per observation is now flat in the group count (37 to 43 microseconds at 100, 250 and 500 groups), and what remains is the <code>n x m</code> jacobian, which is the return value and is O(n m) rather than the O(n m^2) the square cost.</p>
+<p><code>blocks</code> is called with the row of the jacobian RESTRICTED to the active set and with that set, returning its pieces in the same coordinates. A three-argument callback of the earlier shape still works and is given the full row, paying the quadratic allocation the restriction avoids.</p>
+</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.23.0" id="modelterms7-0230">modelterms7 0.23.0<a class="anchor" aria-label="anchor" href="#modelterms7-0230"></a></h2>
+<ul><li>
+<p>A score-driven term carries the names its literature uses. The score loadings are <code>alpha1</code>, <code>alpha2</code>, … where they were <code>a1</code>, <code>a2</code>: they are the quantities themselves, each on the identity link, so the name can promise what it reports.</p>
+<p>The persistence is a different matter and keeps its own name. It rides a PARTIAL AUTOCORRELATION, the stationary region of an autoregression not being a box, so a free coordinate called <code>beta1</code> would promise the coefficient and report the chart – and above <code>q = 1</code> the two are different numbers.</p>
+</li>
+<li>
+<p><code><a href="../reference/term_readable.html">term_readable()</a></code> is the new generic that reports what a fitted term is about, with the Jacobian from the term’s own parameters, in the shape <code><a href="https://statmodels7.github.io/parameters7/reference/param_readable.html" class="external-link">parameters7::param_readable()</a></code> already uses for a matrix parameter. The base method answers with the parameters themselves on the parameter scale, so every existing term is unchanged.</p>
+<p>A score-driven term answers with <code>omega</code>, the loadings, and the AUTOREGRESSIVE COEFFICIENTS <code>beta1</code>, <code>beta2</code>, …, taken through the Levinson-Durbin recursion whose Jacobian the filter already computes and chained onto the rhobit link of each coordinate. Against <code>numDeriv</code> the Jacobian agrees to 1e-11 at every order tried; at <code>q = 1</code> the coefficient is exactly the link’s inverse, which is the case where the two coincide.</p>
+</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.22.0" id="modelterms7-0220">modelterms7 0.22.0<a class="anchor" aria-label="anchor" href="#modelterms7-0220"></a></h2>
+<ul><li>
+<p>A penalty is an object, not a string. <code><a href="../reference/gas.html">gas()</a></code>, <code><a href="../reference/nl.html">nl()</a></code>, <code><a href="../reference/seg.html">seg()</a></code>, <code><a href="../reference/seg.html">jump()</a></code> and <code><a href="../reference/seg.html">jseg()</a></code> took <code>"none"</code>, <code>"lasso"</code> or <code>"ridge"</code> through <code><a href="https://rdrr.io/r/base/match.arg.html" class="external-link">match.arg()</a></code>, which put a term’s reach at two of the penalties <code>penalties7</code> offers and made every other one need a name invented for it here. They now also take</p>
+<ul><li>a <code>penalties7</code> penalty, used as it stands, so an elastic net, a heavy-tailed prior or a structured precision reaches a term directly;</li>
+<li>a function of the number of coefficients returning one, which is what a penalty whose WIDTH the data decide needs – a panel’s deviations exist only once the groups are counted, so a specification cannot name one.</li>
+</ul><p>The two shorthands keep working and remain the defaults. A penalty given as an object is checked against the count where that count first exists, at <code><a href="../reference/term_build.html">term_build()</a></code>, rather than being evaluated at a coefficient vector of another length and recycled in silence.</p>
+<p><code>.penalty_factory()</code> is the one place that reads the argument and <code>.penalty_arg()</code> the one that validates it, so the three constructors cannot drift apart.</p>
+</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.21.0" id="modelterms7-0210">modelterms7 0.21.0<a class="anchor" aria-label="anchor" href="#modelterms7-0210"></a></h2>
+<ul><li>
+<p><code><a href="../reference/term_curvature.html">term_curvature()</a></code> carries deviations, where it used to reject them.</p>
+<p>A group’s parameters are the population values plus that group’s deviations ON THE UNCONSTRAINED SCALE, which is the scale a deviation is defined on. That map is affine: its Jacobian is a matrix of ones and zeros and its second derivative is exactly zero. So the recursion is unchanged and only the lift widens, a base coordinate reaching two columns of the caller’s unknowns instead of one, the population value and that group’s own deviation. Nothing had to be derived.</p>
+<p>Against <code>numDeriv</code> on the filter itself, over deviations on every parameter, on the level alone and on a mixed pair, at <code>p</code> and <code>q</code> up to two: the Jacobian agrees to 3e-10 and the curvature to 5e-10 relative. Where the gap looks larger the reference is the weaker side – at <code>q = 2</code> two Richardson settings disagree with each other by 4.4e-4 while the closed form sits 2.8e-7 from one of them, which is 2e-10 of the matrix’s own size. Two structural claims are asserted as well: at a zero deviation the population block reproduces the shared-parameter term’s curvature, and whatever the deviations are, one parameter’s deviation columns sum to its population column, which is the affine lift.</p>
+<p>This is what a penalty over a panel’s deviations needed: with it, <code>statmodels7</code> fits such a term, inverts its information and estimates its hyperparameters.</p>
+</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.20.0" id="modelterms7-0200">modelterms7 0.20.0<a class="anchor" aria-label="anchor" href="#modelterms7-0200"></a></h2>
 <ul><li>
