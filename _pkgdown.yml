@@ -108,6 +108,7 @@ reference:
   - term_loglik
   - term_adjoint
   - term_curvature
+  - term_third
   - term_hessian
   - term_posterior
   - term_level_param

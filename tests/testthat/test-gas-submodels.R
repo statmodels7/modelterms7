@@ -244,6 +244,68 @@ test_that("the curvature of a developed filter is exact", {
   }
 })
 
+test_that("the third derivative of a developed filter is exact", {
+  # A penalty can only reach a gas term's own parameters through a
+  # subformula -- term_penalties() is empty without one, and gas(penalty =)
+  # was retired -- so THIS route, and not the scalar one, is what the exact
+  # gradient of a marginal criterion calls.
+  #
+  # The layer is stubbed by l = -log cosh(e - y): four non-zero orders, all
+  # bounded, so nothing here is multiplied by zero and the filter cannot
+  # diverge. See the scalar test in test-gas.R for both reasons.
+  X <- cbind(1, as.numeric(scale(seq_len(n))) * 0.3)
+  mb <- ncol(X)
+  tt <- function(e, i) tanh(e - dd$y[i])
+  sc3 <- function(e, i) -tt(e, i)
+  cu3 <- function(e, i) -(1 - tt(e, i)^2)
+  l3 <- function(e, i) { t <- tt(e, i); 2 * t * (1 - t^2) }
+  l4 <- function(e, i) { t <- tt(e, i); (1 - t^2) * (2 - 6 * t^2) }
+
+  for (cfg in list(quote(gas(p = 1, q = 1, alpha1 ~ z, time = t)),
+                   quote(gas(p = 1, q = 3, pacf1 ~ z, time = t)),
+                   quote(gas(p = 2, q = 2, omega ~ z, alpha1 ~ g, time = t)),
+                   # a panel, which is the shape a real fit has: the second
+                   # and third derivatives are accumulated on each group's
+                   # ACTIVE SET rather than as a square over every unknown
+                   quote(gas(p = 1, q = 1, omega ~ g, by = g, time = t)))) {
+    term <- term_build(eval(cfg), dd)
+    nm <- term_params(term)
+    np <- length(nm)
+    lk <- term_links(term)
+    m <- mb + np
+    seed <- cbind(X, matrix(0, n, np))
+    psi_of <- function(z) as.list(stats::setNames(vapply(seq_len(np),
+      function(j) linkfunctions7::linkinv(lk[[nm[j]]], z[j]), numeric(1)),
+      nm))
+    set.seed(11)
+    u0 <- c(0.3, -0.15, stats::runif(np, -0.35, -0.1))
+    gw <- stats::rnorm(n)
+    v <- stats::rnorm(m)
+    eta0 <- function(u) as.numeric(X %*% u[seq_len(mb)])
+    blk2 <- function(e, i, D, act) list(cross = numeric(length(D)),
+                                        M = l3(e, i) * outer(D, D))
+    blk3 <- function(e, i, D, act) list(
+      cross = numeric(length(D)), M = l3(e, i) * outer(D, D),
+      dcurv = l3(e, i) * D,
+      N = l4(e, i) * sum(D * v[act]) * outer(D, D))
+
+    got <- term_third(term, eta0(u0), dd$y, sc3, cu3,
+                      psi_of(u0[mb + seq_len(np)]), gw, seed, blk3, v)
+    at <- function(u) term_curvature(term, eta0(u), dd$y, sc3, cu3,
+      psi_of(u[mb + seq_len(np)]), gw, seed, blk2)
+    dir_of <- function(h, what) {
+      (at(u0 + h * v)[[what]] - at(u0 - h * v)[[what]]) / (2 * h)
+    }
+    lab <- paste(deparse(cfg), collapse = "")
+    rich <- (4 * dir_of(1e-3, "curvature") - dir_of(2e-3, "curvature")) / 3
+    expect_equal(got$curvature, rich, tolerance = 1e-6, info = lab)
+    expect_equal(got$dphi, dir_of(1e-3, "jacobian"), tolerance = 1e-4,
+                 info = lab)
+    expect_identical(got$jacobian, at(u0)$jacobian)
+    expect_identical(got$curvature, t(got$curvature))
+  }
+})
+
 test_that("the contract views answer for a developed term", {
   term <- term_build(gas(p = 1, q = 1, omega ~ random(~1 | g),
                          alpha1 ~ z, by = g, time = t), dd)

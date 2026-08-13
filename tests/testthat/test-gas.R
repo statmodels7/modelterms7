@@ -430,6 +430,126 @@ test_that("the second derivative of Levinson-Durbin is exact", {
   expect_length(gas_levinson2(numeric(0))$hessian, 0L)
 })
 
+test_that("the third derivative of Levinson-Durbin is exact", {
+  # The exact gradient of a marginal criterion over a penalty on this term's
+  # own parameters needs one more order than the curvature, contracted
+  # against the direction the penalized mode moves in.
+  #
+  # The loop runs to q = 4 and NOT to q = 2, which would assert nothing: the
+  # map is multilinear of degree k in the first k partial autocorrelations,
+  # so at q = 2 the only non-trivial coefficient is rho_1(1 - rho_2), whose
+  # third derivative is identically zero. A check stopping there compares
+  # zero with zero -- the same shape as a symmetry that is free at p = q = 1.
+  set.seed(3)
+  for (pc in list(c(0.9, 0.8, -0.6), c(0.2, -0.4, 0.7, 0.1))) {
+    q <- length(pc)
+    w <- stats::rnorm(q)
+    got <- gas_levinson3(pc, w)
+    for (i in seq_len(q)) {
+      num <- numDeriv::jacobian(
+        function(z) as.numeric(gas_levinson2(z)$hessian[[i]]), pc)
+      ref <- matrix(as.numeric(num %*% w), q, q)
+      expect_equal(got[[i]], ref, tolerance = 1e-6,
+                   info = sprintf("q = %d, coefficient %d", q, i))
+      expect_identical(got[[i]], t(got[[i]]))
+    }
+    # the last coefficient IS the last partial autocorrelation
+    expect_true(all(got[[q]] == 0))
+  }
+  # and the degenerate cases, where the answer is zero for a reason
+  expect_length(gas_levinson3(numeric(0), numeric(0)), 0L)
+  expect_true(all(gas_levinson3(c(0.5, -0.3), c(1, 1))[[1L]] == 0))
+})
+
+test_that("the third-order recursion gives the exact directional derivative", {
+  # Step one of the exact gradient over a structural penalty: the second
+  # derivative of the predictor differentiated once more along one direction.
+  #
+  # The layer is stubbed by l = -log cosh(e - y), whose four derivatives are
+  # all NON-ZERO and all BOUNDED. Both properties are load-bearing: a
+  # gaussian mean has l''' = l'''' = 0, which multiplies every new term of
+  # the recursion by zero and asserts nothing, while an exponential family's
+  # score grows with the predictor and the recursion is geometric in it, so
+  # the filter leaves the doubles before anything is differenced.
+  set.seed(8)
+  nn <- 50L
+  d2 <- data.frame(t = seq_len(nn), y = stats::rnorm(nn))
+  X <- cbind(1, as.numeric(scale(seq_len(nn))) * 0.3)
+  mb <- ncol(X)
+  tt <- function(e, i) tanh(e - d2$y[i])
+  sc <- function(e, i) -tt(e, i)
+  cu <- function(e, i) -(1 - tt(e, i)^2)
+  l3 <- function(e, i) { t <- tt(e, i); 2 * t * (1 - t^2) }
+  l4 <- function(e, i) { t <- tt(e, i); (1 - t^2) * (2 - 6 * t^2) }
+
+  # q reaches 3 so that the map's own third derivative is exercised; see
+  # the Levinson-Durbin test above for why q = 2 would not
+  for (cfg in list(c(1, 1), c(2, 1), c(1, 2), c(2, 2), c(1, 3))) {
+    term <- term_build(gas(p = cfg[1], q = cfg[2], time = t), d2)
+    nm <- term_params(term)
+    np <- length(nm)
+    lk <- term_links(term)
+    m <- mb + np
+    seed <- cbind(X, matrix(0, nn, np))
+    psi_of <- function(z) as.list(stats::setNames(vapply(seq_along(nm),
+      function(j) linkfunctions7::linkinv(lk[[nm[j]]], z[j]), numeric(1)), nm))
+    set.seed(9)
+    u0 <- c(0.3, -0.2, stats::runif(np, -0.4, 0.2))
+    gw <- stats::rnorm(nn)
+    v <- stats::rnorm(m)
+    eta0 <- function(u) as.numeric(X %*% u[seq_len(mb)])
+    blk2 <- function(e, i, D, act) list(cross = numeric(length(D)),
+                                        M = l3(e, i) * outer(D, D))
+    blk3 <- function(e, i, D, act) list(
+      cross = numeric(length(D)), M = l3(e, i) * outer(D, D),
+      dcurv = l3(e, i) * D,
+      N = l4(e, i) * sum(D * v[act]) * outer(D, D))
+
+    got <- term_third(term, eta0(u0), d2$y, sc, cu,
+                      psi_of(u0[mb + seq_len(np)]), gw, seed, blk3, v)
+    at <- function(u) term_curvature(term, eta0(u), d2$y, sc, cu,
+      psi_of(u[mb + seq_len(np)]), gw, seed, blk2)
+    dir_of <- function(h, what) {
+      (at(u0 + h * v)[[what]] - at(u0 - h * v)[[what]]) / (2 * h)
+    }
+    lab <- sprintf("p = %d, q = %d", cfg[1], cfg[2])
+
+    # Richardson on the central difference: the plain difference carries an
+    # O(h^2) truncation of its own, and at these scales it is LARGER than
+    # the gap being measured, so the reference is extrapolated before it is
+    # believed against the code
+    rich <- (4 * dir_of(1e-3, "curvature") - dir_of(2e-3, "curvature")) / 3
+    expect_equal(got$curvature, rich, tolerance = 1e-6, info = lab)
+    expect_equal(got$dphi, dir_of(1e-3, "jacobian"), tolerance = 1e-4,
+                 info = lab)
+    # the refactor that shares the recursion between the two orders must
+    # leave the second one's jacobian untouched, to the bit
+    expect_identical(got$jacobian, at(u0)$jacobian)
+  }
+})
+
+test_that("term_third is zero for an additive term and refused where absent", {
+  # an additive term's predictor is a block of columns, so its second
+  # derivative is already zero and so is every order above it
+  td <- data.frame(x = stats::rnorm(20), y = stats::rnorm(20))
+  lp <- term_build(linpar(~x), td)
+  out <- term_third(lp, rep(0, 20), td$y, function(e, i) 0,
+                    function(e, i) -1, list(), rep(1, 20),
+                    matrix(0, 20, 2), function(e, i, D, act) NULL, c(1, 0))
+  expect_true(all(out$curvature == 0))
+  expect_true(all(out$dphi == 0))
+
+  # a term that BENDS the predictor and has not written its third derivative
+  # must refuse rather than inherit that zero, which a caller could not tell
+  # from a term that genuinely has none
+  rg <- term_build(regime(k = 2), td)
+  expect_error(term_third(rg, rep(0, 20), td$y, function(e, i) 0,
+                          function(e, i) -1, list(), rep(1, 20),
+                          matrix(0, 20, 2), function(e, i, D, act) NULL,
+                          c(1, 0)),
+               "does not implement term_third")
+})
+
 test_that("the second-order recursion gives the exact curvature", {
   # Step two of the exact observed information: the forward jacobian of the
   # predictor in a caller's unknowns, and the second derivative contracted
@@ -547,4 +667,65 @@ test_that("the curvature of a per-group development has the affine structure", {
            c(u0[1:2], 0.15, stats::runif(ng, -0.2, 0.2), 0.25, 0.4))$curvature
   expect_equal(rowSums(b2[keep, i_dev, drop = FALSE]),
                b2[keep, i_int], tolerance = 1e-12)
+})
+
+test_that("the third derivative of a development has the affine structure", {
+  # The two statements a tolerance against a numerical reference cannot make.
+  # A development's design places the intercept column as the SUM of the
+  # group indicators, and that linear relation propagates to every order, so
+  # it can be read off the matrix rather than measured.
+  X <- cbind(1, as.numeric(scale(seq_len(n))) * 0.3)
+  mb <- ncol(X)
+  tt <- function(e, i) tanh(e - dd$y[i])
+  sc <- function(e, i) -tt(e, i)
+  cu <- function(e, i) -(1 - tt(e, i)^2)
+  l3 <- function(e, i) { t <- tt(e, i); 2 * t * (1 - t^2) }
+  l4 <- function(e, i) { t <- tt(e, i); (1 - t^2) * (2 - 6 * t^2) }
+
+  at3 <- function(term, u, v) {
+    nm <- term_params(term)
+    lk <- term_links(term)
+    np <- length(nm)
+    psi_of <- function(z) as.list(stats::setNames(vapply(seq_along(nm),
+      function(j) linkfunctions7::linkinv(lk[[nm[j]]], z[j]), numeric(1)), nm))
+    term_third(term, as.numeric(X %*% u[seq_len(mb)]), dd$y, sc, cu,
+               psi_of(u[mb + seq_len(np)]), gw,
+               cbind(X, matrix(0, n, np)),
+               function(e, i, D, act) list(
+                 cross = numeric(length(D)), M = l3(e, i) * outer(D, D),
+                 dcurv = l3(e, i) * D,
+                 N = l4(e, i) * sum(D * v[act]) * outer(D, D)),
+               v)
+  }
+
+  set.seed(11)
+  gw <- stats::rnorm(n)
+  plain <- term_build(gas(p = 1, q = 1, by = g), dd)
+  term <- term_build(gas(p = 1, q = 1, omega ~ random(~1 | g), by = g), dd)
+  nm <- term_params(term)
+  ng <- length(term@blueprint$order)
+  u0 <- c(0.3, -0.2, 0.15, -0.25, 0.4)
+  i_int <- mb + match("omega.(Intercept)", nm)
+  i_dev <- mb + which(startsWith(nm, "omega.random"))
+  keep <- c(seq_len(mb), i_int, mb + match(c("alpha1", "pacf1"), nm))
+
+  # (1) at ZERO departures the developed term IS the shared-parameter one,
+  # along a direction that does not move the departures -- a direction that
+  # did would be asking for something the plain term cannot represent
+  set.seed(5)
+  v0 <- stats::rnorm(mb + 3L)
+  vdev <- numeric(mb + length(nm))
+  vdev[keep] <- v0
+  a <- at3(plain, u0, v0)$curvature
+  b <- at3(term, c(u0[1:2], 0.15, numeric(ng), -0.25, 0.4), vdev)$curvature
+  expect_equal(unname(b[keep, keep]), unname(a), tolerance = 1e-12)
+
+  # (2) and whatever the departures and whatever the direction, the
+  # departure columns of one parameter sum to its intercept column
+  set.seed(7)
+  vd2 <- stats::rnorm(mb + length(nm))
+  b2 <- at3(term, c(u0[1:2], 0.15, stats::runif(ng, -0.2, 0.2), -0.25, 0.4),
+            vd2)$curvature
+  expect_equal(rowSums(b2[keep, i_dev, drop = FALSE]), b2[keep, i_int],
+               tolerance = 1e-12)
 })

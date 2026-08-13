@@ -59,7 +59,7 @@ NULL
 # d value / d coordinate row by row over the parameter's own coordinates,
 # and k2 the diagonal chart curvature the second order needs.
 .gas_sub_values <- function(term, u, scale = c("parameter", "zeta"),
-                            second = FALSE) {
+                            second = FALSE, third = FALSE) {
   scale <- match.arg(scale)
   base <- .gas_base_params(term@p, term@q)
   sub <- term@blueprint$sub
@@ -76,11 +76,13 @@ NULL
         idx = idx, developed = TRUE, Z = Z,
         v = linkfunctions7::linkinv(lk, eta),
         W = linkfunctions7::dlinkinv(lk, eta) * Z,
-        k2 = if (second) linkfunctions7::d2linkinv(lk, eta) else NULL)
+        k2 = if (second) linkfunctions7::d2linkinv(lk, eta) else NULL,
+        k3 = if (third) linkfunctions7::d3linkinv(lk, eta) else NULL)
     } else if (identical(scale, "parameter")) {
       out[[j]] <- list(idx = idx, developed = FALSE, Z = NULL,
                        v = rep(u[[idx]], n), W = matrix(1, n, 1L),
-                       k2 = if (second) rep(0, n) else NULL)
+                       k2 = if (second) rep(0, n) else NULL,
+                       k3 = if (third) rep(0, n) else NULL)
     } else {
       lk <- .gas_param_link(term, j)
       out[[j]] <- list(
@@ -88,6 +90,8 @@ NULL
         v = rep(linkfunctions7::linkinv(lk, u[[idx]]), n),
         W = matrix(linkfunctions7::dlinkinv(lk, u[[idx]]), n, 1L),
         k2 = if (second) rep(linkfunctions7::d2linkinv(lk, u[[idx]]), n)
+          else NULL,
+        k3 = if (third) rep(linkfunctions7::d3linkinv(lk, u[[idx]]), n)
           else NULL)
     }
   }
@@ -371,10 +375,11 @@ NULL
 # derivative, the chart differentiated per observation, everything carried
 # on each group's active set
 .gas_curvature_sub <- function(term, eta, y, score, curvature, psiv, g,
-                               seed, blocks) {
+                               seed, blocks, direction = NULL) {
   bp <- term@blueprint
   p <- term@p
   q <- term@q
+  third <- !is.null(direction)
   nm <- term_params(term)
   np <- length(nm)
   lay <- .gas_sub_layout(term)
@@ -389,7 +394,7 @@ NULL
                                                  psiv[[lay$idx[[j]]]])
     }
   }
-  vals <- .gas_sub_values(term, u, "zeta", second = TRUE)
+  vals <- .gas_sub_values(term, u, "zeta", second = TRUE, third = third)
   bd <- .gas_sub_b(term, vals)
   acts <- .gas_sub_active(term, vals)
   aj <- if (p > 0L) paste0("alpha", seq_len(p)) else character(0)
@@ -411,6 +416,13 @@ NULL
                  m, np), call. = FALSE)
   }
   zcol <- m - np + seq_len(np)
+  if (third) {
+    direction <- as.numeric(direction)
+    if (length(direction) != m) {
+      stop(sprintf("'direction' must have one value per unknown (%d).", m),
+           call. = FALSE)
+    }
+  }
   varying_b <- q > 0L &&
     any(vapply(pj, function(j) vals[[j]]$developed, logical(1)))
   ld2_const <- if (q > 0L && !varying_b) {
@@ -423,6 +435,7 @@ NULL
 
   D <- matrix(0, bp$n, m)
   W <- matrix(0, m, m)
+  dP <- if (third) matrix(0, bp$n, m) else NULL
   for (l in seq_along(bp$order)) {
     rows <- bp$order[[l]]
     # this group's columns among the caller's unknowns: everything that is
@@ -493,6 +506,63 @@ NULL
     }
     hb_const_l <- if (q > 0L && !varying_b) hb_of(rows[1L]) else NULL
 
+    # the third derivative of one value at one observation, contracted
+    # against the direction: a developed coordinate reads its chart's own
+    # h''' at z'gamma along the design row, a scalar one is diagonal
+    vk <- if (third) direction[act] else NULL
+    t_of <- function(j, r) {
+      h <- matrix(0, mk, mk)
+      vj <- vals[[j]]
+      at <- pos[[j]]
+      ok <- !is.na(at)
+      if (!any(ok)) return(h)
+      if (vj$developed) {
+        z <- vj$Z[r, ok]
+        h[at[ok], at[ok]] <- vj$k3[r] * sum(z * vk[at[ok]]) * outer(z, z)
+      } else {
+        h[at[ok], at[ok]] <- vj$k3[r] * vk[at[ok]]
+      }
+      h
+    }
+    # and of one autoregressive coefficient: the Levinson-Durbin map's own
+    # third derivative over the chained first derivatives, plus the two
+    # places the product rule puts a chart's curvature and the one it puts
+    # its third derivative
+    tb_of <- function(r) {
+      if (q == 0L) return(NULL)
+      ld2 <- if (!varying_b) ld2_const else {
+        gas_levinson2(vapply(pj, function(j) vals[[j]]$v[r], numeric(1)))
+      }
+      wrows <- lapply(pj, function(j) row_of(j, r))
+      hrows <- lapply(pj, function(j) h_of(j, r))
+      trows <- lapply(pj, function(j) t_of(j, r))
+      hv <- lapply(hrows, function(H) as.numeric(H %*% vk))
+      wdot <- vapply(wrows, function(W) sum(W * vk), numeric(1))
+      ld3 <- gas_levinson3(vapply(pj, function(j) vals[[j]]$v[r], numeric(1)),
+                           wdot)
+      lapply(seq_len(q), function(j) {
+        h <- matrix(0, mk, mk)
+        hw <- as.numeric(ld2$hessian[[j]] %*% wdot)
+        for (k in seq_len(q)) {
+          for (ll in seq_len(q)) {
+            if (ld3[[j]][k, ll] != 0) {
+              h <- h + ld3[[j]][k, ll] * outer(wrows[[k]], wrows[[ll]])
+            }
+            if (ld2$hessian[[j]][k, ll] != 0) {
+              h <- h + ld2$hessian[[j]][k, ll] *
+                (outer(hv[[k]], wrows[[ll]]) + outer(wrows[[k]], hv[[ll]]))
+            }
+          }
+          if (hw[[k]] != 0) h <- h + hw[[k]] * hrows[[k]]
+          if (ld2$jacobian[j, k] != 0) {
+            h <- h + ld2$jacobian[j, k] * trows[[k]]
+          }
+        }
+        h
+      })
+    }
+    tb_const_l <- if (third && q > 0L && !varying_b) tb_of(rows[1L]) else NULL
+
     r1 <- rows[1L]
     sbv <- if (q > 0L) sum(bd$B[r1, ]) else 0
     if (abs(1 - sbv) < 1e-10) {
@@ -514,6 +584,28 @@ NULL
     if (q > 0L) {
       f0_uu <- f0_uu + om1 * Reduce(`+`, hb1) / (1 - sbv)^2
     }
+    if (third) {
+      # f0 = omega/(1 - S): the same expansion the scalar route carries,
+      # with every quantity read at this group's first observation
+      tb1 <- if (q > 0L) (if (varying_b) tb_of(r1) else tb_const_l) else NULL
+      cst <- 1 / (1 - sbv)
+      S_uu <- if (q > 0L) Reduce(`+`, hb1) else matrix(0, mk, mk)
+      S_3 <- if (q > 0L) Reduce(`+`, tb1) else matrix(0, mk, mk)
+      dS <- sum(dbsum * vk)
+      dS2 <- as.numeric(S_uu %*% vk)
+      dom <- sum(om1_u * vk)
+      dom2 <- as.numeric(om1_uu %*% vk)
+      om1_3 <- t_of("omega", r1)
+      f0_3 <- om1_3 * cst + om1_uu * (cst^2 * dS) +
+        2 * cst^3 * dS * (outer(om1_u, dbsum) + outer(dbsum, om1_u)) +
+        cst^2 * (outer(dom2, dbsum) + outer(om1_u, dS2) +
+                 outer(dS2, om1_u) + outer(dbsum, dom2)) +
+        (2 * dom * cst^3 + 6 * om1 * cst^4 * dS) * outer(dbsum, dbsum) +
+        2 * om1 * cst^3 * (outer(dS2, dbsum) + outer(dbsum, dS2)) +
+        dom * cst^2 * S_uu + 2 * om1 * cst^3 * dS * S_uu + om1 * cst^2 * S_3
+      df0 <- sum(f0_u * vk)
+      dphi0 <- as.numeric(f0_uu %*% vk)
+    }
 
     Wl <- matrix(0, mk, mk)
     k <- length(rows)
@@ -523,11 +615,14 @@ NULL
     Phi <- vector("list", k)
     Sd <- vector("list", k)
     Sdd <- vector("list", k)
+    Psi <- if (third) vector("list", k) else NULL
+    Sddd <- if (third) vector("list", k) else NULL
     for (t in seq_len(k)) {
       r <- rows[t]
       ft <- vals$omega$v[r]
       Ft <- row_of("omega", r)
       Pt <- h_of("omega", r)
+      Tt <- if (third) t_of("omega", r) else NULL
       if (p > 0L) {
         for (i in seq_len(p)) {
           lag <- t - i
@@ -536,15 +631,28 @@ NULL
           Sdd_l <- if (lag >= 1L) Sdd[[lag]] else matrix(0, mk, mk)
           va <- vals[[aj[i]]]
           a_u <- row_of(aj[i], r)
+          a_uu <- h_of(aj[i], r)
           ft <- ft + va$v[r] * s_l
           Ft <- Ft + va$v[r] * Sd_l + s_l * a_u
           Pt <- Pt + va$v[r] * Sdd_l +
             outer(a_u, Sd_l) + outer(Sd_l, a_u) +
-            s_l * h_of(aj[i], r)
+            s_l * a_uu
+          if (third) {
+            Sddd_l <- if (lag >= 1L) Sddd[[lag]] else matrix(0, mk, mk)
+            dSd_l <- if (lag >= 1L) sum(Sd_l * vk) else 0
+            dSdd_l <- if (lag >= 1L) as.numeric(Sdd_l %*% vk) else numeric(mk)
+            da <- sum(a_u * vk)
+            da2 <- as.numeric(a_uu %*% vk)
+            Tt <- Tt + da * Sdd_l + va$v[r] * Sddd_l +
+              outer(da2, Sd_l) + outer(Sd_l, da2) +
+              outer(a_u, dSdd_l) + outer(dSdd_l, a_u) +
+              dSd_l * a_uu + s_l * t_of(aj[i], r)
+          }
         }
       }
       if (q > 0L) {
         hb <- if (varying_b) hb_of(r) else hb_const_l
+        tb <- if (third) (if (varying_b) tb_of(r) else tb_const_l) else NULL
         for (j in seq_len(q)) {
           lag <- t - j
           f_l <- if (lag >= 1L) f[lag] else f0
@@ -555,16 +663,28 @@ NULL
           Ft <- Ft + bd$B[r, j] * F_l + f_l * b_u
           Pt <- Pt + bd$B[r, j] * Phi_l +
             outer(b_u, F_l) + outer(F_l, b_u) + f_l * hb[[j]]
+          if (third) {
+            Psi_l <- if (lag >= 1L) Psi[[lag]] else f0_3
+            dF_l <- if (lag >= 1L) sum(F_l * vk) else df0
+            dPhi_l <- if (lag >= 1L) as.numeric(Phi_l %*% vk) else dphi0
+            db <- sum(b_u * vk)
+            db2 <- as.numeric(hb[[j]] %*% vk)
+            Tt <- Tt + db * Phi_l + bd$B[r, j] * Psi_l +
+              outer(db2, F_l) + outer(F_l, db2) +
+              outer(b_u, dPhi_l) + outer(dPhi_l, b_u) +
+              dF_l * hb[[j]] + f_l * tb[[j]]
+          }
         }
       }
       f[t] <- ft
       F_[[t]] <- Ft
       Phi[[t]] <- Pt
+      if (third) Psi[[t]] <- Tt
 
       e_t <- eta[r] + ft
       Dt <- seed[r, act] + Ft
       D[r, act] <- Dt
-      Wl <- Wl + g[r] * Pt
+      Wl <- Wl + g[r] * (if (third) Tt else Pt)
 
       s[t] <- score(e_t, r)
       cv <- curvature(e_t, r)
@@ -572,13 +692,22 @@ NULL
         full <- numeric(m)
         full[act] <- Dt
         b3 <- blocks(e_t, r, full)
-        list(cross = b3$cross[act], M = b3$M[act, act, drop = FALSE])
+        list(cross = b3$cross[act], M = b3$M[act, act, drop = FALSE],
+             dcurv = b3$dcurv[act],
+             N = if (third) b3$N[act, act, drop = FALSE] else NULL)
       }
       Sd[[t]] <- cv * Dt + bl$cross
       Sdd[[t]] <- cv * Pt + bl$M
+      if (third) {
+        dPhi_t <- as.numeric(Pt %*% vk)
+        dP[r, act] <- dPhi_t
+        Sddd[[t]] <- sum(bl$dcurv * vk) * Pt + cv * Tt + bl$N +
+          outer(dPhi_t, bl$dcurv) + outer(bl$dcurv, dPhi_t)
+      }
     }
     W[act, act] <- W[act, act] + Wl
   }
   W <- (W + t(W)) / 2
+  if (third) return(list(jacobian = D, dphi = dP, curvature = W))
   list(jacobian = D, curvature = W)
 }
