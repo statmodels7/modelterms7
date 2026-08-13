@@ -9,3 +9,4 @@
 **/*.quarto_ipynb
 vignettes/figure/
 docs/
+tests/testthat/_problems/
