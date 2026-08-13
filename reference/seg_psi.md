@@ -25,7 +25,9 @@ seg_psi(term, coef = NULL)
 
 ## Value
 
-A numeric vector of break-point positions.
+A numeric vector of break-point positions, or, where the break-points
+carry a development, a matrix with one row per observation and one
+column per break-point.
 
 ## See also
 

@@ -10,33 +10,36 @@ discontinuous (fasola2018); `jseg` does both at the same points.
 ``` r
 seg(
   x,
+  ...,
   npsi = 1,
   psi = NULL,
   by = NULL,
   linear = TRUE,
-  penalty = "none",
+  penalty = NULL,
   c0 = 0.05,
   label = "seg"
 )
 
 jump(
   x,
+  ...,
   npsi = 1,
   psi = NULL,
   by = NULL,
   linear = TRUE,
-  penalty = "none",
+  penalty = NULL,
   c0 = 0.05,
   label = "jump"
 )
 
 jseg(
   x,
+  ...,
   npsi = 1,
   psi = NULL,
   by = NULL,
   linear = TRUE,
-  penalty = "none",
+  penalty = NULL,
   c0 = 0.05,
   label = "jseg"
 )
@@ -48,6 +51,11 @@ jseg(
 
   The covariate, an expression evaluated in the data.
 
+- ...:
+
+  At most one two-sided formula `psi ~ f` developing the break-points
+  with covariates; see the section above. Cannot be combined with `by`.
+
 - npsi:
 
   The number of break-points. Defaults to 1.
@@ -55,7 +63,8 @@ jseg(
 - psi:
 
   Optional starting positions; defaults to evenly spaced quantiles of
-  the covariate.
+  the covariate. With a subformula they seed the development, each
+  starting vector solving \\Z\gamma_k \approx \psi_k^{0}\\.
 
 - by:
 
@@ -68,11 +77,12 @@ jseg(
 
 - penalty:
 
-  The penalty on the changes: `"none"` (default), `"lasso"`, `"ridge"`,
-  a penalties7 penalty over as many coefficients as there are changes,
-  or a function of that count returning one. A joint term declares two
-  penalties, one on the slope changes and one on the jumps, and a
-  penalty given as an object is used for both.
+  The penalty on the changes: `NULL` (default, none), a penalties7
+  penalty over as many coefficients as there are changes, or a function
+  of that count returning one – a penalties7 constructor passed bare
+  works, e.g. `penalty = penalties7::lasso_penalty`. A joint term
+  declares two penalties, one on the slope changes and one on the jumps,
+  and a penalty given as an object is used for both.
 
 - c0:
 
@@ -164,7 +174,7 @@ term is the whole relationship rather than the change in it. `by` gives
 an independent set of break-points and changes per level of a factor.
 `penalty` puts a penalty on the changes themselves – the slope changes
 for `seg`, the jump sizes for `jump`, both for `jseg` – and leaves the
-linear effect and the break-points alone; with `"lasso"` that is a
+linear effect and the break-points alone; with the lasso that is a
 selection of how many break-points are really there.
 
 The penalty is declared through
@@ -192,6 +202,35 @@ are all three columns. A run that ends against the limit has not located
 a break-point, and
 [`seg_psi`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
 then returns the limit itself.
+
+#### Break-points developed with covariates
+
+A two-sided formula `psi ~ f` in `...` develops every break-point as
+\\\psi_k = Z\gamma_k\\, with \\Z\\ the design of the right-hand side
+through
+[`interpret_formula`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
+and one coefficient vector per break-point: `psi ~ g` with a factor `g`
+is a break-point per group with the slopes shared, where `by` would give
+every level its own slopes as well, and the two are therefore not
+combinable. Each observation carries the position its own row of \\Z\\
+implies, confined to the same interval as above.
+
+For the continuous construction \\\gamma_k\\ are ordinary coefficients
+and the block carries \\-\delta_k\\\mathbb{1}(x\>\psi_k)\\Z_j\\ in place
+of the single Jacobian column, so a sub-term's penalty passes through
+unchanged: `seg(x, psi ~ random(~1 | id))` is the random-changepoint
+model of Muggeo, Atkins, Gallop and Dimidjian (2014), the per-group
+positions shrunk towards a population one. For `jump` the identity above
+splits the \\gW\\ column into \\W Z_j\\, whose coefficients are \\c_k =
+-\kappa_k\gamma_k\\, and the development is read off as \\\gamma_k =
+-c_k/\kappa_k\\ exactly as the scalar break-point is; a sub-term
+carrying a penalty is rejected there, since the penalty would act on
+\\c_k\\, which is the development scaled by the jump size, rather than
+on \\\gamma_k\\ itself. `jseg` rejects a development: its reading of the
+break-point is a quadratic in the increment that couples the slope
+change with the jump, and it does not split over the columns of a
+development, while the componentwise reading that remains diverges
+whenever the jump size passes near zero mid-iteration.
 
 The objective has local optima in the break-points, and the scaling
 schedule widens the basin the iteration converges from rather than

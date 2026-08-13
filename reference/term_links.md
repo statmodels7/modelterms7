@@ -34,5 +34,5 @@ A named list of link objects.
 ``` r
 vapply(term_links(gas(p = 1, q = 1)), function(l) l@link_name, character(1))
 #>      omega     alpha1      pacf1 
-#> "identity" "identity"   "rhobit" 
+#> "identity"      "log"   "rhobit" 
 ```

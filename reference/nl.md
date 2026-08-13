@@ -10,13 +10,12 @@ given as a formula, may itself be modeled with covariates.
 ``` r
 nl(
   fn,
+  ...,
   params = NULL,
   x = NULL,
   links = NULL,
   subformulas = NULL,
   start = NULL,
-  penalty = "none",
-  penalize = NULL,
   label = "nl"
 )
 ```
@@ -27,6 +26,12 @@ nl(
 
   A one-sided formula in the covariates and the parameters, or a
   function of `(x, theta)` vectorized in both.
+
+- ...:
+
+  Two-sided formulas whose left side names a parameter, one per
+  parameter to be modeled with covariates, e.g. `theta1 ~ s(z)`. Formula
+  input only; the same as naming the right-hand side in `subformulas`.
 
 - params:
 
@@ -45,25 +50,13 @@ nl(
 
 - subformulas:
 
-  An optional named list of one-sided formulas, one per parameter to be
-  modeled with covariates. Formula input only.
+  An optional named list of one-sided formulas, the programmatic
+  spelling of the formulas of `...`. Formula input only.
 
 - start:
 
   An optional named list of starting values for the parameters, on the
   parameter scale. Defaults to the inverse link at zero.
-
-- penalty:
-
-  The penalty on the coefficients of the parameters `penalize` names:
-  `"none"` (default), `"lasso"`, `"ridge"`, a penalties7 penalty over as
-  many coefficients as those parameters number, or a function of that
-  count returning one.
-
-- penalize:
-
-  The parameters the penalty reaches, as a character vector. Defaults to
-  all of them.
 
 - label:
 
@@ -111,31 +104,45 @@ other.
 
 `links` carries each parameter to an unconstrained scale, so a rate
 constrained positive is estimated as its logarithm and the optimizer
-never proposes a negative one. `subformulas` develops a parameter as
-\\\theta_j = g_j^{-1}(Z\gamma_j)\\ for a design \\Z\\ built from a
-one-sided formula, which gives a parameter that varies by group or with
-a covariate; the coefficients are then the \\\gamma_j\\, and the
-Jacobian carries the chain rule \\\partial f/\partial\theta_j \cdot
-(g_j^{-1})' \cdot Z\\.
+never proposes a negative one. A subformula develops a parameter as
+\\\theta_j = g_j^{-1}(Z\gamma_j)\\ for a design \\Z\\ built from its
+right-hand side, which gives a parameter that varies by group or with a
+covariate; the coefficients are then the \\\gamma_j\\, and the Jacobian
+carries the chain rule \\\partial f/\partial\theta_j \cdot (g_j^{-1})'
+\cdot Z\\. Because the development acts on the unconstrained scale, the
+parameter stays in its own set at every observation whatever the
+coefficients are: a rate on the log link is positive for every row of
+\\Z\\.
+
+A subformula is written in `...` as a two-sided formula whose left side
+names the parameter, `theta1 ~ z`, or programmatically as
+`subformulas = list(theta1 = ~z)`; the two spellings are the same and a
+parameter may carry only one. The right-hand side goes through
+[`interpret_formula`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
+so it takes any term of this package: `theta1 ~ ridge(g)` is a
+population value (the intercept) plus shrunken departures,
+`theta1 ~ s(z)` lets the parameter move smoothly with a covariate, and
+`theta1 ~ random(~1 | g)` is a random intercept on the parameter's
+unconstrained scale. The penalties the sub-terms carry are reported
+through
+[`term_penalties`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+under the key `parameter::subterm`, so a fitting layer estimates their
+hyperparameters as it does any other term's. A structural term, and a
+term whose block moves with its coefficients, are rejected: a
+parameter's submodel must be a fixed design.
 
 ### Penalizing a parameter
 
-`penalty` attaches a penalty to the coefficients of the parameters
-`penalize` names, one penalty per parameter and so one hyperparameter
-each, since two parameters of a nonlinear function are on scales of
-their own and have no reason to share one. They are declared through
-[`term_penalties`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
-which names the coefficients each covers; the parameters left out are
-unpenalized.
-
-What is shrunk is the coefficient, not the parameter, so with a link the
-target is \\g_j^{-1}(0)\\ rather than zero: a rate carried by a log link
-is shrunk towards one. Where the parameter carries a subformula, the
-whole vector \\\gamma_j\\ is covered, so a lasso there selects which
-covariates a parameter depends on. A subformula of the form `~ g` with a
-factor `g` is the population-and-deviations pattern: the intercept is
-the population value and the remaining columns are deviations, penalized
-as the coordinates they are.
+A penalty is asked for inside the subformula, where the sub-term that
+carries it declares it: `theta1 ~ lasso(~z1 + z2)` selects which
+covariates the parameter depends on, and `theta1 ~ ridge(~g)` or
+`theta1 ~ random(~1 | g)` shrinks per-group departures towards a
+population value (the intercept, which stays unpenalized). Each sub-term
+brings its own hyperparameter, which is what two parameters of a
+nonlinear function want, being on scales of their own. Earlier releases
+carried `penalty` and `penalize` arguments over the parameters'
+coefficients; both are gone, the sub-terms covering the cases that
+matter with the hyperparameters in the right place.
 
 ## See also
 
@@ -159,4 +166,12 @@ term_coef_names(built)
 #> [1] "nl.a" "nl.r"
 dim(term_matrix(built))
 #> [1] 60  2
+
+# the amplitude developed by group: a population value plus shrunken
+# departures, whose hyperparameter a fitting layer estimates
+dd$g <- factor(rep(c("u", "v"), 30))
+sub <- term_build(nl(~ a * exp(-r * x), a ~ ridge(~g),
+                     start = list(a = 1, r = 1)), dd)
+vapply(term_penalties(sub), function(e) e$name, character(1))
+#> [1] "a::ridge(~g)"
 ```

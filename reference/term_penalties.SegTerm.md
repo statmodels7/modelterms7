@@ -3,7 +3,7 @@
 One entry per kind of change the term carries a penalty on, naming the
 coefficients it covers: `"delta"` for the slope changes, `"kappa"` for
 the jump sizes, shared across the levels of `by`. The list is empty when
-`penalty = "none"`, and for a specification, whose parameters there is
+`penalty = NULL`, and for a specification, whose parameters there is
 nothing yet to index: a penalty is attached at build, as it is for every
 penalized term here.
 

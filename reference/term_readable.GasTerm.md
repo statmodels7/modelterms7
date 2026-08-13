@@ -27,13 +27,14 @@ documents.
 
 ## Details
 
-The level and the loadings are the coordinates themselves. The
-persistence is not: it is carried on a partial autocorrelation, and the
-coefficients come from the Levinson-Durbin recursion, whose Jacobian the
-term already computes for the filter. Chained onto the rhobit link of
-each coordinate, that Jacobian is what a delta-method standard error for
-\\\beta_j\\ needs. At \\q = 1\\ the two coincide and the chain factor is
-the link's alone; above it they do not.
+The level and the loadings are reported through their own links, each a
+function of its own coordinate alone, which the base method already
+does. The persistence is not: it is carried on a partial
+autocorrelation, and the coefficients come from the Levinson-Durbin
+recursion, whose Jacobian the term already computes for the filter.
+Chained onto the rhobit link of each coordinate, that Jacobian is what a
+delta-method standard error for \\\beta_j\\ needs. At \\q = 1\\ the two
+coincide and the chain factor is the link's alone; above it they do not.
 
 A deviation is reported as it stands, being unconstrained and defined on
 the scale of the parameter it departs from.

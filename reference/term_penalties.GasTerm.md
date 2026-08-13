@@ -1,10 +1,10 @@
 # Penalties of a Score-Driven Term
 
-One entry per parameter carrying deviations, named after it and covering
-its deviations across the groups. The population parameters are
-unpenalized, and the list is empty when `penalty = "none"`, and for a
-specification, whose deviations do not exist until the data say how many
-groups there are.
+The penalties the subformulas' sub-terms declare, each under the key
+`parameter::subterm` and covering that sub-term's coefficients in the
+term's own numbering. The scalar parameters are unpenalized, and the
+list is empty for a specification, whose developments do not exist until
+the term is built.
 
 ## Arguments
 

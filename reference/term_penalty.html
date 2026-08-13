@@ -13,7 +13,7 @@ are the penalty object's, not the term's."><meta property="og:image" content="ht
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.26.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.28.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,8 +73,8 @@ are the penalty object's, not the term's.</p>
 <code>NULL</code> here and declares that penalty through
 <code><a href="term_penalties.html">term_penalties</a></code>, which names the parameters it covers:
 <code><a href="seg.html">seg</a></code> penalizes the changes and not the linear effect or the
-break-points, <code><a href="nl.html">nl</a></code> penalizes one nonlinear parameter at a
-time, and <code><a href="gas.html">gas</a></code> penalizes the deviations of a panel. Reading
+break-points, and the developments of <code><a href="nl.html">nl</a></code> and
+<code><a href="gas.html">gas</a></code> carry their sub-terms' penalties. Reading
 a partial penalty here would say that it covers the block, so the
 question this generic asks is answered only where the answer is the whole
 of it.</p>

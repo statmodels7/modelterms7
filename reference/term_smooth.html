@@ -21,7 +21,7 @@ strategies."><meta property="og:image" content="https://statmodels7.github.io/mo
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.26.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.28.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,7 +83,8 @@ strategies.</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The enumeration is <code><a href="term_penalties.html">term_penalties</a></code>, so a term carrying one
 penalty over part of its parameters and none over the rest answers for
-the part: <code>seg(x, penalty = "lasso")</code> is not smooth, its slope
+the part: <code>seg(x, penalty = penalties7::lasso_penalty)</code> is not
+smooth, its slope
 changes sitting at a kink, although its linear effect and its
 break-points are unpenalized.</p>
     </div>

@@ -135,6 +135,10 @@ exact derivative beside the state.
   : Parameters of a Structural Term
 - [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
   : Links of a Structural Term's Parameters
+- [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
+  : Where a Term's Own Parameters Start
+- [`term_level_design()`](https://statmodels7.github.io/modelterms7/reference/term_level_design.md)
+  : The Design of a Term's Level Development
 - [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
   : Apply a Structural Term to a Linear Predictor
 - [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)

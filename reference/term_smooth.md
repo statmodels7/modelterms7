@@ -35,9 +35,10 @@ A logical scalar.
 The enumeration is
 [`term_penalties`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
 so a term carrying one penalty over part of its parameters and none over
-the rest answers for the part: `seg(x, penalty = "lasso")` is not
-smooth, its slope changes sitting at a kink, although its linear effect
-and its break-points are unpenalized.
+the rest answers for the part:
+`seg(x, penalty = penalties7::lasso_penalty)` is not smooth, its slope
+changes sitting at a kink, although its linear effect and its
+break-points are unpenalized.
 
 ## See also
 

@@ -37,8 +37,8 @@ design block, and this generalizes it in two directions a model layer
 needs.
 
 A term may carry **more than one** penalty, over different parameters of
-its own. A panel model with a population value and a deviation per group
-wants the population value free and the deviations shrunk, which is one
+its own. A panel model with a population value and a departure per group
+wants the population value free and the departures shrunk, which is one
 penalty over part of the parameters and none over the rest.
 
 The parameters need **not be coefficients of a design block**. The

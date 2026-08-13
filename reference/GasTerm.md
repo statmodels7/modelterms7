@@ -16,8 +16,8 @@ GasTerm(
   q = integer(0),
   by = NULL,
   time = NULL,
-  deviations = NULL,
-  penalty_kind = NULL,
+  links = list(),
+  submodels = list(),
   blueprint = list()
 )
 ```
@@ -45,13 +45,13 @@ GasTerm(
 
   An optional ordering expression.
 
-- deviations:
+- links:
 
-  Which parameters carry a deviation per group.
+  The links overriding the defaults, if any.
 
-- penalty_kind:
+- submodels:
 
-  The penalty on the deviations, if any.
+  One optional subformula per parameter.
 
 - blueprint:
 

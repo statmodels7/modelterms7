@@ -1,5 +1,202 @@
 # Changelog
 
+## modelterms7 0.28.0
+
+- The general recursion of the submodel route runs compiled
+  (`gas_filter_sub_cpp` in `src/gas_filter.cpp`). The R side prepares
+  each group’s derivative rows once, scattered onto the group’s active
+  coordinates by one vectorized assignment per parameter, so the
+  kernel’s loop allocates nothing per step; the score and curvature
+  callbacks stay in R, as in the scalar kernel and for the same reason.
+  Measured on a panel with a developed level: 4.2x-4.3x over the R
+  route, flat in n (n = 2000 to 8000), the compiled route now within
+  1.8x-2.1x of the scalar kernel where the R route sat at 5.4x-5.6x. The
+  R loop survives as `.gas_filter_sub_r`, the twin the kernel is
+  compared against at a tolerance (a compiler may contract a
+  multiply-add; measured agreement is one rounding, 2.2e-16 on the
+  jacobian). The adjoint and the curvature stay in R: the adjoint is one
+  pass computed once per gradient, and the curvature is computed once,
+  at [`vcov()`](https://rdrr.io/r/stats/vcov.html).
+
+## modelterms7 0.27.0
+
+- Every parameter of
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  takes a subformula: a two-sided formula in `...` develops it as
+  `psi_{j,t} = g_j^-1(z_t' gamma_j)` over the design of the right-hand
+  side through
+  [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
+  so
+  `gas(p = 1, q = 1, omega ~ ridge(~g), alpha1 ~ s(x), pacf1 ~ random(~1 | id))`
+  is a specification. The development acts on the unconstrained scale of
+  the parameter’s own link, so every per-observation value stays in its
+  own set whatever the coefficients are – a loading on the log link is
+  positive at every observation, a persistence on the rhobit chart is
+  stationary at every observation. The coefficients are the term’s
+  parameters, unconstrained on the identity link, with the chart applied
+  inside; the sub-terms’ penalties are reported through
+  [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+  under `parameter::subterm`.
+
+  A parameter that varies by observation changes the recursion itself,
+  `f_t = omega_t + sum_i a_{i,t} s_{t-i} + sum_j b_{j,t} f_{t-j}`, with
+  `b_t` from the Levinson-Durbin map of that observation’s partial
+  autocorrelations, so the filter, the reverse pass and the second-order
+  propagation all run a general per-observation recursion (in R;
+  `src/gas_filter.cpp` keeps the scalar case). Validated each piece
+  against the special case it generalizes and against `numDeriv`: a
+  development of `~1` reproduces the scalar filter to 1e-12 with the
+  chart’s chain factor exact; before the shorthand was retired,
+  `omega ~ random(~1 | g)` with `by = g` was pinned against
+  `deviations = TRUE` to 1e-12, column for column, on the identity chart
+  and on the log one, and at the FIT level the two agreed on the REML
+  hyperparameter to the printed digit; a time-varying loading and a
+  per-group development each reproduce a recursion written by hand; and
+  the jacobian, the adjoint and the curvature agree with `numDeriv` to
+  the reference’s own accuracy at p and q up to 2, a developed partial
+  autocorrelation included.
+
+  `by = ~f` (a formula, where a grouping variable is a bare symbol)
+  gives every parameter the same subformula; mixing it with
+  per-parameter formulas is an error. Everything is carried on each
+  group’s ACTIVE SET – a development’s coordinate reaches only the
+  groups where its column is not identically zero – so with grouping
+  indicators the per-observation work is constant in the number of
+  groups, the property the deviations machinery had and the measured
+  twelve-minute trap of a full square at five hundred groups required.
+  Measured at n up to 10000, the general recursion costs 5.4-5.6x the
+  compiled scalar filter, flat in n; porting it is the natural next step
+  and the scalar kernel’s own measurement (callbacks 17-27 per cent of
+  the loop) says roughly what it would pay.
+
+- `gas(deviations =, penalty =)` and `nl(penalty =, penalize =)` are
+  RETIRED: the subformulas subsume them (Giovanni, explicit). A gas
+  panel’s population-and-departures model is
+  `gas(omega ~ random(~1 | id), by = id)`, proved equivalent to the
+  shorthand to the printed digit before the removal; a penalized nl
+  parameter is `a ~ lasso(~z1 + z2)` or `a ~ ridge(~g)`, the sub-term
+  bringing its own hyperparameter. What the removal loses is only the
+  penalty on a SCALAR nl parameter’s single coefficient, which had no
+  subformula spelling.
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  KEEP `penalty=`: it reaches the changes (the slope changes and the
+  jump sizes), which are not parameters a subformula models, and a lasso
+  there is the selection of how many break-points are real. A call
+  carrying a removed argument is reported by name.
+
+- `penalty` takes only a penalties7 object or a function of the
+  coefficient count – the strings `"none"`/`"lasso"`/`"ridge"` are gone
+  (Giovanni, explicit), `NULL` being the default. A function with an
+  `n_coef` formal is called by that NAME, so a penalties7 constructor
+  passes bare: `penalty = penalties7::lasso_penalty` is exactly as short
+  as the string it replaces, where before it failed with “the function
+  covers 1 coefficients” because the constructor’s first formal is the
+  map and received the count positionally.
+
+- The break-points of
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  and
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  take a subformula, `psi ~ f`, developing every break-point as
+  `psi_k = Z gamma_k` over the design of the right-hand side through
+  [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md).
+
+  `psi ~ g` with a factor is a break-point per group with the slopes
+  shared (where `by` would give every level its own slopes as well, so
+  the two are not combinable), and each observation carries the position
+  its own row implies, confined to the same \[q05, q95\] interval as the
+  scalar case. For the continuous construction the `gamma_k` are
+  ordinary coefficients, the Jacobian column splitting into
+  `-delta_k 1(x > psi_k) Z_j`, and a sub-term’s penalty passes through:
+  `seg(x, psi ~ random(~1 | id))` is the random-changepoint model of
+  Muggeo, Atkins, Gallop and Dimidjian (2014). For `jump` the Fasola
+  identity splits the `gW` column into `W Z_j`, whose coefficients are
+  `c_k = -kappa_k gamma_k`, and the development is read off
+  componentwise, `gamma_k = -c_k/kappa_k`, exactly as the scalar
+  break-point is; a sub-term carrying a penalty is rejected there, the
+  penalty acting on the development scaled by the jump size.
+
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  REJECTS a development, and the reason is measured rather than
+  presumed: its reading of the break-point is a quadratic in the
+  increment that couples the slope change with the jump and does not
+  split over the columns of a development, while the componentwise
+  reading that remains diverges whenever the jump size passes near zero
+  mid-iteration – from the grid start on an ordinary sample the scalar
+  quadratic settles at the truth and the linear reading runs to the
+  confinement boundary. A development of `~1` reproduces the scalar
+  construction: same block, same contribution, and the iteration walks
+  the two to the same break-point (pinned to 1e-6).
+
+- A subformula of
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+  goes through
+  [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
+  so it takes any term of the package, and it is written as a two-sided
+  formula in `...` whose left side names the parameter.
+
+  `nl(~ a * exp(-r * x), a ~ ridge(~g))` is a population value (the
+  intercept) plus shrunken departures; `a ~ s(z)` lets a parameter move
+  smoothly with a covariate; `a ~ random(~1 | g)` is a random intercept
+  on the parameter’s unconstrained scale. The old route built the
+  sub-design with
+  [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)
+  directly, so `a ~ g` worked and `a ~ ridge(~g)` could not exist. The
+  penalties the sub-terms carry are reported through
+  [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+  under the key `parameter::subterm`, with indices in the term’s own
+  numbering, so a fitting layer reaches their hyperparameters as it does
+  any other term’s. Because the development acts on the unconstrained
+  scale, the parameter stays in its own set at every observation
+  whatever the coefficients are.
+
+  `subformulas = list(a = ~g)` remains as the programmatic spelling; a
+  parameter may carry one subformula, whichever spelling supplies it. A
+  structural term, and a term whose block moves with its own
+  coefficients, are rejected: a parameter’s submodel must be a fixed
+  design. Prediction reapplies each sub-term’s own blueprint (levels,
+  knots, constants) instead of the hand-rolled terms/xlev record the old
+  route kept, and the Jacobian is assembled block by block so a sparse
+  sub-design – a random intercept’s indicators – stays sparse through
+  the block it becomes.
+
+- The charts of a score-driven term’s parameters are configurable, and
+  the score loadings ride the log link by default.
+
+  `gas(links = list(alpha1 = identity_link()))` overrides the default of
+  any base parameter; a deviation cannot be named, being unconstrained
+  by construction. The defaults are now: the level on the identity,
+  every loading on the LOG link, the persistence on the rhobit chart of
+  its partial autocorrelations. A positive loading responds in the
+  direction of the score, which is the case the literature writes, and
+  positivity is structural: a deviation (or, later, a submodel) moves
+  the loading on the log scale, so no group can take a negative one –
+  which under the old identity default it could.
+
+  The chart’s own curvature now enters
+  [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md):
+  the first and second derivatives of the level and the loadings in
+  their coordinates are the links’ rather than one and zero, verified
+  against `numDeriv` at p and q up to 2 through the existing curvature
+  tests, which read
+  [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
+  and exercised the new terms the moment the default moved.
+
+- [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
+  says where a term’s own parameters start, on the unconstrained scale.
+
+  The start belongs to the term because only the term knows what a
+  coordinate of zero means on each of its charts. The base method
+  returns zero everywhere, each link’s natural point;
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  overrides it for the loadings, whose log chart puts a loading of ONE
+  at zero – a response strong enough to destabilize the recursion at
+  ordinary curvatures – and starts them at 0.1 on the parameter scale
+  instead, whatever chart each one rides.
+
 ## modelterms7 0.26.0
 
 - A sparse matrix handed to
