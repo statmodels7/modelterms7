@@ -12,7 +12,8 @@ PenalizedTerm(
   penalty = NULL,
   input = NULL,
   input_expr = NULL,
-  factory = function() NULL
+  factory = function() NULL,
+  standardize = FALSE
 )
 }
 \arguments{
@@ -36,7 +37,12 @@ matrix.}
 \code{\link{term_predict}} can re-evaluate it in new data.}
 
 \item{factory}{The function mapping a coefficient count to the penalty
-object.}
+object. It is called with the diagonal map as a second argument where
+\code{standardize} asks for one, so a factory that will never be
+standardized may take the count alone.}
+
+\item{standardize}{Whether the block's columns are put on a common scale
+by the penalty's diagonal map.}
 }
 \value{
 An object of class \code{PenalizedTerm}.

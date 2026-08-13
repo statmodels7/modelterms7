@@ -8,15 +8,15 @@
 \alias{mcp}
 \title{Penalized Parametric Terms}
 \usage{
-ridge(x, label = "ridge", by = NULL)
+ridge(x, label = "ridge", by = NULL, standardize = FALSE)
 
-lasso(x, label = "lasso", by = NULL)
+lasso(x, label = "lasso", by = NULL, standardize = FALSE)
 
-enet(x, label = "enet", by = NULL)
+enet(x, label = "enet", by = NULL, standardize = FALSE)
 
-scad(x, label = "scad", by = NULL)
+scad(x, label = "scad", by = NULL, standardize = FALSE)
 
-mcp(x, label = "mcp", by = NULL)
+mcp(x, label = "mcp", by = NULL, standardize = FALSE)
 }
 \arguments{
 \item{x}{A one-sided formula or a numeric matrix.}
@@ -25,6 +25,9 @@ mcp(x, label = "mcp", by = NULL)
 names.}
 
 \item{by}{Reserved for a later release; must be \code{NULL}.}
+
+\item{standardize}{A single logical: whether to penalize each
+coefficient on the scale of its own column. See the section below.}
 }
 \value{
 An object of class \code{\link{PenalizedTerm}} (a
@@ -64,6 +67,48 @@ rows.
 \code{FALSE} for \code{lasso}, \code{enet}, \code{scad} and
 \code{mcp}, read from each penalty's kink set.
 }
+\section{Standardization}{
+
+A hyperparameter is comparable across coordinates only where the
+coordinates share a scale: without \code{standardize} a lasso penalizes a
+column measured in metres more than the same column measured in
+kilometres, and a reader of \eqn{\lambda} has no way to know.
+
+\code{standardize = TRUE} divides each coefficient by the standard
+deviation of its own column, and it does so through the penalty's
+diagonal map rather than by touching the design. With \eqn{z_j = x_j/s_j}
+the coefficient satisfies \eqn{\beta_{z,j} = s_j\beta_{x,j}}, so
+
+\deqn{\lambda\sum_j \lvert\beta_{z,j}\rvert
+  = \lambda\sum_j s_j\lvert\beta_{x,j}\rvert
+  = \rho(S\beta_x), \qquad S = \mathrm{diag}(s),}
+
+which is the standardized penalty read on the original scale. Three
+things follow. The design is never rescaled, so a sparse block stays
+sparse; \eqn{\lambda} stays one number and the coefficients are already
+on the scale the data came in, with nothing to map back; and centring,
+which is what would destroy sparsity, is not needed, the fit being
+invariant to a translation of a penalized column wherever an intercept
+is free.
+
+The spread is computed from the built block and frozen in the blueprint,
+so the same term standardizes identically in every equation of a
+distributional model and does not move with the working weights of a
+fit. A constant column takes \eqn{s_j = 1}. \code{\link{print}} shows the
+values, a number that changes the meaning of \eqn{\lambda} having to be
+legible.
+
+For SCAD and MCP the diagonal map is not a rescaling of \eqn{\lambda}
+alone: substituting \eqn{s_j\beta_j} gives \eqn{\lambda_j = \lambda s_j}
+AND \eqn{a_j = a/s_j} (or \eqn{\gamma_j = \gamma/s_j}), a composition of
+both hyperparameters per coordinate, which the map expresses exactly.
+
+\code{\link{random}} does not standardize and takes no such argument. Its
+columns are grouping indicators and its penalty is a variance component
+with a meaning of its own; weighting it by the size of the groups would
+change the model rather than its parametrization.
+}
+
 \section{The penalties}{
 
 Writing \eqn{\beta} for the block's coefficients and \eqn{p} for their
@@ -103,6 +148,10 @@ built <- term_build(lasso(~ x1 + x2), dd)
 term_coef_names(built)
 term_penalty(built)@params
 term_smooth(built)
+
+# the same block penalized on a common scale
+dd$x3 <- 1000 * dd$x2
+term_penalty(term_build(lasso(~ x1 + x3, standardize = TRUE), dd))@map
 
 }
 \seealso{

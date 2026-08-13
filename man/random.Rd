@@ -77,6 +77,15 @@ provided here.
 
 Prediction maps new data onto the levels seen at build time; a level
 the term has not seen is rejected.
+
+A random effect is not standardized, and there is no \code{standardize}
+argument to ask for it with; passing one is an error. The term is a
+ridge where the effects are Gaussian and independent (see below), but
+its columns are grouping indicators rather than measured covariates, and
+its hyperparameter is a variance component with a meaning of its own.
+Dividing each coefficient by the spread of its indicator would weight
+the effects by the sizes of the groups, which changes the model rather
+than the scale its hyperparameter is read on.
 }
 \section{The block and its penalty}{
 

@@ -144,9 +144,16 @@ S7::method(print, PenalizedTerm) <- function(x, ...) {
     cat(sprintf("<PenalizedTerm>%s built: %d coefficient%s; penalty %s (%s)\n",
                 lab, ncol(x@X), if (ncol(x@X) == 1L) "" else "s",
                 pen@penalty_name, paste(pen@params, collapse = ", ")))
+    # the scale a hyperparameter is read against belongs on the page
+    s <- x@blueprint$standardize
+    if (!is.null(s)) {
+      cat("  standardized by: ",
+          paste(sprintf("%s = %.4g", names(s), s), collapse = ", "),
+          "\n", sep = "")
+    }
   } else {
-    cat(sprintf("<PenalizedTerm>%s (specification; call term_build() with data)\n",
-                lab))
+    cat(sprintf("<PenalizedTerm>%s%s (specification; call term_build() with data)\n",
+                lab, if (isTRUE(x@standardize)) ", standardized" else ""))
   }
   invisible(x)
 }

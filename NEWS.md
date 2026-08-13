@@ -1,3 +1,81 @@
+# modelterms7 0.26.0
+
+* A sparse matrix handed to `ridge()`, `lasso()`, `enet()`, `scad()` or
+  `mcp()` is no longer densified.
+
+  `.penalized_spec()` called `as.matrix()` on any non-formula input, so a
+  caller's `dgCMatrix` was densified at SPECIFICATION time, before anything
+  had a chance to keep it. Measured on a 4000 x 60 indicator design at
+  density 0.017: **0.050 MB became 1.920 MB**, a factor of 1/density, and
+  the block stayed dense from there on. A penalized block is exactly where a
+  sparse design turns up -- indicators over many levels are what a lasso is
+  for -- so this was the one input the constructor had to preserve and the
+  one it destroyed. `term_predict()` did the same at new data.
+
+  Both keep the Matrix now, and a logical Matrix is carried to double rather
+  than rejected, an indicator being the commonest sparse input. The
+  infrastructure was already there and unused: `.is_block()` has accepted
+  sparse since 0.24.0 and `check_term()` already reported it.
+
+  End to end through `statmod()`, against the same design densified by hand,
+  with the coefficients identical:
+
+  | | sparse | dense | |
+  |---|---|---|---|
+  | ridge, n=20000 p=200 | 0.75 s | 4.73 s | 6.3x |
+  | ridge, n=20000 p=1000 | 2.37 s | 90.86 s | **38.3x** |
+  | lasso, n=20000 p=200 | 1.04 s | 3.39 s | 3.3x |
+  | lasso, n=20000 p=1000 | 3.61 s | 59.22 s | **16.4x** |
+
+  The coefficients agree to 2.4e-16 for the smooth branch and EXACTLY for
+  the kinked one.
+
+  ⚠️ The gap between the two branches is not noise and is worth reading:
+  the kinked branch reaches a compiled coordinate descent that takes an
+  `arma::mat`, so `statmodels7:::coord_fit()` still materializes the
+  penalized block dense at that one boundary. That is the remaining
+  densification in the chain, it is the whole of the difference between 38x
+  and 16x, and closing it means a sparse path in the kernel -- which is also
+  the natural algorithm, a coordinate update on a sparse column touching
+  only its nonzeros.
+
+# modelterms7 0.25.0
+
+* `ridge()`, `lasso()`, `enet()`, `scad()` and `mcp()` take `standardize`.
+
+  A hyperparameter is comparable across coordinates only where the
+  coordinates share a scale, and without this a lasso penalizes a column
+  measured in metres more than the same column measured in kilometres.
+  `standardize = TRUE` divides each coefficient by the standard deviation of
+  its own column through the penalty's DIAGONAL MAP, so the design is never
+  rescaled: a sparse block stays sparse, `lambda` stays one number, and the
+  coefficients come back on the scale the data arrived in with nothing to map
+  back. Centring, which is what would destroy sparsity, is not needed, the fit
+  being invariant to a translation of a penalized column where an intercept is
+  free.
+
+  The spread is computed from the BUILT block and frozen in the blueprint, so
+  the same term standardizes identically in every equation of a distributional
+  model and does not move with the working weights of a fit. A constant column
+  takes `s_j = 1`. `print()` shows the values, a number that changes the
+  meaning of `lambda` having to be legible.
+
+  ⚠️ For SCAD and MCP this is not a rescaling of `lambda`, and the naive
+  substitution is wrong by a wide margin. Measured against the published
+  piecewise forms transcribed independently, at spreads from 0.5 to 3:
+  `rho(s b)` differs from `rho(b; lambda*s, a)` by **11.2** for SCAD and from
+  `rho(b; lambda*s, gamma/s)` by **4.39** for MCP. The exact relations are
+  `s^2 rho(b; lambda/s, a)` and `s^2 rho(b; lambda/s, gamma)` -- an overall
+  factor as well as both hyperparameters -- and SCAD is not a member of its
+  own family at any parameters without that factor. The diagonal map expresses
+  `rho(s b)` exactly (0), which is why no new arithmetic was needed; a test
+  pins all of it, including the two wrong answers.
+
+* `random()` does not standardize and takes no such argument, its columns
+  being grouping indicators and its hyperparameter a variance component;
+  `gas(deviations =)` likewise, a deviation being a parameter of the recursion
+  rather than a coefficient on a column. Both reject the argument by name.
+
 # modelterms7 0.24.0
 
 * A grouping indicator is built SPARSE. `.random_block()` assembled a dense

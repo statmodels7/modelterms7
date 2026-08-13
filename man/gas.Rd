@@ -35,7 +35,10 @@ one. Requires \code{by}.}
 number, or a function of that count returning one. The count is a
 property of the data, so a penalty given as an object is checked
 against it at \code{\link{term_build}} and a function is the spelling
-for a specification written before the groups are known.}
+for a specification written before the groups are known. There is no
+\code{standardize} argument here and passing one is an error: a
+deviation is a parameter of the recursion rather than a coefficient on
+a column, so there is no spread to divide it by.}
 
 \item{label}{A single non-empty string naming the term.}
 }

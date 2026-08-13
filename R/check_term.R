@@ -12,6 +12,10 @@ NULL
     (isS4(x) && length(dim(x)) == 2L)
 }
 
+# Coerce to a block WITHOUT densifying: a Matrix is already one and is left
+# alone, and only something that is neither is sent through as.matrix().
+.as_block <- function(x) if (.is_block(x)) x else as.matrix(x)
+
 # Rows whose removal is most likely to expose a blueprint defect: when the
 # data carry a factor, dropping every row of one level makes a rebuilt (as
 # opposed to reapplied) encoding lose a column, so the subset check below
