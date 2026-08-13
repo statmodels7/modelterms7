@@ -141,63 +141,125 @@ test_that("the interpreter routes it and print says how it differentiates", {
   expect_output(print(nl(~ a * x)), "specification")
 })
 
-test_that("a penalty names the parameter it reaches, one per parameter", {
-  spec <- nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3),
-             penalty = "lasso", penalize = "a")
-  built <- term_build(spec, dd)
+test_that("a penalty is asked for inside the subformula", {
+  # the sub-term that carries it declares it, with its own hyperparameter;
+  # an unpenalized term reports none
+  expect_length(term_penalties(term_build(nl(~ a * exp(-r * x)), dd)), 0L)
+  built <- term_build(nl(~ a * exp(-r * x), a ~ lasso(~g),
+                         start = list(r = 1.3)), dd)
   ent <- term_penalties(built)
   expect_length(ent, 1L)
-  expect_identical(ent[[1L]]$name, "a")
-  expect_identical(term_coef_names(built)[ent[[1L]]$index], "nl.a")
-  expect_null(ent[[1L]]$penalty@map)
+  expect_identical(ent[[1L]]$name, "a::lasso(~g)")
   expect_true(penalties7::has_prox(ent[[1L]]$penalty))
   expect_false(term_smooth(built))
   # the whole of the block is not penalized: the rate is left free
   expect_null(term_penalty(built))
 
-  # by default every parameter carries one, and they do not share it
-  both <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3),
-                        penalty = "ridge"), dd)
-  eb <- term_penalties(both)
-  expect_length(eb, 2L)
-  expect_identical(vapply(eb, function(e) e$name, character(1)), c("a", "r"))
-  expect_true(term_smooth(both))
-
-  expect_length(term_penalties(term_build(nl(~ a * exp(-r * x)), dd)), 0L)
-
-  # a penalties7 penalty and a function of the coefficient count are the
-  # general spellings the two names are a shorthand for
-  obj <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3),
-                       penalty = penalties7::elasticnet_penalty(n_coef = 1),
-                       penalize = "a"), dd)
-  expect_identical(term_penalties(obj)[[1L]]$penalty@n_coef, 1L)
-  fac <- term_build(nl(~ a * exp(-r * x), subformulas = list(a = ~g),
-                       start = list(r = 1.3), penalize = "a",
-                       penalty = function(k)
-                         penalties7::ridge_penalty(n_coef = k)), dd)
-  expect_identical(term_penalties(fac)[[1L]]$penalty@n_coef, 2L)
-  expect_error(term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3),
-                             penalty = penalties7::ridge_penalty(n_coef = 4),
-                             penalize = "a"), dd),
-               "covers 4 coefficients and the term has 1")
+  # the removed arguments are reported by name
+  expect_error(nl(~ a * x, penalty = penalties7::lasso_penalty),
+               "unused argument 'penalty'")
+  expect_error(nl(~ a * x, penalize = "a"), "unused argument 'penalize'")
 })
 
-test_that("a penalized parameter with a submodel covers its whole vector", {
-  spec <- nl(~ a * exp(-r * x), subformulas = list(a = ~g),
-             start = list(r = 1.3), penalty = "lasso", penalize = "a")
+test_that("a two-sided formula in ... is the subformula it names", {
+  a1 <- term_build(nl(~ a * exp(-r * x), a ~ g, start = list(r = 1.3)), dd)
+  a2 <- term_build(nl(~ a * exp(-r * x), subformulas = list(a = ~g),
+                      start = list(r = 1.3)), dd)
+  expect_identical(term_coef_names(a1), term_coef_names(a2))
+  expect_equal(term_matrix(a1), term_matrix(a2))
+
+  # a parameter carries one subformula, whichever spelling supplies it
+  expect_error(nl(~ a * exp(-r * x), a ~ g, subformulas = list(a = ~g)),
+               "two subformulas")
+  expect_error(nl(~ a * exp(-r * x), a ~ g, a ~ x), "two subformulas")
+  # what lands in ... must be a two-sided formula naming a parameter
+  expect_error(nl(~ a * exp(-r * x), ~g), "two-sided")
+  expect_error(nl(~ a * exp(-r * x), "g"), "two-sided")
+  expect_error(nl(~ a * exp(-r * x), (a + 1) ~ g), "two-sided")
+})
+
+test_that("a subformula of ~1 reproduces the plain parameter", {
+  plain <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3)), dd)
+  one <- term_build(nl(~ a * exp(-r * x), a ~ 1,
+                       start = list(a = 2, r = 1.3)), dd)
+  expect_identical(term_coef_names(one), c("nl.a.(Intercept)", "nl.r"))
+  expect_equal(unname(as.matrix(term_matrix(one))),
+               unname(as.matrix(term_matrix(plain))), tolerance = 1e-12)
+  expect_equal(term_value(one), term_value(plain), tolerance = 1e-12)
+})
+
+test_that("a subformula takes a term, whose penalty the term reports", {
+  spec <- nl(~ a * exp(-r * x), a ~ ridge(~g), start = list(a = 2, r = 1.3))
   built <- term_build(spec, dd)
+
+  # the interpreter's convention: the parametric block first (here the
+  # intercept, which is the population value), then the penalized departures
   ent <- term_penalties(built)
   expect_length(ent, 1L)
+  expect_identical(ent[[1L]]$name, "a::ridge(~g)")
+  rsub <- term_build(ridge(~g), dd)
   expect_identical(term_coef_names(built)[ent[[1L]]$index],
-                   c("nl.a.(Intercept)", "nl.a.gb"))
-  expect_identical(ent[[1L]]$penalty@n_coef, 2L)
+                   paste("nl.a", term_coef_names(rsub), sep = "."))
+  expect_true(term_smooth(built))
+
+  # the jacobian carries the chain through the whole sub-design
+  Z <- cbind(1, as.matrix(term_matrix(rsub)))
+  k <- ncol(Z)
+  f <- function(v) as.numeric(Z %*% v[seq_len(k)]) * exp(-v[k + 1L] * dd$x)
+  b <- c(2, 0.3, -0.1, 1.3)[seq_len(k + 1L)]
+  moved <- term_refresh(built, b)
+  expect_equal(term_value(moved), f(b), tolerance = 1e-10)
+  expect_equal(unname(as.matrix(term_matrix(moved))),
+               numDeriv::jacobian(f, b), tolerance = 1e-6)
+
+  res <- check_term(spec, dd, verbose = FALSE)
+  expect_true(all(res$status == "OK"),
+              info = paste(res$check[res$status != "OK"], collapse = ", "))
 })
 
-test_that("a penalty on a parameter that is not there is refused", {
-  expect_error(nl(~ a * x, penalize = 1), "character vector")
-  expect_error(term_build(nl(~ a * x, penalty = "lasso", penalize = "b"), dd),
-               "not a parameter")
-  expect_error(nl(~ a * x, penalty = "nope"), "should be one of")
+test_that("a smooth in a subformula predicts through its own blueprint", {
+  d2 <- dd
+  d2$z <- runif(n)
+  spec <- nl(~ a * exp(-r * x), a ~ s(z, k = 6), start = list(a = 2, r = 1.3))
+  built <- term_build(spec, d2)
+  ent <- term_penalties(built)
+  expect_length(ent, 1L)
+  expect_identical(ent[[1L]]$name, "a::s(z, k = 6)")
+  expect_true(term_smooth(built))
+
+  # reapplied on a subset of the rows, the contribution is the fitted one
+  cf <- c(1.5, stats::rnorm(length(term_coef_names(built)) - 2L, sd = 0.1), 1.1)
+  keep <- seq_len(20)
+  expect_equal(term_value(built, coef = cf,
+                          newdata = d2[keep, , drop = FALSE]),
+               term_value(built, coef = cf)[keep], tolerance = 1e-10)
+})
+
+test_that("a sparse sub-design stays sparse through the jacobian", {
+  d3 <- data.frame(x = rep(seq(0, 3, length.out = 12), 15),
+                   g3 = factor(rep(sprintf("g%02d", 1:15), each = 12)))
+  spec <- nl(~ a * exp(-r * x), a ~ random(~1 | g3),
+             start = list(a = 2, r = 1.3))
+  built <- term_build(spec, d3)
+  expect_s4_class(term_matrix(built), "Matrix")
+  # and the values agree with the dense arithmetic
+  ent <- term_penalties(built)
+  expect_length(ent, 1L)
+  rsub <- term_build(random(~1 | g3), d3)
+  Z <- cbind(1, as.matrix(term_matrix(rsub)))
+  k <- ncol(Z)
+  b <- c(2, stats::rnorm(k - 1L, sd = 0.1), 1.3)
+  f <- function(v) as.numeric(Z %*% v[seq_len(k)]) * exp(-v[k + 1L] * d3$x)
+  moved <- term_refresh(built, b)
+  expect_equal(unname(as.matrix(term_matrix(moved))),
+               numDeriv::jacobian(f, b), tolerance = 1e-6)
+})
+
+test_that("a submodel must be a fixed design", {
+  expect_error(term_build(nl(~ a * exp(-r * x), a ~ gas(p = 1, q = 1)), dd),
+               "structural")
+  expect_error(term_build(nl(~ a * exp(-r * x), a ~ seg(x)), dd),
+               "moves with its coefficients")
 })
 
 test_that("term_value answers on other rows, where the block cannot", {

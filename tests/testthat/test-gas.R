@@ -18,8 +18,47 @@ test_that("the parameters are named for the chart they live on", {
                    c("omega", "alpha1", "alpha2", "pacf1", "pacf2", "pacf3"))
   lk <- term_links(gas(p = 1, q = 2))
   expect_identical(vapply(lk, function(l) l@link_name, character(1)),
-                   c(omega = "identity", alpha1 = "identity",
+                   c(omega = "identity", alpha1 = "log",
                      pacf1 = "rhobit", pacf2 = "rhobit"))
+  # every loading is positive by default, not only the first
+  lk2 <- term_links(gas(p = 3, q = 0))
+  expect_identical(vapply(lk2, function(l) l@link_name, character(1)),
+                   c(omega = "identity", alpha1 = "log", alpha2 = "log",
+                     alpha3 = "log"))
+})
+
+test_that("the links are configurable and validated", {
+  # an override replaces the default for the parameter it names alone
+  term <- gas(p = 2, q = 1,
+              links = list(alpha2 = linkfunctions7::identity_link()))
+  lk <- term_links(term)
+  expect_identical(vapply(lk, function(l) l@link_name, character(1)),
+                   c(omega = "identity", alpha1 = "log",
+                     alpha2 = "identity", pacf1 = "rhobit"))
+
+  # a name that is not a parameter, a value that is not a link, and an
+  # unnamed list are each rejected where they are written
+  expect_error(gas(links = list(gamma = linkfunctions7::log_link())),
+               "the parameters are")
+  expect_error(gas(links = list(alpha1 = "log")), "not a linkfunctions7 link")
+  expect_error(gas(links = list(linkfunctions7::log_link())), "named list")
+})
+
+test_that("the start is the term's own, and the loadings start weak", {
+  z <- term_start(gas(p = 1, q = 1))
+  expect_identical(names(z), c("omega", "alpha1", "pacf1"))
+  expect_identical(unname(z[c("omega", "pacf1")]), c(0, 0))
+  # alpha starts at 0.1 on the parameter scale, through whatever chart it
+  # rides: log(0.1) on the default, 0.1 under an identity override
+  expect_equal(unname(z[["alpha1"]]), log(0.1))
+  z2 <- term_start(gas(p = 1, q = 1,
+                       links = list(alpha1 = linkfunctions7::identity_link())))
+  expect_equal(unname(z2[["alpha1"]]), 0.1)
+  # the departures of a development start at zero, being departures
+  term <- term_build(gas(p = 1, q = 1, omega ~ random(~1 | g), by = g), dd)
+  z3 <- term_start(term)
+  expect_identical(unname(z3[!grepl("^alpha", names(z3))]),
+                   numeric(sum(!grepl("^alpha", names(z3)))))
 })
 
 test_that("the Levinson-Durbin map is stationary and its jacobian is right", {
@@ -182,129 +221,57 @@ test_that("the compiled filter and the R twin agree exactly", {
   }
 })
 
-# --- a population value and a deviation per group -------------------------
+# --- a population value and a departure per group -------------------------
 
-test_that("deviations are parameters of the term, named and charted", {
-  spec <- gas(p = 1, q = 1, by = g, time = t, deviations = "omega")
-  # a specification reports the population parameters alone: how many
-  # groups there are is a property of the data
-  expect_identical(term_params(spec), c("omega", "alpha1", "pacf1"))
-
-  built <- term_build(spec, dd)
-  expect_identical(term_params(built),
-                   c("omega", "alpha1", "pacf1", "omega.dev.a", "omega.dev.b"))
-  expect_identical(term_npar(built), 5L)
-  # a deviation acts on the unconstrained scale and is unconstrained itself
-  lk <- term_links(built)
-  expect_identical(vapply(lk, function(l) l@link_name, character(1)),
-                   c(omega = "identity", alpha1 = "identity", pacf1 = "rhobit",
-                     omega.dev.a = "identity", omega.dev.b = "identity"))
-
-  all_dev <- term_build(gas(p = 1, q = 2, by = g, deviations = TRUE), dd)
-  expect_identical(term_npar(all_dev), 4L + 4L * 2L)
-})
-
-test_that("deviations at zero reproduce the shared-parameter filter", {
+test_that("departures at zero reproduce the shared-parameter filter", {
   shared <- term_build(gas(p = 1, q = 1, by = g, time = t), dd)
-  dev <- term_build(gas(p = 1, q = 1, by = g, time = t, deviations = TRUE),
-                    dd)
+  dev <- term_build(gas(p = 1, q = 1, omega ~ random(~1 | g),
+                        alpha1 ~ random(~1 | g), pacf1 ~ random(~1 | g),
+                        by = g, time = t), dd)
   psi <- list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.5)
   a <- term_filter(shared, eta = rep(0, n), y = dd$y,
                    score = gauss_score(dd$y), curvature = gauss_curv(dd$y),
                    psi = psi)
+  nm <- term_params(dev)
+  v <- stats::setNames(rep(list(0), length(nm)), nm)
+  v[["omega.(Intercept)"]] <- 0.1
+  v[["alpha1.(Intercept)"]] <- log(0.2)
+  lkr <- linkfunctions7::rhobit_link()
+  v[["pacf1.(Intercept)"]] <- linkfunctions7::linkfun(lkr, 0.5)
   b <- term_filter(dev, eta = rep(0, n), y = dd$y,
                    score = gauss_score(dd$y), curvature = gauss_curv(dd$y),
-                   psi = c(psi, stats::setNames(as.list(rep(0, 6)),
-                                                term_params(dev)[4:9])))
-  # At a zero deviation the two chain factors are reciprocal by the inverse
-  # function theorem, so the deviations change nothing. They are reciprocal in
-  # the MATHEMATICS: computing h'(g(psi)) * g'(psi) gives 1 within a rounding,
-  # not 1 exactly, and multiplying by that is not the same as not multiplying.
-  # Whether the last bit survives depends on the platform's libm -- the
-  # identity held on Windows and macOS and failed on all three Linux jobs by
-  # 3e-16 relative -- so what is asserted is a tolerance tight enough that
-  # scaling the wrong way round, which is off by the factor itself, fails it.
+                   psi = v)
+  # the developments read each chart at the intercept alone, so at zero
+  # departures the two runs are the same recursion; the comparison carries
+  # a tolerance because the chart arithmetic differs by a rounding across
+  # platforms' libm, the lesson the deviations machinery once recorded
   expect_equal(b$eta, a$eta, tolerance = 1e-13)
-  expect_equal(unname(b$jacobian[, 1:3]), unname(a$jacobian),
-               tolerance = 1e-13)
 })
 
-test_that("a shift shared by the population and the deviations does nothing", {
+test_that("a shift shared by the population and the departures does nothing", {
   # m + 1 numbers describe m group values, so the filter is invariant under
-  # adding a constant on the unconstrained scale to the population value and
-  # subtracting it from every deviation. The invariance is exact and is why
-  # the deviations need their penalty to be identified.
-  term <- term_build(gas(p = 1, q = 1, by = g, time = t,
-                         deviations = c("omega", "pacf1")), dd)
+  # adding a constant to the development's intercept and subtracting it
+  # from every group's departure, on the unconstrained scale. The
+  # invariance is exact and is why the departures need their penalty to be
+  # identified.
+  term <- term_build(gas(p = 1, q = 1, omega ~ random(~1 | g),
+                         pacf1 ~ random(~1 | g), by = g, time = t), dd)
   nm <- term_params(term)
-  psi <- stats::setNames(c(0.15, 0.3, 0.4, 0.2, -0.5, 0.1, 0.6), nm)
+  set.seed(21)
+  psi <- stats::setNames(stats::runif(length(nm), -0.4, 0.4), nm)
   run <- function(v) {
     term_filter(term, eta = rep(0, n), y = dd$y,
                 score = gauss_score(dd$y), curvature = gauss_curv(dd$y),
                 psi = as.list(v))$eta
   }
   shifted <- psi
-  shifted[["omega"]] <- psi[["omega"]] + 0.25
-  shifted[grepl("^omega\\.dev", nm)] <- psi[grepl("^omega\\.dev", nm)] - 0.25
-  # the persistence rides rhobit, so the shift is applied on that scale
-  lk <- linkfunctions7::rhobit_link()
-  shifted[["pacf1"]] <- linkfunctions7::linkinv(
-    lk, linkfunctions7::linkfun(lk, psi[["pacf1"]]) + 0.4)
-  shifted[grepl("^pacf1\\.dev", nm)] <- psi[grepl("^pacf1\\.dev", nm)] - 0.4
+  shifted[["omega.(Intercept)"]] <- psi[["omega.(Intercept)"]] + 0.25
+  sel <- grepl("^omega\\.random", nm)
+  shifted[sel] <- psi[sel] - 0.25
+  shifted[["pacf1.(Intercept)"]] <- psi[["pacf1.(Intercept)"]] + 0.4
+  sel <- grepl("^pacf1\\.random", nm)
+  shifted[sel] <- psi[sel] - 0.4
   expect_equal(run(shifted), run(psi), tolerance = 1e-12)
-})
-
-test_that("the jacobian is exact in the population values and the deviations", {
-  for (cfg in list(list(1L, 1L, "omega"), list(1L, 2L, TRUE),
-                   list(2L, 1L, c("alpha1", "alpha2")))) {
-    term <- term_build(gas(p = cfg[[1L]], q = cfg[[2L]], by = g, time = t,
-                           deviations = cfg[[3L]]), dd)
-    nm <- term_params(term)
-    nb <- 1L + cfg[[1L]] + cfg[[2L]]
-    set.seed(21)
-    psi0 <- stats::setNames(
-      c(0.15, rep(0.25, cfg[[1L]]), c(0.5, -0.2)[seq_len(cfg[[2L]])],
-        stats::runif(length(nm) - nb, -0.4, 0.4)), nm)
-
-    run <- function(v) {
-      term_filter(term, eta = rep(0, n), y = dd$y,
-                  score = gauss_score(dd$y), curvature = gauss_curv(dd$y),
-                  psi = as.list(stats::setNames(v, nm)))$eta
-    }
-    got <- term_filter(term, eta = rep(0, n), y = dd$y,
-                       score = gauss_score(dd$y),
-                       curvature = gauss_curv(dd$y),
-                       psi = as.list(psi0))$jacobian
-    num <- numDeriv::jacobian(run, psi0)
-    expect_equal(unname(got), num, tolerance = 1e-6,
-                 info = sprintf("p = %d, q = %d", cfg[[1L]], cfg[[2L]]))
-  }
-})
-
-test_that("the penalty reaches the deviations and the population is free", {
-  built <- term_build(gas(p = 1, q = 1, by = g, deviations = "omega",
-                          penalty = "lasso"), dd)
-  ent <- term_penalties(built)
-  expect_length(ent, 1L)
-  expect_identical(ent[[1L]]$name, "omega")
-  expect_identical(term_params(built)[ent[[1L]]$index],
-                   c("omega.dev.a", "omega.dev.b"))
-  # named as coordinates, so the separable branch applies unchanged
-  expect_null(ent[[1L]]$penalty@map)
-  expect_true(penalties7::has_prox(ent[[1L]]$penalty))
-  expect_false(term_smooth(built))
-
-  # one penalty per parameter carrying deviations: two parameters of a
-  # filter are on scales of their own
-  both <- term_build(gas(p = 1, q = 1, by = g, deviations = c("omega", "alpha1"),
-                         penalty = "ridge"), dd)
-  eb <- term_penalties(both)
-  expect_length(eb, 2L)
-  expect_identical(vapply(eb, function(e) e$name, character(1)),
-                   c("omega", "alpha1"))
-  expect_true(term_smooth(both))
-
-  expect_length(term_penalties(term_build(gas(p = 1, q = 1, by = g), dd)), 0L)
 })
 
 test_that("the reported quantities are the literature's, with a jacobian", {
@@ -341,65 +308,25 @@ test_that("the reported quantities are the literature's, with a jacobian", {
   expect_false(isTRUE(all.equal(term_readable(gas(1, 2), z2)$value[[3L]],
                                 rho[[1L]])))
 
-  # a term whose coordinates ARE its quantities reports them unchanged
+  # the level's coordinate IS its quantity; a loading is reported through
+  # its chart, exp of the coordinate on the default log link
   base <- term_readable(gas(p = 1, q = 0), c(omega = 0.5, alpha1 = 0.2))
   expect_identical(base$name, c("omega", "alpha1"))
-  expect_equal(base$value, c(0.5, 0.2))
+  expect_equal(base$value, c(0.5, exp(0.2)))
+  # and under an identity override it is the coordinate again
+  ident <- term_readable(
+    gas(p = 1, q = 0, links = list(alpha1 = linkfunctions7::identity_link())),
+    c(omega = 0.5, alpha1 = 0.2))
+  expect_equal(ident$value, c(0.5, 0.2))
 })
 
-test_that("a penalty is an object, a function of the count, or a name", {
-  # The two shorthands are a convenience over the general case, not the whole
-  # of it: a term takes any penalties7 penalty, so an elastic net or a
-  # heavy-tailed prior reaches one without a name having to be invented here.
-  net <- penalties7::elasticnet_penalty(n_coef = 2)
-  obj <- term_build(gas(p = 1, q = 1, by = g, deviations = "omega",
-                        penalty = net), dd)
-  ent <- term_penalties(obj)
-  expect_length(ent, 1L)
-  expect_identical(ent[[1L]]$penalty@penalty_name, net@penalty_name)
-  expect_false(term_smooth(obj))
-
-  # a function of the coefficient count is the spelling for a penalty whose
-  # SIZE the data decide: a panel's deviations exist once the groups are
-  # counted, so a specification cannot name a width
-  fac <- term_build(gas(p = 1, q = 1, by = g, deviations = c("omega", "alpha1"),
-                        penalty = function(k)
-                          penalties7::ridge_penalty(n_coef = k)), dd)
-  ef <- term_penalties(fac)
-  expect_length(ef, 2L)
-  expect_true(all(vapply(ef, function(e) e$penalty@n_coef == 2, logical(1))))
-
-  # the two named branches keep answering as they did
-  expect_identical(
-    term_penalties(term_build(gas(p = 1, q = 1, by = g,
-                                  deviations = "omega",
-                                  penalty = "ridge"), dd))[[1L]]$penalty@penalty_name,
-    penalties7::ridge_penalty(n_coef = 2)@penalty_name)
-
-  # a penalty of the wrong width is rejected where the count is finally
-  # known, rather than evaluated at a coefficient vector of another length
-  expect_error(term_build(gas(p = 1, q = 1, by = g, deviations = "omega",
-                              penalty = penalties7::ridge_penalty(n_coef = 5)),
-                          dd),
-               "covers 5 coefficients and the term has 2")
-  expect_error(gas(by = g, deviations = TRUE, penalty = "elastic"),
-               "should be one of")
-  expect_error(gas(by = g, deviations = TRUE, penalty = 3),
-               "must be one of")
-  expect_error(term_build(gas(p = 1, q = 1, by = g, deviations = "omega",
-                              penalty = function(k) k), dd),
-               "must give a penalties7 penalty")
-})
-
-test_that("the constructor refuses a deviation it cannot place", {
-  expect_error(gas(deviations = TRUE), "needs 'by'")
-  expect_error(gas(by = g, deviations = "sigma"), "the parameters are")
-  expect_error(gas(by = g, penalty = "lasso"), "needs 'deviations'")
-  expect_error(gas(by = g, deviations = 1), "FALSE, TRUE")
-  # a specification has no deviations to index yet, and reports none, as an
-  # unbuilt ridge() reports no penalty rather than raising
-  expect_length(term_penalties(gas(by = g, deviations = TRUE,
-                                   penalty = "lasso")), 0L)
+test_that("the removed shorthands are reported by name", {
+  # deviations= and penalty= were retired when the subformulas subsumed
+  # them; a call carrying either lands in `...` and is named rather than
+  # swallowed by the formula check
+  expect_error(gas(by = g, deviations = TRUE), "unused argument 'deviations'")
+  expect_error(gas(by = g, penalty = penalties7::lasso_penalty),
+               "unused argument 'penalty'")
 })
 
 # --- the reverse recursion ------------------------------------------------
@@ -569,14 +496,12 @@ test_that("the curvature refuses what it does not carry", {
                "one value per observation")
 })
 
-test_that("the curvature carries deviations", {
+test_that("the curvature of a per-group development has the affine structure", {
   X <- cbind(1, as.numeric(scale(seq_len(n))))
   mb <- ncol(X)
   sc <- gauss_score(dd$y)
   cu <- gauss_curv(dd$y)
 
-  # every quantity of one term: the curvature, the jacobian, and the pieces a
-  # comparison with the shared-parameter term needs
   at <- function(term, u) {
     nm <- term_params(term)
     lk <- term_links(term)
@@ -584,60 +509,42 @@ test_that("the curvature carries deviations", {
     m <- mb + np
     psi_of <- function(z) as.list(stats::setNames(vapply(seq_along(nm),
       function(j) linkfunctions7::linkinv(lk[[nm[j]]], z[j]), numeric(1)), nm))
-    e_of <- function(v) term_filter(term, as.numeric(X %*% v[seq_len(mb)]),
-                                    dd$y, sc, cu,
-                                    psi_of(v[mb + seq_len(np)]))$eta
-    got <- term_curvature(term, as.numeric(X %*% u[seq_len(mb)]), dd$y, sc, cu,
-                          psi_of(u[mb + seq_len(np)]), gw,
-                          cbind(X, matrix(0, n, np)),
-                          function(e, i, D) list(cross = numeric(m),
-                                                 M = matrix(0, m, m)))
-    list(nm = nm, np = np, got = got, e_of = e_of,
-         gsum = function(v) sum(gw * e_of(v)))
+    term_curvature(term, as.numeric(X %*% u[seq_len(mb)]), dd$y, sc, cu,
+                   psi_of(u[mb + seq_len(np)]), gw,
+                   cbind(X, matrix(0, n, np)),
+                   function(e, i, D, act) list(cross = numeric(length(D)),
+                                               M = matrix(0, length(D),
+                                                          length(D))))
   }
 
   set.seed(11)
   gw <- stats::rnorm(n)
 
-  for (spec in list(list(d = TRUE, lab = "every parameter"),
-                    list(d = "omega", lab = "omega alone"),
-                    list(d = c("omega", "pacf1"), lab = "omega and pacf1"))) {
-    term <- term_build(gas(p = 1, q = 1, by = g, deviations = spec$d), dd)
-    set.seed(3)
-    u <- c(0.3, -0.2, stats::runif(length(term_params(term)), -0.3, 0.4))
-    z <- at(term, u)
-    # the numerical reference is the weaker side here -- two Richardson
-    # settings disagree with each other by more than either disagrees with
-    # this -- so the tolerance is the reference's own accuracy
-    expect_equal(z$got$jacobian, numDeriv::jacobian(z$e_of, u),
-                 tolerance = 1e-6, info = spec$lab)
-    expect_equal(z$got$curvature, numDeriv::hessian(z$gsum, u),
-                 tolerance = 1e-6, info = spec$lab)
-    expect_identical(z$got$curvature, t(z$got$curvature))
-  }
-
-  # At a ZERO deviation every group runs on the population values, so the
-  # population block must be the shared-parameter term's own curvature. And
-  # whatever the deviations are, a base coordinate reaches its population
-  # column and its group's deviation column through the SAME lift, so the
-  # deviation columns of one parameter sum to its population column: that is
-  # the affine map, asserted rather than assumed.
+  # At ZERO departures every group runs on the intercepts alone, so the
+  # curvature over the intercept coordinates must be the shared-parameter
+  # term's own. And whatever the departures are, a random intercept's
+  # indicator columns sum to the constant, so the departure columns of one
+  # parameter sum to its intercept column: the affine lift, asserted
+  # rather than assumed.
   plain <- term_build(gas(p = 1, q = 1, by = g), dd)
-  term <- term_build(gas(p = 1, q = 1, by = g, deviations = TRUE), dd)
+  term <- term_build(gas(p = 1, q = 1, omega ~ random(~1 | g), by = g), dd)
+  nm <- term_params(term)
   ng <- length(term@blueprint$order)
-  base <- term_params(plain)
   u0 <- c(0.3, -0.2, 0.15, 0.25, 0.4)
-  a <- at(plain, u0)$got$curvature
-  b <- at(term, c(u0, numeric(length(base) * ng)))$got$curvature
-  keep <- c(seq_len(mb), mb + seq_along(base))
-  expect_equal(b[keep, keep], a, tolerance = 1e-12)
+  a <- at(plain, u0)$curvature
+  # the developed layout: omega.(Intercept), the departures, alpha1, pacf1
+  i_int <- mb + match("omega.(Intercept)", nm)
+  i_dev <- mb + which(startsWith(nm, "omega.random"))
+  i_al <- mb + match("alpha1", nm)
+  i_pa <- mb + match("pacf1", nm)
+  u_dev <- c(u0[1:2], 0.15, numeric(ng), 0.25, 0.4)
+  b <- at(term, u_dev)$curvature
+  keep <- c(seq_len(mb), i_int, i_al, i_pa)
+  expect_equal(unname(b[keep, keep]), unname(a), tolerance = 1e-12)
 
   set.seed(7)
-  b2 <- at(term, c(u0, stats::runif(length(base) * ng, -0.2, 0.2)))$got$curvature
-  for (j in seq_along(base)) {
-    dcol <- mb + length(base) + (j - 1L) * ng + seq_len(ng)
-    expect_equal(rowSums(b2[keep, dcol, drop = FALSE]),
-                 b2[keep, mb + j], tolerance = 1e-12,
-                 info = base[[j]])
-  }
+  b2 <- at(term,
+           c(u0[1:2], 0.15, stats::runif(ng, -0.2, 0.2), 0.25, 0.4))$curvature
+  expect_equal(rowSums(b2[keep, i_dev, drop = FALSE]),
+               b2[keep, i_int], tolerance = 1e-12)
 })

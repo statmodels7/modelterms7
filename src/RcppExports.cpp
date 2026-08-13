@@ -34,6 +34,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// gas_filter_sub_cpp
+List gas_filter_sub_cpp(NumericVector eta, List groups, int p, int q, NumericVector om, NumericMatrix A, NumericMatrix B, int np, Function score, Function curvature);
+RcppExport SEXP _modelterms7_gas_filter_sub_cpp(SEXP etaSEXP, SEXP groupsSEXP, SEXP pSEXP, SEXP qSEXP, SEXP omSEXP, SEXP ASEXP, SEXP BSEXP, SEXP npSEXP, SEXP scoreSEXP, SEXP curvatureSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type eta(etaSEXP);
+    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type q(qSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type om(omSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type A(ASEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type B(BSEXP);
+    Rcpp::traits::input_parameter< int >::type np(npSEXP);
+    Rcpp::traits::input_parameter< Function >::type score(scoreSEXP);
+    Rcpp::traits::input_parameter< Function >::type curvature(curvatureSEXP);
+    rcpp_result_gen = Rcpp::wrap(gas_filter_sub_cpp(eta, groups, p, q, om, A, B, np, score, curvature));
+    return rcpp_result_gen;
+END_RCPP
+}
 // regime_forward_cpp
 List regime_forward_cpp(const List& order, const NumericMatrix& LF, const NumericMatrix& SC, const NumericMatrix& dmu, const NumericMatrix& P, const List& dP, const NumericVector& delta, const NumericMatrix& ddelta);
 RcppExport SEXP _modelterms7_regime_forward_cpp(SEXP orderSEXP, SEXP LFSEXP, SEXP SCSEXP, SEXP dmuSEXP, SEXP PSEXP, SEXP dPSEXP, SEXP deltaSEXP, SEXP ddeltaSEXP) {
@@ -75,6 +95,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_modelterms7_gas_filter_cpp", (DL_FUNC) &_modelterms7_gas_filter_cpp, 14},
+    {"_modelterms7_gas_filter_sub_cpp", (DL_FUNC) &_modelterms7_gas_filter_sub_cpp, 10},
     {"_modelterms7_regime_forward_cpp", (DL_FUNC) &_modelterms7_regime_forward_cpp, 8},
     {"_modelterms7_seg_block_cpp", (DL_FUNC) &_modelterms7_seg_block_cpp, 10},
     {NULL, NULL, 0}

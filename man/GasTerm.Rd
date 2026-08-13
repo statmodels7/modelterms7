@@ -10,8 +10,8 @@ GasTerm(
   q = integer(0),
   by = NULL,
   time = NULL,
-  deviations = NULL,
-  penalty_kind = NULL,
+  links = list(),
+  submodels = list(),
   blueprint = list()
 )
 }
@@ -27,9 +27,9 @@ when non-empty.}
 
 \item{time}{An optional ordering expression.}
 
-\item{deviations}{Which parameters carry a deviation per group.}
+\item{links}{The links overriding the defaults, if any.}
 
-\item{penalty_kind}{The penalty on the deviations, if any.}
+\item{submodels}{One optional subformula per parameter.}
 
 \item{blueprint}{The resolved ordering and grouping.}
 }

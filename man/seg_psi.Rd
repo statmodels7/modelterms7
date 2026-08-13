@@ -13,7 +13,9 @@ seg_psi(term, coef = NULL)
 last refreshed at.}
 }
 \value{
-A numeric vector of break-point positions.
+A numeric vector of break-point positions, or, where the
+  break-points carry a development, a matrix with one row per
+  observation and one column per break-point.
 }
 \description{
 The estimated positions of the break-points, one per break-point and

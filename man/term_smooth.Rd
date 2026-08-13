@@ -27,7 +27,8 @@ strategies.
 \details{
 The enumeration is \code{\link{term_penalties}}, so a term carrying one
 penalty over part of its parameters and none over the rest answers for
-the part: \code{seg(x, penalty = "lasso")} is not smooth, its slope
+the part: \code{seg(x, penalty = penalties7::lasso_penalty)} is not
+smooth, its slope
 changes sitting at a kink, although its linear effect and its
 break-points are unpenalized.
 }

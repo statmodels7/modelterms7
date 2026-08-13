@@ -102,6 +102,8 @@ reference:
   - RegimeTerm
   - term_params
   - term_links
+  - term_start
+  - term_level_design
   - term_filter
   - term_loglik
   - term_adjoint

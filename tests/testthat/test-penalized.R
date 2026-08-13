@@ -314,8 +314,7 @@ test_that("a term with no columns rejects standardize by name", {
   # are grouping indicators: neither has a spread to divide by, and neither
   # constructor takes the argument, so the request is an error rather than
   # something silently ignored
-  expect_error(gas(p = 1, q = 1, by = g, deviations = TRUE,
-                   standardize = TRUE), "standardize")
+  expect_error(gas(p = 1, q = 1, by = g, standardize = TRUE), "standardize")
   expect_error(random(~ 1 | g, standardize = TRUE), "standardize")
   expect_error(lasso(~x, standardize = "yes"), "TRUE or FALSE")
   expect_error(lasso(~x, standardize = NA), "TRUE or FALSE")

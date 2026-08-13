@@ -6,19 +6,23 @@
 \usage{
 nl(
   fn,
+  ...,
   params = NULL,
   x = NULL,
   links = NULL,
   subformulas = NULL,
   start = NULL,
-  penalty = "none",
-  penalize = NULL,
   label = "nl"
 )
 }
 \arguments{
 \item{fn}{A one-sided formula in the covariates and the parameters, or
 a function of \code{(x, theta)} vectorized in both.}
+
+\item{...}{Two-sided formulas whose left side names a parameter, one
+per parameter to be modeled with covariates, e.g.
+\code{theta1 ~ s(z)}. Formula input only; the same as naming the
+right-hand side in \code{subformulas}.}
 
 \item{params}{The parameter names. Required when \code{fn} is a
 function; inferred from the formula otherwise.}
@@ -29,20 +33,13 @@ evaluated in the data. Unused for a formula.}
 \item{links}{An optional named list of \pkg{linkfunctions7} links, one
 per parameter. Parameters without one carry the identity.}
 
-\item{subformulas}{An optional named list of one-sided formulas, one
-per parameter to be modeled with covariates. Formula input only.}
+\item{subformulas}{An optional named list of one-sided formulas, the
+programmatic spelling of the formulas of \code{...}. Formula input
+only.}
 
 \item{start}{An optional named list of starting values for the
 parameters, on the parameter scale. Defaults to the inverse link at
 zero.}
-
-\item{penalty}{The penalty on the coefficients of the parameters
-\code{penalize} names: \code{"none"} (default), \code{"lasso"},
-\code{"ridge"}, a \pkg{penalties7} penalty over as many coefficients as
-those parameters number, or a function of that count returning one.}
-
-\item{penalize}{The parameters the penalty reaches, as a character
-vector. Defaults to all of them.}
 
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}
@@ -90,31 +87,45 @@ only, and is rejected on the other.
 \subsection{Links and submodels}{
 \code{links} carries each parameter to an unconstrained scale, so a
 rate constrained positive is estimated as its logarithm and the
-optimizer never proposes a negative one. \code{subformulas} develops a
+optimizer never proposes a negative one. A subformula develops a
 parameter as \eqn{\theta_j = g_j^{-1}(Z\gamma_j)} for a design
-\eqn{Z} built from a one-sided formula, which gives a parameter that
+\eqn{Z} built from its right-hand side, which gives a parameter that
 varies by group or with a covariate; the coefficients are then the
 \eqn{\gamma_j}, and the Jacobian carries the chain rule
-\eqn{\partial f/\partial\theta_j \cdot (g_j^{-1})' \cdot Z}.
+\eqn{\partial f/\partial\theta_j \cdot (g_j^{-1})' \cdot Z}. Because
+the development acts on the unconstrained scale, the parameter stays
+in its own set at every observation whatever the coefficients are: a
+rate on the log link is positive for every row of \eqn{Z}.
+
+A subformula is written in \code{...} as a two-sided formula whose
+left side names the parameter, \code{theta1 ~ z}, or programmatically
+as \code{subformulas = list(theta1 = ~z)}; the two spellings are the
+same and a parameter may carry only one. The right-hand side goes
+through \code{\link{interpret_formula}}, so it takes any term of this
+package: \code{theta1 ~ ridge(g)} is a population value (the
+intercept) plus shrunken departures, \code{theta1 ~ s(z)} lets the
+parameter move smoothly with a covariate, and
+\code{theta1 ~ random(~1 | g)} is a random intercept on the
+parameter's unconstrained scale. The penalties the sub-terms carry are
+reported through \code{\link{term_penalties}} under the key
+\code{parameter::subterm}, so a fitting layer estimates their
+hyperparameters as it does any other term's. A structural term, and a
+term whose block moves with its coefficients, are rejected: a
+parameter's submodel must be a fixed design.
 }
 
 \subsection{Penalizing a parameter}{
-\code{penalty} attaches a penalty to the coefficients of the
-parameters \code{penalize} names, one penalty per parameter and so one
-hyperparameter each, since two parameters of a nonlinear function are
-on scales of their own and have no reason to share one. They are
-declared through \code{\link{term_penalties}}, which names the
-coefficients each covers; the parameters left out are unpenalized.
-
-What is shrunk is the coefficient, not the parameter, so with a link
-the target is \eqn{g_j^{-1}(0)} rather than zero: a rate carried by a
-log link is shrunk towards one. Where the parameter carries a
-subformula, the whole vector \eqn{\gamma_j} is covered, so a lasso
-there selects which covariates a parameter depends on. A subformula of
-the form \code{~ g} with a factor \code{g} is the
-population-and-deviations pattern: the intercept is the population
-value and the remaining columns are deviations, penalized as the
-coordinates they are.
+A penalty is asked for inside the subformula, where the sub-term that
+carries it declares it: \code{theta1 ~ lasso(~z1 + z2)} selects which
+covariates the parameter depends on, and
+\code{theta1 ~ ridge(~g)} or \code{theta1 ~ random(~1 | g)} shrinks
+per-group departures towards a population value (the intercept, which
+stays unpenalized). Each sub-term brings its own hyperparameter, which
+is what two parameters of a nonlinear function want, being on scales of
+their own. Earlier releases carried \code{penalty} and \code{penalize}
+arguments over the parameters' coefficients; both are gone, the
+sub-terms covering the cases that matter with the hyperparameters in
+the right place.
 }
 }
 \examples{
@@ -129,6 +140,13 @@ spec <- nl(~ a * exp(-r * x),
 built <- term_build(spec, dd)
 term_coef_names(built)
 dim(term_matrix(built))
+
+# the amplitude developed by group: a population value plus shrunken
+# departures, whose hyperparameter a fitting layer estimates
+dd$g <- factor(rep(c("u", "v"), 30))
+sub <- term_build(nl(~ a * exp(-r * x), a ~ ridge(~g),
+                     start = list(a = 1, r = 1)), dd)
+vapply(term_penalties(sub), function(e) e$name, character(1))
 
 }
 \seealso{

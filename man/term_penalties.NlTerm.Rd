@@ -12,10 +12,10 @@
 A list of entries, as \code{\link{term_penalties}} documents.
 }
 \description{
-One entry per penalized parameter, named after it and covering its own
-coefficients: the single coefficient of a plain parameter, or the whole
-vector of a parameter carrying a subformula. The list is empty when
-\code{penalty = "none"}, and for a specification, whose parameters a
-formula does not name until the data say which of them the data supply.
+The penalties the sub-terms of the subformulas declare, each under the
+key \code{parameter::subterm} and covering that sub-term's coefficients
+in the term's own numbering. The list is empty when there are none, and
+for a specification, whose parameters a formula does not name until the
+data say which of them the data supply.
 }
 \keyword{internal}

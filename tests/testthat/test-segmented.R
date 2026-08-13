@@ -256,7 +256,7 @@ test_that("by gives an independent break-point per level", {
 test_that("a penalty reaches the changes and nothing else", {
   set.seed(8)
   dd <- data.frame(x = sort(runif(120, 0, 10)))
-  built <- term_build(seg(x, npsi = 2, penalty = "lasso"), dd)
+  built <- term_build(seg(x, npsi = 2, penalty = penalties7::lasso_penalty), dd)
   # the penalty is declared over the coefficients it covers, and is not
   # attached to the whole block: term_penalty() answers for a penalty over
   # all of it, and there is none
@@ -279,7 +279,7 @@ test_that("a penalty reaches the changes and nothing else", {
   expect_true(penalties7::has_prox(ent[[1L]]$penalty))
 
   # ridge is the smooth alternative and reaches the same coefficients
-  br <- term_build(seg(x, npsi = 2, penalty = "ridge"), dd)
+  br <- term_build(seg(x, npsi = 2, penalty = penalties7::ridge_penalty), dd)
   expect_true(term_smooth(br))
   expect_identical(term_penalties(br)[[1L]]$index, 2:3)
   # with no penalty there is none
@@ -288,8 +288,8 @@ test_that("a penalty reaches the changes and nothing else", {
 
   # a specification has nothing to index yet and reports no penalty, as an
   # unbuilt ridge() does, rather than raising
-  expect_length(term_penalties(seg(x, penalty = "lasso")), 0L)
-  expect_true(term_smooth(seg(x, penalty = "lasso")))
+  expect_length(term_penalties(seg(x, penalty = penalties7::lasso_penalty)), 0L)
+  expect_true(term_smooth(seg(x, penalty = penalties7::lasso_penalty)))
 
   # a penalties7 penalty is taken as it stands, so anything that package
   # offers reaches a term without a name for it being invented here
@@ -313,7 +313,7 @@ test_that("a joint term penalizes its two kinds of change separately", {
   dd <- data.frame(x = sort(runif(120, 0, 10)))
   # a slope change and a jump are not comparable and cannot share a
   # hyperparameter, so jseg declares two penalties
-  built <- term_build(jseg(x, penalty = "lasso"), dd)
+  built <- term_build(jseg(x, penalty = penalties7::lasso_penalty), dd)
   ent <- term_penalties(built)
   expect_length(ent, 2L)
   expect_identical(vapply(ent, function(e) e$name, character(1)),
@@ -325,7 +325,7 @@ test_that("a joint term penalizes its two kinds of change separately", {
   expect_false(any(grepl("\\.g", cn[unlist(lapply(ent, function(e) e$index))])))
 
   # a pure jump has only the one kind
-  bj <- term_build(jump(x, npsi = 2, penalty = "lasso"), dd)
+  bj <- term_build(jump(x, npsi = 2, penalty = penalties7::lasso_penalty), dd)
   ej <- term_penalties(bj)
   expect_length(ej, 1L)
   expect_identical(ej[[1L]]$name, "kappa")
@@ -337,7 +337,7 @@ test_that("a penalty covers the levels of by under one hyperparameter", {
   set.seed(82)
   dd <- data.frame(x = sort(runif(160, 0, 10)),
                    g = factor(rep(c("a", "b"), length.out = 160)))
-  built <- term_build(seg(x, by = g, penalty = "lasso"), dd)
+  built <- term_build(seg(x, by = g, penalty = penalties7::lasso_penalty), dd)
   ent <- term_penalties(built)
   expect_length(ent, 1L)
   expect_identical(term_coef_names(built)[ent[[1L]]$index],
@@ -367,7 +367,14 @@ test_that("the constructors reject what they cannot honour", {
   expect_error(seg(x, npsi = 2, psi = 1), "one starting position")
   expect_error(jump(x, linear = NA), "TRUE or FALSE")
   expect_error(jseg(x, label = ""), "non-empty")
-  expect_error(seg(x, penalty = "nope"), "should be one of")
+  # a string is not a penalty: the argument takes a penalties7 object or a
+  # function of the count, and penalty = penalties7::lasso_penalty is
+  # exactly as short as the name it replaced
+  expect_error(seg(x, penalty = "lasso"), "must be NULL")
+  expect_error(seg(x, penalty = 3), "must be NULL")
+  expect_error(term_build(seg(x, penalty = function(k) k),
+                          data.frame(x = sort(runif(30, 0, 10)))),
+               "must give a penalties7 penalty")
   dd <- data.frame(x = rep(1, 10))
   expect_error(term_build(seg(x), dd), "must vary")
   expect_error(seg_psi(seg(x)), "not been built")
@@ -469,4 +476,129 @@ test_that("term_value on other rows is the contribution, not the block", {
   cj <- bj@blueprint$coef
   expect_equal(as.numeric(term_predict(bj, nd) %*% cj),
                term_value(bj, coef = cj, newdata = nd), tolerance = 1e-10)
+})
+
+test_that("a development of ~1 reproduces the scalar construction", {
+  set.seed(21)
+  n <- 200
+  dd <- data.frame(x = sort(runif(n, 0, 10)))
+  dd$y <- 1 + 0.4 * dd$x + 2 * pmax(dd$x - 6, 0) + 1.5 * (dd$x > 6) +
+    rnorm(n, sd = 0.3)
+
+  for (ctor in list(seg, jump)) {
+    plain <- term_build(ctor(x, psi = 5), dd)
+    devd <- term_build(ctor(x, psi ~ 1, psi = 5), dd)
+    # same block and same contribution at the starting coefficients, the
+    # development being the scalar break-point under another name
+    expect_equal(unname(as.matrix(term_matrix(devd))),
+                 unname(as.matrix(term_matrix(plain))), tolerance = 1e-10)
+    expect_equal(term_value(devd), term_value(plain), tolerance = 1e-10)
+  }
+
+  # and the iteration walks the two to the same break-point
+  for (ctor in list(seg, jump)) {
+    b1 <- seg_iterate(term_build(ctor(x, psi = 4), dd), dd$y, iters = 60)
+    t2 <- term_build(ctor(x, psi ~ 1, psi = 4), dd)
+    b2 <- seg_iterate(t2, dd$y, iters = 60)
+    p1 <- seg_psi(term_build(ctor(x, psi = 4), dd), b1)
+    p2 <- seg_psi(t2, b2)
+    expect_equal(mean(p2), as.numeric(p1), tolerance = 1e-6)
+  }
+
+  # jseg rejects a development: its quadratic reading of the break-point
+  # does not split over the columns, and the componentwise reading that
+  # remains diverges whenever the jump size passes near zero (measured)
+  expect_error(jseg(x, psi ~ 1), "does not split over the columns")
+})
+
+test_that("a break-point developed by group finds per-group positions", {
+  set.seed(22)
+  n <- 240
+  truth <- c(a = 4, b = 5.5, c = 6.5)
+  dd <- data.frame(x = runif(n, 0, 10),
+                   id = factor(rep(c("a", "b", "c"), length.out = n)))
+  dd$y <- 0.5 * dd$x + 2.5 * pmax(dd$x - truth[dd$id], 0) +
+    rnorm(n, sd = 0.3)
+
+  spec <- seg(x, psi ~ id)
+  built <- term_build(seg_start(spec, dd, dd$y), dd)
+  # one gamma vector per break-point over the shared design: intercept
+  # plus the factor's contrasts, with the slopes shared across groups
+  expect_identical(term_coef_names(built),
+                   c("seg.lin", "seg.delta1", "seg.psi1.(Intercept)",
+                     "seg.psi1.idb", "seg.psi1.idc"))
+  b <- seg_iterate(built, dd$y, iters = 80)
+  psi <- seg_psi(built, b)
+  expect_true(is.matrix(psi))
+  got <- vapply(levels(dd$id), function(l) mean(psi[dd$id == l, 1L]),
+                numeric(1))
+  expect_equal(unname(got), unname(truth), tolerance = 0.25)
+})
+
+test_that("a jump developed by group finds per-group positions", {
+  set.seed(23)
+  n <- 300
+  truth <- c(a = 4, b = 6.5)
+  dd <- data.frame(x = runif(n, 0, 10),
+                   id = factor(rep(c("a", "b"), length.out = n)))
+  dd$y <- 3 * (dd$x > truth[dd$id]) + rnorm(n, sd = 0.4)
+
+  spec <- jump(x, psi ~ id, linear = FALSE)
+  built <- term_build(seg_start(spec, dd, dd$y), dd)
+  expect_identical(term_coef_names(built),
+                   c("jump.kappa1", "jump.g1.(Intercept)", "jump.g1.idb"))
+  b <- seg_iterate(built, dd$y, iters = 80)
+  psi <- seg_psi(built, b)
+  got <- vapply(levels(dd$id), function(l) mean(psi[dd$id == l, 1L]),
+                numeric(1))
+  expect_equal(unname(got), unname(truth), tolerance = 0.3)
+  expect_equal(b[1], 3, tolerance = 0.4)
+})
+
+test_that("a penalized development is the random-changepoint model, on seg", {
+  set.seed(24)
+  n <- 200
+  dd <- data.frame(x = runif(n, 0, 10),
+                   id = factor(rep(sprintf("g%d", 1:5), length.out = n)))
+  dd$y <- 0.5 * dd$x + 2 * pmax(dd$x - 5, 0) + rnorm(n, sd = 0.3)
+
+  built <- term_build(seg(x, psi ~ random(~1 | id)), dd)
+  ent <- term_penalties(built)
+  expect_length(ent, 1L)
+  expect_true(startsWith(ent[[1L]]$name, "psi1::"))
+  # the entry covers the indicator columns of the development, in the
+  # term's own numbering
+  expect_true(all(startsWith(term_coef_names(built)[ent[[1L]]$index],
+                             "seg.psi1.")))
+
+  # a discontinuous construction rejects it: the penalty would act on
+  # c = -kappa * gamma rather than on the development
+  expect_error(term_build(jump(x, psi ~ random(~1 | id)), dd),
+               "scaled by the jump size")
+})
+
+test_that("the development's syntax is validated where it is written", {
+  expect_error(seg(x, psi ~ id, by = g), "cannot be combined")
+  expect_error(seg(x, tau ~ id), "break-points of a")
+  expect_error(seg(x, psi ~ id, psi ~ z), "at most one subformula")
+  expect_error(seg(x, ~id), "two-sided formula")
+})
+
+test_that("a developed term predicts by reapplying the sub-design", {
+  set.seed(25)
+  n <- 120
+  dd <- data.frame(x = runif(n, 0, 10),
+                   id = factor(rep(c("a", "b"), length.out = n)))
+  dd$y <- 0.5 * dd$x + 2 * pmax(dd$x - c(a = 4, b = 6)[dd$id], 0) +
+    rnorm(n, sd = 0.3)
+  built <- term_build(seg(x, psi ~ id), dd)
+  b <- seg_iterate(built, dd$y, iters = 40)
+  cur <- term_refresh(built, b)
+  keep <- which(dd$id == "a")
+  sub <- dd[keep, , drop = FALSE]
+  expect_equal(term_value(cur, coef = b, newdata = sub),
+               term_value(cur, coef = b)[keep], tolerance = 1e-10)
+  expect_equal(unname(as.matrix(term_predict(cur, sub))),
+               unname(as.matrix(term_matrix(cur)))[keep, , drop = FALSE],
+               tolerance = 1e-10)
 })

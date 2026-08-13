@@ -5,6 +5,10 @@ gas_filter_cpp <- function(eta, order, p, q, omega, a, b, db, f0, df0, i_a, np, 
     .Call(`_modelterms7_gas_filter_cpp`, eta, order, p, q, omega, a, b, db, f0, df0, i_a, np, score, curvature)
 }
 
+gas_filter_sub_cpp <- function(eta, groups, p, q, om, A, B, np, score, curvature) {
+    .Call(`_modelterms7_gas_filter_sub_cpp`, eta, groups, p, q, om, A, B, np, score, curvature)
+}
+
 regime_forward_cpp <- function(order, LF, SC, dmu, P, dP, delta, ddelta) {
     .Call(`_modelterms7_regime_forward_cpp`, order, LF, SC, dmu, P, dP, delta, ddelta)
 }

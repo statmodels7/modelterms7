@@ -12,10 +12,10 @@
 A list of entries, as \code{\link{term_penalties}} documents.
 }
 \description{
-One entry per parameter carrying deviations, named after it and covering
-its deviations across the groups. The population parameters are
-unpenalized, and the list is empty when \code{penalty = "none"}, and for
-a specification, whose deviations do not exist until the data say how
-many groups there are.
+The penalties the subformulas' sub-terms declare, each under the key
+\code{parameter::subterm} and covering that sub-term's coefficients in
+the term's own numbering. The scalar parameters are unpenalized, and
+the list is empty for a specification, whose developments do not exist
+until the term is built.
 }
 \keyword{internal}

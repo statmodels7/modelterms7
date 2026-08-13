@@ -15,7 +15,7 @@ A list of entries, as \code{\link{term_penalties}} documents.
 One entry per kind of change the term carries a penalty on, naming the
 coefficients it covers: \code{"delta"} for the slope changes,
 \code{"kappa"} for the jump sizes, shared across the levels of
-\code{by}. The list is empty when \code{penalty = "none"}, and for a
+\code{by}. The list is empty when \code{penalty = NULL}, and for a
 specification, whose parameters there is nothing yet to index: a penalty
 is attached at build, as it is for every penalized term here.
 }

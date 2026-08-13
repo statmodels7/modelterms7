@@ -80,52 +80,65 @@ NlTerm <- S7::new_class(
 #' \subsection{Links and submodels}{
 #' \code{links} carries each parameter to an unconstrained scale, so a
 #' rate constrained positive is estimated as its logarithm and the
-#' optimizer never proposes a negative one. \code{subformulas} develops a
+#' optimizer never proposes a negative one. A subformula develops a
 #' parameter as \eqn{\theta_j = g_j^{-1}(Z\gamma_j)} for a design
-#' \eqn{Z} built from a one-sided formula, which gives a parameter that
+#' \eqn{Z} built from its right-hand side, which gives a parameter that
 #' varies by group or with a covariate; the coefficients are then the
 #' \eqn{\gamma_j}, and the Jacobian carries the chain rule
-#' \eqn{\partial f/\partial\theta_j \cdot (g_j^{-1})' \cdot Z}.
+#' \eqn{\partial f/\partial\theta_j \cdot (g_j^{-1})' \cdot Z}. Because
+#' the development acts on the unconstrained scale, the parameter stays
+#' in its own set at every observation whatever the coefficients are: a
+#' rate on the log link is positive for every row of \eqn{Z}.
+#'
+#' A subformula is written in \code{...} as a two-sided formula whose
+#' left side names the parameter, \code{theta1 ~ z}, or programmatically
+#' as \code{subformulas = list(theta1 = ~z)}; the two spellings are the
+#' same and a parameter may carry only one. The right-hand side goes
+#' through \code{\link{interpret_formula}}, so it takes any term of this
+#' package: \code{theta1 ~ ridge(g)} is a population value (the
+#' intercept) plus shrunken departures, \code{theta1 ~ s(z)} lets the
+#' parameter move smoothly with a covariate, and
+#' \code{theta1 ~ random(~1 | g)} is a random intercept on the
+#' parameter's unconstrained scale. The penalties the sub-terms carry are
+#' reported through \code{\link{term_penalties}} under the key
+#' \code{parameter::subterm}, so a fitting layer estimates their
+#' hyperparameters as it does any other term's. A structural term, and a
+#' term whose block moves with its coefficients, are rejected: a
+#' parameter's submodel must be a fixed design.
 #' }
 #'
 #' \subsection{Penalizing a parameter}{
-#' \code{penalty} attaches a penalty to the coefficients of the
-#' parameters \code{penalize} names, one penalty per parameter and so one
-#' hyperparameter each, since two parameters of a nonlinear function are
-#' on scales of their own and have no reason to share one. They are
-#' declared through \code{\link{term_penalties}}, which names the
-#' coefficients each covers; the parameters left out are unpenalized.
-#'
-#' What is shrunk is the coefficient, not the parameter, so with a link
-#' the target is \eqn{g_j^{-1}(0)} rather than zero: a rate carried by a
-#' log link is shrunk towards one. Where the parameter carries a
-#' subformula, the whole vector \eqn{\gamma_j} is covered, so a lasso
-#' there selects which covariates a parameter depends on. A subformula of
-#' the form \code{~ g} with a factor \code{g} is the
-#' population-and-deviations pattern: the intercept is the population
-#' value and the remaining columns are deviations, penalized as the
-#' coordinates they are.
+#' A penalty is asked for inside the subformula, where the sub-term that
+#' carries it declares it: \code{theta1 ~ lasso(~z1 + z2)} selects which
+#' covariates the parameter depends on, and
+#' \code{theta1 ~ ridge(~g)} or \code{theta1 ~ random(~1 | g)} shrinks
+#' per-group departures towards a population value (the intercept, which
+#' stays unpenalized). Each sub-term brings its own hyperparameter, which
+#' is what two parameters of a nonlinear function want, being on scales of
+#' their own. Earlier releases carried \code{penalty} and \code{penalize}
+#' arguments over the parameters' coefficients; both are gone, the
+#' sub-terms covering the cases that matter with the hyperparameters in
+#' the right place.
 #' }
 #'
 #' @param fn A one-sided formula in the covariates and the parameters, or
 #'   a function of \code{(x, theta)} vectorized in both.
+#' @param ... Two-sided formulas whose left side names a parameter, one
+#'   per parameter to be modeled with covariates, e.g.
+#'   \code{theta1 ~ s(z)}. Formula input only; the same as naming the
+#'   right-hand side in \code{subformulas}.
 #' @param params The parameter names. Required when \code{fn} is a
 #'   function; inferred from the formula otherwise.
 #' @param x The covariate expression handed to a function \code{fn},
 #'   evaluated in the data. Unused for a formula.
 #' @param links An optional named list of \pkg{linkfunctions7} links, one
 #'   per parameter. Parameters without one carry the identity.
-#' @param subformulas An optional named list of one-sided formulas, one
-#'   per parameter to be modeled with covariates. Formula input only.
+#' @param subformulas An optional named list of one-sided formulas, the
+#'   programmatic spelling of the formulas of \code{...}. Formula input
+#'   only.
 #' @param start An optional named list of starting values for the
 #'   parameters, on the parameter scale. Defaults to the inverse link at
 #'   zero.
-#' @param penalty The penalty on the coefficients of the parameters
-#'   \code{penalize} names: \code{"none"} (default), \code{"lasso"},
-#'   \code{"ridge"}, a \pkg{penalties7} penalty over as many coefficients as
-#'   those parameters number, or a function of that count returning one.
-#' @param penalize The parameters the penalty reaches, as a character
-#'   vector. Defaults to all of them.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names.
 #'
@@ -145,19 +158,20 @@ NlTerm <- S7::new_class(
 #' term_coef_names(built)
 #' dim(term_matrix(built))
 #'
+#' # the amplitude developed by group: a population value plus shrunken
+#' # departures, whose hyperparameter a fitting layer estimates
+#' dd$g <- factor(rep(c("u", "v"), 30))
+#' sub <- term_build(nl(~ a * exp(-r * x), a ~ ridge(~g),
+#'                      start = list(a = 1, r = 1)), dd)
+#' vapply(term_penalties(sub), function(e) e$name, character(1))
+#'
 #' @seealso \code{\link{s}}, \code{\link{te}}, \code{\link{random}}
 #' @export
-nl <- function(fn, params = NULL, x = NULL, links = NULL,
+nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
                subformulas = NULL, start = NULL,
-               penalty = "none", penalize = NULL,
                label = "nl") {
   xe <- substitute(x)
-  penalty <- .penalty_arg(penalty)
-  if (!is.null(penalize) && (!is.character(penalize) || !length(penalize) ||
-                             anyNA(penalize) || !all(nzchar(penalize)))) {
-    stop("'penalize' must be a character vector of parameter names.",
-         call. = FALSE)
-  }
+  subformulas <- .nl_gather_subformulas(list(...), subformulas)
   is_formula <- inherits(fn, "formula")
   if (!is_formula && !is.function(fn)) {
     stop("'fn' must be a one-sided formula or a function of (x, theta).",
@@ -197,10 +211,44 @@ nl <- function(fn, params = NULL, x = NULL, links = NULL,
          links = if (is.null(links)) list() else links,
          subformulas = if (is.null(subformulas)) list() else subformulas,
          deriv_mode = if (is_formula) "symbolic" else "numeric",
-         spec = list(x = xe, start = start, is_formula = is_formula,
-                     penalty = penalty, penalize = penalize),
+         spec = list(x = xe, start = start, is_formula = is_formula),
          X = NULL, coef_names = character(0),
          blueprint = list(), penalty = NULL)
+}
+
+# The two spellings of a parameter's subformula, merged: a two-sided formula
+# in `...` whose left side names the parameter, and an entry of the
+# `subformulas` list. A parameter may carry only one.
+.nl_gather_subformulas <- function(dots, subformulas) {
+  if (!length(dots)) return(subformulas)
+  # a named entry is an argument the signature does not take -- the shape a
+  # mistyped or removed argument arrives in -- and it is reported by name
+  nms <- names(dots)
+  if (!is.null(nms) && any(nzchar(nms))) {
+    stop(sprintf(paste("unused argument '%s': '...' takes two-sided",
+                       "formulas whose left side names a parameter."),
+                 nms[nzchar(nms)][1L]), call. = FALSE)
+  }
+  if (!is.null(subformulas) &&
+      (!is.list(subformulas) || is.null(names(subformulas)) ||
+       anyNA(names(subformulas)) || !all(nzchar(names(subformulas))))) {
+    stop("'subformulas' must be a named list.", call. = FALSE)
+  }
+  out <- if (is.null(subformulas)) list() else subformulas
+  for (d in dots) {
+    if (!inherits(d, "formula") || length(d) != 3L || !is.name(d[[2L]])) {
+      stop(paste("arguments in '...' must be two-sided formulas whose left",
+                 "side names a parameter, e.g. theta1 ~ s(z)."),
+           call. = FALSE)
+    }
+    pn <- as.character(d[[2L]])
+    if (!is.null(out[[pn]])) {
+      stop(sprintf("parameter '%s' carries two subformulas.", pn),
+           call. = FALSE)
+    }
+    out[[pn]] <- stats::as.formula(call("~", d[[3L]]), env = environment(d))
+  }
+  out
 }
 
 # the parameters of a formula: every name it uses that the data do not
@@ -294,18 +342,31 @@ nl <- function(fn, params = NULL, x = NULL, links = NULL,
   acc / h
 }
 
-# the Jacobian in the coefficients and the value, at one coefficient vector
+# The Jacobian in the coefficients and the value, at one coefficient vector.
+# It is assembled block by block rather than written into a preallocated
+# matrix: scaling a sub-design by a per-row weight keeps its sparsity
+# pattern, so a sparse submodel (indicators over many groups) stays sparse
+# through the block it becomes.
 .nl_jacobian <- function(bp, coef) {
   th <- .nl_theta(bp, coef)
   fv <- .nl_eval(bp, th$value)
-  J <- matrix(0, bp$n, bp$ncoef)
-  for (p in bp$params) {
-    idx <- bp$index[[p]]
+  blocks <- vector("list", length(bp$params))
+  for (k in seq_along(bp$params)) {
+    p <- bp$params[k]
     w <- fv$grad[[p]] * th$deriv[[p]]
     Z <- bp$Z[[p]]
-    J[, idx] <- if (is.null(Z)) w else w * Z
+    blocks[[k]] <- if (is.null(Z)) matrix(w, ncol = 1L) else w * Z
   }
-  list(J = J, value = fv$value)
+  list(J = .nl_bind(blocks), value = fv$value)
+}
+
+# blocks side by side, plain when every one is plain, Matrix when any is
+.nl_bind <- function(blocks) {
+  if (length(blocks) == 1L) return(blocks[[1L]])
+  if (!any(vapply(blocks, function(m) inherits(m, "Matrix"), logical(1)))) {
+    return(do.call(cbind, blocks))
+  }
+  Reduce(Matrix::cbind2, blocks)
 }
 
 S7::method(term_build, NlTerm) <- function(term, data, ...) {
@@ -327,10 +388,15 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
   links <- stats::setNames(lapply(params, .nl_link, links = term@links),
                            params)
 
-  # the submodel design of each parameter, and where its coefficients sit
+  # the submodel design of each parameter, and where its coefficients sit.
+  # A subformula goes through the interpreter, so it takes any term of the
+  # package; the built sub-terms are kept, since prediction reapplies each
+  # one's own blueprint, and the penalties they carry are collected here
+  # with the key parameter::subterm
   Z <- stats::setNames(vector("list", length(params)), params)
-  sub_bp <- stats::setNames(vector("list", length(params)), params)
+  subs <- stats::setNames(vector("list", length(params)), params)
   index <- stats::setNames(vector("list", length(params)), params)
+  sub_pens <- list()
   cn <- character(0)
   pos <- 0L
   for (p in params) {
@@ -340,22 +406,18 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
       index[[p]] <- pos
       cn <- c(cn, p)
     } else {
-      mf <- stats::model.frame(sf, data, na.action = stats::na.pass,
-                               drop.unused.levels = FALSE)
-      tt <- attr(mf, "terms")
-      Zp <- stats::model.matrix(tt, mf)
-      # the submodel needs the same blueprint discipline as any other
-      # design: its levels and contrasts are recorded here so that
-      # prediction reapplies them instead of re-deriving them
-      sub_bp[[p]] <- list(terms = stats::delete.response(tt),
-                          xlev = stats::.getXlevels(tt, mf),
-                          contrasts = attr(Zp, "contrasts"))
-      attr(Zp, "assign") <- NULL
-      attr(Zp, "contrasts") <- NULL
-      Z[[p]] <- Zp
-      index[[p]] <- pos + seq_len(ncol(Zp))
-      pos <- pos + ncol(Zp)
-      cn <- c(cn, paste(p, colnames(Zp), sep = "."))
+      sub <- .nl_submodel(p, sf, data)
+      subs[[p]] <- sub$terms
+      Z[[p]] <- sub$Z
+      index[[p]] <- pos + seq_len(ncol(sub$Z))
+      pos <- pos + ncol(sub$Z)
+      cn <- c(cn, paste(p, sub$coef_names, sep = "."))
+      for (e in sub$penalties) {
+        sub_pens[[length(sub_pens) + 1L]] <- list(
+          name = paste0(p, "::", e$name),
+          index = index[[p]][e$index],
+          penalty = e$penalty)
+      }
     }
   }
 
@@ -382,27 +444,13 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
              expr = if (is_f) term@fn[[2L]] else NULL,
              fn = if (is_f) NULL else term@fn, xval = xval,
              data_vars = data_vars, one = numeric(n),
-             subformulas = term@subformulas, sub_bp = sub_bp,
+             subformulas = term@subformulas, subs = subs,
              is_formula = is_f)
 
-  # one penalty per penalized parameter, over that parameter's own
-  # coefficients: two parameters of a nonlinear function are on scales of
-  # their own and cannot share a hyperparameter
-  bp$penalties <- list()
-  if (!.penalty_is_none(term@spec$penalty)) {
-    pz <- term@spec$penalize
-    if (is.null(pz)) pz <- params
-    bad <- setdiff(pz, params)
-    if (length(bad)) {
-      stop(sprintf("'penalize' names '%s', which is not a parameter.",
-                   bad[1L]), call. = FALSE)
-    }
-    factory <- .penalty_factory(term@spec$penalty)
-    for (p in pz) {
-      bp$penalties[[length(bp$penalties) + 1L]] <- list(
-        name = p, index = index[[p]], penalty = factory(length(index[[p]])))
-    }
-  }
+  # the penalties are the sub-terms' own, collected above with the key
+  # parameter::subterm: a penalty is asked for inside the subformula,
+  # where the sub-term that carries it brings its own hyperparameter
+  bp$penalties <- sub_pens
 
   # the coefficients the block is built at: the link of the starting value,
   # or zero, which is the inverse link's own natural point
@@ -431,14 +479,61 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
   term
 }
 
+# One parameter's submodel: the subformula through the interpreter, every
+# sub-term built against the data, the blocks side by side, and the
+# penalties the sub-terms declare with their indices in the bound design.
+# What is kept is the BUILT terms, because prediction reapplies each one's
+# own blueprint (levels, knots, constants) rather than rebuilding it.
+.nl_submodel <- function(p, sf, data) {
+  ir <- interpret_formula(sf, data)
+  for (lb in names(ir$terms)) {
+    .nl_reject_subterm(ir$terms[[lb]], p, lb)
+  }
+  subs <- lapply(ir$terms, term_build, data = data)
+  mats <- lapply(subs, term_matrix)
+  pens <- list()
+  off <- 0L
+  for (lb in names(subs)) {
+    for (e in term_penalties(subs[[lb]])) {
+      key <- if (is.null(e$name) || !nzchar(e$name)) lb
+        else paste0(lb, "::", e$name)
+      pens[[length(pens) + 1L]] <- list(name = key, index = off + e$index,
+                                        penalty = e$penalty)
+    }
+    off <- off + ncol(mats[[lb]])
+  }
+  list(terms = subs, Z = .nl_bind(mats),
+       coef_names = unlist(lapply(subs, term_coef_names), use.names = FALSE),
+       penalties = pens)
+}
+
+# What a parameter's submodel must be: a fixed design. A structural term
+# reports no block at all, and a term whose block moves with its own
+# coefficients would put an iteration inside the Jacobian of another one.
+.nl_reject_subterm <- function(tm, p, lb) {
+  if (S7::S7_inherits(tm, structural_term)) {
+    stop(sprintf(paste("the subformula of '%s' carries '%s', a structural",
+                       "term; a parameter's submodel must be a fixed",
+                       "design."), p, lb), call. = FALSE)
+  }
+  m <- S7::method(term_refresh, S7::S7_class(tm))
+  cls <- attr(m, "signature")[[1L]]
+  if (!identical(attr(cls, "name"), "model_term")) {
+    stop(sprintf(paste("the subformula of '%s' carries '%s', whose block",
+                       "moves with its coefficients; a parameter's submodel",
+                       "must be a fixed design."), p, lb), call. = FALSE)
+  }
+  invisible(NULL)
+}
+
 #' @title Penalties of a Nonlinear Term
 #' @name term_penalties.NlTerm
 #' @description
-#' One entry per penalized parameter, named after it and covering its own
-#' coefficients: the single coefficient of a plain parameter, or the whole
-#' vector of a parameter carrying a subformula. The list is empty when
-#' \code{penalty = "none"}, and for a specification, whose parameters a
-#' formula does not name until the data say which of them the data supply.
+#' The penalties the sub-terms of the subformulas declare, each under the
+#' key \code{parameter::subterm} and covering that sub-term's coefficients
+#' in the term's own numbering. The list is empty when there are none, and
+#' for a specification, whose parameters a formula does not name until the
+#' data say which of them the data supply.
 #' @param term A built \code{\link{NlTerm}}.
 #' @param ... Unused.
 #' @return A list of entries, as \code{\link{term_penalties}} documents.
@@ -449,7 +544,7 @@ S7::method(term_penalties, NlTerm) <- function(term, ...) {
 }
 
 # the blueprint of the same term read on other rows: the submodel designs
-# are REAPPLIED through their recorded levels and contrasts, never rebuilt
+# are REAPPLIED through each sub-term's own blueprint, never rebuilt
 .nl_blueprint_at <- function(term, newdata) {
   bp <- term@blueprint
   nb <- bp
@@ -458,13 +553,8 @@ S7::method(term_penalties, NlTerm) <- function(term, ...) {
   nb$data_vars <- as.list(newdata)
   for (p in bp$params) {
     if (!is.null(bp$Z[[p]])) {
-      sb <- bp$sub_bp[[p]]
-      mf <- stats::model.frame(sb$terms, newdata, na.action = stats::na.pass,
-                               xlev = sb$xlev)
-      Zp <- stats::model.matrix(sb$terms, mf, contrasts.arg = sb$contrasts)
-      attr(Zp, "assign") <- NULL
-      attr(Zp, "contrasts") <- NULL
-      nb$Z[[p]] <- Zp
+      nb$Z[[p]] <- .nl_bind(lapply(bp$subs[[p]], term_predict,
+                                   newdata = newdata))
     }
   }
   if (!bp$is_formula) {

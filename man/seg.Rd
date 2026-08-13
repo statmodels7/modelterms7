@@ -8,33 +8,36 @@
 \usage{
 seg(
   x,
+  ...,
   npsi = 1,
   psi = NULL,
   by = NULL,
   linear = TRUE,
-  penalty = "none",
+  penalty = NULL,
   c0 = 0.05,
   label = "seg"
 )
 
 jump(
   x,
+  ...,
   npsi = 1,
   psi = NULL,
   by = NULL,
   linear = TRUE,
-  penalty = "none",
+  penalty = NULL,
   c0 = 0.05,
   label = "jump"
 )
 
 jseg(
   x,
+  ...,
   npsi = 1,
   psi = NULL,
   by = NULL,
   linear = TRUE,
-  penalty = "none",
+  penalty = NULL,
   c0 = 0.05,
   label = "jseg"
 )
@@ -42,10 +45,16 @@ jseg(
 \arguments{
 \item{x}{The covariate, an expression evaluated in the data.}
 
+\item{...}{At most one two-sided formula \code{psi ~ f} developing the
+break-points with covariates; see the section above. Cannot be
+combined with \code{by}.}
+
 \item{npsi}{The number of break-points. Defaults to 1.}
 
 \item{psi}{Optional starting positions; defaults to evenly spaced
-quantiles of the covariate.}
+quantiles of the covariate. With a subformula they seed the
+development, each starting vector solving \eqn{Z\gamma_k \approx
+\psi_k^{0}}.}
 
 \item{by}{An optional factor giving an independent set of
 break-points per level.}
@@ -53,12 +62,13 @@ break-points per level.}
 \item{linear}{Whether the block carries the linear effect. Defaults to
 \code{TRUE}.}
 
-\item{penalty}{The penalty on the changes: \code{"none"} (default),
-\code{"lasso"}, \code{"ridge"}, a \pkg{penalties7} penalty over as many
-coefficients as there are changes, or a function of that count
-returning one. A joint term declares two penalties, one on the slope
-changes and one on the jumps, and a penalty given as an object is used
-for both.}
+\item{penalty}{The penalty on the changes: \code{NULL} (default, none),
+a \pkg{penalties7} penalty over as many coefficients as there are
+changes, or a function of that count returning one -- a \pkg{penalties7}
+constructor passed bare works, e.g.
+\code{penalty = penalties7::lasso_penalty}. A joint term declares two
+penalties, one on the slope changes and one on the jumps, and a penalty
+given as an object is used for both.}
 
 \item{c0}{For a discontinuous term, the starting value of the scaling
 factor that separates the observations from the break-point, as a
@@ -148,7 +158,7 @@ the term is the whole relationship rather than the change in it.
 level of a factor. \code{penalty} puts a penalty on the changes
 themselves -- the slope changes for \code{seg}, the jump sizes for
 \code{jump}, both for \code{jseg} -- and leaves the linear effect and
-the break-points alone; with \code{"lasso"} that is a selection of how
+the break-points alone; with the lasso that is a selection of how
 many break-points are really there.
 
 The penalty is declared through \code{\link{term_penalties}}, which
@@ -173,6 +183,36 @@ constant are linearly dependent, and with the linear effect present so
 are all three columns. A run that ends against the limit has not
 located a break-point, and \code{\link{seg_psi}} then returns the
 limit itself.
+
+\subsection{Break-points developed with covariates}{
+A two-sided formula \code{psi ~ f} in \code{...} develops every
+break-point as \eqn{\psi_k = Z\gamma_k}, with \eqn{Z} the design of the
+right-hand side through \code{\link{interpret_formula}} and one
+coefficient vector per break-point: \code{psi ~ g} with a factor
+\code{g} is a break-point per group with the slopes shared, where
+\code{by} would give every level its own slopes as well, and the two
+are therefore not combinable. Each observation carries the position its
+own row of \eqn{Z} implies, confined to the same interval as above.
+
+For the continuous construction \eqn{\gamma_k} are ordinary
+coefficients and the block carries
+\eqn{-\delta_k\,\mathbb{1}(x>\psi_k)\,Z_j} in place of the single
+Jacobian column, so a sub-term's penalty passes through unchanged:
+\code{seg(x, psi ~ random(~1 | id))} is the random-changepoint model of
+Muggeo, Atkins, Gallop and Dimidjian (2014), the per-group positions
+shrunk towards a population one. For \code{jump} the identity above
+splits the \eqn{gW} column into \eqn{W Z_j}, whose coefficients are
+\eqn{c_k = -\kappa_k\gamma_k}, and the development is read off as
+\eqn{\gamma_k = -c_k/\kappa_k} exactly as the scalar break-point is; a
+sub-term carrying a penalty is rejected there, since the penalty would
+act on \eqn{c_k}, which is the development scaled by the jump size,
+rather than on \eqn{\gamma_k} itself. \code{jseg} rejects a
+development: its reading of the break-point is a quadratic in the
+increment that couples the slope change with the jump, and it does not
+split over the columns of a development, while the componentwise
+reading that remains diverges whenever the jump size passes near zero
+mid-iteration.
+}
 
 The objective has local optima in the break-points, and the scaling
 schedule widens the basin the iteration converges from rather than

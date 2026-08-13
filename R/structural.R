@@ -42,6 +42,38 @@ term_params <- S7::new_generic("term_params", "term",
 term_links <- S7::new_generic("term_links", "term",
   function(term, ...) S7::S7_dispatch())
 
+#' @title Where a Term's Own Parameters Start
+#'
+#' @description
+#' The starting values of a structural term's parameters, on the
+#' unconstrained scale of \code{\link{term_links}}, one per parameter of
+#' \code{\link{term_params}}.
+#'
+#' @details
+#' The start belongs to the term because only the term knows what a
+#' coordinate of zero means on each of its charts. The base method returns
+#' zero everywhere, which is each link's own natural point; a term whose
+#' chart makes zero mean something other than "the model without the term"
+#' overrides it, as \code{\link{gas}} does for its score loadings, whose
+#' log chart puts a loading of one at zero.
+#'
+#' @param term A built structural term.
+#' @param ... Passed to methods.
+#'
+#' @return A named numeric vector on the unconstrained scale.
+#'
+#' @examples
+#' term_start(gas(p = 1, q = 1))
+#'
+#' @seealso \code{\link{term_params}}, \code{\link{term_links}}
+#' @export
+term_start <- S7::new_generic("term_start", "term",
+  function(term, ...) S7::S7_dispatch())
+
+S7::method(term_start, structural_term) <- function(term, ...) {
+  stats::setNames(numeric(length(term_params(term))), term_params(term))
+}
+
 #' @title Apply a Structural Term to a Linear Predictor
 #'
 #' @description
@@ -141,6 +173,39 @@ term_level_param <- S7::new_generic("term_level_param", "term",
   function(term, ...) S7::S7_dispatch())
 
 S7::method(term_level_param, model_term) <- function(term, ...) character(0)
+
+#' @title The Design of a Term's Level Development
+#'
+#' @description
+#' Where the parameter \code{\link{term_level_param}} names is developed
+#' with covariates, the design of that development, with one column per
+#' coordinate named as \code{\link{term_params}} names it. \code{NULL}
+#' for a scalar level and for every other term.
+#'
+#' @details
+#' It exists for the subspace form of the confounding question.
+#' \code{term_level_param} answers for the constant: a coordinate whose
+#' column is constant shifts the equation's predictor exactly as an
+#' intercept does. With the level developed, a direction of the
+#' development's span that also lies in the span of the equation's design
+#' raises the same question for that direction, and only a fitting layer,
+#' which holds both designs, can ask it. This generic hands it the one
+#' half it cannot see.
+#'
+#' @param term A built term.
+#' @param ... Passed to methods.
+#'
+#' @return A numeric matrix with named columns, or \code{NULL}.
+#'
+#' @examples
+#' is.null(term_level_design(linpar(~x)))
+#'
+#' @seealso \code{\link{term_level_param}}
+#' @export
+term_level_design <- S7::new_generic("term_level_design", "term",
+  function(term, ...) S7::S7_dispatch())
+
+S7::method(term_level_design, model_term) <- function(term, ...) NULL
 
 
 #' @title The Quantities a Fitted Term Reports

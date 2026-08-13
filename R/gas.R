@@ -15,8 +15,8 @@ NULL
 #' @param q The number of autoregressive lags.
 #' @param by An optional grouping expression, filtered independently.
 #' @param time An optional ordering expression.
-#' @param deviations Which parameters carry a deviation per group.
-#' @param penalty_kind The penalty on the deviations, if any.
+#' @param links The links overriding the defaults, if any.
+#' @param submodels One optional subformula per parameter.
 #' @param blueprint The resolved ordering and grouping.
 #'
 #' @return An object of class \code{GasTerm}.
@@ -33,8 +33,8 @@ GasTerm <- S7::new_class(
     q = S7::class_integer,
     by = S7::class_any,
     time = S7::class_any,
-    deviations = S7::class_any,
-    penalty_kind = S7::class_any,
+    links = S7::class_list,
+    submodels = S7::class_list,
     blueprint = S7::class_list
   )
 )
@@ -67,15 +67,31 @@ GasTerm <- S7::new_class(
 #'
 #' \subsection{The parameters and their chart}{
 #' The parameters are the level \eqn{\omega}, the score loadings
-#' \eqn{a_1, \dots, a_p}, and the persistence. The persistence is carried
-#' by \strong{partial autocorrelations} rather than by the coefficients
-#' \eqn{b_j}: the stationary region of an autoregression is not a box, so
-#' no collection of scalar links covers it, while the partial
-#' autocorrelations each range over \eqn{(-1, 1)} independently and the
-#' Levinson-Durbin recursion carries them onto the coefficients
-#' bijectively. At \eqn{q = 1} the two coincide. The coordinate is named
-#' for the chart it lives on, \code{pacf1} and so on, following the
-#' convention of \pkg{parameters7}.
+#' \eqn{a_1, \dots, a_p}, and the persistence. Each is estimated on the
+#' unconstrained scale of a link, and \code{links} overrides any of them;
+#' the defaults are the following.
+#'
+#' The level carries the identity, being unconstrained. The loadings carry
+#' the \strong{log} link: a positive loading responds in the direction of
+#' the score, which is the case the score-driven literature writes, and
+#' positivity is then structural -- a deviation or a submodel moves the
+#' loading on the log scale and no group or observation can take a
+#' negative one. A loading that must be free in sign is asked for with
+#' \code{links = list(alpha1 = linkfunctions7::identity_link())}.
+#'
+#' The persistence is carried by \strong{partial autocorrelations} rather
+#' than by the coefficients \eqn{b_j}: the stationary region of an
+#' autoregression is not a box, so no collection of scalar links covers
+#' it, while the partial autocorrelations each range over \eqn{(-1, 1)}
+#' independently and the Levinson-Durbin recursion carries them onto the
+#' coefficients bijectively. At \eqn{q = 1} the two coincide. The
+#' coordinate is named for the chart it lives on, \code{pacf1} and so on,
+#' following the convention of \pkg{parameters7}.
+#'
+#' Whatever the links, a parameter modeled per group or per observation
+#' stays in its own set: a departure acts on the unconstrained scale, so a
+#' loading on the log link is positive and a persistence on the rhobit
+#' link is stationary at every observation, whatever the departure is.
 #' }
 #'
 #' \subsection{One parameter at a time}{
@@ -104,63 +120,76 @@ GasTerm <- S7::new_class(
 #' Without \code{time} the rows are taken in the order they appear.
 #' }
 #'
-#' \subsection{A population value and a deviation per group}{
-#' By default every group of a panel is filtered with the same parameters.
-#' \code{deviations} gives each group its own, written as a population
-#' value and a departure from it,
-#' \deqn{\psi_{j,i} = g_j^{-1}\!\left(g_j(\psi_j) + \delta_{j,i}\right),}
-#' the deviation acting on the unconstrained scale of the chart the
-#' parameter lives on, so that a persistence stays inside \eqn{(-1, 1)}
-#' whatever the deviation is. The deviations are parameters of the term,
-#' named \code{omega.dev.1} and so on after the parameter and the level,
-#' and they carry the identity link, being unconstrained already.
+#' \subsection{A parameter developed with covariates}{
+#' A two-sided formula in \code{...} whose left side names a parameter
+#' develops it as \eqn{\psi_{j,t} = g_j^{-1}(z_t^\top\gamma_j)}, the
+#' design \eqn{Z} built from the right-hand side through
+#' \code{\link{interpret_formula}}, so it takes any additive term of the
+#' package:
+#' \preformatted{gas(p = 1, q = 1, omega ~ ridge(~g), alpha1 ~ s(x),
+#'     pacf1 ~ random(~1 | id), by = id)}
+#' The development acts on the unconstrained scale of the parameter's own
+#' link, which is what keeps every per-observation value in the
+#' parameter's own set whatever the coefficients are: a loading on the
+#' log link is positive at every observation, a persistence on the rhobit
+#' chart is inside \eqn{(-1, 1)} at every observation, and at \eqn{q = 1}
+#' that bounds the recursion's growth step by step. The coefficients
+#' \eqn{\gamma_j} are the term's parameters, unconstrained and on the
+#' identity link; the penalties the sub-terms carry are reported through
+#' \code{\link{term_penalties}} under the key \code{parameter::subterm}.
+#' A parameter that varies by observation changes the recursion itself,
+#' \deqn{f_t = \omega_t + \sum_i a_{i,t}\, s_{t-i}
+#'   + \sum_j b_{j,t}\, f_{t-j},}
+#' with \eqn{b_t} from the Levinson-Durbin map of that observation's
+#' partial autocorrelations, and the filter, its derivative, the reverse
+#' pass and the curvature all run the general recursion.
 #'
-#' They are parameters and not a penalty on the per-group values through a
-#' difference matrix, which is what the same model looks like written the
-#' other way. The difference decides what can be fitted: a penalty over a
-#' general map is the generalized-lasso problem, whose proximal operator
-#' does not split by coordinate, whereas a deviation named as a coordinate
-#' is reached by a soft threshold and by a coordinate descent unchanged.
-#' \code{penalty} shrinks them towards zero, which is towards a panel that
-#' is homogeneous in that parameter, and \code{"lasso"} sets the
-#' deviations of the groups that do not need one exactly to it.
+#' \code{by = ~f} (a formula, where a grouping variable is a bare symbol)
+#' is the shorthand giving the same subformula to every parameter; mixing
+#' it with per-parameter formulas is an error. A structural term, and a
+#' term whose block moves with its own coefficients, are rejected inside
+#' a subformula.
+#' }
 #'
-#' The penalty is also what identifies them. A parameter and its \eqn{m}
-#' deviations are \eqn{m+1} numbers describing \eqn{m} group values, so
-#' adding a constant to \eqn{g_j(\psi_j)} and subtracting it from every
-#' \eqn{\delta_{j,i}} leaves the filter and its likelihood exactly
-#' unchanged: without a penalty on the deviations the likelihood is flat
-#' along one direction per parameter carrying them. This is the
-#' parametrization of a random effect, and it is identified in the same way
-#' -- there by a variance component, here by the penalty, which selects the
-#' deviations of smallest size among those that describe the same panel.
-#' \code{penalty = "none"} is therefore for reading a filter at given
-#' parameters rather than for fitting one.
+#' \subsection{A population value and a departure per group}{
+#' The panel case is one subformula:
+#' \code{gas(omega ~ random(~1 | id), by = id)} is a population value (the
+#' intercept of the development) plus one unconstrained departure per
+#' group, shrunk by the random intercept's own ridge, whose hyperparameter
+#' a fitting layer estimates. \code{lasso(...)} in the subformula sets the
+#' departures of the groups that do not need one exactly to zero.
 #'
-#' The parameters a specification reports are the population ones alone:
-#' how many groups there are is a property of the data, so the deviations
-#' appear once the term is built.
+#' The departures act on the unconstrained scale of the parameter's chart,
+#' so a persistence stays inside \eqn{(-1, 1)} whatever the departure is.
+#' Their penalty is also what identifies them: a population value and
+#' \eqn{m} departures are \eqn{m+1} numbers describing \eqn{m} group
+#' values, so without the penalty the likelihood is flat along one
+#' direction per developed parameter. This is the parametrization of a
+#' random effect and it is identified the same way, there by a variance
+#' component, here by the penalty. An unpenalized development over group
+#' indicators is therefore for reading a filter at given parameters rather
+#' than for fitting one.
+#'
+#' Earlier releases spelled this case as \code{deviations =} with a
+#' \code{penalty =}; both arguments are gone, the subformula reproducing
+#' them exactly (the same fit to the printed digit, hyperparameter
+#' included) while covering what they could not.
 #' }
 #'
 #' @param p The number of score lags. Defaults to 1.
 #' @param q The number of autoregressive lags. Defaults to 1.
+#' @param ... Two-sided formulas whose left side names a parameter, one
+#'   per parameter to be developed with covariates, e.g.
+#'   \code{alpha1 ~ s(x)}; see the section above.
 #' @param by An optional grouping variable, evaluated in the data; each
-#'   group is filtered independently, from its own starting level.
+#'   group is filtered independently, from its own starting level. A
+#'   FORMULA here is the shorthand giving the same subformula to every
+#'   parameter, and then no grouping is implied.
 #' @param time An optional ordering variable, evaluated in the data.
-#' @param deviations Whether each group carries a deviation from the
-#'   population parameters: \code{FALSE} (default), \code{TRUE} for every
-#'   parameter, or a character vector naming the parameters that carry
-#'   one. Requires \code{by}.
-#' @param penalty The penalty on the deviations, which requires them:
-#'   \code{"none"} (default), \code{"lasso"}, \code{"ridge"}, a
-#'   \pkg{penalties7} penalty over as many coefficients as the deviations
-#'   number, or a function of that count returning one. The count is a
-#'   property of the data, so a penalty given as an object is checked
-#'   against it at \code{\link{term_build}} and a function is the spelling
-#'   for a specification written before the groups are known. There is no
-#'   \code{standardize} argument here and passing one is an error: a
-#'   deviation is a parameter of the recursion rather than a coefficient on
-#'   a column, so there is no spread to divide it by.
+#' @param links An optional named list of \pkg{linkfunctions7} links over
+#'   the parameters of \code{\link{term_params}}, overriding the defaults
+#'   described above. A deviation cannot be named: it is unconstrained by
+#'   construction, acting on the scale its parameter's own link defines.
 #' @param label A single non-empty string naming the term.
 #'
 #' @return An object of class \code{\link{GasTerm}} (a specification; see
@@ -179,8 +208,8 @@ GasTerm <- S7::new_class(
 #'
 #' @seealso \code{\link{regime}}
 #' @export
-gas <- function(p = 1, q = 1, by = NULL, time = NULL, deviations = FALSE,
-                penalty = "none", label = "gas") {
+gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL,
+                links = NULL, label = "gas") {
   chk <- function(v, nm, lo) {
     if (!is.numeric(v) || length(v) != 1L || is.na(v) || v < lo ||
         v != round(v)) {
@@ -191,7 +220,6 @@ gas <- function(p = 1, q = 1, by = NULL, time = NULL, deviations = FALSE,
   }
   p <- chk(p, "p", 1L)
   q <- chk(q, "q", 0L)
-  penalty <- .penalty_arg(penalty)
   if (!is.character(label) || length(label) != 1L || is.na(label) ||
       !nzchar(label)) {
     stop("'label' must be a single non-empty character string.",
@@ -199,73 +227,146 @@ gas <- function(p = 1, q = 1, by = NULL, time = NULL, deviations = FALSE,
   }
   by <- substitute(by)
   base <- .gas_base_params(p, q)
-  if (!isFALSE(deviations)) {
-    if (!isTRUE(deviations) &&
-        (!is.character(deviations) || !length(deviations) ||
-         anyNA(deviations))) {
-      stop(paste("'deviations' must be FALSE, TRUE, or a character vector",
-                 "naming the parameters that carry one."), call. = FALSE)
-    }
-    if (is.null(by)) {
-      stop("'deviations' needs 'by': a deviation is a departure per group.",
+  submodels <- .gas_gather_submodels(list(...), base)
+  # `by = ~f` is the shorthand giving every parameter the same subformula;
+  # a grouping variable is a bare symbol, so the two are told apart by shape
+  if (is.call(by) && identical(by[[1L]], as.name("~"))) {
+    if (length(submodels)) {
+      stop(paste("'by = ~f' gives every parameter the same subformula;",
+                 "mixing it with per-parameter formulas is an error."),
            call. = FALSE)
     }
-    bad <- setdiff(if (isTRUE(deviations)) character(0) else deviations, base)
+    if (length(by) != 2L) {
+      stop("a formula 'by' must be one-sided, e.g. by = ~ridge(~g).",
+           call. = FALSE)
+    }
+    f <- stats::as.formula(by, env = parent.frame())
+    submodels <- stats::setNames(rep(list(f), length(base)), base)
+    by <- NULL
+  }
+  if (!is.null(links)) {
+    if (!is.list(links) || is.null(names(links)) || anyNA(names(links)) ||
+        !all(nzchar(names(links)))) {
+      stop("'links' must be a named list of linkfunctions7 links.",
+           call. = FALSE)
+    }
+    bad <- setdiff(names(links), base)
     if (length(bad)) {
-      stop(sprintf("'deviations' names '%s'; the parameters are %s.",
+      stop(sprintf("'links' names '%s'; the parameters are %s.",
                    bad[1L], paste(base, collapse = ", ")), call. = FALSE)
     }
-  } else if (!.penalty_is_none(penalty)) {
-    stop(paste("'penalty' reaches the deviations of a panel, so it needs",
-               "'deviations'; the population parameters of a filter are not",
-               "shrunk towards zero."), call. = FALSE)
+    for (lname in names(links)) {
+      if (!S7::S7_inherits(links[[lname]], linkfunctions7::link)) {
+        stop(sprintf("'links$%s' is not a linkfunctions7 link.", lname),
+             call. = FALSE)
+      }
+    }
   }
   GasTerm(label = label, p = p, q = q,
           by = by, time = substitute(time),
-          deviations = deviations, penalty_kind = penalty,
+          links = if (is.null(links)) list() else links,
+          submodels = submodels,
           blueprint = list())
+}
+
+# the per-parameter subformulas of `...`: two-sided formulas whose left
+# side names a base parameter, at most one per parameter
+.gas_gather_submodels <- function(dots, base) {
+  # a named entry is an argument the signature does not take -- the shape a
+  # mistyped or removed argument arrives in -- and it is reported by name
+  # rather than swallowed by the formula check below
+  nms <- names(dots)
+  if (!is.null(nms) && any(nzchar(nms))) {
+    stop(sprintf(paste("unused argument '%s': '...' takes two-sided",
+                       "formulas whose left side names a parameter."),
+                 nms[nzchar(nms)][1L]), call. = FALSE)
+  }
+  out <- list()
+  for (d in dots) {
+    if (!inherits(d, "formula") || length(d) != 3L || !is.name(d[[2L]])) {
+      stop(paste("arguments in '...' must be two-sided formulas whose left",
+                 "side names a parameter, e.g. alpha1 ~ s(x)."),
+           call. = FALSE)
+    }
+    pn <- as.character(d[[2L]])
+    if (!(pn %in% base)) {
+      stop(sprintf("the subformula names '%s'; the parameters are %s.",
+                   pn, paste(base, collapse = ", ")), call. = FALSE)
+    }
+    if (!is.null(out[[pn]])) {
+      stop(sprintf("parameter '%s' carries two subformulas.", pn),
+           call. = FALSE)
+    }
+    out[[pn]] <- stats::as.formula(call("~", d[[3L]]), env = environment(d))
+  }
+  out
 }
 
 # the parameters of the filter itself, before any deviation
 .gas_base_params <- function(p, q) {
   # The level and the score loadings carry the names the score-driven
   # literature gives them, spelled out: they are the quantities themselves,
-  # each on the identity link, so a name can promise what it reports. The
-  # persistence cannot be named `beta`: it rides a partial autocorrelation,
-  # the stationary region not being a box, and a free coordinate named after
-  # the coefficient would promise the coefficient and report the chart. The
-  # coefficient is what a fitted model REPORTS, through `term_readable()`.
+  # each reported through its own link, so a name can promise what it
+  # reports. The persistence cannot be named `beta`: it rides a partial
+  # autocorrelation, the stationary region not being a box, and a free
+  # coordinate named after the coefficient would promise the coefficient and
+  # report the chart. The coefficient is what a fitted model REPORTS,
+  # through `term_readable()`.
   c("omega",
     if (p > 0L) paste0("alpha", seq_len(p)),
     if (q > 0L) paste0("pacf", seq_len(q)))
 }
 
-# which of them carry a deviation per group
-.gas_dev_params <- function(term) {
-  d <- term@deviations
-  if (isFALSE(d)) return(character(0))
-  if (isTRUE(d)) return(.gas_base_params(term@p, term@q))
-  d
-}
-
 S7::method(term_params, GasTerm) <- function(term, ...) {
-  base <- .gas_base_params(term@p, term@q)
-  dv <- .gas_dev_params(term)
-  levs <- term@blueprint$levels
-  if (!length(dv) || is.null(levs)) return(base)
-  c(base, unlist(lapply(dv, function(p) paste(p, "dev", levs, sep = "."))))
+  if (length(term@blueprint) && !is.null(term@blueprint$sub)) {
+    return(.gas_sub_layout(term)$names)
+  }
+  .gas_base_params(term@p, term@q)
 }
 
 #' @title The Level of a Score-Driven Term
 #' @name term_level_param.GasTerm
 #' @description
 #' \code{"omega"}, which adds a constant to the equation's predictor and is
-#' therefore the direction an intercept there also spans.
+#' therefore the direction an intercept there also spans. With the level
+#' developed by a subformula, the coordinates whose design column is
+#' constant, each of which shifts the predictor the same way.
 #' @param term A \code{\link{GasTerm}}.
 #' @param ... Unused.
-#' @return A single string.
+#' @return A character vector, usually of length one.
 #' @keywords internal
-S7::method(term_level_param, GasTerm) <- function(term, ...) "omega"
+S7::method(term_level_param, GasTerm) <- function(term, ...) {
+  sub <- if (length(term@blueprint)) term@blueprint$sub else NULL
+  if (is.null(sub) || is.null(sub$omega)) return("omega")
+  # with the level developed, the coordinates that shift the predictor by
+  # a constant are the ones whose column is constant; any residual
+  # constant hiding in a combination of non-constant columns is the
+  # layer's subspace question, not the term's
+  Z <- as.matrix(sub$omega$Z)
+  const <- vapply(seq_len(ncol(Z)), function(k) {
+    v <- Z[, k]
+    all(v == v[1L])
+  }, logical(1))
+  term_params(term)[.gas_sub_layout(term)$idx$omega][const]
+}
+
+#' @title The Design of a Developed Level
+#' @name term_level_design.GasTerm
+#' @description
+#' The design of \code{omega}'s development when it carries one, its
+#' columns named after the coordinates, so a fitting layer can compare its
+#' span with the equation's; \code{NULL} for a scalar level.
+#' @param term A built \code{\link{GasTerm}}.
+#' @param ... Unused.
+#' @return A numeric matrix or \code{NULL}.
+#' @keywords internal
+S7::method(term_level_design, GasTerm) <- function(term, ...) {
+  sub <- if (length(term@blueprint)) term@blueprint$sub else NULL
+  if (is.null(sub) || is.null(sub$omega)) return(NULL)
+  Z <- as.matrix(sub$omega$Z)
+  colnames(Z) <- term_params(term)[.gas_sub_layout(term)$idx$omega]
+  Z
+}
 
 #' @title What a Fitted Score-Driven Term Reports
 #' @name term_readable.GasTerm
@@ -274,13 +375,15 @@ S7::method(term_level_param, GasTerm) <- function(term, ...) "omega"
 #' literature -- \code{omega}, \code{alpha1}, \code{beta1} -- with the
 #' Jacobian from the term's own parameters.
 #' @details
-#' The level and the loadings are the coordinates themselves. The
-#' persistence is not: it is carried on a partial autocorrelation, and the
-#' coefficients come from the Levinson-Durbin recursion, whose Jacobian the
-#' term already computes for the filter. Chained onto the rhobit link of
-#' each coordinate, that Jacobian is what a delta-method standard error for
-#' \eqn{\beta_j} needs. At \eqn{q = 1} the two coincide and the chain factor
-#' is the link's alone; above it they do not.
+#' The level and the loadings are reported through their own links, each a
+#' function of its own coordinate alone, which the base method already
+#' does. The persistence is not: it is carried on a partial
+#' autocorrelation, and the coefficients come from the Levinson-Durbin
+#' recursion, whose Jacobian the term already computes for the filter.
+#' Chained onto the rhobit link of each coordinate, that Jacobian is what
+#' a delta-method standard error for \eqn{\beta_j} needs. At \eqn{q = 1}
+#' the two coincide and the chain factor is the link's alone; above it
+#' they do not.
 #'
 #' A deviation is reported as it stands, being unconstrained and defined on
 #' the scale of the parameter it departs from.
@@ -299,6 +402,10 @@ S7::method(term_readable, GasTerm) <- function(term, zeta, ...) {
   if (q == 0L) return(out)
 
   i_pa <- match(paste0("pacf", seq_len(q)), nm)
+  # with any partial autocorrelation developed, the coefficients vary by
+  # observation and there is no single beta to report: the coordinates are
+  # reported as the base method gives them
+  if (anyNA(i_pa)) return(out)
   lk <- links[[nm[i_pa[1L]]]]
   rho <- linkfunctions7::linkinv(lk, z[i_pa])
   k1 <- linkfunctions7::dlinkinv(lk, z[i_pa])
@@ -323,38 +430,82 @@ S7::method(term_links, GasTerm) <- function(term, ...) {
   base <- .gas_base_params(term@p, term@q)
   nm <- term_params(term)
   stats::setNames(lapply(nm, function(p) {
-    # a deviation is already unconstrained: it acts on the scale the
-    # population parameter's own link carries it to
-    if (!(p %in% base)) linkfunctions7::identity_link()
-    else if (startsWith(p, "pacf")) linkfunctions7::rhobit_link()
-    else linkfunctions7::identity_link()
+    # a deviation, and a coordinate of a development, are unconstrained
+    # already: they act on the scale the parameter's own link carries it
+    # to, which the term applies inside
+    if (!(p %in% base)) return(linkfunctions7::identity_link())
+    .gas_param_link(term, p)
   }), nm)
+}
+
+#' @title Where a Score-Driven Term's Parameters Start
+#' @name term_start.GasTerm
+#' @description
+#' Zero on the unconstrained scale of every parameter except the score
+#' loadings, which start at \eqn{0.1} on the parameter scale, through
+#' whatever link each one carries.
+#' @details
+#' Zero is the natural point of every other chart -- a level of zero, no
+#' persistence, no deviation -- so the term starts as near the model
+#' without it as its charts allow. The loadings are the exception because
+#' zero on the log scale is a loading of ONE, a response strong enough to
+#' destabilize the recursion at ordinary curvatures; \eqn{0.1} is a weak
+#' response, and it is applied on the parameter scale so the start means
+#' the same thing whatever chart a loading rides.
+#' @param term A \code{\link{GasTerm}}.
+#' @param ... Unused.
+#' @return A named numeric vector on the unconstrained scale.
+#' @keywords internal
+S7::method(term_start, GasTerm) <- function(term, ...) {
+  nm <- term_params(term)
+  z <- stats::setNames(numeric(length(nm)), nm)
+  base <- .gas_base_params(term@p, term@q)
+  target <- function(j) {
+    if (startsWith(j, "alpha")) {
+      linkfunctions7::linkfun(.gas_param_link(term, j), 0.1)
+    } else 0
+  }
+  sub <- if (length(term@blueprint)) term@blueprint$sub else NULL
+  if (!is.null(sub)) {
+    lay <- .gas_sub_layout(term)
+    for (j in base) {
+      z[lay$idx[[j]]] <- if (is.null(sub[[j]])) target(j) else {
+        # the constant start projected onto the development's design
+        .seg_gamma_start(sub[[j]]$Z, target(j))
+      }
+    }
+    return(z)
+  }
+  for (j in base) z[[j]] <- target(j)
+  z
 }
 
 #' @title Penalties of a Score-Driven Term
 #' @name term_penalties.GasTerm
 #' @description
-#' One entry per parameter carrying deviations, named after it and covering
-#' its deviations across the groups. The population parameters are
-#' unpenalized, and the list is empty when \code{penalty = "none"}, and for
-#' a specification, whose deviations do not exist until the data say how
-#' many groups there are.
+#' The penalties the subformulas' sub-terms declare, each under the key
+#' \code{parameter::subterm} and covering that sub-term's coefficients in
+#' the term's own numbering. The scalar parameters are unpenalized, and
+#' the list is empty for a specification, whose developments do not exist
+#' until the term is built.
 #' @param term A built \code{\link{GasTerm}}.
 #' @param ... Unused.
 #' @return A list of entries, as \code{\link{term_penalties}} documents.
 #' @keywords internal
 S7::method(term_penalties, GasTerm) <- function(term, ...) {
-  if (.penalty_is_none(term@penalty_kind)) return(list())
-  levs <- term@blueprint$levels
-  if (is.null(levs)) return(list())
-  base <- .gas_base_params(term@p, term@q)
-  dv <- .gas_dev_params(term)
-  m <- length(levs)
-  factory <- .penalty_factory(term@penalty_kind)
-  lapply(seq_along(dv), function(i) {
-    list(name = dv[i], index = length(base) + (i - 1L) * m + seq_len(m),
-         penalty = factory(m))
-  })
+  sub <- if (length(term@blueprint)) term@blueprint$sub else NULL
+  if (is.null(sub)) return(list())
+  lay <- .gas_sub_layout(term)
+  out <- list()
+  for (j in names(sub)) {
+    for (e in sub[[j]]$penalties) {
+      out[[length(out) + 1L]] <- list(
+        name = paste0(j, "::", e$name),
+        index = lay$idx[[j]][e$index],
+        penalty = e$penalty)
+    }
+  }
+  out
 }
 
 #' The Autoregressive Coefficients Behind the Partial Autocorrelations
@@ -480,10 +631,21 @@ S7::method(term_build, GasTerm) <- function(term, data, ...) {
   ord <- split(order(grp, tm), grp[order(grp, tm)])
   term@blueprint <- list(order = ord, n = n, levels = levels(gf),
                          by = term@by, time = term@time)
-  # a penalty supplied as an object covers a fixed number of coefficients and
-  # the deviations are counted here for the first time, so this is the
-  # earliest point at which the two can be compared, and the latest at which
-  # a caller can still read the mistake against what they wrote
+  # the developments, each through the interpreter exactly as a parameter
+  # of nl(): the built sub-terms are kept, prediction reapplying each
+  # one's own blueprint, and their penalties are collected at
+  # term_penalties() under the key parameter::subterm
+  if (length(term@submodels)) {
+    sub <- list()
+    for (pn in names(term@submodels)) {
+      sub[[pn]] <- .nl_submodel(pn, term@submodels[[pn]], data)
+    }
+    term@blueprint$sub <- sub
+  }
+  # a penalty supplied as an object covers a fixed number of coefficients
+  # and a development's width is counted here for the first time, so this
+  # is the earliest point at which the two can be compared, and the latest
+  # at which a caller can still read the mistake against what they wrote
   term_penalties(term)
   term
 }
@@ -519,27 +681,6 @@ S7::method(term_build, GasTerm) <- function(term, data, ...) {
        i_a = i_a, np = np)
 }
 
-# One group's parameter values and the two chain factors the jacobian needs:
-# with psi_i = g^-1(g(psi) + delta), the derivative in the population value
-# is g^-1'(g(psi) + delta) g'(psi) and the one in the deviation is the same
-# without the second factor. At delta = 0 the first is 1, by the inverse
-# function theorem, which is what makes an unused deviation cost nothing.
-.gas_group_values <- function(base_psi, links, dv, delta) {
-  v <- base_psi
-  dpop <- rep(1, length(base_psi))
-  ddev <- stats::setNames(numeric(length(dv)), dv)
-  for (p in dv) {
-    lk <- links[[p]]
-    e <- linkfunctions7::linkfun(lk, base_psi[[p]]) + delta[[p]]
-    v[[p]] <- linkfunctions7::linkinv(lk, e)
-    di <- linkfunctions7::dlinkinv(lk, e)
-    ddev[[p]] <- di
-    dpop[[which(names(base_psi) == p)]] <-
-      di * linkfunctions7::dlinkfun(lk, base_psi[[p]])
-  }
-  list(value = v, dpop = dpop, ddev = ddev)
-}
-
 #' @title Filter a Score-Driven Term
 #' @name term_filter.GasTerm
 #' @description
@@ -572,51 +713,17 @@ S7::method(term_filter, GasTerm) <- function(term, eta, y, score, curvature,
     stop(sprintf("'psi' must supply %s.", paste(nm, collapse = ", ")),
          call. = FALSE)
   }
+  if (!is.null(bp$sub)) {
+    return(.gas_filter_sub(term, eta, y, score, curvature, psi))
+  }
   p <- term@p
   q <- term@q
-  base <- .gas_base_params(p, q)
-  dv <- .gas_dev_params(term)
-  base_psi <- psi[base]
-
-  if (!length(dv)) {
-    cf <- .gas_coefs(base_psi, p, q)
-    out <- gas_filter_cpp(eta, bp$order, p, q, cf$omega, cf$a, cf$b, cf$db,
-                          cf$f0, cf$df0, cf$i_a, cf$np, score, curvature)
-    jac <- out$jacobian
-    colnames(jac) <- nm
-    return(list(eta = out$eta, jacobian = jac))
-  }
-
-  # With deviations each group runs on parameters of its own, so the filter
-  # is called once per group and the columns of its jacobian are chained
-  # onto the population values and scattered into that group's deviations.
-  # A group's rows reach no other group's deviation, the groups being
-  # filtered independently.
-  levs <- bp$levels
-  m <- length(levs)
-  links <- term_links(term)
-  nb <- length(base)
-  eta_out <- numeric(bp$n)
-  jac <- matrix(0, bp$n, length(nm))
-  for (l in seq_len(m)) {
-    delta <- stats::setNames(
-      as.list(psi[nb + (seq_along(dv) - 1L) * m + l]), dv)
-    gv <- .gas_group_values(base_psi, links, dv, delta)
-    cf <- .gas_coefs(gv$value, p, q)
-    rows <- bp$order[[l]]
-    out <- gas_filter_cpp(eta, list(rows), p, q, cf$omega, cf$a, cf$b,
-                          cf$db, cf$f0, cf$df0, cf$i_a, cf$np, score,
-                          curvature)
-    eta_out[rows] <- out$eta[rows]
-    g <- out$jacobian[rows, , drop = FALSE]
-    jac[rows, seq_len(nb)] <- g * rep(gv$dpop, each = length(rows))
-    for (i in seq_along(dv)) {
-      j <- match(dv[i], base)
-      jac[rows, nb + (i - 1L) * m + l] <- g[, j] * gv$ddev[[dv[i]]]
-    }
-  }
+  cf <- .gas_coefs(psi[.gas_base_params(p, q)], p, q)
+  out <- gas_filter_cpp(eta, bp$order, p, q, cf$omega, cf$a, cf$b, cf$db,
+                        cf$f0, cf$df0, cf$i_a, cf$np, score, curvature)
+  jac <- out$jacobian
   colnames(jac) <- nm
-  list(eta = eta_out, jacobian = jac)
+  list(eta = out$eta, jacobian = jac)
 }
 
 #' @title Filter a Score-Driven Term Backwards
@@ -653,29 +760,21 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
     stop(sprintf("'g' must give one value per observation (%d).", bp$n),
          call. = FALSE)
   }
+  if (!is.null(bp$sub)) {
+    return(.gas_adjoint_sub(term, eta, y, score, curvature, v, g))
+  }
   # the predictor the recursion produced, which is where the callbacks are read
   e <- term_filter(term, eta, y, score, curvature, psi)$eta
 
   p <- term@p
   q <- term@q
   base <- .gas_base_params(p, q)
-  dv <- .gas_dev_params(term)
-  base_psi <- v[base]
-  links <- if (length(dv)) term_links(term) else NULL
-  levs <- bp$levels
-  nb <- length(base)
-  m <- length(levs)
 
+  cf <- .gas_coefs(v[base], p, q)
   deta <- numeric(bp$n)
   dscore <- numeric(bp$n)
   for (l in seq_along(bp$order)) {
     rows <- bp$order[[l]]
-    vals <- if (!length(dv)) base_psi else {
-      delta <- stats::setNames(
-        as.list(v[nb + (seq_along(dv) - 1L) * m + l]), dv)
-      .gas_group_values(base_psi, links, dv, delta)$value
-    }
-    cf <- .gas_coefs(vals, p, q)
     a <- cf$a
     b <- cf$b
     k <- length(rows)
@@ -711,13 +810,13 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' second derivatives in those.
 #'
 #' @details
-#' The level and the loadings carry the identity link, so their first
-#' derivative is one and their second is zero. The persistence reaches the
-#' coefficients through two maps -- the link onto the partial
-#' autocorrelations and Levinson-Durbin onto the coefficients -- so its
-#' second derivative carries both a term in the map's own curvature and one
-#' in the link's, which is where \code{\link[linkfunctions7]{d2linkinv}}
-#' enters.
+#' The level and the loadings each reach the recursion through their own
+#' link, so their first derivative is the link's and their second, on the
+#' diagonal, is \code{\link[linkfunctions7]{d2linkinv}}; on the identity
+#' both collapse to one and zero. The persistence reaches the coefficients
+#' through two maps -- the link onto the partial autocorrelations and
+#' Levinson-Durbin onto the coefficients -- so its second derivative
+#' carries both a term in the map's own curvature and one in the link's.
 #'
 #' @param zeta The term's parameters on the unconstrained scale.
 #' @param p,q The score and autoregressive orders.
@@ -733,14 +832,30 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
   i_a <- if (p > 0L) 1L + seq_len(p) else integer(0)
   i_pa <- if (q > 0L) 1L + p + seq_len(q) else integer(0)
 
-  omega <- zeta[[i_om]]
-  a <- if (p > 0L) zeta[i_a] else numeric(0)
+  lk_om <- links[[nm[i_om]]]
+  omega <- linkfunctions7::linkinv(lk_om, zeta[[i_om]])
+  a <- if (p > 0L) vapply(seq_len(p), function(i)
+    linkfunctions7::linkinv(links[[nm[i_a[i]]]], zeta[[i_a[i]]]),
+    numeric(1)) else numeric(0)
   d_omega <- numeric(np)
-  d_omega[i_om] <- 1
+  d_omega[i_om] <- linkfunctions7::dlinkinv(lk_om, zeta[[i_om]])
+  h_omega <- matrix(0, np, np)
+  h_omega[i_om, i_om] <- linkfunctions7::d2linkinv(lk_om, zeta[[i_om]])
   d_a <- lapply(seq_len(max(p, 1L)), function(i) {
     v <- numeric(np)
-    if (p > 0L) v[i_a[i]] <- 1
+    if (p > 0L) {
+      v[i_a[i]] <- linkfunctions7::dlinkinv(links[[nm[i_a[i]]]],
+                                            zeta[[i_a[i]]])
+    }
     v
+  })
+  h_a <- lapply(seq_len(max(p, 1L)), function(i) {
+    h <- matrix(0, np, np)
+    if (p > 0L) {
+      h[i_a[i], i_a[i]] <- linkfunctions7::d2linkinv(links[[nm[i_a[i]]]],
+                                                     zeta[[i_a[i]]])
+    }
+    h
   })
 
   b <- numeric(0)
@@ -770,8 +885,8 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
       h_b[[j]] <- h
     }
   }
-  list(omega = omega, a = a, b = b, d_omega = d_omega, d_a = d_a,
-       d_b = d_b, h_b = h_b, np = np)
+  list(omega = omega, a = a, b = b, d_omega = d_omega, h_omega = h_omega,
+       d_a = d_a, h_a = h_a, d_b = d_b, h_b = h_b, np = np)
 }
 
 #' @title Second Derivatives of a Score-Driven Predictor
@@ -781,24 +896,17 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' the second derivative contracted against the caller's weights, both
 #' propagated through the recursion beside the state.
 #' @details
-#' With deviations the recursion runs once per group on that group's own
-#' parameters, which are the population values plus the group's deviations
-#' on the unconstrained scale. That map is affine, so its second derivative
-#' is zero and the only change is the lift carrying a base coordinate into
-#' two columns of the caller's unknowns, the population value and the
-#' group's own deviation.
+#' With subformulas the general per-observation route runs instead, and
+#' the second derivative is accumulated on each group's ACTIVE SET rather
+#' than as a square over all the unknowns: a development's coordinate
+#' reaches only the groups where its column is not identically zero, so
+#' with grouping indicators the active set has the same size whether the
+#' panel has ten groups or a thousand. Measured, the full square cost
+#' 0.39 s at 124 unknowns over 1600 rows and would have reached about
+#' twelve minutes at five hundred groups.
 #'
-#' The second derivative is accumulated on that group's ACTIVE SET and never
-#' as a square over all the unknowns. A group's rows reach the coefficients,
-#' the population parameters and that group's own deviations, and nothing
-#' else, so the active set has the same size whether the panel has ten
-#' groups or a thousand: the per-observation work is constant in the number
-#' of groups where forming the full square made it quadratic. Measured, the
-#' square cost 0.39 s at 124 unknowns over 1600 rows and would have reached
-#' about twelve minutes at five hundred groups.
-#'
-#' \code{blocks} is therefore called with the row of the jacobian RESTRICTED
-#' to the active set and with that set, and returns its pieces in the same
+#' \code{blocks} is called with the row of the jacobian RESTRICTED to the
+#' active set and with that set, and returns its pieces in the same
 #' coordinates. A callback of the earlier three-argument shape is still
 #' accepted and given the full row, its result being subset here; it costs
 #' the quadratic allocation the restriction exists to avoid.
@@ -826,8 +934,11 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
   nm <- term_params(term)
   links <- term_links(term)
   psiv <- unlist(psi[nm])
+  if (!is.null(bp$sub)) {
+    return(.gas_curvature_sub(term, eta, y, score, curvature, psiv, g,
+                              seed, blocks))
+  }
   base <- .gas_base_params(term@p, term@q)
-  dv <- .gas_dev_params(term)
   nb <- length(base)
   ng <- length(bp$order)
   # the recursion is driven by the parameters, and the caller's unknowns
@@ -858,48 +969,26 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
   p <- term@p
   q <- term@q
 
-  # A group's parameters are its population values plus its deviations ON THE
-  # UNCONSTRAINED SCALE, which is the scale a deviation is defined on, so the
-  # map from the caller's unknowns to a group's chart is AFFINE: its Jacobian
-  # is this matrix of ones and zeros and its second derivative is exactly
-  # zero, which is why a deviation adds no term to the recursion below and
-  # only widens the lift. One base coordinate reaches two columns, the
-  # population value and that group's own deviation.
-  # A group's rows reach the coefficients, the population parameters and that
-  # group's own deviations, and NOTHING else: no row of group l carries a
-  # derivative in group l's neighbour. Everything below is carried on this
-  # set, whose size does not grow with the number of groups.
-  active_of <- function(l) {
-    if (!length(dv)) return(seq_len(m))
-    dev <- vapply(seq_along(dv), function(i) zcol[nb + (i - 1L) * ng + l],
-                  integer(1))
-    c(seq_len(m - np), zcol[seq_len(nb)], dev)
-  }
+  # every group shares the scalar parameters, so the chart, the lifted
+  # derivative arrays and the starting level are built once
+  active_of <- function(l) seq_len(m)
 
   lift_of <- function(l, act) {
     A <- matrix(0, nb, length(act))
     A[cbind(seq_len(nb), match(zcol[seq_len(nb)], act))] <- 1
-    for (i in seq_along(dv)) {
-      j <- match(dv[[i]], base)
-      A[j, match(zcol[nb + (i - 1L) * ng + l], act)] <- 1
-    }
     A
   }
 
-  # the chart, the lifted derivative arrays and the starting level of one
-  # group; with no deviation every group shares them and they are built once
   prep <- function(l, act) {
     mk <- length(act)
-    z <- zeta
-    for (i in seq_along(dv)) {
-      z[[dv[[i]]]] <- z[[dv[[i]]]] + psiv[[nb + (i - 1L) * ng + l]]
-    }
-    ch <- .gas_chart_derivs(z, p, q, links)
+    ch <- .gas_chart_derivs(zeta, p, q, links)
     A <- lift_of(l, act)
     lift <- function(v) as.numeric(crossprod(A, v))
     lift2 <- function(h) crossprod(A, h %*% A)
     om_u <- lift(ch$d_omega)
+    om_uu <- lift2(ch$h_omega)
     a_u <- lapply(ch$d_a, lift)
+    a_uu <- lapply(ch$h_a, lift2)
     b_u <- lapply(ch$d_b, lift)
     b_uu <- lapply(ch$h_b, lift2)
     sb <- if (q > 0L) sum(ch$b) else 0
@@ -907,19 +996,22 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
       stop("the autoregressive polynomial is at the unit root; the filter has no starting level.",
            call. = FALSE)
     }
-    # the starting level and its two derivatives: f0 = omega/(1 - sum b)
+    # the starting level and its two derivatives: f0 = omega/(1 - sum b),
+    # with omega's own chart curvature entering the first term
     db_sum <- if (q > 0L) Reduce(`+`, b_u) else numeric(mk)
     f0 <- ch$omega / (1 - sb)
     f0_u <- om_u / (1 - sb) + ch$omega * db_sum / (1 - sb)^2
-    f0_uu <- (outer(om_u, db_sum) + outer(db_sum, om_u)) / (1 - sb)^2 +
+    f0_uu <- om_uu / (1 - sb) +
+      (outer(om_u, db_sum) + outer(db_sum, om_u)) / (1 - sb)^2 +
       2 * ch$omega * outer(db_sum, db_sum) / (1 - sb)^3
     if (q > 0L) {
       f0_uu <- f0_uu + ch$omega * Reduce(`+`, b_uu) / (1 - sb)^2
     }
-    list(omega = ch$omega, a = ch$a, b = ch$b, om_u = om_u, a_u = a_u,
-         b_u = b_u, b_uu = b_uu, f0 = f0, f0_u = f0_u, f0_uu = f0_uu)
+    list(omega = ch$omega, a = ch$a, b = ch$b, om_u = om_u, om_uu = om_uu,
+         a_u = a_u, a_uu = a_uu, b_u = b_u, b_uu = b_uu,
+         f0 = f0, f0_u = f0_u, f0_uu = f0_uu)
   }
-  shared <- if (!length(dv)) prep(1L, seq_len(m)) else NULL
+  shared <- prep(1L, seq_len(m))
 
   # does the caller take the active set? A three-argument callback is the
   # earlier contract and is given the full row instead
@@ -936,7 +1028,9 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
     a <- gp$a
     b <- gp$b
     om_u <- gp$om_u
+    om_uu <- gp$om_uu
     a_u <- gp$a_u
+    a_uu <- gp$a_uu
     b_u <- gp$b_u
     b_uu <- gp$b_uu
     f0 <- gp$f0
@@ -953,7 +1047,8 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
       row <- rows[t]
       ft <- gp$omega
       Ft <- om_u
-      Pt <- matrix(0, mk, mk)
+      # the level's own chart curvature, zero on the identity
+      Pt <- om_uu
       if (p > 0L) {
         for (i in seq_len(p)) {
           lag <- t - i
@@ -963,7 +1058,8 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
           ft <- ft + a[[i]] * s_l
           Ft <- Ft + a[[i]] * Sd_l + s_l * a_u[[i]]
           Pt <- Pt + a[[i]] * Sdd_l +
-            outer(a_u[[i]], Sd_l) + outer(Sd_l, a_u[[i]])
+            outer(a_u[[i]], Sd_l) + outer(Sd_l, a_u[[i]]) +
+            s_l * a_uu[[i]]
         }
       }
       if (q > 0L) {
@@ -1017,11 +1113,9 @@ S7::method(print, GasTerm) <- function(x, ...) {
               x@label, x@p, x@q,
               if (built) sprintf("; %d group(s)", length(x@blueprint$order))
               else " (specification)"))
-  dv <- .gas_dev_params(x)
-  if (length(dv)) {
-    cat(sprintf("  deviations on: %s%s\n", paste(dv, collapse = ", "),
-                if (!.penalty_is_none(x@penalty_kind))
-                  sprintf("; %s", .penalty_label(x@penalty_kind)) else ""))
+  if (length(x@submodels)) {
+    cat("  developed: ", paste(names(x@submodels), collapse = ", "),
+        "\n", sep = "")
   }
   cat("  parameters: ", paste(term_params(x), collapse = ", "), "\n", sep = "")
   invisible(x)

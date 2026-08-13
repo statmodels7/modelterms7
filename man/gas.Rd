@@ -4,41 +4,28 @@
 \alias{gas}
 \title{Score-Driven Dynamics}
 \usage{
-gas(
-  p = 1,
-  q = 1,
-  by = NULL,
-  time = NULL,
-  deviations = FALSE,
-  penalty = "none",
-  label = "gas"
-)
+gas(p = 1, q = 1, ..., by = NULL, time = NULL, links = NULL, label = "gas")
 }
 \arguments{
 \item{p}{The number of score lags. Defaults to 1.}
 
 \item{q}{The number of autoregressive lags. Defaults to 1.}
 
+\item{...}{Two-sided formulas whose left side names a parameter, one
+per parameter to be developed with covariates, e.g.
+\code{alpha1 ~ s(x)}; see the section above.}
+
 \item{by}{An optional grouping variable, evaluated in the data; each
-group is filtered independently, from its own starting level.}
+group is filtered independently, from its own starting level. A
+FORMULA here is the shorthand giving the same subformula to every
+parameter, and then no grouping is implied.}
 
 \item{time}{An optional ordering variable, evaluated in the data.}
 
-\item{deviations}{Whether each group carries a deviation from the
-population parameters: \code{FALSE} (default), \code{TRUE} for every
-parameter, or a character vector naming the parameters that carry
-one. Requires \code{by}.}
-
-\item{penalty}{The penalty on the deviations, which requires them:
-\code{"none"} (default), \code{"lasso"}, \code{"ridge"}, a
-\pkg{penalties7} penalty over as many coefficients as the deviations
-number, or a function of that count returning one. The count is a
-property of the data, so a penalty given as an object is checked
-against it at \code{\link{term_build}} and a function is the spelling
-for a specification written before the groups are known. There is no
-\code{standardize} argument here and passing one is an error: a
-deviation is a parameter of the recursion rather than a coefficient on
-a column, so there is no spread to divide it by.}
+\item{links}{An optional named list of \pkg{linkfunctions7} links over
+the parameters of \code{\link{term_params}}, overriding the defaults
+described above. A deviation cannot be named: it is unconstrained by
+construction, acting on the scale its parameter's own link defines.}
 
 \item{label}{A single non-empty string naming the term.}
 }
@@ -72,15 +59,31 @@ to its size.
 
 \subsection{The parameters and their chart}{
 The parameters are the level \eqn{\omega}, the score loadings
-\eqn{a_1, \dots, a_p}, and the persistence. The persistence is carried
-by \strong{partial autocorrelations} rather than by the coefficients
-\eqn{b_j}: the stationary region of an autoregression is not a box, so
-no collection of scalar links covers it, while the partial
-autocorrelations each range over \eqn{(-1, 1)} independently and the
-Levinson-Durbin recursion carries them onto the coefficients
-bijectively. At \eqn{q = 1} the two coincide. The coordinate is named
-for the chart it lives on, \code{pacf1} and so on, following the
-convention of \pkg{parameters7}.
+\eqn{a_1, \dots, a_p}, and the persistence. Each is estimated on the
+unconstrained scale of a link, and \code{links} overrides any of them;
+the defaults are the following.
+
+The level carries the identity, being unconstrained. The loadings carry
+the \strong{log} link: a positive loading responds in the direction of
+the score, which is the case the score-driven literature writes, and
+positivity is then structural -- a deviation or a submodel moves the
+loading on the log scale and no group or observation can take a
+negative one. A loading that must be free in sign is asked for with
+\code{links = list(alpha1 = linkfunctions7::identity_link())}.
+
+The persistence is carried by \strong{partial autocorrelations} rather
+than by the coefficients \eqn{b_j}: the stationary region of an
+autoregression is not a box, so no collection of scalar links covers
+it, while the partial autocorrelations each range over \eqn{(-1, 1)}
+independently and the Levinson-Durbin recursion carries them onto the
+coefficients bijectively. At \eqn{q = 1} the two coincide. The
+coordinate is named for the chart it lives on, \code{pacf1} and so on,
+following the convention of \pkg{parameters7}.
+
+Whatever the links, a parameter modeled per group or per observation
+stays in its own set: a departure acts on the unconstrained scale, so a
+loading on the log link is positive and a persistence on the rhobit
+link is stationary at every observation, whatever the departure is.
 }
 
 \subsection{One parameter at a time}{
@@ -109,42 +112,60 @@ short series needs, and \code{time} gives the order within a group.
 Without \code{time} the rows are taken in the order they appear.
 }
 
-\subsection{A population value and a deviation per group}{
-By default every group of a panel is filtered with the same parameters.
-\code{deviations} gives each group its own, written as a population
-value and a departure from it,
-\deqn{\psi_{j,i} = g_j^{-1}\!\left(g_j(\psi_j) + \delta_{j,i}\right),}
-the deviation acting on the unconstrained scale of the chart the
-parameter lives on, so that a persistence stays inside \eqn{(-1, 1)}
-whatever the deviation is. The deviations are parameters of the term,
-named \code{omega.dev.1} and so on after the parameter and the level,
-and they carry the identity link, being unconstrained already.
+\subsection{A parameter developed with covariates}{
+A two-sided formula in \code{...} whose left side names a parameter
+develops it as \eqn{\psi_{j,t} = g_j^{-1}(z_t^\top\gamma_j)}, the
+design \eqn{Z} built from the right-hand side through
+\code{\link{interpret_formula}}, so it takes any additive term of the
+package:
+\preformatted{gas(p = 1, q = 1, omega ~ ridge(~g), alpha1 ~ s(x),
+    pacf1 ~ random(~1 | id), by = id)}
+The development acts on the unconstrained scale of the parameter's own
+link, which is what keeps every per-observation value in the
+parameter's own set whatever the coefficients are: a loading on the
+log link is positive at every observation, a persistence on the rhobit
+chart is inside \eqn{(-1, 1)} at every observation, and at \eqn{q = 1}
+that bounds the recursion's growth step by step. The coefficients
+\eqn{\gamma_j} are the term's parameters, unconstrained and on the
+identity link; the penalties the sub-terms carry are reported through
+\code{\link{term_penalties}} under the key \code{parameter::subterm}.
+A parameter that varies by observation changes the recursion itself,
+\deqn{f_t = \omega_t + \sum_i a_{i,t}\, s_{t-i}
+  + \sum_j b_{j,t}\, f_{t-j},}
+with \eqn{b_t} from the Levinson-Durbin map of that observation's
+partial autocorrelations, and the filter, its derivative, the reverse
+pass and the curvature all run the general recursion.
 
-They are parameters and not a penalty on the per-group values through a
-difference matrix, which is what the same model looks like written the
-other way. The difference decides what can be fitted: a penalty over a
-general map is the generalized-lasso problem, whose proximal operator
-does not split by coordinate, whereas a deviation named as a coordinate
-is reached by a soft threshold and by a coordinate descent unchanged.
-\code{penalty} shrinks them towards zero, which is towards a panel that
-is homogeneous in that parameter, and \code{"lasso"} sets the
-deviations of the groups that do not need one exactly to it.
+\code{by = ~f} (a formula, where a grouping variable is a bare symbol)
+is the shorthand giving the same subformula to every parameter; mixing
+it with per-parameter formulas is an error. A structural term, and a
+term whose block moves with its own coefficients, are rejected inside
+a subformula.
+}
 
-The penalty is also what identifies them. A parameter and its \eqn{m}
-deviations are \eqn{m+1} numbers describing \eqn{m} group values, so
-adding a constant to \eqn{g_j(\psi_j)} and subtracting it from every
-\eqn{\delta_{j,i}} leaves the filter and its likelihood exactly
-unchanged: without a penalty on the deviations the likelihood is flat
-along one direction per parameter carrying them. This is the
-parametrization of a random effect, and it is identified in the same way
--- there by a variance component, here by the penalty, which selects the
-deviations of smallest size among those that describe the same panel.
-\code{penalty = "none"} is therefore for reading a filter at given
-parameters rather than for fitting one.
+\subsection{A population value and a departure per group}{
+The panel case is one subformula:
+\code{gas(omega ~ random(~1 | id), by = id)} is a population value (the
+intercept of the development) plus one unconstrained departure per
+group, shrunk by the random intercept's own ridge, whose hyperparameter
+a fitting layer estimates. \code{lasso(...)} in the subformula sets the
+departures of the groups that do not need one exactly to zero.
 
-The parameters a specification reports are the population ones alone:
-how many groups there are is a property of the data, so the deviations
-appear once the term is built.
+The departures act on the unconstrained scale of the parameter's chart,
+so a persistence stays inside \eqn{(-1, 1)} whatever the departure is.
+Their penalty is also what identifies them: a population value and
+\eqn{m} departures are \eqn{m+1} numbers describing \eqn{m} group
+values, so without the penalty the likelihood is flat along one
+direction per developed parameter. This is the parametrization of a
+random effect and it is identified the same way, there by a variance
+component, here by the penalty. An unpenalized development over group
+indicators is therefore for reading a filter at given parameters rather
+than for fitting one.
+
+Earlier releases spelled this case as \code{deviations =} with a
+\code{penalty =}; both arguments are gone, the subformula reproducing
+them exactly (the same fit to the printed digit, hyperparameter
+included) while covering what they could not.
 }
 }
 \examples{
