@@ -1,5 +1,53 @@
 # Changelog
 
+## modelterms7 0.29.0
+
+- [`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md),
+  a new generic: the second derivative of a structural term’s predictor
+  differentiated once more and contracted against ONE direction,
+  together with the derivative of the term’s jacobian along the same
+  direction. It is what the exact gradient of a marginal criterion needs
+  where a penalty covers the term’s own parameters, the criterion asking
+  for `tr(M dK/du[v])` at the direction the penalized mode moves in. The
+  full third derivative is an `m^3` array per observation and is never
+  formed: what is propagated is a matrix per observation, the same size
+  as the curvature and therefore the same O(n m^2). Measured against
+  [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
+  on panels of 9, 15 and 30 unknowns: 2.62x, 2.66x and 2.78x, flat in
+  the number of unknowns.
+
+  The base method on `model_term` returns zero, which is right for a
+  term whose predictor is a block of columns; `structural_term` REFUSES,
+  so a term that bends the predictor and has not written its third
+  derivative reports nothing rather than a zero a caller could not tell
+  from a genuine one. `GasTerm` implements it on both routes, scalar and
+  submodel.
+
+  Each order of differentiating the predictor through the recursion
+  pulls in one more order of the family, the score the recursion is
+  driven by being read at the predictor it produces: the curvature’s `M`
+  is built from third derivatives and this needs a FOURTH, which
+  `blocks` supplies as `N` alongside `dcurv`. Validated against a
+  central difference of
+  [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
+  along the direction, Richardson-extrapolated because the plain
+  difference’s own truncation is larger than the gap being measured:
+  4.5e-11 to 1.7e-9 relative over p and q to 3, on a stub whose four
+  derivative orders are all non-zero and all bounded.
+
+- [`gas_levinson3()`](https://statmodels7.github.io/modelterms7/reference/gas_levinson3.md):
+  the Levinson-Durbin map’s third derivative, contracted against one
+  direction. ⚠️ It is identically zero for q \<= 2, the map being
+  multilinear of degree k in the first k partial autocorrelations, so a
+  check that stops at q = 2 compares zero with zero; the test runs to q
+  = 4.
+
+- [`.gas_curvature_core()`](https://statmodels7.github.io/modelterms7/reference/dot-gas_curvature_core.md):
+  the second and third orders share one body rather than a method each.
+  The third order reads F, Phi and the score’s first two derivatives at
+  every lag, so a separate implementation would carry a second copy of
+  the first two orders and the two would drift.
+
 ## modelterms7 0.28.0
 
 - The general recursion of the submodel route runs compiled

@@ -293,6 +293,8 @@ exact derivative beside the state.
   : Differentiate a Structural Term Backwards
 - [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
   : Second Derivatives of a Structural Term's Predictor
+- [`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
+  : Third Derivatives of a Structural Term's Predictor, in One Direction
 - [`term_hessian()`](https://statmodels7.github.io/modelterms7/reference/term_hessian.md)
   : The Observed Hessian of a Likelihood Mixed Over States
 - [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.28.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.29.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,16 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.29.0" id="modelterms7-0290">modelterms7 0.29.0<a class="anchor" aria-label="anchor" href="#modelterms7-0290"></a></h2>
+<ul><li>
+<p><code><a href="../reference/term_third.html">term_third()</a></code>, a new generic: the second derivative of a structural term’s predictor differentiated once more and contracted against ONE direction, together with the derivative of the term’s jacobian along the same direction. It is what the exact gradient of a marginal criterion needs where a penalty covers the term’s own parameters, the criterion asking for <code>tr(M dK/du[v])</code> at the direction the penalized mode moves in. The full third derivative is an <code>m^3</code> array per observation and is never formed: what is propagated is a matrix per observation, the same size as the curvature and therefore the same O(n m^2). Measured against <code><a href="../reference/term_curvature.html">term_curvature()</a></code> on panels of 9, 15 and 30 unknowns: 2.62x, 2.66x and 2.78x, flat in the number of unknowns.</p>
+<p>The base method on <code>model_term</code> returns zero, which is right for a term whose predictor is a block of columns; <code>structural_term</code> REFUSES, so a term that bends the predictor and has not written its third derivative reports nothing rather than a zero a caller could not tell from a genuine one. <code>GasTerm</code> implements it on both routes, scalar and submodel.</p>
+<p>Each order of differentiating the predictor through the recursion pulls in one more order of the family, the score the recursion is driven by being read at the predictor it produces: the curvature’s <code>M</code> is built from third derivatives and this needs a FOURTH, which <code>blocks</code> supplies as <code>N</code> alongside <code>dcurv</code>. Validated against a central difference of <code><a href="../reference/term_curvature.html">term_curvature()</a></code> along the direction, Richardson-extrapolated because the plain difference’s own truncation is larger than the gap being measured: 4.5e-11 to 1.7e-9 relative over p and q to 3, on a stub whose four derivative orders are all non-zero and all bounded.</p>
+</li>
+<li><p><code><a href="../reference/gas_levinson3.html">gas_levinson3()</a></code>: the Levinson-Durbin map’s third derivative, contracted against one direction. ⚠️ It is identically zero for q &lt;= 2, the map being multilinear of degree k in the first k partial autocorrelations, so a check that stops at q = 2 compares zero with zero; the test runs to q = 4.</p></li>
+<li><p><code><a href="../reference/dot-gas_curvature_core.html">.gas_curvature_core()</a></code>: the second and third orders share one body rather than a method each. The third order reads F, Phi and the score’s first two derivatives at every lag, so a separate implementation would carry a second copy of the first two orders and the two would drift.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.28.0" id="modelterms7-0280">modelterms7 0.28.0<a class="anchor" aria-label="anchor" href="#modelterms7-0280"></a></h2>
 <ul><li>The general recursion of the submodel route runs compiled (<code>gas_filter_sub_cpp</code> in <code>src/gas_filter.cpp</code>). The R side prepares each group’s derivative rows once, scattered onto the group’s active coordinates by one vectorized assignment per parameter, so the kernel’s loop allocates nothing per step; the score and curvature callbacks stay in R, as in the scalar kernel and for the same reason. Measured on a panel with a developed level: 4.2x-4.3x over the R route, flat in n (n = 2000 to 8000), the compiled route now within 1.8x-2.1x of the scalar kernel where the R route sat at 5.4x-5.6x. The R loop survives as <code>.gas_filter_sub_r</code>, the twin the kernel is compared against at a tolerance (a compiler may contract a multiply-add; measured agreement is one rounding, 2.2e-16 on the jacobian). The adjoint and the curvature stay in R: the adjoint is one pass computed once per gradient, and the curvature is computed once, at <code><a href="https://rdrr.io/r/stats/vcov.html" class="external-link">vcov()</a></code>.</li>
