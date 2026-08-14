@@ -1379,3 +1379,127 @@ S7::method(print, SegTerm) <- function(x, ...) {
   }
   invisible(x)
 }
+
+#' @title Where a Break-Point Term's Coefficients Begin
+#' @name term_coef_start.SegTerm
+#' @description
+#' The start \code{\link{term_build}} computed: unit changes, and the
+#' break-points at the positions \code{psi} names or at the interior
+#' quantiles of the covariate. Zero is degenerate here rather than neutral
+#' -- a discontinuous term reads its break-point off \eqn{-g_k/\delta_k},
+#' which at zero is the same clamped position for every one of them, and a
+#' continuous term's Jacobian column vanishes -- so a fitting layer that
+#' starts every coefficient at zero has to be told otherwise.
+#' @param term A built \code{\link{SegTerm}}.
+#' @param ... Unused.
+#' @return A numeric vector, one value per column of the block.
+#' @keywords internal
+S7::method(term_coef_start, SegTerm) <- function(term, ...) {
+  .assert_built(term)
+  term@blueprint$coef
+}
+
+#' @title What a Fitted Break-Point Term Is About
+#' @name term_readable.SegTerm
+#'
+#' @description
+#' The quantities of the model the term defines, rather than the
+#' coefficients of the working block it is fitted through: the linear
+#' effect \eqn{\beta} where the term carries one, the changes of slope
+#' \eqn{\gamma_k} and of level \eqn{\delta_k}, and the break-points
+#' \eqn{\psi_k}, with the Jacobian from the coefficients so that a caller
+#' holding their variance matrix can carry it across.
+#'
+#' @details
+#' A continuous term holds every one of those as a coefficient and the
+#' Jacobian is a selection. A discontinuous one does not hold the
+#' break-point at all: it is read off the auxiliary pair as \eqn{\psi_k =
+#' -g_k/\delta_k}, which the joint construction reaches too, its quadratic
+#' degenerating to that reading once the increment has vanished. The
+#' Jacobian rows are then
+#'
+#' \deqn{\frac{\partial \psi_k}{\partial g_k} = -\frac{1}{\delta_k},
+#'   \qquad
+#'   \frac{\partial \psi_k}{\partial \delta_k} = \frac{g_k}{\delta_k^{2}},}
+#'
+#' which is the delta method \code{segmented} reports a break-point's
+#' standard error by. The joint construction reads its position from a
+#' quadratic that also carries the change of slope, and the two readings
+#' differ by the increment the iteration has left: the VALUE reported is
+#' the one the term holds, so that this and \code{\link{seg_psi}} cannot
+#' give two numbers for one quantity, and the Jacobian is the fixed
+#' point's, which the quadratic degenerates to once the increment has
+#' vanished.
+#'
+#' Every quantity is on the identity scale: a change is unbounded and a
+#' break-point is a position on the covariate's own scale, held inside the
+#' interval between the 5th and the 95th percentile. Where a coefficient
+#' carries a development there is no single number to report -- a
+#' break-point then has one value per observation -- and the method
+#' returns nothing, leaving a caller to report the coefficients
+#' themselves.
+#'
+#' @param term A built \code{\link{SegTerm}}.
+#' @param zeta The term's coefficients, in the order of its block.
+#' @param ... Unused.
+#'
+#' @return A list with \code{name}, \code{value}, \code{jacobian} and
+#'   \code{scale}, as \code{\link{term_readable}} documents, or
+#'   \code{NULL} where a coefficient carries a development.
+#'
+#' @keywords internal
+S7::method(term_readable, SegTerm) <- function(term, zeta, ...) {
+  .assert_built(term)
+  bp <- term@blueprint
+  if (isTRUE(bp$developed)) return(NULL)
+  cf <- as.numeric(zeta)
+  K <- bp$npsi
+  np <- length(cf)
+  nm <- character(0)
+  val <- numeric(0)
+  rows <- list()
+  at <- function(p) bp$index[[p]][1L]
+  push <- function(label, v, j) {
+    nm <<- c(nm, label)
+    val <<- c(val, v)
+    rows[[length(rows) + 1L]] <<- j
+  }
+  sel <- function(i) { e <- numeric(np); e[i] <- 1; e }
+
+  if (bp$linear) push("beta", cf[at("beta")], sel(at("beta")))
+  if (bp$kind %in% c("seg", "jseg")) {
+    for (k in seq_len(K)) {
+      i <- at(paste0("gamma", k))
+      push(paste0("gamma", k), cf[i], sel(i))
+    }
+  }
+  if (bp$kind %in% c("jump", "jseg")) {
+    for (k in seq_len(K)) {
+      i <- at(paste0("delta", k))
+      push(paste0("delta", k), cf[i], sel(i))
+    }
+  }
+  # the positions the TERM holds, read by the same function it reads them
+  # with, so that this and seg_psi() cannot report two numbers for one
+  # quantity
+  pos <- .seg_positions(bp, cf, 1L, bp$Z, bp$pk)$psi[1L, ]
+  for (k in seq_len(K)) {
+    ip <- at(paste0("psi", k))
+    if (bp$kind == "seg") {
+      push(paste0("psi", k), pos[k], sel(ip))
+    } else {
+      id <- at(paste0("delta", k))
+      d <- cf[id]
+      if (abs(d) < 1e-12) d <- sign(d + (d == 0)) * 1e-12
+      j <- numeric(np)
+      j[ip] <- -1 / d
+      j[id] <- cf[ip] / d^2
+      push(paste0("psi", k), pos[k], j)
+    }
+  }
+  J <- do.call(rbind, rows)
+  dimnames(J) <- list(nm, term@coef_names)
+  list(name = nm, value = val, jacobian = J,
+       scale = stats::setNames(
+         rep(list(linkfunctions7::identity_link()), length(nm)), nm))
+}

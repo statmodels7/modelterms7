@@ -607,3 +607,78 @@ test_that("a developed term predicts by reapplying the sub-design", {
                unname(as.matrix(term_matrix(cur)))[keep, , drop = FALSE],
                tolerance = 1e-10)
 })
+
+test_that("a break-point term says where its own coefficients begin", {
+  set.seed(31)
+  dd <- data.frame(x = sort(runif(120, 0, 10)))
+
+  # zero is degenerate rather than neutral here, so the term answers with
+  # the start term_build() computed: unit changes and the break-points at
+  # the positions asked for
+  b <- term_build(jump(x, npsi = 2, psi = c(3, 7)), dd)
+  expect_identical(term_coef_start(b), b@blueprint$coef)
+  expect_equal(term_coef_start(b), c(1, 1, -3, -7), tolerance = 1e-12)
+  expect_equal(seg_psi(term_refresh(b, term_coef_start(b))), c(3, 7),
+               tolerance = 1e-12)
+
+  bs <- term_build(seg(x, psi = 4), dd)
+  expect_equal(term_coef_start(bs), c(0, 1, 4), tolerance = 1e-12)
+
+  # an ordinary block wants zeros, which is what the base method gives
+  expect_identical(term_coef_start(term_build(linpar(~x), dd)), c(0, 0))
+  expect_identical(term_coef_start(term_build(ridge(~x), dd)), 0)
+
+  # and a vector of zeros really is degenerate for a jump: every
+  # break-point collapses onto the same clamped position
+  z <- term_refresh(b, numeric(4))
+  expect_equal(diff(seg_psi(z)), 0, tolerance = 1e-12)
+  expect_lt(qr(as.matrix(term_matrix(z)))$rank, 4L)
+})
+
+test_that("a fitted break-point term reports psi, not the pair it is read from", {
+  set.seed(32)
+  n <- 400
+  dd <- data.frame(x = sort(runif(n, 0, 10)))
+  dd$y <- 1 + 0.4 * dd$x + 2 * pmax(dd$x - 6, 0) + 1.5 * (dd$x > 6) +
+    rnorm(n, sd = 0.3)
+
+  for (kind in c("seg", "jump", "jseg")) {
+    spec <- switch(kind, seg = seg(x), jump = jump(x), jseg = jseg(x))
+    built <- term_build(seg_start(spec, dd, dd$y), dd)
+    cf <- seg_iterate(built, dd$y, iters = 200)
+    cur <- term_refresh(built, cf)
+    rd <- term_readable(cur, cf)
+
+    # the positions it reports ARE the ones seg_psi() gives
+    expect_equal(rd$value[grep("^psi", rd$name)],
+                 as.numeric(seg_psi(cur, cf)), tolerance = 1e-10,
+                 info = kind)
+    # every quantity of the model is named, and the auxiliary pair is not
+    expect_true(all(grepl("^(beta|gamma|delta|psi)[0-9]*$", rd$name)),
+                info = kind)
+    expect_false(any(grepl("^g[0-9]", rd$name)), info = kind)
+
+    # the jacobian against numDeriv, which shares no arithmetic with the
+    # delta method written into the method. The joint construction reads
+    # its position from a quadratic whose previous iterate is a state of
+    # the run and not a function of the coefficients, so what is
+    # differentiated there is the fixed point's reading; the changes are
+    # checked whatever the construction.
+    f <- function(v) {
+      q <- term_readable(term_refresh(cur, v), v)
+      q$value
+    }
+    J <- numDeriv::jacobian(f, cf)
+    rows <- if (kind == "jseg") !grepl("^psi", rd$name) else
+      rep(TRUE, length(rd$name))
+    expect_equal(unname(rd$jacobian[rows, , drop = FALSE]),
+                 J[rows, , drop = FALSE], tolerance = 1e-7, info = kind)
+  }
+
+  # a developed coefficient has no single position to report, and the
+  # method says so by answering NULL rather than by inventing one
+  d2 <- dd
+  d2$g <- factor(rep(c("a", "b"), length.out = n))
+  bd <- term_build(seg(x, by = ~0 + g), d2)
+  expect_null(term_readable(bd, bd@blueprint$coef))
+})

@@ -747,3 +747,21 @@ S7::method(print, NlTerm) <- function(x, ...) {
   }
   invisible(x)
 }
+
+#' @title Where a Nonlinear Term's Coefficients Begin
+#' @name term_coef_start.NlTerm
+#' @description
+#' The coefficients \code{\link{term_build}} built the block at: the
+#' starting value of each of the term's own parameters carried through its
+#' link, from \code{start} where the caller gave one. The block is the
+#' Jacobian at those values, so it is not the same block at any other
+#' point, and a fitting layer that started at zero would linearize where
+#' the term was never meant to be evaluated.
+#' @param term A built \code{\link{NlTerm}}.
+#' @param ... Unused.
+#' @return A numeric vector, one value per column of the block.
+#' @keywords internal
+S7::method(term_coef_start, NlTerm) <- function(term, ...) {
+  .assert_built(term)
+  term@blueprint$coef
+}

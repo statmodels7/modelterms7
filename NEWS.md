@@ -1,3 +1,29 @@
+# modelterms7 0.31.0
+
+* `term_coef_start()`, a new generic: the coefficients a built term asks to
+  be started at. The base method returns zero everywhere, which is what a
+  term whose block is a fixed design wants, and a term that recomputes its
+  block from its coefficients answers with the start `term_build()`
+  computed. Zero is degenerate rather than neutral there: in `jump()` the
+  break-point is read off two coefficients as `-g_k/delta_k`, so a vector
+  of zeros puts every break-point at the same clamped position and leaves
+  the block singular, and in `seg()` the Jacobian column vanishes
+  identically. `nl()` answers with the values its own `start` names.
+
+* `term_readable()` for a break-point term: the quantities of the model it
+  defines -- the linear effect, the changes of slope and of level, and the
+  break-points `psi_k` -- with the Jacobian from the coefficients, so a
+  caller holding their variance matrix carries it across. A continuous
+  term holds each of them as a coefficient; a discontinuous one does not
+  hold the break-point at all, and the rows
+
+      d psi_k / d g_k = -1 / delta_k,   d psi_k / d delta_k = g_k / delta_k^2
+
+  are the delta method `segmented` reports a break-point's standard error
+  by. Checked against numDeriv on all three constructions (1e-11). A
+  developed coefficient has no single number to report and the method
+  answers `NULL`.
+
 # modelterms7 0.30.0
 
 * `seg()`, `jump()` and `jseg()` have a documentation page each, opening

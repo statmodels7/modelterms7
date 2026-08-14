@@ -235,6 +235,52 @@ S7::method(term_npar, structural_term) <- function(term, ...) {
   length(term_params(term))
 }
 
+
+#' @title Where a Term's Own Coefficients Begin
+#'
+#' @description
+#' The coefficients a built term asks to be started at, one per column of
+#' its block. The base method returns zero everywhere, which is what a term
+#' whose block is a fixed design wants: the fit reaches the same optimum
+#' from anywhere, the objective being convex in those coordinates.
+#'
+#' @details
+#' A term that recomputes its block from its coefficients
+#' (\code{\link{term_refresh}}) is the case this exists for, because zero
+#' is not a neutral point there but a degenerate one. In
+#' \code{\link{jump}} the break-point is read off two coefficients as
+#' \eqn{-g_k/\delta_k}, so a vector of zeros puts every break-point at the
+#' same clamped position and makes the block singular; in
+#' \code{\link{seg}} the Jacobian column is \eqn{-\gamma_k\,\mathbb{1}(x >
+#' \psi_k)} and vanishes identically. Those terms return the start
+#' \code{\link{term_build}} computed -- unit changes and the break-points
+#' at the interior quantiles of the covariate, or the positions
+#' \code{psi} names -- and \code{\link{nl}} returns the starting values of
+#' its own parameters carried through their links.
+#'
+#' The value belongs to the term for the reason \code{\link{term_start}}
+#' records for a structural one: only the term knows what a coefficient of
+#' zero means for the block it builds.
+#'
+#' @param term A built term (see \code{\link{term_build}}).
+#' @param ... Passed to methods.
+#'
+#' @return A numeric vector of length \code{\link{term_npar}}.
+#'
+#' @examples
+#' dd <- data.frame(x = sort(runif(50, 0, 10)))
+#' term_coef_start(term_build(linpar(~x), dd))
+#' term_coef_start(term_build(jump(x), dd))
+#'
+#' @seealso \code{\link{term_start}}, \code{\link{term_refresh}}
+#' @export
+term_coef_start <- S7::new_generic("term_coef_start", "term",
+  function(term, ...) S7::S7_dispatch())
+
+S7::method(term_coef_start, model_term) <- function(term, ...) {
+  numeric(term_npar(term))
+}
+
 #' @title Coefficient Names of a Built Term
 #'
 #' @description
