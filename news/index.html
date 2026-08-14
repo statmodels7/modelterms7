@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.30.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.31.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,13 +33,22 @@
     </div>
 
     <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.31.0" id="modelterms7-0310">modelterms7 0.31.0<a class="anchor" aria-label="anchor" href="#modelterms7-0310"></a></h2>
+<ul><li><p><code><a href="../reference/term_coef_start.html">term_coef_start()</a></code>, a new generic: the coefficients a built term asks to be started at. The base method returns zero everywhere, which is what a term whose block is a fixed design wants, and a term that recomputes its block from its coefficients answers with the start <code><a href="../reference/term_build.html">term_build()</a></code> computed. Zero is degenerate rather than neutral there: in <code><a href="../reference/jump.html">jump()</a></code> the break-point is read off two coefficients as <code>-g_k/delta_k</code>, so a vector of zeros puts every break-point at the same clamped position and leaves the block singular, and in <code><a href="../reference/seg.html">seg()</a></code> the Jacobian column vanishes identically. <code><a href="../reference/nl.html">nl()</a></code> answers with the values its own <code>start</code> names.</p></li>
+<li>
+<p><code><a href="../reference/term_readable.html">term_readable()</a></code> for a break-point term: the quantities of the model it defines – the linear effect, the changes of slope and of level, and the break-points <code>psi_k</code> – with the Jacobian from the coefficients, so a caller holding their variance matrix carries it across. A continuous term holds each of them as a coefficient; a discontinuous one does not hold the break-point at all, and the rows</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>d psi_k <span class="sc">/</span> d g_k <span class="ot">=</span> <span class="sc">-</span><span class="dv">1</span> <span class="sc">/</span> delta_k,   d psi_k <span class="sc">/</span> d delta_k <span class="ot">=</span> g_k <span class="sc">/</span> delta_k<span class="sc">^</span><span class="dv">2</span></span></code></pre></div>
+<p>are the delta method <code>segmented</code> reports a break-point’s standard error by. Checked against numDeriv on all three constructions (1e-11). A developed coefficient has no single number to report and the method answers <code>NULL</code>.</p>
+</li>
+</ul></div>
+    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.30.0" id="modelterms7-0300">modelterms7 0.30.0<a class="anchor" aria-label="anchor" href="#modelterms7-0300"></a></h2>
 <ul><li>
 <p><code><a href="../reference/seg.html">seg()</a></code>, <code><a href="../reference/jump.html">jump()</a></code> and <code><a href="../reference/jseg.html">jseg()</a></code> have a documentation page each, opening with the model the term defines. Written for the predictor of any parameter of any distribution rather than for a gaussian mean, they are</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>seg    eta_i <span class="ot">=</span> z_i<span class="st">'alpha + beta x_i + sum_k gamma_k (x_i - psi_k)_+</span></span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="st">jump   eta_i = z_i'</span>alpha            <span class="sc">+</span> sum_k delta_k <span class="dv">1</span>(x_i <span class="sc">&gt;=</span> psi_k)</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>jseg   eta_i <span class="ot">=</span> z_i<span class="st">'alpha + beta x_i</span></span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a><span class="st">               + sum_k [delta_k 1(x_i &gt;= psi_k) + gamma_k (x_i - psi_k)_+]</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>seg    eta_i <span class="ot">=</span> z_i<span class="st">'alpha + beta x_i + sum_k gamma_k (x_i - psi_k)_+</span></span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="st">jump   eta_i = z_i'</span>alpha            <span class="sc">+</span> sum_k delta_k <span class="dv">1</span>(x_i <span class="sc">&gt;=</span> psi_k)</span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>jseg   eta_i <span class="ot">=</span> z_i<span class="st">'alpha + beta x_i</span></span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="st">               + sum_k [delta_k 1(x_i &gt;= psi_k) + gamma_k (x_i - psi_k)_+]</span></span></code></pre></div>
 <p>with the rest of the equation supplying <code>z_i'alpha</code>.</p>
 </li>
 <li><p>The coefficients are named after those formulas: <code>beta</code> for the linear effect (was <code>lin</code>), <code>gamma_k</code> for a change of slope (was <code>delta_k</code>) and <code>delta_k</code> for a change of level (was <code>kappa_k</code>). <code>psi_k</code> is unchanged for the continuous construction, and the auxiliary pair of the discontinuous ones stays <code>g_k</code>.</p></li>
@@ -243,7 +252,7 @@
 <h2 class="pkg-version" data-toc-text="0.16.0" id="modelterms7-0160">modelterms7 0.16.0<a class="anchor" aria-label="anchor" href="#modelterms7-0160"></a></h2>
 <ul><li>
 <p><code><a href="../reference/gas.html">gas()</a></code> carries a population value and a deviation per group. With <code>by</code> and <code>deviations</code> each group of a panel is filtered with parameters of its own, written as</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>psi[j, i] <span class="ot">=</span> g_j<span class="sc">^-</span><span class="dv">1</span>( <span class="fu">g_j</span>(psi_j) <span class="sc">+</span> delta[j, i] ),</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>psi[j, i] <span class="ot">=</span> g_j<span class="sc">^-</span><span class="dv">1</span>( <span class="fu">g_j</span>(psi_j) <span class="sc">+</span> delta[j, i] ),</span></code></pre></div>
 <p>the deviation acting on the unconstrained scale of the chart the parameter lives on, so a persistence stays inside (-1, 1) whatever the deviation is. <code>deviations</code> takes TRUE for every parameter or the names of the ones that carry one, and needs <code>by</code>. The deviations are parameters of the term, named after the parameter and the level (<code>omega.dev.a</code>), and carry the identity link, being unconstrained already.</p>
 <p>They are parameters and NOT a penalty on the per-group values through a difference matrix, which is the same model written the other way. The difference decides what can be fitted: a penalty over a general map is the generalized-lasso problem, whose proximal operator does not split by coordinate, while a deviation named as a coordinate is reached by a soft threshold and by a coordinate descent unchanged.</p>
 <p>The filter runs once per group and chains the columns of its jacobian onto the population values, exactly, <code>d psi[j,i] / d psi_j</code> being <code>g^-1'(g(psi_j) + delta) g'(psi_j)</code> and the derivative in the deviation the same without the second factor. At a zero deviation the two are reciprocal by the inverse function theorem, so the filter and every population column are then bit for bit the shared-parameter ones. The jacobian agrees with <code>numDeriv</code> to 1e-10 with deviations on one parameter and on all of them.</p>
