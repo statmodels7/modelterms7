@@ -38,7 +38,7 @@ test_that("seg recovers a change of slope", {
   dd$y <- 1 + 0.5 * dd$x + 2 * pmax(dd$x - 6, 0) + rnorm(n, sd = 0.3)
 
   built <- term_build(seg(x, psi = 4), dd)
-  expect_identical(term_coef_names(built), c("seg.lin", "seg.delta1",
+  expect_identical(term_coef_names(built), c("seg.beta", "seg.gamma1",
                                              "seg.psi1"))
   b <- seg_iterate(built, dd$y - 1)
   expect_equal(seg_psi(built, b), 6, tolerance = 0.15)
@@ -75,7 +75,7 @@ test_that("the jump identity is exact at every observation", {
   built <- term_build(jump(x, psi = 4), dd)
   kappa <- 2.5
   psi <- 4
-  b <- c(0, kappa, -kappa * psi)
+  b <- c(kappa, -kappa * psi)
   cur <- term_refresh(built, b)
   X <- term_matrix(cur)
 
@@ -100,9 +100,9 @@ test_that("jump recovers a discontinuity, from a start well away from it", {
   dd <- data.frame(x = sort(runif(n, 0, 10)))
   dd$y <- 3 * (dd$x > 6.5) + rnorm(n, sd = 0.4)
 
-  built <- term_build(jump(x, psi = 3, linear = FALSE), dd)
+  built <- term_build(jump(x, psi = 3), dd)
   expect_identical(term_coef_names(built),
-                   c("jump.kappa1", "jump.g1"))
+                   c("jump.delta1", "jump.g1"))
   b <- seg_iterate(built, dd$y, iters = 60)
   expect_equal(seg_psi(built, b), 6.5, tolerance = 0.2)
   expect_equal(b[1], 3, tolerance = 0.3)   # the size of the jump
@@ -117,7 +117,7 @@ test_that("jseg recovers a jump and a change of slope at the same point", {
 
   built <- term_build(jseg(x, psi = 6), dd)
   expect_identical(term_coef_names(built),
-                   c("jseg.lin", "jseg.delta1", "jseg.kappa1", "jseg.g1"))
+                   c("jseg.beta", "jseg.gamma1", "jseg.delta1", "jseg.g1"))
   b <- seg_iterate(built, dd$y, iters = 120)
   expect_equal(seg_psi(built, b), 5, tolerance = 0.2)
   expect_equal(b[3], 2, tolerance = 0.4)    # the jump
@@ -175,40 +175,40 @@ test_that("the compiled block agrees with the R twin", {
   # reordering would fail it. They are NOT bit for bit everywhere --
   # a compiler free to contract `v += d * u` into a fused multiply-add
   # drops the intermediate rounding, which macOS does and this machine
-  # does not.
+  # does not. The compiled route is taken wherever no coefficient carries
+  # a development, which is the ordinary case and the one it was written
+  # for; a development goes through the R form.
   set.seed(11)
-  code <- c(seg = 0L, jump = 1L, jseg = 2L)
   for (n in c(37L, 1000L)) {
-    xv <- sort(runif(n, 0, 10))
-    lim <- as.numeric(stats::quantile(xv, c(0.05, 0.95), names = FALSE))
-    rr <- range(xv)
-    cs <- rep(0.05, 3L)
+    dd <- data.frame(x = sort(runif(n, 0, 10)))
     for (kind in c("seg", "jump", "jseg")) {
       for (npsi in c(1L, 3L)) {
         for (linear in c(TRUE, FALSE)) {
-          npar <- (if (linear) 1L else 0L) +
-            (if (kind == "jseg") 3L else 2L) * npsi
+          if (kind == "jump" && linear) next
+          ctor <- switch(kind, seg = seg, jump = jump, jseg = jseg)
+          spec <- if (kind == "jump") ctor(x, npsi = npsi) else
+            ctor(x, npsi = npsi, linear = linear)
+          built <- term_build(spec, dd)
+          bp <- built@blueprint
+          npar <- ncol(built@X)
           cf <- runif(npar, 0.5, 2) * sample(c(-1, 1), npar, TRUE)
-          a <- modelterms7:::.seg_block_r(kind, xv, cf, npsi, linear,
-                                          cs[seq_len(npsi)], rr[1], rr[2],
-                                          lim)
-          b <- modelterms7:::.seg_block(kind, xv, cf, npsi, linear,
-                                        cs[seq_len(npsi)], rr[1], rr[2],
-                                        lim)
+          a <- modelterms7:::.seg_block(bp, dd$x, cf, bp$cscale)
+          b <- modelterms7:::.seg_block_cpp(bp, dd$x, cf, bp$cscale)
           info <- paste(kind, npsi, linear, n)
-          expect_equal(b$X, a$X, tolerance = 1e-15, info = info)
-          expect_equal(b$value, a$value, tolerance = 1e-15, info = info)
-          expect_identical(b$psi, a$psi, info = info)
+          expect_equal(unname(as.matrix(a$X)), unname(b$X),
+                       tolerance = 1e-15, info = info)
+          expect_equal(a$value, b$value, tolerance = 1e-15, info = info)
+          expect_equal(a$psi, b$psi, tolerance = 1e-15, info = info)
         }
       }
     }
   }
 
-  # A level of `by` can be empty on a subset, which is how check_term
-  # reaches this: taking the address of the first element of a matrix
-  # with no rows is out of bounds.
-  e <- modelterms7:::.seg_block("jseg", numeric(0), c(1, 1, 2, -4), 1L,
-                                TRUE, 0.05, 0, 10, c(0, 10))
+  # A subset can be empty, which is how check_term reaches this: taking the
+  # address of the first element of a matrix with no rows is out of bounds.
+  built <- term_build(jseg(x), data.frame(x = sort(runif(50, 0, 10))))
+  e <- modelterms7:::.seg_block_cpp(built@blueprint, numeric(0),
+                                    c(1, 1, 2, -4), built@blueprint$cscale)
   expect_identical(dim(e$X), c(0L, 4L))
   expect_identical(e$value, numeric(0))
 })
@@ -218,7 +218,7 @@ test_that("several break-points are carried and reported in order", {
   dd <- data.frame(x = sort(runif(200, 0, 10)))
   built <- term_build(seg(x, npsi = 3), dd)
   expect_identical(term_coef_names(built),
-                   c("seg.lin", "seg.delta1", "seg.delta2", "seg.delta3",
+                   c("seg.beta", "seg.gamma1", "seg.gamma2", "seg.gamma3",
                      "seg.psi1", "seg.psi2", "seg.psi3"))
   # the default starting positions are the interior quantiles
   expect_equal(seg_psi(built),
@@ -228,120 +228,108 @@ test_that("several break-points are carried and reported in order", {
 
   bj <- term_build(jump(x, npsi = 2), dd)
   expect_identical(term_coef_names(bj),
-                   c("jump.lin", "jump.kappa1", "jump.kappa2",
-                     "jump.g1", "jump.g2"))
+                   c("jump.delta1", "jump.delta2", "jump.g1", "jump.g2"))
   expect_identical(length(seg_psi(bj)), 2L)
 })
 
-test_that("by gives an independent break-point per level", {
+test_that("by = ~0 + g gives an independent set of everything per level", {
+  # the shorthand develops EVERY coefficient of the term on the group
+  # indicators, which is the per-level model written as a development, so
+  # the columns are parameter-major: one per level within each coefficient
   set.seed(7)
   n <- 400
   dd <- data.frame(x = sort(runif(n, 0, 10)),
                    g = factor(sample(c("a", "b"), n, TRUE)))
-  built <- term_build(seg(x, by = g), dd)
+  built <- term_build(seg(x, by = ~0 + g), dd)
   expect_identical(term_npar(built), 6L)
-  expect_true(all(grepl("^seg\\.(a|b)\\.", term_coef_names(built))))
-  expect_identical(length(seg_psi(built)), 2L)
+  expect_identical(term_coef_names(built),
+                   c("seg.beta.ga", "seg.beta.gb", "seg.gamma1.ga",
+                     "seg.gamma1.gb", "seg.psi1.ga", "seg.psi1.gb"))
 
   # a level's columns vanish off its own rows
-  X <- term_matrix(built)
-  expect_true(all(X[dd$g != "a", 1:3] == 0))
-  expect_true(all(X[dd$g != "b", 4:6] == 0))
+  X <- as.matrix(term_matrix(built))
+  expect_true(all(X[dd$g != "a", c(1L, 3L, 5L)] == 0))
+  expect_true(all(X[dd$g != "b", c(2L, 4L, 6L)] == 0))
 
-  res <- check_term(seg(x, by = g), dd, verbose = FALSE)
+  res <- check_term(seg(x, by = ~0 + g), dd, verbose = FALSE)
   expect_true(all(res$status == "OK"),
               info = paste(res$check[res$status != "OK"], collapse = ", "))
+
+  # the discontinuous constructions reach the same model, the product the
+  # break-point is read off collapsing group by group over indicators
+  bj <- term_build(jump(x, by = ~0 + g), dd)
+  expect_identical(term_coef_names(bj),
+                   c("jump.delta1.ga", "jump.delta1.gb", "jump.g1.ga",
+                     "jump.g1.gb"))
+
+  # a bare variable is rejected with the formula it stands for
+  expect_error(seg(x, by = g), "by = ~0 \\+ g")
 })
 
-test_that("a penalty reaches the changes and nothing else", {
+test_that("a penalty on the changes is the development on a penalized intercept", {
   set.seed(8)
   dd <- data.frame(x = sort(runif(120, 0, 10)))
-  built <- term_build(seg(x, npsi = 2, penalty = penalties7::lasso_penalty), dd)
-  # the penalty is declared over the coefficients it covers, and is not
-  # attached to the whole block: term_penalty() answers for a penalty over
-  # all of it, and there is none
+  # `gamma ~ 0 + lasso(~1)` says the changes themselves carry a lasso. The
+  # `0 +` removes the subformula's own unpenalized intercept, which for an
+  # intercept-only development would be the same column twice.
+  built <- term_build(seg(x, npsi = 2, gamma ~ 0 + lasso(~1)), dd)
   expect_null(term_penalty(built))
   ent <- term_penalties(built)
   expect_length(ent, 1L)
-  expect_identical(ent[[1L]]$name, "delta")
+  # one entry over BOTH changes: a subformula shared by every coefficient
+  # of a kind is one penalized block under one hyperparameter, which is
+  # what selecting how many break-points there are asks for
   expect_identical(ent[[1L]]$penalty@params, "lambda")
-  expect_false(term_smooth(built))
-
-  # the two slope changes out of the five coefficients, by position
-  expect_identical(ent[[1L]]$index, 2:3)
-  expect_identical(term_coef_names(built)[ent[[1L]]$index],
-                   c("seg.delta1", "seg.delta2"))
   expect_identical(ent[[1L]]$penalty@n_coef, 2L)
+  expect_identical(term_coef_names(built)[ent[[1L]]$index],
+                   c("seg.gamma1.lasso.(Intercept)",
+                     "seg.gamma2.lasso.(Intercept)"))
+  expect_false(term_smooth(built))
 
   # named as coordinates the map is the identity, which is what keeps the
   # proximal operator available: a selection map is the generalized lasso
   expect_null(ent[[1L]]$penalty@map)
   expect_true(penalties7::has_prox(ent[[1L]]$penalty))
 
-  # ridge is the smooth alternative and reaches the same coefficients
-  br <- term_build(seg(x, npsi = 2, penalty = penalties7::ridge_penalty), dd)
+  # the break-points are not touched by it
+  expect_false(any(grepl("psi", term_coef_names(built)[ent[[1L]]$index])))
+
+  # ridge is the smooth alternative over the same coefficients
+  br <- term_build(seg(x, npsi = 2, gamma ~ 0 + ridge(~1)), dd)
   expect_true(term_smooth(br))
-  expect_identical(term_penalties(br)[[1L]]$index, 2:3)
-  # with no penalty there is none
+  expect_identical(term_penalties(br)[[1L]]$penalty@n_coef, 2L)
+
+  # with no development there is no penalty
   expect_length(term_penalties(term_build(seg(x), dd)), 0L)
   expect_null(term_penalty(term_build(seg(x), dd)))
+  # and a specification has nothing to index yet
+  expect_length(term_penalties(seg(x, npsi = 2, gamma ~ 0 + lasso(~1))), 0L)
 
-  # a specification has nothing to index yet and reports no penalty, as an
-  # unbuilt ridge() does, rather than raising
-  expect_length(term_penalties(seg(x, penalty = penalties7::lasso_penalty)), 0L)
-  expect_true(term_smooth(seg(x, penalty = penalties7::lasso_penalty)))
-
-  # a penalties7 penalty is taken as it stands, so anything that package
-  # offers reaches a term without a name for it being invented here
-  net <- term_build(seg(x, npsi = 2,
-                        penalty = penalties7::elasticnet_penalty(n_coef = 2)),
-                    dd)
-  expect_identical(term_penalties(net)[[1L]]$penalty@n_coef, 2L)
-  expect_false(term_smooth(net))
-  # and a function of the coefficient count, for a width the data decide
-  fac <- term_build(seg(x, npsi = 2, penalty = function(k)
-    penalties7::ridge_penalty(n_coef = k)), dd)
-  expect_identical(term_penalties(fac)[[1L]]$penalty@n_coef, 2L)
-  expect_error(term_build(seg(x, npsi = 2,
-                              penalty = penalties7::ridge_penalty(n_coef = 7)),
-                          dd),
-               "covers 7 coefficients and the term has 2")
+  # an unshared subformula names one coefficient and is not pooled
+  one <- term_build(seg(x, npsi = 2, gamma1 ~ 0 + lasso(~1)), dd)
+  e1 <- term_penalties(one)
+  expect_length(e1, 1L)
+  expect_identical(e1[[1L]]$penalty@n_coef, 1L)
+  expect_true(startsWith(e1[[1L]]$name, "gamma1::"))
 })
 
 test_that("a joint term penalizes its two kinds of change separately", {
   set.seed(81)
   dd <- data.frame(x = sort(runif(120, 0, 10)))
-  # a slope change and a jump are not comparable and cannot share a
-  # hyperparameter, so jseg declares two penalties
-  built <- term_build(jseg(x, penalty = penalties7::lasso_penalty), dd)
+  # a slope change and a change of level are not comparable and cannot
+  # share a hyperparameter, so two subformulas give two penalties
+  built <- term_build(jseg(x, npsi = 2, gamma ~ 0 + lasso(~1),
+                           delta ~ 0 + lasso(~1)), dd)
   ent <- term_penalties(built)
   expect_length(ent, 2L)
   expect_identical(vapply(ent, function(e) e$name, character(1)),
-                   c("delta", "kappa"))
+                   c("gamma::lasso(~1)", "delta::lasso(~1)"))
   cn <- term_coef_names(built)
-  expect_identical(cn[ent[[1L]]$index], "jseg.delta1")
-  expect_identical(cn[ent[[2L]]$index], "jseg.kappa1")
-  # the break-point pair g is never penalized: psi is read off it
-  expect_false(any(grepl("\\.g", cn[unlist(lapply(ent, function(e) e$index))])))
-
-  # a pure jump has only the one kind
-  bj <- term_build(jump(x, npsi = 2, penalty = penalties7::lasso_penalty), dd)
-  ej <- term_penalties(bj)
-  expect_length(ej, 1L)
-  expect_identical(ej[[1L]]$name, "kappa")
-  expect_identical(term_coef_names(bj)[ej[[1L]]$index],
-                   c("jump.kappa1", "jump.kappa2"))
-})
-
-test_that("a penalty covers the levels of by under one hyperparameter", {
-  set.seed(82)
-  dd <- data.frame(x = sort(runif(160, 0, 10)),
-                   g = factor(rep(c("a", "b"), length.out = 160)))
-  built <- term_build(seg(x, by = g, penalty = penalties7::lasso_penalty), dd)
-  ent <- term_penalties(built)
-  expect_length(ent, 1L)
-  expect_identical(term_coef_names(built)[ent[[1L]]$index],
-                   c("seg.a.delta1", "seg.b.delta1"))
+  expect_true(all(grepl("^jseg\\.gamma", cn[ent[[1L]]$index])))
+  expect_true(all(grepl("^jseg\\.delta", cn[ent[[2L]]$index])))
+  # the auxiliary pair g is never penalized: the break-point is read off it
+  expect_false(any(grepl("\\.g[0-9]",
+                         cn[unlist(lapply(ent, function(e) e$index))])))
 })
 
 test_that("prediction reapplies the break-points and the terms validate", {
@@ -349,7 +337,7 @@ test_that("prediction reapplies the break-points and the terms validate", {
   dd <- data.frame(x = sort(runif(150, 0, 10)),
                    g = factor(rep(c("a", "b"), length.out = 150)))
   for (spec in list(seg(x), jump(x), jseg(x), seg(x, npsi = 2),
-                    jump(x, linear = FALSE))) {
+                    seg(x, linear = FALSE))) {
     res <- check_term(spec, dd, verbose = FALSE)
     expect_true(all(res$status == "OK"),
                 info = paste(res$check[res$status != "OK"], collapse = ", "))
@@ -365,16 +353,13 @@ test_that("prediction reapplies the break-points and the terms validate", {
 test_that("the constructors reject what they cannot honour", {
   expect_error(seg(x, npsi = 0), "at least 1")
   expect_error(seg(x, npsi = 2, psi = 1), "one starting position")
-  expect_error(jump(x, linear = NA), "TRUE or FALSE")
+  expect_error(seg(x, linear = NA), "TRUE or FALSE")
   expect_error(jseg(x, label = ""), "non-empty")
-  # a string is not a penalty: the argument takes a penalties7 object or a
-  # function of the count, and penalty = penalties7::lasso_penalty is
-  # exactly as short as the name it replaced
-  expect_error(seg(x, penalty = "lasso"), "must be NULL")
-  expect_error(seg(x, penalty = 3), "must be NULL")
-  expect_error(term_build(seg(x, penalty = function(k) k),
-                          data.frame(x = sort(runif(30, 0, 10)))),
-               "must give a penalties7 penalty")
+  # jump has no linear effect by construction, so it has no such argument
+  expect_error(jump(x, linear = FALSE), "not an argument")
+  # and none of the three has a penalty argument any more: a penalty on the
+  # changes is the development on a penalized intercept
+  expect_error(seg(x, penalty = "lasso"), "not an argument")
   dd <- data.frame(x = rep(1, 10))
   expect_error(term_build(seg(x), dd), "must vary")
   expect_error(seg_psi(seg(x)), "not been built")
@@ -389,7 +374,9 @@ test_that("seg_start finds a start every construction converges from", {
   mk <- function(seed, kind) {
     set.seed(seed)
     d <- data.frame(x = sort(runif(400, 0, 10)))
-    d$y <- 0.3 * d$x +
+    # a step model has no linear effect, by construction and by
+    # definition, so the covariate enters its truth only through the steps
+    d$y <- (if (kind != "jump") 0.3 * d$x else 0) +
       (if (kind != "jump") 1.5 * pmax(d$x - 5, 0) else 0) +
       (if (kind != "seg") 2 * (d$x > 5) else 0) + rnorm(400, sd = 0.3)
     d
@@ -409,8 +396,7 @@ test_that("seg_start finds a start every construction converges from", {
 test_that("seg_start scores a grid and handles several points and by", {
   set.seed(21)
   dd <- data.frame(x = sort(runif(600, 0, 10)))
-  dd$y <- 0.3 * dd$x + 2 * (dd$x > 3.5) + 2 * (dd$x > 6.5) +
-    rnorm(600, sd = 0.3)
+  dd$y <- 2 * (dd$x > 3.5) + 2 * (dd$x > 6.5) + rnorm(600, sd = 0.3)
 
   st <- seg_start(jump(x, npsi = 2), dd, dd$y)
   expect_length(st@spec$psi, 2L)
@@ -427,17 +413,23 @@ test_that("seg_start scores a grid and handles several points and by", {
   set.seed(22)
   d2 <- data.frame(x = sort(runif(400, 0, 10)),
                    g = factor(sample(c("a", "b"), 400, TRUE)))
-  d2$y <- 0.3 * d2$x + ifelse(d2$g == "a", 2 * (d2$x > 4), 2 * (d2$x > 7)) +
+  d2$y <- ifelse(d2$g == "a", 2 * (d2$x > 4), 2 * (d2$x > 7)) +
     rnorm(400, sd = 0.3)
-  s2 <- seg_start(jump(x, by = g), d2, d2$y)
+  s2 <- seg_start(jump(x, by = ~0 + g), d2, d2$y)
   expect_length(s2@spec$psi, 1L)
-  b2 <- seg_iterate(term_build(s2, d2), d2$y, iters = 200)
-  expect_equal(seg_psi(term_build(s2, d2), b2), c(4, 7), tolerance = 0.3)
+  t2 <- term_build(s2, d2)
+  b2 <- seg_iterate(t2, d2$y, iters = 200)
+  # a developed break-point carries one position per observation; the
+  # positions of a group are its own
+  psi2 <- seg_psi(t2, b2)
+  got <- vapply(levels(d2$g), function(l) mean(psi2[d2$g == l, 1L]),
+                numeric(1))
+  expect_equal(unname(got), c(4, 7), tolerance = 0.3)
 })
 
 test_that("seg_start rejects what it cannot use", {
   dd <- data.frame(x = sort(runif(50, 0, 10)), y = rnorm(50))
-  expect_error(seg_start(linpar(~x), dd, dd$y), "segmented term")
+  expect_error(seg_start(linpar(~x), dd, dd$y), "break-point term")
   expect_error(seg_start(term_build(seg(x), dd), dd, dd$y), "unbuilt")
   expect_error(seg_start(seg(x, npsi = 3), dd, dd$y, k = 3), "at least 4")
   expect_error(seg_start(seg(x), dd, dd$y[1:10]), "one value per row")
@@ -508,7 +500,14 @@ test_that("a development of ~1 reproduces the scalar construction", {
   # jseg rejects a development: its quadratic reading of the break-point
   # does not split over the columns, and the componentwise reading that
   # remains diverges whenever the jump size passes near zero (measured)
-  expect_error(jseg(x, psi ~ 1), "does not split over the columns")
+  # jseg takes a development of ~1, which is the scalar case under another
+  # name, and rejects one on a design that is not a partition: its
+  # quadratic reading of the break-point splits observation by observation
+  # only where each observation belongs to one group
+  expect_error(term_build(jseg(x, psi ~ id),
+                          data.frame(x = sort(runif(60, 0, 10)),
+                                     id = factor(rep(c("a", "b"), 30)))),
+               "SAME development")
 })
 
 test_that("a break-point developed by group finds per-group positions", {
@@ -525,7 +524,7 @@ test_that("a break-point developed by group finds per-group positions", {
   # one gamma vector per break-point over the shared design: intercept
   # plus the factor's contrasts, with the slopes shared across groups
   expect_identical(term_coef_names(built),
-                   c("seg.lin", "seg.delta1", "seg.psi1.(Intercept)",
+                   c("seg.beta", "seg.gamma1", "seg.psi1.(Intercept)",
                      "seg.psi1.idb", "seg.psi1.idc"))
   b <- seg_iterate(built, dd$y, iters = 80)
   psi <- seg_psi(built, b)
@@ -543,10 +542,10 @@ test_that("a jump developed by group finds per-group positions", {
                    id = factor(rep(c("a", "b"), length.out = n)))
   dd$y <- 3 * (dd$x > truth[dd$id]) + rnorm(n, sd = 0.4)
 
-  spec <- jump(x, psi ~ id, linear = FALSE)
+  spec <- jump(x, psi ~ id)
   built <- term_build(seg_start(spec, dd, dd$y), dd)
   expect_identical(term_coef_names(built),
-                   c("jump.kappa1", "jump.g1.(Intercept)", "jump.g1.idb"))
+                   c("jump.delta1", "jump.g1.(Intercept)", "jump.g1.idb"))
   b <- seg_iterate(built, dd$y, iters = 80)
   psi <- seg_psi(built, b)
   got <- vapply(levels(dd$id), function(l) mean(psi[dd$id == l, 1L]),
@@ -574,14 +573,20 @@ test_that("a penalized development is the random-changepoint model, on seg", {
   # a discontinuous construction rejects it: the penalty would act on
   # c = -kappa * gamma rather than on the development
   expect_error(term_build(jump(x, psi ~ random(~1 | id)), dd),
-               "scaled by the jump size")
+               "scaled by the change of level")
 })
 
 test_that("the development's syntax is validated where it is written", {
-  expect_error(seg(x, psi ~ id, by = g), "cannot be combined")
-  expect_error(seg(x, tau ~ id), "break-points of a")
-  expect_error(seg(x, psi ~ id, psi ~ z), "at most one subformula")
-  expect_error(seg(x, ~id), "two-sided formula")
+  expect_error(seg(x, psi ~ id, by = ~g), "does not combine")
+  expect_error(seg(x, tau ~ id), "not a coefficient of a seg term")
+  expect_error(seg(x, psi ~ id, psi ~ z), "developed twice")
+  expect_error(seg(x, psi1 ~ id, psi ~ z), "developed twice")
+  expect_error(seg(x, ~id), "two-sided formulas")
+  # a stem names every coefficient of a kind, a number names one of them,
+  # and a term carries only the kinds its construction has
+  expect_error(jump(x, gamma ~ id), "not a coefficient of a jump term")
+  expect_error(seg(x, delta1 ~ id), "not a coefficient of a seg term")
+  expect_error(seg(x, npsi = 2, psi3 ~ id), "not a coefficient")
 })
 
 test_that("a developed term predicts by reapplying the sub-design", {

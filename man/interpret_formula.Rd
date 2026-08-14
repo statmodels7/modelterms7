@@ -41,6 +41,17 @@ expression gives a numeric response, and a response constructor such as
 is the formula's own, carried into the collected parametric block, so
 \code{y ~ ridge_like(R)} still produces an intercept-only
 \code{linpar} block and \code{y ~ ridge_like(R) - 1} produces none.
+
+One covariate is removed rather than collected. A \code{\link{seg}} or
+\code{\link{jseg}} term carrying the linear effect contributes the same
+column the bare covariate would, so \code{y ~ x + seg(x)} is rank
+deficient by one; the term owns that effect, which is what
+\code{linear = TRUE} says, so the covariate is dropped from the
+parametric block and the removal is reported with a warning.
+\code{seg(x, linear = FALSE)} keeps the linear effect outside the term
+instead. Only the bare main effect is removed: an interaction spans no
+main effect and is left alone, and another term spanning the same
+direction, as a spline basis does, is reported without being modified.
 }
 \examples{
 dd <- data.frame(y = rnorm(6), x1 = 1:6, x2 = runif(6))

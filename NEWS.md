@@ -1,3 +1,61 @@
+# modelterms7 0.30.0
+
+* `seg()`, `jump()` and `jseg()` have a documentation page each, opening
+  with the model the term defines. Written for the predictor of any
+  parameter of any distribution rather than for a gaussian mean, they are
+
+      seg    eta_i = z_i'alpha + beta x_i + sum_k gamma_k (x_i - psi_k)_+
+      jump   eta_i = z_i'alpha            + sum_k delta_k 1(x_i >= psi_k)
+      jseg   eta_i = z_i'alpha + beta x_i
+                     + sum_k [delta_k 1(x_i >= psi_k) + gamma_k (x_i - psi_k)_+]
+
+  with the rest of the equation supplying `z_i'alpha`.
+
+* The coefficients are named after those formulas: `beta` for the linear
+  effect (was `lin`), `gamma_k` for a change of slope (was `delta_k`) and
+  `delta_k` for a change of level (was `kappa_k`). `psi_k` is unchanged for
+  the continuous construction, and the auxiliary pair of the discontinuous
+  ones stays `g_k`.
+
+* `jump()` has no `linear` argument. A step model's relationship with the
+  covariate is a step function, the intercept of the equation being its
+  level before the first break-point; a model that is linear in the
+  covariate and steps is `y ~ x + jump(x)`, and one whose slope changes at
+  the same points is `jseg()`.
+
+* `by` is a one-sided formula and develops EVERY coefficient of the term on
+  it: `by = ~0 + g` is the independent set per level that `by = g` used to
+  give. A bare variable is rejected, with the formula it stands for in the
+  message.
+
+* Any coefficient of the term takes a development, through a two-sided
+  formula in `...` whose left side names it -- `psi`, `psi1`, `gamma`,
+  `gamma2`, `delta`, `beta` -- a stem meaning every coefficient of its
+  kind. The right side goes through `interpret_formula()` and takes any
+  term of the package. The continuous construction accepts any combination;
+  the discontinuous ones read the break-point off a product of the unknowns
+  and accept a developed break-point alone (exact on any design), or every
+  varying coefficient on one shared design with a column per group.
+
+* `penalty=` is retired from all three. A penalty on the changes is the
+  development on a penalized intercept, `seg(x, npsi = 4,
+  gamma ~ 0 + lasso(~1))`, which is the lasso that selects how many
+  break-points there are; the entries of a subformula shared by every
+  coefficient of a kind are pooled into one penalized block under one
+  hyperparameter.
+
+* A penalized constructor keeps the intercept where it is all the formula
+  has, so `lasso(~1)` is a block of that one column rather than a block of
+  none. That is what makes the spelling above mean anything.
+
+* `interpret_formula()` removes a bare covariate that a `seg()` or `jseg()`
+  term in the same equation already carries the linear effect of, and
+  reports the removal: the two are exactly the same column, so
+  `y ~ x + seg(x)` was rank deficient by one. `seg(x, linear = FALSE)`
+  keeps the linear effect outside the term instead. Another term spanning
+  the same direction, as a spline basis does, is reported without being
+  modified.
+
 # modelterms7 0.29.0
 
 * `term_third()`, a new generic: the second derivative of a structural

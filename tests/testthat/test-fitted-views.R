@@ -41,7 +41,7 @@ test_that("edf counts a partially penalized term parameter by parameter", {
 
   # seg carries a lasso on its one slope change and nothing on its linear
   # effect or its break-point, so those two count exactly
-  bl <- term_build(seg(x, penalty = penalties7::lasso_penalty), dx)
+  bl <- term_build(seg(x, gamma ~ 0 + lasso(~1)), dx)
   expect_identical(edf(bl, coef = c(0.5, 2, 6)), 3)
   expect_identical(edf(bl, coef = c(0.5, 0, 6)), 2)
   # nothing is asked of the curvature: the count is read from coef alone
@@ -49,7 +49,7 @@ test_that("edf counts a partially penalized term parameter by parameter", {
 
   # under a ridge the same two count exactly and the change is shrunk, so
   # the answer sits between the two limits and reaches them
-  br <- term_build(seg(x, penalty = penalties7::ridge_penalty), dx)
+  br <- term_build(seg(x, gamma ~ 0 + ridge(~1)), dx)
   H <- crossprod(term_matrix(br))
   expect_equal(edf(br, coef = c(0.5, 2, 6), hessian = H,
                    theta = list(sigma = 1e6)), 3, tolerance = 1e-6)
@@ -69,13 +69,15 @@ test_that("edf counts a partially penalized term parameter by parameter", {
 test_that("a term carrying two penalties keys its hyperparameters by name", {
   set.seed(13)
   dx <- data.frame(x = sort(runif(200, 0, 10)))
-  bj <- term_build(jseg(x, penalty = penalties7::ridge_penalty), dx)
+  bj <- term_build(jseg(x, gamma ~ 0 + ridge(~1), delta ~ 0 + ridge(~1)),
+                   dx)
   H <- crossprod(term_matrix(bj))
   cf <- c(0.5, 2, 1, -6)
   ent <- term_penalties(bj)
   expect_length(ent, 2L)
 
-  th <- list(delta = list(sigma = 1.1), kappa = list(sigma = 0.4))
+  th <- stats::setNames(list(list(sigma = 1.1), list(sigma = 0.4)),
+                        vapply(ent, function(e) e$name, character(1)))
   got <- edf(bj, coef = cf, hessian = H, theta = th)
   S <- matrix(0, 4, 4)
   S[ent[[1L]]$index, ent[[1L]]$index] <- 1 / 1.1^2

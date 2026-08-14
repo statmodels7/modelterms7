@@ -122,7 +122,13 @@ PenalizedTerm <- S7::new_class(
 #' machinery with the intercept removed (a penalized block does not
 #' penalize an intercept; the model's intercept lives in the parametric
 #' block), and its blueprint records the terms, the factor levels and the
-#' contrasts, exactly as \code{\link{linpar}} does. A matrix input is used
+#' contrasts, exactly as \code{\link{linpar}} does. The exception is a
+#' formula whose intercept is all it has: \code{ridge(~1)} is a block of
+#' that one column under the penalty, since removing it would leave no
+#' block. That is the form a subformula on another term's parameter uses,
+#' \code{gamma ~ lasso(~1)} saying that the parameter itself carries a
+#' lasso, there being no parametric block of its own to hold an
+#' unpenalized intercept. A matrix input is used
 #' as given, and its columns are named after the matrix's own column
 #' names, or numbered when it has none.
 #'
@@ -273,7 +279,16 @@ mcp <- function(x, label = "mcp", by = NULL, standardize = FALSE) {
 
 S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
   if (inherits(term@input, "formula")) {
-    f <- stats::update(term@input, ~ . - 1)
+    # The intercept is dropped because the model's intercept lives in the
+    # parametric block and is not penalized -- unless it is all the formula
+    # has, where dropping it leaves no block at all. `ridge(~1)` then means
+    # the single coefficient under the penalty, which is what a subformula
+    # on a term's own parameter needs: `gamma ~ lasso(~1)` says the change
+    # itself carries a lasso, there being no parametric block of its own to
+    # hold an unpenalized intercept.
+    f <- if (.intercept_only(term@input)) term@input else {
+      stats::update(term@input, ~ . - 1)
+    }
     environment(f) <- environment(term@input)
     mf <- stats::model.frame(f, data,
                              na.action = stats::na.pass,
@@ -327,6 +342,15 @@ S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
   term@penalty <- if (is.null(map)) term@factory(ncol(X)) else
     term@factory(ncol(X), map)
   term
+}
+
+# Whether a formula carries an intercept and nothing else, which is the one
+# case where removing the intercept would leave no block. `~1` and `~+1`
+# reach here; `~0` and `~-1` do not, having neither an intercept nor a term
+# and being an empty block whichever rule is applied.
+.intercept_only <- function(f) {
+  tt <- stats::terms(f)
+  attr(tt, "intercept") == 1L && length(attr(tt, "term.labels")) == 0L
 }
 
 S7::method(term_predict, PenalizedTerm) <- function(term, newdata, ...) {

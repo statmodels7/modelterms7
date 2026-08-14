@@ -1,13 +1,13 @@
 #' @include term_classes.R generics.R nonlinear.R
 NULL
 
-#' @title S7 Class for Segmented and Stepmented Terms
+#' @title S7 Class for Break-Point Terms
 #' @name SegTerm
 #'
 #' @description
 #' A subclass of \code{\link{additive_term}} for a covariate whose effect
 #' changes at estimated break-points: a change of slope
-#' (\code{\link{seg}}), a jump in level (\code{\link{jump}}), or both at
+#' (\code{\link{seg}}), a change of level (\code{\link{jump}}), or both at
 #' the same points (\code{\link{jseg}}). The design block is the working
 #' one of the iteration that estimates the break-points, and is
 #' recomputed by \code{\link{term_refresh}} as they move.
@@ -16,14 +16,14 @@ NULL
 #' @param kind Which of the three constructions.
 #' @param var The covariate expression.
 #' @param npsi The number of break-points.
-#' @param by An optional grouping expression.
 #' @param linear Whether the block carries the linear effect.
-#' @param penalty_kind The penalty on the changes, if any.
+#' @param subformulas A named list of one-sided formulas, one per developed
+#'   parameter.
 #' @param spec The resolved construction settings.
 #'
 #' @return An object of class \code{SegTerm}.
 #'
-#' @seealso \code{\link{seg}}
+#' @seealso \code{\link{seg}}, \code{\link{jump}}, \code{\link{jseg}}
 #' @examples
 #' S7::S7_inherits(seg(x), SegTerm)
 #' @export
@@ -34,187 +34,396 @@ SegTerm <- S7::new_class(
     kind = S7::class_character,
     var = S7::class_any,
     npsi = S7::class_integer,
-    by = S7::class_any,
     linear = S7::class_logical,
-    penalty_kind = S7::class_any,
+    subformulas = S7::class_list,
     spec = S7::class_list
   )
 )
 
-#' Segmented, Stepmented and Segmented-with-Jump Terms
+#' Segmented Term: a Broken Line with Estimated Break-Points
 #'
 #' @description
-#' A covariate whose effect changes at break-points estimated with
-#' everything else. \code{seg} changes slope at each break-point and
-#' stays continuous (\cite{muggeo2003}); \code{jump} steps to a new level
-#' and is discontinuous (\cite{fasola2018}); \code{jseg} does both at the
-#' same points.
+#' A covariate whose slope changes at \eqn{K} break-points estimated with
+#' everything else, the relationship staying continuous
+#' (\cite{muggeo2003}). Written in the equation of any parameter of any
+#' distribution, the term contributes
+#'
+#' \deqn{\beta x_i + \sum_{k=1}^{K} \gamma_k\,(x_i - \psi_k)_{+},
+#'   \qquad (u)_{+} = \max(0, u),}
+#'
+#' to that parameter's linear predictor, so that in a model
+#' \eqn{g(\theta_i) = \eta_i} with the rest of the equation supplying
+#' \eqn{z_i'\alpha},
+#'
+#' \deqn{\eta_i = z_i'\alpha + \beta x_i
+#'   + \sum_{k=1}^{K} \gamma_k\,(x_i - \psi_k)_{+}.}
+#'
+#' \eqn{\beta} is the slope before the first break-point and
+#' \eqn{\gamma_k} the change of slope at \eqn{\psi_k}, so the slope over
+#' the \eqn{k}-th segment is \eqn{\beta + \gamma_1 + \cdots + \gamma_k}.
+#' The gaussian additive model is the case \eqn{g = \mathrm{id}} on the
+#' mean of a \code{gaussian1_distrib}; nothing here is particular to it.
 #'
 #' @details
-#' Both constructions rest on the same device: a quantity that depends on
-#' the break-point non-linearly is written as a linear function of it
-#' once something is frozen at the previous iterate, so that a linear fit
-#' returns the new break-point. Iterating that is the estimation
-#' algorithm, and here it is the \code{\link{term_refresh}} contract of
-#' \code{\link{nl}} with a different block: refreshing the term at the
-#' current coefficients and fitting is one step of it.
+#' \subsection{How the break-points are estimated}{
+#' The contribution is differentiable in \eqn{\psi_k} away from the
+#' break-point, with
+#' \eqn{\partial/\partial\psi_k = -\gamma_k\,\mathbb{1}(x>\psi_k)}, so the
+#' design block is the ordinary Jacobian, the break-point is an ordinary
+#' coefficient, and the increment a Gauss-Newton step solves for is the
+#' update of \cite{muggeo2003}: his working variables \eqn{U} and \eqn{V}
+#' are the block's columns and his \eqn{\psi \leftarrow \psi +
+#' \gamma/\delta} is that step. Refreshing the term at the current
+#' coefficients (\code{\link{term_refresh}}) and fitting is one iteration
+#' of it, which is the same contract \code{\link{nl}} uses.
 #'
-#' \subsection{The continuous case}{
-#' With \eqn{f(x) = \delta (x-\psi)_+} the contribution is differentiable
-#' in \eqn{\psi} away from the break-point, and
-#' \eqn{\partial f/\partial\psi = -\delta\,\mathbb{1}(x>\psi)}, so the
-#' design block is the ordinary Jacobian and the break-point is an
-#' ordinary coefficient, updated by the increment a Gauss-Newton step
-#' solves for. That is the algorithm of \cite{muggeo2003} written in the
-#' coordinates the rest of this package uses: his working variables
-#' \eqn{U} and \eqn{V} are its columns, and his update
-#' \eqn{\psi \leftarrow \psi + \gamma/\delta} is that step.
+#' The objective has local optima in the break-points and the iteration
+#' converges from within a basin around where it starts, so
+#' \code{\link{seg_start}} chooses the starting positions on a grid rather
+#' than at a conventional point. A break-point is confined to the interval
+#' between the 5th and the 95th percentile of the covariate: outside it
+#' the indicator is constant, the truncated line and that constant are
+#' linearly dependent, and the block is singular rather than merely
+#' ill-conditioned. A run ending against the limit has not located a
+#' break-point, and \code{\link{seg_psi}} then reports the limit itself.
+#'
+#' The iteration can settle into a cycle of period two in the break-point,
+#' in which case the rule of \code{\link{seg_converged}} is never met while
+#' the objective has long since stopped moving; a caller that can evaluate
+#' the objective should stop on its relative change, as \code{segmented}
+#' does.
 #' }
 #'
-#' \subsection{The discontinuous case}{
-#' A jump is not differentiable in \eqn{\psi} at all, and yet needs no
+#' @section The coefficients:
+#' \code{beta} (present when \code{linear = TRUE}), \code{gamma1} \ldots
+#' \code{gammaK} and \code{psi1} \ldots \code{psiK}, in that order. The
+#' break-points are coefficients of the working block here, which they are
+#' not in the discontinuous constructions, so \code{\link{seg_psi}} is the
+#' function that reports them either way.
+#'
+#' @section Developing a coefficient with covariates:
+#' Every coefficient of the term is a parameter like any other and may be
+#' developed on covariates, through a two-sided formula in \code{...} whose
+#' left side names it:
+#'
+#' \preformatted{seg(x, psi ~ id)                   a break-point per subject
+#' seg(x, psi ~ random(~1 | id))      the random-changepoint model
+#' seg(x, gamma1 ~ z)                 a first slope change varying with z
+#' seg(x, by = ~0 + g)                every coefficient, per level of g}
+#'
+#' The right side goes through \code{\link{interpret_formula}}, so it takes
+#' \emph{any} term of this package, penalized ones included, and the
+#' hyperparameters a sub-term declares are reported by
+#' \code{\link{term_penalties}} and estimated by the fitting layer. The
+#' left side names either one coefficient (\code{gamma2}) or a whole kind
+#' (\code{gamma}, meaning every \eqn{\gamma_k}, each with coefficients of
+#' its own over the shared design). \code{by = ~f} is the shorthand giving
+#' every coefficient the same development, and does not combine with
+#' per-coefficient formulas.
+#'
+#' A developed coefficient carries one value per observation:
+#' \eqn{\gamma_{k,i} = w_i'a_k} and \eqn{\psi_{k,i} =
+#' w_i'p_k}, with \eqn{w_i} the row of the sub-design. Both
+#' enter the block linearly, the truncated line becoming
+#' \eqn{(x_i-\psi_{k,i})_{+}w_i'} and the Jacobian column
+#' \eqn{-\gamma_{k,i}\,\mathbb{1}(x_i>\psi_{k,i})\,w_i'}, so the
+#' continuous construction accepts a development of any coefficient and any
+#' combination of them.
+#'
+#' A penalty on the changes themselves -- the lasso that selects how many
+#' break-points are really there -- is the development on an intercept
+#' alone, \code{seg(x, npsi = 4, gamma ~ 0 + lasso(~1))}: the \eqn{K}
+#' changes are then one penalized block under one hyperparameter, the
+#' entries of a subformula shared by every coefficient of a kind being
+#' pooled into one. The \code{0 +} is not decoration. A subformula follows
+#' the intercept convention of a formula, so \code{gamma ~ lasso(~1)}
+#' carries the subformula's own unpenalized intercept beside the penalized
+#' column, which for an intercept-only development is the same column
+#' twice.
+#'
+#' @section The linear effect:
+#' With \code{linear = TRUE}, the default, the term carries \eqn{\beta x}
+#' itself, so \code{y ~ seg(x)} is the whole relationship. Writing the
+#' covariate again in the same equation is then exactly collinear with that
+#' column, and \code{\link{interpret_formula}} removes it with a warning.
+#' \code{linear = FALSE} is the explicit way to keep the linear effect
+#' outside the term, and \code{y ~ x + seg(x, linear = FALSE)} is the same
+#' model written the other way round.
+#'
+#' @param x The covariate, an expression evaluated in the data.
+#' @param ... Two-sided formulas developing the term's own coefficients;
+#'   see the section above. Cannot be combined with \code{by}.
+#' @param npsi The number of break-points. Defaults to 1.
+#' @param psi Optional starting positions; defaults to evenly spaced
+#'   quantiles of the covariate. Where a break-point carries a development
+#'   they seed it, each starting vector solving \eqn{Wp_k \approx
+#'   \psi_k^{0}}.
+#' @param by A one-sided formula giving every coefficient of the term the
+#'   same development, e.g. \code{by = ~0 + g} for an independent set per
+#'   level of a factor. A bare variable is rejected; write the formula.
+#' @param linear Whether the block carries the linear effect \eqn{\beta x}.
+#'   Defaults to \code{TRUE}.
+#' @param label A single non-empty string prefixed to the coefficient
+#'   names.
+#'
+#' @return An object of class \code{\link{SegTerm}} (a specification; see
+#'   \code{\link{term_build}}).
+#'
+#' @references
+#' Muggeo, V. M. R. (2003). Estimating regression models with unknown
+#' break-points. \emph{Statistics in Medicine}, 22(19), 3055--3071.
+#'
+#' Muggeo, V. M. R., Atkins, D. C., Gallop, R. J. and Dimidjian, S. (2014).
+#' Segmented mixed models with random changepoints: a maximum likelihood
+#' approach with application to treatment for depression study.
+#' \emph{Statistical Modelling}, 14(4), 293--313.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(x = sort(runif(200, 0, 10)))
+#' dd$y <- 1 + 0.5 * dd$x + 2 * pmax(dd$x - 6, 0) + rnorm(200, sd = 0.3)
+#'
+#' built <- term_build(seg(x), dd)
+#' term_coef_names(built)
+#' seg_psi(built)
+#'
+#' @seealso \code{\link{jump}}, \code{\link{jseg}}, \code{\link{seg_psi}},
+#'   \code{\link{seg_start}}, \code{\link{seg_step}}, \code{\link{nl}}
+#' @export
+seg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
+                label = "seg") {
+  # a continuous term has no scaling factor, its working block being
+  # bounded already; the value is carried so that one blueprint serves the
+  # three constructions
+  .seg_spec("seg", substitute(x), npsi, psi, linear, 0.05, label,
+            list(...), .seg_by_formula(substitute(by), parent.frame()))
+}
+
+#' Stepmented Term: a Level that Changes at Estimated Break-Points
+#'
+#' @description
+#' A covariate whose effect is a constant that steps to a new value at
+#' \eqn{K} break-points estimated with everything else
+#' (\cite{fasola2018}). Written in the equation of any parameter of any
+#' distribution, the term contributes
+#'
+#' \deqn{\sum_{k=1}^{K} \delta_k\,\mathbb{1}(x_i \geq \psi_k)}
+#'
+#' to that parameter's linear predictor, so that in a model
+#' \eqn{g(\theta_i) = \eta_i} with the rest of the equation supplying
+#' \eqn{z_i'\alpha},
+#'
+#' \deqn{\eta_i = z_i'\alpha
+#'   + \sum_{k=1}^{K} \delta_k\,\mathbb{1}(x_i \geq \psi_k).}
+#'
+#' There is no linear effect: the relationship between \eqn{x} and the
+#' predictor is a step function, the intercept of the equation being its
+#' level before the first break-point and \eqn{\delta_k} the change of
+#' level at \eqn{\psi_k}. A model that is linear in \eqn{x} \emph{and}
+#' steps is written by putting the covariate in the equation as well,
+#' \code{y ~ x + jump(x)}, or by \code{\link{jseg}} where the slope is to
+#' change at the same points.
+#'
+#' @details
+#' \subsection{How the break-points are estimated}{
+#' A step is not differentiable in \eqn{\psi} at all, and yet needs no
 #' search over candidate positions. The identity
 #' \deqn{\mathbb{1}(x>\psi) = \frac{1}{2}
 #'   + \frac{x-\psi}{2\lvert x-\psi \rvert}}
-#' holds exactly for \eqn{x \neq \psi}, and is linear in \eqn{\psi} once
-#' the weight \eqn{1/(2\lvert x - \psi\rvert)} is held at the previous
-#' iterate. Writing \eqn{W = 1/(2\lvert x-\psi^{0}\rvert)} and
-#' \eqn{Z = xW + 1/2}, a jump of size \eqn{\kappa} at \eqn{\psi} is
-#' \eqn{\kappa Z + gW} with \eqn{g = -\kappa\psi}, so a linear fit on
-#' \eqn{(Z, W)} returns the break-point as \eqn{\psi = -g/\kappa}
-#' (\cite{fasola2018}). The break-point is therefore not a coefficient
-#' here but a quantity read off two of them, which is why refreshing the
-#' term recovers it before rebuilding the weights.
+#' holds exactly for \eqn{x \neq \psi} and is linear in \eqn{\psi} once the
+#' weight \eqn{1/(2\lvert x-\psi^{0}\rvert)} is held at the previous
+#' iterate. Writing \eqn{W = 1/(2\lvert x-\psi^{0}\rvert)} and \eqn{Z = xW
+#' + 1/2}, a step of size \eqn{\delta} at \eqn{\psi} is \eqn{\delta Z + gW}
+#' with \eqn{g = -\delta\psi}, so a linear fit on \eqn{(Z, W)} returns the
+#' break-point as \eqn{\psi = -g/\delta} (\cite{fasola2018}). The
+#' break-point is therefore not a coefficient here but a quantity read off
+#' two of them, which is why refreshing the term recovers it before
+#' rebuilding the weights, and why \code{\link{seg_psi}} exists.
+#' }
 #'
+#' \subsection{The scaling schedule}{
 #' The weight is unbounded as \eqn{x} approaches \eqn{\psi}, and since
 #' \eqn{Z - \psi W} is the step itself, \eqn{Z} is \eqn{\psi W} plus a
 #' quantity of order one: an unbounded \eqn{W} makes the two columns
-#' numerically collinear and drowns the signal the fit reads. The remedy
-#' of \cite{fasola2018} is to move the observations rather than to cap
-#' the weight. With a scaling factor \eqn{c} the two intervals
-#' \eqn{[x_{(1)}, \psi]} and \eqn{(\psi, x_{(n)}]} are mapped onto
+#' numerically collinear and drowns the signal the fit reads. The remedy of
+#' \cite{fasola2018} is to move the observations rather than to cap the
+#' weight. With a scaling factor \eqn{c} the two intervals \eqn{[x_{(1)},
+#' \psi]} and \eqn{(\psi, x_{(n)}]} are mapped onto
 #' \deqn{[x_{(1)},\, \psi - c(\psi - x_{(1)})]
 #'   \quad\text{and}\quad
 #'   (\psi + c(x_{(n)} - \psi),\, x_{(n)}],}
 #' which leaves a gap of relative width \eqn{c} around \eqn{\psi} and
 #' bounds \eqn{W} without altering the model: the working covariates are
-#' computed on the rescaled covariate, while the truncated line, the
-#' linear column and the reported contribution stay on the original one.
+#' computed on the rescaled covariate, while the reported contribution
+#' stays on the original one.
 #'
 #' The factor is not a constant. It governs how far the break-point may
-#' travel in one step, so a large value lets the estimate leave a
-#' spurious optimum and a small one is faithful to the step function.
-#' \code{c0} is its starting value, and \code{\link{term_refresh}}
-#' halves it whenever the break-point reverses direction, which is the
-#' signal that the iteration has begun to circle an optimum rather than
-#' travel towards one. The run has converged when the change in every
-#' break-point falls below a hundredth of the smallest distance between
-#' distinct observations, which \code{\link{seg_converged}} reports.
-#' }
-#'
-#' \subsection{What the term carries}{
-#' With \code{linear = TRUE} the block carries the linear effect too, so
-#' the term is the whole relationship rather than the change in it.
-#' \code{by} gives an independent set of break-points and changes per
-#' level of a factor. \code{penalty} puts a penalty on the changes
-#' themselves -- the slope changes for \code{seg}, the jump sizes for
-#' \code{jump}, both for \code{jseg} -- and leaves the linear effect and
-#' the break-points alone; with the lasso that is a selection of how
-#' many break-points are really there.
-#'
-#' The penalty is declared through \code{\link{term_penalties}}, which
-#' names the coefficients it covers, rather than attached to the whole
-#' block through a map that selects them. The two describe the same
-#' function of the same coefficients and are not interchangeable to a
-#' fitting layer: a separable penalty under a selection map is the
-#' generalized-lasso problem, whose proximal operator does not split by
-#' coordinate, so \code{\link[penalties7]{has_prox}} is \code{FALSE} for
-#' it and neither a proximal step nor a coordinate descent can be taken.
-#' Named as coordinates the map is the identity and both are available
-#' unchanged. \code{jseg} declares two penalties, one over the slope
-#' changes and one over the jump sizes, since a change of slope and a
-#' change of level are not comparable quantities and cannot share a
-#' hyperparameter.
+#' travel in one step, so a large value lets the estimate leave a spurious
+#' optimum and a small one is faithful to the step function. \code{c0} is
+#' its starting value and \code{\link{term_refresh}} halves it whenever the
+#' break-point reverses direction, the signal that the iteration has begun
+#' to circle an optimum rather than travel towards one. The run has
+#' converged when every break-point moves less than a hundredth of the
+#' distance between consecutive distinct observations, which
+#' \code{\link{seg_converged}} reports.
 #'
 #' A break-point is confined to the interval between the 5th and the 95th
-#' percentile of the covariate. Outside it the block is singular rather
-#' than merely ill-conditioned: with \eqn{\psi} below the smallest
-#' observation the indicator is constant, so the truncated line and that
-#' constant are linearly dependent, and with the linear effect present so
-#' are all three columns. A run that ends against the limit has not
-#' located a break-point, and \code{\link{seg_psi}} then returns the
-#' limit itself.
-#'
-#' \subsection{Break-points developed with covariates}{
-#' A two-sided formula \code{psi ~ f} in \code{...} develops every
-#' break-point as \eqn{\psi_k = Z\gamma_k}, with \eqn{Z} the design of the
-#' right-hand side through \code{\link{interpret_formula}} and one
-#' coefficient vector per break-point: \code{psi ~ g} with a factor
-#' \code{g} is a break-point per group with the slopes shared, where
-#' \code{by} would give every level its own slopes as well, and the two
-#' are therefore not combinable. Each observation carries the position its
-#' own row of \eqn{Z} implies, confined to the same interval as above.
-#'
-#' For the continuous construction \eqn{\gamma_k} are ordinary
-#' coefficients and the block carries
-#' \eqn{-\delta_k\,\mathbb{1}(x>\psi_k)\,Z_j} in place of the single
-#' Jacobian column, so a sub-term's penalty passes through unchanged:
-#' \code{seg(x, psi ~ random(~1 | id))} is the random-changepoint model of
-#' Muggeo, Atkins, Gallop and Dimidjian (2014), the per-group positions
-#' shrunk towards a population one. For \code{jump} the identity above
-#' splits the \eqn{gW} column into \eqn{W Z_j}, whose coefficients are
-#' \eqn{c_k = -\kappa_k\gamma_k}, and the development is read off as
-#' \eqn{\gamma_k = -c_k/\kappa_k} exactly as the scalar break-point is; a
-#' sub-term carrying a penalty is rejected there, since the penalty would
-#' act on \eqn{c_k}, which is the development scaled by the jump size,
-#' rather than on \eqn{\gamma_k} itself. \code{jseg} rejects a
-#' development: its reading of the break-point is a quadratic in the
-#' increment that couples the slope change with the jump, and it does not
-#' split over the columns of a development, while the componentwise
-#' reading that remains diverges whenever the jump size passes near zero
-#' mid-iteration.
+#' percentile of the covariate, outside which the indicator is constant and
+#' the block singular, and the starting positions are chosen on a grid by
+#' \code{\link{seg_start}}: measured over eight samples and four starting
+#' positions, the fraction of runs recovering the break-point is 0 to 0.5
+#' from a single conventional start and 1 from the grid.
 #' }
 #'
-#' The objective has local optima in the break-points, and the scaling
-#' schedule widens the basin the iteration converges from rather than
-#' removing the problem. Where the run begins therefore decides what it
-#' finds, and \code{\link{seg_start}} is the answer: it scores an
-#' equally spaced grid on the least-squares profile and returns the
-#' specification with \code{psi} set to the best of it, which is what
-#' \cite{fasola2018} recommend and what measurement supports over both
-#' a conventional single start and bootstrap restarting.
-#' A continuous term has no scaling factor, its working block being
-#' bounded already; where its iteration alternates between two values
-#' the remedy is to shrink the increment, as \code{segmented}'s
-#' \code{h} does.
+#' @section The coefficients:
+#' \code{delta1} \ldots \code{deltaK}, the changes of level, followed by
+#' \code{g1} \ldots \code{gK}, the auxiliary coefficients of the identity
+#' above, from which \eqn{\psi_k = -g_k/\delta_k} is read. The
+#' break-points are \emph{not} coefficients; ask \code{\link{seg_psi}}.
+#'
+#' @section Developing a coefficient with covariates:
+#' As for \code{\link{seg}}, a two-sided formula in \code{...} whose left
+#' side names \code{delta}, \code{deltaK} or \code{psi}, \code{psiK}
+#' develops that coefficient on covariates, and \code{by = ~f} gives every
+#' coefficient the same development. The right side goes through
+#' \code{\link{interpret_formula}} and takes any term of this package.
+#'
+#' What the discontinuous construction can carry is narrower than what the
+#' continuous one can, and the reason is the read-off rather than the
+#' model. The auxiliary coefficient is \eqn{g_k = -\delta_k\psi_k}, a
+#' product of the two quantities, so it stays linear in the unknowns only
+#' when one of the two factors is a single number:
+#'
+#' \itemize{
+#'   \item \strong{the break-point developed}, the change of level a single
+#'     number: exact for any design, \eqn{g_k = -\delta_k p_k} being
+#'     linear in \eqn{p_k}. \code{jump(x, psi ~ id)} is a break-point
+#'     per subject with a shared step size.
+#'   \item \strong{a development on group indicators}, where the design has
+#'     one column per group and each observation belongs to one: the
+#'     product collapses group by group and the read-off is exact within
+#'     each. \code{jump(x, by = ~0 + g)} is an independent step and
+#'     break-point per level.
+#'   \item \strong{anything else} is rejected rather than approximated,
+#'     the product of two developments needing the outer product of their
+#'     designs and no unconstrained fit returning it as one.
 #' }
 #'
-#' @param x The covariate, an expression evaluated in the data.
-#' @param ... At most one two-sided formula \code{psi ~ f} developing the
-#'   break-points with covariates; see the section above. Cannot be
-#'   combined with \code{by}.
-#' @param npsi The number of break-points. Defaults to 1.
-#' @param psi Optional starting positions; defaults to evenly spaced
-#'   quantiles of the covariate. With a subformula they seed the
-#'   development, each starting vector solving \eqn{Z\gamma_k \approx
-#'   \psi_k^{0}}.
-#' @param by An optional factor giving an independent set of
-#'   break-points per level.
-#' @param linear Whether the block carries the linear effect. Defaults to
-#'   \code{TRUE}.
-#' @param penalty The penalty on the changes: \code{NULL} (default, none),
-#'   a \pkg{penalties7} penalty over as many coefficients as there are
-#'   changes, or a function of that count returning one -- a \pkg{penalties7}
-#'   constructor passed bare works, e.g.
-#'   \code{penalty = penalties7::lasso_penalty}. A joint term declares two
-#'   penalties, one on the slope changes and one on the jumps, and a penalty
-#'   given as an object is used for both.
-#' @param c0 For a discontinuous term, the starting value of the scaling
-#'   factor that separates the observations from the break-point, as a
-#'   fraction of the distance to the ends of the range. Defaults to
-#'   \code{0.05}, the value \cite{fasola2018} recommend; see Details.
-#' @param label A single non-empty string prefixed to the coefficient
-#'   names.
+#' A sub-term carrying a penalty is rejected on a developed break-point,
+#' since the estimated coefficients are \eqn{-\delta_k p_k}, the
+#' development scaled by the step size, and a penalty would act on that
+#' rather than on the development. A penalty on the changes of level
+#' themselves is \code{jump(x, npsi = 4, delta ~ 0 + lasso(~1))}, the
+#' \code{0 +} removing the subformula's own unpenalized intercept, which
+#' would otherwise be the same column twice.
+#'
+#' @inheritParams seg
+#' @param c0 The starting value of the scaling factor that separates the
+#'   observations from the break-point, as a fraction of the distance to
+#'   the ends of the range. Defaults to \code{0.05}, the value
+#'   \cite{fasola2018} recommend; see Details.
+#'
+#' @return An object of class \code{\link{SegTerm}} (a specification; see
+#'   \code{\link{term_build}}).
+#'
+#' @references
+#' Fasola, S., Muggeo, V. M. R. and Kuchenhoff, H. (2018). A heuristic,
+#' iterative algorithm for change-point detection in abrupt change
+#' models. \emph{Computational Statistics}, 33, 997--1015.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(x = sort(runif(200, 0, 10)))
+#' dd$y <- 1 + 2 * (dd$x > 6) + rnorm(200, sd = 0.3)
+#'
+#' built <- term_build(jump(x), dd)
+#' term_coef_names(built)
+#' seg_psi(built)
+#'
+#' @seealso \code{\link{seg}}, \code{\link{jseg}}, \code{\link{seg_psi}},
+#'   \code{\link{seg_start}}, \code{\link{seg_step}}
+#' @export
+jump <- function(x, ..., npsi = 1, psi = NULL, by = NULL, c0 = 0.05,
+                 label = "jump") {
+  .seg_spec("jump", substitute(x), npsi, psi, FALSE, c0, label,
+            list(...), .seg_by_formula(substitute(by), parent.frame()))
+}
+
+#' Segmented-with-Jump Term: Slope and Level Both Changing
+#'
+#' @description
+#' A covariate whose slope \emph{and} level both change at \eqn{K}
+#' break-points estimated with everything else, the union of
+#' \code{\link{seg}} and \code{\link{jump}} at the same points. Written in
+#' the equation of any parameter of any distribution, the term contributes
+#'
+#' \deqn{\beta x_i + \sum_{k=1}^{K}
+#'   \bigl[\delta_k\,\mathbb{1}(x_i \geq \psi_k)
+#'         + \gamma_k\,(x_i - \psi_k)_{+}\bigr]}
+#'
+#' to that parameter's linear predictor, so that in a model
+#' \eqn{g(\theta_i) = \eta_i} with the rest of the equation supplying
+#' \eqn{z_i'\alpha},
+#'
+#' \deqn{\eta_i = z_i'\alpha + \beta x_i + \sum_{k=1}^{K}
+#'   \bigl[\delta_k\,\mathbb{1}(x_i \geq \psi_k)
+#'         + \gamma_k\,(x_i - \psi_k)_{+}\bigr].}
+#'
+#' \eqn{\beta} is the slope before the first break-point, \eqn{\gamma_k}
+#' the change of slope at \eqn{\psi_k} and \eqn{\delta_k} the change of
+#' level there.
+#'
+#' @details
+#' Both devices of the two constructions are used at once: the truncated
+#' line is differentiable in the break-point and the step is linearized by
+#' the identity of \cite{fasola2018}, on the rescaled covariate its scaling
+#' schedule provides (see \code{\link{jump}}). What is particular to the
+#' joint term is the read-off, since the truncated line depends on the
+#' break-point as well and reading only the step's pair would discard what
+#' the change of slope says about it. Linearizing both parts about the
+#' previous position, and writing \eqn{h} for the increment, \eqn{U} for
+#' the truncated line and \eqn{I = Z - \psi^{0}W} for the indicator,
+#'
+#' \deqn{\gamma\,(x-\psi)_{+} \approx \gamma U - \gamma h I,
+#'   \qquad \delta\,\mathbb{1}(x>\psi)
+#'     = \delta Z - \delta\psi W,}
+#'
+#' so the fitted coefficients of \eqn{Z} and \eqn{W} are \eqn{a = \delta -
+#' \gamma h} and \eqn{b = \gamma h\psi^{0} - \delta\psi^{0} - \delta h},
+#' and the increment solves
+#'
+#' \deqn{\gamma h^{2} + a h + (b + a\psi^{0}) = 0,}
+#'
+#' the root of smaller modulus. At \eqn{\gamma = 0} the quadratic
+#' degenerates to \eqn{h = -(b + a\psi^{0})/a}, that is \eqn{\psi = -b/a},
+#' so the pure step is the case this contains rather than an exception to
+#' it.
+#'
+#' Everything \code{\link{jump}} documents about the scaling schedule, the
+#' confinement of a break-point and the choice of starting positions
+#' applies here unchanged.
+#'
+#' @section The coefficients:
+#' \code{beta} (present when \code{linear = TRUE}), \code{gamma1} \ldots
+#' \code{gammaK}, the changes of slope, then \code{delta1} \ldots
+#' \code{deltaK}, the changes of level, then \code{g1} \ldots \code{gK},
+#' the auxiliary coefficients from which the break-points are read. Ask
+#' \code{\link{seg_psi}} for the break-points.
+#'
+#' @section Developing a coefficient with covariates:
+#' \code{beta} and \code{gammaK} take a development on any design, both
+#' entering the block linearly. \code{deltaK} and \code{psiK} enter the
+#' quadratic above, which is a scalar identity: it splits observation by
+#' observation only where the design has one column per group and each
+#' observation belongs to one, so \code{jseg(x, by = ~0 + g)} is an
+#' independent set of everything per level and a development of
+#' \code{delta} or \code{psi} on any other design is rejected. The
+#' componentwise reading that would remain diverges whenever a change of
+#' level passes near zero mid-iteration, which on a joint model it
+#' routinely does; it is rejected rather than shipped diverging.
+#'
+#' @inheritParams seg
+#' @inheritParams jump
 #'
 #' @return An object of class \code{\link{SegTerm}} (a specification; see
 #'   \code{\link{term_build}}).
@@ -230,62 +439,125 @@ SegTerm <- S7::new_class(
 #' @examples
 #' set.seed(1)
 #' dd <- data.frame(x = sort(runif(200, 0, 10)))
-#' dd$y <- 1 + 0.5 * dd$x + 2 * pmax(dd$x - 6, 0) + rnorm(200, sd = 0.3)
+#' dd$y <- 1 + 0.3 * dd$x + 2 * (dd$x > 6) +
+#'   1.5 * pmax(dd$x - 6, 0) + rnorm(200, sd = 0.3)
 #'
-#' built <- term_build(seg(x), dd)
+#' built <- term_build(jseg(x), dd)
 #' term_coef_names(built)
-#' seg_psi(built)
 #'
-#' @seealso \code{\link{seg_psi}}, \code{\link{seg_start}}, \code{\link{seg_step}}, \code{\link{nl}}
-#' @export
-seg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
-                penalty = NULL, c0 = 0.05,
-                label = "seg") {
-  .seg_spec("seg", substitute(x), npsi, psi, substitute(by), linear,
-            .penalty_arg(penalty), c0, label, .seg_gather_psi(list(...)))
-}
-
-#' @rdname seg
-#' @export
-jump <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
-                 penalty = NULL, c0 = 0.05,
-                 label = "jump") {
-  .seg_spec("jump", substitute(x), npsi, psi, substitute(by), linear,
-            .penalty_arg(penalty), c0, label, .seg_gather_psi(list(...)))
-}
-
-#' @rdname seg
+#' @seealso \code{\link{seg}}, \code{\link{jump}}, \code{\link{seg_psi}},
+#'   \code{\link{seg_start}}, \code{\link{seg_step}}
 #' @export
 jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
-                 penalty = NULL, c0 = 0.05,
-                 label = "jseg") {
-  .seg_spec("jseg", substitute(x), npsi, psi, substitute(by), linear,
-            .penalty_arg(penalty), c0, label, .seg_gather_psi(list(...)))
+                 c0 = 0.05, label = "jseg") {
+  .seg_spec("jseg", substitute(x), npsi, psi, linear, c0, label,
+            list(...), .seg_by_formula(substitute(by), parent.frame()))
 }
 
-# The subformula of the break-points, from `...`: at most one two-sided
-# formula whose left side is `psi`, meaning every break-point, each with
-# its own coefficients over the shared design.
-.seg_gather_psi <- function(dots) {
-  if (!length(dots)) return(NULL)
-  if (length(dots) > 1L) {
-    stop("'...' takes at most one subformula, psi ~ f.", call. = FALSE)
+# `by` is a one-sided formula and not a variable: the shorthand it stands
+# for develops every coefficient, and a bare variable would have to be
+# read as `~0 + g`, which is a guess about the coding. A symbol is
+# rejected with the formula it means, since the value would otherwise be
+# looked up in the calling frame and fail there, three frames from the
+# mistake.
+.seg_by_formula <- function(by, env) {
+  if (is.null(by)) return(NULL)
+  if (is.call(by) && identical(by[[1L]], as.name("~"))) {
+    if (length(by) != 2L) {
+      stop("a formula 'by' must be one-sided, e.g. by = ~0 + g.",
+           call. = FALSE)
+    }
+    return(stats::as.formula(by, env = env))
   }
-  d <- dots[[1L]]
-  if (!inherits(d, "formula") || length(d) != 3L || !is.name(d[[2L]])) {
-    stop(paste("arguments in '...' must be a two-sided formula whose left",
-               "side is 'psi', e.g. psi ~ g."), call. = FALSE)
-  }
-  if (!identical(as.character(d[[2L]]), "psi")) {
-    stop(sprintf(paste("the subformula names '%s'; the break-points of a",
-                       "segmented term are 'psi'."),
-                 as.character(d[[2L]])), call. = FALSE)
-  }
-  stats::as.formula(call("~", d[[3L]]), env = environment(d))
+  stop(sprintf(paste("'by' must be a one-sided formula giving every",
+                     "coefficient of the term the same development;",
+                     "write by = ~0 + %s for an independent set per level."),
+               deparse(by)), call. = FALSE)
 }
 
-.seg_spec <- function(kind, var, npsi, psi, by, linear, penalty, c0,
-                      label, psi_sub = NULL) {
+# The term's own coefficients, in the order the block carries them. They
+# are what a subformula may name, and `beta` is among them because the
+# term owns the linear effect: the covariate cannot appear again in the
+# same equation, so a linear effect varying with a covariate has nowhere
+# else to be written.
+.seg_params <- function(kind, npsi, linear) {
+  k <- seq_len(npsi)
+  c(if (linear) "beta" else character(0),
+    if (kind %in% c("seg", "jseg")) paste0("gamma", k) else character(0),
+    if (kind %in% c("jump", "jseg")) paste0("delta", k) else character(0),
+    paste0("psi", k))
+}
+
+# The stems a subformula may name in place of a numbered coefficient,
+# meaning every coefficient of that kind.
+.seg_stems <- function(kind, npsi, linear) {
+  c(if (linear) "beta" else character(0),
+    if (kind %in% c("seg", "jseg")) "gamma" else character(0),
+    if (kind %in% c("jump", "jseg")) "delta" else character(0),
+    "psi")
+}
+
+# The subformulas of a break-point term, resolved to one entry per
+# coefficient: two-sided formulas in `...` whose left side names a
+# coefficient or a stem, or `by = ~f` giving every coefficient the same
+# development. The two forms do not mix, `by` being the shorthand for all
+# of what the other spells out.
+.seg_gather <- function(dots, by, kind, npsi, linear) {
+  params <- .seg_params(kind, npsi, linear)
+  stems <- .seg_stems(kind, npsi, linear)
+  out <- list()
+
+  if (!is.null(by)) {
+    if (length(dots)) {
+      stop(paste("'by = ~f' gives every coefficient the same development;",
+                 "it does not combine with per-coefficient formulas."),
+           call. = FALSE)
+    }
+    if (!inherits(by, "formula") || length(by) != 2L) {
+      stop(paste("'by' must be a one-sided formula giving every coefficient",
+                 "the same development, e.g. by = ~0 + g."), call. = FALSE)
+    }
+    for (p in params) out[[p]] <- by
+    return(out)
+  }
+
+  if (!length(dots)) return(out)
+  nms <- names(dots)
+  for (i in seq_along(dots)) {
+    d <- dots[[i]]
+    # a named argument in `...` is a mistyped or removed one, and is
+    # reported as such rather than swallowed by the formula check
+    if (!is.null(nms) && nzchar(nms[i])) {
+      stop(sprintf("'%s' is not an argument of a break-point term.", nms[i]),
+           call. = FALSE)
+    }
+    if (!inherits(d, "formula") || length(d) != 3L || !is.name(d[[2L]])) {
+      stop(paste("arguments in '...' must be two-sided formulas developing",
+                 "a coefficient of the term, e.g. psi ~ g."), call. = FALSE)
+    }
+    lhs <- as.character(d[[2L]])
+    rhs <- stats::as.formula(call("~", d[[3L]]), env = environment(d))
+    targets <- if (lhs %in% params) lhs else if (lhs %in% stems) {
+      grep(sprintf("^%s[0-9]+$", lhs), params, value = TRUE)
+    } else {
+      stop(sprintf(paste("'%s' is not a coefficient of a %s term; the",
+                         "coefficients are %s, and a stem (%s) names every",
+                         "one of a kind."),
+                   lhs, kind, paste(params, collapse = ", "),
+                   paste(setdiff(stems, params), collapse = ", ")),
+           call. = FALSE)
+    }
+    for (p in targets) {
+      if (!is.null(out[[p]])) {
+        stop(sprintf("'%s' is developed twice.", p), call. = FALSE)
+      }
+      out[[p]] <- rhs
+    }
+  }
+  out[intersect(params, names(out))]
+}
+
+.seg_spec <- function(kind, var, npsi, psi, linear, c0, label, dots, by) {
   if (!is.numeric(c0) || length(c0) != 1L || is.na(c0) ||
       c0 <= 0 || c0 >= 1) {
     stop("'c0' must be a single number strictly between 0 and 1.",
@@ -308,113 +580,154 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
     stop("'label' must be a single non-empty character string.",
          call. = FALSE)
   }
-  if (!is.null(psi_sub) && !is.null(by)) {
-    stop(paste("'by' gives every level its own break-points AND changes,",
-               "while a subformula develops the break-points alone;",
-               "the two cannot be combined."), call. = FALSE)
-  }
-  # The joint construction reads its break-point through a quadratic in the
-  # increment, which couples the slope change with the jump and does not
-  # split over the columns of a development; the componentwise reading
-  # gamma = -c/kappa that remains diverges whenever the jump size passes
-  # near zero mid-iteration, which on a joint model it routinely does
-  # (measured: from the grid start on an ordinary sample the scalar
-  # quadratic settles at the truth and the linear reading runs to the
-  # confinement boundary). Rejected rather than shipped diverging.
-  if (!is.null(psi_sub) && kind == "jseg") {
-    stop(paste("a subformula on the break-points is not available for",
-               "jseg: its quadratic reading of the break-point does not",
-               "split over the columns of a development. Use seg or jump,",
-               "or a scalar jseg."), call. = FALSE)
-  }
-  SegTerm(label = label, kind = kind, var = var, npsi = as.integer(npsi),
-          by = by, linear = linear, penalty_kind = penalty,
-          spec = list(psi = psi, c0 = c0, psi_sub = psi_sub),
+  npsi <- as.integer(npsi)
+  subs <- .seg_gather(dots, by, kind, npsi, linear)
+  SegTerm(label = label, kind = kind, var = var, npsi = npsi,
+          linear = linear, subformulas = subs,
+          spec = list(psi = psi, c0 = c0),
           X = NULL, coef_names = character(0),
           blueprint = list(), penalty = NULL)
 }
 
-# the coefficient names of one level, and which of them are the changes a
-# penalty may reach, grouped by what the change is: a slope change and a
-# jump are different quantities, so a term carrying both carries two
-# penalties rather than one over their union
-.seg_names <- function(kind, npsi, linear, subnames = NULL) {
-  k <- seq_len(npsi)
-  nm <- if (linear) "lin" else character(0)
-  groups <- list()
-  expand <- function(stem) {
-    if (is.null(subnames)) paste0(stem, k)
-    else as.character(t(outer(paste0(stem, k), subnames, paste, sep = ".")))
-  }
-  if (kind %in% c("seg", "jseg")) {
-    nm <- c(nm, paste0("delta", k))
-    groups$delta <- paste0("delta", k)
-  }
-  if (kind == "seg") {
-    nm <- c(nm, expand("psi"))
-  } else {
-    nm <- c(nm, paste0("kappa", k), expand("g"))
-    groups$kappa <- paste0("kappa", k)
-  }
-  list(names = nm, changes = unlist(groups, use.names = FALSE),
-       groups = groups)
+# The stem of each own coefficient's name. It is the parameter's own name
+# except for a break-point of a discontinuous construction, whose
+# coefficients are the auxiliary g of the identity of Fasola et al. and not
+# the position: the position is read off, and seg_psi() is what reports it.
+.seg_coef_stem <- function(kind, p) {
+  if (kind != "seg" && grepl("^psi[0-9]+$", p)) sub("^psi", "g", p) else p
 }
 
-# The break-points implied by one level's coefficients.
-#
-# A continuous term carries them as coefficients. A pure jump reads them
-# off two, psi = -g/kappa, after Fasola et al. A JOINT term needs more
-# than that, because the truncated line depends on the break-point as
-# well and reading only the jump pair discards what the slope change
-# says about it. Linearizing both parts about the previous position, and
-# writing h for the increment, U for the truncated line and
-# I = Z - psi0 W for the indicator,
-#
-#   delta (x-psi)_+  ~  delta U - delta h I
-#   kappa 1(x>psi)    =  kappa Z - kappa psi W
-#
-# so the fitted coefficients of Z and W are a = kappa - delta h and
-# b = delta h psi0 - kappa psi0 - kappa h, and the increment solves
-#
-#   delta h^2 + a h + (b + a psi0) = 0,
-#
-# the root of smaller modulus. At delta = 0 the quadratic degenerates to
-# h = -(b + a psi0)/a, that is psi = -b/a, so the pure jump is the case
-# the general form contains rather than an exception to it.
-#
-# The result is held inside `lim`, and that is not cosmetic. A
-# break-point outside the data leaves the indicator constant, and then
-# the linear effect, the truncated line and that constant are linearly
-# dependent: the working block goes exactly singular. Confining the
-# break-point to the interval where data lie on both sides is what the
-# segmented literature does for the same reason.
-.seg_psi_of <- function(kind, cf, npsi, linear, lim, psi_prev = NULL) {
-  off <- if (linear) 1L else 0L
-  psi <- if (kind == "seg") {
-    cf[off + npsi + seq_len(npsi)]
-  } else {
-    d <- if (kind == "jseg") npsi else 0L
-    a <- cf[off + d + seq_len(npsi)]
-    b <- cf[off + d + npsi + seq_len(npsi)]
-    a[abs(a) < 1e-12] <- 1e-12
-    if (kind == "jseg" && !is.null(psi_prev)) {
-      del <- cf[off + seq_len(npsi)]
-      cc <- b + a * psi_prev
-      disc <- a^2 - 4 * del * cc
-      # the smaller root where the quadratic is one, the linear solution
-      # where delta vanishes or the roots are complex
-      lin_h <- -cc / a
-      r <- sqrt(pmax(disc, 0))
-      h1 <- (-a + r) / (2 * del)
-      h2 <- (-a - r) / (2 * del)
-      h <- ifelse(abs(h1) <= abs(h2), h1, h2)
-      ok <- disc >= 0 & abs(del) > 1e-10 & is.finite(h)
-      psi_prev + ifelse(ok, h, lin_h)
-    } else {
-      -b / a
+# A design with one column per group and every observation in exactly one
+# of them. The product of two developments over such a design collapses
+# group by group, which is what lets a discontinuous construction carry
+# both a change of level and a break-point that vary.
+.seg_is_partition <- function(Z) {
+  Z <- as.matrix(Z)
+  all(Z == 0 | Z == 1) && all(rowSums(Z) == 1)
+}
+
+# What each construction can carry, and why. The continuous one accepts a
+# development of anything: every coefficient enters its block linearly. The
+# discontinuous ones read the break-point off g = -delta * psi, a product
+# of two of the unknowns, so it stays linear only where one factor is a
+# single number or where the design collapses the product; and the joint
+# construction reads it off a quadratic that also carries the change of
+# slope, so that one is constrained as well.
+.seg_check_devs <- function(kind, npsi, dev) {
+  if (kind == "seg") return(invisible(NULL))
+  for (k in seq_len(npsi)) {
+    pp <- paste0("psi", k)
+    involved <- c(if (kind == "jseg") paste0("gamma", k), paste0("delta", k), pp)
+    # a development of one column is a single number under another name and
+    # constrains nothing; what has to collapse is a coefficient that really
+    # varies
+    wide <- involved[vapply(involved, function(p) {
+      !is.null(dev[[p]]) && ncol(dev[[p]]$Z) > 1L
+    }, logical(1))]
+    if (!length(wide)) next
+    # a pure step reads g = -delta * psi, which stays linear in the
+    # development whenever the change of level is a single number
+    if (kind == "jump" && identical(wide, pp)) next
+    keys <- unique(vapply(wide, function(p) dev[[p]]$key, character(1)))
+    if (length(keys) == 1L && pp %in% wide && isTRUE(dev[[pp]]$partition)) next
+    stop(sprintf(paste("'%s' is developed in a %s term, whose break-point is",
+                       "read off a product of the unknowns. That splits",
+                       "observation by observation only when every one of %s",
+                       "that varies carries the SAME development and its",
+                       "design has one column per group with each observation",
+                       "in one of them, as by = ~0 + g does.%s"),
+                 wide[1L], kind,
+                 paste(sprintf("'%s'", involved), collapse = ", "),
+                 if (kind == "jump")
+                   " Developing the break-point alone is exact on any design."
+                 else " Use seg, or develop nothing."),
+         call. = FALSE)
+  }
+  invisible(NULL)
+}
+
+# The sub-design of every developed coefficient, its built sub-terms and
+# the penalties they declare. A coefficient with no subformula has no
+# design: it is a single number, which the block reads as a constant column
+# without forming one.
+.seg_designs <- function(term, data) {
+  params <- .seg_params(term@kind, term@npsi, term@linear)
+  dev <- stats::setNames(vector("list", length(params)), params)
+  for (p in params) {
+    sf <- term@subformulas[[p]]
+    if (is.null(sf)) next
+    sub <- .nl_submodel(p, sf, data)
+    dev[[p]] <- list(Z = sub$Z, subs = sub$terms, pens = sub$penalties,
+                     coef_names = sub$coef_names,
+                     key = paste(deparse(sf), collapse = ""),
+                     partition = .seg_is_partition(sub$Z))
+  }
+  .seg_check_devs(term@kind, term@npsi, dev)
+  if (term@kind != "seg") {
+    for (k in seq_len(term@npsi)) {
+      d <- dev[[paste0("psi", k)]]
+      if (!is.null(d) && length(d$pens)) {
+        stop(paste("a sub-term carrying a penalty is rejected on a developed",
+                   "break-point of a discontinuous construction: the",
+                   "estimated coefficients are -delta * gamma, the",
+                   "development scaled by the change of level, so the",
+                   "penalty would act on that rather than on the",
+                   "development."), call. = FALSE)
+      }
     }
   }
-  pmin(pmax(psi, lim[1L]), lim[2L])
+  dev
+}
+
+# The value of one developed coefficient at every observation, and the
+# positions of one break-point. A scalar coefficient is recycled rather
+# than multiplied into a column of ones.
+.seg_pval <- function(bp, coef, p, n) {
+  z <- bp$Z[[p]]
+  b <- coef[bp$index[[p]]]
+  if (is.null(z)) rep(b, n) else as.numeric(z %*% b)
+}
+
+# The coefficient vector of a break-point's development, or the position
+# itself where it carries none. A continuous term holds it directly; the
+# discontinuous ones read it off, from g = -delta * psi for a pure step and
+# from the quadratic of the joint construction, both componentwise, which
+# is exact under the conditions .seg_check_devs() enforces.
+.seg_pk <- function(bp, coef, k, prev = NULL) {
+  cf <- coef[bp$index[[paste0("psi", k)]]]
+  if (bp$kind == "seg") return(cf)
+  dk <- coef[bp$index[[paste0("delta", k)]]]
+  dk[abs(dk) < 1e-12] <- 1e-12
+  if (bp$kind == "jseg" && !is.null(prev)) {
+    gk <- coef[bp$index[[paste0("gamma", k)]]]
+    cc <- cf + dk * prev
+    disc <- dk^2 - 4 * gk * cc
+    lin_h <- -cc / dk
+    r <- sqrt(pmax(disc, 0))
+    h1 <- (-dk + r) / (2 * gk)
+    h2 <- (-dk - r) / (2 * gk)
+    h <- ifelse(abs(h1) <= abs(h2), h1, h2)
+    ok <- disc >= 0 & abs(gk) > 1e-10 & is.finite(h)
+    return(prev + ifelse(ok, h, lin_h))
+  }
+  -cf / dk
+}
+
+# The positions of every break-point, one column each, and the coefficient
+# vectors they were read from. Confining the position is what keeps the
+# block non-singular: outside the data the indicator is constant and the
+# columns are linearly dependent, not merely ill-conditioned.
+.seg_positions <- function(bp, coef, n, Z = bp$Z, prev = bp$pk) {
+  K <- bp$npsi
+  pk <- vector("list", K)
+  psi <- matrix(0, n, K)
+  for (k in seq_len(K)) {
+    pk[[k]] <- .seg_pk(bp, coef, k, prev[[k]])
+    z <- Z[[paste0("psi", k)]]
+    v <- if (is.null(z)) rep(pk[[k]], n) else as.numeric(z %*% pk[[k]])
+    psi[, k] <- pmin(pmax(v, bp$lim[1L]), bp$lim[2L])
+  }
+  list(psi = psi, pk = pk)
 }
 
 # The rescaled covariate of Fasola, Muggeo and Kuchenhoff: the two
@@ -426,157 +739,119 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
          (psi + cs * (hi - psi)) + (xv - psi) * keep)
 }
 
-# The working block and the true contribution of one level. The
-# arithmetic is elementwise and is compiled (src/seg_block.cpp), which
-# measures 1.2 to 3.2 times the R form below over n from 1e3 to 1e6 and
-# one to five break-points. The operations are the same in the same
-# order, so the two agree to a rounding; .seg_block_r is kept as the
-# twin the tests compare against.
-.seg_block <- function(kind, xv, cf, npsi, linear, cs, lo, hi, lim,
-                       psi_prev = NULL) {
-  psi <- .seg_psi_of(kind, cf, npsi, linear, lim, psi_prev)
-  off <- if (linear) 1L else 0L
-  del <- if (kind %in% c("seg", "jseg")) cf[off + seq_len(npsi)] else numeric(0)
-  d <- if (kind == "jseg") npsi else 0L
-  kap <- if (kind == "seg") numeric(0) else cf[off + d + seq_len(npsi)]
-  out <- seg_block_cpp(switch(kind, seg = 0L, jump = 1L, jseg = 2L),
-                       xv, psi, del, kap, cs,
-                       if (linear) cf[1L] else 0, linear, lo, hi)
-  list(X = out$X, value = out$value, psi = psi)
-}
-
-.seg_block_r <- function(kind, xv, cf, npsi, linear, cs, lo, hi, lim,
-                         psi_prev = NULL) {
+# The working block and the contribution. Every coefficient of the term is
+# a multiplier times its own design, and which multiplier is the whole of
+# the difference between the three constructions:
+#
+#   beta     x
+#   gamma_k  (x - psi_k)_+
+#   delta_k  x~ W + 1/2                (the identity of Fasola et al.)
+#   psi_k    -gamma_k(x) 1(x > psi_k)  continuous, the ordinary Jacobian
+#            W                         discontinuous, the auxiliary column
+#
+# A coefficient with no development has a design of one constant column,
+# which is never formed: its block is the multiplier itself.
+.seg_block <- function(bp, xv, coef, cscale, Z = bp$Z, prev = bp$pk) {
   n <- length(xv)
-  off <- if (linear) 1L else 0L
-  psi <- .seg_psi_of(kind, cf, npsi, linear, lim, psi_prev)
+  K <- bp$npsi
+  pos <- .seg_positions(bp, coef, n, Z, prev)
+  psi <- pos$psi
+  value <- numeric(n)
   cols <- list()
-  if (linear) cols[[1L]] <- xv
-  value <- if (linear) cf[1L] * xv else numeric(n)
+  put <- function(p, mult) {
+    z <- Z[[p]]
+    cols[[p]] <<- if (is.null(z)) matrix(mult, ncol = 1L) else mult * z
+  }
+  val <- function(p) .seg_pval(list(Z = Z, index = bp$index), coef, p, n)
 
-  if (kind %in% c("seg", "jseg")) {
-    del <- cf[off + seq_len(npsi)]
-    for (j in seq_len(npsi)) {
-      cols[[length(cols) + 1L]] <- pmax(xv - psi[j], 0)
-      value <- value + del[j] * pmax(xv - psi[j], 0)
+  if (bp$linear) {
+    put("beta", xv)
+    value <- value + val("beta") * xv
+  }
+  gam <- vector("list", K)
+  if (bp$kind %in% c("seg", "jseg")) {
+    for (k in seq_len(K)) {
+      gam[[k]] <- val(paste0("gamma", k))
+      tr <- pmax(xv - psi[, k], 0)
+      put(paste0("gamma", k), tr)
+      value <- value + gam[[k]] * tr
     }
   }
-
-  if (kind == "seg") {
-    # the Jacobian in the break-point: an ordinary column, so the
-    # break-point is an ordinary coefficient
-    for (j in seq_len(npsi)) {
-      cols[[length(cols) + 1L]] <- -del[j] * (xv > psi[j])
+  if (bp$kind == "seg") {
+    for (k in seq_len(K)) {
+      put(paste0("psi", k), -gam[[k]] * (xv > psi[, k]))
     }
   } else {
-    d <- if (kind == "jseg") npsi else 0L
-    kap <- cf[off + d + seq_len(npsi)]
-    for (j in seq_len(npsi)) {
-      # the identity of Fasola et al.: exact at x != psi, and linear in
-      # the break-point once the weight is frozen. It is applied to the
-      # rescaled covariate, which is what keeps the weight bounded.
-      xs <- .seg_rescale(xv, psi[j], cs[j], lo, hi)
-      W <- 1 / (2 * abs(xs - psi[j]))
-      cols[[length(cols) + 1L]] <- xs * W + 0.5
-      cols[[length(cols) + 1L]] <- W
-      value <- value + kap[j] * (xv > psi[j])
+    W <- vector("list", K)
+    for (k in seq_len(K)) {
+      del <- val(paste0("delta", k))
+      xs <- .seg_rescale(xv, psi[, k], cscale[k], bp$lo, bp$hi)
+      W[[k]] <- 1 / (2 * abs(xs - psi[, k]))
+      put(paste0("delta", k), xs * W[[k]] + 0.5)
+      value <- value + del * (xv > psi[, k])
     }
-    # the two columns of a jump are interleaved above; reorder so that
-    # every kappa precedes every g, matching .seg_names()
-    base <- length(cols) - 2L * npsi
-    zw <- cols[base + seq_len(2L * npsi)]
-    cols[base + seq_len(2L * npsi)] <-
-      c(zw[seq(1L, 2L * npsi, by = 2L)], zw[seq(2L, 2L * npsi, by = 2L)])
+    for (k in seq_len(K)) put(paste0("psi", k), W[[k]])
   }
 
-  list(X = do.call(cbind, cols), value = value, psi = psi)
+  list(X = .nl_bind(cols[bp$params]), value = value, psi = psi, pk = pos$pk)
 }
 
-# The working block and the contribution where the break-points carry a
-# submodel psi_k = Z gamma_k. The same constructions as the scalar block,
-# read per observation: the continuous Jacobian column splits into
-# -delta_k 1(x > psi_k) Z_j, and the gW column of the Fasola identity into
-# W Z_j, whose coefficients are c_k = -kappa_k gamma_k, so the development
-# is read off as gamma_k = -c_k / kappa_k exactly as the scalar
-# break-point is. The blocks are bound rather than written into a
-# preallocated matrix, so a sparse Z (grouping indicators) stays sparse.
-.seg_block_sub <- function(kind, xv, cf, npsi, linear, cs, lo, hi, lim, Z) {
+# The same block through the compiled kernel, which is taken wherever no
+# coefficient carries a development. That is the ordinary case and the one
+# the kernel was written for; it measures 1.2 to 3.2 times the R form over
+# n from 1e3 to 1e6 and one to five break-points. .seg_block stays the twin
+# the tests compare it against, at a tolerance rather than by identity, a
+# compiler being free to contract a multiply-add.
+.seg_block_cpp <- function(bp, xv, coef, cscale, prev = bp$pk) {
   n <- length(xv)
-  q <- ncol(Z)
-  off <- if (linear) 1L else 0L
-  d <- if (kind %in% c("seg", "jseg")) npsi else 0L
-  gam <- .seg_gamma_of(kind, cf, npsi, linear, q)
-  psi <- matrix(0, n, npsi)
-  for (k in seq_len(npsi)) {
-    psi[, k] <- pmin(pmax(as.numeric(Z %*% gam[, k]), lim[1L]), lim[2L])
-  }
-
-  cols <- list()
-  value <- if (linear) cf[1L] * xv else numeric(n)
-  if (linear) cols[[length(cols) + 1L]] <- matrix(xv, ncol = 1L)
-
-  if (kind %in% c("seg", "jseg")) {
-    del <- cf[off + seq_len(npsi)]
-    tr <- lapply(seq_len(npsi), function(k) pmax(xv - psi[, k], 0))
-    for (k in seq_len(npsi)) {
-      cols[[length(cols) + 1L]] <- matrix(tr[[k]], ncol = 1L)
-      value <- value + del[k] * tr[[k]]
-    }
-  }
-
-  if (kind == "seg") {
-    for (k in seq_len(npsi)) {
-      cols[[length(cols) + 1L]] <- (-del[k] * (xv > psi[, k])) * Z
-    }
-  } else {
-    kap <- cf[off + d + seq_len(npsi)]
-    wcols <- vector("list", npsi)
-    for (k in seq_len(npsi)) {
-      xs <- .seg_rescale(xv, psi[, k], cs[k], lo, hi)
-      W <- 1 / (2 * abs(xs - psi[, k]))
-      cols[[length(cols) + 1L]] <- matrix(xs * W + 0.5, ncol = 1L)
-      wcols[[k]] <- W * Z
-      value <- value + kap[k] * (xv > psi[, k])
-    }
-    for (k in seq_len(npsi)) cols[[length(cols) + 1L]] <- wcols[[k]]
-  }
-
-  list(X = .nl_bind(cols), value = value, psi = psi)
+  K <- bp$npsi
+  pos <- .seg_positions(bp, coef, n, bp$Z, prev)
+  off <- if (bp$linear) 1L else 0L
+  gam <- if (bp$kind %in% c("seg", "jseg")) coef[off + seq_len(K)] else numeric(0)
+  d <- if (bp$kind == "jseg") K else 0L
+  del <- if (bp$kind == "seg") numeric(0) else coef[off + d + seq_len(K)]
+  # the positions are read from the coefficient vectors rather than off the
+  # matrix of values, which has no rows to read where the subset is empty
+  psi1 <- pmin(pmax(vapply(pos$pk, function(v) v[1L], numeric(1)),
+                    bp$lim[1L]), bp$lim[2L])
+  out <- seg_block_cpp(switch(bp$kind, seg = 0L, jump = 1L, jseg = 2L),
+                       xv, psi1, gam, del, cscale,
+                       if (bp$linear) coef[1L] else 0, bp$linear,
+                       bp$lo, bp$hi)
+  list(X = out$X, value = out$value, psi = pos$psi, pk = pos$pk)
 }
 
-# the coefficient vectors of the development, one column per break-point:
-# read directly for the continuous construction, off c = -kappa gamma for
-# the discontinuous ones
-.seg_gamma_of <- function(kind, cf, npsi, linear, q) {
-  off <- if (linear) 1L else 0L
-  d <- if (kind %in% c("seg", "jseg")) npsi else 0L
-  gam <- matrix(0, q, npsi)
-  if (kind == "seg") {
-    for (k in seq_len(npsi)) {
-      gam[, k] <- cf[off + d + (k - 1L) * q + seq_len(q)]
-    }
-  } else {
-    kap <- cf[off + d + seq_len(npsi)]
-    kap[abs(kap) < 1e-12] <- 1e-12
-    for (k in seq_len(npsi)) {
-      gam[, k] <- -cf[off + d + npsi + (k - 1L) * q + seq_len(q)] / kap[k]
-    }
-  }
-  gam
+.seg_assemble <- function(bp, xv, coef, cscale = bp$cscale, Z = bp$Z,
+                          prev = bp$pk) {
+  if (bp$developed) .seg_block(bp, xv, coef, cscale, Z, prev)
+  else .seg_block_cpp(bp, xv, coef, cscale, prev)
 }
 
-# The starting coefficients of one break-point's development: the vector
-# solving Z gamma ~ psi0, the constant start projected onto the design.
-# The solve is exact first -- a regularized one displaces the start by its
-# own ridge, which a development of ~1 must not inherit -- and the
-# regularized fallback answers for a rank-deficient Z. A branch decided by
-# a tryCatch is the shape the toolkit distrusts, and it is admissible here
-# for the reason distrib_start() records: a starting value is allowed to
-# be approximate, where the contract quantity is not.
-.seg_gamma_start <- function(Z, psi0) {
+.seg_x <- function(expr, data) {
+  v <- as.numeric(eval(expr, data, baseenv()))
+  if (length(v) != nrow(data)) {
+    stop("the covariate of a break-point term must give one value per row.",
+         call. = FALSE)
+  }
+  if (anyNA(v)) {
+    stop("the covariate of a break-point term must not contain missing values.",
+         call. = FALSE)
+  }
+  v
+}
+
+# The starting coefficients of one development: the vector solving
+# W p ~ psi0, the constant start projected onto the design. The solve is
+# exact first -- a regularized one displaces the start by its own ridge,
+# which a development of ~1 must not inherit -- and the regularized
+# fallback answers for a rank-deficient design. A branch decided by a
+# tryCatch is the shape the toolkit distrusts, and it is admissible here
+# for the reason distrib_start() records: a starting value is allowed to be
+# approximate, where a contract quantity is not.
+.seg_proj_start <- function(Z, v) {
   q <- ncol(Z)
   zz <- Matrix::crossprod(Z)
-  zy <- Matrix::crossprod(Z, rep(psi0, nrow(Z)))
+  zy <- Matrix::crossprod(Z, rep(v, nrow(Z)))
   out <- tryCatch(as.numeric(Matrix::solve(zz, zy)),
                   error = function(e) NULL, warning = function(w) NULL)
   if (is.null(out) || !all(is.finite(out))) {
@@ -586,83 +861,15 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   out
 }
 
-.seg_x <- function(expr, data) {
-  v <- as.numeric(eval(expr, data, baseenv()))
-  if (length(v) != nrow(data)) {
-    stop("the covariate of a segmented term must give one value per row.",
-         call. = FALSE)
-  }
-  if (anyNA(v)) {
-    stop("the covariate of a segmented term must not contain missing values.",
-         call. = FALSE)
-  }
-  v
-}
-
-.seg_by <- function(by, data, levels = NULL) {
-  if (is.null(by)) return(NULL)
-  v <- eval(by, data, baseenv())
-  f <- if (is.null(levels)) factor(v) else factor(v, levels = levels)
-  if (any(is.na(f) & !is.na(v))) {
-    stop("a 'by' level absent at build time cannot be predicted.",
-         call. = FALSE)
-  }
-  f
-}
-
-# the block over every level of by, and the contribution; with a
-# subformula there are no levels and the block is the developed one
-.seg_assemble <- function(bp, xv, grp, coef, cscale = bp$cscale,
-                          Zsub = bp$Zsub) {
-  if (!is.null(Zsub)) {
-    return(.seg_block_sub(bp$kind, xv, coef, bp$npsi, bp$linear,
-                          cscale, bp$lo, bp$hi, bp$lim, Zsub))
-  }
-  per <- bp$per_level
-  m <- length(bp$levels)
-  n <- length(xv)
-  X <- matrix(0, n, m * per)
-  value <- numeric(n)
-  psi <- numeric(0)
-  for (l in seq_len(m)) {
-    idx <- (l - 1L) * per + seq_len(per)
-    jj <- (l - 1L) * bp$npsi + seq_len(bp$npsi)
-    cs <- cscale[jj]
-    rows <- if (is.null(grp)) rep(TRUE, n) else grp == bp$levels[l]
-    b <- .seg_block(bp$kind, xv[rows], coef[idx], bp$npsi, bp$linear,
-                    cs, bp$lo, bp$hi, bp$lim, bp$psi[jj])
-    X[rows, idx] <- b$X
-    value[rows] <- b$value
-    psi <- c(psi, b$psi)
-  }
-  list(X = X, value = value, psi = psi)
-}
-
 S7::method(term_build, SegTerm) <- function(term, data, ...) {
   xv <- .seg_x(term@var, data)
-  grp <- .seg_by(term@by, data)
-  levs <- if (is.null(grp)) "" else levels(grp)
-
-  # the break-points' development, when they carry one: the subformula
-  # through the interpreter, exactly as a parameter of nl()
-  sub <- NULL
-  if (!is.null(term@spec$psi_sub)) {
-    sub <- .nl_submodel("psi", term@spec$psi_sub, data)
-    if (term@kind != "seg" && length(sub$penalties)) {
-      stop(paste("a sub-term carrying a penalty is rejected in a",
-                 "discontinuous construction: the estimated coefficients",
-                 "are c = -kappa * gamma, so the penalty would act on the",
-                 "development scaled by the jump size rather than on the",
-                 "development itself."), call. = FALSE)
-    }
-  }
-  nmi <- .seg_names(term@kind, term@npsi, term@linear,
-                    subnames = if (is.null(sub)) NULL else sub$coef_names)
-  per <- length(nmi$names)
+  n <- length(xv)
+  params <- .seg_params(term@kind, term@npsi, term@linear)
+  dev <- .seg_designs(term, data)
 
   rr <- range(xv)
   if (diff(rr) <= 0) {
-    stop("the covariate of a segmented term must vary.", call. = FALSE)
+    stop("the covariate of a break-point term must vary.", call. = FALSE)
   }
 
   # the interval a break-point is held in: far enough inside the data
@@ -684,99 +891,64 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
                                names = FALSE))
   }
 
+  # the layout: one stretch of coefficients per own parameter, in the
+  # order the block carries them
+  Z <- stats::setNames(vector("list", length(params)), params)
+  index <- stats::setNames(vector("list", length(params)), params)
+  cn <- character(0)
+  pos <- 0L
+  for (p in params) {
+    stem <- .seg_coef_stem(term@kind, p)
+    d <- dev[[p]]
+    q <- if (is.null(d)) 1L else ncol(d$Z)
+    Z[[p]] <- if (is.null(d)) NULL else d$Z
+    index[[p]] <- pos + seq_len(q)
+    pos <- pos + q
+    cn <- c(cn, if (is.null(d)) paste(term@label, stem, sep = ".")
+            else paste(term@label, stem, d$coef_names, sep = "."))
+  }
+
   # the starting coefficients: unit changes, the break-points at their
-  # starting positions, and g = -kappa * psi where a jump reads them off.
-  # A development starts at the vector solving Z gamma ~ psi0, the
-  # constant start projected onto its own design.
-  coef0 <- numeric(length(levs) * per)
-  if (!is.null(sub)) {
-    q <- ncol(sub$Z)
-    off <- if (term@linear) 1L else 0L
-    d <- if (term@kind %in% c("seg", "jseg")) term@npsi else 0L
-    if (term@kind %in% c("seg", "jseg")) {
-      coef0[off + seq_len(term@npsi)] <- 1
-    }
-    for (k in seq_len(term@npsi)) {
-      g0 <- .seg_gamma_start(sub$Z, start_psi[k])
-      if (term@kind == "seg") {
-        coef0[off + d + (k - 1L) * q + seq_len(q)] <- g0
-      } else {
-        coef0[off + d + k] <- 1
-        coef0[off + d + term@npsi + (k - 1L) * q + seq_len(q)] <- -g0
-      }
-    }
-  } else {
-    for (l in seq_along(levs)) {
-      idx <- (l - 1L) * per
-      off <- if (term@linear) 1L else 0L
-      if (term@linear) coef0[idx + 1L] <- 0
-      if (term@kind %in% c("seg", "jseg")) {
-        coef0[idx + off + seq_len(term@npsi)] <- 1
-      }
-      if (term@kind == "seg") {
-        coef0[idx + off + term@npsi + seq_len(term@npsi)] <- start_psi
-      } else {
-        d <- if (term@kind == "jseg") term@npsi else 0L
-        coef0[idx + off + d + seq_len(term@npsi)] <- 1
-        coef0[idx + off + d + term@npsi + seq_len(term@npsi)] <- -start_psi
-      }
-    }
+  # starting positions, and g = -delta * psi where a step reads them off.
+  # A development starts at the vector projecting the constant start onto
+  # its own design.
+  coef0 <- numeric(pos)
+  start_at <- function(p, v) {
+    d <- dev[[p]]
+    coef0[index[[p]]] <<- if (is.null(d)) v else .seg_proj_start(d$Z, v)
+  }
+  for (k in seq_len(term@npsi)) {
+    if (term@kind %in% c("seg", "jseg")) start_at(paste0("gamma", k), 1)
+    if (term@kind %in% c("jump", "jseg")) start_at(paste0("delta", k), 1)
+    start_at(paste0("psi", k),
+             if (term@kind == "seg") start_psi[k] else -start_psi[k])
   }
 
-  npt <- length(levs) * term@npsi
   bp <- list(kind = term@kind, npsi = term@npsi, linear = term@linear,
-             per_level = per, levels = levs,
+             params = params, Z = Z, index = index,
+             subs = lapply(dev, function(d) if (is.null(d)) NULL else d$subs),
+             developed = any(!vapply(dev, is.null, logical(1))),
              lo = rr[1L], hi = rr[2L], lim = lim, delta = delta,
-             cscale = rep(term@spec$c0, npt), sgn = rep(0, npt),
-             step = rep(NA_real_, npt), nref = 0L,
-             var = term@var, by = term@by, coef = coef0,
-             xv = xv, grp = grp,
-             Zsub = if (is.null(sub)) NULL else sub$Z,
-             subs = if (is.null(sub)) NULL else sub$terms,
-             names_one = nmi$names, changes_one = nmi$changes)
+             cscale = rep(term@spec$c0, term@npsi),
+             sgn = rep(0, term@npsi), step = rep(NA_real_, term@npsi),
+             nref = 0L, var = term@var, coef = coef0, xv = xv,
+             pk = vector("list", term@npsi))
 
-  asm <- .seg_assemble(bp, xv, grp, coef0)
-  cn <- if (is.null(grp)) {
-    paste(term@label, nmi$names, sep = ".")
-  } else {
-    as.character(t(outer(levs, nmi$names,
-                         function(a, b) paste(term@label, a, b, sep = "."))))
-  }
+  asm <- .seg_assemble(bp, xv, coef0)
   X <- asm$X
   colnames(X) <- cn
 
-  # The penalty names the coefficients it covers instead of selecting them
-  # with a map: over its own coordinates it is separable, and a fitting
-  # layer can take a proximal step or a coordinate descent on it, which a
-  # selection map would deny it. One penalty per kind of change, shared
-  # across the levels of `by`.
-  bp$penalties <- list()
-  if (!.penalty_is_none(term@penalty_kind)) {
-    factory <- .penalty_factory(term@penalty_kind)
-    for (g in names(nmi$groups)) {
-      keep <- which(rep(nmi$names %in% nmi$groups[[g]], times = length(levs)))
-      bp$penalties[[length(bp$penalties) + 1L]] <- list(
-        name = g, index = keep, penalty = factory(length(keep)))
-    }
-  }
-  # the penalties the development's sub-terms declare, one entry per
-  # break-point, its coefficients being the break-point's own; only the
-  # continuous construction reaches here
-  if (!is.null(sub) && length(sub$penalties)) {
-    offp <- (if (term@linear) 1L else 0L) + term@npsi
-    q <- ncol(sub$Z)
-    for (k in seq_len(term@npsi)) {
-      for (e in sub$penalties) {
-        bp$penalties[[length(bp$penalties) + 1L]] <- list(
-          name = paste0("psi", k, "::", e$name),
-          index = offp + (k - 1L) * q + e$index,
-          penalty = e$penalty)
-      }
-    }
-  }
+  # The penalties a development declares, keyed by the coefficient it
+  # develops. Where one subformula covers every coefficient of a kind the
+  # entries are POOLED into one, so that `gamma ~ 0 + lasso(~1)` is a
+  # penalized block over the K changes under one hyperparameter, which is
+  # what selecting how many break-points there are asks for; per-parameter
+  # subformulas name one coefficient each and there is nothing to pool.
+  bp$penalties <- .seg_penalties(term, dev, index)
 
   bp$value <- asm$value
   bp$psi <- asm$psi
+  bp$pk <- asm$pk
   term@X <- X
   term@coef_names <- cn
   term@blueprint <- bp
@@ -784,15 +956,65 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
   term
 }
 
-#' @title Penalties of a Segmented Term
+# The penalty entries of the developments. A sub-term shared by several
+# coefficients of one kind declares one penalty per coefficient, and K
+# hyperparameters over the same quantity is not what a shared subformula
+# says: the entries are pooled, the penalty rebuilt over the union through
+# the sub-term's own factory. A sub-term that has no factory -- anything
+# but the penalized constructors -- keeps one entry per coefficient, its
+# penalty being sized to its own block.
+.seg_penalties <- function(term, dev, index) {
+  out <- list()
+  devd <- names(dev)[!vapply(dev, is.null, logical(1))]
+  kinds <- sub("[0-9]+$", "", devd)
+  pooled <- character(0)
+  for (g in unique(kinds)) {
+    ps <- devd[kinds == g]
+    keys <- vapply(ps, function(p) dev[[p]]$key, character(1))
+    ent <- dev[[ps[1L]]]$pens
+    if (length(ps) < 2L || length(unique(keys)) > 1L || !length(ent)) next
+    fac <- lapply(ent, function(e) .seg_sub_factory(dev[[ps[1L]]]$subs, e$name))
+    if (any(vapply(fac, is.null, logical(1)))) next
+    for (i in seq_along(ent)) {
+      idx <- unlist(lapply(ps, function(p) index[[p]][ent[[i]]$index]),
+                    use.names = FALSE)
+      out[[length(out) + 1L]] <- list(
+        name = paste0(g, "::", ent[[i]]$name), index = idx,
+        penalty = fac[[i]](length(idx)))
+    }
+    pooled <- c(pooled, ps)
+  }
+  for (p in setdiff(devd, pooled)) {
+    for (e in dev[[p]]$pens) {
+      out[[length(out) + 1L]] <- list(name = paste0(p, "::", e$name),
+                                      index = index[[p]][e$index],
+                                      penalty = e$penalty)
+    }
+  }
+  out
+}
+
+# The factory of the sub-term an entry came from, where it has one. The
+# property is asked for rather than the class tested, which is what lets a
+# term written later be pooled without an edit here.
+.seg_sub_factory <- function(subs, name) {
+  lb <- sub("::.*$", "", name)
+  tm <- subs[[lb]]
+  if (is.null(tm) || !("factory" %in% S7::prop_names(tm))) return(NULL)
+  tm@factory
+}
+
+#' @title Penalties of a Break-Point Term
 #' @name term_penalties.SegTerm
 #' @description
-#' One entry per kind of change the term carries a penalty on, naming the
-#' coefficients it covers: \code{"delta"} for the slope changes,
-#' \code{"kappa"} for the jump sizes, shared across the levels of
-#' \code{by}. The list is empty when \code{penalty = NULL}, and for a
-#' specification, whose parameters there is nothing yet to index: a penalty
-#' is attached at build, as it is for every penalized term here.
+#' One entry per penalty the developments of the term's own coefficients
+#' declare, naming the coefficients it covers. The entries of a subformula
+#' shared by every coefficient of one kind are pooled into one, so that
+#' \code{gamma ~ 0 + lasso(~1)} is a single penalized block over the changes
+#' under one hyperparameter. The list is empty for a term whose
+#' coefficients carry no development, and for a specification, whose
+#' coefficients there is nothing yet to index: a penalty is attached at
+#' build, as it is for every penalized term here.
 #' @param term A built \code{\link{SegTerm}}.
 #' @param ... Unused.
 #' @return A list of entries, as \code{\link{term_penalties}} documents.
@@ -800,27 +1022,6 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
 S7::method(term_penalties, SegTerm) <- function(term, ...) {
   pens <- term@blueprint$penalties
   if (is.null(pens)) list() else pens
-}
-
-# the break-points of every level, read off the coefficients without
-# building the block; a matrix, one column per break-point, where they
-# carry a development
-.seg_psi_all <- function(bp, coef) {
-  if (!is.null(bp$Zsub)) {
-    gam <- .seg_gamma_of(bp$kind, coef, bp$npsi, bp$linear, ncol(bp$Zsub))
-    psi <- matrix(0, nrow(bp$Zsub), bp$npsi)
-    for (k in seq_len(bp$npsi)) {
-      psi[, k] <- pmin(pmax(as.numeric(bp$Zsub %*% gam[, k]), bp$lim[1L]),
-                       bp$lim[2L])
-    }
-    return(psi)
-  }
-  per <- bp$per_level
-  unlist(lapply(seq_along(bp$levels), function(l) {
-    .seg_psi_of(bp$kind, coef[(l - 1L) * per + seq_len(per)], bp$npsi,
-                bp$linear, bp$lim,
-                bp$psi[(l - 1L) * bp$npsi + seq_len(bp$npsi)])
-  }), use.names = FALSE)
 }
 
 S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
@@ -836,25 +1037,18 @@ S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   # iteration has begun to circle an optimum rather than travel towards
   # one. A large factor moves the estimate far and lets it leave a
   # spurious optimum; a small one is faithful to the step function.
-  psi_new <- .seg_psi_all(bp, coef)
-  if (is.matrix(psi_new)) {
-    # a developed break-point moves once per observation: the schedule is
-    # driven per break-point, by the mean movement for the direction and
-    # by the largest for the step, and the conditioning bound is taken at
-    # the observation nearest an end of the range
-    dm <- psi_new - bp$psi
-    d <- colMeans(dm)
-    stepv <- apply(abs(dm), 2L, max)
-    dfar <- apply(psi_new, 2L, function(p) max(pmax(p - bp$lo, bp$hi - p)))
-    dnear <- apply(psi_new, 2L, function(p) min(pmin(p - bp$lo, bp$hi - p)))
-    amax <- apply(abs(psi_new), 2L, max)
-  } else {
-    d <- psi_new - bp$psi
-    stepv <- abs(d)
-    dfar <- pmax(psi_new - bp$lo, bp$hi - psi_new)
-    dnear <- pmin(psi_new - bp$lo, bp$hi - psi_new)
-    amax <- abs(psi_new)
-  }
+  # A developed break-point moves once per observation, so the schedule is
+  # driven by the mean movement for the direction and by the largest for
+  # the step, and the conditioning bound is taken at the observation
+  # nearest an end of the range.
+  psi_new <- .seg_positions(bp, coef, length(bp$xv))$psi
+  dm <- psi_new - bp$psi
+  d <- colMeans(dm)
+  stepv <- apply(abs(dm), 2L, max)
+  dfar <- apply(psi_new, 2L, function(p) max(pmax(p - bp$lo, bp$hi - p)))
+  dnear <- apply(psi_new, 2L, function(p) min(pmin(p - bp$lo, bp$hi - p)))
+  amax <- apply(abs(psi_new), 2L, max)
+
   s <- sign(d)
   flip <- s != 0 & bp$sgn != 0 & s != bp$sgn
   bp$cscale[flip] <- bp$cscale[flip] / 2
@@ -877,22 +1071,26 @@ S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   bp$nref <- bp$nref + 1L
   bp$step <- if (bp$nref > 1L) stepv else rep(NA_real_, length(stepv))
 
-  asm <- .seg_assemble(bp, bp$xv, bp$grp, coef)
+  asm <- .seg_assemble(bp, bp$xv, coef)
   X <- asm$X
   colnames(X) <- term@coef_names
   bp$coef <- coef
   bp$value <- asm$value
   bp$psi <- asm$psi
+  bp$pk <- asm$pk
   term@X <- X
   term@blueprint <- bp
   term
 }
 
-# the development's design on other rows, each sub-term reapplied through
+# The developments' designs on other rows, each sub-term reapplied through
 # its own blueprint
-.seg_zsub_at <- function(bp, newdata) {
-  if (is.null(bp$Zsub)) return(NULL)
-  .nl_bind(lapply(bp$subs, term_predict, newdata = newdata))
+.seg_z_at <- function(bp, newdata) {
+  if (!bp$developed) return(bp$Z)
+  lapply(stats::setNames(bp$params, bp$params), function(p) {
+    if (is.null(bp$subs[[p]])) NULL
+    else .nl_bind(lapply(bp$subs[[p]], term_predict, newdata = newdata))
+  })
 }
 
 S7::method(term_value, SegTerm) <- function(term, coef = NULL, newdata = NULL,
@@ -903,10 +1101,9 @@ S7::method(term_value, SegTerm) <- function(term, coef = NULL, newdata = NULL,
     # the break-points are the ones the term carries, as term_predict()
     # reapplies them: refreshing here would read them off the new rows
     xv <- .seg_x(bp$var, newdata)
-    grp <- if (is.null(bp$by)) NULL else .seg_by(bp$by, newdata, bp$levels)
     cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
-    return(.seg_assemble(bp, xv, grp, cf,
-                         Zsub = .seg_zsub_at(bp, newdata))$value)
+    return(.seg_assemble(bp, xv, cf, bp$cscale, .seg_z_at(bp, newdata),
+                         bp$pk)$value)
   }
   if (is.null(coef)) return(bp$value)
   term_refresh(term, coef)@blueprint$value
@@ -916,27 +1113,25 @@ S7::method(term_predict, SegTerm) <- function(term, newdata, ...) {
   .assert_built(term)
   bp <- term@blueprint
   xv <- .seg_x(bp$var, newdata)
-  grp <- if (is.null(bp$by)) NULL else .seg_by(bp$by, newdata, bp$levels)
-  X <- .seg_assemble(bp, xv, grp, bp$coef,
-                     Zsub = .seg_zsub_at(bp, newdata))$X
+  X <- .seg_assemble(bp, xv, bp$coef, bp$cscale, .seg_z_at(bp, newdata),
+                     bp$pk)$X
   colnames(X) <- term@coef_names
   X
 }
-
-#' The Break-Points of a Segmented Term
+#' The Break-Points of a Break-Point Term
 #'
 #' @description
-#' The estimated positions of the break-points, one per break-point and
-#' per level of \code{by}. For a continuous term these are coefficients;
-#' for a discontinuous one they are read off two coefficients as
-#' \eqn{-g/\kappa}, so this is the function that reports them either way.
+#' The estimated positions of the break-points. For a continuous term
+#' these are coefficients; for a discontinuous one they are read off two
+#' coefficients as \eqn{-g_k/\delta_k}, so this is the function that
+#' reports them either way.
 #'
 #' @param term A built \code{\link{SegTerm}}.
 #' @param coef Optional coefficients; defaults to the ones the term was
 #'   last refreshed at.
 #'
-#' @return A numeric vector of break-point positions, or, where the
-#'   break-points carry a development, a matrix with one row per
+#' @return A numeric vector with one entry per break-point, or, where a
+#'   break-point carries a development, a matrix with one row per
 #'   observation and one column per break-point.
 #'
 #' @examples
@@ -944,15 +1139,24 @@ S7::method(term_predict, SegTerm) <- function(term, newdata, ...) {
 #' dd <- data.frame(x = sort(runif(100, 0, 10)))
 #' seg_psi(term_build(seg(x, npsi = 2), dd))
 #'
-#' @seealso \code{\link{seg}}
+#' @seealso \code{\link{seg}}, \code{\link{jump}}, \code{\link{jseg}}
 #' @export
 seg_psi <- function(term, coef = NULL) {
   if (!S7::S7_inherits(term, SegTerm)) {
-    stop("'term' must be a segmented term.", call. = FALSE)
+    stop("'term' must be a break-point term.", call. = FALSE)
   }
   .assert_built(term)
-  if (is.null(coef)) return(term@blueprint$psi)
-  term_refresh(term, coef)@blueprint$psi
+  tm <- if (is.null(coef)) term else term_refresh(term, coef)
+  .seg_psi_report(tm@blueprint)
+}
+
+# The positions as a reader wants them: one number per break-point where
+# none of them is developed, since the matrix then repeats one row.
+.seg_psi_report <- function(bp) {
+  psi <- bp$psi
+  devd <- any(vapply(paste0("psi", seq_len(bp$npsi)),
+                     function(p) !is.null(bp$Z[[p]]), logical(1)))
+  if (devd) psi else as.numeric(psi[1L, ])
 }
 
 #' The Progress of a Break-Point Iteration
@@ -993,14 +1197,13 @@ seg_psi <- function(term, coef = NULL) {
 #' @param term A built \code{\link{SegTerm}}.
 #'
 #' @return \code{seg_step} returns a numeric vector with one entry per
-#'   break-point and per level of \code{by}; \code{seg_converged} returns
-#'   a single logical.
+#'   break-point; \code{seg_converged} returns a single logical.
 #'
 #' @examples
 #' set.seed(1)
 #' dd <- data.frame(x = sort(runif(100, 0, 10)))
 #' dd$y <- 2 * (dd$x > 6) + rnorm(100, sd = 0.3)
-#' b <- term_build(jump(x, psi = 4, linear = FALSE), dd)
+#' b <- term_build(jump(x, psi = 4), dd)
 #' cf <- b@blueprint$coef
 #' for (it in 1:30) {
 #'   b <- term_refresh(b, cf)
@@ -1015,7 +1218,7 @@ seg_psi <- function(term, coef = NULL) {
 #' @export
 seg_step <- function(term) {
   if (!S7::S7_inherits(term, SegTerm)) {
-    stop("'term' must be a segmented term.", call. = FALSE)
+    stop("'term' must be a break-point term.", call. = FALSE)
   }
   .assert_built(term)
   term@blueprint$step
@@ -1028,7 +1231,7 @@ seg_converged <- function(term) {
   !anyNA(st) && max(st) < term@blueprint$delta
 }
 
-#' @title Whether a Segmented Term's Break-Points Have Settled
+#' @title Whether a Break-Point Term's Break-Points Have Settled
 #' @name term_converged.SegTerm
 #' @description
 #' \code{\link{seg_converged}}, so that a fitting layer reads the rule the
@@ -1079,10 +1282,11 @@ S7::method(term_converged, SegTerm) <- function(term, ...) {
 #' the term's columns at each candidate position and, where the term
 #' carries one, the linear effect. That is the exact profile for a
 #' gaussian response and an adequate starting rule for any other, the
-#' quantity being used to place a starting value and not to fit. With
-#' \code{by} each level is scored on its own rows. With several
-#' break-points every increasing combination of grid points is scored,
-#' so \code{k} should be kept small.
+#' quantity being used to place a starting value and not to fit. The
+#' positions found seed a development as well, each starting vector
+#' projecting the position onto the sub-design. With several break-points
+#' every increasing combination of grid points is scored, so \code{k}
+#' should be kept small.
 #'
 #' @param spec An unbuilt \code{\link{SegTerm}}.
 #' @param data A data frame in which the covariate is evaluated.
@@ -1102,11 +1306,11 @@ S7::method(term_converged, SegTerm) <- function(term, ...) {
 #' dd$y <- 0.3 * dd$x + 2 * (dd$x > 6.5) + rnorm(200, sd = 0.3)
 #' seg_start(jump(x), dd, dd$y)@spec$psi
 #'
-#' @seealso \code{\link{seg}}
+#' @seealso \code{\link{seg}}, \code{\link{jump}}, \code{\link{jseg}}
 #' @export
 seg_start <- function(spec, data, y, k = 10) {
   if (!S7::S7_inherits(spec, SegTerm)) {
-    stop("'spec' must be a segmented term.", call. = FALSE)
+    stop("'spec' must be a break-point term.", call. = FALSE)
   }
   if (length(spec@X) > 0L) {
     stop("'spec' must be an unbuilt term; see term_build().", call. = FALSE)
@@ -1120,8 +1324,6 @@ seg_start <- function(spec, data, y, k = 10) {
   if (length(y) != length(xv)) {
     stop("'y' must have one value per row of 'data'.", call. = FALSE)
   }
-  grp <- .seg_by(spec@by, data)
-  levs <- if (is.null(grp)) "" else levels(grp)
 
   lim <- as.numeric(stats::quantile(xv, c(0.05, 0.95), names = FALSE))
   grid <- seq(lim[1L], lim[2L], length.out = as.integer(k))
@@ -1138,47 +1340,42 @@ seg_start <- function(spec, data, y, k = 10) {
     Z
   }
 
-  best <- unlist(lapply(levs, function(l) {
-    rows <- if (is.null(grp)) rep(TRUE, length(xv)) else grp == l
-    xs <- xv[rows]; ys <- y[rows]
-    v <- vapply(combos, function(ii) {
-      Z <- cols(xs, grid[ii])
-      out <- tryCatch(sum(qr.resid(qr(Z), ys)^2), error = function(e) Inf)
-      if (is.finite(out)) out else Inf
-    }, numeric(1))
-    grid[combos[[which.min(v)]]]
-  }), use.names = FALSE)
+  v <- vapply(combos, function(ii) {
+    Z <- cols(xv, grid[ii])
+    out <- tryCatch(sum(qr.resid(qr(Z), y)^2), error = function(e) Inf)
+    if (is.finite(out)) out else Inf
+  }, numeric(1))
+  best <- grid[combos[[which.min(v)]]]
 
-  # one set of positions is carried, so the levels are averaged when
-  # `by` splits them; the per-level fit moves them apart from there
-  if (length(levs) > 1L) {
-    best <- rowMeans(matrix(best, nrow = spec@npsi))
-  }
   spec@spec$psi <- best
   spec
 }
 
 S7::method(print, SegTerm) <- function(x, ...) {
   if (term_is_built(x)) {
-    cat(sprintf("<SegTerm> '%s': %s, %d break-point%s%s\n", x@label, x@kind,
+    dv <- names(x@subformulas)
+    cat(sprintf("<SegTerm> '%s': %s, %d break-point%s%s
+", x@label, x@kind,
                 x@npsi, if (x@npsi == 1L) "" else "s",
-                if (!.penalty_is_none(x@penalty_kind))
-                  sprintf("; %s on the changes",
-                          .penalty_label(x@penalty_kind)) else ""))
-    psi <- x@blueprint$psi
+                if (length(dv))
+                  sprintf("; %s developed", paste(dv, collapse = ", ")) else ""))
+    psi <- .seg_psi_report(x@blueprint)
     if (is.matrix(psi)) {
       # a developed break-point has one position per observation; what a
       # reader wants is where each one ranges
       rng <- apply(psi, 2L, function(p)
         sprintf("[%s, %s]", format(min(p), digits = 4),
                 format(max(p), digits = 4)))
-      cat("  at (developed): ", paste(rng, collapse = ", "), "\n", sep = "")
+      cat("  at (developed): ", paste(rng, collapse = ", "), "
+", sep = "")
     } else {
       cat("  at: ", paste(format(psi, digits = 4), collapse = ", "),
-          "\n", sep = "")
+          "
+", sep = "")
     }
   } else {
-    cat(sprintf("<SegTerm> '%s': %s (specification)\n", x@label, x@kind))
+    cat(sprintf("<SegTerm> '%s': %s (specification)
+", x@label, x@kind))
   }
   invisible(x)
 }

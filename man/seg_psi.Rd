@@ -2,7 +2,7 @@
 % Please edit documentation in R/segmented.R
 \name{seg_psi}
 \alias{seg_psi}
-\title{The Break-Points of a Segmented Term}
+\title{The Break-Points of a Break-Point Term}
 \usage{
 seg_psi(term, coef = NULL)
 }
@@ -13,15 +13,15 @@ seg_psi(term, coef = NULL)
 last refreshed at.}
 }
 \value{
-A numeric vector of break-point positions, or, where the
-  break-points carry a development, a matrix with one row per
+A numeric vector with one entry per break-point, or, where a
+  break-point carries a development, a matrix with one row per
   observation and one column per break-point.
 }
 \description{
-The estimated positions of the break-points, one per break-point and
-per level of \code{by}. For a continuous term these are coefficients;
-for a discontinuous one they are read off two coefficients as
-\eqn{-g/\kappa}, so this is the function that reports them either way.
+The estimated positions of the break-points. For a continuous term
+these are coefficients; for a discontinuous one they are read off two
+coefficients as \eqn{-g_k/\delta_k}, so this is the function that
+reports them either way.
 }
 \examples{
 set.seed(1)
@@ -30,5 +30,5 @@ seg_psi(term_build(seg(x, npsi = 2), dd))
 
 }
 \seealso{
-\code{\link{seg}}
+\code{\link{seg}}, \code{\link{jump}}, \code{\link{jseg}}
 }

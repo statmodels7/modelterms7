@@ -2,7 +2,7 @@
 % Please edit documentation in R/segmented.R
 \name{term_converged.SegTerm}
 \alias{term_converged.SegTerm}
-\title{Whether a Segmented Term's Break-Points Have Settled}
+\title{Whether a Break-Point Term's Break-Points Have Settled}
 \arguments{
 \item{term}{A built \code{\link{SegTerm}}.}
 

@@ -471,7 +471,7 @@ S7::method(term_start, GasTerm) <- function(term, ...) {
     for (j in base) {
       z[lay$idx[[j]]] <- if (is.null(sub[[j]])) target(j) else {
         # the constant start projected onto the development's design
-        .seg_gamma_start(sub[[j]]$Z, target(j))
+        .seg_proj_start(sub[[j]]$Z, target(j))
       }
     }
     return(z)

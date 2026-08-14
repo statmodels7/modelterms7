@@ -50,7 +50,13 @@ A formula input goes through the \code{\link[stats]{model.matrix}}
 machinery with the intercept removed (a penalized block does not
 penalize an intercept; the model's intercept lives in the parametric
 block), and its blueprint records the terms, the factor levels and the
-contrasts, exactly as \code{\link{linpar}} does. A matrix input is used
+contrasts, exactly as \code{\link{linpar}} does. The exception is a
+formula whose intercept is all it has: \code{ridge(~1)} is a block of
+that one column under the penalty, since removing it would leave no
+block. That is the form a subformula on another term's parameter uses,
+\code{gamma ~ lasso(~1)} saying that the parameter itself carries a
+lasso, there being no parametric block of its own to hold an
+unpenalized intercept. A matrix input is used
 as given, and its columns are named after the matrix's own column
 names, or numbered when it has none.
 

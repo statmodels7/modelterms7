@@ -52,10 +52,11 @@ The grid is scored on the residual sum of squares of an intercept,
 the term's columns at each candidate position and, where the term
 carries one, the linear effect. That is the exact profile for a
 gaussian response and an adequate starting rule for any other, the
-quantity being used to place a starting value and not to fit. With
-\code{by} each level is scored on its own rows. With several
-break-points every increasing combination of grid points is scored,
-so \code{k} should be kept small.
+quantity being used to place a starting value and not to fit. The
+positions found seed a development as well, each starting vector
+projecting the position onto the sub-design. With several break-points
+every increasing combination of grid points is scored, so \code{k}
+should be kept small.
 }
 \examples{
 set.seed(1)
@@ -70,5 +71,5 @@ iterative algorithm for change-point detection in abrupt change
 models. \emph{Computational Statistics}, 33, 997--1015.
 }
 \seealso{
-\code{\link{seg}}
+\code{\link{seg}}, \code{\link{jump}}, \code{\link{jseg}}
 }

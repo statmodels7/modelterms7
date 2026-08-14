@@ -33,6 +33,17 @@ NULL
 #' \code{y ~ ridge_like(R)} still produces an intercept-only
 #' \code{linpar} block and \code{y ~ ridge_like(R) - 1} produces none.
 #'
+#' One covariate is removed rather than collected. A \code{\link{seg}} or
+#' \code{\link{jseg}} term carrying the linear effect contributes the same
+#' column the bare covariate would, so \code{y ~ x + seg(x)} is rank
+#' deficient by one; the term owns that effect, which is what
+#' \code{linear = TRUE} says, so the covariate is dropped from the
+#' parametric block and the removal is reported with a warning.
+#' \code{seg(x, linear = FALSE)} keeps the linear effect outside the term
+#' instead. Only the bare main effect is removed: an interaction spans no
+#' main effect and is left alone, and another term spanning the same
+#' direction, as a spline basis does, is reported without being modified.
+#'
 #' @param formula A model formula.
 #' @param data A data frame in which the formula's symbols are evaluated.
 #'
@@ -87,6 +98,8 @@ interpret_formula <- function(formula, data) {
     }
   }
 
+  ordinary <- .absorb_linear(ordinary, specials)
+
   terms_list <- list()
   if (length(ordinary)) {
     f <- stats::reformulate(ordinary, intercept = intercept)
@@ -102,6 +115,58 @@ interpret_formula <- function(formula, data) {
   list(response = response, terms = terms_list,
        intercept = intercept, formula = formula)
 }
+
+# A break-point term that carries the linear effect carries the column the
+# bare covariate would contribute, so the two are EXACTLY collinear and the
+# equation is rank deficient by one. The term owns it -- that is what
+# `linear = TRUE` says -- so the covariate is removed from the parametric
+# part and the removal is reported, `y ~ x + seg(x)` being an ordinary
+# thing to write and a silent singularity a poor answer to it. Writing
+# `seg(x, linear = FALSE)` is the way to keep the linear effect outside.
+#
+# Only the bare main effect is removed, matched by the deparsed expression:
+# an interaction spans no main effect and is left alone. Another term that
+# spans the same direction is reported and NOT modified -- a spline basis
+# contains the constant and the line, and its penalty leaves the line
+# unpenalized, so `s(x) + seg(x)` is confounded too -- because there is no
+# one column to remove there and reshaping another term is not this
+# function's business.
+.absorb_linear <- function(ordinary, specials) {
+  keep <- vapply(specials, function(tm) {
+    S7::S7_inherits(tm, SegTerm) && isTRUE(tm@linear)
+  }, logical(1))
+  if (!any(keep)) return(ordinary)
+  segs <- specials[keep]
+  owned <- stats::setNames(
+    vapply(segs, function(tm) tm@kind, character(1)),
+    vapply(segs, function(tm) paste(deparse(tm@var), collapse = ""),
+           character(1)))
+  for (lb in intersect(ordinary, names(owned))) {
+    warning(sprintf(paste("the covariate '%s' is exactly collinear with the",
+                          "linear effect that '%s' carries, and has been",
+                          "removed from the parametric part. Write %s(%s,",
+                          "linear = FALSE) to keep the linear effect outside",
+                          "the term instead."),
+                    lb, owned[[lb]], owned[[lb]], lb), call. = FALSE)
+  }
+  # another term spanning the same direction is reported and left alone
+  for (nm in names(specials)) {
+    tm <- specials[[nm]]
+    if (!("vars" %in% S7::prop_names(tm))) next
+    v <- intersect(vapply(tm@vars, function(e)
+      paste(deparse(e), collapse = ""), character(1)), names(owned))
+    if (length(v)) {
+      warning(sprintf(paste("'%s' spans the linear effect in '%s' that '%s'",
+                            "also carries, so the two are confounded along",
+                            "it. Neither is modified; write %s(%s,",
+                            "linear = FALSE) if that is what was meant."),
+                      nm, v[1L], owned[[v[1L]]], owned[[v[1L]]], v[1L]),
+              call. = FALSE)
+    }
+  }
+  setdiff(ordinary, names(owned))
+}
+
 # A call in a formula is a term when its value inherits model_term and a
 # covariate otherwise, which leaves a third case: a value that is neither.
 # It reaches model.matrix and fails there, several frames from the cause

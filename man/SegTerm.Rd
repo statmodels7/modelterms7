@@ -2,7 +2,7 @@
 % Please edit documentation in R/segmented.R
 \name{SegTerm}
 \alias{SegTerm}
-\title{S7 Class for Segmented and Stepmented Terms}
+\title{S7 Class for Break-Point Terms}
 \usage{
 SegTerm(
   label = character(0),
@@ -13,9 +13,8 @@ SegTerm(
   kind = character(0),
   var = NULL,
   npsi = integer(0),
-  by = NULL,
   linear = logical(0),
-  penalty_kind = NULL,
+  subformulas = list(),
   spec = list()
 )
 }
@@ -39,11 +38,10 @@ data, filled by \code{\link{term_build}}.}
 
 \item{npsi}{The number of break-points.}
 
-\item{by}{An optional grouping expression.}
-
 \item{linear}{Whether the block carries the linear effect.}
 
-\item{penalty_kind}{The penalty on the changes, if any.}
+\item{subformulas}{A named list of one-sided formulas, one per developed
+parameter.}
 
 \item{spec}{The resolved construction settings.}
 }
@@ -53,7 +51,7 @@ An object of class \code{SegTerm}.
 \description{
 A subclass of \code{\link{additive_term}} for a covariate whose effect
 changes at estimated break-points: a change of slope
-(\code{\link{seg}}), a jump in level (\code{\link{jump}}), or both at
+(\code{\link{seg}}), a change of level (\code{\link{jump}}), or both at
 the same points (\code{\link{jseg}}). The design block is the working
 one of the iteration that estimates the break-points, and is
 recomputed by \code{\link{term_refresh}} as they move.
@@ -62,5 +60,5 @@ recomputed by \code{\link{term_refresh}} as they move.
 S7::S7_inherits(seg(x), SegTerm)
 }
 \seealso{
-\code{\link{seg}}
+\code{\link{seg}}, \code{\link{jump}}, \code{\link{jseg}}
 }

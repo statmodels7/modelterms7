@@ -14,8 +14,7 @@ seg_converged(term)
 }
 \value{
 \code{seg_step} returns a numeric vector with one entry per
-  break-point and per level of \code{by}; \code{seg_converged} returns
-  a single logical.
+  break-point; \code{seg_converged} returns a single logical.
 }
 \description{
 \code{seg_step} returns how far each break-point moved at the last
@@ -54,7 +53,7 @@ while the objective has long since stopped moving.
 set.seed(1)
 dd <- data.frame(x = sort(runif(100, 0, 10)))
 dd$y <- 2 * (dd$x > 6) + rnorm(100, sd = 0.3)
-b <- term_build(jump(x, psi = 4, linear = FALSE), dd)
+b <- term_build(jump(x, psi = 4), dd)
 cf <- b@blueprint$coef
 for (it in 1:30) {
   b <- term_refresh(b, cf)

@@ -2,78 +2,29 @@
 % Please edit documentation in R/segmented.R
 \name{seg}
 \alias{seg}
-\alias{jump}
-\alias{jseg}
-\title{Segmented, Stepmented and Segmented-with-Jump Terms}
+\title{Segmented Term: a Broken Line with Estimated Break-Points}
 \usage{
-seg(
-  x,
-  ...,
-  npsi = 1,
-  psi = NULL,
-  by = NULL,
-  linear = TRUE,
-  penalty = NULL,
-  c0 = 0.05,
-  label = "seg"
-)
-
-jump(
-  x,
-  ...,
-  npsi = 1,
-  psi = NULL,
-  by = NULL,
-  linear = TRUE,
-  penalty = NULL,
-  c0 = 0.05,
-  label = "jump"
-)
-
-jseg(
-  x,
-  ...,
-  npsi = 1,
-  psi = NULL,
-  by = NULL,
-  linear = TRUE,
-  penalty = NULL,
-  c0 = 0.05,
-  label = "jseg"
-)
+seg(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE, label = "seg")
 }
 \arguments{
 \item{x}{The covariate, an expression evaluated in the data.}
 
-\item{...}{At most one two-sided formula \code{psi ~ f} developing the
-break-points with covariates; see the section above. Cannot be
-combined with \code{by}.}
+\item{...}{Two-sided formulas developing the term's own coefficients;
+see the section above. Cannot be combined with \code{by}.}
 
 \item{npsi}{The number of break-points. Defaults to 1.}
 
 \item{psi}{Optional starting positions; defaults to evenly spaced
-quantiles of the covariate. With a subformula they seed the
-development, each starting vector solving \eqn{Z\gamma_k \approx
+quantiles of the covariate. Where a break-point carries a development
+they seed it, each starting vector solving \eqn{Wp_k \approx
 \psi_k^{0}}.}
 
-\item{by}{An optional factor giving an independent set of
-break-points per level.}
+\item{by}{A one-sided formula giving every coefficient of the term the
+same development, e.g. \code{by = ~0 + g} for an independent set per
+level of a factor. A bare variable is rejected; write the formula.}
 
-\item{linear}{Whether the block carries the linear effect. Defaults to
-\code{TRUE}.}
-
-\item{penalty}{The penalty on the changes: \code{NULL} (default, none),
-a \pkg{penalties7} penalty over as many coefficients as there are
-changes, or a function of that count returning one -- a \pkg{penalties7}
-constructor passed bare works, e.g.
-\code{penalty = penalties7::lasso_penalty}. A joint term declares two
-penalties, one on the slope changes and one on the jumps, and a penalty
-given as an object is used for both.}
-
-\item{c0}{For a discontinuous term, the starting value of the scaling
-factor that separates the observations from the break-point, as a
-fraction of the distance to the ends of the range. Defaults to
-\code{0.05}, the value \cite{fasola2018} recommend; see Details.}
+\item{linear}{Whether the block carries the linear effect \eqn{\beta x}.
+Defaults to \code{TRUE}.}
 
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}
@@ -83,151 +34,119 @@ An object of class \code{\link{SegTerm}} (a specification; see
   \code{\link{term_build}}).
 }
 \description{
-A covariate whose effect changes at break-points estimated with
-everything else. \code{seg} changes slope at each break-point and
-stays continuous (\cite{muggeo2003}); \code{jump} steps to a new level
-and is discontinuous (\cite{fasola2018}); \code{jseg} does both at the
-same points.
+A covariate whose slope changes at \eqn{K} break-points estimated with
+everything else, the relationship staying continuous
+(\cite{muggeo2003}). Written in the equation of any parameter of any
+distribution, the term contributes
+
+\deqn{\beta x_i + \sum_{k=1}^{K} \gamma_k\,(x_i - \psi_k)_{+},
+  \qquad (u)_{+} = \max(0, u),}
+
+to that parameter's linear predictor, so that in a model
+\eqn{g(\theta_i) = \eta_i} with the rest of the equation supplying
+\eqn{z_i'\alpha},
+
+\deqn{\eta_i = z_i'\alpha + \beta x_i
+  + \sum_{k=1}^{K} \gamma_k\,(x_i - \psi_k)_{+}.}
+
+\eqn{\beta} is the slope before the first break-point and
+\eqn{\gamma_k} the change of slope at \eqn{\psi_k}, so the slope over
+the \eqn{k}-th segment is \eqn{\beta + \gamma_1 + \cdots + \gamma_k}.
+The gaussian additive model is the case \eqn{g = \mathrm{id}} on the
+mean of a \code{gaussian1_distrib}; nothing here is particular to it.
 }
 \details{
-Both constructions rest on the same device: a quantity that depends on
-the break-point non-linearly is written as a linear function of it
-once something is frozen at the previous iterate, so that a linear fit
-returns the new break-point. Iterating that is the estimation
-algorithm, and here it is the \code{\link{term_refresh}} contract of
-\code{\link{nl}} with a different block: refreshing the term at the
-current coefficients and fitting is one step of it.
+\subsection{How the break-points are estimated}{
+The contribution is differentiable in \eqn{\psi_k} away from the
+break-point, with
+\eqn{\partial/\partial\psi_k = -\gamma_k\,\mathbb{1}(x>\psi_k)}, so the
+design block is the ordinary Jacobian, the break-point is an ordinary
+coefficient, and the increment a Gauss-Newton step solves for is the
+update of \cite{muggeo2003}: his working variables \eqn{U} and \eqn{V}
+are the block's columns and his \eqn{\psi \leftarrow \psi +
+\gamma/\delta} is that step. Refreshing the term at the current
+coefficients (\code{\link{term_refresh}}) and fitting is one iteration
+of it, which is the same contract \code{\link{nl}} uses.
 
-\subsection{The continuous case}{
-With \eqn{f(x) = \delta (x-\psi)_+} the contribution is differentiable
-in \eqn{\psi} away from the break-point, and
-\eqn{\partial f/\partial\psi = -\delta\,\mathbb{1}(x>\psi)}, so the
-design block is the ordinary Jacobian and the break-point is an
-ordinary coefficient, updated by the increment a Gauss-Newton step
-solves for. That is the algorithm of \cite{muggeo2003} written in the
-coordinates the rest of this package uses: his working variables
-\eqn{U} and \eqn{V} are its columns, and his update
-\eqn{\psi \leftarrow \psi + \gamma/\delta} is that step.
-}
+The objective has local optima in the break-points and the iteration
+converges from within a basin around where it starts, so
+\code{\link{seg_start}} chooses the starting positions on a grid rather
+than at a conventional point. A break-point is confined to the interval
+between the 5th and the 95th percentile of the covariate: outside it
+the indicator is constant, the truncated line and that constant are
+linearly dependent, and the block is singular rather than merely
+ill-conditioned. A run ending against the limit has not located a
+break-point, and \code{\link{seg_psi}} then reports the limit itself.
 
-\subsection{The discontinuous case}{
-A jump is not differentiable in \eqn{\psi} at all, and yet needs no
-search over candidate positions. The identity
-\deqn{\mathbb{1}(x>\psi) = \frac{1}{2}
-  + \frac{x-\psi}{2\lvert x-\psi \rvert}}
-holds exactly for \eqn{x \neq \psi}, and is linear in \eqn{\psi} once
-the weight \eqn{1/(2\lvert x - \psi\rvert)} is held at the previous
-iterate. Writing \eqn{W = 1/(2\lvert x-\psi^{0}\rvert)} and
-\eqn{Z = xW + 1/2}, a jump of size \eqn{\kappa} at \eqn{\psi} is
-\eqn{\kappa Z + gW} with \eqn{g = -\kappa\psi}, so a linear fit on
-\eqn{(Z, W)} returns the break-point as \eqn{\psi = -g/\kappa}
-(\cite{fasola2018}). The break-point is therefore not a coefficient
-here but a quantity read off two of them, which is why refreshing the
-term recovers it before rebuilding the weights.
-
-The weight is unbounded as \eqn{x} approaches \eqn{\psi}, and since
-\eqn{Z - \psi W} is the step itself, \eqn{Z} is \eqn{\psi W} plus a
-quantity of order one: an unbounded \eqn{W} makes the two columns
-numerically collinear and drowns the signal the fit reads. The remedy
-of \cite{fasola2018} is to move the observations rather than to cap
-the weight. With a scaling factor \eqn{c} the two intervals
-\eqn{[x_{(1)}, \psi]} and \eqn{(\psi, x_{(n)}]} are mapped onto
-\deqn{[x_{(1)},\, \psi - c(\psi - x_{(1)})]
-  \quad\text{and}\quad
-  (\psi + c(x_{(n)} - \psi),\, x_{(n)}],}
-which leaves a gap of relative width \eqn{c} around \eqn{\psi} and
-bounds \eqn{W} without altering the model: the working covariates are
-computed on the rescaled covariate, while the truncated line, the
-linear column and the reported contribution stay on the original one.
-
-The factor is not a constant. It governs how far the break-point may
-travel in one step, so a large value lets the estimate leave a
-spurious optimum and a small one is faithful to the step function.
-\code{c0} is its starting value, and \code{\link{term_refresh}}
-halves it whenever the break-point reverses direction, which is the
-signal that the iteration has begun to circle an optimum rather than
-travel towards one. The run has converged when the change in every
-break-point falls below a hundredth of the smallest distance between
-distinct observations, which \code{\link{seg_converged}} reports.
-}
-
-\subsection{What the term carries}{
-With \code{linear = TRUE} the block carries the linear effect too, so
-the term is the whole relationship rather than the change in it.
-\code{by} gives an independent set of break-points and changes per
-level of a factor. \code{penalty} puts a penalty on the changes
-themselves -- the slope changes for \code{seg}, the jump sizes for
-\code{jump}, both for \code{jseg} -- and leaves the linear effect and
-the break-points alone; with the lasso that is a selection of how
-many break-points are really there.
-
-The penalty is declared through \code{\link{term_penalties}}, which
-names the coefficients it covers, rather than attached to the whole
-block through a map that selects them. The two describe the same
-function of the same coefficients and are not interchangeable to a
-fitting layer: a separable penalty under a selection map is the
-generalized-lasso problem, whose proximal operator does not split by
-coordinate, so \code{\link[penalties7]{has_prox}} is \code{FALSE} for
-it and neither a proximal step nor a coordinate descent can be taken.
-Named as coordinates the map is the identity and both are available
-unchanged. \code{jseg} declares two penalties, one over the slope
-changes and one over the jump sizes, since a change of slope and a
-change of level are not comparable quantities and cannot share a
-hyperparameter.
-
-A break-point is confined to the interval between the 5th and the 95th
-percentile of the covariate. Outside it the block is singular rather
-than merely ill-conditioned: with \eqn{\psi} below the smallest
-observation the indicator is constant, so the truncated line and that
-constant are linearly dependent, and with the linear effect present so
-are all three columns. A run that ends against the limit has not
-located a break-point, and \code{\link{seg_psi}} then returns the
-limit itself.
-
-\subsection{Break-points developed with covariates}{
-A two-sided formula \code{psi ~ f} in \code{...} develops every
-break-point as \eqn{\psi_k = Z\gamma_k}, with \eqn{Z} the design of the
-right-hand side through \code{\link{interpret_formula}} and one
-coefficient vector per break-point: \code{psi ~ g} with a factor
-\code{g} is a break-point per group with the slopes shared, where
-\code{by} would give every level its own slopes as well, and the two
-are therefore not combinable. Each observation carries the position its
-own row of \eqn{Z} implies, confined to the same interval as above.
-
-For the continuous construction \eqn{\gamma_k} are ordinary
-coefficients and the block carries
-\eqn{-\delta_k\,\mathbb{1}(x>\psi_k)\,Z_j} in place of the single
-Jacobian column, so a sub-term's penalty passes through unchanged:
-\code{seg(x, psi ~ random(~1 | id))} is the random-changepoint model of
-Muggeo, Atkins, Gallop and Dimidjian (2014), the per-group positions
-shrunk towards a population one. For \code{jump} the identity above
-splits the \eqn{gW} column into \eqn{W Z_j}, whose coefficients are
-\eqn{c_k = -\kappa_k\gamma_k}, and the development is read off as
-\eqn{\gamma_k = -c_k/\kappa_k} exactly as the scalar break-point is; a
-sub-term carrying a penalty is rejected there, since the penalty would
-act on \eqn{c_k}, which is the development scaled by the jump size,
-rather than on \eqn{\gamma_k} itself. \code{jseg} rejects a
-development: its reading of the break-point is a quadratic in the
-increment that couples the slope change with the jump, and it does not
-split over the columns of a development, while the componentwise
-reading that remains diverges whenever the jump size passes near zero
-mid-iteration.
-}
-
-The objective has local optima in the break-points, and the scaling
-schedule widens the basin the iteration converges from rather than
-removing the problem. Where the run begins therefore decides what it
-finds, and \code{\link{seg_start}} is the answer: it scores an
-equally spaced grid on the least-squares profile and returns the
-specification with \code{psi} set to the best of it, which is what
-\cite{fasola2018} recommend and what measurement supports over both
-a conventional single start and bootstrap restarting.
-A continuous term has no scaling factor, its working block being
-bounded already; where its iteration alternates between two values
-the remedy is to shrink the increment, as \code{segmented}'s
-\code{h} does.
+The iteration can settle into a cycle of period two in the break-point,
+in which case the rule of \code{\link{seg_converged}} is never met while
+the objective has long since stopped moving; a caller that can evaluate
+the objective should stop on its relative change, as \code{segmented}
+does.
 }
 }
+\section{The coefficients}{
+
+\code{beta} (present when \code{linear = TRUE}), \code{gamma1} \ldots
+\code{gammaK} and \code{psi1} \ldots \code{psiK}, in that order. The
+break-points are coefficients of the working block here, which they are
+not in the discontinuous constructions, so \code{\link{seg_psi}} is the
+function that reports them either way.
+}
+
+\section{Developing a coefficient with covariates}{
+
+Every coefficient of the term is a parameter like any other and may be
+developed on covariates, through a two-sided formula in \code{...} whose
+left side names it:
+
+\preformatted{seg(x, psi ~ id)                   a break-point per subject
+seg(x, psi ~ random(~1 | id))      the random-changepoint model
+seg(x, gamma1 ~ z)                 a first slope change varying with z
+seg(x, by = ~0 + g)                every coefficient, per level of g}
+
+The right side goes through \code{\link{interpret_formula}}, so it takes
+\emph{any} term of this package, penalized ones included, and the
+hyperparameters a sub-term declares are reported by
+\code{\link{term_penalties}} and estimated by the fitting layer. The
+left side names either one coefficient (\code{gamma2}) or a whole kind
+(\code{gamma}, meaning every \eqn{\gamma_k}, each with coefficients of
+its own over the shared design). \code{by = ~f} is the shorthand giving
+every coefficient the same development, and does not combine with
+per-coefficient formulas.
+
+A developed coefficient carries one value per observation:
+\eqn{\gamma_{k,i} = w_i'a_k} and \eqn{\psi_{k,i} =
+w_i'p_k}, with \eqn{w_i} the row of the sub-design. Both
+enter the block linearly, the truncated line becoming
+\eqn{(x_i-\psi_{k,i})_{+}w_i'} and the Jacobian column
+\eqn{-\gamma_{k,i}\,\mathbb{1}(x_i>\psi_{k,i})\,w_i'}, so the
+continuous construction accepts a development of any coefficient and any
+combination of them.
+
+A penalty on the changes themselves -- the lasso that selects how many
+break-points are really there -- is the development on an intercept
+alone, \code{seg(x, npsi = 4, gamma ~ 0 + lasso(~1))}: the \eqn{K}
+changes are then one penalized block under one hyperparameter, the
+entries of a subformula shared by every coefficient of a kind being
+pooled into one. The \code{0 +} is not decoration. A subformula follows
+the intercept convention of a formula, so \code{gamma ~ lasso(~1)}
+carries the subformula's own unpenalized intercept beside the penalized
+column, which for an intercept-only development is the same column
+twice.
+}
+
+\section{The linear effect}{
+
+With \code{linear = TRUE}, the default, the term carries \eqn{\beta x}
+itself, so \code{y ~ seg(x)} is the whole relationship. Writing the
+covariate again in the same equation is then exactly collinear with that
+column, and \code{\link{interpret_formula}} removes it with a warning.
+\code{linear = FALSE} is the explicit way to keep the linear effect
+outside the term, and \code{y ~ x + seg(x, linear = FALSE)} is the same
+model written the other way round.
+}
+
 \examples{
 set.seed(1)
 dd <- data.frame(x = sort(runif(200, 0, 10)))
@@ -242,10 +161,12 @@ seg_psi(built)
 Muggeo, V. M. R. (2003). Estimating regression models with unknown
 break-points. \emph{Statistics in Medicine}, 22(19), 3055--3071.
 
-Fasola, S., Muggeo, V. M. R. and Kuchenhoff, H. (2018). A heuristic,
-iterative algorithm for change-point detection in abrupt change
-models. \emph{Computational Statistics}, 33, 997--1015.
+Muggeo, V. M. R., Atkins, D. C., Gallop, R. J. and Dimidjian, S. (2014).
+Segmented mixed models with random changepoints: a maximum likelihood
+approach with application to treatment for depression study.
+\emph{Statistical Modelling}, 14(4), 293--313.
 }
 \seealso{
-\code{\link{seg_psi}}, \code{\link{seg_start}}, \code{\link{seg_step}}, \code{\link{nl}}
+\code{\link{jump}}, \code{\link{jseg}}, \code{\link{seg_psi}},
+  \code{\link{seg_start}}, \code{\link{seg_step}}, \code{\link{nl}}
 }

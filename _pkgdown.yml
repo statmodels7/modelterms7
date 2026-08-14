@@ -79,13 +79,15 @@ reference:
   - term_refresh
   - term_value
   - term_converged
-- title: Segmented terms
+- title: Break-point terms
   desc: >
     The break-points at which an effect changes slope, level or both,
     each written as a working linear model in the break-point
     position, with the grid rule that chooses where to start.
   contents:
   - seg
+  - jump
+  - jseg
   - SegTerm
   - seg_psi
   - seg_step
