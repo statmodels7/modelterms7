@@ -143,10 +143,19 @@ RandomTerm <- S7::new_class(
 #' Laird, N. M. and Ware, J. H. (1982). Random-effects models for
 #' longitudinal data. \emph{Biometrics} 38, 963-974.
 #'
+#' @param hyper The hyperparameters of the effects' distribution to HOLD, as
+#'   a named vector or list; those not named are estimated. Which names there
+#'   are depends on what the term was given: \code{c(sigma = 0.4)} for the
+#'   default, the free names of the structure for a \code{precision}, and the
+#'   distribution's own parameters for a \code{distrib}. A name the penalty
+#'   does not carry is reported when the term is built, which is where the
+#'   penalty first exists.
+#'
 #' @seealso \code{\link{s}}, \code{\link{te}}, \code{\link{nl}}
 #' @export
 random <- function(formula, correlated = TRUE, precision = NULL,
-                   distrib = NULL, kinks = numeric(0), label = "random") {
+                   distrib = NULL, kinks = numeric(0), label = "random",
+                   hyper = NULL) {
   if (!inherits(formula, "formula") || length(formula) != 2L) {
     stop("'formula' must be a one-sided bar formula, e.g. ~ 1 | g.",
          call. = FALSE)
@@ -170,6 +179,7 @@ random <- function(formula, correlated = TRUE, precision = NULL,
   }
   RandomTerm(label = label, formula = formula, correlated = correlated,
              precision = precision, distrib = distrib, kinks = kinks,
+             hyper = as_hyper(hyper, label),
              X = NULL, coef_names = character(0),
              blueprint = list(), penalty = NULL)
 }
@@ -273,6 +283,10 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
     xlev = stats::.getXlevels(tt, mf),
     contrasts = contr
   )
+  # the names are checked HERE, the first point at which the penalty this
+  # term builds exists: which hyperparameters it has depends on whether
+  # the effects carry a structure, a distribution or neither
+  term@hyper <- check_hyper(term@hyper, pen, term@label)
   term@penalty <- pen
   term
 }

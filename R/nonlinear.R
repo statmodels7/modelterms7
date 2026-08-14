@@ -416,7 +416,7 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
         sub_pens[[length(sub_pens) + 1L]] <- list(
           name = paste0(p, "::", e$name),
           index = index[[p]][e$index],
-          penalty = e$penalty)
+          penalty = e$penalty, fixed = e$fixed)
       }
     }
   }
@@ -498,7 +498,7 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
       key <- if (is.null(e$name) || !nzchar(e$name)) lb
         else paste0(lb, "::", e$name)
       pens[[length(pens) + 1L]] <- list(name = key, index = off + e$index,
-                                        penalty = e$penalty)
+                                        penalty = e$penalty, fixed = e$fixed)
     }
     off <- off + ncol(mats[[lb]])
   }

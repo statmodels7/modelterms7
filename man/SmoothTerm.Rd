@@ -6,6 +6,7 @@
 \usage{
 SmoothTerm(
   label = character(0),
+  hyper = list(),
   X = NULL,
   coef_names = character(0),
   blueprint = list(),
@@ -18,6 +19,10 @@ SmoothTerm(
 \arguments{
 \item{label}{A character string prefixed to the coefficient names when
 non-empty.}
+
+\item{hyper}{The hyperparameters of the term's penalty that the
+caller HELD, as a named list. Empty, the default, means every one
+of them is estimated. See \code{\link{term_hyper}}.}
 
 \item{X}{The design block, filled by \code{\link{term_build}}.}
 

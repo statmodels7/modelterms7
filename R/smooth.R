@@ -78,6 +78,10 @@ SmoothTerm <- S7::new_class(
 #'   left unpenalized there. Defaults to \code{TRUE}.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names. Defaults to a name built from the covariate.
+#' @param lambda The smoothing parameter, held at the value given and
+#'   ESTIMATED when left \code{NULL}, which is the default. An
+#'   anisotropic tensor product carries one per margin, so a vector
+#'   of that length, or a named one holding some of them.
 #'
 #' @return An object of class \code{\link{SmoothTerm}} (a specification;
 #'   see \code{\link{term_build}}).
@@ -100,11 +104,11 @@ SmoothTerm <- S7::new_class(
 #' @seealso \code{\link{te}}, \code{\link{random}}, \code{\link{nl}}
 #' @export
 s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
-              linear = TRUE, label = NULL) {
+              linear = TRUE, label = NULL, lambda = NULL) {
   xe <- substitute(x)
   .smooth_spec(list(xe), substitute(by), k, degree,
                if (is.null(basis)) NULL else list(basis), linear, label,
-               sprintf("s(%s)", deparse(xe)))
+               sprintf("s(%s)", deparse(xe)), lambda)
 }
 
 #' Penalized Smooth of Several Covariates
@@ -164,6 +168,10 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #'   \code{TRUE}.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names. Defaults to a name built from the covariates.
+#' @param lambda The smoothing parameter, held at the value given and
+#'   ESTIMATED when left \code{NULL}, which is the default. An
+#'   anisotropic tensor product carries one per margin, so a vector
+#'   of that length, or a named one holding some of them.
 #'
 #' @return An object of class \code{\link{SmoothTerm}} (a specification;
 #'   see \code{\link{term_build}}).
@@ -185,7 +193,7 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #' @seealso \code{\link{s}}, \code{\link{random}}, \code{\link{nl}}
 #' @export
 te <- function(..., by = NULL, k = 5, degree = 3, bases = NULL,
-               anisotropic = TRUE, label = NULL) {
+               anisotropic = TRUE, label = NULL, lambda = NULL) {
   vars <- as.list(substitute(list(...)))[-1L]
   if (length(vars) < 2L) {
     stop("'te' needs at least two covariates; use s() for one.",
@@ -195,16 +203,22 @@ te <- function(..., by = NULL, k = 5, degree = 3, bases = NULL,
       is.na(anisotropic)) {
     stop("'anisotropic' must be TRUE or FALSE.", call. = FALSE)
   }
+  # ANISOTROPIC is one smoothing parameter per margin, so that is how many
+  # names there are to hold; isotropic is the single one of a quadratic
+  # penalty. Either way the names are the penalty's own, which is what the
+  # summary prints and what the fit keys its hyperparameters by.
+  nms <- if (anisotropic) paste0("lambda", seq_along(vars)) else "lambda"
   sp <- .smooth_spec(vars, substitute(by), k, degree, bases, FALSE, label,
                      sprintf("te(%s)",
                              paste(vapply(vars, deparse, character(1)),
-                                   collapse = ",")))
+                                   collapse = ",")),
+                     lambda, nms)
   sp@spec$anisotropic <- anisotropic
   sp
 }
 
 .smooth_spec <- function(vars, by, k, degree, bases, linear, label,
-                         default_label) {
+                         default_label, lambda = NULL, names = "lambda") {
   nv <- length(vars)
   chk <- function(v, nm, lo) {
     if (!is.numeric(v) || anyNA(v) || any(v < lo) || any(v != round(v))) {
@@ -239,6 +253,7 @@ te <- function(..., by = NULL, k = 5, degree = 3, bases = NULL,
   SmoothTerm(label = label, vars = vars, by = by,
              spec = list(k = k, degree = degree, bases = bases,
                          linear = isTRUE(linear)),
+             hyper = smooth_hyper(lambda, names, label),
              X = NULL, coef_names = character(0),
              blueprint = list(), penalty = NULL)
 }

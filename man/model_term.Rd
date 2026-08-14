@@ -4,11 +4,15 @@
 \alias{model_term}
 \title{S7 Base Class for Model Terms}
 \usage{
-model_term(label = character(0))
+model_term(label = character(0), hyper = list())
 }
 \arguments{
 \item{label}{A character string prefixed to the term's coefficient names
 when non-empty.}
+
+\item{hyper}{The hyperparameters of the term's penalty that the
+caller HELD, as a named list. Empty, the default, means every one
+of them is estimated. See \code{\link{term_hyper}}.}
 }
 \value{
 An object inheriting from class \code{model_term}.

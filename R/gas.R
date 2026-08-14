@@ -502,7 +502,11 @@ S7::method(term_penalties, GasTerm) <- function(term, ...) {
       out[[length(out) + 1L]] <- list(
         name = paste0(j, "::", e$name),
         index = lay$idx[[j]][e$index],
-        penalty = e$penalty)
+        penalty = e$penalty,
+        # what the sub-term holds travels WITH the entry, so a structural
+        # term propagates it by copying the entry and needs to know nothing
+        # about hyperparameters
+        fixed = e$fixed)
     }
   }
   out

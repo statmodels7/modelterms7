@@ -6,6 +6,7 @@
 \usage{
 RegimeTerm(
   label = character(0),
+  hyper = list(),
   k = integer(0),
   by = NULL,
   time = NULL,
@@ -16,6 +17,10 @@ RegimeTerm(
 \arguments{
 \item{label}{A character string prefixed to the term's coefficient names
 when non-empty.}
+
+\item{hyper}{The hyperparameters of the term's penalty that the
+caller HELD, as a named list. Empty, the default, means every one
+of them is estimated. See \code{\link{term_hyper}}.}
 
 \item{k}{The number of regimes.}
 

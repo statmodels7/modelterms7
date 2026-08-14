@@ -15,6 +15,9 @@
 #'
 #' @param label A character string prefixed to the term's coefficient names
 #'   when non-empty.
+#' @param hyper The hyperparameters of the term's penalty that the
+#'   caller HELD, as a named list. Empty, the default, means every one
+#'   of them is estimated. See \code{\link{term_hyper}}.
 #'
 #' @return An object inheriting from class \code{model_term}.
 #'
@@ -27,7 +30,13 @@ model_term <- S7::new_class(
   name = "model_term",
   abstract = TRUE,
   properties = list(
-    label = S7::class_character
+    label = S7::class_character,
+    # Which of its penalty's hyperparameters the caller has HELD, and at
+    # what. Empty is the default and means every one of them is estimated:
+    # which are and which are not is a property of the term, since the term
+    # is where the penalty is named, and not of whatever criterion the fit
+    # happens to run. See term_hyper().
+    hyper = S7::new_property(S7::class_list, default = quote(list()))
   )
 )
 
@@ -44,6 +53,9 @@ model_term <- S7::new_class(
 #'
 #' @param label A character string prefixed to the coefficient names when
 #'   non-empty.
+#' @param hyper The hyperparameters of the term's penalty that the
+#'   caller HELD, as a named list. Empty, the default, means every one
+#'   of them is estimated. See \code{\link{term_hyper}}.
 #' @param X The design block, filled by \code{\link{term_build}}.
 #' @param coef_names The coefficient names, filled by
 #'   \code{\link{term_build}}.
@@ -84,6 +96,9 @@ additive_term <- S7::new_class(
 #' indexes into them.
 #'
 #' @param label A character string naming the term.
+#' @param hyper The hyperparameters of the term's penalty that the
+#'   caller HELD, as a named list. Empty, the default, means every one
+#'   of them is estimated. See \code{\link{term_hyper}}.
 #'
 #' @return An object inheriting from class \code{structural_term}.
 #'

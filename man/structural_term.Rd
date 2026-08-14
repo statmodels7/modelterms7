@@ -4,10 +4,14 @@
 \alias{structural_term}
 \title{S7 Class for Structural Terms}
 \usage{
-structural_term(label = character(0))
+structural_term(label = character(0), hyper = list())
 }
 \arguments{
 \item{label}{A character string naming the term.}
+
+\item{hyper}{The hyperparameters of the term's penalty that the
+caller HELD, as a named list. Empty, the default, means every one
+of them is estimated. See \code{\link{term_hyper}}.}
 }
 \value{
 An object inheriting from class \code{structural_term}.

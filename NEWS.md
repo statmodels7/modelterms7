@@ -1,3 +1,24 @@
+# modelterms7 0.32.0
+
+* Every term takes its penalty's hyperparameters as arguments, and holds
+  the ones it is given: `lasso(x, lambda = 3)`, `ridge(x, sigma = 0.5)`,
+  `enet(x, lambda = 2, alpha = 0.5)`, `scad(x, lambda = 1, a = 3.7)`,
+  `mcp(x, gamma = 3)`, `s(x, lambda = 2)`, `te(x, z, lambda = c(1, 5))`,
+  `random(~1 | g, hyper = c(sigma = 0.4))`. NULL, the default, means the
+  hyperparameter is estimated. Which ones are held is a property of the
+  term, since the term is where the penalty is named.
+
+  The arguments carry the penalty's OWN names -- `sigma` for a Gaussian
+  prior, `a` for SCAD -- which are the names a summary prints and
+  penalties7 documents. `ridge(x, lambda = 2)` is rejected with a message
+  naming `sigma`, where R would have reported an unused argument.
+
+* `term_hyper()` reports what a term holds, and every entry of
+  `term_penalties()` carries its own held values in the field `fixed`, so a
+  structural term propagates what its sub-terms hold by copying the entry:
+  `gas(by = ~ ridge(id, sigma = 2))` and `nl(a ~ 0 + ridge(~g, sigma = 0.5))`
+  reach the fit with the value the caller wrote.
+
 # modelterms7 0.31.0
 
 * `term_coef_start()`, a new generic: the coefficients a built term asks to

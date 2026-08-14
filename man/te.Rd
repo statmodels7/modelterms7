@@ -11,7 +11,8 @@ te(
   degree = 3,
   bases = NULL,
   anisotropic = TRUE,
-  label = NULL
+  label = NULL,
+  lambda = NULL
 )
 }
 \arguments{
@@ -33,6 +34,11 @@ used in place of the default B-splines.}
 
 \item{label}{A single non-empty string prefixed to the coefficient
 names. Defaults to a name built from the covariates.}
+
+\item{lambda}{The smoothing parameter, held at the value given and
+ESTIMATED when left \code{NULL}, which is the default. An
+anisotropic tensor product carries one per margin, so a vector
+of that length, or a named one holding some of them.}
 }
 \value{
 An object of class \code{\link{SmoothTerm}} (a specification;

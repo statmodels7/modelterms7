@@ -10,7 +10,8 @@ random(
   precision = NULL,
   distrib = NULL,
   kinks = numeric(0),
-  label = "random"
+  label = "random",
+  hyper = NULL
 )
 }
 \arguments{
@@ -32,6 +33,14 @@ argument, passed to \code{\link[penalties7]{distrib_penalty}}.}
 
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}
+
+\item{hyper}{The hyperparameters of the effects' distribution to HOLD, as
+a named vector or list; those not named are estimated. Which names there
+are depends on what the term was given: \code{c(sigma = 0.4)} for the
+default, the free names of the structure for a \code{precision}, and the
+distribution's own parameters for a \code{distrib}. A name the penalty
+does not carry is reported when the term is built, which is where the
+penalty first exists.}
 }
 \value{
 An object of class \code{\link{RandomTerm}} (a specification;

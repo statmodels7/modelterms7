@@ -8,15 +8,39 @@
 \alias{mcp}
 \title{Penalized Parametric Terms}
 \usage{
-ridge(x, label = "ridge", by = NULL, standardize = FALSE)
+ridge(x, label = "ridge", by = NULL, standardize = FALSE, sigma = NULL, ...)
 
-lasso(x, label = "lasso", by = NULL, standardize = FALSE)
+lasso(x, label = "lasso", by = NULL, standardize = FALSE, lambda = NULL, ...)
 
-enet(x, label = "enet", by = NULL, standardize = FALSE)
+enet(
+  x,
+  label = "enet",
+  by = NULL,
+  standardize = FALSE,
+  lambda = NULL,
+  alpha = NULL,
+  ...
+)
 
-scad(x, label = "scad", by = NULL, standardize = FALSE)
+scad(
+  x,
+  label = "scad",
+  by = NULL,
+  standardize = FALSE,
+  lambda = NULL,
+  a = NULL,
+  ...
+)
 
-mcp(x, label = "mcp", by = NULL, standardize = FALSE)
+mcp(
+  x,
+  label = "mcp",
+  by = NULL,
+  standardize = FALSE,
+  lambda = NULL,
+  gamma = NULL,
+  ...
+)
 }
 \arguments{
 \item{x}{A one-sided formula or a numeric matrix.}
@@ -28,6 +52,18 @@ names.}
 
 \item{standardize}{A single logical: whether to penalize each
 coefficient on the scale of its own column. See the section below.}
+
+\item{sigma, lambda, alpha, a, gamma}{The penalty's own hyperparameters,
+each held at the value given and ESTIMATED when left \code{NULL},
+which is the default. Every constructor takes the ones its penalty
+carries and no others: \code{sigma} for \code{ridge()},
+\code{lambda} for \code{lasso()}, \code{lambda} and \code{alpha}
+for \code{enet()}, \code{lambda} and \code{a} for \code{scad()},
+\code{lambda} and \code{gamma} for \code{mcp()}. The names are the
+penalty's, which are the ones a summary prints.}
+
+\item{...}{Not used, and reported: an argument named after another
+penalty's hyperparameter is the mistake this catches.}
 }
 \value{
 An object of class \code{\link{PenalizedTerm}} (a

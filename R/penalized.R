@@ -41,7 +41,24 @@ PenalizedTerm <- S7::new_class(
   )
 )
 
-.penalized_spec <- function(x, expr, label, by, standardize, factory) {
+.penalized_spec <- function(x, expr, label, by, standardize, factory,
+                            hyper = list(), extra = list()) {
+  # An argument named after ANOTHER penalty's hyperparameter is the mistake
+  # this catches: the shrinkage of a Gaussian prior is its scale sigma, so
+  # `ridge(x, lambda = 2)` is a reasonable thing to write and reaches
+  # nothing. R would report it as an unused argument, which says that it was
+  # not read and not what to write instead.
+  if (length(extra)) {
+    pen <- tryCatch(factory(1L), error = function(e) NULL)
+    stop(sprintf(paste0("'%s' has no argument '%s'. Its hyperparameters are:",
+                        " %s,
+  and each is held by naming it and estimated",
+                        " when left NULL."),
+                 label, names(extra)[[1L]],
+                 if (is.null(pen)) "none" else paste(pen@params,
+                                                     collapse = ", ")),
+         call. = FALSE)
+  }
   if (!is.logical(standardize) || length(standardize) != 1L ||
       is.na(standardize)) {
     stop("'standardize' must be TRUE or FALSE.", call. = FALSE)
@@ -80,6 +97,7 @@ PenalizedTerm <- S7::new_class(
   }
   PenalizedTerm(label = label, input = x, input_expr = expr,
                 factory = factory, standardize = standardize,
+                hyper = check_hyper(hyper, factory, label),
                 X = NULL, coef_names = character(0),
                 blueprint = list(), penalty = NULL)
 }
@@ -222,6 +240,16 @@ PenalizedTerm <- S7::new_class(
 #' @param by Reserved for a later release; must be \code{NULL}.
 #' @param standardize A single logical: whether to penalize each
 #'   coefficient on the scale of its own column. See the section below.
+#' @param sigma,lambda,alpha,a,gamma The penalty's own hyperparameters,
+#'   each held at the value given and ESTIMATED when left \code{NULL},
+#'   which is the default. Every constructor takes the ones its penalty
+#'   carries and no others: \code{sigma} for \code{ridge()},
+#'   \code{lambda} for \code{lasso()}, \code{lambda} and \code{alpha}
+#'   for \code{enet()}, \code{lambda} and \code{a} for \code{scad()},
+#'   \code{lambda} and \code{gamma} for \code{mcp()}. The names are the
+#'   penalty's, which are the ones a summary prints.
+#' @param ... Not used, and reported: an argument named after another
+#'   penalty's hyperparameter is the mistake this catches.
 #'
 #' @return An object of class \code{\link{PenalizedTerm}} (a
 #'   specification; see \code{\link{term_build}}).
@@ -239,42 +267,57 @@ PenalizedTerm <- S7::new_class(
 #'
 #' @seealso \code{\link{linpar}}, \code{\link{s}}, \code{\link{random}}, \code{\link{term_penalty}}, \code{\link{edf}}
 #' @export
-ridge <- function(x, label = "ridge", by = NULL, standardize = FALSE) {
+ridge <- function(x, label = "ridge", by = NULL, standardize = FALSE,
+                   sigma = NULL, ...) {
   .penalized_spec(x, substitute(x), label, by, standardize,
                   function(k, map = NULL) penalties7::ridge_penalty(map = map,
-                                                             n_coef = k))
+                                                        n_coef = k),
+                  list(sigma = sigma),
+                  list(...))
 }
 
 #' @rdname ridge
 #' @export
-lasso <- function(x, label = "lasso", by = NULL, standardize = FALSE) {
+lasso <- function(x, label = "lasso", by = NULL, standardize = FALSE,
+                   lambda = NULL, ...) {
   .penalized_spec(x, substitute(x), label, by, standardize,
                   function(k, map = NULL) penalties7::lasso_penalty(map = map,
-                                                             n_coef = k))
+                                                        n_coef = k),
+                  list(lambda = lambda),
+                  list(...))
 }
 
 #' @rdname ridge
 #' @export
-enet <- function(x, label = "enet", by = NULL, standardize = FALSE) {
+enet <- function(x, label = "enet", by = NULL, standardize = FALSE,
+                  lambda = NULL, alpha = NULL, ...) {
   .penalized_spec(x, substitute(x), label, by, standardize,
                   function(k, map = NULL) penalties7::elasticnet_penalty(map = map,
-                                                                  n_coef = k))
+                                                        n_coef = k),
+                  list(lambda = lambda, alpha = alpha),
+                  list(...))
 }
 
 #' @rdname ridge
 #' @export
-scad <- function(x, label = "scad", by = NULL, standardize = FALSE) {
+scad <- function(x, label = "scad", by = NULL, standardize = FALSE,
+                  lambda = NULL, a = NULL, ...) {
   .penalized_spec(x, substitute(x), label, by, standardize,
                   function(k, map = NULL) penalties7::scad_penalty(map = map,
-                                                            n_coef = k))
+                                                        n_coef = k),
+                  list(lambda = lambda, a = a),
+                  list(...))
 }
 
 #' @rdname ridge
 #' @export
-mcp <- function(x, label = "mcp", by = NULL, standardize = FALSE) {
+mcp <- function(x, label = "mcp", by = NULL, standardize = FALSE,
+                 lambda = NULL, gamma = NULL, ...) {
   .penalized_spec(x, substitute(x), label, by, standardize,
                   function(k, map = NULL) penalties7::mcp_penalty(map = map,
-                                                           n_coef = k))
+                                                        n_coef = k),
+                  list(lambda = lambda, gamma = gamma),
+                  list(...))
 }
 
 S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {

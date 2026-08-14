@@ -4,7 +4,16 @@
 \alias{s}
 \title{Penalized Smooth of One Covariate}
 \usage{
-s(x, by = NULL, k = 10, degree = 3, basis = NULL, linear = TRUE, label = NULL)
+s(
+  x,
+  by = NULL,
+  k = 10,
+  degree = 3,
+  basis = NULL,
+  linear = TRUE,
+  label = NULL,
+  lambda = NULL
+)
 }
 \arguments{
 \item{x}{The covariate, an expression evaluated in the data.}
@@ -23,6 +32,11 @@ left unpenalized there. Defaults to \code{TRUE}.}
 
 \item{label}{A single non-empty string prefixed to the coefficient
 names. Defaults to a name built from the covariate.}
+
+\item{lambda}{The smoothing parameter, held at the value given and
+ESTIMATED when left \code{NULL}, which is the default. An
+anisotropic tensor product carries one per margin, so a vector
+of that length, or a named one holding some of them.}
 }
 \value{
 An object of class \code{\link{SmoothTerm}} (a specification;
