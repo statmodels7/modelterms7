@@ -34,13 +34,12 @@ A named list of the held values.
 
 The check happens at CONSTRUCTION, where the caller can see it, and not
 at the fit three layers away. A name the penalty does not carry is an
-error naming the ones it does, which is what turns `ridge(lambda = 2)` –
-the elastic net's spelling applied to a Gaussian prior, whose
-hyperparameter is `sigma` – into a message instead of an argument that
-lands in `...` and does nothing.
+error naming the ones it does, which is what turns `mcp(x, a = 3)` –
+SCAD's shape written on an MCP, whose own is `gamma` – into a message
+instead of an argument that lands in `...` and does nothing.
 
-The bounds are OPEN, as they are everywhere in the toolkit: a Gaussian
-prior at \\\sigma = 0\\ is not a prior, and an elastic net at \\\alpha =
+The bounds are OPEN, as they are everywhere in the toolkit: a ridge at
+\\\lambda = 0\\ is no penalty at all, and an elastic net at \\\alpha =
 0\\ has no kink and is a penalty of another kind.
 
 ## See also

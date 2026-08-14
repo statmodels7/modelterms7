@@ -74,12 +74,12 @@ used only to read the names and the bounds.</p></dd>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The check happens at CONSTRUCTION, where the caller can see it, and not at
 the fit three layers away. A name the penalty does not carry is an error
-naming the ones it does, which is what turns <code>ridge(lambda = 2)</code> –
-the elastic net's spelling applied to a Gaussian prior, whose
-hyperparameter is <code>sigma</code> – into a message instead of an argument
-that lands in <code>...</code> and does nothing.</p>
-<p>The bounds are OPEN, as they are everywhere in the toolkit: a Gaussian
-prior at \(\sigma = 0\) is not a prior, and an elastic net at
+naming the ones it does, which is what turns <code>mcp(x, a = 3)</code> –
+SCAD's shape written on an MCP, whose own is <code>gamma</code> – into a
+message instead of an argument that lands in <code>...</code> and does
+nothing.</p>
+<p>The bounds are OPEN, as they are everywhere in the toolkit: a ridge at
+\(\lambda = 0\) is no penalty at all, and an elastic net at
 \(\alpha = 0\) has no kink and is a penalty of another kind.</p>
     </div>
     <div class="section level2">
