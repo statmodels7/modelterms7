@@ -17,7 +17,7 @@ link and kink is the penalty object's."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.33.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.35.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,8 +46,8 @@ link and kink is the penalty object's."><meta property="og:image" content="https
     <div class="ref-description section level2">
     <p>A subclass of <code><a href="additive_term.html">additive_term</a></code> for a parametric block whose
 coefficients carry a <span class="pkg">penalties7</span> penalty. Constructed by
-<code><a href="ridge.html">ridge</a></code>, <code><a href="ridge.html">lasso</a></code>, <code><a href="ridge.html">scad</a></code> and
-<code><a href="ridge.html">mcp</a></code>; the four differ only in the penalty their factory
+<code><a href="ridge.html">ridge</a></code>, <code><a href="lasso.html">lasso</a></code>, <code><a href="scad.html">scad</a></code> and
+<code><a href="mcp.html">mcp</a></code>; the four differ only in the penalty their factory
 attaches at build time, and every derivative, hyperparameter, bound,
 link and kink is the penalty object's.</p>
     </div>
@@ -57,6 +57,8 @@ link and kink is the penalty object's.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">PenalizedTerm</span><span class="op">(</span></span>
 <span>  label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  hyper <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  grid <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  min_ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  X <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  coef_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  blueprint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
@@ -81,6 +83,19 @@ non-empty.</p></dd>
 <dd><p>The hyperparameters of the term's penalty that the
 caller HELD, as a named list. Empty, the default, means every one
 of them is estimated. See <code><a href="term_hyper.html">term_hyper</a></code>.</p></dd>
+
+
+<dt id="arg-grid">grid<a class="anchor" aria-label="anchor" href="#arg-grid"></a></dt>
+<dd><p>How many values a path visits for each of the term's
+hyperparameters, as a named list. Empty, the default, leaves it to the
+criterion. See <code><a href="term_grid.html">term_grid</a></code>.</p></dd>
+
+
+<dt id="arg-min-ratio">min_ratio<a class="anchor" aria-label="anchor" href="#arg-min-ratio"></a></dt>
+<dd><p>How far down the path over the size of the kink
+reaches, as a fraction of the value that empties the block, or
+<code>numeric(0)</code> for the criterion's own. See
+<code><a href="term_path_min.html">term_path_min</a></code>.</p></dd>
 
 
 <dt id="arg-x">X<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>

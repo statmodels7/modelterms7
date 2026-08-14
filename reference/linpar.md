@@ -59,10 +59,10 @@ row-aligned with the response.
 ## See also
 
 [`ridge`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-[`lasso`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-[`scad`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-[`mcp`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-[`enet`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
+[`lasso`](https://statmodels7.github.io/modelterms7/reference/lasso.md),
+[`scad`](https://statmodels7.github.io/modelterms7/reference/scad.md),
+[`mcp`](https://statmodels7.github.io/modelterms7/reference/mcp.md),
+[`enet`](https://statmodels7.github.io/modelterms7/reference/enet.md)
 
 ## Examples
 

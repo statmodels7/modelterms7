@@ -25,11 +25,11 @@ $`-\ell(\beta) + \sum_t \rho_t(\beta_t; \theta_t)`$:
 - [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
   is the unpenalized parametric block;
 - [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-  [`scad()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-  [`mcp()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
+  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md),
+  [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md),
+  [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
   and
-  [`enet()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
+  [`enet()`](https://statmodels7.github.io/modelterms7/reference/enet.md)
   attach the corresponding
   [penalties7](https://statmodels7.github.io/penalties7/) object to
   their block;

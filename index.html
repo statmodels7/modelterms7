@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.33.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.35.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,7 @@
 <li>
 <code><a href="reference/linpar.html">linpar()</a></code> is the unpenalized parametric block;</li>
 <li>
-<code><a href="reference/ridge.html">ridge()</a></code>, <code><a href="reference/ridge.html">lasso()</a></code>, <code><a href="reference/ridge.html">scad()</a></code>, <code><a href="reference/ridge.html">mcp()</a></code> and <code><a href="reference/ridge.html">enet()</a></code> attach the corresponding <a href="https://statmodels7.github.io/penalties7/" class="external-link">penalties7</a> object to their block;</li>
+<code><a href="reference/ridge.html">ridge()</a></code>, <code><a href="reference/lasso.html">lasso()</a></code>, <code><a href="reference/scad.html">scad()</a></code>, <code><a href="reference/mcp.html">mcp()</a></code> and <code><a href="reference/enet.html">enet()</a></code> attach the corresponding <a href="https://statmodels7.github.io/penalties7/" class="external-link">penalties7</a> object to their block;</li>
 <li>
 <code><a href="reference/random.html">random()</a></code> builds grouped intercepts and slopes with the effect distribution as the penalty, correlated or not through a <a href="https://statmodels7.github.io/parameters7/" class="external-link">parameters7</a> structure replicated across groups;</li>
 <li>
@@ -97,7 +97,7 @@
 <span>                 g <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">letters</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span>, <span class="fl">50</span>, <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">dd</span><span class="op">$</span><span class="va">L</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">50</span> <span class="op">*</span> <span class="fl">3</span><span class="op">)</span>, <span class="fl">50</span>, <span class="fl">3</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/interpret_formula.html">interpret_formula</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">x2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="reference/ridge.html">lasso</a></span><span class="op">(</span><span class="va">L</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/interpret_formula.html">interpret_formula</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">x2</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="reference/lasso.html">lasso</a></span><span class="op">(</span><span class="va">L</span><span class="op">)</span> <span class="op">+</span></span>
 <span>                           <span class="fu"><a href="reference/random.html">random</a></span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span> <span class="op">|</span> <span class="va">g</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">terms</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "linpar"         "lasso(L)"       "random(~1 | g)"</span></span></code></pre></div>

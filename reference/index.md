@@ -25,6 +25,10 @@ structural term takes instead.
   : Every Penalty a Term Carries
 - [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md)
   : The Hyperparameters a Term Holds
+- [`term_grid()`](https://statmodels7.github.io/modelterms7/reference/term_grid.md)
+  : The Grid a Term Asks For
+- [`term_path_min()`](https://statmodels7.github.io/modelterms7/reference/term_path_min.md)
+  : How Far Down a Term's Path Reaches
 - [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
   : Number of Parameters of a Built Term
 - [`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)
@@ -53,11 +57,17 @@ lasso, SCAD, MCP and the elastic net, over a formula or over a matrix
 column of the data.
 
 - [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
-  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
-  [`enet()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
-  [`scad()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
-  [`mcp()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
-  : Penalized Parametric Terms
+  : Ridge Penalty on a Block of Coefficients
+- [`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md)
+  : Lasso Penalty on a Block of Coefficients
+- [`enet()`](https://statmodels7.github.io/modelterms7/reference/enet.md)
+  : Elastic Net Penalty on a Block of Coefficients
+- [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md)
+  : SCAD Penalty on a Block of Coefficients
+- [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
+  : MCP Penalty on a Block of Coefficients
+- [`penalized_terms`](https://statmodels7.github.io/modelterms7/reference/penalized_terms.md)
+  : What the Penalized Terms Share
 - [`PenalizedTerm()`](https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.md)
   : S7 Class for Penalized Parametric Terms
 

@@ -17,6 +17,8 @@ this class.
 LinparTerm(
   label = character(0),
   hyper = list(),
+  grid = list(),
+  min_ratio = numeric(0),
   X = NULL,
   coef_names = character(0),
   blueprint = list(),
@@ -37,6 +39,19 @@ LinparTerm(
   named list. Empty, the default, means every one of them is estimated.
   See
   [`term_hyper`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
+
+- grid:
+
+  How many values a path visits for each of the term's hyperparameters,
+  as a named list. Empty, the default, leaves it to the criterion. See
+  [`term_grid`](https://statmodels7.github.io/modelterms7/reference/term_grid.md).
+
+- min_ratio:
+
+  How far down the path over the size of the kink reaches, as a fraction
+  of the value that empties the block, or `numeric(0)` for the
+  criterion's own. See
+  [`term_path_min`](https://statmodels7.github.io/modelterms7/reference/term_path_min.md).
 
 - X:
 

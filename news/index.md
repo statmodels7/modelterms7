@@ -1,11 +1,46 @@
 # Changelog
 
+## modelterms7 0.35.0
+
+- [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md),
+  [`enet()`](https://statmodels7.github.io/modelterms7/reference/enet.md),
+  [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md)
+  and
+  [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
+  have a page each, carrying that penalty’s own formula, its
+  hyperparameters and the interval each of them may lie in. What the
+  five share – the formula and matrix input, the standardization, the
+  prediction – is documented once on `penalized_terms`, which they
+  inherit their common arguments from.
+
+- Each takes the SIZE OF THE GRID for each of its hyperparameters:
+  `lasso(~x, n_lambda = 50)`, `enet(~x, n_lambda = 40, n_alpha = 12)`,
+  `scad(~x, n_a = 6)`, `mcp(~x, n_gamma = 7)`. How finely a
+  hyperparameter is swept belongs to the term for the same reason as
+  whether it is swept at all: a penalized block of four columns and one
+  of four hundred want different grids, and a criterion applies to every
+  term of the model at once and cannot know which it is looking at.
+  `NULL`, the default, leaves it to the criterion.
+  [`term_grid()`](https://statmodels7.github.io/modelterms7/reference/term_grid.md)
+  reports it, and the value travels with the penalty’s entry as the held
+  values do.
+
+- And `min_ratio`, how far down the path reaches as a fraction of the
+  kink that empties the block. One number per term rather than one per
+  hyperparameter, because only the sweep by kink size uses it: a bounded
+  hyperparameter is swept over its own interval and a shape that does
+  not move the kink over a geometric grid above its lower bound, where a
+  fraction of an emptying value means nothing.
+  [`term_path_min()`](https://statmodels7.github.io/modelterms7/reference/term_path_min.md)
+  reports it.
+
 ## modelterms7 0.33.0
 
 - [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
   takes `lambda`, the PRECISION of the Gaussian prior, where it took
   `sigma`: larger means more shrinkage, as it already did for
-  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md),
   and it is the same number the quadratic penalty behind
   [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
   [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
@@ -395,11 +430,11 @@
 
 - A sparse matrix handed to
   [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-  [`enet()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-  [`scad()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
+  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md),
+  [`enet()`](https://statmodels7.github.io/modelterms7/reference/enet.md),
+  [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md)
   or
-  [`mcp()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
+  [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
   is no longer densified.
 
   `.penalized_spec()` called
@@ -446,11 +481,11 @@
 ## modelterms7 0.25.0
 
 - [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-  [`enet()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-  [`scad()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
+  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md),
+  [`enet()`](https://statmodels7.github.io/modelterms7/reference/enet.md),
+  [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md)
   and
-  [`mcp()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
+  [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
   take `standardize`.
 
   A hyperparameter is comparable across coordinates only where the

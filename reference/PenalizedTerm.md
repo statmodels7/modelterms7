@@ -5,10 +5,9 @@ A subclass of
 for a parametric block whose coefficients carry a penalties7 penalty.
 Constructed by
 [`ridge`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-[`lasso`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-[`scad`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
-and
-[`mcp`](https://statmodels7.github.io/modelterms7/reference/ridge.md);
+[`lasso`](https://statmodels7.github.io/modelterms7/reference/lasso.md),
+[`scad`](https://statmodels7.github.io/modelterms7/reference/scad.md)
+and [`mcp`](https://statmodels7.github.io/modelterms7/reference/mcp.md);
 the four differ only in the penalty their factory attaches at build
 time, and every derivative, hyperparameter, bound, link and kink is the
 penalty object's.
@@ -19,6 +18,8 @@ penalty object's.
 PenalizedTerm(
   label = character(0),
   hyper = list(),
+  grid = list(),
+  min_ratio = numeric(0),
   X = NULL,
   coef_names = character(0),
   blueprint = list(),
@@ -42,6 +43,19 @@ PenalizedTerm(
   named list. Empty, the default, means every one of them is estimated.
   See
   [`term_hyper`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
+
+- grid:
+
+  How many values a path visits for each of the term's hyperparameters,
+  as a named list. Empty, the default, leaves it to the criterion. See
+  [`term_grid`](https://statmodels7.github.io/modelterms7/reference/term_grid.md).
+
+- min_ratio:
+
+  How far down the path over the size of the kink reaches, as a fraction
+  of the value that empties the block, or `numeric(0)` for the
+  criterion's own. See
+  [`term_path_min`](https://statmodels7.github.io/modelterms7/reference/term_path_min.md).
 
 - X:
 
