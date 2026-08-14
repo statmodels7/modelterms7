@@ -26,13 +26,13 @@ list with the \code{NULL} entries -- the ones to be estimated -- dropped.
 \details{
 The check happens at CONSTRUCTION, where the caller can see it, and not at
 the fit three layers away. A name the penalty does not carry is an error
-naming the ones it does, which is what turns \code{ridge(lambda = 2)} --
-the elastic net's spelling applied to a Gaussian prior, whose
-hyperparameter is \code{sigma} -- into a message instead of an argument
-that lands in \code{...} and does nothing.
+naming the ones it does, which is what turns \code{mcp(x, a = 3)} --
+SCAD's shape written on an MCP, whose own is \code{gamma} -- into a
+message instead of an argument that lands in \code{...} and does
+nothing.
 
-The bounds are OPEN, as they are everywhere in the toolkit: a Gaussian
-prior at \eqn{\sigma = 0} is not a prior, and an elastic net at
+The bounds are OPEN, as they are everywhere in the toolkit: a ridge at
+\eqn{\lambda = 0} is no penalty at all, and an elastic net at
 \eqn{\alpha = 0} has no kink and is a penalty of another kind.
 }
 \seealso{

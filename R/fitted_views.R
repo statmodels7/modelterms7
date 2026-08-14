@@ -58,7 +58,7 @@ NULL
 #' dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
 #' built <- term_build(ridge(~ x1 + x2), dd)
 #' H <- crossprod(term_matrix(built))
-#' edf(built, coef = c(0.5, -0.2), hessian = H, theta = list(sigma = 2))
+#' edf(built, coef = c(0.5, -0.2), hessian = H, theta = list(lambda = 0.25))
 #'
 #' @seealso \code{\link{term_penalties}}, \code{\link{term_penalty}}, \code{\link{term_smooth}}
 #' @export
