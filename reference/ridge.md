@@ -15,7 +15,7 @@ the kink set are the penalty's, never restated by the term.
 ## Usage
 
 ``` r
-ridge(x, label = "ridge", by = NULL, standardize = FALSE, sigma = NULL, ...)
+ridge(x, label = "ridge", by = NULL, standardize = FALSE, lambda = NULL, ...)
 
 lasso(x, label = "lasso", by = NULL, standardize = FALSE, lambda = NULL, ...)
 
@@ -69,12 +69,12 @@ mcp(
   A single logical: whether to penalize each coefficient on the scale of
   its own column. See the section below.
 
-- sigma, lambda, alpha, a, gamma:
+- lambda, alpha, a, gamma:
 
   The penalty's own hyperparameters, each held at the value given and
   ESTIMATED when left `NULL`, which is the default. Every constructor
-  takes the ones its penalty carries and no others: `sigma` for
-  `ridge()`, `lambda` for `lasso()`, `lambda` and `alpha` for `enet()`,
+  takes the ones its penalty carries and no others: `lambda` for
+  `ridge()` and for `lasso()`, `lambda` and `alpha` for `enet()`,
   `lambda` and `a` for `scad()`, `lambda` and `gamma` for `mcp()`. The
   names are the penalty's, which are the ones a summary prints.
 
@@ -168,8 +168,8 @@ Writing \\\beta\\ for the block's coefficients and \\p\\ for their
 number, the five attach
 
 \$\$\rho\_{\mathrm{ridge}}(\beta) =
-\frac{\lVert\beta\rVert_2^2}{2\sigma^2} +
-p\log\\\left(\sigma\sqrt{2\pi}\right),\$\$
+\frac{\lambda\lVert\beta\rVert_2^2}{2} -
+\frac{p}{2}\log\\\left(\frac{\lambda}{2\pi}\right),\$\$
 
 \$\$\rho\_{\mathrm{lasso}}(\beta) = \lambda\lVert\beta\rVert_1 -
 p\log\\\left(\frac{\lambda}{2}\right),\$\$

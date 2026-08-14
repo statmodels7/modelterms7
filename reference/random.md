@@ -55,7 +55,7 @@ random(
 
   The hyperparameters of the effects' distribution to HOLD, as a named
   vector or list; those not named are estimated. Which names there are
-  depends on what the term was given: `c(sigma = 0.4)` for the default,
+  depends on what the term was given: `c(lambda = 4)` for the default,
   the free names of the structure for a `precision`, and the
   distribution's own parameters for a `distrib`. A name the penalty does
   not carry is reported when the term is built, which is where the

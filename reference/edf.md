@@ -93,5 +93,5 @@ dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
 built <- term_build(ridge(~ x1 + x2), dd)
 H <- crossprod(term_matrix(built))
 edf(built, coef = c(0.5, -0.2), hessian = H, theta = list(sigma = 2))
-#> [1] 1.976583
+#> Error: Missing parameter(s) in 'theta': lambda. Expected: lambda.
 ```

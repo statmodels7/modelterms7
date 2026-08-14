@@ -1,5 +1,19 @@
 # Changelog
 
+## modelterms7 0.33.0
+
+- [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
+  takes `lambda`, the PRECISION of the Gaussian prior, where it took
+  `sigma`: larger means more shrinkage, as it already did for
+  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+  and it is the same number the quadratic penalty behind
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
+  [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
+  calls by that name.
+  [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)’s
+  default penalty follows, so the variance component a reader wants from
+  it is `1/sqrt(lambda)`.
+
 ## modelterms7 0.32.0
 
 - Every term takes its penalty’s hyperparameters as arguments, and holds
