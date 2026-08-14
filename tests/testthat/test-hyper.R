@@ -58,12 +58,14 @@ test_that("a smooth holds its smoothing parameter, one per margin", {
 test_that("a random effect is checked against the penalty it builds", {
   dd <- data.frame(y = stats::rnorm(20), x = stats::rnorm(20),
                    g = factor(rep(1:4, 5)))
-  built <- term_build(random(~ 1 | g, hyper = c(lambda = 6)), dd)
-  expect_equal(term_hyper(built)[[1L]], list(lambda = 6))
+  # the effects are gaussian by default and the hyperparameter is their
+  # standard deviation, which is the name the penalty carries
+  built <- term_build(random(~ 1 | g, hyper = c(sigma = 6)), dd)
+  expect_equal(term_hyper(built)[[1L]], list(sigma = 6))
   # which names there are depends on what the term was given, so the check
   # is at the build, the first point at which the penalty exists
-  expect_error(term_build(random(~ 1 | g, hyper = c(sigma = 1)), dd),
-               "no hyperparameter 'sigma'")
+  expect_error(term_build(random(~ 1 | g, hyper = c(lambda = 1)), dd),
+               "not a hyperparameter")
   expect_error(random(~ 1 | g, hyper = 0.4), "must be named")
 })
 
@@ -157,7 +159,7 @@ test_that("several values are a grid the path visits, not a held value", {
   # is covered by the same line as a ridge.
   expect_error(ridge(~x, lambda = c(1, 2)), "no path")
   dg <- data.frame(y = stats::rnorm(30), g = factor(rep(1:6, each = 5)))
-  expect_error(term_build(random(~ 1 | g, hyper = list(lambda = c(1, 2))), dg),
+  expect_error(term_build(random(~ 1 | g, hyper = list(sigma = c(1, 2))), dg),
                "no path")
 
   # and it travels with the entry, as the held values and the grid size do

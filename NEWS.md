@@ -1,3 +1,88 @@
+# modelterms7 0.40.0
+
+* A multivariate Student t prior now carries standard errors and intervals
+  for every hyperparameter, its family having supplied the third and fourth
+  derivatives in the response. The page no longer names it as an exception:
+  where an interval is absent the cause is the POINT and not a missing
+  derivative.
+
+# modelterms7 0.39.0
+
+* A location HELD away from zero is no longer rejected. What is unidentified
+  is a FREE location, which competes with the intercept of the equation the
+  term sits in; a held one shrinks the effects towards its value, which is a
+  modelling statement. Nor could the value be policed in general: where the
+  prior is a transformation of another family the parameter is the mean on
+  the ORIGINAL scale, and holding a gamma's mean at one is what centers its
+  logarithm -- at a value zero would put outside the parameter's own domain.
+  `fixed(transformation(gamma2_distrib(), log_transform()), mu = 1)` is now a
+  usable effects distribution, and its free-location form is still refused.
+
+* The page says which hyperparameters carry an interval and which do not, and
+  why: a run that ended where the criterion has no maximum has a curvature of
+  the wrong sign, and a multivariate Student t prior has no exact outer
+  curvature until that family supplies its third and fourth derivatives in
+  the response.
+
+# modelterms7 0.38.0
+
+* A multivariate Student t is admitted as the effects' distribution, its
+  mixed response-parameter block having been written. The admissibility rule
+  is unchanged and was already a property rather than a list of names, so
+  nothing here had to learn about the family: it carries a location block as
+  long as its dimension and a scale matrix, and it answers the block a
+  marginal criterion reads.
+
+# modelterms7 0.37.0
+
+* `random()` says two things and nothing else: the formula, and the
+  distribution of the effects. Which chart the hyperparameters ride, what
+  they are called, how many there are and where the log-density has a kink
+  are properties of that distribution, read off it rather than restated.
+
+* The hyperparameter of `random(~ 1 | g)` IS the standard deviation of the
+  effects. It was `lambda`, a precision, which a reader of a mixed model had
+  to invert and take the root of; a variance component is now reported as
+  one. It remains the same model as a ridge, which a test pins.
+
+* `distrib` accepts a MULTIVARIATE distribution of the within-group
+  dimension, which is what lets the effects of a group depend on each other:
+  `mvgaussian_distrib(2, omega = ar1(2))` is a prior whose precision is
+  autoregressive, and the free names then say WHICH matrix the structure is.
+  Correlation is admitted by a PROPERTY -- a location block as long as the
+  dimension, and a covariance, precision or scale matrix -- so a family added
+  later is covered and the simplex-valued ones are refused without being
+  named. A family with no mixed response-parameter block is rejected at the
+  build rather than at the criterion, where the message would name a generic.
+
+* A UNIVARIATE distribution over several within-group columns is a TEMPLATE:
+  one copy per column with its own hyperparameters, declared as one
+  `term_penalties()` entry per column over that column's own stride. An
+  intercept and a slope are quantities of different units, and one shared
+  scale would price them against each other -- with a pseudo-Huber it would
+  share the point where the loss stops being quadratic as well. A list of
+  distributions gives one per column explicitly.
+
+* A prior on the effects is CENTERED: a free location is confounded with the
+  intercept of the equation the term sits in, so it is rejected with the
+  spelling that fixes it rather than fitted along a flat direction.
+
+* `precision` is removed. A structured precision is the matrix parameter of a
+  multivariate gaussian, so it is written as one -- which also says which of
+  the two matrices the structure is. The argument is reported by name rather
+  than swallowed by the dots.
+
+* `kinks` is removed, and it was not merely redundant. Its default of
+  `numeric(0)` OVERRODE `penalties7::distrib_kinks()`, so a Laplace prior on
+  a random effect declared no kink where a `lasso()` term on the same parent
+  declares one at zero -- and a fitting layer chooses the scheme by asking,
+  so the block went to the system solved by a curvature the penalty does not
+  have there. `NULL`, the spelling that would have fixed it, was rejected by
+  the property's own type.
+
+* `correlated` beside `distrib` is an error rather than ignored; the page
+  said it was ignored, which is worse than an error.
+
 # modelterms7 0.36.0
 
 * A hyperparameter's argument carries a third state: several numbers are the

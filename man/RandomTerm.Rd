@@ -16,9 +16,7 @@ RandomTerm(
   penalty = NULL,
   formula = NULL,
   correlated = logical(0),
-  precision = NULL,
-  distrib = NULL,
-  kinks = integer(0)
+  distrib = NULL
 )
 }
 \arguments{
@@ -57,13 +55,8 @@ data, filled by \code{\link{term_build}}.}
 \item{correlated}{Logical; whether the default Gaussian lets the
 within-group effects correlate.}
 
-\item{precision}{A \pkg{parameters7} matrix parameter for the
-per-group precision, or \code{NULL}.}
-
-\item{distrib}{A univariate \pkg{distributions7} object for the
-effects, or \code{NULL}.}
-
-\item{kinks}{The declared kink set of \code{distrib}'s log-density.}
+\item{distrib}{The effects' distribution, or \code{NULL} for the default
+Gaussian.}
 }
 \value{
 An object of class \code{RandomTerm}.
