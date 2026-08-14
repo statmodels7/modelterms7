@@ -15,7 +15,8 @@ random(
   precision = NULL,
   distrib = NULL,
   kinks = numeric(0),
-  label = "random"
+  label = "random",
+  hyper = NULL
 )
 ```
 
@@ -49,6 +50,16 @@ random(
 - label:
 
   A single non-empty string prefixed to the coefficient names.
+
+- hyper:
+
+  The hyperparameters of the effects' distribution to HOLD, as a named
+  vector or list; those not named are estimated. Which names there are
+  depends on what the term was given: `c(sigma = 0.4)` for the default,
+  the free names of the structure for a `precision`, and the
+  distribution's own parameters for a `distrib`. A name the penalty does
+  not carry is reported when the term is built, which is where the
+  penalty first exists.
 
 ## Value
 

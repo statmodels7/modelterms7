@@ -18,6 +18,7 @@ penalty object's.
 ``` r
 PenalizedTerm(
   label = character(0),
+  hyper = list(),
   X = NULL,
   coef_names = character(0),
   blueprint = list(),
@@ -34,6 +35,13 @@ PenalizedTerm(
 - label:
 
   A character string prefixed to the coefficient names when non-empty.
+
+- hyper:
+
+  The hyperparameters of the term's penalty that the caller HELD, as a
+  named list. Empty, the default, means every one of them is estimated.
+  See
+  [`term_hyper`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
 - X:
 

@@ -9,7 +9,16 @@ penalty into the identity on the deviation.
 ## Usage
 
 ``` r
-s(x, by = NULL, k = 10, degree = 3, basis = NULL, linear = TRUE, label = NULL)
+s(
+  x,
+  by = NULL,
+  k = 10,
+  degree = 3,
+  basis = NULL,
+  linear = TRUE,
+  label = NULL,
+  lambda = NULL
+)
 ```
 
 ## Arguments
@@ -44,6 +53,13 @@ s(x, by = NULL, k = 10, degree = 3, basis = NULL, linear = TRUE, label = NULL)
 
   A single non-empty string prefixed to the coefficient names. Defaults
   to a name built from the covariate.
+
+- lambda:
+
+  The smoothing parameter, held at the value given and ESTIMATED when
+  left `NULL`, which is the default. An anisotropic tensor product
+  carries one per margin, so a vector of that length, or a named one
+  holding some of them.
 
 ## Value
 

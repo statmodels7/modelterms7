@@ -11,6 +11,7 @@ by a level of its own. Constructed by
 ``` r
 RegimeTerm(
   label = character(0),
+  hyper = list(),
   k = integer(0),
   by = NULL,
   time = NULL,
@@ -25,6 +26,13 @@ RegimeTerm(
 
   A character string prefixed to the term's coefficient names when
   non-empty.
+
+- hyper:
+
+  The hyperparameters of the term's penalty that the caller HELD, as a
+  named list. Empty, the default, means every one of them is estimated.
+  See
+  [`term_hyper`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
 - k:
 

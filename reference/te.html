@@ -11,7 +11,7 @@ penalty on the product coefficients."><meta property="og:image" content="https:/
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.31.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.32.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,8 @@ penalty on the product coefficients.</p>
 <span>  degree <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  bases <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  anisotropic <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  label <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  label <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  lambda <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -91,6 +92,13 @@ used in place of the default B-splines.</p></dd>
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
 <dd><p>A single non-empty string prefixed to the coefficient
 names. Defaults to a name built from the covariates.</p></dd>
+
+
+<dt id="arg-lambda">lambda<a class="anchor" aria-label="anchor" href="#arg-lambda"></a></dt>
+<dd><p>The smoothing parameter, held at the value given and
+ESTIMATED when left <code>NULL</code>, which is the default. An
+anisotropic tensor product carries one per margin, so a vector
+of that length, or a named one holding some of them.</p></dd>
 
 </dl></div>
     <div class="section level2">

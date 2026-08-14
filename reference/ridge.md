@@ -15,15 +15,39 @@ the kink set are the penalty's, never restated by the term.
 ## Usage
 
 ``` r
-ridge(x, label = "ridge", by = NULL, standardize = FALSE)
+ridge(x, label = "ridge", by = NULL, standardize = FALSE, sigma = NULL, ...)
 
-lasso(x, label = "lasso", by = NULL, standardize = FALSE)
+lasso(x, label = "lasso", by = NULL, standardize = FALSE, lambda = NULL, ...)
 
-enet(x, label = "enet", by = NULL, standardize = FALSE)
+enet(
+  x,
+  label = "enet",
+  by = NULL,
+  standardize = FALSE,
+  lambda = NULL,
+  alpha = NULL,
+  ...
+)
 
-scad(x, label = "scad", by = NULL, standardize = FALSE)
+scad(
+  x,
+  label = "scad",
+  by = NULL,
+  standardize = FALSE,
+  lambda = NULL,
+  a = NULL,
+  ...
+)
 
-mcp(x, label = "mcp", by = NULL, standardize = FALSE)
+mcp(
+  x,
+  label = "mcp",
+  by = NULL,
+  standardize = FALSE,
+  lambda = NULL,
+  gamma = NULL,
+  ...
+)
 ```
 
 ## Arguments
@@ -44,6 +68,20 @@ mcp(x, label = "mcp", by = NULL, standardize = FALSE)
 
   A single logical: whether to penalize each coefficient on the scale of
   its own column. See the section below.
+
+- sigma, lambda, alpha, a, gamma:
+
+  The penalty's own hyperparameters, each held at the value given and
+  ESTIMATED when left `NULL`, which is the default. Every constructor
+  takes the ones its penalty carries and no others: `sigma` for
+  `ridge()`, `lambda` for `lasso()`, `lambda` and `alpha` for `enet()`,
+  `lambda` and `a` for `scad()`, `lambda` and `gamma` for `mcp()`. The
+  names are the penalty's, which are the ones a summary prints.
+
+- ...:
+
+  Not used, and reported: an argument named after another penalty's
+  hyperparameter is the mistake this catches.
 
 ## Value
 

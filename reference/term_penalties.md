@@ -76,6 +76,9 @@ term_penalties(term_build(ridge(~x), data.frame(x = rnorm(20))))
 #> [[1]]$penalty
 #> separable [fixed gaussian1 [mu=0]] penalty on 1 coefficient(s) through 1 row(s); theta: sigma
 #> 
+#> [[1]]$fixed
+#> list()
+#> 
 #> 
 term_penalties(term_build(linpar(~x), data.frame(x = rnorm(20))))
 #> list()

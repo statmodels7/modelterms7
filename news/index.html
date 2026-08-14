@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.31.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.32.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,14 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.32.0" id="modelterms7-0320">modelterms7 0.32.0<a class="anchor" aria-label="anchor" href="#modelterms7-0320"></a></h2>
+<ul><li>
+<p>Every term takes its penalty’s hyperparameters as arguments, and holds the ones it is given: <code>lasso(x, lambda = 3)</code>, <code>ridge(x, sigma = 0.5)</code>, <code>enet(x, lambda = 2, alpha = 0.5)</code>, <code>scad(x, lambda = 1, a = 3.7)</code>, <code>mcp(x, gamma = 3)</code>, <code>s(x, lambda = 2)</code>, <code>te(x, z, lambda = c(1, 5))</code>, <code>random(~1 | g, hyper = c(sigma = 0.4))</code>. NULL, the default, means the hyperparameter is estimated. Which ones are held is a property of the term, since the term is where the penalty is named.</p>
+<p>The arguments carry the penalty’s OWN names – <code>sigma</code> for a Gaussian prior, <code>a</code> for SCAD – which are the names a summary prints and penalties7 documents. <code>ridge(x, lambda = 2)</code> is rejected with a message naming <code>sigma</code>, where R would have reported an unused argument.</p>
+</li>
+<li><p><code><a href="../reference/term_hyper.html">term_hyper()</a></code> reports what a term holds, and every entry of <code><a href="../reference/term_penalties.html">term_penalties()</a></code> carries its own held values in the field <code>fixed</code>, so a structural term propagates what its sub-terms hold by copying the entry: <code>gas(by = ~ ridge(id, sigma = 2))</code> and <code>nl(a ~ 0 + ridge(~g, sigma = 0.5))</code> reach the fit with the value the caller wrote.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.31.0" id="modelterms7-0310">modelterms7 0.31.0<a class="anchor" aria-label="anchor" href="#modelterms7-0310"></a></h2>
 <ul><li><p><code><a href="../reference/term_coef_start.html">term_coef_start()</a></code>, a new generic: the coefficients a built term asks to be started at. The base method returns zero everywhere, which is what a term whose block is a fixed design wants, and a term that recomputes its block from its coefficients answers with the start <code><a href="../reference/term_build.html">term_build()</a></code> computed. Zero is degenerate rather than neutral there: in <code><a href="../reference/jump.html">jump()</a></code> the break-point is read off two coefficients as <code>-g_k/delta_k</code>, so a vector of zeros puts every break-point at the same clamped position and leaves the block singular, and in <code><a href="../reference/seg.html">seg()</a></code> the Jacobian column vanishes identically. <code><a href="../reference/nl.html">nl()</a></code> answers with the values its own <code>start</code> names.</p></li>

@@ -19,7 +19,7 @@ indexes into them.
 ## Usage
 
 ``` r
-structural_term(label = character(0))
+structural_term(label = character(0), hyper = list())
 ```
 
 ## Arguments
@@ -27,6 +27,13 @@ structural_term(label = character(0))
 - label:
 
   A character string naming the term.
+
+- hyper:
+
+  The hyperparameters of the term's penalty that the caller HELD, as a
+  named list. Empty, the default, means every one of them is estimated.
+  See
+  [`term_hyper`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
 ## Value
 

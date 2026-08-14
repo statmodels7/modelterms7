@@ -17,7 +17,7 @@ registration.
 ## Usage
 
 ``` r
-model_term(label = character(0))
+model_term(label = character(0), hyper = list())
 ```
 
 ## Arguments
@@ -26,6 +26,13 @@ model_term(label = character(0))
 
   A character string prefixed to the term's coefficient names when
   non-empty.
+
+- hyper:
+
+  The hyperparameters of the term's penalty that the caller HELD, as a
+  named list. Empty, the default, means every one of them is estimated.
+  See
+  [`term_hyper`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
 ## Value
 

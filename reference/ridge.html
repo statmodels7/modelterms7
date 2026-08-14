@@ -25,7 +25,7 @@ never restated by the term."><meta property="og:image" content="https://statmode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.31.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.32.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,15 +66,39 @@ never restated by the term.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ridge</span><span class="op">(</span><span class="va">x</span>, label <span class="op">=</span> <span class="st">"ridge"</span>, by <span class="op">=</span> <span class="cn">NULL</span>, standardize <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ridge</span><span class="op">(</span><span class="va">x</span>, label <span class="op">=</span> <span class="st">"ridge"</span>, by <span class="op">=</span> <span class="cn">NULL</span>, standardize <span class="op">=</span> <span class="cn">FALSE</span>, sigma <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">lasso</span><span class="op">(</span><span class="va">x</span>, label <span class="op">=</span> <span class="st">"lasso"</span>, by <span class="op">=</span> <span class="cn">NULL</span>, standardize <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu">lasso</span><span class="op">(</span><span class="va">x</span>, label <span class="op">=</span> <span class="st">"lasso"</span>, by <span class="op">=</span> <span class="cn">NULL</span>, standardize <span class="op">=</span> <span class="cn">FALSE</span>, lambda <span class="op">=</span> <span class="cn">NULL</span>, <span class="va">...</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">enet</span><span class="op">(</span><span class="va">x</span>, label <span class="op">=</span> <span class="st">"enet"</span>, by <span class="op">=</span> <span class="cn">NULL</span>, standardize <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu">enet</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  label <span class="op">=</span> <span class="st">"enet"</span>,</span>
+<span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  standardize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  lambda <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">scad</span><span class="op">(</span><span class="va">x</span>, label <span class="op">=</span> <span class="st">"scad"</span>, by <span class="op">=</span> <span class="cn">NULL</span>, standardize <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu">scad</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  label <span class="op">=</span> <span class="st">"scad"</span>,</span>
+<span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  standardize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  lambda <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  a <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">mcp</span><span class="op">(</span><span class="va">x</span>, label <span class="op">=</span> <span class="st">"mcp"</span>, by <span class="op">=</span> <span class="cn">NULL</span>, standardize <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">mcp</span><span class="op">(</span></span>
+<span>  <span class="va">x</span>,</span>
+<span>  label <span class="op">=</span> <span class="st">"mcp"</span>,</span>
+<span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  standardize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  lambda <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  gamma <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -97,6 +121,22 @@ names.</p></dd>
 <dt id="arg-standardize">standardize<a class="anchor" aria-label="anchor" href="#arg-standardize"></a></dt>
 <dd><p>A single logical: whether to penalize each
 coefficient on the scale of its own column. See the section below.</p></dd>
+
+
+<dt id="arg-sigma-lambda-alpha-a-gamma">sigma, lambda, alpha, a, gamma<a class="anchor" aria-label="anchor" href="#arg-sigma-lambda-alpha-a-gamma"></a></dt>
+<dd><p>The penalty's own hyperparameters,
+each held at the value given and ESTIMATED when left <code>NULL</code>,
+which is the default. Every constructor takes the ones its penalty
+carries and no others: <code>sigma</code> for <code>ridge()</code>,
+<code>lambda</code> for <code>lasso()</code>, <code>lambda</code> and <code>alpha</code>
+for <code>enet()</code>, <code>lambda</code> and <code>a</code> for <code>scad()</code>,
+<code>lambda</code> and <code>gamma</code> for <code>mcp()</code>. The names are the
+penalty's, which are the ones a summary prints.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Not used, and reported: an argument named after another
+penalty's hyperparameter is the mistake this catches.</p></dd>
 
 </dl></div>
     <div class="section level2">

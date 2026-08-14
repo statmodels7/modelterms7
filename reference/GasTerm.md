@@ -12,6 +12,7 @@ predictor. Constructed by
 ``` r
 GasTerm(
   label = character(0),
+  hyper = list(),
   p = integer(0),
   q = integer(0),
   by = NULL,
@@ -28,6 +29,13 @@ GasTerm(
 
   A character string prefixed to the term's coefficient names when
   non-empty.
+
+- hyper:
+
+  The hyperparameters of the term's penalty that the caller HELD, as a
+  named list. Empty, the default, means every one of them is estimated.
+  See
+  [`term_hyper`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
 - p:
 
