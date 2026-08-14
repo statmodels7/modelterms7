@@ -28,7 +28,7 @@ check_hyper(values, penalty, what = "this term")
 
 ## Value
 
-A named list of the held values.
+A named list of the held values, one number each.
 
 ## Details
 
@@ -42,7 +42,15 @@ The bounds are OPEN, as they are everywhere in the toolkit: a ridge at
 \\\lambda = 0\\ is no penalty at all, and an elastic net at \\\alpha =
 0\\ has no kink and is a penalty of another kind.
 
+One argument carries three states, and they are read per hyperparameter
+rather than per term: `NULL` has the path build the grid, one number
+holds the hyperparameter, and several are the grid itself. This returns
+the second of the three;
+[`check_values`](https://statmodels7.github.io/modelterms7/reference/check_values.md)
+returns the third.
+
 ## See also
 
+[`check_values`](https://statmodels7.github.io/modelterms7/reference/check_values.md),
 [`term_hyper`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md),
 [`term_penalties`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)

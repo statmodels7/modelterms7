@@ -27,6 +27,8 @@ structural term takes instead.
   : The Hyperparameters a Term Holds
 - [`term_grid()`](https://statmodels7.github.io/modelterms7/reference/term_grid.md)
   : The Grid a Term Asks For
+- [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md)
+  : The Values a Term Wrote Out
 - [`term_path_min()`](https://statmodels7.github.io/modelterms7/reference/term_path_min.md)
   : How Far Down a Term's Path Reaches
 - [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)

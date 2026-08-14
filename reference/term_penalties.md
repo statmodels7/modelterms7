@@ -82,6 +82,9 @@ term_penalties(term_build(ridge(~x), data.frame(x = rnorm(20))))
 #> [[1]]$n_values
 #> list()
 #> 
+#> [[1]]$values
+#> list()
+#> 
 #> [[1]]$min_ratio
 #> numeric(0)
 #> 

@@ -42,13 +42,14 @@ enet(
 
 - lambda:
 
-  The overall rate, held at the value given and ESTIMATED when left
-  `NULL`. Must lie in \\(0, \infty)\\.
+  The overall rate. One number holds it, several are the grid the path
+  visits as they stand, and `NULL`, the default, has the path build one.
+  Must lie in \\(0, \infty)\\.
 
 - alpha:
 
-  The mixing weight, held at the value given and ESTIMATED when left
-  `NULL`. Must lie in \\(0, 1)\\.
+  The mixing weight, in the same three states and settled independently
+  of `lambda`. Must lie in \\(0, 1)\\.
 
 - n_lambda, n_alpha:
 

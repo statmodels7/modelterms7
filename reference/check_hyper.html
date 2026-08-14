@@ -11,7 +11,7 @@ list with the NULL entries – the ones to be estimated – dropped."><meta prop
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.35.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.40.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,7 +68,7 @@ used only to read the names and the bounds.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A named list of the held values.</p>
+    <p>A named list of the held values, one number each.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -81,10 +81,15 @@ nothing.</p>
 <p>The bounds are OPEN, as they are everywhere in the toolkit: a ridge at
 \(\lambda = 0\) is no penalty at all, and an elastic net at
 \(\alpha = 0\) has no kink and is a penalty of another kind.</p>
+<p>One argument carries three states, and they are read per hyperparameter
+rather than per term: <code>NULL</code> has the path build the grid, one number
+holds the hyperparameter, and several are the grid itself. This returns
+the second of the three; <code><a href="check_values.html">check_values</a></code> returns the third.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_hyper.html">term_hyper</a></code>, <code><a href="term_penalties.html">term_penalties</a></code></p></div>
+    <div class="dont-index"><p><code><a href="check_values.html">check_values</a></code>, <code><a href="term_hyper.html">term_hyper</a></code>,
+  <code><a href="term_penalties.html">term_penalties</a></code></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

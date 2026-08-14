@@ -39,8 +39,9 @@ ridge(
 
 - lambda:
 
-  The precision of the prior, held at the value given and ESTIMATED when
-  left `NULL`, which is the default. Must lie in \\(0, \infty)\\.
+  The precision of the prior. One number holds it and `NULL`, the
+  default, has it ESTIMATED. A ridge has no kink and no path, so several
+  numbers are not a grid it could visit. Must lie in \\(0, \infty)\\.
 
 - n_lambda:
 

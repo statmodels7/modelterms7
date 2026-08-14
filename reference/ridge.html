@@ -9,7 +9,7 @@ shrunk towards zero, none of them set to it."><meta property="og:image" content=
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.35.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.40.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,8 +77,9 @@ coefficient on the scale of its own column. See the section below.</p></dd>
 
 
 <dt id="arg-lambda">lambda<a class="anchor" aria-label="anchor" href="#arg-lambda"></a></dt>
-<dd><p>The precision of the prior, held at the value given and
-ESTIMATED when left <code>NULL</code>, which is the default. Must lie in
+<dd><p>The precision of the prior. One number holds it and
+<code>NULL</code>, the default, has it ESTIMATED. A ridge has no kink and no
+path, so several numbers are not a grid it could visit. Must lie in
 \((0, \infty)\).</p></dd>
 
 

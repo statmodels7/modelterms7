@@ -23,6 +23,7 @@ structural_term(
   label = character(0),
   hyper = list(),
   grid = list(),
+  values = list(),
   min_ratio = numeric(0)
 )
 ```
@@ -45,6 +46,12 @@ structural_term(
   How many values a path visits for each of the term's hyperparameters,
   as a named list. Empty, the default, leaves it to the criterion. See
   [`term_grid`](https://statmodels7.github.io/modelterms7/reference/term_grid.md).
+
+- values:
+
+  The values a path visits, for each hyperparameter the caller wrote
+  out, as a named list. Empty, the default, has the path build them. See
+  [`term_values`](https://statmodels7.github.io/modelterms7/reference/term_values.md).
 
 - min_ratio:
 

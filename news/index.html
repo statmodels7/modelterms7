@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.35.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.40.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,36 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.40.0" id="modelterms7-0400">modelterms7 0.40.0<a class="anchor" aria-label="anchor" href="#modelterms7-0400"></a></h2>
+<ul><li>A multivariate Student t prior now carries standard errors and intervals for every hyperparameter, its family having supplied the third and fourth derivatives in the response. The page no longer names it as an exception: where an interval is absent the cause is the POINT and not a missing derivative.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.39.0" id="modelterms7-0390">modelterms7 0.39.0<a class="anchor" aria-label="anchor" href="#modelterms7-0390"></a></h2>
+<ul><li><p>A location HELD away from zero is no longer rejected. What is unidentified is a FREE location, which competes with the intercept of the equation the term sits in; a held one shrinks the effects towards its value, which is a modelling statement. Nor could the value be policed in general: where the prior is a transformation of another family the parameter is the mean on the ORIGINAL scale, and holding a gamma’s mean at one is what centers its logarithm – at a value zero would put outside the parameter’s own domain. <code>fixed(transformation(gamma2_distrib(), log_transform()), mu = 1)</code> is now a usable effects distribution, and its free-location form is still refused.</p></li>
+<li><p>The page says which hyperparameters carry an interval and which do not, and why: a run that ended where the criterion has no maximum has a curvature of the wrong sign, and a multivariate Student t prior has no exact outer curvature until that family supplies its third and fourth derivatives in the response.</p></li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.38.0" id="modelterms7-0380">modelterms7 0.38.0<a class="anchor" aria-label="anchor" href="#modelterms7-0380"></a></h2>
+<ul><li>A multivariate Student t is admitted as the effects’ distribution, its mixed response-parameter block having been written. The admissibility rule is unchanged and was already a property rather than a list of names, so nothing here had to learn about the family: it carries a location block as long as its dimension and a scale matrix, and it answers the block a marginal criterion reads.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.37.0" id="modelterms7-0370">modelterms7 0.37.0<a class="anchor" aria-label="anchor" href="#modelterms7-0370"></a></h2>
+<ul><li><p><code><a href="../reference/random.html">random()</a></code> says two things and nothing else: the formula, and the distribution of the effects. Which chart the hyperparameters ride, what they are called, how many there are and where the log-density has a kink are properties of that distribution, read off it rather than restated.</p></li>
+<li><p>The hyperparameter of <code>random(~ 1 | g)</code> IS the standard deviation of the effects. It was <code>lambda</code>, a precision, which a reader of a mixed model had to invert and take the root of; a variance component is now reported as one. It remains the same model as a ridge, which a test pins.</p></li>
+<li><p><code>distrib</code> accepts a MULTIVARIATE distribution of the within-group dimension, which is what lets the effects of a group depend on each other: <code>mvgaussian_distrib(2, omega = ar1(2))</code> is a prior whose precision is autoregressive, and the free names then say WHICH matrix the structure is. Correlation is admitted by a PROPERTY – a location block as long as the dimension, and a covariance, precision or scale matrix – so a family added later is covered and the simplex-valued ones are refused without being named. A family with no mixed response-parameter block is rejected at the build rather than at the criterion, where the message would name a generic.</p></li>
+<li><p>A UNIVARIATE distribution over several within-group columns is a TEMPLATE: one copy per column with its own hyperparameters, declared as one <code><a href="../reference/term_penalties.html">term_penalties()</a></code> entry per column over that column’s own stride. An intercept and a slope are quantities of different units, and one shared scale would price them against each other – with a pseudo-Huber it would share the point where the loss stops being quadratic as well. A list of distributions gives one per column explicitly.</p></li>
+<li><p>A prior on the effects is CENTERED: a free location is confounded with the intercept of the equation the term sits in, so it is rejected with the spelling that fixes it rather than fitted along a flat direction.</p></li>
+<li><p><code>precision</code> is removed. A structured precision is the matrix parameter of a multivariate gaussian, so it is written as one – which also says which of the two matrices the structure is. The argument is reported by name rather than swallowed by the dots.</p></li>
+<li><p><code>kinks</code> is removed, and it was not merely redundant. Its default of <code>numeric(0)</code> OVERRODE <code><a href="https://statmodels7.github.io/penalties7/reference/distrib_kinks.html" class="external-link">penalties7::distrib_kinks()</a></code>, so a Laplace prior on a random effect declared no kink where a <code><a href="../reference/lasso.html">lasso()</a></code> term on the same parent declares one at zero – and a fitting layer chooses the scheme by asking, so the block went to the system solved by a curvature the penalty does not have there. <code>NULL</code>, the spelling that would have fixed it, was rejected by the property’s own type.</p></li>
+<li><p><code>correlated</code> beside <code>distrib</code> is an error rather than ignored; the page said it was ignored, which is worse than an error.</p></li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.36.0" id="modelterms7-0360">modelterms7 0.36.0<a class="anchor" aria-label="anchor" href="#modelterms7-0360"></a></h2>
+<ul><li><p>A hyperparameter’s argument carries a third state: several numbers are the grid a path visits, used as they stand. <code>lasso(~x, lambda = c(0.1, 1, 10))</code> sweeps exactly those three, and <code>enet(~x, lambda = seq(0.1, 10, length = 10))</code> writes out the grid of <code>lambda</code> while leaving <code>alpha</code> to be built, the state being settled per hyperparameter and not per term. <code><a href="../reference/term_values.html">term_values()</a></code> reports them, beside <code><a href="../reference/term_hyper.html">term_hyper()</a></code> for the ones held at one number.</p></li>
+<li><p>A written-out grid is still ESTIMATED: what the caller fixed is where to look, not the answer, so it is not reported as held. The value that empties the block does not cap it and <code>min_ratio</code> does not extend it – both construct a grid, and here there is nothing to construct.</p></li>
+<li><p>Several values are rejected wherever the penalty has no kink, rather than taken and ignored: there is no path to visit them on, the hyperparameter being read at the mode by the criterion. The question is put to the penalty at a probe value and not written per constructor, so <code><a href="../reference/ridge.html">ridge()</a></code> and a <code><a href="../reference/random.html">random()</a></code> effect under a Gaussian prior are covered by one line while the same effect under a Laplace prior is not.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.35.0" id="modelterms7-0350">modelterms7 0.35.0<a class="anchor" aria-label="anchor" href="#modelterms7-0350"></a></h2>
 <ul><li><p><code><a href="../reference/ridge.html">ridge()</a></code>, <code><a href="../reference/lasso.html">lasso()</a></code>, <code><a href="../reference/enet.html">enet()</a></code>, <code><a href="../reference/scad.html">scad()</a></code> and <code><a href="../reference/mcp.html">mcp()</a></code> have a page each, carrying that penalty’s own formula, its hyperparameters and the interval each of them may lie in. What the five share – the formula and matrix input, the standardization, the prediction – is documented once on <code>penalized_terms</code>, which they inherit their common arguments from.</p></li>

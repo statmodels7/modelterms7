@@ -42,13 +42,14 @@ scad(
 
 - lambda:
 
-  The scale of the penalty, held at the value given and ESTIMATED when
-  left `NULL`. Must lie in \\(0, \infty)\\.
+  The scale of the penalty. One number holds it, several are the grid
+  the path visits as they stand, and `NULL`, the default, has the path
+  build one. Must lie in \\(0, \infty)\\.
 
 - a:
 
-  The shape, held at the value given and ESTIMATED when left `NULL`.
-  Must lie in \\(2, \infty)\\.
+  The shape, in the same three states and settled independently of
+  `lambda`. Must lie in \\(2, \infty)\\.
 
 - n_lambda, n_a:
 

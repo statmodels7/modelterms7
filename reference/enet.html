@@ -11,7 +11,7 @@ of choosing arbitrarily among them."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.35.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.40.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,13 +82,14 @@ coefficient on the scale of its own column. See the section below.</p></dd>
 
 
 <dt id="arg-lambda">lambda<a class="anchor" aria-label="anchor" href="#arg-lambda"></a></dt>
-<dd><p>The overall rate, held at the value given and ESTIMATED
-when left <code>NULL</code>. Must lie in \((0, \infty)\).</p></dd>
+<dd><p>The overall rate. One number holds it, several are the grid
+the path visits as they stand, and <code>NULL</code>, the default, has the path
+build one. Must lie in \((0, \infty)\).</p></dd>
 
 
 <dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
-<dd><p>The mixing weight, held at the value given and ESTIMATED
-when left <code>NULL</code>. Must lie in \((0, 1)\).</p></dd>
+<dd><p>The mixing weight, in the same three states and settled
+independently of <code>lambda</code>. Must lie in \((0, 1)\).</p></dd>
 
 
 <dt id="arg-n-lambda-n-alpha">n_lambda, n_alpha<a class="anchor" aria-label="anchor" href="#arg-n-lambda-n-alpha"></a></dt>

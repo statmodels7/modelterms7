@@ -15,6 +15,7 @@ RandomTerm(
   label = character(0),
   hyper = list(),
   grid = list(),
+  values = list(),
   min_ratio = numeric(0),
   X = NULL,
   coef_names = character(0),
@@ -22,9 +23,7 @@ RandomTerm(
   penalty = NULL,
   formula = NULL,
   correlated = logical(0),
-  precision = NULL,
-  distrib = NULL,
-  kinks = integer(0)
+  distrib = NULL
 )
 ```
 
@@ -46,6 +45,12 @@ RandomTerm(
   How many values a path visits for each of the term's hyperparameters,
   as a named list. Empty, the default, leaves it to the criterion. See
   [`term_grid`](https://statmodels7.github.io/modelterms7/reference/term_grid.md).
+
+- values:
+
+  The values a path visits, for each hyperparameter the caller wrote
+  out, as a named list. Empty, the default, has the path build them. See
+  [`term_values`](https://statmodels7.github.io/modelterms7/reference/term_values.md).
 
 - min_ratio:
 
@@ -82,17 +87,9 @@ RandomTerm(
   Logical; whether the default Gaussian lets the within-group effects
   correlate.
 
-- precision:
-
-  A parameters7 matrix parameter for the per-group precision, or `NULL`.
-
 - distrib:
 
-  A univariate distributions7 object for the effects, or `NULL`.
-
-- kinks:
-
-  The declared kink set of `distrib`'s log-density.
+  The effects' distribution, or `NULL` for the default Gaussian.
 
 ## Value
 

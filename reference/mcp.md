@@ -41,13 +41,14 @@ mcp(
 
 - lambda:
 
-  The scale of the penalty, held at the value given and ESTIMATED when
-  left `NULL`. Must lie in \\(0, \infty)\\.
+  The scale of the penalty. One number holds it, several are the grid
+  the path visits as they stand, and `NULL`, the default, has the path
+  build one. Must lie in \\(0, \infty)\\.
 
 - gamma:
 
-  The shape, held at the value given and ESTIMATED when left `NULL`.
-  Must lie in \\(1, \infty)\\.
+  The shape, in the same three states and settled independently of
+  `lambda`. Must lie in \\(1, \infty)\\.
 
 - n_lambda, n_gamma:
 

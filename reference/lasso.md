@@ -40,8 +40,9 @@ lasso(
 
 - lambda:
 
-  The rate of the prior, held at the value given and ESTIMATED when left
-  `NULL`, which is the default. Must lie in \\(0, \infty)\\.
+  The rate of the prior. One number holds it, several are the grid the
+  path visits as they stand, and `NULL`, the default, has the path build
+  one. Must lie in \\(0, \infty)\\.
 
 - n_lambda:
 

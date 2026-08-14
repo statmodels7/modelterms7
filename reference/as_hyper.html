@@ -9,7 +9,7 @@ only what can be checked before the penalty exists."><meta property="og:image" c
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.35.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.40.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,6 +68,10 @@ given – a ridge, a structured prior over a <span class="pkg">parameters7</span
 <span class="pkg">distributions7</span> family used coordinatewise – so which names there are
 is not known until the term is built. The shape is checked here and the
 names against the penalty by <code><a href="check_hyper.html">check_hyper</a></code> at that point.</p>
+<p>A vector entry is a written-out grid rather than a held value, exactly as
+it is in the constructors that name their hyperparameters, so the length
+is not checked here either; <code><a href="dot-hyper_parts.html">.hyper_parts</a></code> splits the two once
+the penalty exists.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
