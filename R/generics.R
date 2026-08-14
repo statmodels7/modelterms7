@@ -202,7 +202,8 @@ S7::method(term_penalties, model_term) <- function(term, ...) {
   pen <- tryCatch(term_penalty(term), error = function(e) NULL)
   if (is.null(pen)) return(list())
   list(list(name = "", index = seq_len(term_npar(term)), penalty = pen,
-            fixed = term@hyper))
+            fixed = term@hyper, n_values = term@grid,
+            min_ratio = term@min_ratio))
 }
 
 #' @title Number of Parameters of a Built Term

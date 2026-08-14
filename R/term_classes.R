@@ -18,6 +18,13 @@
 #' @param hyper The hyperparameters of the term's penalty that the
 #'   caller HELD, as a named list. Empty, the default, means every one
 #'   of them is estimated. See \code{\link{term_hyper}}.
+#' @param grid How many values a path visits for each of the term's
+#'   hyperparameters, as a named list. Empty, the default, leaves it to the
+#'   criterion. See \code{\link{term_grid}}.
+#' @param min_ratio How far down the path over the size of the kink
+#'   reaches, as a fraction of the value that empties the block, or
+#'   \code{numeric(0)} for the criterion's own. See
+#'   \code{\link{term_path_min}}.
 #'
 #' @return An object inheriting from class \code{model_term}.
 #'
@@ -36,7 +43,21 @@ model_term <- S7::new_class(
     # which are and which are not is a property of the term, since the term
     # is where the penalty is named, and not of whatever criterion the fit
     # happens to run. See term_hyper().
-    hyper = S7::new_property(S7::class_list, default = quote(list()))
+    hyper = S7::new_property(S7::class_list, default = quote(list())),
+    # How many values a PATH visits for each of them. A hyperparameter with
+    # a kink is chosen by sweeping its own values, and how finely is a
+    # property of the term for the same reason as which ones are estimated:
+    # a block of four columns and one of four hundred want different grids,
+    # and the criterion does not know which it is looking at.
+    grid = S7::new_property(S7::class_list, default = quote(list())),
+    # How far DOWN the path over the size of the kink reaches, as a
+    # fraction of the value that empties the block. It belongs beside the
+    # grid size and for the same reason, and it is one number rather than
+    # one per hyperparameter because only that path uses it: a bounded
+    # hyperparameter is swept over its own interval and a shape over a
+    # geometric grid above its lower bound, where a ratio means nothing.
+    min_ratio = S7::new_property(S7::class_numeric,
+                                 default = quote(numeric(0)))
   )
 )
 
@@ -56,6 +77,13 @@ model_term <- S7::new_class(
 #' @param hyper The hyperparameters of the term's penalty that the
 #'   caller HELD, as a named list. Empty, the default, means every one
 #'   of them is estimated. See \code{\link{term_hyper}}.
+#' @param grid How many values a path visits for each of the term's
+#'   hyperparameters, as a named list. Empty, the default, leaves it to the
+#'   criterion. See \code{\link{term_grid}}.
+#' @param min_ratio How far down the path over the size of the kink
+#'   reaches, as a fraction of the value that empties the block, or
+#'   \code{numeric(0)} for the criterion's own. See
+#'   \code{\link{term_path_min}}.
 #' @param X The design block, filled by \code{\link{term_build}}.
 #' @param coef_names The coefficient names, filled by
 #'   \code{\link{term_build}}.
@@ -99,6 +127,13 @@ additive_term <- S7::new_class(
 #' @param hyper The hyperparameters of the term's penalty that the
 #'   caller HELD, as a named list. Empty, the default, means every one
 #'   of them is estimated. See \code{\link{term_hyper}}.
+#' @param grid How many values a path visits for each of the term's
+#'   hyperparameters, as a named list. Empty, the default, leaves it to the
+#'   criterion. See \code{\link{term_grid}}.
+#' @param min_ratio How far down the path over the size of the kink
+#'   reaches, as a fraction of the value that empties the block, or
+#'   \code{numeric(0)} for the criterion's own. See
+#'   \code{\link{term_path_min}}.
 #'
 #' @return An object inheriting from class \code{structural_term}.
 #'

@@ -1,3 +1,28 @@
+# modelterms7 0.35.0
+
+* `ridge()`, `lasso()`, `enet()`, `scad()` and `mcp()` have a page each,
+  carrying that penalty's own formula, its hyperparameters and the interval
+  each of them may lie in. What the five share -- the formula and matrix
+  input, the standardization, the prediction -- is documented once on
+  `penalized_terms`, which they inherit their common arguments from.
+
+* Each takes the SIZE OF THE GRID for each of its hyperparameters:
+  `lasso(~x, n_lambda = 50)`, `enet(~x, n_lambda = 40, n_alpha = 12)`,
+  `scad(~x, n_a = 6)`, `mcp(~x, n_gamma = 7)`. How finely a hyperparameter
+  is swept belongs to the term for the same reason as whether it is swept
+  at all: a penalized block of four columns and one of four hundred want
+  different grids, and a criterion applies to every term of the model at
+  once and cannot know which it is looking at. `NULL`, the default, leaves
+  it to the criterion. `term_grid()` reports it, and the value travels with
+  the penalty's entry as the held values do.
+
+* And `min_ratio`, how far down the path reaches as a fraction of the kink
+  that empties the block. One number per term rather than one per
+  hyperparameter, because only the sweep by kink size uses it: a bounded
+  hyperparameter is swept over its own interval and a shape that does not
+  move the kink over a geometric grid above its lower bound, where a
+  fraction of an emptying value means nothing. `term_path_min()` reports it.
+
 # modelterms7 0.33.0
 
 * `ridge()` takes `lambda`, the PRECISION of the Gaussian prior, where it

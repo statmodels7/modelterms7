@@ -79,3 +79,40 @@ test_that("a held value travels with the entry, through a structural term", {
   ent <- term_penalties(b)
   expect_equal(ent[[1L]]$fixed$lambda, 0.7)
 })
+
+test_that("a term says how fine its own grid is, per hyperparameter", {
+  # HOW FINELY is the term's answer for the same reason as WHICH: a block of
+  # four columns and one of four hundred want different grids, and the
+  # criterion applies to every term at once.
+  expect_identical(term_grid(lasso(~x)), list())
+  expect_equal(term_grid(lasso(~x, n_lambda = 50))[[1L]], list(lambda = 50L))
+  expect_equal(term_grid(enet(~x, n_lambda = 40, n_alpha = 12))[[1L]],
+               list(lambda = 40L, alpha = 12L))
+  expect_equal(term_grid(scad(~x, n_a = 6))[[1L]], list(a = 6L))
+  expect_equal(term_grid(mcp(~x, n_gamma = 7))[[1L]], list(gamma = 7L))
+
+  # a grid on a hyperparameter the penalty does not carry, and a grid that
+  # is not a grid
+  expect_error(lasso(~x, n_alpha = 5), "no argument 'n_alpha'")
+  expect_error(mcp(~x, n_gamma = 1), "at least 2")
+  expect_error(mcp(~x, n_gamma = 2.5), "whole number")
+
+  # and it travels with the entry, as the held values do
+  dd <- data.frame(x = stats::rnorm(20), z = stats::rnorm(20))
+  b <- term_build(enet(~ x + z, n_lambda = 9), dd)
+  expect_equal(term_penalties(b)[[1L]]$n_values, list(lambda = 9L))
+})
+
+test_that("a term says how far down its own path reaches", {
+  expect_identical(term_path_min(lasso(~x)), list())
+  expect_equal(term_path_min(lasso(~x, min_ratio = 1e-6))[[1L]], 1e-6)
+  # one number per term and not one per hyperparameter: only the sweep by
+  # kink size uses it
+  expect_error(lasso(~x, min_ratio = 1), "in (0, 1)", fixed = TRUE)
+  expect_error(lasso(~x, min_ratio = 0), "in (0, 1)", fixed = TRUE)
+  expect_error(lasso(~x, min_ratio = c(0.1, 0.2)), "single number")
+  # and it travels with the entry
+  dd <- data.frame(x = stats::rnorm(20), z = stats::rnorm(20))
+  b <- term_build(scad(~ x + z, min_ratio = 1e-3), dd)
+  expect_equal(term_penalties(b)[[1L]]$min_ratio, 1e-3)
+})

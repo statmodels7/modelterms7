@@ -7,6 +7,8 @@
 PenalizedTerm(
   label = character(0),
   hyper = list(),
+  grid = list(),
+  min_ratio = numeric(0),
   X = NULL,
   coef_names = character(0),
   blueprint = list(),
@@ -24,6 +26,15 @@ non-empty.}
 \item{hyper}{The hyperparameters of the term's penalty that the
 caller HELD, as a named list. Empty, the default, means every one
 of them is estimated. See \code{\link{term_hyper}}.}
+
+\item{grid}{How many values a path visits for each of the term's
+hyperparameters, as a named list. Empty, the default, leaves it to the
+criterion. See \code{\link{term_grid}}.}
+
+\item{min_ratio}{How far down the path over the size of the kink
+reaches, as a fraction of the value that empties the block, or
+\code{numeric(0)} for the criterion's own. See
+\code{\link{term_path_min}}.}
 
 \item{X}{The design block, filled by \code{\link{term_build}}.}
 

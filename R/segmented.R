@@ -984,7 +984,8 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
         # the pooled entry is ONE penalty over the union, so it holds what
         # the shared sub-term holds -- they are the same declaration read
         # once per coefficient of the kind
-        fixed = ent[[i]]$fixed)
+        fixed = ent[[i]]$fixed, n_values = ent[[i]]$n_values,
+        min_ratio = ent[[i]]$min_ratio)
     }
     pooled <- c(pooled, ps)
   }
@@ -992,7 +993,9 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
     for (e in dev[[p]]$pens) {
       out[[length(out) + 1L]] <- list(name = paste0(p, "::", e$name),
                                       index = index[[p]][e$index],
-                                      penalty = e$penalty, fixed = e$fixed)
+                                      penalty = e$penalty, fixed = e$fixed,
+                                      n_values = e$n_values,
+                                      min_ratio = e$min_ratio)
     }
   }
   out

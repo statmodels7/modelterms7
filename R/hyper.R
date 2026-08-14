@@ -221,3 +221,174 @@ as_hyper <- function(x, what = "this term") {
   }
   x
 }
+
+
+#' Check a Term's Grid Sizes Against Its Penalty
+#'
+#' @description
+#' Validates the number of values the constructor was given per
+#' hyperparameter, and returns them as a named list with the \code{NULL}
+#' entries dropped.
+#'
+#' @details
+#' How finely a hyperparameter is swept belongs to the term for the same
+#' reason as whether it is swept at all: a penalized block of four columns
+#' and one of four hundred want different grids, and a criterion applies to
+#' every term of the model at once and cannot know which it is looking at.
+#' Where a term says nothing the criterion's own default is used.
+#'
+#' Two values is the smallest grid that is a grid. There is no upper limit
+#' beyond the caller's patience: each point of a path is a whole fit, so the
+#' cost is linear in the number asked for.
+#'
+#' @param values A named list of the constructor's arguments, \code{NULL}
+#'   where the criterion's default is wanted.
+#' @param penalty A \pkg{penalties7} penalty, or a function returning one,
+#'   used only to read the names.
+#' @param what The constructor's name, for the message.
+#'
+#' @return A named list of grid sizes.
+#'
+#' @seealso \code{\link{check_hyper}}, \code{\link{term_grid}}
+#'
+#' @keywords internal
+check_grid <- function(values, penalty, what = "this term") {
+  values <- values[!vapply(values, is.null, logical(1))]
+  if (!length(values)) return(list())
+  pen <- if (is.function(penalty)) {
+    tryCatch(penalty(1L), error = function(e) NULL)
+  } else {
+    penalty
+  }
+  for (nm in names(values)) {
+    if (!is.null(pen) && !nm %in% pen@params) {
+      stop(sprintf(paste0("'%s' has no hyperparameter '%s' to put a grid",
+                          " on. It carries: %s."),
+                   what, nm, paste(pen@params, collapse = ", ")),
+           call. = FALSE)
+    }
+    v <- values[[nm]]
+    if (!is.numeric(v) || length(v) != 1L || !is.finite(v) ||
+        v != round(v) || v < 2) {
+      stop(sprintf(paste0("the grid for '%s' in '%s' must be a whole number",
+                          " of at least 2, or NULL."), nm, what),
+           call. = FALSE)
+    }
+    values[[nm]] <- as.integer(v)
+  }
+  as.list(values)
+}
+
+
+#' @title The Grid a Term Asks For
+#'
+#' @description
+#' How many values a path visits for each of the term's hyperparameters.
+#' Those a term does not name are swept at the criterion's own default.
+#'
+#' @param term A term, built or not.
+#' @param ... Passed to methods.
+#'
+#' @return A named list, one entry per penalty of the term, each a named
+#'   list of grid sizes. Empty where the term asks for nothing.
+#'
+#' @examples
+#' term_grid(lasso(~x, n_lambda = 50))
+#' term_grid(lasso(~x))
+#'
+#' @seealso \code{\link{term_hyper}}, \code{\link{term_penalties}}
+#' @export
+term_grid <- S7::new_generic("term_grid", "term",
+  function(term, ...) S7::S7_dispatch())
+
+S7::method(term_grid, model_term) <- function(term, ...) {
+  ent <- tryCatch(term_penalties(term), error = function(e) list())
+  if (length(ent)) {
+    out <- list()
+    for (e in ent) {
+      g <- e$n_values
+      if (is.null(g) || !length(g)) next
+      out[[if (is.null(e$name)) "" else e$name]] <- g
+    }
+    if (length(out)) return(out)
+  }
+  g <- term@grid
+  if (!length(g)) return(list())
+  stats::setNames(list(g), "")
+}
+
+
+#' Check a Term's Path Depth
+#'
+#' @description
+#' Validates the fraction of the emptying value a path descends to.
+#'
+#' @details
+#' One number per term rather than one per hyperparameter, because only the
+#' path over the SIZE OF THE KINK uses it: a bounded hyperparameter is swept
+#' over its own interval and a shape that does not move the kink over a
+#' geometric grid above its lower bound, and a fraction of an emptying value
+#' means nothing in either.
+#'
+#' @param v What the constructor was given, or \code{NULL}.
+#' @param what The term's label, for the message.
+#'
+#' @return A numeric vector of length one, or of length zero.
+#'
+#' @seealso \code{\link{check_grid}}, \code{\link{term_path_min}}
+#'
+#' @keywords internal
+check_min_ratio <- function(v, what = "this term") {
+  if (is.null(v)) return(numeric(0))
+  if (!is.numeric(v) || length(v) != 1L || !is.finite(v) || v <= 0 || v >= 1) {
+    stop(sprintf(paste0("'min_ratio' in '%s' must be a single number in",
+                        " (0, 1), or NULL."), what), call. = FALSE)
+  }
+  as.numeric(v)
+}
+
+
+#' @title How Far Down a Term's Path Reaches
+#'
+#' @description
+#' The fraction of the emptying value the path descends to, where the term
+#' named one. A term that names none is swept to the criterion's own depth.
+#'
+#' @details
+#' The path runs from the kink that leaves every coefficient of the block at
+#' zero down to \code{min_ratio} of it, so a smaller number reaches a denser
+#' fit and a larger one stops sooner. It belongs to the term for the same
+#' reason as the number of values: how far the useful range of a
+#' hyperparameter extends is a property of the block, and a criterion
+#' applies to every term of the model at once.
+#'
+#' @param term A term, built or not.
+#' @param ... Passed to methods.
+#'
+#' @return A named list, one entry per penalty of the term, each a single
+#'   number. Empty where the term names none.
+#'
+#' @examples
+#' term_path_min(lasso(~x, min_ratio = 1e-6))
+#' term_path_min(lasso(~x))
+#'
+#' @seealso \code{\link{term_grid}}, \code{\link{term_hyper}}
+#' @export
+term_path_min <- S7::new_generic("term_path_min", "term",
+  function(term, ...) S7::S7_dispatch())
+
+S7::method(term_path_min, model_term) <- function(term, ...) {
+  ent <- tryCatch(term_penalties(term), error = function(e) list())
+  if (length(ent)) {
+    out <- list()
+    for (e in ent) {
+      m <- e$min_ratio
+      if (is.null(m) || !length(m)) next
+      out[[if (is.null(e$name)) "" else e$name]] <- as.numeric(m)
+    }
+    if (length(out)) return(out)
+  }
+  m <- term@min_ratio
+  if (!length(m)) return(list())
+  stats::setNames(list(as.numeric(m)), "")
+}

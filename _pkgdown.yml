@@ -32,6 +32,8 @@ reference:
   - term_penalty
   - term_penalties
   - term_hyper
+  - term_grid
+  - term_path_min
   - term_npar
   - term_coef_start
   - term_coef_names
@@ -52,6 +54,11 @@ reference:
     over a matrix column of the data.
   contents:
   - ridge
+  - lasso
+  - enet
+  - scad
+  - mcp
+  - penalized_terms
   - PenalizedTerm
 - title: The random-effect term
   desc: >

@@ -42,7 +42,8 @@ PenalizedTerm <- S7::new_class(
 )
 
 .penalized_spec <- function(x, expr, label, by, standardize, factory,
-                            hyper = list(), extra = list()) {
+                            hyper = list(), extra = list(), grid = list(),
+                            min_ratio = NULL) {
   # An argument named after ANOTHER penalty's hyperparameter is the mistake
   # this catches: `mcp(x, a = 3)` writes SCAD's shape on an MCP, whose own
   # is gamma, and reaches nothing. R would report it as an unused argument,
@@ -97,6 +98,8 @@ PenalizedTerm <- S7::new_class(
   PenalizedTerm(label = label, input = x, input_expr = expr,
                 factory = factory, standardize = standardize,
                 hyper = check_hyper(hyper, factory, label),
+                grid = check_grid(grid, factory, label),
+                min_ratio = check_min_ratio(min_ratio, label),
                 X = NULL, coef_names = character(0),
                 blueprint = list(), penalty = NULL)
 }
@@ -120,17 +123,16 @@ PenalizedTerm <- S7::new_class(
   s
 }
 
-#' Penalized Parametric Terms
+#' What the Penalized Terms Share
 #'
 #' @description
-#' The four classical penalized blocks as model terms: ridge, lasso, SCAD
-#' and MCP. Each takes its block as a one-sided formula or as a numeric
-#' matrix, and attaches the corresponding \pkg{penalties7} object to the
-#' block's coefficients at build time -- \code{\link[penalties7]{ridge_penalty}},
-#' \code{\link[penalties7]{lasso_penalty}},
-#' \code{\link[penalties7]{elasticnet_penalty}},
-#' \code{\link[penalties7]{scad_penalty}},
-#' \code{\link[penalties7]{mcp_penalty}} -- so the hyperparameters, their
+#' The input handling, the standardization and the prediction of the five
+#' penalized terms, documented once. Each of them -- \code{\link{ridge}},
+#' \code{\link{lasso}}, \code{\link{enet}}, \code{\link{scad}}, \code{\link{mcp}} -- has a page
+#' of its own carrying its formula, its hyperparameters and where those may
+#' lie. Each takes its block as a one-sided formula or as a numeric
+#' matrix and attaches the corresponding \pkg{penalties7} object to the
+#' block's coefficients at build time, so the hyperparameters, their
 #' bounds and links, the derivatives and the kink set are the penalty's,
 #' never restated by the term.
 #'
@@ -202,54 +204,14 @@ PenalizedTerm <- S7::new_class(
 #' with a meaning of its own; weighting it by the size of the groups would
 #' change the model rather than its parametrization.
 #'
-#' @section The penalties:
-#' Writing \eqn{\beta} for the block's coefficients and \eqn{p} for their
-#' number, the five attach
-#'
-#' \deqn{\rho_{\mathrm{ridge}}(\beta) =
-#'   \frac{\lambda\lVert\beta\rVert_2^2}{2}
-#'   - \frac{p}{2}\log\!\left(\frac{\lambda}{2\pi}\right),}
-#'
-#' \deqn{\rho_{\mathrm{lasso}}(\beta) = \lambda\lVert\beta\rVert_1
-#'   - p\log\!\left(\frac{\lambda}{2}\right),}
-#'
-#' \deqn{\rho_{\mathrm{enet}}(\beta) = \lambda\left\{
-#'   \alpha\lVert\beta\rVert_1
-#'   + \frac{1-\alpha}{2}\lVert\beta\rVert_2^2\right\}
-#'   + p\log Z(\lambda, \alpha),}
-#'
-#' and the two non-convex ones, which are defined by their derivative
-#' rather than by their value,
-#'
-#' \deqn{\rho'_{\mathrm{scad}}(t) = \lambda\min\!\left\{1,
-#'   \frac{(a\lambda - t)_+}{(a-1)\lambda}\right\},
-#'   \qquad
-#'   \rho'_{\mathrm{mcp}}(t) = \left(\lambda - \frac{t}{\gamma}\right)_+ ,}
-#'
-#' for \eqn{t = \lvert\beta_j\rvert \ge 0}, summed over the coefficients.
-#' The first three are negative log-priors and keep their normalizing
-#' constants, which is what makes their hyperparameters estimable by a
-#' marginal criterion; the last two are improper by construction and have
-#' none. All five, and the arithmetic behind them, belong to
-#' \pkg{penalties7}: the term attaches the object and restates nothing.
-#'
 #' @param x A one-sided formula or a numeric matrix.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names.
 #' @param by Reserved for a later release; must be \code{NULL}.
 #' @param standardize A single logical: whether to penalize each
 #'   coefficient on the scale of its own column. See the section below.
-#' @param lambda,alpha,a,gamma The penalty's own hyperparameters,
-#'   each held at the value given and ESTIMATED when left \code{NULL},
-#'   which is the default. Every constructor takes the ones its penalty
-#'   carries and no others: \code{lambda} for \code{ridge()} and for
-#'   \code{lasso()}, \code{lambda} and \code{alpha}
-#'   for \code{enet()}, \code{lambda} and \code{a} for \code{scad()},
-#'   \code{lambda} and \code{gamma} for \code{mcp()}. The names are the
-#'   penalty's, which are the ones a summary prints.
 #' @param ... Not used, and reported: an argument named after another
 #'   penalty's hyperparameter is the mistake this catches.
-#'
 #' @return An object of class \code{\link{PenalizedTerm}} (a
 #'   specification; see \code{\link{term_build}}).
 #'
@@ -265,59 +227,9 @@ PenalizedTerm <- S7::new_class(
 #' term_penalty(term_build(lasso(~ x1 + x3, standardize = TRUE), dd))@map
 #'
 #' @seealso \code{\link{linpar}}, \code{\link{s}}, \code{\link{random}}, \code{\link{term_penalty}}, \code{\link{edf}}
-#' @export
-ridge <- function(x, label = "ridge", by = NULL, standardize = FALSE,
-                  lambda = NULL, ...) {
-  .penalized_spec(x, substitute(x), label, by, standardize,
-                  function(k, map = NULL) penalties7::ridge_penalty(map = map,
-                                                        n_coef = k),
-                  list(lambda = lambda),
-                  list(...))
-}
-
-#' @rdname ridge
-#' @export
-lasso <- function(x, label = "lasso", by = NULL, standardize = FALSE,
-                   lambda = NULL, ...) {
-  .penalized_spec(x, substitute(x), label, by, standardize,
-                  function(k, map = NULL) penalties7::lasso_penalty(map = map,
-                                                        n_coef = k),
-                  list(lambda = lambda),
-                  list(...))
-}
-
-#' @rdname ridge
-#' @export
-enet <- function(x, label = "enet", by = NULL, standardize = FALSE,
-                  lambda = NULL, alpha = NULL, ...) {
-  .penalized_spec(x, substitute(x), label, by, standardize,
-                  function(k, map = NULL) penalties7::elasticnet_penalty(map = map,
-                                                        n_coef = k),
-                  list(lambda = lambda, alpha = alpha),
-                  list(...))
-}
-
-#' @rdname ridge
-#' @export
-scad <- function(x, label = "scad", by = NULL, standardize = FALSE,
-                  lambda = NULL, a = NULL, ...) {
-  .penalized_spec(x, substitute(x), label, by, standardize,
-                  function(k, map = NULL) penalties7::scad_penalty(map = map,
-                                                        n_coef = k),
-                  list(lambda = lambda, a = a),
-                  list(...))
-}
-
-#' @rdname ridge
-#' @export
-mcp <- function(x, label = "mcp", by = NULL, standardize = FALSE,
-                 lambda = NULL, gamma = NULL, ...) {
-  .penalized_spec(x, substitute(x), label, by, standardize,
-                  function(k, map = NULL) penalties7::mcp_penalty(map = map,
-                                                        n_coef = k),
-                  list(lambda = lambda, gamma = gamma),
-                  list(...))
-}
+#' @name penalized_terms
+#' @keywords internal
+NULL
 
 S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
   if (inherits(term@input, "formula")) {
