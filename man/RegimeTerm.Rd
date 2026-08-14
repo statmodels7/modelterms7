@@ -8,6 +8,7 @@ RegimeTerm(
   label = character(0),
   hyper = list(),
   grid = list(),
+  values = list(),
   min_ratio = numeric(0),
   k = integer(0),
   by = NULL,
@@ -27,6 +28,10 @@ of them is estimated. See \code{\link{term_hyper}}.}
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list. Empty, the default, leaves it to the
 criterion. See \code{\link{term_grid}}.}
+
+\item{values}{The values a path visits, for each hyperparameter the
+caller wrote out, as a named list. Empty, the default, has the path
+build them. See \code{\link{term_values}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink
 reaches, as a fraction of the value that empties the block, or

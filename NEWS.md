@@ -1,3 +1,24 @@
+# modelterms7 0.36.0
+
+* A hyperparameter's argument carries a third state: several numbers are the
+  grid a path visits, used as they stand. `lasso(~x, lambda = c(0.1, 1, 10))`
+  sweeps exactly those three, and `enet(~x, lambda = seq(0.1, 10, length = 10))`
+  writes out the grid of `lambda` while leaving `alpha` to be built, the state
+  being settled per hyperparameter and not per term. `term_values()` reports
+  them, beside `term_hyper()` for the ones held at one number.
+
+* A written-out grid is still ESTIMATED: what the caller fixed is where to
+  look, not the answer, so it is not reported as held. The value that empties
+  the block does not cap it and `min_ratio` does not extend it -- both
+  construct a grid, and here there is nothing to construct.
+
+* Several values are rejected wherever the penalty has no kink, rather than
+  taken and ignored: there is no path to visit them on, the hyperparameter
+  being read at the mode by the criterion. The question is put to the penalty
+  at a probe value and not written per constructor, so `ridge()` and a
+  `random()` effect under a Gaussian prior are covered by one line while the
+  same effect under a Laplace prior is not.
+
 # modelterms7 0.35.0
 
 * `ridge()`, `lasso()`, `enet()`, `scad()` and `mcp()` have a page each,

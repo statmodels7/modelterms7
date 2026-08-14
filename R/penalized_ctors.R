@@ -30,8 +30,9 @@ NULL
 #' \strong{Hyperparameter.} \code{lambda}, admissible on \eqn{(0, \infty)}.
 #'
 #' @inheritParams penalized_terms
-#' @param lambda The precision of the prior, held at the value given and
-#'   ESTIMATED when left \code{NULL}, which is the default. Must lie in
+#' @param lambda The precision of the prior. One number holds it and
+#'   \code{NULL}, the default, has it ESTIMATED. A ridge has no kink and no
+#'   path, so several numbers are not a grid it could visit. Must lie in
 #'   \eqn{(0, \infty)}.
 #' @param n_lambda Unused by this term: a ridge has no kink and its
 #'   hyperparameter is estimated by a criterion rather than swept over a
@@ -90,9 +91,9 @@ ridge <- function(x, label = "ridge", by = NULL, standardize = FALSE,
 #' down to \code{min_ratio} of it.
 #'
 #' @inheritParams penalized_terms
-#' @param lambda The rate of the prior, held at the value given and
-#'   ESTIMATED when left \code{NULL}, which is the default. Must lie in
-#'   \eqn{(0, \infty)}.
+#' @param lambda The rate of the prior. One number holds it, several are the
+#'   grid the path visits as they stand, and \code{NULL}, the default, has the
+#'   path build one. Must lie in \eqn{(0, \infty)}.
 #' @param n_lambda How many values the path visits, at least 2. \code{NULL},
 #'   the default, leaves it to the criterion.
 #'
@@ -159,10 +160,11 @@ lasso <- function(x, label = "lasso", by = NULL, standardize = FALSE,
 #' where a product grid would be exponential in it.
 #'
 #' @inheritParams penalized_terms
-#' @param lambda The overall rate, held at the value given and ESTIMATED
-#'   when left \code{NULL}. Must lie in \eqn{(0, \infty)}.
-#' @param alpha The mixing weight, held at the value given and ESTIMATED
-#'   when left \code{NULL}. Must lie in \eqn{(0, 1)}.
+#' @param lambda The overall rate. One number holds it, several are the grid
+#'   the path visits as they stand, and \code{NULL}, the default, has the path
+#'   build one. Must lie in \eqn{(0, \infty)}.
+#' @param alpha The mixing weight, in the same three states and settled
+#'   independently of \code{lambda}. Must lie in \eqn{(0, 1)}.
 #' @param n_lambda,n_alpha How many values the path visits for each, at
 #'   least 2. \code{NULL}, the default, leaves it to the criterion.
 #'
@@ -228,10 +230,11 @@ enet <- function(x, label = "enet", by = NULL, standardize = FALSE,
 #' \pkg{ncvreg} does.
 #'
 #' @inheritParams penalized_terms
-#' @param lambda The scale of the penalty, held at the value given and
-#'   ESTIMATED when left \code{NULL}. Must lie in \eqn{(0, \infty)}.
-#' @param a The shape, held at the value given and ESTIMATED when left
-#'   \code{NULL}. Must lie in \eqn{(2, \infty)}.
+#' @param lambda The scale of the penalty. One number holds it, several are
+#'   the grid the path visits as they stand, and \code{NULL}, the default, has
+#'   the path build one. Must lie in \eqn{(0, \infty)}.
+#' @param a The shape, in the same three states and settled independently of
+#'   \code{lambda}. Must lie in \eqn{(2, \infty)}.
 #' @param n_lambda,n_a How many values the path visits for each, at least 2.
 #'   \code{NULL}, the default, leaves it to the criterion.
 #'
@@ -288,10 +291,11 @@ scad <- function(x, label = "scad", by = NULL, standardize = FALSE,
 #' grid above that bound. The literature's value is \eqn{\gamma = 3}.
 #'
 #' @inheritParams penalized_terms
-#' @param lambda The scale of the penalty, held at the value given and
-#'   ESTIMATED when left \code{NULL}. Must lie in \eqn{(0, \infty)}.
-#' @param gamma The shape, held at the value given and ESTIMATED when left
-#'   \code{NULL}. Must lie in \eqn{(1, \infty)}.
+#' @param lambda The scale of the penalty. One number holds it, several are
+#'   the grid the path visits as they stand, and \code{NULL}, the default, has
+#'   the path build one. Must lie in \eqn{(0, \infty)}.
+#' @param gamma The shape, in the same three states and settled independently
+#'   of \code{lambda}. Must lie in \eqn{(1, \infty)}.
 #' @param n_lambda,n_gamma How many values the path visits for each, at
 #'   least 2. \code{NULL}, the default, leaves it to the criterion.
 #'

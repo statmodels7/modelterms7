@@ -27,48 +27,114 @@ NULL
 #' \eqn{\lambda = 0} is no penalty at all, and an elastic net at
 #' \eqn{\alpha = 0} has no kink and is a penalty of another kind.
 #'
+#' One argument carries three states, and they are read per hyperparameter
+#' rather than per term: \code{NULL} has the path build the grid, one number
+#' holds the hyperparameter, and several are the grid itself. This returns
+#' the second of the three; \code{\link{check_values}} returns the third.
+#'
 #' @param values A named list of the constructor's arguments, \code{NULL}
 #'   where the hyperparameter is to be estimated.
 #' @param penalty A \pkg{penalties7} penalty, or a function returning one,
 #'   used only to read the names and the bounds.
 #' @param what The constructor's name, for the message.
 #'
-#' @return A named list of the held values.
+#' @return A named list of the held values, one number each.
 #'
-#' @seealso \code{\link{term_hyper}}, \code{\link{term_penalties}}
+#' @seealso \code{\link{check_values}}, \code{\link{term_hyper}},
+#'   \code{\link{term_penalties}}
 #'
 #' @keywords internal
 check_hyper <- function(values, penalty, what = "this term") {
+  .hyper_parts(values, penalty, what)$hyper
+}
+
+
+#' Check a Term's Written-Out Grids Against Its Penalty
+#'
+#' @description
+#' Validates the hyperparameter values a constructor was given as a vector,
+#' which a path visits as they stand.
+#'
+#' @details
+#' Several values are neither a held hyperparameter nor a request to build a
+#' grid: they are the grid. Each is checked against the penalty's bounds as a
+#' held value would be, and nothing else is applied to them -- the value that
+#' empties the block does not cap them and the depth of the path does not
+#' reach them, the caller having said which values to visit.
+#'
+#' They are sorted, because a path is walked from the emptiest fit towards the
+#' fullest and its warm starts follow that order, and duplicates are dropped.
+#' Which end of the order is the sparse one depends on the penalty, so the
+#' direction is settled where the path is built and not here.
+#'
+#' @inheritParams check_hyper
+#'
+#' @return A named list of numeric vectors, one entry per hyperparameter the
+#'   caller wrote out.
+#'
+#' @seealso \code{\link{check_hyper}}, \code{\link{term_values}}
+#'
+#' @keywords internal
+check_values <- function(values, penalty, what = "this term") {
+  .hyper_parts(values, penalty, what)$values
+}
+
+
+#' Split a Constructor's Hyperparameter Arguments by Length
+#'
+#' @description
+#' Validates each against the penalty and files it as held or as a grid.
+#'
+#' @details
+#' The validation is one body because the two states differ in length alone:
+#' the name must be one the penalty carries and every value must lie strictly
+#' inside its bounds, whether there is one of them or twenty.
+#'
+#' @inheritParams check_hyper
+#'
+#' @return A list of \code{hyper} and \code{values}.
+#'
+#' @keywords internal
+.hyper_parts <- function(values, penalty, what = "this term") {
+  none <- list(hyper = list(), values = list())
   values <- values[!vapply(values, is.null, logical(1))]
-  if (!length(values)) return(list())
+  if (!length(values)) return(none)
   pen <- if (is.function(penalty)) {
     tryCatch(penalty(1L), error = function(e) NULL)
   } else {
     penalty
   }
-  if (is.null(pen)) return(as.list(values))
-  ok <- pen@params
+  held <- list()
+  grids <- list()
   for (nm in names(values)) {
-    if (!nm %in% ok) {
+    v <- values[[nm]]
+    if (!is.null(pen) && !nm %in% pen@params) {
       stop(sprintf(paste0("'%s' has no hyperparameter '%s'. It carries: %s.",
                           "\n  Give one of those to hold it, or leave it",
                           " NULL to have it estimated."),
-                   what, nm, paste(ok, collapse = ", ")), call. = FALSE)
-    }
-    v <- values[[nm]]
-    if (!is.numeric(v) || length(v) != 1L || !is.finite(v)) {
-      stop(sprintf("'%s' in '%s' must be a single finite number, or NULL.",
-                   nm, what), call. = FALSE)
-    }
-    b <- pen@params_bounds[[nm]]
-    if (!is.null(b) && (v <= b[1L] || v >= b[2L])) {
-      stop(sprintf(paste0("'%s' in '%s' must lie strictly inside (%s, %s);",
-                          " it is %s."),
-                   nm, what, format(b[1L]), format(b[2L]), format(v)),
+                   what, nm, paste(pen@params, collapse = ", ")),
            call. = FALSE)
     }
+    if (!is.numeric(v) || !length(v) || any(!is.finite(v))) {
+      stop(sprintf(paste0("'%s' in '%s' must be a number to hold it, several",
+                          " numbers to sweep\n  exactly those, or NULL to",
+                          " have the grid built."), nm, what), call. = FALSE)
+    }
+    b <- if (is.null(pen)) NULL else pen@params_bounds[[nm]]
+    if (!is.null(b) && any(v <= b[1L] | v >= b[2L])) {
+      bad <- v[v <= b[1L] | v >= b[2L]][[1L]]
+      stop(sprintf(paste0("'%s' in '%s' must lie strictly inside (%s, %s);",
+                          " it is %s."),
+                   nm, what, format(b[1L]), format(b[2L]), format(bad)),
+           call. = FALSE)
+    }
+    if (length(v) == 1L) {
+      held[[nm]] <- as.numeric(v)
+    } else {
+      grids[[nm]] <- sort(unique(as.numeric(v)))
+    }
   }
-  as.list(values)
+  list(hyper = held, values = grids)
 }
 
 
@@ -198,6 +264,11 @@ smooth_hyper <- function(lambda, names, what = "this smooth") {
 #' is not known until the term is built. The shape is checked here and the
 #' names against the penalty by \code{\link{check_hyper}} at that point.
 #'
+#' A vector entry is a written-out grid rather than a held value, exactly as
+#' it is in the constructors that name their hyperparameters, so the length
+#' is not checked here either; \code{\link{.hyper_parts}} splits the two once
+#' the penalty exists.
+#'
 #' @param x A named vector, a named list, or \code{NULL}.
 #' @param what The term's label, for the message.
 #'
@@ -214,8 +285,9 @@ as_hyper <- function(x, what = "this term") {
   x <- as.list(x)
   for (h in nm) {
     v <- x[[h]]
-    if (!is.numeric(v) || length(v) != 1L || !is.finite(v)) {
-      stop(sprintf("'hyper$%s' in '%s' must be a single finite number.",
+    if (!is.numeric(v) || !length(v) || any(!is.finite(v))) {
+      stop(sprintf(paste0("'hyper$%s' in '%s' must be a number to hold it,",
+                          " or several to sweep\n  exactly those."),
                    h, what), call. = FALSE)
     }
   }
@@ -315,6 +387,98 @@ S7::method(term_grid, model_term) <- function(term, ...) {
   g <- term@grid
   if (!length(g)) return(list())
   stats::setNames(list(g), "")
+}
+
+
+#' Reject a Written-Out Grid Where There Is No Path
+#'
+#' @description
+#' Signals an error when the caller gave several values for a hyperparameter
+#' whose penalty has no kink.
+#'
+#' @details
+#' Several values are a grid for a PATH to visit, and only a penalty with a
+#' kink is swept along one: everything else has its hyperparameter read at the
+#' mode by a marginal criterion, which would take the vector and do nothing
+#' with it. The question is put to the penalty at a probe value of its own
+#' hyperparameters, the kink set being structural, so a ridge and a random
+#' effect under a Gaussian prior are covered by the same line as a family
+#' added later.
+#'
+#' @param values The written-out grids, as \code{\link{check_values}} returns
+#'   them.
+#' @param pen The penalty the term will build, or \code{NULL}.
+#' @param what The term's label, for the message.
+#'
+#' @return \code{NULL}, invisibly.
+#'
+#' @seealso \code{\link{check_values}}, \code{\link{term_values}}
+#'
+#' @keywords internal
+reject_pathless_values <- function(values, pen, what = "this term") {
+  if (!length(values) || is.null(pen)) return(invisible(NULL))
+  k <- tryCatch(penalties7::penalty_kinks(pen, .penalty_probe_theta(pen)),
+                error = function(e) 0)
+  if (length(k)) return(invisible(NULL))
+  stop(sprintf(paste0("'%s' in '%s' has several values, and this term has no",
+                      " path to visit them\n  on: its penalty has no kink, so",
+                      " the hyperparameter is estimated by the\n  criterion at",
+                      " the mode. Give one number to hold it, or NULL to",
+                      " estimate it."),
+               names(values)[[1L]], what), call. = FALSE)
+}
+
+
+#' @title The Values a Term Wrote Out
+#'
+#' @description
+#' The grid the caller gave verbatim, by hyperparameter. Those a term does
+#' not write out are swept over a grid the path builds.
+#'
+#' @details
+#' A hyperparameter's argument carries three states, one per hyperparameter
+#' rather than one per term: \code{NULL} has the path build the grid,
+#' \code{lambda = 3} holds it at three, and \code{lambda = c(0.1, 1, 10)}
+#' sweeps exactly those. So \code{enet(x, lambda = seq(0.1, 10, length = 10))}
+#' is a written-out grid of \eqn{\lambda} combined with an \eqn{\alpha} the
+#' path builds for itself.
+#'
+#' A written-out grid is used as it stands. The value that empties the block
+#' does not cap it and \code{min_ratio} does not extend it: those construct a
+#' grid, and here there is nothing to construct. A hyperparameter written out
+#' is still ESTIMATED -- what the caller fixed is where to look, not the
+#' answer -- so it is reported as chosen by the criterion and not as held.
+#'
+#' @param term A term, built or not.
+#' @param ... Passed to methods.
+#'
+#' @return A named list, one entry per penalty of the term, each a named list
+#'   of numeric vectors. Empty where the term wrote nothing out.
+#'
+#' @examples
+#' term_values(lasso(~x, lambda = c(0.1, 1, 10)))
+#' term_values(lasso(~x, lambda = 3))
+#'
+#' @seealso \code{\link{term_hyper}}, \code{\link{term_grid}},
+#'   \code{\link{term_penalties}}
+#' @export
+term_values <- S7::new_generic("term_values", "term",
+  function(term, ...) S7::S7_dispatch())
+
+S7::method(term_values, model_term) <- function(term, ...) {
+  ent <- tryCatch(term_penalties(term), error = function(e) list())
+  if (length(ent)) {
+    out <- list()
+    for (e in ent) {
+      v <- e$values
+      if (is.null(v) || !length(v)) next
+      out[[if (is.null(e$name)) "" else e$name]] <- v
+    }
+    if (length(out)) return(out)
+  }
+  v <- term@values
+  if (!length(v)) return(list())
+  stats::setNames(list(v), "")
 }
 
 

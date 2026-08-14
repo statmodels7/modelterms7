@@ -16,7 +16,7 @@ used only to read the names and the bounds.}
 \item{what}{The constructor's name, for the message.}
 }
 \value{
-A named list of the held values.
+A named list of the held values, one number each.
 }
 \description{
 Validates the values a constructor was given against the names and the
@@ -34,8 +34,14 @@ nothing.
 The bounds are OPEN, as they are everywhere in the toolkit: a ridge at
 \eqn{\lambda = 0} is no penalty at all, and an elastic net at
 \eqn{\alpha = 0} has no kink and is a penalty of another kind.
+
+One argument carries three states, and they are read per hyperparameter
+rather than per term: \code{NULL} has the path build the grid, one number
+holds the hyperparameter, and several are the grid itself. This returns
+the second of the three; \code{\link{check_values}} returns the third.
 }
 \seealso{
-\code{\link{term_hyper}}, \code{\link{term_penalties}}
+\code{\link{check_values}}, \code{\link{term_hyper}},
+  \code{\link{term_penalties}}
 }
 \keyword{internal}

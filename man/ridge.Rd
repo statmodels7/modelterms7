@@ -26,8 +26,9 @@ names.}
 \item{standardize}{A single logical: whether to penalize each
 coefficient on the scale of its own column. See the section below.}
 
-\item{lambda}{The precision of the prior, held at the value given and
-ESTIMATED when left \code{NULL}, which is the default. Must lie in
+\item{lambda}{The precision of the prior. One number holds it and
+\code{NULL}, the default, has it ESTIMATED. A ridge has no kink and no
+path, so several numbers are not a grid it could visit. Must lie in
 \eqn{(0, \infty)}.}
 
 \item{n_lambda}{Unused by this term: a ridge has no kink and its

@@ -28,11 +28,12 @@ names.}
 \item{standardize}{A single logical: whether to penalize each
 coefficient on the scale of its own column. See the section below.}
 
-\item{lambda}{The scale of the penalty, held at the value given and
-ESTIMATED when left \code{NULL}. Must lie in \eqn{(0, \infty)}.}
+\item{lambda}{The scale of the penalty. One number holds it, several are
+the grid the path visits as they stand, and \code{NULL}, the default, has
+the path build one. Must lie in \eqn{(0, \infty)}.}
 
-\item{a}{The shape, held at the value given and ESTIMATED when left
-\code{NULL}. Must lie in \eqn{(2, \infty)}.}
+\item{a}{The shape, in the same three states and settled independently of
+\code{lambda}. Must lie in \eqn{(2, \infty)}.}
 
 \item{n_lambda, n_a}{How many values the path visits for each, at least 2.
 \code{NULL}, the default, leaves it to the criterion.}

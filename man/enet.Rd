@@ -28,11 +28,12 @@ names.}
 \item{standardize}{A single logical: whether to penalize each
 coefficient on the scale of its own column. See the section below.}
 
-\item{lambda}{The overall rate, held at the value given and ESTIMATED
-when left \code{NULL}. Must lie in \eqn{(0, \infty)}.}
+\item{lambda}{The overall rate. One number holds it, several are the grid
+the path visits as they stand, and \code{NULL}, the default, has the path
+build one. Must lie in \eqn{(0, \infty)}.}
 
-\item{alpha}{The mixing weight, held at the value given and ESTIMATED
-when left \code{NULL}. Must lie in \eqn{(0, 1)}.}
+\item{alpha}{The mixing weight, in the same three states and settled
+independently of \code{lambda}. Must lie in \eqn{(0, 1)}.}
 
 \item{n_lambda, n_alpha}{How many values the path visits for each, at
 least 2. \code{NULL}, the default, leaves it to the criterion.}

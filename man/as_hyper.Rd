@@ -24,5 +24,10 @@ given -- a ridge, a structured prior over a \pkg{parameters7} matrix, or a
 \pkg{distributions7} family used coordinatewise -- so which names there are
 is not known until the term is built. The shape is checked here and the
 names against the penalty by \code{\link{check_hyper}} at that point.
+
+A vector entry is a written-out grid rather than a held value, exactly as
+it is in the constructors that name their hyperparameters, so the length
+is not checked here either; \code{\link{.hyper_parts}} splits the two once
+the penalty exists.
 }
 \keyword{internal}

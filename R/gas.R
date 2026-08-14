@@ -506,7 +506,8 @@ S7::method(term_penalties, GasTerm) <- function(term, ...) {
         # what the sub-term holds travels WITH the entry, so a structural
         # term propagates it by copying the entry and needs to know nothing
         # about hyperparameters
-        fixed = e$fixed, n_values = e$n_values, min_ratio = e$min_ratio)
+        fixed = e$fixed, n_values = e$n_values, values = e$values,
+        min_ratio = e$min_ratio)
     }
   }
   out

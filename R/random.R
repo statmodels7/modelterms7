@@ -286,7 +286,10 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
   # the names are checked HERE, the first point at which the penalty this
   # term builds exists: which hyperparameters it has depends on whether
   # the effects carry a structure, a distribution or neither
-  term@hyper <- check_hyper(term@hyper, pen, term@label)
+  given <- term@hyper
+  term@hyper <- check_hyper(given, pen, term@label)
+  term@values <- check_values(given, pen, term@label)
+  reject_pathless_values(term@values, pen, term@label)
   term@penalty <- pen
   term
 }

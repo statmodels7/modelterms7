@@ -95,9 +95,13 @@ PenalizedTerm <- S7::new_class(
       stop("a matrix input must be numeric.", call. = FALSE)
     }
   }
+  vals <- check_values(hyper, factory, label)
+  reject_pathless_values(vals, tryCatch(factory(1L), error = function(e) NULL),
+                         label)
   PenalizedTerm(label = label, input = x, input_expr = expr,
                 factory = factory, standardize = standardize,
                 hyper = check_hyper(hyper, factory, label),
+                values = vals,
                 grid = check_grid(grid, factory, label),
                 min_ratio = check_min_ratio(min_ratio, label),
                 X = NULL, coef_names = character(0),

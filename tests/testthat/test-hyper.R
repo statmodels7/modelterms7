@@ -31,8 +31,10 @@ test_that("a held value must lie strictly inside the penalty's bounds", {
   expect_error(scad(~x, a = 2), "strictly inside")
   expect_error(mcp(~x, gamma = 1), "strictly inside")
   expect_error(lasso(~x, lambda = 0), "strictly inside")
-  expect_error(lasso(~x, lambda = c(1, 2)), "single finite number")
-  expect_error(lasso(~x, lambda = "a"), "single finite number")
+  expect_error(lasso(~x, lambda = "a"), "must be a number")
+  # several values are a GRID and not a held value, so the length is what
+  # tells the two states apart and nothing rejects it for being more than one
+  expect_silent(lasso(~x, lambda = c(1, 2)))
 })
 
 test_that("a smooth holds its smoothing parameter, one per margin", {
@@ -115,4 +117,52 @@ test_that("a term says how far down its own path reaches", {
   dd <- data.frame(x = stats::rnorm(20), z = stats::rnorm(20))
   b <- term_build(scad(~ x + z, min_ratio = 1e-3), dd)
   expect_equal(term_penalties(b)[[1L]]$min_ratio, 1e-3)
+})
+
+test_that("several values are a grid the path visits, not a held value", {
+  # one argument, three states, settled per hyperparameter: NULL builds the
+  # grid, one number holds, several ARE the grid
+  expect_identical(term_values(lasso(~x)), list())
+  expect_identical(term_hyper(lasso(~x, lambda = 3))[[1L]], list(lambda = 3))
+  expect_identical(term_values(lasso(~x, lambda = 3)), list())
+
+  v <- c(0.1, 1, 10)
+  expect_identical(term_values(lasso(~x, lambda = v))[[1L]], list(lambda = v))
+  # and a written-out grid is NOT held: what the caller fixed is where to
+  # look, not the answer
+  expect_identical(term_hyper(lasso(~x, lambda = v)), list())
+
+  # independently per hyperparameter, which is the case the contract exists
+  # for: a grid on one and a built grid on the other
+  e <- enet(~x, lambda = v)
+  expect_identical(term_values(e)[[1L]], list(lambda = v))
+  expect_identical(term_hyper(e), list())
+  e2 <- enet(~x, lambda = v, alpha = 0.5)
+  expect_identical(term_values(e2)[[1L]], list(lambda = v))
+  expect_identical(term_hyper(e2)[[1L]], list(alpha = 0.5))
+
+  # sorted and deduplicated, a path being walked in one direction
+  expect_identical(term_values(mcp(~x, gamma = c(4, 2, 4, 3)))[[1L]],
+                   list(gamma = c(2, 3, 4)))
+
+  # every value is checked against the bounds, as a held one is
+  expect_error(enet(~x, alpha = c(0.2, 1.5)), "strictly inside")
+  expect_error(scad(~x, a = c(3, 1)), "strictly inside")
+  expect_error(lasso(~x, lambda = c(1, NA)), "several numbers")
+  expect_error(lasso(~x, lambda = character(0)), "several numbers")
+
+  # a penalty with no kink has no path to visit them on, and says so rather
+  # than taking the vector and doing nothing with it. The question is put to
+  # the PENALTY at a probe value, so a random effect under a Gaussian prior
+  # is covered by the same line as a ridge.
+  expect_error(ridge(~x, lambda = c(1, 2)), "no path")
+  dg <- data.frame(y = stats::rnorm(30), g = factor(rep(1:6, each = 5)))
+  expect_error(term_build(random(~ 1 | g, hyper = list(lambda = c(1, 2))), dg),
+               "no path")
+
+  # and it travels with the entry, as the held values and the grid size do
+  dd <- data.frame(x = stats::rnorm(20), z = stats::rnorm(20))
+  b <- term_build(scad(~ x + z, lambda = c(0.5, 2)), dd)
+  expect_equal(term_penalties(b)[[1L]]$values, list(lambda = c(0.5, 2)))
+  expect_identical(term_penalties(b)[[1L]]$fixed, list())
 })

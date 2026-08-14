@@ -21,6 +21,9 @@
 #' @param grid How many values a path visits for each of the term's
 #'   hyperparameters, as a named list. Empty, the default, leaves it to the
 #'   criterion. See \code{\link{term_grid}}.
+#' @param values The values a path visits, for each hyperparameter the
+#'   caller wrote out, as a named list. Empty, the default, has the path
+#'   build them. See \code{\link{term_values}}.
 #' @param min_ratio How far down the path over the size of the kink
 #'   reaches, as a fraction of the value that empties the block, or
 #'   \code{numeric(0)} for the criterion's own. See
@@ -50,6 +53,12 @@ model_term <- S7::new_class(
     # a block of four columns and one of four hundred want different grids,
     # and the criterion does not know which it is looking at.
     grid = S7::new_property(S7::class_list, default = quote(list())),
+    # The values themselves, where the caller wrote them out instead of
+    # having them built. This is the third state of one argument: NULL has
+    # the path construct the grid, one number holds the hyperparameter, and
+    # several are the grid, used as given. A term may be in a different
+    # state for each of its hyperparameters. See term_values().
+    values = S7::new_property(S7::class_list, default = quote(list())),
     # How far DOWN the path over the size of the kink reaches, as a
     # fraction of the value that empties the block. It belongs beside the
     # grid size and for the same reason, and it is one number rather than
@@ -80,6 +89,9 @@ model_term <- S7::new_class(
 #' @param grid How many values a path visits for each of the term's
 #'   hyperparameters, as a named list. Empty, the default, leaves it to the
 #'   criterion. See \code{\link{term_grid}}.
+#' @param values The values a path visits, for each hyperparameter the
+#'   caller wrote out, as a named list. Empty, the default, has the path
+#'   build them. See \code{\link{term_values}}.
 #' @param min_ratio How far down the path over the size of the kink
 #'   reaches, as a fraction of the value that empties the block, or
 #'   \code{numeric(0)} for the criterion's own. See
@@ -130,6 +142,9 @@ additive_term <- S7::new_class(
 #' @param grid How many values a path visits for each of the term's
 #'   hyperparameters, as a named list. Empty, the default, leaves it to the
 #'   criterion. See \code{\link{term_grid}}.
+#' @param values The values a path visits, for each hyperparameter the
+#'   caller wrote out, as a named list. Empty, the default, has the path
+#'   build them. See \code{\link{term_values}}.
 #' @param min_ratio How far down the path over the size of the kink
 #'   reaches, as a fraction of the value that empties the block, or
 #'   \code{numeric(0)} for the criterion's own. See
