@@ -14,7 +14,10 @@ test_that("the four terms attach their penalty and read smoothness from it", {
     list(ctor = scad, ref = penalties7::scad_penalty, smooth = FALSE),
     list(ctor = mcp, ref = penalties7::mcp_penalty, smooth = FALSE)
   )
-  beta <- c(0.6, -1.1, 2.0)
+  # FOUR columns: the intercept is dropped, so a two-level factor is coded
+  # full rank. The separable branch recycled a shorter vector without a word,
+  # which is how this read three of them for as long as the ridge was on it.
+  beta <- c(0.6, -1.1, 2.0, -0.3)
   for (case in cases) {
     built <- term_build(case$ctor(~ x1 + x2 + g), dd)
     pen <- term_penalty(built)

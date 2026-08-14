@@ -11,15 +11,15 @@ test_that("a constructor holds a hyperparameter and leaves the rest free", {
   expect_equal(term_hyper(scad(~x, lambda = 2, a = 3.7))[[1L]],
                list(lambda = 2, a = 3.7))
   expect_equal(term_hyper(mcp(~x, gamma = 3))[[1L]], list(gamma = 3))
-  expect_equal(term_hyper(ridge(~x, sigma = 0.5))[[1L]], list(sigma = 0.5))
+  expect_equal(term_hyper(ridge(~x, lambda = 0.5))[[1L]], list(lambda = 0.5))
 })
 
 test_that("the arguments carry the penalty's own names", {
   # a Gaussian prior is parametrized by its SCALE, so `ridge(lambda = 2)` is
   # a reasonable thing to write and reaches nothing. R reports an unused
   # argument, which says it was not read and not what to write instead.
-  expect_error(ridge(~x, lambda = 2), "no argument 'lambda'")
-  expect_error(ridge(~x, lambda = 2), "sigma")
+  expect_error(ridge(~x, sigma = 2), "no argument 'sigma'")
+  expect_error(ridge(~x, sigma = 2), "lambda")
   expect_error(scad(~x, gamma = 3), "lambda, a")
   expect_error(mcp(~x, a = 3), "lambda, gamma")
   expect_error(lasso(~x, alpha = 0.5), "no argument 'alpha'")
@@ -56,12 +56,12 @@ test_that("a smooth holds its smoothing parameter, one per margin", {
 test_that("a random effect is checked against the penalty it builds", {
   dd <- data.frame(y = stats::rnorm(20), x = stats::rnorm(20),
                    g = factor(rep(1:4, 5)))
-  built <- term_build(random(~ 1 | g, hyper = c(sigma = 0.4)), dd)
-  expect_equal(term_hyper(built)[[1L]], list(sigma = 0.4))
+  built <- term_build(random(~ 1 | g, hyper = c(lambda = 6)), dd)
+  expect_equal(term_hyper(built)[[1L]], list(lambda = 6))
   # which names there are depends on what the term was given, so the check
   # is at the build, the first point at which the penalty exists
-  expect_error(term_build(random(~ 1 | g, hyper = c(lambda = 1)), dd),
-               "no hyperparameter 'lambda'")
+  expect_error(term_build(random(~ 1 | g, hyper = c(sigma = 1)), dd),
+               "no hyperparameter 'sigma'")
   expect_error(random(~ 1 | g, hyper = 0.4), "must be named")
 })
 
@@ -71,11 +71,11 @@ test_that("a held value travels with the entry, through a structural term", {
   set.seed(9)
   dd <- data.frame(y = stats::rnorm(60), x = stats::rnorm(60),
                    id = factor(rep(1:6, 10)))
-  b <- term_build(nl(~ a * exp(-r * x), a ~ 0 + ridge(~ id, sigma = 0.7),
+  b <- term_build(nl(~ a * exp(-r * x), a ~ 0 + ridge(~ id, lambda = 0.7),
                      start = list(a = 1, r = 0.5)), dd)
   h <- term_hyper(b)
   expect_true(length(h) >= 1L)
-  expect_equal(h[[1L]]$sigma, 0.7)
+  expect_equal(h[[1L]]$lambda, 0.7)
   ent <- term_penalties(b)
-  expect_equal(ent[[1L]]$fixed$sigma, 0.7)
+  expect_equal(ent[[1L]]$fixed$lambda, 0.7)
 })

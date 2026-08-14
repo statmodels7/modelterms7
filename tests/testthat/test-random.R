@@ -17,7 +17,7 @@ test_that("random intercepts build the indicator block with a gaussian default",
                    c("random.a", "random.b", "random.c"))
 
   pen <- term_penalty(built)
-  expect_identical(pen@params, "sigma")
+  expect_identical(pen@params, "lambda")
   expect_true(term_smooth(built))
 
   res <- check_term(random(~ 1 | g), dd, verbose = FALSE)

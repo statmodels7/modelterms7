@@ -8,7 +8,7 @@
 \alias{mcp}
 \title{Penalized Parametric Terms}
 \usage{
-ridge(x, label = "ridge", by = NULL, standardize = FALSE, sigma = NULL, ...)
+ridge(x, label = "ridge", by = NULL, standardize = FALSE, lambda = NULL, ...)
 
 lasso(x, label = "lasso", by = NULL, standardize = FALSE, lambda = NULL, ...)
 
@@ -53,11 +53,11 @@ names.}
 \item{standardize}{A single logical: whether to penalize each
 coefficient on the scale of its own column. See the section below.}
 
-\item{sigma, lambda, alpha, a, gamma}{The penalty's own hyperparameters,
+\item{lambda, alpha, a, gamma}{The penalty's own hyperparameters,
 each held at the value given and ESTIMATED when left \code{NULL},
 which is the default. Every constructor takes the ones its penalty
-carries and no others: \code{sigma} for \code{ridge()},
-\code{lambda} for \code{lasso()}, \code{lambda} and \code{alpha}
+carries and no others: \code{lambda} for \code{ridge()} and for
+\code{lasso()}, \code{lambda} and \code{alpha}
 for \code{enet()}, \code{lambda} and \code{a} for \code{scad()},
 \code{lambda} and \code{gamma} for \code{mcp()}. The names are the
 penalty's, which are the ones a summary prints.}
@@ -157,8 +157,8 @@ Writing \eqn{\beta} for the block's coefficients and \eqn{p} for their
 number, the five attach
 
 \deqn{\rho_{\mathrm{ridge}}(\beta) =
-  \frac{\lVert\beta\rVert_2^2}{2\sigma^2}
-  + p\log\!\left(\sigma\sqrt{2\pi}\right),}
+  \frac{\lambda\lVert\beta\rVert_2^2}{2}
+  - \frac{p}{2}\log\!\left(\frac{\lambda}{2\pi}\right),}
 
 \deqn{\rho_{\mathrm{lasso}}(\beta) = \lambda\lVert\beta\rVert_1
   - p\log\!\left(\frac{\lambda}{2}\right),}

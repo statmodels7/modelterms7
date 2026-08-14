@@ -44,10 +44,9 @@ PenalizedTerm <- S7::new_class(
 .penalized_spec <- function(x, expr, label, by, standardize, factory,
                             hyper = list(), extra = list()) {
   # An argument named after ANOTHER penalty's hyperparameter is the mistake
-  # this catches: the shrinkage of a Gaussian prior is its scale sigma, so
-  # `ridge(x, lambda = 2)` is a reasonable thing to write and reaches
-  # nothing. R would report it as an unused argument, which says that it was
-  # not read and not what to write instead.
+  # this catches: `mcp(x, a = 3)` writes SCAD's shape on an MCP, whose own
+  # is gamma, and reaches nothing. R would report it as an unused argument,
+  # which says that it was not read and not what to write instead.
   if (length(extra)) {
     pen <- tryCatch(factory(1L), error = function(e) NULL)
     stop(sprintf(paste0("'%s' has no argument '%s'. Its hyperparameters are:",
@@ -208,8 +207,8 @@ PenalizedTerm <- S7::new_class(
 #' number, the five attach
 #'
 #' \deqn{\rho_{\mathrm{ridge}}(\beta) =
-#'   \frac{\lVert\beta\rVert_2^2}{2\sigma^2}
-#'   + p\log\!\left(\sigma\sqrt{2\pi}\right),}
+#'   \frac{\lambda\lVert\beta\rVert_2^2}{2}
+#'   - \frac{p}{2}\log\!\left(\frac{\lambda}{2\pi}\right),}
 #'
 #' \deqn{\rho_{\mathrm{lasso}}(\beta) = \lambda\lVert\beta\rVert_1
 #'   - p\log\!\left(\frac{\lambda}{2}\right),}
@@ -240,11 +239,11 @@ PenalizedTerm <- S7::new_class(
 #' @param by Reserved for a later release; must be \code{NULL}.
 #' @param standardize A single logical: whether to penalize each
 #'   coefficient on the scale of its own column. See the section below.
-#' @param sigma,lambda,alpha,a,gamma The penalty's own hyperparameters,
+#' @param lambda,alpha,a,gamma The penalty's own hyperparameters,
 #'   each held at the value given and ESTIMATED when left \code{NULL},
 #'   which is the default. Every constructor takes the ones its penalty
-#'   carries and no others: \code{sigma} for \code{ridge()},
-#'   \code{lambda} for \code{lasso()}, \code{lambda} and \code{alpha}
+#'   carries and no others: \code{lambda} for \code{ridge()} and for
+#'   \code{lasso()}, \code{lambda} and \code{alpha}
 #'   for \code{enet()}, \code{lambda} and \code{a} for \code{scad()},
 #'   \code{lambda} and \code{gamma} for \code{mcp()}. The names are the
 #'   penalty's, which are the ones a summary prints.
@@ -268,11 +267,11 @@ PenalizedTerm <- S7::new_class(
 #' @seealso \code{\link{linpar}}, \code{\link{s}}, \code{\link{random}}, \code{\link{term_penalty}}, \code{\link{edf}}
 #' @export
 ridge <- function(x, label = "ridge", by = NULL, standardize = FALSE,
-                   sigma = NULL, ...) {
+                  lambda = NULL, ...) {
   .penalized_spec(x, substitute(x), label, by, standardize,
                   function(k, map = NULL) penalties7::ridge_penalty(map = map,
                                                         n_coef = k),
-                  list(sigma = sigma),
+                  list(lambda = lambda),
                   list(...))
 }
 

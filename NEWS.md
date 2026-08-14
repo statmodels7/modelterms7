@@ -1,3 +1,11 @@
+# modelterms7 0.33.0
+
+* `ridge()` takes `lambda`, the PRECISION of the Gaussian prior, where it
+  took `sigma`: larger means more shrinkage, as it already did for
+  `lasso()`, and it is the same number the quadratic penalty behind `s()`
+  and `te()` calls by that name. `random()`'s default penalty follows, so
+  the variance component a reader wants from it is `1/sqrt(lambda)`.
+
 # modelterms7 0.32.0
 
 * Every term takes its penalty's hyperparameters as arguments, and holds
