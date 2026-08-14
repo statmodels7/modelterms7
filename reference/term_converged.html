@@ -11,7 +11,7 @@ answers TRUE, having no iteration of its own."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.29.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.30.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,7 +71,7 @@ block is the Jacobian of the contribution – <code><a href="nl.html">nl</a></co
 <code><a href="seg.html">seg</a></code> – the gradient of the model's objective is the block
 times the derivative of the log-likelihood in the predictor, and its
 vanishing is the test. Where the block is a working LINEARIZATION with a
-frozen weight – <code><a href="seg.html">jump</a></code>, <code><a href="seg.html">jseg</a></code> – it is not: the
+frozen weight – <code><a href="jump.html">jump</a></code>, <code><a href="jseg.html">jseg</a></code> – it is not: the
 profile objective of a discontinuous term is a step function in the
 break-point, so it has no gradient to vanish, and the quantity the
 iteration actually drives to zero is the movement of the break-point.

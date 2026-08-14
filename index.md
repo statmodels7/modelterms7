@@ -46,9 +46,9 @@ $`-\ell(\beta) + \sum_t \rho_t(\beta_t; \theta_t)`$:
   carries a contribution nonlinear in its own parameters, its block the
   Jacobian refreshed as they move;
 - [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
-  [`jump()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
   and
-  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
   estimate the break-points at which an effect changes slope, level, or
   both, with
   [`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)

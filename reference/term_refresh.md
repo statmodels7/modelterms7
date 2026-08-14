@@ -48,7 +48,7 @@ For a break-point term the same shape holds with a different block: the
 Jacobian for
 [`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md), and
 the frozen-weight columns of
-[`jump`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+[`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md),
 from which the break-point is read rather than incremented.
 
 ## See also

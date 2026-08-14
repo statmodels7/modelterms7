@@ -2,8 +2,8 @@
 
 Chooses the starting positions of a
 [`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md),
-[`jump`](https://statmodels7.github.io/modelterms7/reference/seg.md) or
-[`jseg`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+[`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md) or
+[`jseg`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
 term by scoring an equally spaced grid on the least-squares profile of
 the term's own columns, and returns the specification with `psi` set to
 the best combination found.
@@ -65,9 +65,10 @@ The grid is scored on the residual sum of squares of an intercept, the
 term's columns at each candidate position and, where the term carries
 one, the linear effect. That is the exact profile for a gaussian
 response and an adequate starting rule for any other, the quantity being
-used to place a starting value and not to fit. With `by` each level is
-scored on its own rows. With several break-points every increasing
-combination of grid points is scored, so `k` should be kept small.
+used to place a starting value and not to fit. The positions found seed
+a development as well, each starting vector projecting the position onto
+the sub-design. With several break-points every increasing combination
+of grid points is scored, so `k` should be kept small.
 
 ## References
 
@@ -77,7 +78,9 @@ iterative algorithm for change-point detection in abrupt change models.
 
 ## See also
 
-[`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+[`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+[`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md),
+[`jseg`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
 
 ## Examples
 

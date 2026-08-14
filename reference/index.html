@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.29.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.30.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -268,7 +268,7 @@
         </dt>
         <dd>Has a Term's Own Iteration Settled?</dd>
       </dl></div><div class="section level2">
-      <h2 id="segmented-terms">Segmented terms<a class="anchor" aria-label="anchor" href="#segmented-terms"></a></h2>
+      <h2 id="break-point-terms">Break-point terms<a class="anchor" aria-label="anchor" href="#break-point-terms"></a></h2>
 
       <div class="section-desc"><p>The break-points at which an effect changes slope, level or both, each written as a working linear model in the break-point position, with the grid rule that chooses where to start.</p></div>
 
@@ -279,24 +279,38 @@
 
       <dl><dt>
 
-          <code><a href="seg.html">seg()</a></code> <code><a href="seg.html">jump()</a></code> <code><a href="seg.html">jseg()</a></code>
+          <code><a href="seg.html">seg()</a></code>
 
         </dt>
-        <dd>Segmented, Stepmented and Segmented-with-Jump Terms</dd>
+        <dd>Segmented Term: a Broken Line with Estimated Break-Points</dd>
+
+        <dt>
+
+          <code><a href="jump.html">jump()</a></code>
+
+        </dt>
+        <dd>Stepmented Term: a Level that Changes at Estimated Break-Points</dd>
+
+        <dt>
+
+          <code><a href="jseg.html">jseg()</a></code>
+
+        </dt>
+        <dd>Segmented-with-Jump Term: Slope and Level Both Changing</dd>
 
         <dt>
 
           <code><a href="SegTerm.html">SegTerm()</a></code>
 
         </dt>
-        <dd>S7 Class for Segmented and Stepmented Terms</dd>
+        <dd>S7 Class for Break-Point Terms</dd>
 
         <dt>
 
           <code><a href="seg_psi.html">seg_psi()</a></code>
 
         </dt>
-        <dd>The Break-Points of a Segmented Term</dd>
+        <dd>The Break-Points of a Break-Point Term</dd>
 
         <dt>
 

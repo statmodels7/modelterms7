@@ -1,14 +1,14 @@
-# S7 Class for Segmented and Stepmented Terms
+# S7 Class for Break-Point Terms
 
 A subclass of
 [`additive_term`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 for a covariate whose effect changes at estimated break-points: a change
 of slope
 ([`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md)), a
-jump in level
-([`jump`](https://statmodels7.github.io/modelterms7/reference/seg.md)),
+change of level
+([`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md)),
 or both at the same points
-([`jseg`](https://statmodels7.github.io/modelterms7/reference/seg.md)).
+([`jseg`](https://statmodels7.github.io/modelterms7/reference/jseg.md)).
 The design block is the working one of the iteration that estimates the
 break-points, and is recomputed by
 [`term_refresh`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
@@ -26,9 +26,8 @@ SegTerm(
   kind = character(0),
   var = NULL,
   npsi = integer(0),
-  by = NULL,
   linear = logical(0),
-  penalty_kind = NULL,
+  subformulas = list(),
   spec = list()
 )
 ```
@@ -70,17 +69,13 @@ SegTerm(
 
   The number of break-points.
 
-- by:
-
-  An optional grouping expression.
-
 - linear:
 
   Whether the block carries the linear effect.
 
-- penalty_kind:
+- subformulas:
 
-  The penalty on the changes, if any.
+  A named list of one-sided formulas, one per developed parameter.
 
 - spec:
 
@@ -92,7 +87,9 @@ An object of class `SegTerm`.
 
 ## See also
 
-[`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+[`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+[`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md),
+[`jseg`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
 
 ## Examples
 

@@ -50,6 +50,18 @@ own, carried into the collected parametric block, so `y ~ ridge_like(R)`
 still produces an intercept-only `linpar` block and
 `y ~ ridge_like(R) - 1` produces none.
 
+One covariate is removed rather than collected. A
+[`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md) or
+[`jseg`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+term carrying the linear effect contributes the same column the bare
+covariate would, so `y ~ x + seg(x)` is rank deficient by one; the term
+owns that effect, which is what `linear = TRUE` says, so the covariate
+is dropped from the parametric block and the removal is reported with a
+warning. `seg(x, linear = FALSE)` keeps the linear effect outside the
+term instead. Only the bare main effect is removed: an interaction spans
+no main effect and is left alone, and another term spanning the same
+direction, as a spline basis does, is reported without being modified.
+
 ## See also
 
 [`cens`](https://statmodels7.github.io/modelterms7/reference/cens.md),

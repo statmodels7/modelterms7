@@ -25,7 +25,7 @@ never restated by the term."><meta property="og:image" content="https://statmode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.29.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.30.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -110,7 +110,13 @@ coefficient on the scale of its own column. See the section below.</p></dd>
 machinery with the intercept removed (a penalized block does not
 penalize an intercept; the model's intercept lives in the parametric
 block), and its blueprint records the terms, the factor levels and the
-contrasts, exactly as <code><a href="linpar.html">linpar</a></code> does. A matrix input is used
+contrasts, exactly as <code><a href="linpar.html">linpar</a></code> does. The exception is a
+formula whose intercept is all it has: <code>ridge(~1)</code> is a block of
+that one column under the penalty, since removing it would leave no
+block. That is the form a subformula on another term's parameter uses,
+<code>gamma ~ lasso(~1)</code> saying that the parameter itself carries a
+lasso, there being no parametric block of its own to hold an
+unpenalized intercept. A matrix input is used
 as given, and its columns are named after the matrix's own column
 names, or numbered when it has none.</p>
 <p>Prediction for a matrix input re-evaluates the expression that produced

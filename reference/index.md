@@ -97,20 +97,22 @@ Gauss-Newton step.
 - [`term_converged()`](https://statmodels7.github.io/modelterms7/reference/term_converged.md)
   : Has a Term's Own Iteration Settled?
 
-## Segmented terms
+## Break-point terms
 
 The break-points at which an effect changes slope, level or both, each
 written as a working linear model in the break-point position, with the
 grid rule that chooses where to start.
 
 - [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
-  [`jump()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
-  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
-  : Segmented, Stepmented and Segmented-with-Jump Terms
+  : Segmented Term: a Broken Line with Estimated Break-Points
+- [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  : Stepmented Term: a Level that Changes at Estimated Break-Points
+- [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  : Segmented-with-Jump Term: Slope and Level Both Changing
 - [`SegTerm()`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md)
-  : S7 Class for Segmented and Stepmented Terms
+  : S7 Class for Break-Point Terms
 - [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
-  : The Break-Points of a Segmented Term
+  : The Break-Points of a Break-Point Term
 - [`seg_step()`](https://statmodels7.github.io/modelterms7/reference/seg_step.md)
   [`seg_converged()`](https://statmodels7.github.io/modelterms7/reference/seg_step.md)
   : The Progress of a Break-Point Iteration

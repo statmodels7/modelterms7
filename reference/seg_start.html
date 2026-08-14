@@ -13,7 +13,7 @@ specification with psi set to the best combination found."><meta property="og:im
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.29.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.30.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,8 +40,8 @@ specification with psi set to the best combination found."><meta property="og:im
     </div>
 
     <div class="ref-description section level2">
-    <p>Chooses the starting positions of a <code><a href="seg.html">seg</a></code>, <code><a href="seg.html">jump</a></code>
-or <code><a href="seg.html">jseg</a></code> term by scoring an equally spaced grid on the
+    <p>Chooses the starting positions of a <code><a href="seg.html">seg</a></code>, <code><a href="jump.html">jump</a></code>
+or <code><a href="jseg.html">jseg</a></code> term by scoring an equally spaced grid on the
 least-squares profile of the term's own columns, and returns the
 specification with <code>psi</code> set to the best combination found.</p>
     </div>
@@ -100,10 +100,11 @@ whole rule costs <code>k</code> of them.</p>
 the term's columns at each candidate position and, where the term
 carries one, the linear effect. That is the exact profile for a
 gaussian response and an adequate starting rule for any other, the
-quantity being used to place a starting value and not to fit. With
-<code>by</code> each level is scored on its own rows. With several
-break-points every increasing combination of grid points is scored,
-so <code>k</code> should be kept small.</p>
+quantity being used to place a starting value and not to fit. The
+positions found seed a development as well, each starting vector
+projecting the position onto the sub-design. With several break-points
+every increasing combination of grid points is scored, so <code>k</code>
+should be kept small.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -113,7 +114,7 @@ models. <em>Computational Statistics</em>, 33, 997–1015.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="seg.html">seg</a></code></p></div>
+    <div class="dont-index"><p><code><a href="seg.html">seg</a></code>, <code><a href="jump.html">jump</a></code>, <code><a href="jseg.html">jseg</a></code></p></div>
     </div>
 
     <div class="section level2">
@@ -121,7 +122,7 @@ models. <em>Computational Statistics</em>, 33, 997–1015.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">dd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">200</span>, <span class="fl">0</span>, <span class="fl">10</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">dd</span><span class="op">$</span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="va">dd</span><span class="op">$</span><span class="va">x</span> <span class="op">+</span> <span class="fl">2</span> <span class="op">*</span> <span class="op">(</span><span class="va">dd</span><span class="op">$</span><span class="va">x</span> <span class="op">&gt;</span> <span class="fl">6.5</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">seg_start</span><span class="op">(</span><span class="fu"><a href="seg.html">jump</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="va">dd</span>, <span class="va">dd</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">@</span><span class="va">spec</span><span class="op">$</span><span class="va">psi</span></span></span>
+<span class="r-in"><span><span class="fu">seg_start</span><span class="op">(</span><span class="fu"><a href="jump.html">jump</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>, <span class="va">dd</span>, <span class="va">dd</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">@</span><span class="va">spec</span><span class="op">$</span><span class="va">psi</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6.462078</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

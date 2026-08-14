@@ -25,8 +25,8 @@ seg_converged(term)
 
 ## Value
 
-`seg_step` returns a numeric vector with one entry per break-point and
-per level of `by`; `seg_converged` returns a single logical.
+`seg_step` returns a numeric vector with one entry per break-point;
+`seg_converged` returns a single logical.
 
 ## Details
 
@@ -66,7 +66,7 @@ stopped moving.
 set.seed(1)
 dd <- data.frame(x = sort(runif(100, 0, 10)))
 dd$y <- 2 * (dd$x > 6) + rnorm(100, sd = 0.3)
-b <- term_build(jump(x, psi = 4, linear = FALSE), dd)
+b <- term_build(jump(x, psi = 4), dd)
 cf <- b@blueprint$coef
 for (it in 1:30) {
   b <- term_refresh(b, cf)

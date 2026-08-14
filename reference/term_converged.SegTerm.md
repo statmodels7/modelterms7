@@ -1,4 +1,4 @@
-# Whether a Segmented Term's Break-Points Have Settled
+# Whether a Break-Point Term's Break-Points Have Settled
 
 [`seg_converged`](https://statmodels7.github.io/modelterms7/reference/seg_step.md),
 so that a fitting layer reads the rule the construction is stopped on

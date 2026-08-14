@@ -1,5 +1,77 @@
 # Changelog
 
+## modelterms7 0.30.0
+
+- [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  have a documentation page each, opening with the model the term
+  defines. Written for the predictor of any parameter of any
+  distribution rather than for a gaussian mean, they are
+
+  ``` R
+  seg    eta_i = z_i'alpha + beta x_i + sum_k gamma_k (x_i - psi_k)_+
+  jump   eta_i = z_i'alpha            + sum_k delta_k 1(x_i >= psi_k)
+  jseg   eta_i = z_i'alpha + beta x_i
+                 + sum_k [delta_k 1(x_i >= psi_k) + gamma_k (x_i - psi_k)_+]
+  ```
+
+  with the rest of the equation supplying `z_i'alpha`.
+
+- The coefficients are named after those formulas: `beta` for the linear
+  effect (was `lin`), `gamma_k` for a change of slope (was `delta_k`)
+  and `delta_k` for a change of level (was `kappa_k`). `psi_k` is
+  unchanged for the continuous construction, and the auxiliary pair of
+  the discontinuous ones stays `g_k`.
+
+- [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  has no `linear` argument. A step model’s relationship with the
+  covariate is a step function, the intercept of the equation being its
+  level before the first break-point; a model that is linear in the
+  covariate and steps is `y ~ x + jump(x)`, and one whose slope changes
+  at the same points is
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md).
+
+- `by` is a one-sided formula and develops EVERY coefficient of the term
+  on it: `by = ~0 + g` is the independent set per level that `by = g`
+  used to give. A bare variable is rejected, with the formula it stands
+  for in the message.
+
+- Any coefficient of the term takes a development, through a two-sided
+  formula in `...` whose left side names it – `psi`, `psi1`, `gamma`,
+  `gamma2`, `delta`, `beta` – a stem meaning every coefficient of its
+  kind. The right side goes through
+  [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
+  and takes any term of the package. The continuous construction accepts
+  any combination; the discontinuous ones read the break-point off a
+  product of the unknowns and accept a developed break-point alone
+  (exact on any design), or every varying coefficient on one shared
+  design with a column per group.
+
+- `penalty=` is retired from all three. A penalty on the changes is the
+  development on a penalized intercept,
+  `seg(x, npsi = 4, gamma ~ 0 + lasso(~1))`, which is the lasso that
+  selects how many break-points there are; the entries of a subformula
+  shared by every coefficient of a kind are pooled into one penalized
+  block under one hyperparameter.
+
+- A penalized constructor keeps the intercept where it is all the
+  formula has, so `lasso(~1)` is a block of that one column rather than
+  a block of none. That is what makes the spelling above mean anything.
+
+- [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
+  removes a bare covariate that a
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  or
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  term in the same equation already carries the linear effect of, and
+  reports the removal: the two are exactly the same column, so
+  `y ~ x + seg(x)` was rank deficient by one. `seg(x, linear = FALSE)`
+  keeps the linear effect outside the term instead. Another term
+  spanning the same direction, as a spline basis does, is reported
+  without being modified.
+
 ## modelterms7 0.29.0
 
 - [`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md),
@@ -127,9 +199,9 @@
   penalty on a SCALAR nl parameter’s single coefficient, which had no
   subformula spelling.
   [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
-  [`jump()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
   and
-  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
   KEEP `penalty=`: it reaches the changes (the slope changes and the
   jump sizes), which are not parameters a subformula models, and a lasso
   there is the selection of how many break-points are real. A call
@@ -147,7 +219,7 @@
 - The break-points of
   [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
   and
-  [`jump()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
   take a subformula, `psi ~ f`, developing every break-point as
   `psi_k = Z gamma_k` over the design of the right-hand side through
   [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md).
@@ -167,7 +239,7 @@
   break-point is; a sub-term carrying a penalty is rejected there, the
   penalty acting on the development scaled by the jump size.
 
-  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
   REJECTS a development, and the reason is measured rather than
   presumed: its reading of the break-point is a quadratic in the
   increment that couples the slope change with the jump and does not
@@ -424,9 +496,9 @@
   [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md),
   [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md),
   [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
-  [`jump()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
   and
-  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
   took `"none"`, `"lasso"` or `"ridge"` through
   [`match.arg()`](https://rdrr.io/r/base/match.arg.html), which put a
   term’s reach at two of the penalties `penalties7` offers and made
@@ -642,9 +714,9 @@
   gradient of the model’s objective is the model’s and its vanishing is
   the test; where the block is a working linearization with a frozen
   weight, as in
-  [`jump()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
   and
-  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md),
   the profile objective is a step function in the break-point and has no
   gradient to vanish. The base method is `TRUE`, and the segmented
   method is
@@ -717,7 +789,7 @@
     coefficient, so with a link the target is `g^-1(0)` and not zero.
   - [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
     penalizes the changes as before, and
-    [`jseg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+    [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
     now declares two penalties rather than one over their union: a slope
     change and a jump are not comparable quantities and cannot share a
     hyperparameter.
@@ -848,7 +920,7 @@
   halves the factor whenever the break-point reverses direction. `band`
   is gone and no damping is needed, the factor governing the step.
   Measured over eight samples,
-  [`jump()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
   now recovers the break-point from every starting position tried, where
   the capped form recovered it only from within a narrow basin.
 - seg_step() and seg_converged() report the progress of the iteration

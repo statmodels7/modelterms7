@@ -1,11 +1,13 @@
-# Penalties of a Segmented Term
+# Penalties of a Break-Point Term
 
-One entry per kind of change the term carries a penalty on, naming the
-coefficients it covers: `"delta"` for the slope changes, `"kappa"` for
-the jump sizes, shared across the levels of `by`. The list is empty when
-`penalty = NULL`, and for a specification, whose parameters there is
-nothing yet to index: a penalty is attached at build, as it is for every
-penalized term here.
+One entry per penalty the developments of the term's own coefficients
+declare, naming the coefficients it covers. The entries of a subformula
+shared by every coefficient of one kind are pooled into one, so that
+`gamma ~ 0 + lasso(~1)` is a single penalized block over the changes
+under one hyperparameter. The list is empty for a term whose
+coefficients carry no development, and for a specification, whose
+coefficients there is nothing yet to index: a penalty is attached at
+build, as it is for every penalized term here.
 
 ## Arguments
 

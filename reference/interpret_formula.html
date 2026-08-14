@@ -19,7 +19,7 @@ model.matrix conventions."><meta property="og:image" content="https://statmodels
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.29.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.30.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -94,6 +94,16 @@ expression gives a numeric response, and a response constructor such as
 is the formula's own, carried into the collected parametric block, so
 <code>y ~ ridge_like(R)</code> still produces an intercept-only
 <code>linpar</code> block and <code>y ~ ridge_like(R) - 1</code> produces none.</p>
+<p>One covariate is removed rather than collected. A <code><a href="seg.html">seg</a></code> or
+<code><a href="jseg.html">jseg</a></code> term carrying the linear effect contributes the same
+column the bare covariate would, so <code>y ~ x + seg(x)</code> is rank
+deficient by one; the term owns that effect, which is what
+<code>linear = TRUE</code> says, so the covariate is dropped from the
+parametric block and the removal is reported with a warning.
+<code>seg(x, linear = FALSE)</code> keeps the linear effect outside the term
+instead. Only the bare main effect is removed: an interaction spans no
+main effect and is left alone, and another term spanning the same
+direction, as a spline basis does, is reported without being modified.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
