@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.44.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.45.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,11 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.45.0" id="modelterms7-0450">modelterms7 0.45.0<a class="anchor" aria-label="anchor" href="#modelterms7-0450"></a></h2>
+<ul><li><p>A smooth with a factor <code>by</code> says its penalty is one copy per level rather than handing <code>penalties7</code> the assembled product: <code>quadratic_penalty(P, blocks = m)</code> instead of <code>quadratic_penalty(kronecker(diag(m), P))</code>. Nothing of size <code>(mk)^2</code> is decomposed, and at <code>m = 200</code> over a basis of ten the term builds in 0.06 s where it took 4.16 s.</p></li>
+<li><p>The ANISOTROPIC tensor branch still assembles: <code>additive_penalty()</code> reads one eigendecomposition of the SUM of its components, which is not a blockwise quantity, so the same shortcut does not apply to it.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.44.0" id="modelterms7-0440">modelterms7 0.44.0<a class="anchor" aria-label="anchor" href="#modelterms7-0440"></a></h2>
 <ul><li><p><code><a href="../reference/s.html">s()</a></code> and <code><a href="../reference/te.html">te()</a></code> take <code>sparse</code>, and a FACTOR <code>by</code> is where it applies: each row sits in the block of its own level and nowhere else, a density of <code>1/m</code>, which is the shape <code><a href="../reference/random.html">random()</a></code>’s block already had. Measured at 2000 rows, <code>k = 10</code> and 200 levels, 0.35 MB against 28.93 MB, the numbers and the coefficient names identical, and the storage is in the blueprint so prediction does not densify.</p></li>

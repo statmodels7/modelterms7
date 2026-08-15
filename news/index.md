@@ -1,5 +1,18 @@
 # Changelog
 
+## modelterms7 0.45.0
+
+- A smooth with a factor `by` says its penalty is one copy per level
+  rather than handing `penalties7` the assembled product:
+  `quadratic_penalty(P, blocks = m)` instead of
+  `quadratic_penalty(kronecker(diag(m), P))`. Nothing of size `(mk)^2`
+  is decomposed, and at `m = 200` over a basis of ten the term builds in
+  0.06 s where it took 4.16 s.
+
+- The ANISOTROPIC tensor branch still assembles: `additive_penalty()`
+  reads one eigendecomposition of the SUM of its components, which is
+  not a blockwise quantity, so the same shortcut does not apply to it.
+
 ## modelterms7 0.44.0
 
 - [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
