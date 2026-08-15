@@ -6,7 +6,14 @@ them shrunk towards zero, none of them set to it.
 ## Usage
 
 ``` r
-ridge(x, label = "ridge", standardize = FALSE, lambda = NULL, ...)
+ridge(
+  x,
+  label = "ridge",
+  standardize = FALSE,
+  lambda = NULL,
+  sparse = FALSE,
+  ...
+)
 ```
 
 ## Arguments
@@ -29,6 +36,15 @@ ridge(x, label = "ridge", standardize = FALSE, lambda = NULL, ...)
   The precision of the prior. One number holds it and `NULL`, the
   default, has it ESTIMATED. A ridge has no kink and no path, so several
   numbers are not a grid it could visit. Must lie in \\(0, \infty)\\.
+
+- sparse:
+
+  A single logical, governing the FORMULA route: whether the block is
+  built as a `dgCMatrix` through
+  [`sparse.model.matrix`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html)
+  rather than as a dense model matrix. A MATRIX input needs no such
+  argument, being kept in whatever storage it arrives in. See the
+  section below.
 
 - ...:
 

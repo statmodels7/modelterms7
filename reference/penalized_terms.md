@@ -29,6 +29,15 @@ restated by the term.
   A single logical: whether to penalize each coefficient on the scale of
   its own column. See the section below.
 
+- sparse:
+
+  A single logical, governing the FORMULA route: whether the block is
+  built as a `dgCMatrix` through
+  [`sparse.model.matrix`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html)
+  rather than as a dense model matrix. A MATRIX input needs no such
+  argument, being kept in whatever storage it arrives in. See the
+  section below.
+
 - ...:
 
   Not used, and reported: an argument named after another penalty's
@@ -70,6 +79,26 @@ the new data would silently reuse the build-time rows.
 [`term_smooth`](https://statmodels7.github.io/modelterms7/reference/term_smooth.md)
 is `TRUE` for `ridge` and `FALSE` for `lasso`, `enet`, `scad` and `mcp`,
 read from each penalty's kink set.
+
+## Sparse storage
+
+A MATRIX input is kept in whatever storage it arrives in, so a
+`dgCMatrix` passed to any of the five stays one and nothing has to be
+said. `sparse = TRUE` governs the FORMULA route, where the model matrix
+would otherwise be built dense whatever the columns look like: it goes
+through
+[`sparse.model.matrix`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html),
+which BUILDS the block sparse rather than building a dense one and
+compressing it.
+
+It pays where the formula carries a factor of many levels, whose
+indicator columns hold one non-zero per row – `lasso(~ 0 + g)` over
+hundreds of groups is the case. On numeric covariates the block is dense
+whatever is asked for, and the sparse storage costs more than it saves.
+
+Standardization does not interfere: it is a diagonal map on the PENALTY
+and never an operation on the design, so a sparse block stays sparse
+under it.
 
 ## Standardization
 

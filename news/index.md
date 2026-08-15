@@ -1,6 +1,71 @@
 # Changelog
 
-## modelterms7 0.41.0
+## modelterms7 0.44.0
+
+- [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
+  [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
+  take `sparse`, and a FACTOR `by` is where it applies: each row sits in
+  the block of its own level and nowhere else, a density of `1/m`, which
+  is the shape
+  [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)’s
+  block already had. Measured at 2000 rows, `k = 10` and 200 levels,
+  0.35 MB against 28.93 MB, the numbers and the coefficient names
+  identical, and the storage is in the blueprint so prediction does not
+  densify.
+
+- It is REFUSED where there is nothing to build on rather than accepted
+  and ignored: without a `by` the basis is dense by construction, the
+  Demmler-Reinsch rotation making it so, and a numeric `by` merely
+  multiplies it. The first is caught at construction and the second at
+  the build, which is where each becomes knowable.
+
+- The BLOCK alone is sparse. The penalty of a factor `by` is the same
+  matrix repeated blockwise and comes back dense – 25.92 MB at those
+  sizes, at a density of 0.0005 – because `penalties7` densifies at its
+  contract boundary. Making that sparse is a change to that package’s
+  contract, not to this construction, and it is not made here.
+
+## modelterms7 0.43.0
+
+- [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
+  and the FORMULA route of the five penalized terms take
+  `sparse = FALSE`. It builds the block through
+  [`Matrix::sparse.model.matrix()`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html),
+  which BUILDS it sparse rather than building a dense matrix and
+  compressing it: measured at 20000 rows and a factor of 1000 levels,
+  0.002 s and 1.8 MB against
+  [`stats::model.matrix`](https://rdrr.io/r/stats/model.matrix.html)’s
+  0.100 s and 161.5 MB, the numbers identical, and a design that would
+  be 32 GB dense builds in 0.02 s and 19 MB – which is what says there
+  is no dense intermediate.
+
+- It pays where the formula carries a factor of many levels, whose
+  indicator columns hold one non-zero per row, and costs more than it
+  saves on numeric covariates, whose block is dense whatever is asked
+  for. The storage is part of the blueprint, so
+  [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
+  builds new data the same way, and standardization does not undo it,
+  being a diagonal map on the penalty and never an operation on the
+  design.
+
+- [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
+  does NOT take it: `.random_block()` builds with
+  [`Matrix::sparseMatrix()`](https://rdrr.io/pkg/Matrix/man/sparseMatrix.html)
+  unconditionally and its density is `1/m` by construction, so the
+  argument could only have densified. A matrix input to any of the five
+  does not take it either, being kept in whatever storage it arrives in.
+
+- [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
+  takes `contrasts`, the coding for its factors, which was reachable
+  only through the session’s `options("contrasts")`. The blueprint
+  carries it, so prediction is coded the way the fit was.
+
+- [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
+  takes `linpar`, arguments for the IMPLICIT linpar – the term the bare
+  covariates collapse into, which a caller never writes, so it is the
+  only place they can be given.
+
+## modelterms7 0.42.0
 
 - [`enet()`](https://statmodels7.github.io/modelterms7/reference/enet.md),
   [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md)
@@ -44,11 +109,14 @@
   Both are now reported by name, as any other argument the term does not
   have.
 
-- The pages say what the defaults ARE. `n_lambda = NULL` visits 25
-  values, and `n_alpha`, `n_a` and `n_gamma` visit 5: a path over the
-  size of the kink spans four decades and wants that many points, while
-  the axis beside it spans one bounded interval and does not. “Leaves it
-  to the criterion” named a number nothing printed.
+- The defaults are NUMBERS ON THE SIGNATURE: `n_lambda = 25`,
+  `n_alpha = 5`, `n_a = 5`, `n_gamma = 5`, `min_ratio = 1e-4`,
+  `search = "grid"`. They were `NULL` and documented as “leaves it to
+  the criterion”, which named a number nothing printed – a default a
+  reader cannot find is a default a reader cannot choose against. The
+  two grid sizes differ because the axes do: a path over the size of the
+  kink spans four decades and wants that many points, an axis beside it
+  spans one bounded interval and does not.
 
 ## modelterms7 0.40.0
 

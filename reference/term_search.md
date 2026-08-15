@@ -53,5 +53,7 @@ term_search(enet(~x, search = "cyclic"))
 #> [1] "cyclic"
 #> 
 term_search(enet(~x))
-#> list()
+#> [[1]]
+#> [1] "grid"
+#> 
 ```

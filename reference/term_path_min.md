@@ -46,5 +46,7 @@ term_path_min(lasso(~x, min_ratio = 1e-6))
 #> [1] 1e-06
 #> 
 term_path_min(lasso(~x))
-#> list()
+#> [[1]]
+#> [1] 1e-04
+#> 
 ```

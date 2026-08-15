@@ -13,7 +13,7 @@ block with the usual
 ## Usage
 
 ``` r
-interpret_formula(formula, data)
+interpret_formula(formula, data, linpar = list())
 ```
 
 ## Arguments
@@ -25,6 +25,15 @@ interpret_formula(formula, data)
 - data:
 
   A data frame in which the formula's symbols are evaluated.
+
+- linpar:
+
+  Arguments for the IMPLICIT
+  [`linpar`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
+  term, the one the bare covariates collapse into, as a named list –
+  `sparse` and `contrasts`. It is the only place they can be given: that
+  term is never written by the caller. Empty, the default, leaves the
+  constructor's own.
 
 ## Value
 

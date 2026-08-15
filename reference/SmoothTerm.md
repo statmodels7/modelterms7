@@ -25,7 +25,8 @@ SmoothTerm(
   penalty = NULL,
   vars = list(),
   by = NULL,
-  spec = list()
+  spec = list(),
+  sparse = FALSE
 )
 ```
 
@@ -99,6 +100,11 @@ SmoothTerm(
 
   The construction settings: the basis, its dimension and degree, and
   whether the linear part is carried separately.
+
+- sparse:
+
+  Whether the block is a `dgCMatrix`, which only a factor `by` admits.
+  See [`s`](https://statmodels7.github.io/modelterms7/reference/s.md).
 
 ## Value
 

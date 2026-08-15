@@ -15,7 +15,8 @@ te(
   bases = NULL,
   anisotropic = TRUE,
   label = NULL,
-  lambda = NULL
+  lambda = NULL,
+  sparse = FALSE
 )
 ```
 
@@ -60,6 +61,13 @@ te(
   left `NULL`, which is the default. An anisotropic tensor product
   carries one per margin, so a vector of that length, or a named one
   holding some of them.
+
+- sparse:
+
+  Whether the block is built as a `dgCMatrix`. Only a FACTOR `by` admits
+  it, each row sitting in the block of its own level; without one the
+  argument is refused rather than ignored. See
+  [`s`](https://statmodels7.github.io/modelterms7/reference/s.md).
 
 ## Value
 

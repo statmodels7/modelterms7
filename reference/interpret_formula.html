@@ -19,7 +19,7 @@ model.matrix conventions."><meta property="og:image" content="https://statmodels
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.41.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.44.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,7 @@ is collected into one <code><a href="linpar.html">linpar</a></code> block with t
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">interpret_formula</span><span class="op">(</span><span class="va">formula</span>, <span class="va">data</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">interpret_formula</span><span class="op">(</span><span class="va">formula</span>, <span class="va">data</span>, linpar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -70,6 +70,14 @@ is collected into one <code><a href="linpar.html">linpar</a></code> block with t
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>A data frame in which the formula's symbols are evaluated.</p></dd>
+
+
+<dt id="arg-linpar">linpar<a class="anchor" aria-label="anchor" href="#arg-linpar"></a></dt>
+<dd><p>Arguments for the IMPLICIT <code><a href="linpar.html">linpar</a></code> term, the one
+the bare covariates collapse into, as a named list – <code>sparse</code> and
+<code>contrasts</code>. It is the only place they can be given: that term is
+never written by the caller. Empty, the default, leaves the constructor's
+own.</p></dd>
 
 </dl></div>
     <div class="section level2">

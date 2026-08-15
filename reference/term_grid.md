@@ -39,5 +39,9 @@ term_grid(lasso(~x, n_lambda = 50))
 #> 
 #> 
 term_grid(lasso(~x))
-#> list()
+#> [[1]]
+#> [[1]]$lambda
+#> [1] 25
+#> 
+#> 
 ```

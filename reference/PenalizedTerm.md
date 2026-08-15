@@ -29,7 +29,8 @@ PenalizedTerm(
   input = NULL,
   input_expr = NULL,
   factory = function() NULL,
-  standardize = FALSE
+  standardize = FALSE,
+  sparse = FALSE
 )
 ```
 
@@ -112,6 +113,12 @@ PenalizedTerm(
 
   Whether the block's columns are put on a common scale by the penalty's
   diagonal map.
+
+- sparse:
+
+  Whether the FORMULA route builds the block as a `dgCMatrix`. A matrix
+  input is kept in whatever storage it arrives in and needs no such
+  argument.
 
 ## Value
 

@@ -17,7 +17,8 @@ s(
   basis = NULL,
   linear = TRUE,
   label = NULL,
-  lambda = NULL
+  lambda = NULL,
+  sparse = FALSE
 )
 ```
 
@@ -61,6 +62,12 @@ s(
   carries one per margin, so a vector of that length, or a named one
   holding some of them.
 
+- sparse:
+
+  Whether the block is built as a `dgCMatrix`. Only a FACTOR `by` admits
+  it, each row sitting in the block of its own level; without one the
+  argument is refused rather than ignored. See Details.
+
 ## Value
 
 An object of class
@@ -95,6 +102,20 @@ the same matrix repeated blockwise, so one smoothing parameter governs
 every level. With `by` numeric the term is a varying-coefficient one:
 the smooth multiplies that variable, and the fitted function is the
 coefficient of `by` as it changes with the covariate.
+
+A factor `by` is where a smooth's block can be SPARSE: each row sits in
+the block of its own level and nowhere else, a density of \\1/m\\.
+`sparse = TRUE` builds it that way rather than building the dense matrix
+and compressing it – measured at 2000 rows, \\k = 10\\ and 200 levels,
+0.35 MB against 28.93 MB, the numbers identical. It is refused without a
+factor `by`, where there would be nothing to build on: the basis is
+dense by construction, the Demmler-Reinsch rotation making it so, and a
+numeric `by` merely multiplies it.
+
+The block alone is sparse. The PENALTY of a factor `by` is the same
+matrix repeated blockwise, and penalties7 returns it dense – 25.92 MB at
+those sizes, at a density of 0.0005 – which is a property of that
+package's contract rather than of this construction.
 
 ## References
 

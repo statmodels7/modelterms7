@@ -25,7 +25,9 @@ LinparTerm(
   coef_names = character(0),
   blueprint = list(),
   penalty = NULL,
-  formula = NULL
+  formula = NULL,
+  sparse = FALSE,
+  contrasts = list()
 )
 ```
 
@@ -90,6 +92,17 @@ LinparTerm(
 - formula:
 
   The one-sided formula defining the block.
+
+- sparse:
+
+  Whether the block is a `dgCMatrix`, built sparse rather than
+  compressed after the fact. See
+  [`linpar`](https://statmodels7.github.io/modelterms7/reference/linpar.md).
+
+- contrasts:
+
+  The contrasts for the formula's factors, as a named list, or an empty
+  list for the session's own.
 
 ## Value
 

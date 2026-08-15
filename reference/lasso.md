@@ -12,8 +12,9 @@ lasso(
   label = "lasso",
   standardize = FALSE,
   lambda = NULL,
-  n_lambda = NULL,
-  min_ratio = NULL,
+  n_lambda = 25,
+  min_ratio = 1e-04,
+  sparse = FALSE,
   ...
 )
 ```
@@ -41,15 +42,22 @@ lasso(
 
 - n_lambda:
 
-  How many values the path visits, at least 2. `NULL`, the default,
-  leaves it to the criterion, which visits 25.
+  How many values the path visits, at least 2.
 
 - min_ratio:
 
   How far down the path reaches, as a fraction of the kink that empties
   the block: smaller reaches a denser fit, larger stops sooner. Must lie
-  in (0, 1). NULL, the default, leaves it to the criterion. Only the
-  sweep by kink size uses it.
+  in \\(0, 1)\\.
+
+- sparse:
+
+  A single logical, governing the FORMULA route: whether the block is
+  built as a `dgCMatrix` through
+  [`sparse.model.matrix`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html)
+  rather than as a dense model matrix. A MATRIX input needs no such
+  argument, being kept in whatever storage it arrives in. See the
+  section below.
 
 - ...:
 

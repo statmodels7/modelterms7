@@ -13,10 +13,11 @@ enet(
   standardize = FALSE,
   lambda = NULL,
   alpha = NULL,
-  n_lambda = NULL,
-  n_alpha = NULL,
-  min_ratio = NULL,
-  search = NULL,
+  n_lambda = 25,
+  n_alpha = 5,
+  min_ratio = 1e-04,
+  search = "grid",
+  sparse = FALSE,
   ...
 )
 ```
@@ -49,11 +50,10 @@ enet(
 
 - n_lambda, n_alpha:
 
-  How many values the path visits for each, at least 2. `NULL`, the
-  default, leaves it to the criterion, which visits 25 values of
-  \\\lambda\\ and 5 of \\\alpha\\: the first descends the size of the
-  kink over four decades and wants that many points, the second spans
-  one bounded interval and does not.
+  How many values the path visits for each, at least 2. They differ
+  because the axes do: \\\lambda\\ descends the size of the kink over
+  four decades and wants that many points, while \\\alpha\\ spans one
+  bounded interval and does not.
 
 - min_ratio:
 
@@ -65,9 +65,17 @@ enet(
 - search:
 
   `"grid"` to visit every combination of \\\lambda\\ and \\\alpha\\,
-  `"cyclic"` to sweep one at a time with the other held. `NULL`, the
-  default, leaves it to the fitting layer, which takes the product. See
+  `"cyclic"` to sweep one at a time with the other held. See
   [`term_search`](https://statmodels7.github.io/modelterms7/reference/term_search.md).
+
+- sparse:
+
+  A single logical, governing the FORMULA route: whether the block is
+  built as a `dgCMatrix` through
+  [`sparse.model.matrix`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html)
+  rather than as a dense model matrix. A MATRIX input needs no such
+  argument, being kept in whatever storage it arrives in. See the
+  section below.
 
 - ...:
 

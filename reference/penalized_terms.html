@@ -23,7 +23,7 @@ never restated by the term."><meta property="og:image" content="https://statmode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.41.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.44.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,6 +80,14 @@ names.</p></dd>
 coefficient on the scale of its own column. See the section below.</p></dd>
 
 
+<dt id="arg-sparse">sparse<a class="anchor" aria-label="anchor" href="#arg-sparse"></a></dt>
+<dd><p>A single logical, governing the FORMULA route: whether the
+block is built as a <code>dgCMatrix</code> through
+<code><a href="https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html" class="external-link">sparse.model.matrix</a></code> rather than as a dense model
+matrix. A MATRIX input needs no such argument, being kept in whatever
+storage it arrives in. See the section below.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Not used, and reported: an argument named after another
 penalty's hyperparameter is the mistake this catches.</p></dd>
@@ -116,6 +124,23 @@ rows.</p>
 <p><code><a href="term_smooth.html">term_smooth</a></code> is <code>TRUE</code> for <code>ridge</code> and
 <code>FALSE</code> for <code>lasso</code>, <code>enet</code>, <code>scad</code> and
 <code>mcp</code>, read from each penalty's kink set.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="sparse-storage">Sparse storage<a class="anchor" aria-label="anchor" href="#sparse-storage"></a></h2>
+
+
+<p>A MATRIX input is kept in whatever storage it arrives in, so a
+<code>dgCMatrix</code> passed to any of the five stays one and nothing has to be
+said. <code>sparse = TRUE</code> governs the FORMULA route, where the model
+matrix would otherwise be built dense whatever the columns look like: it
+goes through <code><a href="https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html" class="external-link">sparse.model.matrix</a></code>, which BUILDS the
+block sparse rather than building a dense one and compressing it.</p>
+<p>It pays where the formula carries a factor of many levels, whose indicator
+columns hold one non-zero per row – <code>lasso(~ 0 + g)</code> over hundreds of
+groups is the case. On numeric covariates the block is dense whatever is
+asked for, and the sparse storage costs more than it saves.</p>
+<p>Standardization does not interfere: it is a diagonal map on the PENALTY and
+never an operation on the design, so a sparse block stays sparse under it.</p>
     </div>
     <div class="section level2">
     <h2 id="standardization">Standardization<a class="anchor" aria-label="anchor" href="#standardization"></a></h2>

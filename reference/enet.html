@@ -11,7 +11,7 @@ of choosing arbitrarily among them."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.41.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.44.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -51,10 +51,11 @@ of choosing arbitrarily among them.</p>
 <span>  standardize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  lambda <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  n_lambda <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  n_alpha <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  min_ratio <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  search <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_lambda <span class="op">=</span> <span class="fl">25</span>,</span>
+<span>  n_alpha <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  min_ratio <span class="op">=</span> <span class="fl">1e-04</span>,</span>
+<span>  search <span class="op">=</span> <span class="st">"grid"</span>,</span>
+<span>  sparse <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -90,10 +91,9 @@ independently of <code>lambda</code>. Must lie in \((0, 1)\).</p></dd>
 
 <dt id="arg-n-lambda-n-alpha">n_lambda, n_alpha<a class="anchor" aria-label="anchor" href="#arg-n-lambda-n-alpha"></a></dt>
 <dd><p>How many values the path visits for each, at
-least 2. <code>NULL</code>, the default, leaves it to the criterion, which
-visits 25 values of \(\lambda\) and 5 of \(\alpha\): the first
-descends the size of the kink over four decades and wants that many
-points, the second spans one bounded interval and does not.</p></dd>
+least 2. They differ because the axes do: \(\lambda\) descends the
+size of the kink over four decades and wants that many points, while
+\(\alpha\) spans one bounded interval and does not.</p></dd>
 
 
 <dt id="arg-min-ratio">min_ratio<a class="anchor" aria-label="anchor" href="#arg-min-ratio"></a></dt>
@@ -106,8 +106,15 @@ criterion. Only the sweep by kink size uses it.</p></dd>
 <dt id="arg-search">search<a class="anchor" aria-label="anchor" href="#arg-search"></a></dt>
 <dd><p><code>"grid"</code> to visit every combination of \(\lambda\)
 and \(\alpha\), <code>"cyclic"</code> to sweep one at a time with the other
-held. <code>NULL</code>, the default, leaves it to the fitting layer, which
-takes the product. See <code><a href="term_search.html">term_search</a></code>.</p></dd>
+held. See <code><a href="term_search.html">term_search</a></code>.</p></dd>
+
+
+<dt id="arg-sparse">sparse<a class="anchor" aria-label="anchor" href="#arg-sparse"></a></dt>
+<dd><p>A single logical, governing the FORMULA route: whether the
+block is built as a <code>dgCMatrix</code> through
+<code><a href="https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html" class="external-link">sparse.model.matrix</a></code> rather than as a dense model
+matrix. A MATRIX input needs no such argument, being kept in whatever
+storage it arrives in. See the section below.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

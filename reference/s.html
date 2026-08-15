@@ -15,7 +15,7 @@ penalty into the identity on the deviation."><meta property="og:image" content="
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.41.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.44.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,8 @@ penalty into the identity on the deviation.</p>
 <span>  basis <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  linear <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  label <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  lambda <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  lambda <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  sparse <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -104,6 +105,13 @@ ESTIMATED when left <code>NULL</code>, which is the default. An
 anisotropic tensor product carries one per margin, so a vector
 of that length, or a named one holding some of them.</p></dd>
 
+
+<dt id="arg-sparse">sparse<a class="anchor" aria-label="anchor" href="#arg-sparse"></a></dt>
+<dd><p>Whether the block is built as a <code>dgCMatrix</code>. Only a
+FACTOR <code>by</code> admits it, each row sitting in the block of its own
+level; without one the argument is refused rather than ignored. See
+Details.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -135,6 +143,18 @@ governs every level. With <code>by</code> numeric the term is a
 varying-coefficient one: the smooth multiplies that variable, and the
 fitted function is the coefficient of <code>by</code> as it changes with the
 covariate.</p>
+<p>A factor <code>by</code> is where a smooth's block can be SPARSE: each row sits
+in the block of its own level and nowhere else, a density of \(1/m\).
+<code>sparse = TRUE</code> builds it that way rather than building the dense
+matrix and compressing it – measured at 2000 rows, \(k = 10\) and 200
+levels, 0.35 MB against 28.93 MB, the numbers identical. It is refused
+without a factor <code>by</code>, where there would be nothing to build on: the
+basis is dense by construction, the Demmler-Reinsch rotation making it so,
+and a numeric <code>by</code> merely multiplies it.</p>
+<p>The block alone is sparse. The PENALTY of a factor <code>by</code> is the same
+matrix repeated blockwise, and <span class="pkg">penalties7</span> returns it dense – 25.92
+MB at those sizes, at a density of 0.0005 – which is a property of that
+package's contract rather than of this construction.</p>
 </div>
 
     </div>
