@@ -995,7 +995,8 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
                                       index = index[[p]][e$index],
                                       penalty = e$penalty, fixed = e$fixed,
                                       n_values = e$n_values,
-                                      min_ratio = e$min_ratio)
+                                      min_ratio = e$min_ratio,
+                                      search = e$search)
     }
   }
   out

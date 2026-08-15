@@ -4,24 +4,13 @@
 \alias{ridge}
 \title{Ridge Penalty on a Block of Coefficients}
 \usage{
-ridge(
-  x,
-  label = "ridge",
-  by = NULL,
-  standardize = FALSE,
-  lambda = NULL,
-  n_lambda = NULL,
-  min_ratio = NULL,
-  ...
-)
+ridge(x, label = "ridge", standardize = FALSE, lambda = NULL, ...)
 }
 \arguments{
 \item{x}{A one-sided formula or a numeric matrix.}
 
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}
-
-\item{by}{Reserved for a later release; must be \code{NULL}.}
 
 \item{standardize}{A single logical: whether to penalize each
 coefficient on the scale of its own column. See the section below.}
@@ -30,13 +19,6 @@ coefficient on the scale of its own column. See the section below.}
 \code{NULL}, the default, has it ESTIMATED. A ridge has no kink and no
 path, so several numbers are not a grid it could visit. Must lie in
 \eqn{(0, \infty)}.}
-
-\item{n_lambda}{Unused by this term: a ridge has no kink and its
-hyperparameter is estimated by a criterion rather than swept over a
-grid. Accepted so that the five constructors read alike.}
-
-\item{min_ratio}{Unused by this term, which has no path. Accepted so
-that the five constructors read alike.}
 
 \item{...}{Not used, and reported: an argument named after another
 penalty's hyperparameter is the mistake this catches.}

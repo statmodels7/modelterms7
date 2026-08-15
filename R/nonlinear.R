@@ -417,7 +417,7 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
           name = paste0(p, "::", e$name),
           index = index[[p]][e$index],
           penalty = e$penalty, fixed = e$fixed, n_values = e$n_values,
-          values = e$values, min_ratio = e$min_ratio)
+          values = e$values, min_ratio = e$min_ratio, search = e$search)
       }
     }
   }
@@ -502,7 +502,8 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
                                         penalty = e$penalty, fixed = e$fixed,
                                         n_values = e$n_values,
                                         values = e$values,
-                                        min_ratio = e$min_ratio)
+                                        min_ratio = e$min_ratio,
+                                        search = e$search)
     }
     off <- off + ncol(mats[[lb]])
   }

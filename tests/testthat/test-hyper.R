@@ -168,3 +168,40 @@ test_that("several values are a grid the path visits, not a held value", {
   expect_equal(term_penalties(b)[[1L]]$values, list(lambda = c(0.5, 2)))
   expect_identical(term_penalties(b)[[1L]]$fixed, list())
 })
+
+test_that("a term says how its own hyperparameters are combined", {
+  # HOW they are combined with EACH OTHER is not a property any one of them
+  # has, so it is one word per term. It belongs to the term because a penalty
+  # with a kink is fitted by a scheme of its own; a criterion is asked of
+  # every hyperparameter of the model, the smooth ones included, and most of
+  # those are read at the mode rather than swept.
+  expect_identical(term_search(enet(~x)), list())
+  expect_equal(term_search(enet(~x, search = "cyclic"))[[1L]], "cyclic")
+  expect_equal(term_search(scad(~x, search = "grid"))[[1L]], "grid")
+  expect_equal(term_search(mcp(~x, search = "cyclic"))[[1L]], "cyclic")
+
+  expect_error(enet(~x, search = "product"), "must be")
+  expect_error(enet(~x, search = c("grid", "cyclic")), "must be")
+  expect_error(enet(~x, search = 1), "must be")
+
+  # the two with one hyperparameter or none do not carry it: there is
+  # nothing to combine, and the argument is reported rather than swallowed
+  expect_error(lasso(~x, search = "grid"), "no argument 'search'")
+  expect_error(ridge(~x, search = "grid"), "no argument 'search'")
+
+  # and it travels with the entry, as the grid size and the depth do
+  dd <- data.frame(x = stats::rnorm(20), z = stats::rnorm(20))
+  b <- term_build(enet(~ x + z, search = "cyclic"), dd)
+  expect_equal(term_penalties(b)[[1L]]$search, "cyclic")
+})
+
+test_that("a term does not take an argument it would not read", {
+  # a ridge is twice differentiable everywhere, so its lambda is estimated at
+  # the mode and there is no path: a grid size and a depth describe nothing
+  # here, and they were accepted only so the five constructors read alike
+  expect_error(ridge(~x, n_lambda = 10), "no argument 'n_lambda'")
+  expect_error(ridge(~x, min_ratio = 1e-3), "no argument 'min_ratio'")
+  # while the four that do have a path keep both
+  expect_equal(term_grid(lasso(~x, n_lambda = 10))[[1L]], list(lambda = 10L))
+  expect_equal(term_path_min(lasso(~x, min_ratio = 1e-3))[[1L]], 1e-3)
+})

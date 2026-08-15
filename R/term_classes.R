@@ -28,6 +28,10 @@
 #'   reaches, as a fraction of the value that empties the block, or
 #'   \code{numeric(0)} for the criterion's own. See
 #'   \code{\link{term_path_min}}.
+#' @param search How the term's own hyperparameters are covered when it has
+#'   several with a kink: \code{"grid"} for every combination of them,
+#'   \code{"cyclic"} for one at a time, or \code{character(0)} for the
+#'   default. See \code{\link{term_search}}.
 #'
 #' @return An object inheriting from class \code{model_term}.
 #'
@@ -66,7 +70,16 @@ model_term <- S7::new_class(
     # hyperparameter is swept over its own interval and a shape over a
     # geometric grid above its lower bound, where a ratio means nothing.
     min_ratio = S7::new_property(S7::class_numeric,
-                                 default = quote(numeric(0)))
+                                 default = quote(numeric(0))),
+    # HOW its own hyperparameters are covered when it has several with a
+    # kink: every combination of them, or one at a time. It belongs beside
+    # the grid size and the depth for the same reason -- a term whose
+    # penalty has a kink is fitted by a scheme of its own, and how that
+    # scheme sweeps the term's own hyperparameters is a property of the
+    # term. A criterion is asked of every hyperparameter of the model,
+    # smooth ones included, and has no business carrying it.
+    search = S7::new_property(S7::class_character,
+                              default = quote(character(0)))
   )
 )
 
@@ -96,6 +109,10 @@ model_term <- S7::new_class(
 #'   reaches, as a fraction of the value that empties the block, or
 #'   \code{numeric(0)} for the criterion's own. See
 #'   \code{\link{term_path_min}}.
+#' @param search How the term's own hyperparameters are covered when it has
+#'   several with a kink: \code{"grid"} for every combination of them,
+#'   \code{"cyclic"} for one at a time, or \code{character(0)} for the
+#'   default. See \code{\link{term_search}}.
 #' @param X The design block, filled by \code{\link{term_build}}.
 #' @param coef_names The coefficient names, filled by
 #'   \code{\link{term_build}}.
@@ -149,6 +166,10 @@ additive_term <- S7::new_class(
 #'   reaches, as a fraction of the value that empties the block, or
 #'   \code{numeric(0)} for the criterion's own. See
 #'   \code{\link{term_path_min}}.
+#' @param search How the term's own hyperparameters are covered when it has
+#'   several with a kink: \code{"grid"} for every combination of them,
+#'   \code{"cyclic"} for one at a time, or \code{character(0)} for the
+#'   default. See \code{\link{term_search}}.
 #'
 #' @return An object inheriting from class \code{structural_term}.
 #'

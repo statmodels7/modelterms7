@@ -9,7 +9,8 @@ model_term(
   hyper = list(),
   grid = list(),
   values = list(),
-  min_ratio = numeric(0)
+  min_ratio = numeric(0),
+  search = character(0)
 )
 }
 \arguments{
@@ -32,6 +33,11 @@ build them. See \code{\link{term_values}}.}
 reaches, as a fraction of the value that empties the block, or
 \code{numeric(0)} for the criterion's own. See
 \code{\link{term_path_min}}.}
+
+\item{search}{How the term's own hyperparameters are covered when it has
+several with a kink: \code{"grid"} for every combination of them,
+\code{"cyclic"} for one at a time, or \code{character(0)} for the
+default. See \code{\link{term_search}}.}
 }
 \value{
 An object inheriting from class \code{model_term}.

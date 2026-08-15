@@ -7,13 +7,13 @@
 scad(
   x,
   label = "scad",
-  by = NULL,
   standardize = FALSE,
   lambda = NULL,
   a = NULL,
   n_lambda = NULL,
   n_a = NULL,
   min_ratio = NULL,
+  search = NULL,
   ...
 )
 }
@@ -22,8 +22,6 @@ scad(
 
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}
-
-\item{by}{Reserved for a later release; must be \code{NULL}.}
 
 \item{standardize}{A single logical: whether to penalize each
 coefficient on the scale of its own column. See the section below.}
@@ -36,12 +34,20 @@ the path build one. Must lie in \eqn{(0, \infty)}.}
 \code{lambda}. Must lie in \eqn{(2, \infty)}.}
 
 \item{n_lambda, n_a}{How many values the path visits for each, at least 2.
-\code{NULL}, the default, leaves it to the criterion.}
+\code{NULL}, the default, leaves it to the criterion, which visits 25
+values of \eqn{\lambda} and 5 of \eqn{a}: the first descends the size of
+the kink over four decades and wants that many points, the second spans
+the shape's useful range and does not.}
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
 stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
 criterion. Only the sweep by kink size uses it.}
+
+\item{search}{\code{"grid"} to visit every combination of \eqn{\lambda}
+and \eqn{a}, \code{"cyclic"} to sweep one at a time with the other held.
+\code{NULL}, the default, leaves it to the fitting layer, which takes
+the product. See \code{\link{term_search}}.}
 
 \item{...}{Not used, and reported: an argument named after another
 penalty's hyperparameter is the mistake this catches.}

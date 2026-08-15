@@ -77,8 +77,15 @@ test_that("a free-standing matrix builds but refuses a mismatched prediction", {
   expect_error(term_build(ridge(M[1:5, ]), dd), "5 rows")
 })
 
-test_that("by is reserved and inputs are validated", {
-  expect_error(ridge(~x1, by = dd$g), "reserved")
+test_that("inputs are validated, and by is not an argument here", {
+  # A `by` over the observations builds PENALTY STRUCTURE where it belongs,
+  # in s() and te(): one block of the penalty matrix per level. These five
+  # are SEPARABLE -- that is the property that lets a coordinate descent fit
+  # them -- so repeating the penalty blockwise is the identity operation and
+  # `lasso(~ (x1 + x2):g)` already is the per-level fit, coefficient by
+  # coefficient. There was nothing for the argument to build.
+  expect_error(ridge(~x1, by = dd$g), "no argument 'by'")
+  expect_error(lasso(~x1, by = dd$g), "no argument 'by'")
   expect_error(lasso(y ~ x1), "one-sided")
   expect_error(scad(matrix("a", 2, 2)), "numeric")
   expect_error(mcp(~x1, label = ""), "non-empty")

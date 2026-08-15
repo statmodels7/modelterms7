@@ -556,3 +556,88 @@ S7::method(term_path_min, model_term) <- function(term, ...) {
   if (!length(m)) return(list())
   stats::setNames(list(as.numeric(m)), "")
 }
+
+
+#' Check How a Term Covers Its Own Hyperparameters
+#'
+#' @description
+#' Validates the sweep a constructor was given for the term's own kinked
+#' hyperparameters.
+#'
+#' @details
+#' One word per term rather than one per hyperparameter: it says how the
+#' hyperparameters are combined WITH EACH OTHER, which is not a property any
+#' one of them has. It belongs to the term because a penalty with a kink is
+#' fitted by a scheme of its own, and how that scheme sweeps its own
+#' hyperparameters is part of the scheme. A criterion applies to every
+#' hyperparameter of the model, the smooth ones included, and would be
+#' carrying an argument most of them cannot read.
+#'
+#' @param v What the constructor was given, or \code{NULL}.
+#' @param what The term's label, for the message.
+#'
+#' @return A character vector of length one, or of length zero.
+#'
+#' @seealso \code{\link{term_search}}, \code{\link{check_min_ratio}}
+#'
+#' @keywords internal
+check_search <- function(v, what = "this term") {
+  if (is.null(v)) return(character(0))
+  if (!is.character(v) || length(v) != 1L || is.na(v) ||
+      !v %in% c("grid", "cyclic")) {
+    stop(sprintf(paste0("'search' in '%s' must be \"grid\", \"cyclic\" or",
+                        " NULL."), what), call. = FALSE)
+  }
+  v
+}
+
+
+#' @title How a Term Covers Its Own Hyperparameters
+#'
+#' @description
+#' \code{"grid"} for every combination of the term's kinked hyperparameters,
+#' \code{"cyclic"} for one at a time. A term that names neither is covered
+#' the way the fitting layer covers one by default.
+#'
+#' @details
+#' It matters only for a term carrying MORE THAN ONE hyperparameter with a
+#' kink -- \code{\link{enet}}, \code{\link{scad}} and \code{\link{mcp}} --
+#' since there is nothing to combine otherwise. Under \code{"grid"} the cost
+#' is the product of the term's own grids and under \code{"cyclic"} their sum
+#' per pass.
+#'
+#' Between two terms the sweep alternates whichever each one names, so
+#' \code{y ~ lasso(X) + enet(R)} costs the two blocks added and not
+#' multiplied, and one term asking for a product does not make the other pay
+#' for it.
+#'
+#' @param term A term, built or not.
+#' @param ... Passed to methods.
+#'
+#' @return A named list, one entry per penalty of the term, each a single
+#'   string. Empty where the term names none.
+#'
+#' @examples
+#' term_search(enet(~x, search = "cyclic"))
+#' term_search(enet(~x))
+#'
+#' @seealso \code{\link{term_grid}}, \code{\link{term_path_min}}
+#' @export
+term_search <- S7::new_generic("term_search", "term",
+  function(term, ...) S7::S7_dispatch())
+
+S7::method(term_search, model_term) <- function(term, ...) {
+  ent <- tryCatch(term_penalties(term), error = function(e) list())
+  if (length(ent)) {
+    out <- list()
+    for (e in ent) {
+      s <- e$search
+      if (is.null(s) || !length(s)) next
+      out[[if (is.null(e$name)) "" else e$name]] <- as.character(s)
+    }
+    if (length(out)) return(out)
+  }
+  s <- term@search
+  if (!length(s)) return(list())
+  stats::setNames(list(as.character(s)), "")
+}

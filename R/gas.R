@@ -507,7 +507,7 @@ S7::method(term_penalties, GasTerm) <- function(term, ...) {
         # term propagates it by copying the entry and needs to know nothing
         # about hyperparameters
         fixed = e$fixed, n_values = e$n_values, values = e$values,
-        min_ratio = e$min_ratio)
+        min_ratio = e$min_ratio, search = e$search)
     }
   }
   out

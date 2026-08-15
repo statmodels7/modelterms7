@@ -7,7 +7,6 @@
 lasso(
   x,
   label = "lasso",
-  by = NULL,
   standardize = FALSE,
   lambda = NULL,
   n_lambda = NULL,
@@ -21,8 +20,6 @@ lasso(
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}
 
-\item{by}{Reserved for a later release; must be \code{NULL}.}
-
 \item{standardize}{A single logical: whether to penalize each
 coefficient on the scale of its own column. See the section below.}
 
@@ -31,7 +28,7 @@ grid the path visits as they stand, and \code{NULL}, the default, has the
 path build one. Must lie in \eqn{(0, \infty)}.}
 
 \item{n_lambda}{How many values the path visits, at least 2. \code{NULL},
-the default, leaves it to the criterion.}
+the default, leaves it to the criterion, which visits 25.}
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger

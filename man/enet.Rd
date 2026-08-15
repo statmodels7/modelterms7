@@ -7,13 +7,13 @@
 enet(
   x,
   label = "enet",
-  by = NULL,
   standardize = FALSE,
   lambda = NULL,
   alpha = NULL,
   n_lambda = NULL,
   n_alpha = NULL,
   min_ratio = NULL,
+  search = NULL,
   ...
 )
 }
@@ -22,8 +22,6 @@ enet(
 
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}
-
-\item{by}{Reserved for a later release; must be \code{NULL}.}
 
 \item{standardize}{A single logical: whether to penalize each
 coefficient on the scale of its own column. See the section below.}
@@ -36,12 +34,20 @@ build one. Must lie in \eqn{(0, \infty)}.}
 independently of \code{lambda}. Must lie in \eqn{(0, 1)}.}
 
 \item{n_lambda, n_alpha}{How many values the path visits for each, at
-least 2. \code{NULL}, the default, leaves it to the criterion.}
+least 2. \code{NULL}, the default, leaves it to the criterion, which
+visits 25 values of \eqn{\lambda} and 5 of \eqn{\alpha}: the first
+descends the size of the kink over four decades and wants that many
+points, the second spans one bounded interval and does not.}
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
 stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
 criterion. Only the sweep by kink size uses it.}
+
+\item{search}{\code{"grid"} to visit every combination of \eqn{\lambda}
+and \eqn{\alpha}, \code{"cyclic"} to sweep one at a time with the other
+held. \code{NULL}, the default, leaves it to the fitting layer, which
+takes the product. See \code{\link{term_search}}.}
 
 \item{...}{Not used, and reported: an argument named after another
 penalty's hyperparameter is the mistake this catches.}
@@ -72,9 +78,9 @@ half-width \eqn{\lambda\alpha}, so both hyperparameters scale it.
 \strong{Hyperparameters.} \code{lambda} on \eqn{(0, \infty)}, swept over
 \code{n_lambda} values by kink size; \code{alpha} on \eqn{(0, 1)}, swept
 over \code{n_alpha} values across that interval, the ends excluded
-because the penalty there is one of the other two. The two are swept
-cyclically, one at a time, which keeps the cost linear in their number
-where a product grid would be exponential in it.
+because the penalty there is one of the other two. Every combination of
+the two is visited, \code{n_lambda * n_alpha} fits, unless
+\code{search = "cyclic"} asks for one at a time instead.
 }
 \examples{
 dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))

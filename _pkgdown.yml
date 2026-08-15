@@ -35,6 +35,7 @@ reference:
   - term_grid
   - term_values
   - term_path_min
+  - term_search
   - term_npar
   - term_coef_start
   - term_coef_names

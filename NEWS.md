@@ -1,3 +1,40 @@
+# modelterms7 0.41.0
+
+* `enet()`, `scad()` and `mcp()` take `search`, how their own two
+  hyperparameters are combined: `"grid"` for every combination of them,
+  `"cyclic"` for one at a time. It sat on the criterion, where it did not
+  belong -- the same criterion is put to the smooth hyperparameters of a
+  model, which are read at the mode rather than swept, so most of what it is
+  asked about could not use it. A penalty with a kink is fitted by a scheme
+  of its own, and how that scheme covers the term's own hyperparameters is
+  part of the scheme. `term_search()` reports it.
+
+* `lasso()` and `ridge()` do not carry it: with one hyperparameter or none
+  there is nothing to combine, and the argument is reported by name rather
+  than accepted and read by nothing.
+
+* `by` is gone from all five, and it was not merely unimplemented: there is
+  nothing for it to build. Where `by` earns its place, in `s()` and `te()`,
+  it builds PENALTY STRUCTURE -- one block of the penalty matrix per level of
+  the factor. These five are separable, which is the property that lets a
+  coordinate descent fit them, so repeating the penalty blockwise is the
+  identity operation and `lasso(~ (x1 + x2):g)` already IS the per-level fit,
+  coefficient by coefficient. It was reserved for a later release that had no
+  work to do.
+
+* `ridge()` loses `n_lambda` and `min_ratio`, which it never read. They were
+  accepted "so that the five constructors read alike", and a symmetry of
+  spelling is not worth an argument that does nothing: a ridge is twice
+  differentiable everywhere, so its `lambda` is estimated at the mode by
+  `reml()` and there is no path for a grid size or a depth to describe. Both
+  are now reported by name, as any other argument the term does not have.
+
+* The pages say what the defaults ARE. `n_lambda = NULL` visits 25 values,
+  and `n_alpha`, `n_a` and `n_gamma` visit 5: a path over the size of the
+  kink spans four decades and wants that many points, while the axis beside
+  it spans one bounded interval and does not. "Leaves it to the criterion"
+  named a number nothing printed.
+
 # modelterms7 0.40.0
 
 * A multivariate Student t prior now carries standard errors and intervals

@@ -41,19 +41,23 @@ PenalizedTerm <- S7::new_class(
   )
 )
 
-.penalized_spec <- function(x, expr, label, by, standardize, factory,
+.penalized_spec <- function(x, expr, label, standardize, factory,
                             hyper = list(), extra = list(), grid = list(),
-                            min_ratio = NULL) {
+                            min_ratio = NULL, search = NULL) {
   # An argument named after ANOTHER penalty's hyperparameter is the mistake
   # this catches: `mcp(x, a = 3)` writes SCAD's shape on an MCP, whose own
   # is gamma, and reaches nothing. R would report it as an unused argument,
   # which says that it was not read and not what to write instead.
+  #
+  # It is also where an argument the term does not have arrives -- `by` on a
+  # separable penalty, a grid size on a ridge -- so the reply names what was
+  # written and then the hyperparameters, which is what the caller was most
+  # likely reaching for, rather than claiming to list every argument.
   if (length(extra)) {
     pen <- tryCatch(factory(1L), error = function(e) NULL)
-    stop(sprintf(paste0("'%s' has no argument '%s'. Its hyperparameters are:",
-                        " %s,
-  and each is held by naming it and estimated",
-                        " when left NULL."),
+    stop(sprintf(paste0("'%s' has no argument '%s'.\n  Its hyperparameters",
+                        " are: %s, each held by naming it and estimated when",
+                        " left NULL."),
                  label, names(extra)[[1L]],
                  if (is.null(pen)) "none" else paste(pen@params,
                                                      collapse = ", ")),
@@ -62,10 +66,6 @@ PenalizedTerm <- S7::new_class(
   if (!is.logical(standardize) || length(standardize) != 1L ||
       is.na(standardize)) {
     stop("'standardize' must be TRUE or FALSE.", call. = FALSE)
-  }
-  if (!is.null(by)) {
-    stop("'by' is reserved for a later release and is not implemented yet.",
-         call. = FALSE)
   }
   if (!is.character(label) || length(label) != 1L || is.na(label) ||
       !nzchar(label)) {
@@ -104,6 +104,7 @@ PenalizedTerm <- S7::new_class(
                 values = vals,
                 grid = check_grid(grid, factory, label),
                 min_ratio = check_min_ratio(min_ratio, label),
+                search = check_search(search, label),
                 X = NULL, coef_names = character(0),
                 blueprint = list(), penalty = NULL)
 }
@@ -211,7 +212,6 @@ PenalizedTerm <- S7::new_class(
 #' @param x A one-sided formula or a numeric matrix.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names.
-#' @param by Reserved for a later release; must be \code{NULL}.
 #' @param standardize A single logical: whether to penalize each
 #'   coefficient on the scale of its own column. See the section below.
 #' @param ... Not used, and reported: an argument named after another

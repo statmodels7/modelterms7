@@ -9,8 +9,6 @@
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}
 
-\item{by}{Reserved for a later release; must be \code{NULL}.}
-
 \item{standardize}{A single logical: whether to penalize each
 coefficient on the scale of its own column. See the section below.}
 
