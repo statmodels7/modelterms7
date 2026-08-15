@@ -31,6 +31,8 @@ structural term takes instead.
   : The Values a Term Wrote Out
 - [`term_path_min()`](https://statmodels7.github.io/modelterms7/reference/term_path_min.md)
   : How Far Down a Term's Path Reaches
+- [`term_search()`](https://statmodels7.github.io/modelterms7/reference/term_search.md)
+  : How a Term Covers Its Own Hyperparameters
 - [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
   : Number of Parameters of a Built Term
 - [`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)

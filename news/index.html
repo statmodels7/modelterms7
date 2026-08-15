@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.40.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.41.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,14 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.41.0" id="modelterms7-0410">modelterms7 0.41.0<a class="anchor" aria-label="anchor" href="#modelterms7-0410"></a></h2>
+<ul><li><p><code><a href="../reference/enet.html">enet()</a></code>, <code><a href="../reference/scad.html">scad()</a></code> and <code><a href="../reference/mcp.html">mcp()</a></code> take <code>search</code>, how their own two hyperparameters are combined: <code>"grid"</code> for every combination of them, <code>"cyclic"</code> for one at a time. It sat on the criterion, where it did not belong – the same criterion is put to the smooth hyperparameters of a model, which are read at the mode rather than swept, so most of what it is asked about could not use it. A penalty with a kink is fitted by a scheme of its own, and how that scheme covers the term’s own hyperparameters is part of the scheme. <code><a href="../reference/term_search.html">term_search()</a></code> reports it.</p></li>
+<li><p><code><a href="../reference/lasso.html">lasso()</a></code> and <code><a href="../reference/ridge.html">ridge()</a></code> do not carry it: with one hyperparameter or none there is nothing to combine, and the argument is reported by name rather than accepted and read by nothing.</p></li>
+<li><p><code>by</code> is gone from all five, and it was not merely unimplemented: there is nothing for it to build. Where <code>by</code> earns its place, in <code><a href="../reference/s.html">s()</a></code> and <code><a href="../reference/te.html">te()</a></code>, it builds PENALTY STRUCTURE – one block of the penalty matrix per level of the factor. These five are separable, which is the property that lets a coordinate descent fit them, so repeating the penalty blockwise is the identity operation and <code>lasso(~ (x1 + x2):g)</code> already IS the per-level fit, coefficient by coefficient. It was reserved for a later release that had no work to do.</p></li>
+<li><p><code><a href="../reference/ridge.html">ridge()</a></code> loses <code>n_lambda</code> and <code>min_ratio</code>, which it never read. They were accepted “so that the five constructors read alike”, and a symmetry of spelling is not worth an argument that does nothing: a ridge is twice differentiable everywhere, so its <code>lambda</code> is estimated at the mode by <code>reml()</code> and there is no path for a grid size or a depth to describe. Both are now reported by name, as any other argument the term does not have.</p></li>
+<li><p>The pages say what the defaults ARE. <code>n_lambda = NULL</code> visits 25 values, and <code>n_alpha</code>, <code>n_a</code> and <code>n_gamma</code> visit 5: a path over the size of the kink spans four decades and wants that many points, while the axis beside it spans one bounded interval and does not. “Leaves it to the criterion” named a number nothing printed.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.40.0" id="modelterms7-0400">modelterms7 0.40.0<a class="anchor" aria-label="anchor" href="#modelterms7-0400"></a></h2>
 <ul><li>A multivariate Student t prior now carries standard errors and intervals for every hyperparameter, its family having supplied the third and fourth derivatives in the response. The page no longer names it as an exception: where an interval is absent the cause is the POINT and not a missing derivative.</li>

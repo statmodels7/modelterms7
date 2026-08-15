@@ -11,7 +11,7 @@ coefficient is not shrunk at all."><meta property="og:image" content="https://st
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.40.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.41.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -48,13 +48,13 @@ coefficient is not shrunk at all.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">scad</span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
 <span>  label <span class="op">=</span> <span class="st">"scad"</span>,</span>
-<span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  standardize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  lambda <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  a <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_lambda <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_a <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  min_ratio <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  search <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -70,10 +70,6 @@ coefficient is not shrunk at all.</p>
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
 <dd><p>A single non-empty string prefixed to the coefficient
 names.</p></dd>
-
-
-<dt id="arg-by">by<a class="anchor" aria-label="anchor" href="#arg-by"></a></dt>
-<dd><p>Reserved for a later release; must be <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-standardize">standardize<a class="anchor" aria-label="anchor" href="#arg-standardize"></a></dt>
@@ -94,7 +90,10 @@ the path build one. Must lie in \((0, \infty)\).</p></dd>
 
 <dt id="arg-n-lambda-n-a">n_lambda, n_a<a class="anchor" aria-label="anchor" href="#arg-n-lambda-n-a"></a></dt>
 <dd><p>How many values the path visits for each, at least 2.
-<code>NULL</code>, the default, leaves it to the criterion.</p></dd>
+<code>NULL</code>, the default, leaves it to the criterion, which visits 25
+values of \(\lambda\) and 5 of \(a\): the first descends the size of
+the kink over four decades and wants that many points, the second spans
+the shape's useful range and does not.</p></dd>
 
 
 <dt id="arg-min-ratio">min_ratio<a class="anchor" aria-label="anchor" href="#arg-min-ratio"></a></dt>
@@ -102,6 +101,13 @@ the path build one. Must lie in \((0, \infty)\).</p></dd>
 kink that empties the block: smaller reaches a denser fit, larger
 stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
 criterion. Only the sweep by kink size uses it.</p></dd>
+
+
+<dt id="arg-search">search<a class="anchor" aria-label="anchor" href="#arg-search"></a></dt>
+<dd><p><code>"grid"</code> to visit every combination of \(\lambda\)
+and \(a\), <code>"cyclic"</code> to sweep one at a time with the other held.
+<code>NULL</code>, the default, leaves it to the fitting layer, which takes
+the product. See <code><a href="term_search.html">term_search</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

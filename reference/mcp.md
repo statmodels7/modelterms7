@@ -9,13 +9,13 @@ it begins to flatten IMMEDIATELY rather than after a first threshold.
 mcp(
   x,
   label = "mcp",
-  by = NULL,
   standardize = FALSE,
   lambda = NULL,
   gamma = NULL,
   n_lambda = NULL,
   n_gamma = NULL,
   min_ratio = NULL,
+  search = NULL,
   ...
 )
 ```
@@ -29,10 +29,6 @@ mcp(
 - label:
 
   A single non-empty string prefixed to the coefficient names.
-
-- by:
-
-  Reserved for a later release; must be `NULL`.
 
 - standardize:
 
@@ -53,7 +49,10 @@ mcp(
 - n_lambda, n_gamma:
 
   How many values the path visits for each, at least 2. `NULL`, the
-  default, leaves it to the criterion.
+  default, leaves it to the criterion, which visits 25 values of
+  \\\lambda\\ and 5 of \\\gamma\\: the first descends the size of the
+  kink over four decades and wants that many points, the second spans
+  the shape's useful range and does not.
 
 - min_ratio:
 
@@ -61,6 +60,13 @@ mcp(
   the block: smaller reaches a denser fit, larger stops sooner. Must lie
   in (0, 1). NULL, the default, leaves it to the criterion. Only the
   sweep by kink size uses it.
+
+- search:
+
+  `"grid"` to visit every combination of \\\lambda\\ and \\\gamma\\,
+  `"cyclic"` to sweep one at a time with the other held. `NULL`, the
+  default, leaves it to the fitting layer, which takes the product. See
+  [`term_search`](https://statmodels7.github.io/modelterms7/reference/term_search.md).
 
 - ...:
 

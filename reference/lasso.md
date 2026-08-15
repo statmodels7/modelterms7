@@ -10,7 +10,6 @@ selects.
 lasso(
   x,
   label = "lasso",
-  by = NULL,
   standardize = FALSE,
   lambda = NULL,
   n_lambda = NULL,
@@ -29,10 +28,6 @@ lasso(
 
   A single non-empty string prefixed to the coefficient names.
 
-- by:
-
-  Reserved for a later release; must be `NULL`.
-
 - standardize:
 
   A single logical: whether to penalize each coefficient on the scale of
@@ -47,7 +42,7 @@ lasso(
 - n_lambda:
 
   How many values the path visits, at least 2. `NULL`, the default,
-  leaves it to the criterion.
+  leaves it to the criterion, which visits 25.
 
 - min_ratio:
 

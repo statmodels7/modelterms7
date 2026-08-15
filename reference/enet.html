@@ -11,7 +11,7 @@ of choosing arbitrarily among them."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.40.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.41.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -48,13 +48,13 @@ of choosing arbitrarily among them.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">enet</span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
 <span>  label <span class="op">=</span> <span class="st">"enet"</span>,</span>
-<span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  standardize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  lambda <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  alpha <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_lambda <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_alpha <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  min_ratio <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  search <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -70,10 +70,6 @@ of choosing arbitrarily among them.</p>
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
 <dd><p>A single non-empty string prefixed to the coefficient
 names.</p></dd>
-
-
-<dt id="arg-by">by<a class="anchor" aria-label="anchor" href="#arg-by"></a></dt>
-<dd><p>Reserved for a later release; must be <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-standardize">standardize<a class="anchor" aria-label="anchor" href="#arg-standardize"></a></dt>
@@ -94,7 +90,10 @@ independently of <code>lambda</code>. Must lie in \((0, 1)\).</p></dd>
 
 <dt id="arg-n-lambda-n-alpha">n_lambda, n_alpha<a class="anchor" aria-label="anchor" href="#arg-n-lambda-n-alpha"></a></dt>
 <dd><p>How many values the path visits for each, at
-least 2. <code>NULL</code>, the default, leaves it to the criterion.</p></dd>
+least 2. <code>NULL</code>, the default, leaves it to the criterion, which
+visits 25 values of \(\lambda\) and 5 of \(\alpha\): the first
+descends the size of the kink over four decades and wants that many
+points, the second spans one bounded interval and does not.</p></dd>
 
 
 <dt id="arg-min-ratio">min_ratio<a class="anchor" aria-label="anchor" href="#arg-min-ratio"></a></dt>
@@ -102,6 +101,13 @@ least 2. <code>NULL</code>, the default, leaves it to the criterion.</p></dd>
 kink that empties the block: smaller reaches a denser fit, larger
 stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
 criterion. Only the sweep by kink size uses it.</p></dd>
+
+
+<dt id="arg-search">search<a class="anchor" aria-label="anchor" href="#arg-search"></a></dt>
+<dd><p><code>"grid"</code> to visit every combination of \(\lambda\)
+and \(\alpha\), <code>"cyclic"</code> to sweep one at a time with the other
+held. <code>NULL</code>, the default, leaves it to the fitting layer, which
+takes the product. See <code><a href="term_search.html">term_search</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -130,9 +136,9 @@ half-width \(\lambda\alpha\), so both hyperparameters scale it.</p>
 <p><strong>Hyperparameters.</strong> <code>lambda</code> on \((0, \infty)\), swept over
 <code>n_lambda</code> values by kink size; <code>alpha</code> on \((0, 1)\), swept
 over <code>n_alpha</code> values across that interval, the ends excluded
-because the penalty there is one of the other two. The two are swept
-cyclically, one at a time, which keeps the cost linear in their number
-where a product grid would be exponential in it.</p>
+because the penalty there is one of the other two. Every combination of
+the two is visited, <code>n_lambda * n_alpha</code> fits, unless
+<code>search = "cyclic"</code> asks for one at a time instead.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

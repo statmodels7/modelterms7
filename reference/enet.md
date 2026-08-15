@@ -10,13 +10,13 @@ together instead of choosing arbitrarily among them.
 enet(
   x,
   label = "enet",
-  by = NULL,
   standardize = FALSE,
   lambda = NULL,
   alpha = NULL,
   n_lambda = NULL,
   n_alpha = NULL,
   min_ratio = NULL,
+  search = NULL,
   ...
 )
 ```
@@ -30,10 +30,6 @@ enet(
 - label:
 
   A single non-empty string prefixed to the coefficient names.
-
-- by:
-
-  Reserved for a later release; must be `NULL`.
 
 - standardize:
 
@@ -54,7 +50,10 @@ enet(
 - n_lambda, n_alpha:
 
   How many values the path visits for each, at least 2. `NULL`, the
-  default, leaves it to the criterion.
+  default, leaves it to the criterion, which visits 25 values of
+  \\\lambda\\ and 5 of \\\alpha\\: the first descends the size of the
+  kink over four decades and wants that many points, the second spans
+  one bounded interval and does not.
 
 - min_ratio:
 
@@ -62,6 +61,13 @@ enet(
   the block: smaller reaches a denser fit, larger stops sooner. Must lie
   in (0, 1). NULL, the default, leaves it to the criterion. Only the
   sweep by kink size uses it.
+
+- search:
+
+  `"grid"` to visit every combination of \\\lambda\\ and \\\alpha\\,
+  `"cyclic"` to sweep one at a time with the other held. `NULL`, the
+  default, leaves it to the fitting layer, which takes the product. See
+  [`term_search`](https://statmodels7.github.io/modelterms7/reference/term_search.md).
 
 - ...:
 
@@ -93,9 +99,9 @@ half-width \\\lambda\alpha\\, so both hyperparameters scale it.
 **Hyperparameters.** `lambda` on \\(0, \infty)\\, swept over `n_lambda`
 values by kink size; `alpha` on \\(0, 1)\\, swept over `n_alpha` values
 across that interval, the ends excluded because the penalty there is one
-of the other two. The two are swept cyclically, one at a time, which
-keeps the cost linear in their number where a product grid would be
-exponential in it.
+of the other two. Every combination of the two is visited,
+`n_lambda * n_alpha` fits, unless `search = "cyclic"` asks for one at a
+time instead.
 
 ## References
 

@@ -24,10 +24,6 @@ restated by the term.
 
   A single non-empty string prefixed to the coefficient names.
 
-- by:
-
-  Reserved for a later release; must be `NULL`.
-
 - standardize:
 
   A single logical: whether to penalize each coefficient on the scale of

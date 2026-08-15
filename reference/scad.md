@@ -10,13 +10,13 @@ coefficient is not shrunk at all.
 scad(
   x,
   label = "scad",
-  by = NULL,
   standardize = FALSE,
   lambda = NULL,
   a = NULL,
   n_lambda = NULL,
   n_a = NULL,
   min_ratio = NULL,
+  search = NULL,
   ...
 )
 ```
@@ -30,10 +30,6 @@ scad(
 - label:
 
   A single non-empty string prefixed to the coefficient names.
-
-- by:
-
-  Reserved for a later release; must be `NULL`.
 
 - standardize:
 
@@ -54,7 +50,10 @@ scad(
 - n_lambda, n_a:
 
   How many values the path visits for each, at least 2. `NULL`, the
-  default, leaves it to the criterion.
+  default, leaves it to the criterion, which visits 25 values of
+  \\\lambda\\ and 5 of \\a\\: the first descends the size of the kink
+  over four decades and wants that many points, the second spans the
+  shape's useful range and does not.
 
 - min_ratio:
 
@@ -62,6 +61,13 @@ scad(
   the block: smaller reaches a denser fit, larger stops sooner. Must lie
   in (0, 1). NULL, the default, leaves it to the criterion. Only the
   sweep by kink size uses it.
+
+- search:
+
+  `"grid"` to visit every combination of \\\lambda\\ and \\a\\,
+  `"cyclic"` to sweep one at a time with the other held. `NULL`, the
+  default, leaves it to the fitting layer, which takes the product. See
+  [`term_search`](https://statmodels7.github.io/modelterms7/reference/term_search.md).
 
 - ...:
 

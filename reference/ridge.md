@@ -6,16 +6,7 @@ them shrunk towards zero, none of them set to it.
 ## Usage
 
 ``` r
-ridge(
-  x,
-  label = "ridge",
-  by = NULL,
-  standardize = FALSE,
-  lambda = NULL,
-  n_lambda = NULL,
-  min_ratio = NULL,
-  ...
-)
+ridge(x, label = "ridge", standardize = FALSE, lambda = NULL, ...)
 ```
 
 ## Arguments
@@ -28,10 +19,6 @@ ridge(
 
   A single non-empty string prefixed to the coefficient names.
 
-- by:
-
-  Reserved for a later release; must be `NULL`.
-
 - standardize:
 
   A single logical: whether to penalize each coefficient on the scale of
@@ -42,17 +29,6 @@ ridge(
   The precision of the prior. One number holds it and `NULL`, the
   default, has it ESTIMATED. A ridge has no kink and no path, so several
   numbers are not a grid it could visit. Must lie in \\(0, \infty)\\.
-
-- n_lambda:
-
-  Unused by this term: a ridge has no kink and its hyperparameter is
-  estimated by a criterion rather than swept over a grid. Accepted so
-  that the five constructors read alike.
-
-- min_ratio:
-
-  Unused by this term, which has no path. Accepted so that the five
-  constructors read alike.
 
 - ...:
 

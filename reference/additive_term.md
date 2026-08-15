@@ -17,6 +17,7 @@ additive_term(
   grid = list(),
   values = list(),
   min_ratio = numeric(0),
+  search = character(0),
   X = NULL,
   coef_names = character(0),
   blueprint = list(),
@@ -55,6 +56,13 @@ additive_term(
   of the value that empties the block, or `numeric(0)` for the
   criterion's own. See
   [`term_path_min`](https://statmodels7.github.io/modelterms7/reference/term_path_min.md).
+
+- search:
+
+  How the term's own hyperparameters are covered when it has several
+  with a kink: `"grid"` for every combination of them, `"cyclic"` for
+  one at a time, or `character(0)` for the default. See
+  [`term_search`](https://statmodels7.github.io/modelterms7/reference/term_search.md).
 
 - X:
 
