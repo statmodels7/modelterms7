@@ -195,6 +195,10 @@ structural_term <- S7::new_class(
 #'
 #' @inheritParams additive_term
 #' @param formula The one-sided formula defining the block.
+#' @param sparse Whether the block is a \code{dgCMatrix}, built sparse rather
+#'   than compressed after the fact. See \code{\link{linpar}}.
+#' @param contrasts The contrasts for the formula's factors, as a named list,
+#'   or an empty list for the session's own.
 #'
 #' @return An object of class \code{LinparTerm}.
 #'
@@ -206,6 +210,11 @@ LinparTerm <- S7::new_class(
   name = "LinparTerm",
   parent = additive_term,
   properties = list(
-    formula = S7::class_any
+    formula = S7::class_any,
+    # WHERE the block is built sparse rather than compressed afterwards: a
+    # formula carrying a factor of many levels has one non-zero per row, and
+    # the dense model matrix of it is the memory the choice exists to avoid.
+    sparse = S7::new_property(S7::class_logical, default = FALSE),
+    contrasts = S7::new_property(S7::class_list, default = quote(list()))
   )
 )

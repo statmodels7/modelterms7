@@ -18,7 +18,8 @@ PenalizedTerm(
   input = NULL,
   input_expr = NULL,
   factory = function() NULL,
-  standardize = FALSE
+  standardize = FALSE,
+  sparse = FALSE
 )
 }
 \arguments{
@@ -70,6 +71,10 @@ standardized may take the count alone.}
 
 \item{standardize}{Whether the block's columns are put on a common scale
 by the penalty's diagonal map.}
+
+\item{sparse}{Whether the FORMULA route builds the block as a
+\code{dgCMatrix}. A matrix input is kept in whatever storage it arrives
+in and needs no such argument.}
 }
 \value{
 An object of class \code{PenalizedTerm}.

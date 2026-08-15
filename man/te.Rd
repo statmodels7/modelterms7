@@ -12,7 +12,8 @@ te(
   bases = NULL,
   anisotropic = TRUE,
   label = NULL,
-  lambda = NULL
+  lambda = NULL,
+  sparse = FALSE
 )
 }
 \arguments{
@@ -39,6 +40,11 @@ names. Defaults to a name built from the covariates.}
 ESTIMATED when left \code{NULL}, which is the default. An
 anisotropic tensor product carries one per margin, so a vector
 of that length, or a named one holding some of them.}
+
+\item{sparse}{Whether the block is built as a \code{dgCMatrix}. Only a
+FACTOR \code{by} admits it, each row sitting in the block of its own
+level; without one the argument is refused rather than ignored. See
+\code{\link{s}}.}
 }
 \value{
 An object of class \code{\link{SmoothTerm}} (a specification;

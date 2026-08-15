@@ -17,7 +17,8 @@ SmoothTerm(
   penalty = NULL,
   vars = list(),
   by = NULL,
-  spec = list()
+  spec = list(),
+  sparse = FALSE
 )
 }
 \arguments{
@@ -62,6 +63,9 @@ data, filled by \code{\link{term_build}}.}
 
 \item{spec}{The construction settings: the basis, its dimension and
 degree, and whether the linear part is carried separately.}
+
+\item{sparse}{Whether the block is a \code{dgCMatrix}, which only a factor
+\code{by} admits. See \code{\link{s}}.}
 }
 \value{
 An object of class \code{SmoothTerm}.

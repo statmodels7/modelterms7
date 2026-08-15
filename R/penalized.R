@@ -21,6 +21,9 @@ NULL
 #'   object. It is called with the diagonal map as a second argument where
 #'   \code{standardize} asks for one, so a factory that will never be
 #'   standardized may take the count alone.
+#' @param sparse Whether the FORMULA route builds the block as a
+#'   \code{dgCMatrix}. A matrix input is kept in whatever storage it arrives
+#'   in and needs no such argument.
 #' @param standardize Whether the block's columns are put on a common scale
 #'   by the penalty's diagonal map.
 #'
@@ -37,13 +40,16 @@ PenalizedTerm <- S7::new_class(
     input = S7::class_any,
     input_expr = S7::class_any,
     factory = S7::class_function,
-    standardize = S7::new_property(S7::class_logical, default = FALSE)
+    standardize = S7::new_property(S7::class_logical, default = FALSE),
+    # the FORMULA route's storage. A matrix input is kept in whatever
+    # storage it arrives in and needs no argument to say so.
+    sparse = S7::new_property(S7::class_logical, default = FALSE)
   )
 )
 
 .penalized_spec <- function(x, expr, label, standardize, factory,
                             hyper = list(), extra = list(), grid = list(),
-                            min_ratio = NULL, search = NULL) {
+                            min_ratio = NULL, search = NULL, sparse = FALSE) {
   # An argument named after ANOTHER penalty's hyperparameter is the mistake
   # this catches: `mcp(x, a = 3)` writes SCAD's shape on an MCP, whose own
   # is gamma, and reaches nothing. R would report it as an unused argument,
@@ -98,8 +104,12 @@ PenalizedTerm <- S7::new_class(
   vals <- check_values(hyper, factory, label)
   reject_pathless_values(vals, tryCatch(factory(1L), error = function(e) NULL),
                          label)
+  # a MATRIX input is kept in whatever storage it arrives in, so `sparse`
+  # governs the FORMULA route, where the model matrix would otherwise be
+  # built dense whatever the caller passed
   PenalizedTerm(label = label, input = x, input_expr = expr,
                 factory = factory, standardize = standardize,
+                sparse = .check_design_opts(sparse, NULL, label)$sparse,
                 hyper = check_hyper(hyper, factory, label),
                 values = vals,
                 grid = check_grid(grid, factory, label),
@@ -169,6 +179,22 @@ PenalizedTerm <- S7::new_class(
 #' \code{FALSE} for \code{lasso}, \code{enet}, \code{scad} and
 #' \code{mcp}, read from each penalty's kink set.
 #'
+#' @section Sparse storage:
+#' A MATRIX input is kept in whatever storage it arrives in, so a
+#' \code{dgCMatrix} passed to any of the five stays one and nothing has to be
+#' said. \code{sparse = TRUE} governs the FORMULA route, where the model
+#' matrix would otherwise be built dense whatever the columns look like: it
+#' goes through \code{\link[Matrix]{sparse.model.matrix}}, which BUILDS the
+#' block sparse rather than building a dense one and compressing it.
+#'
+#' It pays where the formula carries a factor of many levels, whose indicator
+#' columns hold one non-zero per row -- \code{lasso(~ 0 + g)} over hundreds of
+#' groups is the case. On numeric covariates the block is dense whatever is
+#' asked for, and the sparse storage costs more than it saves.
+#'
+#' Standardization does not interfere: it is a diagonal map on the PENALTY and
+#' never an operation on the design, so a sparse block stays sparse under it.
+#'
 #' @section Standardization:
 #' A hyperparameter is comparable across coordinates only where the
 #' coordinates share a scale: without \code{standardize} a lasso penalizes a
@@ -214,6 +240,11 @@ PenalizedTerm <- S7::new_class(
 #'   names.
 #' @param standardize A single logical: whether to penalize each
 #'   coefficient on the scale of its own column. See the section below.
+#' @param sparse A single logical, governing the FORMULA route: whether the
+#'   block is built as a \code{dgCMatrix} through
+#'   \code{\link[Matrix]{sparse.model.matrix}} rather than as a dense model
+#'   matrix. A MATRIX input needs no such argument, being kept in whatever
+#'   storage it arrives in. See the section below.
 #' @param ... Not used, and reported: an argument named after another
 #'   penalty's hyperparameter is the mistake this catches.
 #' @return An object of class \code{\link{PenalizedTerm}} (a
@@ -252,16 +283,15 @@ S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
                              na.action = stats::na.pass,
                              drop.unused.levels = FALSE)
     tt <- attr(mf, "terms")
-    X <- stats::model.matrix(tt, mf)
-    contr <- attr(X, "contrasts")
+    b <- .design_matrix(tt, mf, NULL, term@sparse)
+    X <- b$X
     base_names <- colnames(X)
-    attr(X, "assign") <- NULL
-    attr(X, "contrasts") <- NULL
     term@blueprint <- list(
       kind = "formula",
       terms = stats::delete.response(tt),
       xlev = stats::.getXlevels(tt, mf),
-      contrasts = contr
+      contrasts = b$contrasts,
+      sparse = term@sparse
     )
   } else {
     X <- term@input
@@ -318,9 +348,7 @@ S7::method(term_predict, PenalizedTerm) <- function(term, newdata, ...) {
     mf <- stats::model.frame(bp$terms, newdata,
                              na.action = stats::na.pass,
                              xlev = bp$xlev)
-    X <- stats::model.matrix(bp$terms, mf, contrasts.arg = bp$contrasts)
-    attr(X, "assign") <- NULL
-    attr(X, "contrasts") <- NULL
+    X <- .design_matrix(bp$terms, mf, bp$contrasts, isTRUE(bp$sparse))$X
   } else {
     # kept sparse for the reason the constructor keeps it: a prediction that
     # densified would spend at new data what the build was careful not to

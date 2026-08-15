@@ -10,10 +10,11 @@ scad(
   standardize = FALSE,
   lambda = NULL,
   a = NULL,
-  n_lambda = NULL,
-  n_a = NULL,
-  min_ratio = NULL,
-  search = NULL,
+  n_lambda = 25,
+  n_a = 5,
+  min_ratio = 1e-04,
+  search = "grid",
+  sparse = FALSE,
   ...
 )
 }
@@ -34,9 +35,8 @@ the path build one. Must lie in \eqn{(0, \infty)}.}
 \code{lambda}. Must lie in \eqn{(2, \infty)}.}
 
 \item{n_lambda, n_a}{How many values the path visits for each, at least 2.
-\code{NULL}, the default, leaves it to the criterion, which visits 25
-values of \eqn{\lambda} and 5 of \eqn{a}: the first descends the size of
-the kink over four decades and wants that many points, the second spans
+They differ because the axes do: \eqn{\lambda} descends the size of the
+kink over four decades and wants that many points, while \eqn{a} spans
 the shape's useful range and does not.}
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
@@ -46,8 +46,13 @@ criterion. Only the sweep by kink size uses it.}
 
 \item{search}{\code{"grid"} to visit every combination of \eqn{\lambda}
 and \eqn{a}, \code{"cyclic"} to sweep one at a time with the other held.
-\code{NULL}, the default, leaves it to the fitting layer, which takes
-the product. See \code{\link{term_search}}.}
+See \code{\link{term_search}}.}
+
+\item{sparse}{A single logical, governing the FORMULA route: whether the
+block is built as a \code{dgCMatrix} through
+\code{\link[Matrix]{sparse.model.matrix}} rather than as a dense model
+matrix. A MATRIX input needs no such argument, being kept in whatever
+storage it arrives in. See the section below.}
 
 \item{...}{Not used, and reported: an argument named after another
 penalty's hyperparameter is the mistake this catches.}

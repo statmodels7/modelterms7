@@ -4,12 +4,18 @@
 \alias{interpret_formula}
 \title{Interpret a Model Formula Into Terms}
 \usage{
-interpret_formula(formula, data)
+interpret_formula(formula, data, linpar = list())
 }
 \arguments{
 \item{formula}{A model formula.}
 
 \item{data}{A data frame in which the formula's symbols are evaluated.}
+
+\item{linpar}{Arguments for the IMPLICIT \code{\link{linpar}} term, the one
+the bare covariates collapse into, as a named list -- \code{sparse} and
+\code{contrasts}. It is the only place they can be given: that term is
+never written by the caller. Empty, the default, leaves the constructor's
+own.}
 }
 \value{
 A list with elements \code{response} (the evaluated left-hand

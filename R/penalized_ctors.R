@@ -51,11 +51,11 @@ NULL
 #'   \code{\link{mcp}}, \code{\link[penalties7]{ridge_penalty}}
 #' @export
 ridge <- function(x, label = "ridge", standardize = FALSE,
-                  lambda = NULL, ...) {
+                  lambda = NULL, sparse = FALSE, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
                   function(k, map = NULL) penalties7::ridge_penalty(map = map,
                                                                     n_coef = k),
-                  list(lambda = lambda), list(...))
+                  list(lambda = lambda), list(...), sparse = sparse)
 }
 
 
@@ -87,13 +87,10 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #' @param lambda The rate of the prior. One number holds it, several are the
 #'   grid the path visits as they stand, and \code{NULL}, the default, has the
 #'   path build one. Must lie in \eqn{(0, \infty)}.
-#' @param n_lambda How many values the path visits, at least 2. \code{NULL},
-#'   the default, leaves it to the criterion, which visits 25.
-#'
+#' @param n_lambda How many values the path visits, at least 2.
 #' @param min_ratio How far down the path reaches, as a fraction of the
-#'   kink that empties the block: smaller reaches a denser fit, larger
-#'   stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
-#'   criterion. Only the sweep by kink size uses it.
+#'   kink that empties the block: smaller reaches a denser fit, larger stops
+#'   sooner. Must lie in \eqn{(0, 1)}.
 #' @return An object of class \code{\link{PenalizedTerm}} (a specification;
 #'   see \code{\link{term_build}}).
 #'
@@ -115,12 +112,14 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #'   \code{\link{mcp}}, \code{\link[penalties7]{lasso_penalty}}
 #' @export
 lasso <- function(x, label = "lasso", standardize = FALSE,
-                  lambda = NULL, n_lambda = NULL, min_ratio = NULL, ...) {
+                  lambda = NULL, n_lambda = 25, min_ratio = 1e-4,
+                  sparse = FALSE, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
                   function(k, map = NULL) penalties7::lasso_penalty(map = map,
                                                                     n_coef = k),
                   list(lambda = lambda),
-                  list(...), list(lambda = n_lambda), min_ratio)
+                  list(...), list(lambda = n_lambda), min_ratio,
+                  sparse = sparse)
 }
 
 
@@ -159,14 +158,12 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #' @param alpha The mixing weight, in the same three states and settled
 #'   independently of \code{lambda}. Must lie in \eqn{(0, 1)}.
 #' @param n_lambda,n_alpha How many values the path visits for each, at
-#'   least 2. \code{NULL}, the default, leaves it to the criterion, which
-#'   visits 25 values of \eqn{\lambda} and 5 of \eqn{\alpha}: the first
-#'   descends the size of the kink over four decades and wants that many
-#'   points, the second spans one bounded interval and does not.
+#'   least 2. They differ because the axes do: \eqn{\lambda} descends the
+#'   size of the kink over four decades and wants that many points, while
+#'   \eqn{\alpha} spans one bounded interval and does not.
 #' @param search \code{"grid"} to visit every combination of \eqn{\lambda}
 #'   and \eqn{\alpha}, \code{"cyclic"} to sweep one at a time with the other
-#'   held. \code{NULL}, the default, leaves it to the fitting layer, which
-#'   takes the product. See \code{\link{term_search}}.
+#'   held. See \code{\link{term_search}}.
 #'
 #' @param min_ratio How far down the path reaches, as a fraction of the
 #'   kink that empties the block: smaller reaches a denser fit, larger
@@ -193,14 +190,14 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #' @export
 enet <- function(x, label = "enet", standardize = FALSE,
                  lambda = NULL, alpha = NULL,
-                 n_lambda = NULL, n_alpha = NULL, min_ratio = NULL,
-                 search = NULL, ...) {
+                 n_lambda = 25, n_alpha = 5, min_ratio = 1e-4,
+                 search = "grid", sparse = FALSE, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
                   function(k, map = NULL)
                     penalties7::elasticnet_penalty(map = map, n_coef = k),
                   list(lambda = lambda, alpha = alpha),
                   list(...), list(lambda = n_lambda, alpha = n_alpha),
-                  min_ratio, search)
+                  min_ratio, search, sparse)
 }
 
 
@@ -237,14 +234,12 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #' @param a The shape, in the same three states and settled independently of
 #'   \code{lambda}. Must lie in \eqn{(2, \infty)}.
 #' @param n_lambda,n_a How many values the path visits for each, at least 2.
-#'   \code{NULL}, the default, leaves it to the criterion, which visits 25
-#'   values of \eqn{\lambda} and 5 of \eqn{a}: the first descends the size of
-#'   the kink over four decades and wants that many points, the second spans
+#'   They differ because the axes do: \eqn{\lambda} descends the size of the
+#'   kink over four decades and wants that many points, while \eqn{a} spans
 #'   the shape's useful range and does not.
 #' @param search \code{"grid"} to visit every combination of \eqn{\lambda}
 #'   and \eqn{a}, \code{"cyclic"} to sweep one at a time with the other held.
-#'   \code{NULL}, the default, leaves it to the fitting layer, which takes
-#'   the product. See \code{\link{term_search}}.
+#'   See \code{\link{term_search}}.
 #'
 #' @param min_ratio How far down the path reaches, as a fraction of the
 #'   kink that empties the block: smaller reaches a denser fit, larger
@@ -269,14 +264,14 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #' @export
 scad <- function(x, label = "scad", standardize = FALSE,
                  lambda = NULL, a = NULL,
-                 n_lambda = NULL, n_a = NULL, min_ratio = NULL,
-                 search = NULL, ...) {
+                 n_lambda = 25, n_a = 5, min_ratio = 1e-4,
+                 search = "grid", sparse = FALSE, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
                   function(k, map = NULL) penalties7::scad_penalty(map = map,
                                                                    n_coef = k),
                   list(lambda = lambda, a = a),
                   list(...), list(lambda = n_lambda, a = n_a), min_ratio,
-                  search)
+                  search, sparse)
 }
 
 
@@ -307,14 +302,12 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #' @param gamma The shape, in the same three states and settled independently
 #'   of \code{lambda}. Must lie in \eqn{(1, \infty)}.
 #' @param n_lambda,n_gamma How many values the path visits for each, at
-#'   least 2. \code{NULL}, the default, leaves it to the criterion, which
-#'   visits 25 values of \eqn{\lambda} and 5 of \eqn{\gamma}: the first
-#'   descends the size of the kink over four decades and wants that many
-#'   points, the second spans the shape's useful range and does not.
+#'   least 2. They differ because the axes do: \eqn{\lambda} descends the
+#'   size of the kink over four decades and wants that many points, while
+#'   \eqn{\gamma} spans the shape's useful range and does not.
 #' @param search \code{"grid"} to visit every combination of \eqn{\lambda}
 #'   and \eqn{\gamma}, \code{"cyclic"} to sweep one at a time with the other
-#'   held. \code{NULL}, the default, leaves it to the fitting layer, which
-#'   takes the product. See \code{\link{term_search}}.
+#'   held. See \code{\link{term_search}}.
 #'
 #' @param min_ratio How far down the path reaches, as a fraction of the
 #'   kink that empties the block: smaller reaches a denser fit, larger
@@ -338,12 +331,12 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #' @export
 mcp <- function(x, label = "mcp", standardize = FALSE,
                 lambda = NULL, gamma = NULL,
-                n_lambda = NULL, n_gamma = NULL, min_ratio = NULL,
-                search = NULL, ...) {
+                n_lambda = 25, n_gamma = 5, min_ratio = 1e-4,
+                search = "grid", sparse = FALSE, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
                   function(k, map = NULL) penalties7::mcp_penalty(map = map,
                                                                   n_coef = k),
                   list(lambda = lambda, gamma = gamma),
                   list(...), list(lambda = n_lambda, gamma = n_gamma),
-                  min_ratio, search)
+                  min_ratio, search, sparse)
 }

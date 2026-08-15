@@ -9,8 +9,9 @@ lasso(
   label = "lasso",
   standardize = FALSE,
   lambda = NULL,
-  n_lambda = NULL,
-  min_ratio = NULL,
+  n_lambda = 25,
+  min_ratio = 1e-04,
+  sparse = FALSE,
   ...
 )
 }
@@ -27,13 +28,17 @@ coefficient on the scale of its own column. See the section below.}
 grid the path visits as they stand, and \code{NULL}, the default, has the
 path build one. Must lie in \eqn{(0, \infty)}.}
 
-\item{n_lambda}{How many values the path visits, at least 2. \code{NULL},
-the default, leaves it to the criterion, which visits 25.}
+\item{n_lambda}{How many values the path visits, at least 2.}
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
-kink that empties the block: smaller reaches a denser fit, larger
-stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
-criterion. Only the sweep by kink size uses it.}
+kink that empties the block: smaller reaches a denser fit, larger stops
+sooner. Must lie in \eqn{(0, 1)}.}
+
+\item{sparse}{A single logical, governing the FORMULA route: whether the
+block is built as a \code{dgCMatrix} through
+\code{\link[Matrix]{sparse.model.matrix}} rather than as a dense model
+matrix. A MATRIX input needs no such argument, being kept in whatever
+storage it arrives in. See the section below.}
 
 \item{...}{Not used, and reported: an argument named after another
 penalty's hyperparameter is the mistake this catches.}

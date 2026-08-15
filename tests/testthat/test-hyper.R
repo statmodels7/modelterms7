@@ -87,13 +87,22 @@ test_that("a held value travels with the entry, through a structural term", {
 test_that("a term says how fine its own grid is, per hyperparameter", {
   # HOW FINELY is the term's answer for the same reason as WHICH: a block of
   # four columns and one of four hundred want different grids, and the
-  # criterion applies to every term at once.
-  expect_identical(term_grid(lasso(~x)), list())
+  # criterion is put to every hyperparameter of the model at once, the
+  # smooth ones included, so it cannot know which it is looking at.
+  #
+  # The default is a NUMBER ON THE SIGNATURE and not a criterion's that
+  # nothing prints, so the term always answers.
+  expect_equal(term_grid(lasso(~x))[[1L]], list(lambda = 25L))
+  expect_equal(term_grid(enet(~x))[[1L]], list(lambda = 25L, alpha = 5L))
   expect_equal(term_grid(lasso(~x, n_lambda = 50))[[1L]], list(lambda = 50L))
   expect_equal(term_grid(enet(~x, n_lambda = 40, n_alpha = 12))[[1L]],
                list(lambda = 40L, alpha = 12L))
-  expect_equal(term_grid(scad(~x, n_a = 6))[[1L]], list(a = 6L))
-  expect_equal(term_grid(mcp(~x, n_gamma = 7))[[1L]], list(gamma = 7L))
+  expect_equal(term_grid(scad(~x, n_a = 6))[[1L]], list(lambda = 25L, a = 6L))
+  expect_equal(term_grid(mcp(~x, n_gamma = 7))[[1L]],
+               list(lambda = 25L, gamma = 7L))
+  # the two axes differ because what they span differs: lambda descends the
+  # size of the kink over four decades, a shape spans its useful range
+  expect_gt(eval(formals(enet)$n_lambda), eval(formals(enet)$n_alpha))
 
   # a grid on a hyperparameter the penalty does not carry, and a grid that
   # is not a grid
@@ -104,11 +113,12 @@ test_that("a term says how fine its own grid is, per hyperparameter", {
   # and it travels with the entry, as the held values do
   dd <- data.frame(x = stats::rnorm(20), z = stats::rnorm(20))
   b <- term_build(enet(~ x + z, n_lambda = 9), dd)
-  expect_equal(term_penalties(b)[[1L]]$n_values, list(lambda = 9L))
+  expect_equal(term_penalties(b)[[1L]]$n_values,
+               list(lambda = 9L, alpha = 5L))
 })
 
 test_that("a term says how far down its own path reaches", {
-  expect_identical(term_path_min(lasso(~x)), list())
+  expect_equal(term_path_min(lasso(~x))[[1L]], 1e-4)
   expect_equal(term_path_min(lasso(~x, min_ratio = 1e-6))[[1L]], 1e-6)
   # one number per term and not one per hyperparameter: only the sweep by
   # kink size uses it
@@ -175,7 +185,7 @@ test_that("a term says how its own hyperparameters are combined", {
   # with a kink is fitted by a scheme of its own; a criterion is asked of
   # every hyperparameter of the model, the smooth ones included, and most of
   # those are read at the mode rather than swept.
-  expect_identical(term_search(enet(~x)), list())
+  expect_equal(term_search(enet(~x))[[1L]], "grid")
   expect_equal(term_search(enet(~x, search = "cyclic"))[[1L]], "cyclic")
   expect_equal(term_search(scad(~x, search = "grid"))[[1L]], "grid")
   expect_equal(term_search(mcp(~x, search = "cyclic"))[[1L]], "cyclic")

@@ -46,6 +46,11 @@ NULL
 #'
 #' @param formula A model formula.
 #' @param data A data frame in which the formula's symbols are evaluated.
+#' @param linpar Arguments for the IMPLICIT \code{\link{linpar}} term, the one
+#'   the bare covariates collapse into, as a named list -- \code{sparse} and
+#'   \code{contrasts}. It is the only place they can be given: that term is
+#'   never written by the caller. Empty, the default, leaves the constructor's
+#'   own.
 #'
 #' @return A list with elements \code{response} (the evaluated left-hand
 #'   side, or \code{NULL} for a one-sided formula), \code{terms} (a named
@@ -60,12 +65,15 @@ NULL
 #'
 #' @seealso \code{\link{cens}}, \code{\link{check_term}}
 #' @export
-interpret_formula <- function(formula, data) {
+interpret_formula <- function(formula, data, linpar = list()) {
   if (!inherits(formula, "formula")) {
     stop("'formula' must be a formula.", call. = FALSE)
   }
   if (!is.data.frame(data)) {
     stop("'data' must be a data frame.", call. = FALSE)
+  }
+  if (!is.list(linpar)) {
+    stop("'linpar' must be a list of arguments for linpar().", call. = FALSE)
   }
   env <- environment(formula)
   if (is.null(env)) env <- baseenv()
@@ -100,15 +108,19 @@ interpret_formula <- function(formula, data) {
 
   ordinary <- .absorb_linear(ordinary, specials)
 
+  # The IMPLICIT linpar is the one a caller never writes -- the bare
+  # covariates of the formula collapsed into one term -- so the only place
+  # its arguments can come from is here.
+  mk <- function(f) do.call(modelterms7::linpar, c(list(f), linpar))
   terms_list <- list()
   if (length(ordinary)) {
     f <- stats::reformulate(ordinary, intercept = intercept)
     environment(f) <- env
-    terms_list$linpar <- linpar(f)
+    terms_list$linpar <- mk(f)
   } else if (intercept) {
     f <- ~1
     environment(f) <- env
-    terms_list$linpar <- linpar(f)
+    terms_list$linpar <- mk(f)
   }
   terms_list <- c(terms_list, specials)
 

@@ -15,7 +15,9 @@ LinparTerm(
   coef_names = character(0),
   blueprint = list(),
   penalty = NULL,
-  formula = NULL
+  formula = NULL,
+  sparse = FALSE,
+  contrasts = list()
 )
 }
 \arguments{
@@ -55,6 +57,12 @@ data, filled by \code{\link{term_build}}.}
 \item{penalty}{The penalty on the term's coefficients, or \code{NULL}.}
 
 \item{formula}{The one-sided formula defining the block.}
+
+\item{sparse}{Whether the block is a \code{dgCMatrix}, built sparse rather
+than compressed after the fact. See \code{\link{linpar}}.}
+
+\item{contrasts}{The contrasts for the formula's factors, as a named list,
+or an empty list for the session's own.}
 }
 \value{
 An object of class \code{LinparTerm}.

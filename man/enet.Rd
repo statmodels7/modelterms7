@@ -10,10 +10,11 @@ enet(
   standardize = FALSE,
   lambda = NULL,
   alpha = NULL,
-  n_lambda = NULL,
-  n_alpha = NULL,
-  min_ratio = NULL,
-  search = NULL,
+  n_lambda = 25,
+  n_alpha = 5,
+  min_ratio = 1e-04,
+  search = "grid",
+  sparse = FALSE,
   ...
 )
 }
@@ -34,10 +35,9 @@ build one. Must lie in \eqn{(0, \infty)}.}
 independently of \code{lambda}. Must lie in \eqn{(0, 1)}.}
 
 \item{n_lambda, n_alpha}{How many values the path visits for each, at
-least 2. \code{NULL}, the default, leaves it to the criterion, which
-visits 25 values of \eqn{\lambda} and 5 of \eqn{\alpha}: the first
-descends the size of the kink over four decades and wants that many
-points, the second spans one bounded interval and does not.}
+least 2. They differ because the axes do: \eqn{\lambda} descends the
+size of the kink over four decades and wants that many points, while
+\eqn{\alpha} spans one bounded interval and does not.}
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
@@ -46,8 +46,13 @@ criterion. Only the sweep by kink size uses it.}
 
 \item{search}{\code{"grid"} to visit every combination of \eqn{\lambda}
 and \eqn{\alpha}, \code{"cyclic"} to sweep one at a time with the other
-held. \code{NULL}, the default, leaves it to the fitting layer, which
-takes the product. See \code{\link{term_search}}.}
+held. See \code{\link{term_search}}.}
+
+\item{sparse}{A single logical, governing the FORMULA route: whether the
+block is built as a \code{dgCMatrix} through
+\code{\link[Matrix]{sparse.model.matrix}} rather than as a dense model
+matrix. A MATRIX input needs no such argument, being kept in whatever
+storage it arrives in. See the section below.}
 
 \item{...}{Not used, and reported: an argument named after another
 penalty's hyperparameter is the mistake this catches.}

@@ -226,3 +226,52 @@ test_that("the smooths are routed by the interpreter and validated", {
   expect_error(s(x, label = ""), "non-empty")
   expect_error(term_build(s(nope), dd), "not found")
 })
+
+test_that("a factor by is where a smooth's block can be sparse", {
+  # each row sits in the block of its own level and nowhere else, a density
+  # of 1/m -- the shape .random_block() has. The basis itself is dense by
+  # construction, so this is the only place a smooth admits the storage.
+  set.seed(41)
+  n <- 600L
+  m <- 40L
+  d <- data.frame(x = stats::runif(n), z = stats::runif(n),
+                  g = factor(sample.int(m, n, TRUE)))
+
+  a <- term_build(s(x, k = 8, by = g), d)
+  b <- term_build(s(x, k = 8, by = g, sparse = TRUE), d)
+  expect_true(is.matrix(term_matrix(a)))
+  expect_true(methods::is(term_matrix(b), "sparseMatrix"))
+  # the same block, only stored differently
+  expect_identical(term_coef_names(b), term_coef_names(a))
+  expect_equal(unname(as.matrix(term_matrix(b))), unname(term_matrix(a)))
+  expect_lt(as.numeric(utils::object.size(term_matrix(b))),
+            as.numeric(utils::object.size(term_matrix(a))) / 5)
+
+  # the storage is in the blueprint, so prediction does not densify
+  nd <- d[1:25, , drop = FALSE]
+  expect_true(methods::is(term_predict(b, nd), "sparseMatrix"))
+  expect_equal(unname(as.matrix(term_predict(b, nd))),
+               unname(term_predict(a, nd)))
+
+  # and a tensor product takes it on the same terms
+  tb <- term_build(te(x, z, k = 4, by = g, sparse = TRUE), d)
+  expect_true(methods::is(term_matrix(tb), "sparseMatrix"))
+})
+
+test_that("a smooth refuses sparse where there is nothing to build on", {
+  set.seed(42)
+  d <- data.frame(x = stats::runif(50), z = stats::runif(50),
+                  g = factor(rep(1:5, 10)))
+  # no `by` at all: the basis is dense by construction, the Demmler-Reinsch
+  # rotation making it so
+  expect_error(s(x, k = 6, sparse = TRUE), "nothing to build on")
+  expect_error(te(x, z, k = 5, sparse = TRUE), "nothing to build on")
+  # a NUMERIC by multiplies the basis, so the block is as dense as it is.
+  # Known only at the build, which is where it is said.
+  expect_error(term_build(s(x, k = 6, by = z, sparse = TRUE), d),
+               "nothing to build on")
+  expect_error(s(x, sparse = "yes"), "TRUE or FALSE")
+  # the default is untouched
+  expect_true(methods::is(term_matrix(term_build(s(x, k = 6, by = g), d)),
+                          "matrix"))
+})
