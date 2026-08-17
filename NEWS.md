@@ -1,3 +1,29 @@
+# modelterms7 0.47.0
+
+* `sparse` defaults to `NULL` in `linpar()`, `s()`, `te()` and the five
+  penalized constructors, and the storage is then SETTLED AT BUILD from the
+  size of the design rather than asked for. `TRUE` and `FALSE` override it,
+  and an explicit `TRUE` is still refused where there is nothing to build on.
+
+* **The threshold is the cells of the dense indicator part, not a count of
+  levels.** The dense form holds `n` times its column count against one
+  non-zero per row, so that product is what separates the two routes.
+  Measured end to end on `y ~ 0 + g + s(x)` over eighteen combinations of
+  sample size and level count, they cross at about `1e5` cells, and the rule
+  predicts every one of the eighteen: at `n = 1000` the sparse route loses at
+  every level count up to sixty (0.93x at `6e4` cells), at `n = 5000` it
+  crosses between fifteen and twenty-five levels, and at `n = 20000` between
+  six and ten (1.00x at `1.2e5`). The same threshold accounts for the large
+  cases, four hundred levels at `n = 20000` being `8e6` cells and 43.75x, and
+  for the negative one: a design carrying no factor has no indicator part, and
+  forcing the storage there measures 0.66x to 0.90x.
+
+* The SETTLED storage is what the blueprint carries, so `term_predict()`
+  reproduces the build's kind rather than deciding again on however many rows
+  the new data has.
+
+* `random()` is untouched, its block being sparse by construction.
+
 # modelterms7 0.46.0
 
 * `nl()` takes `gradient`, `hessian`, `deriv3` and `deriv4`: functions

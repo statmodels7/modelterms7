@@ -51,7 +51,7 @@ NULL
 #'   \code{\link{mcp}}, \code{\link[penalties7]{ridge_penalty}}
 #' @export
 ridge <- function(x, label = "ridge", standardize = FALSE,
-                  lambda = NULL, sparse = FALSE, ...) {
+                  lambda = NULL, sparse = NULL, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
                   function(k, map = NULL) penalties7::ridge_penalty(map = map,
                                                                     n_coef = k),
@@ -113,7 +113,7 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #' @export
 lasso <- function(x, label = "lasso", standardize = FALSE,
                   lambda = NULL, n_lambda = 25, min_ratio = 1e-4,
-                  sparse = FALSE, ...) {
+                  sparse = NULL, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
                   function(k, map = NULL) penalties7::lasso_penalty(map = map,
                                                                     n_coef = k),
@@ -191,7 +191,7 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 enet <- function(x, label = "enet", standardize = FALSE,
                  lambda = NULL, alpha = NULL,
                  n_lambda = 25, n_alpha = 5, min_ratio = 1e-4,
-                 search = "grid", sparse = FALSE, ...) {
+                 search = "grid", sparse = NULL, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
                   function(k, map = NULL)
                     penalties7::elasticnet_penalty(map = map, n_coef = k),
@@ -265,7 +265,7 @@ enet <- function(x, label = "enet", standardize = FALSE,
 scad <- function(x, label = "scad", standardize = FALSE,
                  lambda = NULL, a = NULL,
                  n_lambda = 25, n_a = 5, min_ratio = 1e-4,
-                 search = "grid", sparse = FALSE, ...) {
+                 search = "grid", sparse = NULL, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
                   function(k, map = NULL) penalties7::scad_penalty(map = map,
                                                                    n_coef = k),
@@ -332,7 +332,7 @@ scad <- function(x, label = "scad", standardize = FALSE,
 mcp <- function(x, label = "mcp", standardize = FALSE,
                 lambda = NULL, gamma = NULL,
                 n_lambda = 25, n_gamma = 5, min_ratio = 1e-4,
-                search = "grid", sparse = FALSE, ...) {
+                search = "grid", sparse = NULL, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
                   function(k, map = NULL) penalties7::mcp_penalty(map = map,
                                                                   n_coef = k),

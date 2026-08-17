@@ -11,7 +11,7 @@ lasso(
   lambda = NULL,
   n_lambda = 25,
   min_ratio = 1e-04,
-  sparse = FALSE,
+  sparse = NULL,
   ...
 )
 }
@@ -34,11 +34,12 @@ path build one. Must lie in \eqn{(0, \infty)}.}
 kink that empties the block: smaller reaches a denser fit, larger stops
 sooner. Must lie in \eqn{(0, 1)}.}
 
-\item{sparse}{A single logical, governing the FORMULA route: whether the
-block is built as a \code{dgCMatrix} through
-\code{\link[Matrix]{sparse.model.matrix}} rather than as a dense model
-matrix. A MATRIX input needs no such argument, being kept in whatever
-storage it arrives in. See the section below.}
+\item{sparse}{Governs the FORMULA route: whether the block is built as a
+\code{dgCMatrix} through \code{\link[Matrix]{sparse.model.matrix}} rather
+than as a dense model matrix. \code{NULL}, the default, settles it at
+build from the size of the design; \code{TRUE} and \code{FALSE} override
+it. A MATRIX input needs no such argument, being kept in whatever storage
+it arrives in. See the section below.}
 
 \item{...}{Not used, and reported: an argument named after another
 penalty's hyperparameter is the mistake this catches.}

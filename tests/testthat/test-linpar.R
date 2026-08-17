@@ -79,7 +79,11 @@ test_that("a block is built sparse where it is asked for, not compressed after",
   m <- 120L
   d <- data.frame(g = factor(sample.int(m, n, TRUE)), z = stats::rnorm(n))
 
-  a <- term_build(linpar(~ 0 + g + z), d)
+  # the dense side is asked for EXPLICITLY rather than left to the default:
+  # 800 rows by 120 levels is 96000 cells against a threshold of 1e5, so the
+  # default would settle dense here by a margin of four per cent, and a test
+  # that turns on that margin says nothing about what it means to test
+  a <- term_build(linpar(~ 0 + g + z, sparse = FALSE), d)
   b <- term_build(linpar(~ 0 + g + z, sparse = TRUE), d)
   expect_true(is.matrix(term_matrix(a)))
   expect_true(methods::is(term_matrix(b), "sparseMatrix"))
@@ -96,7 +100,33 @@ test_that("a block is built sparse where it is asked for, not compressed after",
   expect_equal(unname(as.matrix(term_predict(b, nd))),
                unname(term_predict(a, nd)))
 
-  expect_error(linpar(~z, sparse = "yes"), "must be TRUE or FALSE")
+  expect_error(linpar(~z, sparse = "yes"), "must be TRUE, FALSE, or NULL")
+})
+
+test_that("the storage a NULL settles on is read off the size of the design", {
+  # The threshold is the cells of the dense indicator part, n times its column
+  # count, and not a count of levels: measured end to end over eighteen
+  # combinations of the two, the routes cross at about 1e5 cells, and the same
+  # number accounts for 43.75x at 400 levels and 0.66x with no factor at all.
+  set.seed(32)
+  mk <- function(n, m) {
+    data.frame(g = factor(sample.int(m, n, TRUE)), z = stats::rnorm(n))
+  }
+  # 20000 x 400 = 8e6 cells, far above
+  big <- term_build(linpar(~ 0 + g + z), mk(20000L, 400L))
+  expect_true(methods::is(term_matrix(big), "sparseMatrix"))
+  # 1000 x 60 = 6e4 cells, below -- and this is the case where the sparse
+  # route measured 0.93 times the dense one, so settling dense is the answer
+  small <- term_build(linpar(~ 0 + g + z), mk(1000L, 60L))
+  expect_true(is.matrix(term_matrix(small)))
+  # no factor at all: no indicator part, so the product is zero whatever the
+  # sample size, and the block is dense
+  nof <- term_build(linpar(~ z), mk(50000L, 2L))
+  expect_true(is.matrix(term_matrix(nof)))
+  # the SETTLED storage is what the blueprint carries, so a prediction on
+  # twenty rows does not decide again and build a block of the other kind
+  nd <- mk(20000L, 400L)[1:20, , drop = FALSE]
+  expect_true(methods::is(term_predict(big, nd), "sparseMatrix"))
 })
 
 test_that("a penalized term's FORMULA route takes the same storage", {

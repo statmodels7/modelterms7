@@ -7,7 +7,8 @@
 .check_design_opts(sparse, contrasts, what = "this term")
 }
 \arguments{
-\item{sparse}{What the constructor was given.}
+\item{sparse}{What the constructor was given: \code{TRUE}, \code{FALSE}, or
+\code{NULL} for the storage to be settled at build from the design.}
 
 \item{contrasts}{What the constructor was given.}
 

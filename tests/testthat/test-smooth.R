@@ -237,9 +237,14 @@ test_that("a factor by is where a smooth's block can be sparse", {
   d <- data.frame(x = stats::runif(n), z = stats::runif(n),
                   g = factor(sample.int(m, n, TRUE)))
 
-  a <- term_build(s(x, k = 8, by = g), d)
+  # the dense side is asked for EXPLICITLY: left NULL the storage is settled
+  # from the size of the block, and 600 rows by 40 levels by a basis of eight
+  # is 192000 cells, well past the threshold, so the default settles sparse
+  a <- term_build(s(x, k = 8, by = g, sparse = FALSE), d)
   b <- term_build(s(x, k = 8, by = g, sparse = TRUE), d)
   expect_true(is.matrix(term_matrix(a)))
+  expect_true(methods::is(term_matrix(term_build(s(x, k = 8, by = g), d)),
+                          "sparseMatrix"))
   expect_true(methods::is(term_matrix(b), "sparseMatrix"))
   # the same block, only stored differently
   expect_identical(term_coef_names(b), term_coef_names(a))
@@ -270,8 +275,12 @@ test_that("a smooth refuses sparse where there is nothing to build on", {
   # Known only at the build, which is where it is said.
   expect_error(term_build(s(x, k = 6, by = z, sparse = TRUE), d),
                "nothing to build on")
-  expect_error(s(x, sparse = "yes"), "TRUE or FALSE")
-  # the default is untouched
-  expect_true(methods::is(term_matrix(term_build(s(x, k = 6, by = g), d)),
-                          "matrix"))
+  expect_error(s(x, sparse = "yes"), "TRUE, FALSE, or NULL")
+  # a NULL is not an explicit TRUE and so is not refused: it settles, and
+  # where there is nothing to build on it settles dense
+  expect_true(is.matrix(term_matrix(term_build(s(x, k = 6), d))))
+  expect_true(is.matrix(term_matrix(term_build(s(x, k = 6, by = z), d))))
+  # 50 rows by 5 levels by a basis of six is 1500 cells, below the threshold,
+  # so the default settles dense even where a factor `by` admits the storage
+  expect_true(is.matrix(term_matrix(term_build(s(x, k = 6, by = g), d))))
 })

@@ -4,7 +4,7 @@
 \alias{linpar}
 \title{Unpenalized Parametric Term}
 \usage{
-linpar(formula, label = "", sparse = FALSE, contrasts = NULL)
+linpar(formula, label = "", sparse = NULL, contrasts = NULL)
 }
 \arguments{
 \item{formula}{A one-sided formula, e.g. \code{~ x1 + x2}.}
@@ -12,8 +12,9 @@ linpar(formula, label = "", sparse = FALSE, contrasts = NULL)
 \item{label}{A character string; when non-empty it is prefixed to the
 coefficient names as \code{label.name}.}
 
-\item{sparse}{Whether to build the block as a \code{dgCMatrix}. See the
-section below.}
+\item{sparse}{Whether to build the block as a \code{dgCMatrix}.
+\code{NULL}, the default, settles it from the design. See the section
+below.}
 
 \item{contrasts}{The contrasts for the formula's factors, as a named list
 of the kind \code{\link[stats]{model.matrix}}'s \code{contrasts.arg}
@@ -65,9 +66,13 @@ and 19 MB, which is what says there is no dense intermediate.
 It pays where the formula carries a FACTOR OF MANY LEVELS, whose indicator
 columns hold one non-zero per row. On numeric covariates the block is dense
 whatever is asked for, and the sparse storage then costs more than it
-saves; measured on a grouping indicator, the crossover is around a hundred
-levels. The storage is part of the blueprint, so
-\code{\link{term_predict}} builds new data the same way.
+saves. \code{sparse = NULL}, the default, settles it at build from the
+design: the dense indicator part holds \code{n} times its column count in
+cells against one non-zero per row, and the two routes cross at about
+\eqn{10^5} of those cells, which is the rule \code{\link{.resolve_sparse}}
+applies. \code{TRUE} and \code{FALSE} override it. The storage that was
+settled is part of the blueprint, so \code{\link{term_predict}} builds new
+data the same way.
 }
 
 \examples{

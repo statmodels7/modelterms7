@@ -9,7 +9,7 @@ ridge(
   label = "ridge",
   standardize = FALSE,
   lambda = NULL,
-  sparse = FALSE,
+  sparse = NULL,
   ...
 )
 }
@@ -27,11 +27,12 @@ coefficient on the scale of its own column. See the section below.}
 path, so several numbers are not a grid it could visit. Must lie in
 \eqn{(0, \infty)}.}
 
-\item{sparse}{A single logical, governing the FORMULA route: whether the
-block is built as a \code{dgCMatrix} through
-\code{\link[Matrix]{sparse.model.matrix}} rather than as a dense model
-matrix. A MATRIX input needs no such argument, being kept in whatever
-storage it arrives in. See the section below.}
+\item{sparse}{Governs the FORMULA route: whether the block is built as a
+\code{dgCMatrix} through \code{\link[Matrix]{sparse.model.matrix}} rather
+than as a dense model matrix. \code{NULL}, the default, settles it at
+build from the size of the design; \code{TRUE} and \code{FALSE} override
+it. A MATRIX input needs no such argument, being kept in whatever storage
+it arrives in. See the section below.}
 
 \item{...}{Not used, and reported: an argument named after another
 penalty's hyperparameter is the mistake this catches.}

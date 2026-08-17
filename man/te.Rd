@@ -13,7 +13,7 @@ te(
   anisotropic = TRUE,
   label = NULL,
   lambda = NULL,
-  sparse = FALSE
+  sparse = NULL
 )
 }
 \arguments{
@@ -41,10 +41,11 @@ ESTIMATED when left \code{NULL}, which is the default. An
 anisotropic tensor product carries one per margin, so a vector
 of that length, or a named one holding some of them.}
 
-\item{sparse}{Whether the block is built as a \code{dgCMatrix}. Only a
-FACTOR \code{by} admits it, each row sitting in the block of its own
-level; without one the argument is refused rather than ignored. See
-\code{\link{s}}.}
+\item{sparse}{Whether the block is built as a \code{dgCMatrix}.
+\code{NULL}, the default, settles it at build from the size of the block.
+Only a FACTOR \code{by} admits it, each row sitting in the block of its
+own level; without one an explicit \code{TRUE} is refused rather than
+ignored. See \code{\link{s}}.}
 }
 \value{
 An object of class \code{\link{SmoothTerm}} (a specification;

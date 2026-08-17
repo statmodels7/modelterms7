@@ -18,7 +18,7 @@ SmoothTerm(
   vars = list(),
   by = NULL,
   spec = list(),
-  sparse = FALSE
+  sparse = NULL
 )
 }
 \arguments{

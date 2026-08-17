@@ -14,7 +14,7 @@ mcp(
   n_gamma = 5,
   min_ratio = 1e-04,
   search = "grid",
-  sparse = FALSE,
+  sparse = NULL,
   ...
 )
 }
@@ -48,11 +48,12 @@ criterion. Only the sweep by kink size uses it.}
 and \eqn{\gamma}, \code{"cyclic"} to sweep one at a time with the other
 held. See \code{\link{term_search}}.}
 
-\item{sparse}{A single logical, governing the FORMULA route: whether the
-block is built as a \code{dgCMatrix} through
-\code{\link[Matrix]{sparse.model.matrix}} rather than as a dense model
-matrix. A MATRIX input needs no such argument, being kept in whatever
-storage it arrives in. See the section below.}
+\item{sparse}{Governs the FORMULA route: whether the block is built as a
+\code{dgCMatrix} through \code{\link[Matrix]{sparse.model.matrix}} rather
+than as a dense model matrix. \code{NULL}, the default, settles it at
+build from the size of the design; \code{TRUE} and \code{FALSE} override
+it. A MATRIX input needs no such argument, being kept in whatever storage
+it arrives in. See the section below.}
 
 \item{...}{Not used, and reported: an argument named after another
 penalty's hyperparameter is the mistake this catches.}

@@ -34,8 +34,9 @@ SmoothTerm <- S7::new_class(
     # WHERE the block is sparse: a factor `by` puts each row in the block of
     # its own level, a density of 1/m. The basis itself is dense by
     # construction -- the Demmler-Reinsch rotation makes it so -- and so is
-    # a numeric `by`, which merely multiplies it.
-    sparse = S7::new_property(S7::class_logical, default = FALSE)
+    # a numeric `by`, which merely multiplies it. NULL until the build
+    # settles it; the settled value is what the blueprint carries.
+    sparse = S7::class_any
   )
 )
 
@@ -78,10 +79,14 @@ SmoothTerm <- S7::new_class(
 #' in the block of its own level and nowhere else, a density of \eqn{1/m}.
 #' \code{sparse = TRUE} builds it that way rather than building the dense
 #' matrix and compressing it -- measured at 2000 rows, \eqn{k = 10} and 200
-#' levels, 0.35 MB against 28.93 MB, the numbers identical. It is refused
-#' without a factor \code{by}, where there would be nothing to build on: the
-#' basis is dense by construction, the Demmler-Reinsch rotation making it so,
-#' and a numeric \code{by} merely multiplies it.
+#' levels, 0.35 MB against 28.93 MB, the numbers identical. \code{sparse =
+#' NULL}, the default, settles it at build from the size of the block, the
+#' dense form holding \eqn{n m k} cells against \eqn{n k} non-zeros; see
+#' \code{\link{.resolve_sparse}} for the threshold and what it was measured
+#' against. An explicit \code{TRUE} is refused without a factor \code{by},
+#' where there would be nothing to build on: the basis is dense by
+#' construction, the Demmler-Reinsch rotation making it so, and a numeric
+#' \code{by} merely multiplies it.
 #'
 #' The block alone is sparse. The PENALTY of a factor \code{by} is the same
 #' matrix repeated blockwise, and \pkg{penalties7} returns it dense -- 25.92
@@ -103,10 +108,11 @@ SmoothTerm <- S7::new_class(
 #'   ESTIMATED when left \code{NULL}, which is the default. An
 #'   anisotropic tensor product carries one per margin, so a vector
 #'   of that length, or a named one holding some of them.
-#' @param sparse Whether the block is built as a \code{dgCMatrix}. Only a
-#'   FACTOR \code{by} admits it, each row sitting in the block of its own
-#'   level; without one the argument is refused rather than ignored. See
-#'   Details.
+#' @param sparse Whether the block is built as a \code{dgCMatrix}.
+#'   \code{NULL}, the default, settles it at build from the size of the block.
+#'   Only a FACTOR \code{by} admits it, each row sitting in the block of its
+#'   own level; without one an explicit \code{TRUE} is refused rather than
+#'   ignored. See Details.
 #'
 #' @return An object of class \code{\link{SmoothTerm}} (a specification;
 #'   see \code{\link{term_build}}).
@@ -130,7 +136,7 @@ SmoothTerm <- S7::new_class(
 #' @export
 s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
               linear = TRUE, label = NULL, lambda = NULL,
-              sparse = FALSE) {
+              sparse = NULL) {
   xe <- substitute(x)
   .smooth_spec(list(xe), substitute(by), k, degree,
                if (is.null(basis)) NULL else list(basis), linear, label,
@@ -198,10 +204,11 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #'   ESTIMATED when left \code{NULL}, which is the default. An
 #'   anisotropic tensor product carries one per margin, so a vector
 #'   of that length, or a named one holding some of them.
-#' @param sparse Whether the block is built as a \code{dgCMatrix}. Only a
-#'   FACTOR \code{by} admits it, each row sitting in the block of its own
-#'   level; without one the argument is refused rather than ignored. See
-#'   \code{\link{s}}.
+#' @param sparse Whether the block is built as a \code{dgCMatrix}.
+#'   \code{NULL}, the default, settles it at build from the size of the block.
+#'   Only a FACTOR \code{by} admits it, each row sitting in the block of its
+#'   own level; without one an explicit \code{TRUE} is refused rather than
+#'   ignored. See \code{\link{s}}.
 #'
 #' @return An object of class \code{\link{SmoothTerm}} (a specification;
 #'   see \code{\link{term_build}}).
@@ -224,7 +231,7 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #' @export
 te <- function(..., by = NULL, k = 5, degree = 3, bases = NULL,
                anisotropic = TRUE, label = NULL, lambda = NULL,
-               sparse = FALSE) {
+               sparse = NULL) {
   vars <- as.list(substitute(list(...)))[-1L]
   if (length(vars) < 2L) {
     stop("'te' needs at least two covariates; use s() for one.",
@@ -250,7 +257,7 @@ te <- function(..., by = NULL, k = 5, degree = 3, bases = NULL,
 
 .smooth_spec <- function(vars, by, k, degree, bases, linear, label,
                          default_label, lambda = NULL, names = "lambda",
-                         sparse = FALSE) {
+                         sparse = NULL) {
   nv <- length(vars)
   chk <- function(v, nm, lo) {
     if (!is.numeric(v) || anyNA(v) || any(v < lo) || any(v != round(v))) {
@@ -282,8 +289,10 @@ te <- function(..., by = NULL, k = 5, degree = 3, bases = NULL,
     stop("'label' must be a single non-empty character string.",
          call. = FALSE)
   }
-  if (!is.logical(sparse) || length(sparse) != 1L || is.na(sparse)) {
-    stop("'sparse' must be TRUE or FALSE.", call. = FALSE)
+  if (!is.null(sparse) &&
+      (!is.logical(sparse) || length(sparse) != 1L || is.na(sparse))) {
+    stop(paste0("'sparse' must be TRUE, FALSE, or NULL to settle it from",
+                " the design."), call. = FALSE)
   }
   # ASKED AT CONSTRUCTION, where the caller can see it: the sparsity of a
   # smooth comes from a factor `by`, whose indicators put each row in one
@@ -295,7 +304,7 @@ te <- function(..., by = NULL, k = 5, degree = 3, bases = NULL,
                 " 'by', whose indicators put each\n  row in the block of its",
                 " own level."), call. = FALSE)
   }
-  SmoothTerm(label = label, vars = vars, by = by, sparse = isTRUE(sparse),
+  SmoothTerm(label = label, vars = vars, by = by, sparse = sparse,
              spec = list(k = k, degree = degree, bases = bases,
                          linear = isTRUE(linear)),
              hyper = smooth_hyper(lambda, names, label),
@@ -429,13 +438,20 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
   }
 
   by_blocks <- 1L
+  # settled here and carried to the blueprint: without a factor `by` there is
+  # nothing sparse to build, so the answer is FALSE whatever was asked
+  sp <- FALSE
   by <- .smooth_by(term@by, data)
   if (!is.null(by)) {
     if (identical(by$kind, "factor")) {
       m <- nlevels(by$value)
       nm <- as.character(t(outer(levels(by$value), nm,
                                  function(a, b) paste(a, b, sep = "."))))
-      Z <- .smooth_by_block(Z, by$value, m, term@sparse)
+      # the block is m copies of a basis of ncol(Z), one row per level, so
+      # the dense form holds n * m * ncol(Z) cells against n * ncol(Z)
+      # non-zeros -- the same product .resolve_sparse() reads for a formula
+      sp <- .resolve_sparse(term@sparse, nrow(Z), m * ncol(Z))
+      Z <- .smooth_by_block(Z, by$value, m, sp)
       # ONE COPY PER LEVEL, and the penalty says so rather than being handed
       # the assembled product. What a quadratic penalty needs from its matrix
       # -- the rank, the log pseudo-determinant, a basis of the null space --
@@ -476,7 +492,7 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
                          by_levels = if (!is.null(by) &&
                                          identical(by$kind, "factor"))
                            by$levels else NULL,
-                         sparse = term@sparse,
+                         sparse = sp,
                          nblock = ncol(Z))
   term@penalty <- if (is.list(P)) penalties7::additive_penalty(P)
                   else penalties7::quadratic_penalty(P, blocks = by_blocks)

@@ -214,7 +214,9 @@ LinparTerm <- S7::new_class(
     # WHERE the block is built sparse rather than compressed afterwards: a
     # formula carrying a factor of many levels has one non-zero per row, and
     # the dense model matrix of it is the memory the choice exists to avoid.
-    sparse = S7::new_property(S7::class_logical, default = FALSE),
+    # NULL until the build settles it from the design; the settled value is
+    # what the blueprint carries.
+    sparse = S7::class_any,
     contrasts = S7::new_property(S7::class_list, default = quote(list()))
   )
 )

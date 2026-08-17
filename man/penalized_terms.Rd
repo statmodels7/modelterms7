@@ -12,11 +12,12 @@ names.}
 \item{standardize}{A single logical: whether to penalize each
 coefficient on the scale of its own column. See the section below.}
 
-\item{sparse}{A single logical, governing the FORMULA route: whether the
-block is built as a \code{dgCMatrix} through
-\code{\link[Matrix]{sparse.model.matrix}} rather than as a dense model
-matrix. A MATRIX input needs no such argument, being kept in whatever
-storage it arrives in. See the section below.}
+\item{sparse}{Governs the FORMULA route: whether the block is built as a
+\code{dgCMatrix} through \code{\link[Matrix]{sparse.model.matrix}} rather
+than as a dense model matrix. \code{NULL}, the default, settles it at
+build from the size of the design; \code{TRUE} and \code{FALSE} override
+it. A MATRIX input needs no such argument, being kept in whatever storage
+it arrives in. See the section below.}
 
 \item{...}{Not used, and reported: an argument named after another
 penalty's hyperparameter is the mistake this catches.}
@@ -76,7 +77,11 @@ block sparse rather than building a dense one and compressing it.
 It pays where the formula carries a factor of many levels, whose indicator
 columns hold one non-zero per row -- \code{lasso(~ 0 + g)} over hundreds of
 groups is the case. On numeric covariates the block is dense whatever is
-asked for, and the sparse storage costs more than it saves.
+asked for, and the sparse storage costs more than it saves. Left
+\code{NULL}, which is the default, the storage is settled at build by
+\code{\link{.resolve_sparse}}: the dense indicator part holds \code{n} times
+its column count in cells against one non-zero per row, and the two routes
+cross at about \eqn{10^5} of those cells.
 
 Standardization does not interfere: it is a diagonal map on the PENALTY and
 never an operation on the design, so a sparse block stays sparse under it.

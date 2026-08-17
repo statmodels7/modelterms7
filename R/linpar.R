@@ -43,15 +43,20 @@ NULL
 #' It pays where the formula carries a FACTOR OF MANY LEVELS, whose indicator
 #' columns hold one non-zero per row. On numeric covariates the block is dense
 #' whatever is asked for, and the sparse storage then costs more than it
-#' saves; measured on a grouping indicator, the crossover is around a hundred
-#' levels. The storage is part of the blueprint, so
-#' \code{\link{term_predict}} builds new data the same way.
+#' saves. \code{sparse = NULL}, the default, settles it at build from the
+#' design: the dense indicator part holds \code{n} times its column count in
+#' cells against one non-zero per row, and the two routes cross at about
+#' \eqn{10^5} of those cells, which is the rule \code{\link{.resolve_sparse}}
+#' applies. \code{TRUE} and \code{FALSE} override it. The storage that was
+#' settled is part of the blueprint, so \code{\link{term_predict}} builds new
+#' data the same way.
 #'
 #' @param formula A one-sided formula, e.g. \code{~ x1 + x2}.
 #' @param label A character string; when non-empty it is prefixed to the
 #'   coefficient names as \code{label.name}.
-#' @param sparse Whether to build the block as a \code{dgCMatrix}. See the
-#'   section below.
+#' @param sparse Whether to build the block as a \code{dgCMatrix}.
+#'   \code{NULL}, the default, settles it from the design. See the section
+#'   below.
 #' @param contrasts The contrasts for the formula's factors, as a named list
 #'   of the kind \code{\link[stats]{model.matrix}}'s \code{contrasts.arg}
 #'   takes. \code{NULL}, the default, leaves them to the session's
@@ -68,7 +73,7 @@ NULL
 #'
 #' @seealso \code{\link{ridge}}, \code{\link{lasso}}, \code{\link{scad}}, \code{\link{mcp}}, \code{\link{enet}}
 #' @export
-linpar <- function(formula, label = "", sparse = FALSE, contrasts = NULL) {
+linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
   if (!inherits(formula, "formula")) {
     stop("'formula' must be a formula.", call. = FALSE)
   }
@@ -130,7 +135,8 @@ linpar <- function(formula, label = "", sparse = FALSE, contrasts = NULL) {
 
 #' Check a Term's Storage and Contrasts
 #'
-#' @param sparse What the constructor was given.
+#' @param sparse What the constructor was given: \code{TRUE}, \code{FALSE}, or
+#'   \code{NULL} for the storage to be settled at build from the design.
 #' @param contrasts What the constructor was given.
 #' @param what The term's label, for the message.
 #'
@@ -138,9 +144,10 @@ linpar <- function(formula, label = "", sparse = FALSE, contrasts = NULL) {
 #'
 #' @keywords internal
 .check_design_opts <- function(sparse, contrasts, what = "this term") {
-  if (!is.logical(sparse) || length(sparse) != 1L || is.na(sparse)) {
-    stop(sprintf("'sparse' in '%s' must be TRUE or FALSE.", what),
-         call. = FALSE)
+  if (!is.null(sparse) &&
+      (!is.logical(sparse) || length(sparse) != 1L || is.na(sparse))) {
+    stop(sprintf(paste0("'sparse' in '%s' must be TRUE, FALSE, or NULL to",
+                        " settle it from the design."), what), call. = FALSE)
   }
   if (!is.null(contrasts) && !is.list(contrasts)) {
     stop(sprintf(paste0("'contrasts' in '%s' must be a named list, one entry",
@@ -151,17 +158,99 @@ linpar <- function(formula, label = "", sparse = FALSE, contrasts = NULL) {
 }
 
 
+#' How Many Columns of a Model Matrix Come From Factors
+#'
+#' @description
+#' The number of columns a terms object contributes through indicator
+#' variables, counted from the model frame without building the matrix.
+#'
+#' @details
+#' A term contributes the product of its variables' level counts, a numeric
+#' variable counting one; a term carrying no factor contributes columns that
+#' are dense whatever the storage, and is not counted. The count is an upper
+#' bound, contrasts dropping one level per factor, which is the right side to
+#' err on: it is read against a threshold below which the sparse route loses
+#' little and above which it wins by orders.
+#'
+#' @param tt A terms object.
+#' @param mf The model frame it was built from.
+#'
+#' @return A single number, zero when no term carries a factor.
+#'
+#' @seealso \code{\link{.resolve_sparse}}
+#'
+#' @keywords internal
+.indicator_cols <- function(tt, mf) {
+  fac <- attr(tt, "factors")
+  if (is.null(fac) || !length(fac) || !ncol(fac)) return(0)
+  nlev <- vapply(rownames(fac), function(v) {
+    x <- mf[[v]]
+    if (is.null(x)) 1
+    else if (is.factor(x)) as.numeric(nlevels(x))
+    else if (is.character(x) || is.logical(x)) as.numeric(length(unique(x)))
+    else 1
+  }, numeric(1))
+  tot <- 0
+  for (j in seq_len(ncol(fac))) {
+    inn <- fac[, j] > 0
+    if (!any(inn) || !any(nlev[inn] > 1)) next
+    tot <- tot + prod(nlev[inn])
+  }
+  tot
+}
+
+
+#' Settle Whether a Block Is Built Sparse
+#'
+#' @description
+#' Passes an explicit \code{TRUE} or \code{FALSE} through, and where the
+#' caller left \code{NULL} decides from the size of the block.
+#'
+#' @details
+#' The dense indicator part holds \code{n * ncol_ind} cells where the sparse
+#' one holds one non-zero per row, so that product is what the two routes are
+#' separated by, and the threshold is read off it rather than off a count of
+#' levels. Measured end to end on \code{y ~ 0 + g + s(x)} over eighteen
+#' combinations of sample size and level count, the routes cross at about
+#' \eqn{10^5} cells: at \eqn{n = 1000} the sparse route loses at every level
+#' count up to sixty (\eqn{6 \times 10^4} cells, 0.93 times the dense route),
+#' at \eqn{n = 5000} it crosses between fifteen and twenty-five levels, and at
+#' \eqn{n = 20000} between six and ten. The same threshold accounts for the
+#' large cases: four hundred levels at \eqn{n = 20000} are \eqn{8 \times 10^6}
+#' cells and run 43.75 times faster, with the log-likelihood identical.
+#'
+#' A design carrying no factor has no indicator part, so the product is zero
+#' and the block is built dense, which is what the measurements ask for there
+#' (0.66 to 0.90 times the dense route on purely continuous covariates).
+#'
+#' @param sparse \code{TRUE}, \code{FALSE}, or \code{NULL} to decide here.
+#' @param n The number of rows.
+#' @param ncol_ind The columns coming from indicators, from
+#'   \code{\link{.indicator_cols}}.
+#'
+#' @return A single logical.
+#'
+#' @seealso \code{\link{.indicator_cols}}, \code{\link{linpar}}
+#'
+#' @keywords internal
+.resolve_sparse <- function(sparse, n, ncol_ind) {
+  if (!is.null(sparse)) return(isTRUE(sparse))
+  isTRUE(is.finite(n) && is.finite(ncol_ind) && n * ncol_ind > 1e5)
+}
+
+
 S7::method(term_build, LinparTerm) <- function(term, data, ...) {
   mf <- stats::model.frame(term@formula, data,
                            na.action = stats::na.pass,
                            drop.unused.levels = FALSE)
   tt <- attr(mf, "terms")
   # the block is a plain numeric matrix, or a dgCMatrix where the caller
-  # asked for one: the model.matrix bookkeeping lives in the blueprint, not
-  # on the result
+  # asked for one or where the design is large enough that one pays: the
+  # model.matrix bookkeeping lives in the blueprint, not on the result
+  sp <- .resolve_sparse(term@sparse, nrow(mf), .indicator_cols(tt, mf))
   b <- .design_matrix(tt, mf,
                       if (length(term@contrasts)) term@contrasts else NULL,
-                      term@sparse)
+                      sp)
   X <- b$X
   cn <- colnames(X)
   if (nzchar(term@label)) cn <- paste(term@label, cn, sep = ".")
@@ -172,7 +261,10 @@ S7::method(term_build, LinparTerm) <- function(term, data, ...) {
     terms = stats::delete.response(tt),
     xlev = stats::.getXlevels(tt, mf),
     contrasts = b$contrasts,
-    sparse = term@sparse
+    # the SETTLED storage, not what the constructor was given: new data may
+    # carry any number of rows, and a prediction that decided again could
+    # build a block of a different kind from the one that was fitted
+    sparse = sp
   )
   term
 }

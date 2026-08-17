@@ -42,14 +42,15 @@ PenalizedTerm <- S7::new_class(
     factory = S7::class_function,
     standardize = S7::new_property(S7::class_logical, default = FALSE),
     # the FORMULA route's storage. A matrix input is kept in whatever
-    # storage it arrives in and needs no argument to say so.
-    sparse = S7::new_property(S7::class_logical, default = FALSE)
+    # storage it arrives in and needs no argument to say so. NULL until the
+    # build settles it from the design.
+    sparse = S7::class_any
   )
 )
 
 .penalized_spec <- function(x, expr, label, standardize, factory,
                             hyper = list(), extra = list(), grid = list(),
-                            min_ratio = NULL, search = NULL, sparse = FALSE) {
+                            min_ratio = NULL, search = NULL, sparse = NULL) {
   # An argument named after ANOTHER penalty's hyperparameter is the mistake
   # this catches: `mcp(x, a = 3)` writes SCAD's shape on an MCP, whose own
   # is gamma, and reaches nothing. R would report it as an unused argument,
@@ -190,7 +191,11 @@ PenalizedTerm <- S7::new_class(
 #' It pays where the formula carries a factor of many levels, whose indicator
 #' columns hold one non-zero per row -- \code{lasso(~ 0 + g)} over hundreds of
 #' groups is the case. On numeric covariates the block is dense whatever is
-#' asked for, and the sparse storage costs more than it saves.
+#' asked for, and the sparse storage costs more than it saves. Left
+#' \code{NULL}, which is the default, the storage is settled at build by
+#' \code{\link{.resolve_sparse}}: the dense indicator part holds \code{n} times
+#' its column count in cells against one non-zero per row, and the two routes
+#' cross at about \eqn{10^5} of those cells.
 #'
 #' Standardization does not interfere: it is a diagonal map on the PENALTY and
 #' never an operation on the design, so a sparse block stays sparse under it.
@@ -240,11 +245,12 @@ PenalizedTerm <- S7::new_class(
 #'   names.
 #' @param standardize A single logical: whether to penalize each
 #'   coefficient on the scale of its own column. See the section below.
-#' @param sparse A single logical, governing the FORMULA route: whether the
-#'   block is built as a \code{dgCMatrix} through
-#'   \code{\link[Matrix]{sparse.model.matrix}} rather than as a dense model
-#'   matrix. A MATRIX input needs no such argument, being kept in whatever
-#'   storage it arrives in. See the section below.
+#' @param sparse Governs the FORMULA route: whether the block is built as a
+#'   \code{dgCMatrix} through \code{\link[Matrix]{sparse.model.matrix}} rather
+#'   than as a dense model matrix. \code{NULL}, the default, settles it at
+#'   build from the size of the design; \code{TRUE} and \code{FALSE} override
+#'   it. A MATRIX input needs no such argument, being kept in whatever storage
+#'   it arrives in. See the section below.
 #' @param ... Not used, and reported: an argument named after another
 #'   penalty's hyperparameter is the mistake this catches.
 #' @return An object of class \code{\link{PenalizedTerm}} (a
@@ -283,7 +289,8 @@ S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
                              na.action = stats::na.pass,
                              drop.unused.levels = FALSE)
     tt <- attr(mf, "terms")
-    b <- .design_matrix(tt, mf, NULL, term@sparse)
+    sp <- .resolve_sparse(term@sparse, nrow(mf), .indicator_cols(tt, mf))
+    b <- .design_matrix(tt, mf, NULL, sp)
     X <- b$X
     base_names <- colnames(X)
     term@blueprint <- list(
@@ -291,7 +298,8 @@ S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
       terms = stats::delete.response(tt),
       xlev = stats::.getXlevels(tt, mf),
       contrasts = b$contrasts,
-      sparse = term@sparse
+      # the SETTLED storage, so a prediction reproduces the build's kind
+      sparse = sp
     )
   } else {
     X <- term@input
