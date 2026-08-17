@@ -16,7 +16,7 @@ mcp(
   n_gamma = 5,
   min_ratio = 1e-04,
   search = "grid",
-  sparse = FALSE,
+  sparse = NULL,
   ...
 )
 ```
@@ -69,12 +69,13 @@ mcp(
 
 - sparse:
 
-  A single logical, governing the FORMULA route: whether the block is
-  built as a `dgCMatrix` through
+  Governs the FORMULA route: whether the block is built as a `dgCMatrix`
+  through
   [`sparse.model.matrix`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html)
-  rather than as a dense model matrix. A MATRIX input needs no such
-  argument, being kept in whatever storage it arrives in. See the
-  section below.
+  rather than as a dense model matrix. `NULL`, the default, settles it
+  at build from the size of the design; `TRUE` and `FALSE` override it.
+  A MATRIX input needs no such argument, being kept in whatever storage
+  it arrives in. See the section below.
 
 - ...:
 

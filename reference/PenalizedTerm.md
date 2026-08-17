@@ -30,7 +30,7 @@ PenalizedTerm(
   input_expr = NULL,
   factory = function() NULL,
   standardize = FALSE,
-  sparse = FALSE
+  sparse = NULL
 )
 ```
 

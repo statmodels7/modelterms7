@@ -11,7 +11,7 @@ conventions for factors, contrasts, interactions and the intercept."><meta prope
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.46.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.47.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,7 +45,7 @@ conventions for factors, contrasts, interactions and the intercept.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">linpar</span><span class="op">(</span><span class="va">formula</span>, label <span class="op">=</span> <span class="st">""</span>, sparse <span class="op">=</span> <span class="cn">FALSE</span>, contrasts <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">linpar</span><span class="op">(</span><span class="va">formula</span>, label <span class="op">=</span> <span class="st">""</span>, sparse <span class="op">=</span> <span class="cn">NULL</span>, contrasts <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -62,8 +62,9 @@ coefficient names as <code>label.name</code>.</p></dd>
 
 
 <dt id="arg-sparse">sparse<a class="anchor" aria-label="anchor" href="#arg-sparse"></a></dt>
-<dd><p>Whether to build the block as a <code>dgCMatrix</code>. See the
-section below.</p></dd>
+<dd><p>Whether to build the block as a <code>dgCMatrix</code>.
+<code>NULL</code>, the default, settles it from the design. See the section
+below.</p></dd>
 
 
 <dt id="arg-contrasts">contrasts<a class="anchor" aria-label="anchor" href="#arg-contrasts"></a></dt>
@@ -112,9 +113,13 @@ and 19 MB, which is what says there is no dense intermediate.</p>
 <p>It pays where the formula carries a FACTOR OF MANY LEVELS, whose indicator
 columns hold one non-zero per row. On numeric covariates the block is dense
 whatever is asked for, and the sparse storage then costs more than it
-saves; measured on a grouping indicator, the crossover is around a hundred
-levels. The storage is part of the blueprint, so
-<code><a href="term_predict.html">term_predict</a></code> builds new data the same way.</p>
+saves. <code>sparse = NULL</code>, the default, settles it at build from the
+design: the dense indicator part holds <code>n</code> times its column count in
+cells against one non-zero per row, and the two routes cross at about
+\(10^5\) of those cells, which is the rule <code><a href="dot-resolve_sparse.html">.resolve_sparse</a></code>
+applies. <code>TRUE</code> and <code>FALSE</code> override it. The storage that was
+settled is part of the blueprint, so <code><a href="term_predict.html">term_predict</a></code> builds new
+data the same way.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

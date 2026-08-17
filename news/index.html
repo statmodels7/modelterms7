@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.46.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.47.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,13 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.47.0" id="modelterms7-0470">modelterms7 0.47.0<a class="anchor" aria-label="anchor" href="#modelterms7-0470"></a></h2>
+<ul><li><p><code>sparse</code> defaults to <code>NULL</code> in <code><a href="../reference/linpar.html">linpar()</a></code>, <code><a href="../reference/s.html">s()</a></code>, <code><a href="../reference/te.html">te()</a></code> and the five penalized constructors, and the storage is then SETTLED AT BUILD from the size of the design rather than asked for. <code>TRUE</code> and <code>FALSE</code> override it, and an explicit <code>TRUE</code> is still refused where there is nothing to build on.</p></li>
+<li><p><strong>The threshold is the cells of the dense indicator part, not a count of levels.</strong> The dense form holds <code>n</code> times its column count against one non-zero per row, so that product is what separates the two routes. Measured end to end on <code>y ~ 0 + g + s(x)</code> over eighteen combinations of sample size and level count, they cross at about <code>1e5</code> cells, and the rule predicts every one of the eighteen: at <code>n = 1000</code> the sparse route loses at every level count up to sixty (0.93x at <code>6e4</code> cells), at <code>n = 5000</code> it crosses between fifteen and twenty-five levels, and at <code>n = 20000</code> between six and ten (1.00x at <code>1.2e5</code>). The same threshold accounts for the large cases, four hundred levels at <code>n = 20000</code> being <code>8e6</code> cells and 43.75x, and for the negative one: a design carrying no factor has no indicator part, and forcing the storage there measures 0.66x to 0.90x.</p></li>
+<li><p>The SETTLED storage is what the blueprint carries, so <code><a href="../reference/term_predict.html">term_predict()</a></code> reproduces the build’s kind rather than deciding again on however many rows the new data has.</p></li>
+<li><p><code><a href="../reference/random.html">random()</a></code> is untouched, its block being sparse by construction.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.46.0" id="modelterms7-0460">modelterms7 0.46.0<a class="anchor" aria-label="anchor" href="#modelterms7-0460"></a></h2>
 <ul><li><p><code><a href="../reference/nl.html">nl()</a></code> takes <code>gradient</code>, <code>hessian</code>, <code>deriv3</code> and <code>deriv4</code>: functions <code>function(theta, data)</code> returning the derivatives of the nonlinear function in its own parameters, each a NAMED LIST keyed as  keys its own derivative surfaces. They are independent, so the orders worth writing out by hand can be written and the rest left alone, and the route is chosen ONE ORDER AT A TIME: a supplied function, then symbolic differentiation of the expression, then one stencil applied to the highest order that IS analytic.</p></li>

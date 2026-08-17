@@ -11,7 +11,7 @@ penalty on the product coefficients."><meta property="og:image" content="https:/
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.46.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.47.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@ penalty on the product coefficients.</p>
 <span>  anisotropic <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  label <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lambda <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  sparse <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  sparse <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -103,10 +103,11 @@ of that length, or a named one holding some of them.</p></dd>
 
 
 <dt id="arg-sparse">sparse<a class="anchor" aria-label="anchor" href="#arg-sparse"></a></dt>
-<dd><p>Whether the block is built as a <code>dgCMatrix</code>. Only a
-FACTOR <code>by</code> admits it, each row sitting in the block of its own
-level; without one the argument is refused rather than ignored. See
-<code><a href="s.html">s</a></code>.</p></dd>
+<dd><p>Whether the block is built as a <code>dgCMatrix</code>.
+<code>NULL</code>, the default, settles it at build from the size of the block.
+Only a FACTOR <code>by</code> admits it, each row sitting in the block of its
+own level; without one an explicit <code>TRUE</code> is refused rather than
+ignored. See <code><a href="s.html">s</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -16,7 +16,7 @@ te(
   anisotropic = TRUE,
   label = NULL,
   lambda = NULL,
-  sparse = FALSE
+  sparse = NULL
 )
 ```
 
@@ -64,9 +64,10 @@ te(
 
 - sparse:
 
-  Whether the block is built as a `dgCMatrix`. Only a FACTOR `by` admits
-  it, each row sitting in the block of its own level; without one the
-  argument is refused rather than ignored. See
+  Whether the block is built as a `dgCMatrix`. `NULL`, the default,
+  settles it at build from the size of the block. Only a FACTOR `by`
+  admits it, each row sitting in the block of its own level; without one
+  an explicit `TRUE` is refused rather than ignored. See
   [`s`](https://statmodels7.github.io/modelterms7/reference/s.md).
 
 ## Value

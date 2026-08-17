@@ -18,7 +18,7 @@ s(
   linear = TRUE,
   label = NULL,
   lambda = NULL,
-  sparse = FALSE
+  sparse = NULL
 )
 ```
 
@@ -64,9 +64,10 @@ s(
 
 - sparse:
 
-  Whether the block is built as a `dgCMatrix`. Only a FACTOR `by` admits
-  it, each row sitting in the block of its own level; without one the
-  argument is refused rather than ignored. See Details.
+  Whether the block is built as a `dgCMatrix`. `NULL`, the default,
+  settles it at build from the size of the block. Only a FACTOR `by`
+  admits it, each row sitting in the block of its own level; without one
+  an explicit `TRUE` is refused rather than ignored. See Details.
 
 ## Value
 
@@ -107,10 +108,14 @@ A factor `by` is where a smooth's block can be SPARSE: each row sits in
 the block of its own level and nowhere else, a density of \\1/m\\.
 `sparse = TRUE` builds it that way rather than building the dense matrix
 and compressing it – measured at 2000 rows, \\k = 10\\ and 200 levels,
-0.35 MB against 28.93 MB, the numbers identical. It is refused without a
-factor `by`, where there would be nothing to build on: the basis is
-dense by construction, the Demmler-Reinsch rotation making it so, and a
-numeric `by` merely multiplies it.
+0.35 MB against 28.93 MB, the numbers identical. `sparse = NULL`, the
+default, settles it at build from the size of the block, the dense form
+holding \\n m k\\ cells against \\n k\\ non-zeros; see
+[`.resolve_sparse`](https://statmodels7.github.io/modelterms7/reference/dot-resolve_sparse.md)
+for the threshold and what it was measured against. An explicit `TRUE`
+is refused without a factor `by`, where there would be nothing to build
+on: the basis is dense by construction, the Demmler-Reinsch rotation
+making it so, and a numeric `by` merely multiplies it.
 
 The block alone is sparse. The PENALTY of a factor `by` is the same
 matrix repeated blockwise, and penalties7 returns it dense – 25.92 MB at

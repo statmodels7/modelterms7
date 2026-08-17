@@ -23,7 +23,7 @@ never restated by the term."><meta property="og:image" content="https://statmode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.46.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.47.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -81,11 +81,12 @@ coefficient on the scale of its own column. See the section below.</p></dd>
 
 
 <dt id="arg-sparse">sparse<a class="anchor" aria-label="anchor" href="#arg-sparse"></a></dt>
-<dd><p>A single logical, governing the FORMULA route: whether the
-block is built as a <code>dgCMatrix</code> through
-<code><a href="https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html" class="external-link">sparse.model.matrix</a></code> rather than as a dense model
-matrix. A MATRIX input needs no such argument, being kept in whatever
-storage it arrives in. See the section below.</p></dd>
+<dd><p>Governs the FORMULA route: whether the block is built as a
+<code>dgCMatrix</code> through <code><a href="https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html" class="external-link">sparse.model.matrix</a></code> rather
+than as a dense model matrix. <code>NULL</code>, the default, settles it at
+build from the size of the design; <code>TRUE</code> and <code>FALSE</code> override
+it. A MATRIX input needs no such argument, being kept in whatever storage
+it arrives in. See the section below.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -138,7 +139,11 @@ block sparse rather than building a dense one and compressing it.</p>
 <p>It pays where the formula carries a factor of many levels, whose indicator
 columns hold one non-zero per row – <code>lasso(~ 0 + g)</code> over hundreds of
 groups is the case. On numeric covariates the block is dense whatever is
-asked for, and the sparse storage costs more than it saves.</p>
+asked for, and the sparse storage costs more than it saves. Left
+<code>NULL</code>, which is the default, the storage is settled at build by
+<code><a href="dot-resolve_sparse.html">.resolve_sparse</a></code>: the dense indicator part holds <code>n</code> times
+its column count in cells against one non-zero per row, and the two routes
+cross at about \(10^5\) of those cells.</p>
 <p>Standardization does not interfere: it is a diagonal map on the PENALTY and
 never an operation on the design, so a sparse block stays sparse under it.</p>
     </div>

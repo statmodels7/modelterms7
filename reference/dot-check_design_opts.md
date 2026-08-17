@@ -12,7 +12,8 @@ Check a Term's Storage and Contrasts
 
 - sparse:
 
-  What the constructor was given.
+  What the constructor was given: `TRUE`, `FALSE`, or `NULL` for the
+  storage to be settled at build from the design.
 
 - contrasts:
 

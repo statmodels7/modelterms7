@@ -8,7 +8,7 @@ for factors, contrasts, interactions and the intercept.
 ## Usage
 
 ``` r
-linpar(formula, label = "", sparse = FALSE, contrasts = NULL)
+linpar(formula, label = "", sparse = NULL, contrasts = NULL)
 ```
 
 ## Arguments
@@ -24,7 +24,8 @@ linpar(formula, label = "", sparse = FALSE, contrasts = NULL)
 
 - sparse:
 
-  Whether to build the block as a `dgCMatrix`. See the section below.
+  Whether to build the block as a `dgCMatrix`. `NULL`, the default,
+  settles it from the design. See the section below.
 
 - contrasts:
 
@@ -81,8 +82,13 @@ there is no dense intermediate.
 It pays where the formula carries a FACTOR OF MANY LEVELS, whose
 indicator columns hold one non-zero per row. On numeric covariates the
 block is dense whatever is asked for, and the sparse storage then costs
-more than it saves; measured on a grouping indicator, the crossover is
-around a hundred levels. The storage is part of the blueprint, so
+more than it saves. `sparse = NULL`, the default, settles it at build
+from the design: the dense indicator part holds `n` times its column
+count in cells against one non-zero per row, and the two routes cross at
+about \\10^5\\ of those cells, which is the rule
+[`.resolve_sparse`](https://statmodels7.github.io/modelterms7/reference/dot-resolve_sparse.md)
+applies. `TRUE` and `FALSE` override it. The storage that was settled is
+part of the blueprint, so
 [`term_predict`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 builds new data the same way.
 

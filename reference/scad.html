@@ -11,7 +11,7 @@ coefficient is not shrunk at all."><meta property="og:image" content="https://st
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.46.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.47.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,7 +55,7 @@ coefficient is not shrunk at all.</p>
 <span>  n_a <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  min_ratio <span class="op">=</span> <span class="fl">1e-04</span>,</span>
 <span>  search <span class="op">=</span> <span class="st">"grid"</span>,</span>
-<span>  sparse <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  sparse <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -110,11 +110,12 @@ See <code><a href="term_search.html">term_search</a></code>.</p></dd>
 
 
 <dt id="arg-sparse">sparse<a class="anchor" aria-label="anchor" href="#arg-sparse"></a></dt>
-<dd><p>A single logical, governing the FORMULA route: whether the
-block is built as a <code>dgCMatrix</code> through
-<code><a href="https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html" class="external-link">sparse.model.matrix</a></code> rather than as a dense model
-matrix. A MATRIX input needs no such argument, being kept in whatever
-storage it arrives in. See the section below.</p></dd>
+<dd><p>Governs the FORMULA route: whether the block is built as a
+<code>dgCMatrix</code> through <code><a href="https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html" class="external-link">sparse.model.matrix</a></code> rather
+than as a dense model matrix. <code>NULL</code>, the default, settles it at
+build from the size of the design; <code>TRUE</code> and <code>FALSE</code> override
+it. A MATRIX input needs no such argument, being kept in whatever storage
+it arrives in. See the section below.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

@@ -31,12 +31,13 @@ restated by the term.
 
 - sparse:
 
-  A single logical, governing the FORMULA route: whether the block is
-  built as a `dgCMatrix` through
+  Governs the FORMULA route: whether the block is built as a `dgCMatrix`
+  through
   [`sparse.model.matrix`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html)
-  rather than as a dense model matrix. A MATRIX input needs no such
-  argument, being kept in whatever storage it arrives in. See the
-  section below.
+  rather than as a dense model matrix. `NULL`, the default, settles it
+  at build from the size of the design; `TRUE` and `FALSE` override it.
+  A MATRIX input needs no such argument, being kept in whatever storage
+  it arrives in. See the section below.
 
 - ...:
 
@@ -95,6 +96,11 @@ It pays where the formula carries a factor of many levels, whose
 indicator columns hold one non-zero per row – `lasso(~ 0 + g)` over
 hundreds of groups is the case. On numeric covariates the block is dense
 whatever is asked for, and the sparse storage costs more than it saves.
+Left `NULL`, which is the default, the storage is settled at build by
+[`.resolve_sparse`](https://statmodels7.github.io/modelterms7/reference/dot-resolve_sparse.md):
+the dense indicator part holds `n` times its column count in cells
+against one non-zero per row, and the two routes cross at about \\10^5\\
+of those cells.
 
 Standardization does not interfere: it is a diagonal map on the PENALTY
 and never an operation on the design, so a sparse block stays sparse

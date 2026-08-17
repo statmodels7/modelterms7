@@ -26,7 +26,7 @@ LinparTerm(
   blueprint = list(),
   penalty = NULL,
   formula = NULL,
-  sparse = FALSE,
+  sparse = NULL,
   contrasts = list()
 )
 ```
