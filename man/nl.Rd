@@ -12,6 +12,10 @@ nl(
   links = NULL,
   subformulas = NULL,
   start = NULL,
+  gradient = NULL,
+  hessian = NULL,
+  deriv3 = NULL,
+  deriv4 = NULL,
   label = "nl"
 )
 }
@@ -40,6 +44,11 @@ only.}
 \item{start}{An optional named list of starting values for the
 parameters, on the parameter scale. Defaults to the inverse link at
 zero.}
+
+\item{gradient, hessian, deriv3, deriv4}{Optional functions
+\code{function(theta, data)} returning the derivatives of \code{fn} in
+its own parameters, each a NAMED LIST of numeric vectors. Supply as many
+as are worth writing out and leave the rest; see the section below.}
 
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}
@@ -127,6 +136,47 @@ arguments over the parameters' coefficients; both are gone, the
 sub-terms covering the cases that matter with the hyperparameters in
 the right place.
 }
+
+\subsection{Supplying the derivatives}{
+The derivatives of \eqn{f} in its own parameters drive everything: the
+first is the design block, and a fitting layer reads the second and third
+where the block moves with the coefficients. They come from whichever of
+four routes is available, and the choice is made ONE ORDER AT A TIME:
+a function given here, then symbolic differentiation of the expression,
+then one stencil applied to the highest order that IS analytic.
+
+\code{gradient}, \code{hessian}, \code{deriv3} and \code{deriv4} are
+independent, so the orders worth writing out by hand can be written and the
+rest left alone. \strong{Writing the Hessian pays twice}: the third and
+fourth orders are then one difference away from an exact second rather than
+from the function. Measured on \eqn{f = a e^{-rx}} given as an opaque
+function, so that nothing is symbolic, against the closed forms:
+
+\tabular{lrrrr}{
+  \tab order 1 \tab 2 \tab 3 \tab 4 \cr
+  nothing supplied \tab 5.2e-13 \tab 8.4e-03 \tab 4.62 \tab 1.96e+03 \cr
+  gradient and hessian \tab 0 \tab 0 \tab 2.2e-12 \tab 8.9e-11
+}
+
+Each function takes \code{(theta, data)} -- a named list of the parameters,
+each of length \code{n} or 1, and the variables the formula names -- and
+returns a named list of numeric vectors of length \code{n}. The names are
+the components of that order, keyed as \pkg{distributions7} keys its own
+derivative surfaces: the parameter names joined by \code{"_"}. Order two of
+\code{c("a", "r")} is therefore \code{a_a}, \code{a_r}, \code{r_r}.
+
+The names are normalized here, so \code{r_a} and \code{a_r} are the same
+component and the order in which they are returned does not matter; what is
+checked is the SET. A name that is not a component of this term, a missing
+component or a repeated one is an error at \code{\link{term_build}} rather
+than a silent fall-through to the numerical route, an exact derivative that
+is quietly not used being worse than none.
+
+The derivatives are in the parameters \eqn{\theta}, not in the
+coefficients: the chain rule onto the coefficients -- each parameter's link,
+and a subformula's design -- is the term's, which is the only thing that
+knows them. \code{\link{nl_fderiv}} reads any order back.
+}
 }
 \examples{
 set.seed(1)
@@ -147,6 +197,20 @@ dd$g <- factor(rep(c("u", "v"), 30))
 sub <- term_build(nl(~ a * exp(-r * x), a ~ ridge(~g),
                      start = list(a = 1, r = 1)), dd)
 vapply(term_penalties(sub), function(e) e$name, character(1))
+
+# the derivatives written out: as many orders as are worth the work, the
+# rest one difference away from the highest that is exact
+g <- function(theta, data) {
+  e <- exp(-theta$r * data$x)
+  list(a = e, r = -theta$a * data$x * e)
+}
+h <- function(theta, data) {
+  e <- exp(-theta$r * data$x)
+  list(a_a = 0 * e, r_r = theta$a * data$x^2 * e, a_r = -data$x * e)
+}
+ex <- term_build(nl(~ a * exp(-r * x), gradient = g, hessian = h,
+                    start = list(a = 1, r = 1)), dd)
+names(nl_fderiv(ex, order = 3))
 
 }
 \seealso{

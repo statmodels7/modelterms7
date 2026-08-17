@@ -86,8 +86,10 @@ reference:
     a Gauss-Newton step.
   contents:
   - nl
+  - nl_fderiv
   - NlTerm
   - term_refresh
+  - term_block_contract
   - term_value
   - term_converged
 - title: Break-point terms

@@ -121,6 +121,47 @@ NlTerm <- S7::new_class(
 #' the right place.
 #' }
 #'
+#' \subsection{Supplying the derivatives}{
+#' The derivatives of \eqn{f} in its own parameters drive everything: the
+#' first is the design block, and a fitting layer reads the second and third
+#' where the block moves with the coefficients. They come from whichever of
+#' four routes is available, and the choice is made ONE ORDER AT A TIME:
+#' a function given here, then symbolic differentiation of the expression,
+#' then one stencil applied to the highest order that IS analytic.
+#'
+#' \code{gradient}, \code{hessian}, \code{deriv3} and \code{deriv4} are
+#' independent, so the orders worth writing out by hand can be written and the
+#' rest left alone. \strong{Writing the Hessian pays twice}: the third and
+#' fourth orders are then one difference away from an exact second rather than
+#' from the function. Measured on \eqn{f = a e^{-rx}} given as an opaque
+#' function, so that nothing is symbolic, against the closed forms:
+#'
+#' \tabular{lrrrr}{
+#'   \tab order 1 \tab 2 \tab 3 \tab 4 \cr
+#'   nothing supplied \tab 5.2e-13 \tab 8.4e-03 \tab 4.62 \tab 1.96e+03 \cr
+#'   gradient and hessian \tab 0 \tab 0 \tab 2.2e-12 \tab 8.9e-11
+#' }
+#'
+#' Each function takes \code{(theta, data)} -- a named list of the parameters,
+#' each of length \code{n} or 1, and the variables the formula names -- and
+#' returns a named list of numeric vectors of length \code{n}. The names are
+#' the components of that order, keyed as \pkg{distributions7} keys its own
+#' derivative surfaces: the parameter names joined by \code{"_"}. Order two of
+#' \code{c("a", "r")} is therefore \code{a_a}, \code{a_r}, \code{r_r}.
+#'
+#' The names are normalized here, so \code{r_a} and \code{a_r} are the same
+#' component and the order in which they are returned does not matter; what is
+#' checked is the SET. A name that is not a component of this term, a missing
+#' component or a repeated one is an error at \code{\link{term_build}} rather
+#' than a silent fall-through to the numerical route, an exact derivative that
+#' is quietly not used being worse than none.
+#'
+#' The derivatives are in the parameters \eqn{\theta}, not in the
+#' coefficients: the chain rule onto the coefficients -- each parameter's link,
+#' and a subformula's design -- is the term's, which is the only thing that
+#' knows them. \code{\link{nl_fderiv}} reads any order back.
+#' }
+#'
 #' @param fn A one-sided formula in the covariates and the parameters, or
 #'   a function of \code{(x, theta)} vectorized in both.
 #' @param ... Two-sided formulas whose left side names a parameter, one
@@ -139,6 +180,10 @@ NlTerm <- S7::new_class(
 #' @param start An optional named list of starting values for the
 #'   parameters, on the parameter scale. Defaults to the inverse link at
 #'   zero.
+#' @param gradient,hessian,deriv3,deriv4 Optional functions
+#'   \code{function(theta, data)} returning the derivatives of \code{fn} in
+#'   its own parameters, each a NAMED LIST of numeric vectors. Supply as many
+#'   as are worth writing out and leave the rest; see the section below.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names.
 #'
@@ -165,10 +210,25 @@ NlTerm <- S7::new_class(
 #'                      start = list(a = 1, r = 1)), dd)
 #' vapply(term_penalties(sub), function(e) e$name, character(1))
 #'
+#' # the derivatives written out: as many orders as are worth the work, the
+#' # rest one difference away from the highest that is exact
+#' g <- function(theta, data) {
+#'   e <- exp(-theta$r * data$x)
+#'   list(a = e, r = -theta$a * data$x * e)
+#' }
+#' h <- function(theta, data) {
+#'   e <- exp(-theta$r * data$x)
+#'   list(a_a = 0 * e, r_r = theta$a * data$x^2 * e, a_r = -data$x * e)
+#' }
+#' ex <- term_build(nl(~ a * exp(-r * x), gradient = g, hessian = h,
+#'                     start = list(a = 1, r = 1)), dd)
+#' names(nl_fderiv(ex, order = 3))
+#'
 #' @seealso \code{\link{s}}, \code{\link{te}}, \code{\link{random}}
 #' @export
 nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
                subformulas = NULL, start = NULL,
+               gradient = NULL, hessian = NULL, deriv3 = NULL, deriv4 = NULL,
                label = "nl") {
   xe <- substitute(x)
   subformulas <- .nl_gather_subformulas(list(...), subformulas)
@@ -206,12 +266,30 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
     stop("'label' must be a single non-empty character string.",
          call. = FALSE)
   }
+  supplied <- list(gradient = gradient, hessian = hessian,
+                   deriv3 = deriv3, deriv4 = deriv4)
+  for (nm in names(supplied)) {
+    f <- supplied[[nm]]
+    if (is.null(f)) next
+    if (!is.function(f)) {
+      stop(sprintf("'%s' must be a function of (theta, data).", nm),
+           call. = FALSE)
+    }
+    if (length(formals(f)) < 2L) {
+      stop(sprintf(paste("'%s' must take (theta, data): a named list of the",
+                         "parameters and\n  the data the formula names."), nm),
+           call. = FALSE)
+    }
+  }
+  supplied <- supplied[!vapply(supplied, is.null, logical(1))]
+
   NlTerm(label = label, fn = fn,
          nl_params = if (is_formula) character(0) else params,
          links = if (is.null(links)) list() else links,
          subformulas = if (is.null(subformulas)) list() else subformulas,
          deriv_mode = if (is_formula) "symbolic" else "numeric",
-         spec = list(x = xe, start = start, is_formula = is_formula),
+         spec = list(x = xe, start = start, is_formula = is_formula,
+                     supplied = supplied),
          X = NULL, coef_names = character(0),
          blueprint = list(), penalty = NULL)
 }
@@ -280,6 +358,7 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
     lk <- bp$links[[p]]
     out$value[[p]] <- linkfunctions7::linkinv(lk, eta)
     out$deriv[[p]] <- linkfunctions7::dlinkinv(lk, eta)
+    out$deriv2[[p]] <- linkfunctions7::d2linkinv(lk, eta)
   }
   out
 }
@@ -287,6 +366,17 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
 # f and its derivatives in the parameters, at the current theta
 .nl_eval <- function(bp, th) {
   env <- c(bp$data_vars, th)
+  # a gradient written out by the caller is the block, and is preferred to
+  # every other route: it is what makes the Jacobian -- and so every step the
+  # fit takes -- exact rather than a difference
+  sup <- bp$supplied$gradient
+  if (!is.null(sup)) {
+    val <- if (bp$is_formula) as.numeric(eval(bp$expr, env)) else
+      as.numeric(bp$fn(bp$xval, th))
+    return(list(value = val + 0 * bp$one,
+                grad = .nl_user_order(sup, bp$params, 1L, th, bp$data_vars,
+                                      bp$one)))
+  }
   if (identical(bp$mode, "symbolic")) {
     res <- eval(bp$dexpr, env)
     g <- attr(res, "gradient")
@@ -341,6 +431,257 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
   }
   acc / h
 }
+
+# --- the derivatives of f in its OWN parameters -------------------------
+#
+# The parameters are ordered as they APPEAR: all.vars() reads the expression
+# left to right and setdiff() keeps that order, so `params` is the canonical
+# order and every component name is built from it.
+#
+# A user supplies whichever orders are worth writing out and leaves the rest;
+# what is not supplied comes from the symbolic route where the expression can
+# be differentiated and otherwise from ONE stencil applied to the highest
+# order that IS analytic -- including a supplied one, which is what makes
+# writing the Hessian pay twice over.
+
+# The canonical name of a component, built from the parameter order and never
+# parsed back. The multiset of indices is sorted, so d2f/da dr and d2f/dr da
+# are one component under one name.
+.nl_key <- function(params, idx) paste(params[sort(idx)], collapse = "_")
+
+# Every index multiset of a given order, in the enumeration distributions7
+# uses: sorted, and lexicographic in the sorted form.
+.nl_index_list <- function(np, order) {
+  if (order == 1L) return(lapply(seq_len(np), identity))
+  prev <- .nl_index_list(np, order - 1L)
+  out <- list()
+  for (ix in prev) {
+    for (j in seq(from = ix[length(ix)], to = np)) out[[length(out) + 1L]] <- c(ix, j)
+  }
+  out
+}
+
+.nl_keys <- function(params, order) {
+  vapply(.nl_index_list(length(params), order),
+         function(ix) .nl_key(params, ix), character(1))
+}
+
+# Which spellings of a component name are accepted, and what each one means.
+#
+# A user writes "a_r" or "r_a" for the same mixed second derivative, so the
+# names are normalized here -- POST HOC, by us, as the canonical order says.
+# The map is BUILT from every permutation rather than obtained by splitting
+# the user's string: a parameter whose own name contains an underscore makes
+# a name ambiguous to read back, which is the trap this package records for
+# Hessian component names, and building cannot fall into it.
+.nl_key_map <- function(params, order) {
+  keys <- character(0)
+  canon <- character(0)
+  for (ix in .nl_index_list(length(params), order)) {
+    ck <- .nl_key(params, ix)
+    for (pm in .nl_permutations(ix)) {
+      keys <- c(keys, paste(params[pm], collapse = "_"))
+      canon <- c(canon, ck)
+    }
+  }
+  dup <- duplicated(keys)
+  if (any(dup)) {
+    bad <- unique(keys[dup])
+    # two different components spelling the same string: only reachable when a
+    # parameter's own name contains an underscore, and it is reported rather
+    # than resolved by a guess
+    if (any(vapply(bad, function(b) length(unique(canon[keys == b])) > 1L,
+                   logical(1)))) {
+      stop(sprintf(paste("the parameter names make the component name '%s'",
+                         "ambiguous at order %d.\n  Rename a parameter: a name",
+                         "containing '_' cannot be told apart from a\n",
+                         " combination of others."), bad[1L], order),
+           call. = FALSE)
+    }
+  }
+  stats::setNames(canon[!dup], keys[!dup])
+}
+
+.nl_permutations <- function(x) {
+  n <- length(x)
+  if (n <= 1L) return(list(x))
+  out <- list()
+  for (i in seq_len(n)) {
+    for (rest in .nl_permutations(x[-i])) out[[length(out) + 1L]] <- c(x[i], rest)
+  }
+  out
+}
+
+# One order from the user, with the names normalized and checked. A wrong name
+# is an ERROR and not a silent fall-through to the numerical route: a supplied
+# derivative that is quietly not used is an exact quantity thrown away.
+.nl_user_order <- function(f, params, order, th, data_vars, one) {
+  out <- f(th, data_vars)
+  if (!is.list(out) || is.null(names(out)) || anyNA(names(out)) ||
+      !all(nzchar(names(out)))) {
+    stop(sprintf(paste("the '%s' function must return a NAMED list, one entry",
+                       "per component."), .nl_arg_name(order)), call. = FALSE)
+  }
+  map <- .nl_key_map(params, order)
+  want <- .nl_keys(params, order)
+  unknown <- setdiff(names(out), names(map))
+  if (length(unknown)) {
+    stop(sprintf(paste("'%s' returned the component '%s', which is not one of",
+                       "this term's.\n  Expected: %s."),
+                 .nl_arg_name(order), unknown[1L],
+                 paste(want, collapse = ", ")), call. = FALSE)
+  }
+  names(out) <- unname(map[names(out)])
+  if (anyDuplicated(names(out))) {
+    stop(sprintf("'%s' returned the same component twice ('%s').",
+                 .nl_arg_name(order), names(out)[anyDuplicated(names(out))]),
+         call. = FALSE)
+  }
+  missing <- setdiff(want, names(out))
+  if (length(missing)) {
+    stop(sprintf(paste("'%s' did not return the component '%s'.\n  All %d are",
+                       "required: %s."), .nl_arg_name(order), missing[1L],
+                 length(want), paste(want, collapse = ", ")), call. = FALSE)
+  }
+  lapply(out[want], function(v) as.numeric(v) + 0 * one)
+}
+
+.nl_arg_name <- function(order) {
+  c("gradient", "hessian", "deriv3", "deriv4")[order]
+}
+
+# The symbolic route at any order: D() applied once per index, which composes
+# to the whole multiset. deriv() is kept for order one, where it computes the
+# gradient in a single compiled pass.
+.nl_symbolic_exprs <- function(expr, params, order) {
+  out <- list()
+  for (ix in .nl_index_list(length(params), order)) {
+    e <- expr
+    ok <- TRUE
+    for (j in ix) {
+      e <- tryCatch(stats::D(e, params[j]), error = function(err) NULL)
+      if (is.null(e)) { ok <- FALSE; break }
+    }
+    if (!ok) return(NULL)
+    out[[.nl_key(params, ix)]] <- e
+  }
+  out
+}
+
+# One order of derivatives of f in its own parameters, by whichever route is
+# available, highest first. Returns a named list keyed by .nl_keys().
+.nl_forder <- function(bp, th, order) {
+  params <- bp$params
+  one <- bp$one
+  # order 0 is the value itself, which is what a stencil starts from when the
+  # term has no analytic derivative at all -- an opaque function. One stencil
+  # of order k on the value is a single difference of an analytic quantity;
+  # differencing the numerical FIRST derivative would be the nesting the
+  # package forbids everywhere.
+  if (order == 0L) return(stats::setNames(list(.nl_eval(bp, th)$value), ""))
+  sup <- bp$supplied[[.nl_arg_name(order)]]
+  if (!is.null(sup)) {
+    return(.nl_user_order(sup, params, order, th, bp$data_vars, one))
+  }
+  # order one has a route of its own already: the supplied function above, the
+  # compiled gradient of deriv(), or one stencil on the value
+  if (order == 1L) return(.nl_eval(bp, th)$grad)
+  ex <- bp$sym_exprs[[as.character(order)]]
+  if (!is.null(ex)) {
+    env <- c(bp$data_vars, th)
+    return(lapply(ex, function(e) as.numeric(eval(e, env)) + 0 * one))
+  }
+  # the numerical route: ONE stencil per distinct parameter still to be
+  # differentiated in, applied to the highest ANALYTIC order there is. Two
+  # stencils in DIFFERENT parameters compose and are not the nested
+  # differencing the package forbids; a repeated parameter takes a single
+  # stencil of its own multiplicity instead of a chain.
+  m <- min(bp$analytic_order, order - 1L)
+  base <- function(tv) .nl_forder(bp, tv, m)
+  out <- list()
+  for (ix in .nl_index_list(length(params), order)) {
+    key <- .nl_key(params, ix)
+    # the analytic part is the first m indices of the sorted multiset; the
+    # rest is differenced
+    s <- sort(ix)
+    keep <- if (m > 0L) s[seq_len(m)] else integer(0)
+    rest <- if (m > 0L) s[-seq_len(m)] else s
+    bkey <- .nl_key(params, keep)
+    out[[key]] <- .nl_stencil(base, bkey, params[rest], th, one)
+  }
+  out
+}
+
+# f differentiated in each parameter of `vars`, with the multiplicity of a
+# repeated one taken by a single stencil of that order.
+.nl_stencil <- function(base, key, vars, th, one) {
+  if (!length(vars)) return(base(th)[[key]])
+  p <- vars[1L]
+  r <- sum(vars == p)
+  rest <- vars[vars != p]
+  acc <- 4L
+  s <- numericals7::fd_offsets(r, acc)$central
+  w <- numericals7::fd_weights(s, r)
+  h <- numericals7::fd_step(th[[p]], r, acc)
+  val <- 0 * one
+  for (k in seq_along(s)) {
+    if (w[k] == 0) next
+    tv <- th
+    tv[[p]] <- th[[p]] + s[k] * h
+    val <- val + w[k] * .nl_stencil(base, key, rest, tv, one)
+  }
+  val / h^r
+}
+
+
+#' The Derivatives of a Nonlinear Term in Its Own Parameters
+#'
+#' @description
+#' \eqn{\partial^k f/\partial\theta^k} at the given coefficients, one named
+#' component per index multiset, keyed as \pkg{distributions7} keys its own
+#' derivative surfaces.
+#'
+#' @details
+#' The route is chosen per ORDER, highest first: a function supplied to
+#' \code{\link{nl}} is used where there is one, then the symbolic route where
+#' the expression can be differentiated, and otherwise one stencil applied to
+#' the highest order that is analytic -- which includes a supplied one. That is
+#' what makes writing out a Hessian pay twice: the third and fourth orders are
+#' then one difference away from an exact second rather than from the function.
+#'
+#' The components are in the term's OWN parameters, not in its coefficients.
+#' The chain rule onto the coefficients -- the links, and a subformula's design
+#' -- belongs to the term, which is the only thing that knows them.
+#'
+#' @param term A built \code{\link{NlTerm}}.
+#' @param coef The coefficients, or \code{NULL} for the ones the term carries.
+#' @param order 1, 2, 3 or 4.
+#'
+#' @return A named list of numeric vectors, one per component of that order.
+#'
+#' @examples
+#' dd <- data.frame(x = seq(0.2, 3, length.out = 20))
+#' dd$y <- 2 * exp(-1.3 * dd$x)
+#' b <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3)), dd)
+#' names(nl_fderiv(b, order = 2))
+#'
+#' @seealso \code{\link{nl}}
+#'
+#' @export
+nl_fderiv <- function(term, coef = NULL, order = 1L) {
+  if (!S7::S7_inherits(term, NlTerm)) {
+    stop("'term' must be a built nl() term.", call. = FALSE)
+  }
+  order <- as.integer(order)
+  if (length(order) != 1L || is.na(order) || order < 1L || order > 4L) {
+    stop("'order' must be 1, 2, 3 or 4.", call. = FALSE)
+  }
+  bp <- term@blueprint
+  if (!length(bp)) stop("the term is not built.", call. = FALSE)
+  cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
+  .nl_forder(bp, .nl_theta(bp, cf)$value, order)
+}
+
 
 # The Jacobian in the coefficients and the value, at one coefficient vector.
 # It is assembled block by block rather than written into a preallocated
@@ -440,13 +781,49 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
     data
   } else NULL
 
+  # the orders a user wrote out, checked against this term's own parameters
+  # now that they are known: a name is an error at BUILD rather than a silent
+  # fall-through at the first evaluation
+  supplied <- term@spec$supplied
+  if (is.null(supplied)) supplied <- list()
+  if (length(supplied)) {
+    th0 <- stats::setNames(lapply(params, function(p) numeric(n) + 0.37),
+                           params)
+    for (nm in names(supplied)) {
+      k <- match(nm, c("gradient", "hessian", "deriv3", "deriv4"))
+      .nl_user_order(supplied[[nm]], params, k, th0, data_vars, numeric(n))
+    }
+  }
+  # the symbolic expressions, differentiated once at build and evaluated at
+  # every point thereafter; orders 3 and 4 are not formed unless the term is
+  # asked for them, D() on a large expression being the expensive part
+  sym <- list()
+  if (is_f) {
+    for (k in 2:4) {
+      if (!is.null(supplied[[.nl_arg_name(k)]])) next
+      e <- .nl_symbolic_exprs(term@fn[[2L]], params, k)
+      if (is.null(e)) break
+      sym[[as.character(k)]] <- e
+    }
+  }
+  # the highest order that is analytic, which is where a stencil starts from
+  ana <- 0L
+  for (k in 1:4) {
+    ok <- !is.null(supplied[[.nl_arg_name(k)]]) ||
+      (k == 1L && identical(mode, "symbolic")) ||
+      (k >= 2L && !is.null(sym[[as.character(k)]]))
+    if (ok) ana <- k else break
+  }
+
   bp <- list(params = params, links = links, Z = Z, index = index,
              n = n, ncoef = pos, mode = mode, dexpr = dexpr,
              expr = if (is_f) term@fn[[2L]] else NULL,
              fn = if (is_f) NULL else term@fn, xval = xval,
              data_vars = data_vars, one = numeric(n),
              subformulas = term@subformulas, subs = subs,
-             is_formula = is_f)
+             is_formula = is_f,
+             supplied = supplied, sym_exprs = sym,
+             analytic_order = max(1L, ana))
 
   # the penalties are the sub-terms' own, collected above with the key
   # parameter::subterm: a penalty is asked for inside the subformula,
@@ -623,6 +1000,113 @@ term_refresh <- S7::new_generic("term_refresh", "term",
   function(term, coef, ...) S7::S7_dispatch())
 
 S7::method(term_refresh, model_term) <- function(term, coef, ...) term
+
+
+#' How a Term's Block Moves With Its Coefficients
+#'
+#' @description
+#' \eqn{\sum_{i,j} A_{ij}\,\partial X_{ij}/\partial\beta_c}, one entry per
+#' coefficient of the term: the block's own derivative contracted against a
+#' weight the caller supplies.
+#'
+#' @details
+#' A term whose block is a fixed design does not move, and the base method
+#' returns zeros. A term registering \code{\link{term_refresh}} does move, and
+#' a consumer that differentiates anything built from \eqn{X} needs this: a
+#' marginal criterion reads \eqn{\log|K|} with
+#' \eqn{K = -\sum_i w_i \ell_{ab,i} X_a X_b'}, so
+#' \eqn{\partial K/\partial\beta} gains everything coming from
+#' \eqn{\partial X/\partial\beta}.
+#'
+#' \strong{The contraction and not the derivative}, because
+#' \eqn{\partial X/\partial\beta} is \eqn{n \times m \times m} and nothing
+#' needs it whole. For \code{\link{nl}} it is closed form at \eqn{O(nm)}:
+#' writing \eqn{X_{i,c} = w_{p}(i) Z_p[i,c]} with
+#' \eqn{w_p = (\partial f/\partial\theta_p)\,h_p'},
+#' \deqn{\frac{\partial X_{i,c_1}}{\partial\beta_{c_2}} =
+#'   Z_{p_1}[i,c_1]Z_{p_2}[i,c_2]\Big(f_{p_1p_2}h_{p_1}'h_{p_2}'
+#'   + \delta_{p_1p_2} f_{p_1} h_{p_1}''\Big),}
+#' so with \eqn{s_{p}(i) = \sum_{c\in p} A_{ic}Z_{p}[i,c]} the answer is
+#' \eqn{Z_{p_2}'\sum_{p_1} q_{p_1p_2}s_{p_1}}, one crossprod per parameter.
+#' The chain rule onto the coefficients -- each parameter's link and its
+#' subformula's design -- stays here, which is the only place that knows them.
+#'
+#' ⚠️ The base method is right for a FIXED block and is what
+#' \code{\link{seg}}, \code{\link{jump}} and \code{\link{jseg}} inherit, whose
+#' blocks do move. Theirs is not a difference a caller could take either: a
+#' break-point column is a step function in its break-point, so the quotient
+#' diverges as the step shrinks -- measured at h, h/4 and h/16, 3.6e4, 1.4e5
+#' and 5.8e5, against \code{\link{nl}}'s 0.6038 throughout. They need their own
+#' method, written from the closed forms, which is not this release.
+#'
+#' @param term A built term.
+#' @param coef The coefficients, or \code{NULL} for the ones it carries.
+#' @param A A numeric matrix, one row per observation and one column per
+#'   coefficient of the term.
+#' @param ... Passed to methods.
+#'
+#' @return A numeric vector as long as the term's coefficients.
+#'
+#' @examples
+#' dd <- data.frame(x = seq(0.2, 3, length.out = 20))
+#' dd$y <- 2 * exp(-1.3 * dd$x)
+#' b <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3)), dd)
+#' term_block_contract(b, A = matrix(1, 20, 2))
+#'
+#' @seealso \code{\link{term_refresh}}, \code{\link{nl_fderiv}}
+#'
+#' @export
+term_block_contract <- S7::new_generic(
+  "term_block_contract", "term",
+  function(term, coef = NULL, A, ...) S7::S7_dispatch())
+
+S7::method(term_block_contract, model_term) <- function(term, coef = NULL, A,
+                                                        ...) {
+  numeric(length(term_coef_names(term)))
+}
+
+S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
+  bp <- term@blueprint
+  if (!length(bp)) stop("the term is not built.", call. = FALSE)
+  cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
+  A <- as.matrix(A)
+  if (nrow(A) != bp$n || ncol(A) != bp$ncoef) {
+    stop(sprintf("'A' must be %d by %d, the observations by the term's coefficients.",
+                 bp$n, bp$ncoef), call. = FALSE)
+  }
+  params <- bp$params
+  th <- .nl_theta(bp, cf)
+  f1 <- .nl_forder(bp, th$value, 1L)
+  f2 <- .nl_forder(bp, th$value, 2L)
+  # s_p, one column per parameter: the weight already summed over that
+  # parameter's own sub-design
+  s <- lapply(params, function(p) {
+    idx <- bp$index[[p]]
+    Z <- bp$Z[[p]]
+    Ap <- A[, idx, drop = FALSE]
+    if (is.null(Z)) as.numeric(Ap[, 1L]) else
+      as.numeric(rowSums(Ap * as.matrix(Z)))
+  })
+  names(s) <- params
+  out <- numeric(bp$ncoef)
+  for (p2 in params) {
+    acc <- 0 * bp$one
+    for (p1 in params) {
+      q <- as.numeric(f2[[.nl_key(params, c(match(p1, params),
+                                            match(p2, params)))]]) *
+        th$deriv[[p1]] * th$deriv[[p2]]
+      if (identical(p1, p2)) {
+        q <- q + as.numeric(f1[[p1]]) * th$deriv2[[p1]]
+      }
+      acc <- acc + q * s[[p1]]
+    }
+    idx <- bp$index[[p2]]
+    Z <- bp$Z[[p2]]
+    out[idx] <- if (is.null(Z)) sum(acc) else
+      as.numeric(crossprod(as.matrix(Z), acc))
+  }
+  out
+}
 
 #' @title Has a Term's Own Iteration Settled?
 #'
