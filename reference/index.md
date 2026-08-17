@@ -114,6 +114,8 @@ Gauss-Newton step.
   : Refresh a Term at New Coefficients
 - [`term_block_contract()`](https://statmodels7.github.io/modelterms7/reference/term_block_contract.md)
   : How a Term's Block Moves With Its Coefficients
+- [`term_block_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md)
+  : How a Term's Block Moves Along One Direction
 - [`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
   : The Contribution of a Term at Its Current Coefficients
 - [`term_converged()`](https://statmodels7.github.io/modelterms7/reference/term_converged.md)

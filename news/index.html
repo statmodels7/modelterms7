@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.48.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.49.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,13 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.49.0" id="modelterms7-0490">modelterms7 0.49.0<a class="anchor" aria-label="anchor" href="#modelterms7-0490"></a></h2>
+<ul><li><p><code>term_block_deriv(term, coef, v)</code> is the ADJOINT of <code><a href="../reference/term_block_contract.html">term_block_contract()</a></code>: the block’s own derivative taken along a direction, one entry per observation and column, where the other contracts over the observations and answers per coefficient. Neither computes the other. The GRADIENT of a marginal criterion needs the contraction; its HESSIAN needs the direction, <code>dK/dbeta</code> being wanted there in the direction the mode moves rather than traced.</p></li>
+<li><p>It reads the same closed form and needs no derivative the other did not: for <code>nl</code> it is the SECOND derivative of <code>f</code>, not the third. <code>seg</code> has it on the same two pieces its contraction carries; <code>jump</code>, <code>jseg</code> and every fixed block answer zeros.</p></li>
+<li><p>Verified against the block differenced along <code>v</code> – 3e-10 to 2e-11 against scales of 1.2 to 6.8 – and against <code><a href="../reference/term_block_contract.html">term_block_contract()</a></code> through the adjoint identity <code>sum_ij A_ij (dX.v)_ij == v' contract(A)</code>, which shares no code with either and comes back EXACTLY zero.</p></li>
+<li><p>Nothing in  consumes it yet: correcting the outer Hessian needs the same piece in three places at once, and doing one of them made a weakly identified fit worse rather than better.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.48.0" id="modelterms7-0480">modelterms7 0.48.0<a class="anchor" aria-label="anchor" href="#modelterms7-0480"></a></h2>
 <ul><li><p><code><a href="../reference/seg.html">seg()</a></code> implements <code><a href="../reference/term_block_contract.html">term_block_contract()</a></code>, where it inherited the base method’s zeros. Those are right for a fixed design and wrong for a block that moves, and a consumer differentiating anything built from <code>X</code> needs them: measured through , the outer gradient of a penalized <code>seg</code> was <code>6.6e-04</code> relative against a central difference of the criterion where an <code>nl</code> sits at <code>4.3e-10</code>, and is <code>8.2e-10</code> now.</p></li>
