@@ -1,3 +1,35 @@
+# modelterms7 0.48.0
+
+* `seg()` implements `term_block_contract()`, where it inherited the base
+  method's zeros. Those are right for a fixed design and wrong for a block
+  that moves, and a consumer differentiating anything built from `X` needs
+  them: measured through \pkg{statmodels7}, the outer gradient of a penalized
+  `seg` was `6.6e-04` relative against a central difference of the criterion
+  where an `nl` sits at `4.3e-10`, and is `8.2e-10` now.
+
+* What is written out is what is BOUNDED. The truncated line `(x - psi)_+` has
+  derivative `-1(x > psi)` in the break-point, and the break-point column
+  `-gamma(x) 1(x > psi)` has that same indicator as its derivative in the
+  CHANGE and zero almost everywhere in the break-point, the indicator being a
+  step. A caller could not take the difference instead: measured at h, h/4 and
+  h/16 the quotient reads 3.6e4, 1.4e5 and 5.8e5.
+
+* ⚠️ `jump()` and `jseg()` keep the zeros, and the reason is their
+  construction rather than the work being unfinished. Their position is READ
+  OFF a product of the unknowns, `psi = -g/delta`, so a column's derivative
+  runs through that read-off rather than through a development's design, and
+  the weight `W = 1/(2|x~ - psi|)` they carry has an unbounded derivative in
+  the break-point. Their block is a working linearization with a frozen weight
+  rather than a Jacobian. A test pins the zeros so a partial implementation
+  cannot arrive unnoticed.
+
+* ⚠️ The reference is a brute-force `dX/dbeta` and NOT the criterion. At two
+  break-points the criterion's own central difference disagrees with ITSELF by
+  7.37 relative, so it reported the correct contraction as wrong by 0.92; the
+  brute force puts all four spellings -- one break-point, two, a developed
+  change and a developed break-point -- at `1e-9` to `1e-10` against scales of
+  4 to 25.
+
 # modelterms7 0.47.0
 
 * `sparse` defaults to `NULL` in `linpar()`, `s()`, `te()` and the five

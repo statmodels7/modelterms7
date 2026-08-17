@@ -682,3 +682,83 @@ test_that("a fitted break-point term reports psi, not the pair it is read from",
   bd <- term_build(seg(x, by = ~0 + g), d2)
   expect_null(term_readable(bd, bd@blueprint$coef))
 })
+
+
+test_that("a continuous break-point term reports how its block moves", {
+  # term_block_contract() is what a marginal criterion's gradient needs from a
+  # term whose block is not a fixed design. The base method's zeros are right
+  # for a fixed one and wrong here, and left in place they cost the outer
+  # gradient of a penalized seg 6.6e-04 relative against a central difference
+  # of the criterion, where an nl sits at 4.3e-10.
+  #
+  # The reference is a brute-force dX/dbeta and NOT the criterion: at two
+  # break-points the criterion's own central difference disagrees with itself
+  # by 7.37 relative, so it cannot judge anything there.
+  set.seed(31)
+  m <- 6L
+  n <- 402L
+  id <- factor(rep(seq_len(m), each = n / m))
+  x <- stats::runif(n, 0, 10)
+  d <- data.frame(x = x, id = id,
+                  y = 1 + 0.3 * x + 1.5 * pmax(x - 5, 0) +
+                      stats::rnorm(n, sd = 0.4))
+
+  brute <- function(tm, cf, A, cols, dirs, h = 1e-6) {
+    vapply(dirs, function(c1) {
+      cp <- cf; cp[c1] <- cp[c1] + h
+      cm <- cf; cm[c1] <- cm[c1] - h
+      Xp <- as.matrix(term_matrix(term_refresh(tm, cp)))[, cols, drop = FALSE]
+      Xm <- as.matrix(term_matrix(term_refresh(tm, cm)))[, cols, drop = FALSE]
+      sum(A[, cols, drop = FALSE] * (Xp - Xm)) / (2 * h)
+    }, numeric(1))
+  }
+
+  for (call in list(quote(seg(x)), quote(seg(x, npsi = 2)),
+                    quote(seg(x, gamma1 ~ 0 + id)),
+                    quote(seg(x, psi ~ 0 + id)))) {
+    tm <- term_build(eval(call), d)
+    cf <- term_coef_start(tm)
+    tm <- term_refresh(tm, cf)
+    nm <- term_coef_names(tm)
+    set.seed(5)
+    A <- matrix(stats::rnorm(n * length(nm)), n, length(nm))
+    gcols <- grep("[.]gamma", nm)
+    pcols <- grep("[.]psi", nm)
+
+    # the change columns are (x - psi)_+, differentiable in every direction
+    A1 <- A; A1[, -gcols] <- 0
+    ex <- term_block_contract(tm, cf, A1)
+    bf <- brute(tm, cf, A1, gcols, seq_along(nm))
+    expect_lt(max(abs(ex - bf)), 1e-6 * max(1, max(abs(bf))))
+
+    # the break-point columns differentiated in the CHANGES, where they are
+    # linear. In the break-point their derivative is a delta and the formula
+    # takes its almost-everywhere value, which no difference can confirm.
+    A2 <- A; A2[, -pcols] <- 0
+    ex2 <- term_block_contract(tm, cf, A2)
+    bf2 <- brute(tm, cf, A2, pcols, gcols)
+    expect_lt(max(abs(ex2[gcols] - bf2)), 1e-6 * max(1, max(abs(bf2))))
+  }
+})
+
+
+test_that("a discontinuous break-point term keeps the base method's zeros", {
+  # Their position is read off a product of the unknowns and the weight they
+  # carry has an unbounded derivative in the break-point, so the block is a
+  # working linearization rather than a Jacobian. Zeros are what the base
+  # class gives and are the honest answer; this pins that they are what comes
+  # back, so a later partial implementation cannot arrive unnoticed.
+  set.seed(31)
+  n <- 402L
+  x <- stats::runif(n, 0, 10)
+  d <- data.frame(x = x,
+                  y = 1 + 0.3 * x + 2 * (x > 5) + stats::rnorm(n, sd = 0.4))
+  for (call in list(quote(jump(x)), quote(jseg(x)))) {
+    tm <- term_build(eval(call), d)
+    cf <- term_coef_start(tm)
+    tm <- term_refresh(tm, cf)
+    nm <- term_coef_names(tm)
+    A <- matrix(1, n, length(nm))
+    expect_identical(term_block_contract(tm, cf, A), numeric(length(nm)))
+  }
+})

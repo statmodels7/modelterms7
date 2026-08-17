@@ -1031,13 +1031,25 @@ S7::method(term_refresh, model_term) <- function(term, coef, ...) term
 #' The chain rule onto the coefficients -- each parameter's link and its
 #' subformula's design -- stays here, which is the only place that knows them.
 #'
-#' ⚠️ The base method is right for a FIXED block and is what
-#' \code{\link{seg}}, \code{\link{jump}} and \code{\link{jseg}} inherit, whose
-#' blocks do move. Theirs is not a difference a caller could take either: a
-#' break-point column is a step function in its break-point, so the quotient
-#' diverges as the step shrinks -- measured at h, h/4 and h/16, 3.6e4, 1.4e5
-#' and 5.8e5, against \code{\link{nl}}'s 0.6038 throughout. They need their own
-#' method, written from the closed forms, which is not this release.
+#' \code{\link{seg}} has its own, written from the closed forms, because
+#' theirs is not a difference a caller could take: a break-point column is a
+#' step function in its break-point, so the quotient diverges as the step
+#' shrinks -- measured at h, h/4 and h/16, 3.6e4, 1.4e5 and 5.8e5, against
+#' \code{\link{nl}}'s 0.6038 throughout. What is bounded is written out
+#' instead. The truncated line \eqn{(x-\psi)_+} has derivative
+#' \eqn{-\mathbf{1}(x>\psi)} in the break-point, and the break-point column
+#' \eqn{-\gamma(x)\mathbf{1}(x>\psi)} has the same indicator as its derivative
+#' in the CHANGE and zero almost everywhere in the break-point, which is the
+#' value taken.
+#'
+#' ⚠️ \code{\link{jump}} and \code{\link{jseg}} keep the base method's zeros.
+#' Their position is READ OFF a product of the unknowns, \eqn{\psi = -g/\delta},
+#' so a column's derivative runs through that read-off rather than through a
+#' development's design, and the weight \eqn{W = 1/(2\lvert\tilde x-\psi\rvert)}
+#' they carry has an unbounded derivative in the break-point. Their block is a
+#' working LINEARIZATION with a frozen weight rather than a Jacobian, which is
+#' the same fact that makes \code{\link{term_converged}} answer differently for
+#' them.
 #'
 #' @param term A built term.
 #' @param coef The coefficients, or \code{NULL} for the ones it carries.

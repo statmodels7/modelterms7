@@ -1032,6 +1032,75 @@ S7::method(term_penalties, SegTerm) <- function(term, ...) {
   if (is.null(pens)) list() else pens
 }
 
+S7::method(term_block_contract, SegTerm) <- function(term, coef = NULL, A,
+                                                     ...) {
+  bp <- term@blueprint
+  if (!length(bp)) stop("the term is not built.", call. = FALSE)
+  cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
+  A <- as.matrix(A)
+  ncoef <- length(term_coef_names(term))
+  n <- length(bp$xv)
+  if (nrow(A) != n || ncol(A) != ncoef) {
+    stop(sprintf(paste0("'A' must be %d by %d, the observations by the term's",
+                        " coefficients."), n, ncoef), call. = FALSE)
+  }
+  out <- numeric(ncoef)
+  # ⚠️ THE CONTINUOUS CONSTRUCTION ONLY. In a jump or a jseg the position is
+  # READ OFF a product of the unknowns, psi = -g/delta, so the derivative of a
+  # column in the coefficients runs through that read-off rather than through
+  # a development's design, and the weight W = 1/(2|x~ - psi|) those two carry
+  # has a derivative in the break-point that is unbounded -- measured at h,
+  # h/4 and h/16 the quotient reads 3.6e4, 1.4e5 and 5.8e5. Their block is a
+  # working LINEARIZATION with a frozen weight rather than a Jacobian, which
+  # is the same fact that makes term_converged() answer differently for them.
+  # Zeros here are what the base class gives, and are honest: a partial answer
+  # that looked complete would be worse. Measured, this is the whole of the
+  # gap on a jseg -- the contraction over its change columns reads 0 against a
+  # brute-force 1.30e+02.
+  if (!identical(bp$kind, "seg")) return(out)
+  # every column of the block is a multiplier times that coefficient's own
+  # design, so the contraction over a parameter's columns collapses to one
+  # weight per observation before any derivative is taken
+  sfun <- function(p) {
+    idx <- bp$index[[p]]
+    z <- bp$Z[[p]]
+    Ap <- A[, idx, drop = FALSE]
+    if (is.null(z)) as.numeric(Ap[, 1L]) else
+      as.numeric(rowSums(Ap * as.matrix(z)))
+  }
+  place <- function(p, w) {
+    idx <- bp$index[[p]]
+    z <- bp$Z[[p]]
+    out[idx] <<- out[idx] +
+      if (is.null(z)) sum(w) else as.numeric(crossprod(as.matrix(z), w))
+  }
+
+  xv <- bp$xv
+  pos <- .seg_positions(bp, cf, n)
+  for (k in seq_len(bp$npsi)) {
+    pk <- paste0("psi", k)
+    gk <- paste0("gamma", k)
+    psi <- pos$psi[, k]
+    ind <- as.numeric(xv > psi)
+    # where the position is against a limit it does not move with its
+    # coefficients, and neither does anything downstream of it
+    zp <- bp$Z[[pk]]
+    v <- if (is.null(zp)) rep(pos$pk[[k]], n) else
+      as.numeric(as.matrix(zp) %*% pos$pk[[k]])
+    free <- as.numeric(v > bp$lim[1L] & v < bp$lim[2L])
+
+    # the truncated line (x - psi)_+ has derivative -1(x > psi) in the
+    # break-point: bounded, and existing everywhere but at the point itself
+    place(pk, -sfun(gk) * ind * free)
+    # the break-point column is -gamma(x) 1(x > psi). Its derivative in the
+    # CHANGE is the same indicator; in the break-point it is zero almost
+    # everywhere, the indicator being a step, and that is the value taken.
+    place(gk, -sfun(pk) * ind)
+  }
+  out
+}
+
+
 S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   .assert_built(term)
   bp <- term@blueprint
