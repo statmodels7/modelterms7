@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.45.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.46.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,13 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.46.0" id="modelterms7-0460">modelterms7 0.46.0<a class="anchor" aria-label="anchor" href="#modelterms7-0460"></a></h2>
+<ul><li><p><code><a href="../reference/nl.html">nl()</a></code> takes <code>gradient</code>, <code>hessian</code>, <code>deriv3</code> and <code>deriv4</code>: functions <code>function(theta, data)</code> returning the derivatives of the nonlinear function in its own parameters, each a NAMED LIST keyed as  keys its own derivative surfaces. They are independent, so the orders worth writing out by hand can be written and the rest left alone, and the route is chosen ONE ORDER AT A TIME: a supplied function, then symbolic differentiation of the expression, then one stencil applied to the highest order that IS analytic.</p></li>
+<li><p><strong>Writing the Hessian pays twice.</strong> The third and fourth orders are then one difference away from an exact second rather than from the function. Measured on <code>a * exp(-r * x)</code> given as an OPAQUE function, so that nothing is symbolic, against the closed forms: with nothing supplied the orders come back at 8.4e-03, 4.62 and 1.96e+03; with the gradient and the Hessian written out, 0, 2.2e-12 and 8.9e-11.</p></li>
+<li><p>The component names are normalized here, so <code>r_a</code> and <code>a_r</code> are one component and the order they are returned in does not matter. ⚠️ The accepted spellings are BUILT by permuting the parameter order and never obtained by splitting the user’s string: a parameter whose own name contains an underscore makes a name ambiguous to read back, which is the trap this toolkit records for Hessian component names. A name that is not a component, a missing one or a repeated one is an ERROR at <code><a href="../reference/term_build.html">term_build()</a></code>, an exact derivative that is quietly not used being worse than none.</p></li>
+<li><p><code>nl_fderiv(term, coef, order)</code> reads any order back, and <code>term_block_contract(term, coef, A)</code> is the new generic a fitting layer needs: the contraction of the block’s own derivative, <code>sum_ij A_ij dX_ij/dbeta_c</code>, in closed form at O(nm) for <code><a href="../reference/nl.html">nl()</a></code> and zeros on the base class, which is exactly right for a fixed design. The chain rule onto the coefficients – each parameter’s link and its subformula’s design – stays in the term, the only thing that knows them. Verified against a brute-force numerical <code>dX/dbeta</code> at 1e-11 across links on one or both parameters, a developed parameter, three parameters and an opaque function.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.45.0" id="modelterms7-0450">modelterms7 0.45.0<a class="anchor" aria-label="anchor" href="#modelterms7-0450"></a></h2>
 <ul><li><p>A smooth with a factor <code>by</code> says its penalty is one copy per level rather than handing <code>penalties7</code> the assembled product: <code>quadratic_penalty(P, blocks = m)</code> instead of <code>quadratic_penalty(kronecker(diag(m), P))</code>. Nothing of size <code>(mk)^2</code> is decomposed, and at <code>m = 200</code> over a basis of ten the term builds in 0.06 s where it took 4.16 s.</p></li>

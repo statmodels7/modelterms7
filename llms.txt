@@ -252,10 +252,14 @@ Gauss-Newton step.
 
 - [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) :
   Nonlinear Parametric Term
+- [`nl_fderiv()`](https://statmodels7.github.io/modelterms7/reference/nl_fderiv.md)
+  : The Derivatives of a Nonlinear Term in Its Own Parameters
 - [`NlTerm()`](https://statmodels7.github.io/modelterms7/reference/NlTerm.md)
   : S7 Class for Nonlinear Parametric Terms
 - [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
   : Refresh a Term at New Coefficients
+- [`term_block_contract()`](https://statmodels7.github.io/modelterms7/reference/term_block_contract.md)
+  : How a Term's Block Moves With Its Coefficients
 - [`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
   : The Contribution of a Term at Its Current Coefficients
 - [`term_converged()`](https://statmodels7.github.io/modelterms7/reference/term_converged.md)

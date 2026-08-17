@@ -1,5 +1,47 @@
 # Changelog
 
+## modelterms7 0.46.0
+
+- [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+  takes `gradient`, `hessian`, `deriv3` and `deriv4`: functions
+  `function(theta, data)` returning the derivatives of the nonlinear
+  function in its own parameters, each a NAMED LIST keyed as keys its
+  own derivative surfaces. They are independent, so the orders worth
+  writing out by hand can be written and the rest left alone, and the
+  route is chosen ONE ORDER AT A TIME: a supplied function, then
+  symbolic differentiation of the expression, then one stencil applied
+  to the highest order that IS analytic.
+
+- **Writing the Hessian pays twice.** The third and fourth orders are
+  then one difference away from an exact second rather than from the
+  function. Measured on `a * exp(-r * x)` given as an OPAQUE function,
+  so that nothing is symbolic, against the closed forms: with nothing
+  supplied the orders come back at 8.4e-03, 4.62 and 1.96e+03; with the
+  gradient and the Hessian written out, 0, 2.2e-12 and 8.9e-11.
+
+- The component names are normalized here, so `r_a` and `a_r` are one
+  component and the order they are returned in does not matter. ⚠️ The
+  accepted spellings are BUILT by permuting the parameter order and
+  never obtained by splitting the user’s string: a parameter whose own
+  name contains an underscore makes a name ambiguous to read back, which
+  is the trap this toolkit records for Hessian component names. A name
+  that is not a component, a missing one or a repeated one is an ERROR
+  at
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md),
+  an exact derivative that is quietly not used being worse than none.
+
+- `nl_fderiv(term, coef, order)` reads any order back, and
+  `term_block_contract(term, coef, A)` is the new generic a fitting
+  layer needs: the contraction of the block’s own derivative,
+  `sum_ij A_ij dX_ij/dbeta_c`, in closed form at O(nm) for
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+  and zeros on the base class, which is exactly right for a fixed
+  design. The chain rule onto the coefficients – each parameter’s link
+  and its subformula’s design – stays in the term, the only thing that
+  knows them. Verified against a brute-force numerical `dX/dbeta` at
+  1e-11 across links on one or both parameters, a developed parameter,
+  three parameters and an opaque function.
+
 ## modelterms7 0.45.0
 
 - A smooth with a factor `by` says its penalty is one copy per level
