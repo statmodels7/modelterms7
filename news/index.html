@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.47.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.48.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,13 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.48.0" id="modelterms7-0480">modelterms7 0.48.0<a class="anchor" aria-label="anchor" href="#modelterms7-0480"></a></h2>
+<ul><li><p><code><a href="../reference/seg.html">seg()</a></code> implements <code><a href="../reference/term_block_contract.html">term_block_contract()</a></code>, where it inherited the base method’s zeros. Those are right for a fixed design and wrong for a block that moves, and a consumer differentiating anything built from <code>X</code> needs them: measured through , the outer gradient of a penalized <code>seg</code> was <code>6.6e-04</code> relative against a central difference of the criterion where an <code>nl</code> sits at <code>4.3e-10</code>, and is <code>8.2e-10</code> now.</p></li>
+<li><p>What is written out is what is BOUNDED. The truncated line <code>(x - psi)_+</code> has derivative <code>-1(x &gt; psi)</code> in the break-point, and the break-point column <code>-gamma(x) 1(x &gt; psi)</code> has that same indicator as its derivative in the CHANGE and zero almost everywhere in the break-point, the indicator being a step. A caller could not take the difference instead: measured at h, h/4 and h/16 the quotient reads 3.6e4, 1.4e5 and 5.8e5.</p></li>
+<li><p>⚠️ <code><a href="../reference/jump.html">jump()</a></code> and <code><a href="../reference/jseg.html">jseg()</a></code> keep the zeros, and the reason is their construction rather than the work being unfinished. Their position is READ OFF a product of the unknowns, <code>psi = -g/delta</code>, so a column’s derivative runs through that read-off rather than through a development’s design, and the weight <code>W = 1/(2|x~ - psi|)</code> they carry has an unbounded derivative in the break-point. Their block is a working linearization with a frozen weight rather than a Jacobian. A test pins the zeros so a partial implementation cannot arrive unnoticed.</p></li>
+<li><p>⚠️ The reference is a brute-force <code>dX/dbeta</code> and NOT the criterion. At two break-points the criterion’s own central difference disagrees with ITSELF by 7.37 relative, so it reported the correct contraction as wrong by 0.92; the brute force puts all four spellings – one break-point, two, a developed change and a developed break-point – at <code>1e-9</code> to <code>1e-10</code> against scales of 4 to 25.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.47.0" id="modelterms7-0470">modelterms7 0.47.0<a class="anchor" aria-label="anchor" href="#modelterms7-0470"></a></h2>
 <ul><li><p><code>sparse</code> defaults to <code>NULL</code> in <code><a href="../reference/linpar.html">linpar()</a></code>, <code><a href="../reference/s.html">s()</a></code>, <code><a href="../reference/te.html">te()</a></code> and the five penalized constructors, and the storage is then SETTLED AT BUILD from the size of the design rather than asked for. <code>TRUE</code> and <code>FALSE</code> override it, and an explicit <code>TRUE</code> is still refused where there is nothing to build on.</p></li>
