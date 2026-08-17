@@ -90,6 +90,7 @@ reference:
   - NlTerm
   - term_refresh
   - term_block_contract
+  - term_block_deriv
   - term_value
   - term_converged
 - title: Break-point terms

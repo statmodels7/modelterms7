@@ -283,3 +283,59 @@ test_that("term_value answers on other rows, where the block cannot", {
                           newdata = droplevels(dd[keep, , drop = FALSE])),
                term_value(bs, coef = cs)[keep], tolerance = 1e-12)
 })
+
+
+test_that("the block's derivative along a direction is the contraction's adjoint", {
+  # term_block_deriv() answers per ENTRY of the block where
+  # term_block_contract() answers per coefficient, and neither computes the
+  # other: the gradient of a marginal criterion needs the contraction, its
+  # Hessian needs the direction. The identity that ties them shares no code
+  # with either and must hold exactly:
+  #     sum_ij A_ij (dX/dbeta . v)_ij  ==  v' term_block_contract(A)
+  set.seed(31)
+  n <- 200L
+  m <- 5L
+  id <- factor(rep(seq_len(m), each = n / m))
+  d <- data.frame(x = stats::runif(n, 0.2, 3), id = id)
+  d$y <- 3 * exp(-0.7 * d$x) + stats::rnorm(n, sd = 0.15)
+
+  calls <- list(
+    quote(nl(~ a * exp(-r * x), start = list(a = 3, r = 0.7))),
+    quote(nl(~ a * exp(-r * x), a ~ 0 + id)),
+    quote(nl(~ a * exp(-r * x) + c, start = list(a = 3, r = 0.7, c = 0.1))),
+    quote(nl(~ a * exp(-r * x), links = list(r = linkfunctions7::log_link()),
+             start = list(a = 3, r = 0.7)))
+  )
+  for (call in calls) {
+    tm <- term_build(eval(call), d)
+    cf <- term_coef_start(tm)
+    tm <- term_refresh(tm, cf)
+    p <- length(term_coef_names(tm))
+    set.seed(5)
+    v <- stats::rnorm(p)
+    A <- matrix(stats::rnorm(n * p), n, p)
+    ex <- term_block_deriv(tm, cf, v)
+    expect_identical(dim(ex), c(n, p))
+    # the adjoint identity, which is exact arithmetic and not an approximation
+    expect_equal(sum(A * ex), sum(v * term_block_contract(tm, cf, A)),
+                 tolerance = 1e-12)
+    # and against the block differenced along v, which shares nothing with
+    # either: it is the block itself, evaluated twice
+    h <- 1e-6
+    bf <- (as.matrix(term_matrix(term_refresh(tm, cf + h * v))) -
+             as.matrix(term_matrix(term_refresh(tm, cf - h * v)))) / (2 * h)
+    expect_lt(max(abs(ex - bf)), 1e-6 * max(1, max(abs(bf))))
+  }
+
+  # a term whose block does not move answers zeros, of the block's shape
+  lp <- term_build(linpar(~ x), d)
+  z <- term_block_deriv(lp, v = c(0.3, -0.2))
+  expect_identical(dim(z), dim(as.matrix(term_matrix(lp))))
+  expect_true(all(z == 0))
+
+  # and a direction of the wrong length is refused where it is given
+  tm <- term_refresh(term_build(nl(~ a * exp(-r * x),
+                                   start = list(a = 3, r = 0.7)), d),
+                     c(3, 0.7))
+  expect_error(term_block_deriv(tm, c(3, 0.7), v = 1), "length 2")
+})

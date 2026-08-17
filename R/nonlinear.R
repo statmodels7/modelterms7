@@ -1077,6 +1077,97 @@ S7::method(term_block_contract, model_term) <- function(term, coef = NULL, A,
   numeric(length(term_coef_names(term)))
 }
 
+#' How a Term's Block Moves Along One Direction
+#'
+#' @description
+#' \eqn{\sum_c v_c\,\partial X_{ij}/\partial\beta_c}, one entry per observation
+#' and column of the block: the block's own derivative taken along a direction
+#' the caller supplies.
+#'
+#' @details
+#' It is the ADJOINT of \code{\link{term_block_contract}} and neither computes
+#' the other. That one contracts over the observations and the columns and
+#' answers per coefficient, which is what the gradient of a marginal criterion
+#' needs; this one contracts over the coefficients and answers per entry of the
+#' block, which is what its HESSIAN needs -- there \eqn{\partial K/\partial\beta}
+#' is required in the direction the mode moves rather than traced.
+#'
+#' Both are \eqn{O(nm)} and read the same closed form, so this needs no
+#' derivative the other did not: for \code{\link{nl}}, writing
+#' \eqn{q_{p_1p_2} = f_{p_1p_2}h_{p_1}'h_{p_2}' + \delta_{p_1p_2}f_{p_1}h_{p_1}''},
+#' \deqn{\Big(\frac{\partial X}{\partial\beta}v\Big)[i, c_1] =
+#'   Z_{p_1}[i,c_1]\sum_{p_2} q_{p_1p_2}(i)\,(Z_{p_2}v_{p_2})[i],}
+#' which is the second derivative of \eqn{f} and not the third.
+#'
+#' The base method returns zeros, right for a block that does not move.
+#'
+#' @param term A built term.
+#' @param coef The coefficients, or \code{NULL} for the ones it carries.
+#' @param v A numeric vector as long as the term's coefficients.
+#' @param ... Passed to methods.
+#'
+#' @return A numeric matrix, one row per observation and one column per
+#'   coefficient of the term.
+#'
+#' @examples
+#' dd <- data.frame(x = seq(0.2, 3, length.out = 20))
+#' dd$y <- 2 * exp(-1.3 * dd$x)
+#' b <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3)), dd)
+#' dim(term_block_deriv(b, v = c(1, 0)))
+#'
+#' @seealso \code{\link{term_block_contract}}, \code{\link{term_refresh}}
+#'
+#' @export
+term_block_deriv <- S7::new_generic(
+  "term_block_deriv", "term",
+  function(term, coef = NULL, v, ...) S7::S7_dispatch())
+
+S7::method(term_block_deriv, model_term) <- function(term, coef = NULL, v,
+                                                     ...) {
+  X <- term_matrix(term)
+  matrix(0, nrow(as.matrix(X)), ncol(as.matrix(X)))
+}
+
+S7::method(term_block_deriv, NlTerm) <- function(term, coef = NULL, v, ...) {
+  bp <- term@blueprint
+  if (!length(bp)) stop("the term is not built.", call. = FALSE)
+  cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
+  v <- as.numeric(v)
+  if (length(v) != bp$ncoef) {
+    stop(sprintf("'v' must have length %d, the term's coefficients.",
+                 bp$ncoef), call. = FALSE)
+  }
+  params <- bp$params
+  th <- .nl_theta(bp, cf)
+  f1 <- .nl_forder(bp, th$value, 1L)
+  f2 <- .nl_forder(bp, th$value, 2L)
+  # the direction carried onto each parameter's own scale: one column per
+  # parameter, the development's design already applied
+  tvp <- lapply(params, function(p) {
+    idx <- bp$index[[p]]
+    Z <- bp$Z[[p]]
+    if (is.null(Z)) rep(v[idx], bp$n) else as.numeric(as.matrix(Z) %*% v[idx])
+  })
+  names(tvp) <- params
+  out <- matrix(0, bp$n, bp$ncoef)
+  for (p1 in params) {
+    acc <- 0 * bp$one
+    for (p2 in params) {
+      q <- as.numeric(f2[[.nl_key(params, c(match(p1, params),
+                                            match(p2, params)))]]) *
+        th$deriv[[p1]] * th$deriv[[p2]]
+      if (identical(p1, p2)) {
+        q <- q + as.numeric(f1[[p1]]) * th$deriv2[[p1]]
+      }
+      acc <- acc + q * tvp[[p2]]
+    }
+    idx <- bp$index[[p1]]
+    Z <- bp$Z[[p1]]
+    out[, idx] <- if (is.null(Z)) acc else as.matrix(Z) * acc
+  }
+  out
+}
+
 S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
   bp <- term@blueprint
   if (!length(bp)) stop("the term is not built.", call. = FALSE)

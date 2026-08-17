@@ -1101,6 +1101,56 @@ S7::method(term_block_contract, SegTerm) <- function(term, coef = NULL, A,
 }
 
 
+S7::method(term_block_deriv, SegTerm) <- function(term, coef = NULL, v, ...) {
+  bp <- term@blueprint
+  if (!length(bp)) stop("the term is not built.", call. = FALSE)
+  cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
+  ncoef <- length(term_coef_names(term))
+  n <- length(bp$xv)
+  v <- as.numeric(v)
+  if (length(v) != ncoef) {
+    stop(sprintf("'v' must have length %d, the term's coefficients.", ncoef),
+         call. = FALSE)
+  }
+  out <- matrix(0, n, ncoef)
+  # the continuous construction only, for the reason term_block_contract()
+  # records: a discontinuous one reads its position off a product of the
+  # unknowns and carries a weight whose derivative in the break-point is
+  # unbounded
+  if (!identical(bp$kind, "seg")) return(out)
+
+  along <- function(p) {
+    idx <- bp$index[[p]]
+    z <- bp$Z[[p]]
+    if (is.null(z)) rep(v[idx], n) else as.numeric(as.matrix(z) %*% v[idx])
+  }
+  put <- function(p, w) {
+    idx <- bp$index[[p]]
+    z <- bp$Z[[p]]
+    out[, idx] <<- out[, idx] + if (is.null(z)) w else as.matrix(z) * w
+  }
+
+  xv <- bp$xv
+  pos <- .seg_positions(bp, cf, n)
+  for (k in seq_len(bp$npsi)) {
+    pk <- paste0("psi", k)
+    gk <- paste0("gamma", k)
+    psi <- pos$psi[, k]
+    ind <- as.numeric(xv > psi)
+    zp <- bp$Z[[pk]]
+    vv <- if (is.null(zp)) rep(pos$pk[[k]], n) else
+      as.numeric(as.matrix(zp) %*% pos$pk[[k]])
+    free <- as.numeric(vv > bp$lim[1L] & vv < bp$lim[2L])
+    # the change column moves with the position, and the position column with
+    # the change: the same two pieces term_block_contract() carries, read the
+    # other way round
+    put(gk, -ind * free * along(pk))
+    put(pk, -ind * along(gk))
+  }
+  out
+}
+
+
 S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   .assert_built(term)
   bp <- term@blueprint

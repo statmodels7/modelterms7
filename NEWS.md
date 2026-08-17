@@ -1,3 +1,27 @@
+# modelterms7 0.49.0
+
+* `term_block_deriv(term, coef, v)` is the ADJOINT of
+  `term_block_contract()`: the block's own derivative taken along a direction,
+  one entry per observation and column, where the other contracts over the
+  observations and answers per coefficient. Neither computes the other. The
+  GRADIENT of a marginal criterion needs the contraction; its HESSIAN needs the
+  direction, `dK/dbeta` being wanted there in the direction the mode moves
+  rather than traced.
+
+* It reads the same closed form and needs no derivative the other did not: for
+  `nl` it is the SECOND derivative of `f`, not the third. `seg` has it on the
+  same two pieces its contraction carries; `jump`, `jseg` and every fixed block
+  answer zeros.
+
+* Verified against the block differenced along `v` -- 3e-10 to 2e-11 against
+  scales of 1.2 to 6.8 -- and against `term_block_contract()` through the
+  adjoint identity `sum_ij A_ij (dX.v)_ij == v' contract(A)`, which shares no
+  code with either and comes back EXACTLY zero.
+
+* Nothing in \pkg{statmodels7} consumes it yet: correcting the outer Hessian
+  needs the same piece in three places at once, and doing one of them made a
+  weakly identified fit worse rather than better.
+
 # modelterms7 0.48.0
 
 * `seg()` implements `term_block_contract()`, where it inherited the base
