@@ -69,4 +69,4 @@ gas_filter_r(
 
 ## Value
 
-A list with `eta` and `jacobian`.
+A list with `eta`, `jacobian` and `curv`.

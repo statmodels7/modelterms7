@@ -45,6 +45,29 @@ propagated through the recursion beside the state.
 
   Unused.
 
+- score_values, curvature_values:
+
+  The score and curvature of the model's log-density evaluated at the
+  CURRENT predictors, one value per observation, on the parameter scale
+  the callbacks read. Supplying both, together with `blocks_data`,
+  routes the second-order recursion of the subformula route through the
+  compiled kernel; either `NULL` keeps the R route.
+
+- blocks_data:
+
+  The model's derivative pieces as data rather than as a callback: a
+  list with `H` (the mixed second derivatives, one column per
+  distribution parameter), `D3` (the third derivatives, one column per
+  parameter pair, pair `(r, r2)` at column `(r - 1) * np + r2`), `Vs`
+  (the per-parameter jacobian rows of the other equations) and `ap` (the
+  filter's own parameter index). Read only by the compiled route.
+
+- threads:
+
+  Threads for the compiled route's group loop, as
+  [`numericals7::n_threads()`](https://statmodels7.github.io/numericals7/reference/n_threads.html)
+  counts them; 1 is sequential.
+
 ## Value
 
 A list with `jacobian` and `curvature`.

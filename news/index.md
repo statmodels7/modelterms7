@@ -1,5 +1,59 @@
 # Changelog
 
+## modelterms7 0.53.0
+
+- [`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
+  on a gas term takes `fast` and `threads` and passes them to the
+  forward pass it re-runs; and both filter kernels now return `curv`,
+  the curvature read at each predictor – computed anyway for the
+  jacobian – so the reverse pass looks the sequence up instead of
+  evaluating the callback a second time at the same points. With a
+  covered context the adjoint evaluates no R callback at all; without
+  one the callbacks run once per observation instead of twice. Results
+  are identical to the bit either way, and the twin test proves the fast
+  route with a callback counter.
+
+## modelterms7 0.52.0
+
+- The second-order recursion of the SUBMODEL route runs compiled
+  (`src/gas_curvature.cpp`). What made it portable is the same asymmetry
+  as the filter’s: a curvature runs at a point the caller has already
+  fitted, so the score and the curvature of the density arrive as
+  LOOKUPS (`score_values`, `curvature_values`) and the layer’s blocks
+  callback as DATA (`blocks_data`: the mixed second derivatives, the
+  third derivatives one column per parameter pair, the static jacobian
+  rows and the filter’s parameter index), and the loop touches no R API.
+  Coverage is stated rather than blurred: second order only and constant
+  autoregressive charts – a direction (the third order) or a developed
+  partial autocorrelation keeps the R recursion, which stays the
+  reference and is compared as a twin at a tolerance (the seg_block
+  rule). The GROUPS run over threads (`threads`), each group’s
+  contribution merged on the main thread in group order, so the result
+  is identical across thread counts to the bit; a test asserts it, and a
+  callback counter proves the compiled route is the one taken.
+  `.gas_curv_prep()` scatters every per-observation quantity once per
+  group with the R route’s own expressions, so the prep is shared
+  arithmetic and not a second derivation.
+
+## modelterms7 0.51.0
+
+- The score-driven filter’s kernels take a FAST context and a thread
+  count. With `fast`, both recursions (the scalar route and the general
+  submodel route) resolve the scalar C entry points of and once per call
+  with `R_GetCCallable` and read the score and the curvature without
+  touching the R API – mirroring `distrib_kernel()`’s composition
+  expression by expression, held bit-identical to the callback route by
+  a twin test; a family or link the registries do not cover leaves the
+  context inert and the callbacks run as before. With no R in the loop
+  the groups run over THREADS (`threads`, from the caller’s
+  `n_threads()`): a group’s filter is independent and writes its own
+  rows, so no reduction is split and the result does not depend on the
+  count, bit for bit, which the tests assert with
+  [`identical()`](https://rdrr.io/r/base/identical.html) at 1 and 2
+  threads.
+  [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+  passes both through its dots, so the contract is unchanged.
+
 ## modelterms7 0.50.0
 
 - **[`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)

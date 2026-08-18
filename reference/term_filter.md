@@ -47,8 +47,12 @@ term_filter(term, eta, y, score, curvature, psi, ...)
 
 ## Value
 
-A list with `eta`, the predictor the term produces, and `jacobian`, an
-`n` by `length(psi)` matrix of its derivatives with respect to `psi`.
+A list with `eta`, the predictor the term produces, `jacobian`, an `n`
+by `length(psi)` matrix of its derivatives with respect to `psi`, and
+`curv`, the value of `curvature` at each predictor – returned because
+the recursion evaluates it anyway, so a consumer running a second pass
+at the same point (the adjoint) can read it rather than evaluate it
+again.
 
 ## Details
 

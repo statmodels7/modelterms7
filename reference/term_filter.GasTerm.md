@@ -39,6 +39,25 @@ parameters, propagated alongside the state.
 
   Unused.
 
+- fast:
+
+  The fast context of the caller, or `NULL`: a list with `family` (the
+  distribution's S7 class name), `link` (the parameter's link name), `k`
+  (the parameter's 1-based index), `bounds`, `y` and `theta` (the
+  per-observation parameters). Where the C registries of distributions7
+  and linkfunctions7 cover the pair, the recursion reads the score and
+  the curvature through their scalar entry points instead of the R
+  callbacks, bit-identically; where they do not, the context is inert
+  and the callbacks run as before.
+
+- threads:
+
+  How many threads the recursion may use, over GROUPS and only on the
+  fast route: a group's filter is independent of the others and its
+  writes land on its own rows, so no reduction is split and the result
+  does not depend on the count, bit for bit.
+
 ## Value
 
-A list with `eta` and `jacobian`.
+A list with `eta`, `jacobian` and `curv`, the curvature read at each
+predictor.

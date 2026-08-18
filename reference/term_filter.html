@@ -15,7 +15,7 @@ the others, so it cannot be written as a block of columns."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.50.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.53.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,9 +92,12 @@ derivative of the log-likelihood with respect to it.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list with <code>eta</code>, the predictor the term produces, and
+    <p>A list with <code>eta</code>, the predictor the term produces,
   <code>jacobian</code>, an <code>n</code> by <code>length(psi)</code> matrix of its
-  derivatives with respect to <code>psi</code>.</p>
+  derivatives with respect to <code>psi</code>, and <code>curv</code>, the value of
+  <code>curvature</code> at each predictor – returned because the recursion
+  evaluates it anyway, so a consumer running a second pass at the same
+  point (the adjoint) can read it rather than evaluate it again.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

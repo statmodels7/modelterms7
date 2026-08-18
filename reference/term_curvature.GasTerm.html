@@ -11,7 +11,7 @@ propagated through the recursion beside the state."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.50.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.53.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -84,6 +84,30 @@ propagated through the recursion beside the state.</p>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Unused.</p></dd>
+
+
+<dt id="arg-score-values-curvature-values">score_values, curvature_values<a class="anchor" aria-label="anchor" href="#arg-score-values-curvature-values"></a></dt>
+<dd><p>The score and curvature of the
+model's log-density evaluated at the CURRENT predictors, one value per
+observation, on the parameter scale the callbacks read. Supplying both,
+together with <code>blocks_data</code>, routes the second-order recursion of
+the subformula route through the compiled kernel; either <code>NULL</code>
+keeps the R route.</p></dd>
+
+
+<dt id="arg-blocks-data">blocks_data<a class="anchor" aria-label="anchor" href="#arg-blocks-data"></a></dt>
+<dd><p>The model's derivative pieces as data rather than as a
+callback: a list with <code>H</code> (the mixed second derivatives, one
+column per distribution parameter), <code>D3</code> (the third derivatives,
+one column per parameter pair, pair <code>(r, r2)</code> at column
+<code>(r - 1) * np + r2</code>), <code>Vs</code> (the per-parameter jacobian rows
+of the other equations) and <code>ap</code> (the filter's own parameter
+index). Read only by the compiled route.</p></dd>
+
+
+<dt id="arg-threads">threads<a class="anchor" aria-label="anchor" href="#arg-threads"></a></dt>
+<dd><p>Threads for the compiled route's group loop, as
+<code><a href="https://statmodels7.github.io/numericals7/reference/n_threads.html" class="external-link">numericals7::n_threads()</a></code> counts them; 1 is sequential.</p></dd>
 
 </dl></div>
     <div class="section level2">
