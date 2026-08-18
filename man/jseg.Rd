@@ -12,6 +12,7 @@ jseg(
   by = NULL,
   linear = TRUE,
   c0 = 0.05,
+  n_boot = 10,
   label = "jseg"
 )
 }
@@ -39,6 +40,17 @@ Defaults to \code{TRUE}.}
 observations from the break-point, as a fraction of the distance to
 the ends of the range. Defaults to \code{0.05}, the value
 \cite{fasola2018} recommend; see Details.}
+
+\item{n_boot}{How many bootstrap restarts the fitting layer runs after
+the iteration first converges (Wood 2001, the device \code{segmented}
+runs by default): each restart re-estimates on a bootstrap resample
+from the current break-points and then on the data again from where
+the resample ended, keeping the better fit. The objective has local
+optima in the break-points, and with several of them a grid start does
+not reach the right basin from every placement. Defaults to 10,
+\code{segmented}'s own default; 0 disables. The term itself only
+declares the value; running the restarts is the fitting layer's,
+as with a penalty's hyperparameters.}
 
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}

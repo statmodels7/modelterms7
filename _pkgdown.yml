@@ -38,6 +38,7 @@ reference:
   - term_search
   - term_npar
   - term_coef_start
+  - term_jacobian_block
   - term_coef_names
   - term_smooth
   - term_predict
@@ -106,6 +107,10 @@ reference:
   - seg_psi
   - seg_step
   - seg_start
+  - seg_reheat
+  - seg_relocate
+  - seg_polish
+  - seg_profile_rss
 - title: Structural terms
   desc: >
     Terms that rewrite the likelihood rather than adding to the

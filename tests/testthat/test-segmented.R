@@ -762,3 +762,106 @@ test_that("a discontinuous break-point term keeps the base method's zeros", {
     expect_identical(term_block_contract(tm, cf, A), numeric(length(nm)))
   }
 })
+
+
+test_that("the block of a discontinuous construction is not a Jacobian", {
+  # what the fitting layer routes on: the continuous construction's block is
+  # the exact derivative of its contribution, the frozen-weight ones' is a
+  # working linearization, and an ordinary term answers TRUE trivially
+  expect_true(term_jacobian_block(seg(x)))
+  expect_false(term_jacobian_block(jump(x)))
+  expect_false(term_jacobian_block(jseg(x)))
+  expect_true(term_jacobian_block(linpar(~x)))
+})
+
+test_that("crossed break-point lineages are relabeled at a refresh", {
+  set.seed(5)
+  d <- data.frame(x = sort(stats::runif(300, 0, 10)))
+  # a jump whose coefficients imply psi = (7, 3): delta = (1, 1) and
+  # g = (-7, -3), i.e. the triples out of order
+  tm <- term_build(jump(x, npsi = 2, psi = c(2, 8)), d)
+  cf <- term_coef_start(tm)
+  cf[tm@blueprint$index[["psi1"]]] <- -7
+  cf[tm@blueprint$index[["psi2"]]] <- -3
+  tm2 <- term_refresh(tm, cf)
+  psi <- seg_psi(tm2)
+  expect_equal(psi, sort(psi))
+  expect_equal(psi, c(3, 7), tolerance = 1e-8)
+  # relabeling moves no value: the contribution is the same sum over k
+  expect_equal(tm2@blueprint$value,
+               1 * (d$x > 3) + 1 * (d$x > 7), tolerance = 1e-12)
+  # and the coefficients the term stored are the relabeled ones, which is
+  # what a caller continues from
+  cf2 <- tm2@blueprint$coef
+  expect_equal(unname(cf2[tm@blueprint$index[["psi1"]]]), -3)
+  expect_equal(unname(cf2[tm@blueprint$index[["psi2"]]]), -7)
+})
+
+test_that("ordered lineages are left exactly alone", {
+  set.seed(6)
+  d <- data.frame(x = sort(stats::runif(200, 0, 10)))
+  tm <- term_build(jseg(x, npsi = 2, psi = c(3, 7)), d)
+  cf <- term_coef_start(tm)
+  tm2 <- term_refresh(tm, cf)
+  psi <- seg_psi(tm2)
+  expect_equal(psi, sort(psi))
+  expect_equal(unname(tm2@blueprint$coef), unname(cf))
+})
+
+test_that("n_boot is declared on the term and validated", {
+  expect_identical(seg(x)@spec$n_boot, 10L)
+  expect_identical(jump(x, n_boot = 0)@spec$n_boot, 0L)
+  expect_identical(jseg(x, n_boot = 3)@spec$n_boot, 3L)
+  expect_error(seg(x, n_boot = -1), "n_boot")
+  expect_error(jump(x, n_boot = 1.5), "n_boot")
+  expect_error(jseg(x, n_boot = c(1, 2)), "n_boot")
+})
+
+
+test_that("seg_reheat resets the schedule and seg_relocate places psi", {
+  set.seed(9)
+  d <- data.frame(x = sort(stats::runif(200, 0, 10)))
+  b <- term_build(jump(x, psi = 4), d)
+  cf <- term_coef_start(b)
+  for (i in 1:6) b <- term_refresh(b, cf)
+  b2 <- seg_reheat(b)
+  expect_equal(b2@blueprint$cscale, rep(0.05, 1))
+  expect_identical(b2@blueprint$nref, 0L)
+  expect_true(is.na(seg_step(b2)))
+  # relocation: positions given come back exactly, the changes kept
+  b3 <- seg_relocate(b, 6)
+  expect_equal(unname(seg_psi(b3)), 6)
+  expect_equal(b3@blueprint$value, as.numeric(d$x > 6) *
+                 b@blueprint$coef[b@blueprint$index[["delta1"]]],
+               tolerance = 1e-12)
+  # confined and sorted
+  bj <- term_build(jseg(x, npsi = 2), d)
+  bj2 <- seg_relocate(bj, c(9.9, 0.01))
+  psi <- unname(seg_psi(bj2))
+  expect_equal(psi, sort(psi))
+  expect_gte(psi[1], bj@blueprint$lim[1])
+  expect_lte(psi[2], bj@blueprint$lim[2])
+  expect_error(seg_relocate(bj, 1), "positions")
+})
+
+
+test_that("the profile is read at a point and swept, weighted or not", {
+  set.seed(12)
+  d <- data.frame(x = sort(stats::runif(400, 0, 10)))
+  d$y <- 2 * (d$x > 3) - 1.5 * (d$x > 7) + stats::rnorm(400, sd = 0.3)
+  b <- term_build(jump(x, npsi = 2, psi = c(1, 2)), d)
+  # the truth's profile beats a wrong placement's
+  expect_gt(seg_profile_rss(b, d$y),
+            seg_profile_rss(seg_relocate(b, c(3, 7)), d$y))
+  # the sweep finds it from the wrong placement
+  psi <- unname(seg_psi(seg_polish(b, d$y)))
+  expect_equal(psi, c(3, 7), tolerance = 0.15)
+  # unit weights are the unweighted profile exactly
+  expect_equal(seg_profile_rss(b, d$y, weights = rep(1, 400)),
+               seg_profile_rss(b, d$y), tolerance = 1e-12)
+  # and a weighted sweep runs and returns positions in the interval
+  w <- tabulate(sample.int(400, 400, replace = TRUE), nbins = 400)
+  pw <- unname(seg_psi(seg_polish(b, d$y, weights = w)))
+  expect_true(all(pw >= b@blueprint$lim[1] & pw <= b@blueprint$lim[2]))
+  expect_error(seg_profile_rss(b, d$y, weights = rep(-1, 400)), "weights")
+})

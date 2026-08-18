@@ -163,6 +163,16 @@ SegTerm <- S7::new_class(
 #'   level of a factor. A bare variable is rejected; write the formula.
 #' @param linear Whether the block carries the linear effect \eqn{\beta x}.
 #'   Defaults to \code{TRUE}.
+#' @param n_boot How many bootstrap restarts the fitting layer runs after
+#'   the iteration first converges (Wood 2001, the device \code{segmented}
+#'   runs by default): each restart re-estimates on a bootstrap resample
+#'   from the current break-points and then on the data again from where
+#'   the resample ended, keeping the better fit. The objective has local
+#'   optima in the break-points, and with several of them a grid start does
+#'   not reach the right basin from every placement. Defaults to 10,
+#'   \code{segmented}'s own default; 0 disables. The term itself only
+#'   declares the value; running the restarts is the fitting layer's,
+#'   as with a penalty's hyperparameters.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names.
 #'
@@ -178,6 +188,10 @@ SegTerm <- S7::new_class(
 #' approach with application to treatment for depression study.
 #' \emph{Statistical Modelling}, 14(4), 293--313.
 #'
+#' Wood, S. N. (2001). Minimizing model fitting objectives that contain
+#' spurious local minima by bootstrap restarting. \emph{Biometrics}, 57(1),
+#' 240--244.
+#'
 #' @examples
 #' set.seed(1)
 #' dd <- data.frame(x = sort(runif(200, 0, 10)))
@@ -191,11 +205,11 @@ SegTerm <- S7::new_class(
 #'   \code{\link{seg_start}}, \code{\link{seg_step}}, \code{\link{nl}}
 #' @export
 seg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
-                label = "seg") {
+                n_boot = 10, label = "seg") {
   # a continuous term has no scaling factor, its working block being
   # bounded already; the value is carried so that one blueprint serves the
   # three constructions
-  .seg_spec("seg", substitute(x), npsi, psi, linear, 0.05, label,
+  .seg_spec("seg", substitute(x), npsi, psi, linear, 0.05, n_boot, label,
             list(...), .seg_by_formula(substitute(by), parent.frame()))
 }
 
@@ -344,8 +358,8 @@ seg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 #'   \code{\link{seg_start}}, \code{\link{seg_step}}
 #' @export
 jump <- function(x, ..., npsi = 1, psi = NULL, by = NULL, c0 = 0.05,
-                 label = "jump") {
-  .seg_spec("jump", substitute(x), npsi, psi, FALSE, c0, label,
+                 n_boot = 10, label = "jump") {
+  .seg_spec("jump", substitute(x), npsi, psi, FALSE, c0, n_boot, label,
             list(...), .seg_by_formula(substitute(by), parent.frame()))
 }
 
@@ -449,8 +463,8 @@ jump <- function(x, ..., npsi = 1, psi = NULL, by = NULL, c0 = 0.05,
 #'   \code{\link{seg_start}}, \code{\link{seg_step}}
 #' @export
 jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
-                 c0 = 0.05, label = "jseg") {
-  .seg_spec("jseg", substitute(x), npsi, psi, linear, c0, label,
+                 c0 = 0.05, n_boot = 10, label = "jseg") {
+  .seg_spec("jseg", substitute(x), npsi, psi, linear, c0, n_boot, label,
             list(...), .seg_by_formula(substitute(by), parent.frame()))
 }
 
@@ -557,11 +571,16 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   out[intersect(params, names(out))]
 }
 
-.seg_spec <- function(kind, var, npsi, psi, linear, c0, label, dots, by) {
+.seg_spec <- function(kind, var, npsi, psi, linear, c0, n_boot, label, dots,
+                      by) {
   if (!is.numeric(c0) || length(c0) != 1L || is.na(c0) ||
       c0 <= 0 || c0 >= 1) {
     stop("'c0' must be a single number strictly between 0 and 1.",
          call. = FALSE)
+  }
+  if (!is.numeric(n_boot) || length(n_boot) != 1L || is.na(n_boot) ||
+      n_boot < 0 || n_boot != round(n_boot)) {
+    stop("'n_boot' must be a single non-negative integer.", call. = FALSE)
   }
   if (!is.numeric(npsi) || length(npsi) != 1L || is.na(npsi) || npsi < 1 ||
       npsi != round(npsi)) {
@@ -584,7 +603,7 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   subs <- .seg_gather(dots, by, kind, npsi, linear)
   SegTerm(label = label, kind = kind, var = var, npsi = npsi,
           linear = linear, subformulas = subs,
-          spec = list(psi = psi, c0 = c0),
+          spec = list(psi = psi, c0 = c0, n_boot = as.integer(n_boot)),
           X = NULL, coef_names = character(0),
           blueprint = list(), penalty = NULL)
 }
@@ -1032,6 +1051,14 @@ S7::method(term_penalties, SegTerm) <- function(term, ...) {
   if (is.null(pens)) list() else pens
 }
 
+# The continuous construction's block is the Jacobian of its contribution;
+# the discontinuous ones carry the frozen weight of the identity of Fasola
+# et al., so their block is a working linearization and the fixed-point
+# iteration it belongs to is not a descent method on the model's objective.
+S7::method(term_jacobian_block, SegTerm) <- function(term, ...) {
+  identical(term@kind, "seg")
+}
+
 S7::method(term_block_contract, SegTerm) <- function(term, coef = NULL, A,
                                                      ...) {
   bp <- term@blueprint
@@ -1151,6 +1178,39 @@ S7::method(term_block_deriv, SegTerm) <- function(term, coef = NULL, v, ...) {
 }
 
 
+# The relabeling itself: NULL where there is nothing to do. The per-k
+# coefficient stretches are permuted along with every per-break-point
+# field of the blueprint, so a lineage keeps its own previous position,
+# its scaling factor and its direction under the new label.
+.seg_reorder <- function(bp, coef, psi_new) {
+  K <- bp$npsi
+  if (K < 2L) return(NULL)
+  perk <- c(if (bp$kind %in% c("seg", "jseg")) paste0("gamma", seq_len(K)),
+            if (bp$kind %in% c("jump", "jseg")) paste0("delta", seq_len(K)),
+            paste0("psi", seq_len(K)))
+  if (any(vapply(perk, function(p) !is.null(bp$Z[[p]]), logical(1)))) {
+    return(NULL)
+  }
+  pos <- psi_new[1L, ]
+  o <- order(pos)
+  if (!is.unsorted(pos, strictly = FALSE)) return(NULL)
+  relabel <- function(pref) {
+    for (j in seq_len(K)) {
+      coef[bp$index[[paste0(pref, j)]]] <<-
+        old[bp$index[[paste0(pref, o[j])]]]
+    }
+  }
+  old <- coef
+  if (bp$kind %in% c("seg", "jseg")) relabel("gamma")
+  if (bp$kind %in% c("jump", "jseg")) relabel("delta")
+  relabel("psi")
+  bp$psi <- bp$psi[, o, drop = FALSE]
+  bp$pk <- bp$pk[o]
+  bp$cscale <- bp$cscale[o]
+  bp$sgn <- bp$sgn[o]
+  list(coef = coef, bp = bp, psi_new = psi_new[, o, drop = FALSE])
+}
+
 S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   .assert_built(term)
   bp <- term@blueprint
@@ -1168,7 +1228,23 @@ S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   # driven by the mean movement for the direction and by the largest for
   # the step, and the conditioning bound is taken at the observation
   # nearest an end of the range.
+  # Two break-points that cross have exchanged roles, and left to
+  # themselves they go on chasing the same feature: the fit that follows
+  # reads two nearly identical columns and the iteration settles on a
+  # collision. The lineages are relabeled so the positions come out
+  # ordered -- each (change, level, position) triple travels with its own
+  # scaling factor and direction -- which is what `segmented` does at
+  # every iteration. The contribution is a sum over k, so relabeling
+  # moves no value. A term whose per-break-point coefficients carry a
+  # development is left alone: its positions are one per observation and
+  # a single order need not exist.
   psi_new <- .seg_positions(bp, coef, length(bp$xv))$psi
+  ro <- .seg_reorder(bp, coef, psi_new)
+  if (!is.null(ro)) {
+    coef <- ro$coef
+    bp <- ro$bp
+    psi_new <- ro$psi_new
+  }
   dm <- psi_new - bp$psi
   d <- colMeans(dm)
   stepv <- apply(abs(dm), 2L, max)
@@ -1358,6 +1434,127 @@ seg_converged <- function(term) {
   !anyNA(st) && max(st) < term@blueprint$delta
 }
 
+#' Reset a Break-Point Term's Scaling Schedule
+#'
+#' @description
+#' The term with its scaling factors back at \code{c0}, the directions and
+#' the step record cleared, and the break-points where they are. A restart
+#' needs it: the schedule is a state of the iteration that only ever
+#' tightens, so an iteration resumed from a converged fit inherits factors
+#' at their floor and cannot travel -- measured, bootstrap restarts without
+#' the reset returned the incumbent unchanged ten times out of ten.
+#'
+#' @param term A built break-point term (see \code{\link{term_build}}).
+#'
+#' @return The term, ready to iterate afresh from its current positions.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(x = sort(runif(100, 0, 10)))
+#' b <- term_build(jump(x, psi = 4), dd)
+#' b <- term_refresh(b, b@blueprint$coef)
+#' identical(seg_reheat(b)@blueprint$cscale, b@blueprint$cscale * 0 + 0.05)
+#'
+#' @seealso \code{\link{seg_step}}, \code{\link{term_refresh}}
+#' @export
+seg_reheat <- function(term) {
+  if (!S7::S7_inherits(term, SegTerm)) {
+    stop("'term' must be a break-point term.", call. = FALSE)
+  }
+  .assert_built(term)
+  bp <- term@blueprint
+  bp$cscale <- rep(term@spec$c0, bp$npsi)
+  bp$sgn <- rep(0, bp$npsi)
+  bp$step <- rep(NA_real_, bp$npsi)
+  bp$nref <- 0L
+  term@blueprint <- bp
+  term
+}
+
+#' Move a Break-Point Term to Given Positions
+#'
+#' @description
+#' The term with its break-points placed at \code{psi}, the changes kept,
+#' the scaling schedule fresh and the block rebuilt -- ready to iterate
+#' from there. A restart proposal needs it: a bootstrap resample perturbs
+#' the objective by \eqn{1/\sqrt{n}} and stops escaping a deep basin as the
+#' sample grows, so the restarting loop also proposes fresh positions
+#' outright, which this is the operation behind.
+#'
+#' @details
+#' The positions are sorted and confined to the term's own interval. For a
+#' discontinuous construction the auxiliary coefficients are set to
+#' \eqn{g_k = -\delta_k\psi_k}, a change of level at zero replaced by one,
+#' so the read-off returns exactly the positions given. A term whose
+#' per-break-point coefficients carry a development is rejected: its
+#' positions are one per observation and a single vector does not place
+#' them.
+#'
+#' @param term A built break-point term (see \code{\link{term_build}}).
+#' @param psi A numeric vector, one position per break-point.
+#'
+#' @return The term at the new positions.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(x = sort(runif(100, 0, 10)))
+#' b <- term_build(jump(x, psi = 4), dd)
+#' seg_psi(seg_relocate(b, 6))
+#'
+#' @seealso \code{\link{seg_reheat}}, \code{\link{seg_start}}
+#' @export
+seg_relocate <- function(term, psi) {
+  if (!S7::S7_inherits(term, SegTerm)) {
+    stop("'term' must be a break-point term.", call. = FALSE)
+  }
+  .assert_built(term)
+  bp <- term@blueprint
+  K <- bp$npsi
+  if (!is.numeric(psi) || length(psi) != K || anyNA(psi)) {
+    stop(sprintf("'psi' must give %d finite positions.", K), call. = FALSE)
+  }
+  perk <- c(if (bp$kind %in% c("seg", "jseg")) paste0("gamma", seq_len(K)),
+            if (bp$kind %in% c("jump", "jseg")) paste0("delta", seq_len(K)),
+            paste0("psi", seq_len(K)))
+  if (any(vapply(perk, function(p) !is.null(bp$Z[[p]]), logical(1)))) {
+    stop(paste("a term whose per-break-point coefficients carry a",
+               "development cannot be relocated by a single vector."),
+         call. = FALSE)
+  }
+  psi <- sort(pmin(pmax(as.numeric(psi), bp$lim[1L]), bp$lim[2L]))
+  cf <- bp$coef
+  for (k in seq_len(K)) {
+    pk <- paste0("psi", k)
+    if (bp$kind == "seg") {
+      cf[bp$index[[pk]]] <- psi[k]
+    } else {
+      dk <- cf[bp$index[[paste0("delta", k)]]]
+      if (abs(dk) < 1e-8) {
+        dk <- 1
+        cf[bp$index[[paste0("delta", k)]]] <- dk
+      }
+      cf[bp$index[[pk]]] <- -dk * psi[k]
+    }
+  }
+  n <- length(bp$xv)
+  bp$pk <- lapply(seq_len(K), function(k) psi[k])
+  bp$psi <- matrix(psi, n, K, byrow = TRUE)
+  bp$cscale <- rep(term@spec$c0, K)
+  bp$sgn <- rep(0, K)
+  bp$step <- rep(NA_real_, K)
+  bp$nref <- 0L
+  asm <- .seg_assemble(bp, bp$xv, cf)
+  X <- asm$X
+  colnames(X) <- term@coef_names
+  bp$coef <- cf
+  bp$value <- asm$value
+  bp$psi <- asm$psi
+  bp$pk <- asm$pk
+  term@X <- X
+  term@blueprint <- bp
+  term
+}
+
 #' @title Whether a Break-Point Term's Break-Points Have Settled
 #' @name term_converged.SegTerm
 #' @description
@@ -1476,6 +1673,166 @@ seg_start <- function(spec, data, y, k = 10) {
 
   spec@spec$psi <- best
   spec
+}
+
+#' Polish a Break-Point Term's Positions on the Exact Profile
+#'
+#' @description
+#' Coordinate descent over the break-point positions on the EXACT profile:
+#' one position at a time is swept over a grid with the others held, the
+#' least-squares fit at fixed positions being an ordinary linear model, and
+#' the sweeps repeat until no position moves. The term comes back relocated
+#' (\code{\link{seg_relocate}}) at the best positions found.
+#'
+#' @details
+#' This is \code{\link{seg_start}}'s device made conditional, and it exists
+#' for the failure a start cannot fix: with several break-points the
+#' iteration can capture two of them on one feature and press the third
+#' against its confinement limit, and neither a bootstrap excursion --
+#' whose perturbation is of order \eqn{1/\sqrt{n}} -- nor a random
+#' relocation escapes it, the basin of the right configuration being
+#' narrow. A grid sweep of ONE position with the others held walks
+#' straight to the missing feature, because the profile at fixed positions
+#' is exact and unimodal around it.
+#'
+#' The profile is least squares of \code{y} on the term's own columns at
+#' fixed positions, so it is exact for a gaussian response and a starting
+#' rule for any other, the argument \code{\link{seg_start}} already makes.
+#' A term whose per-break-point coefficients carry a development is
+#' rejected, its positions being one per observation.
+#'
+#' With \code{weights}, the profile is weighted least squares. A restarting
+#' loop sweeps the profile of a bootstrap resample that way -- the
+#' multinomial counts of sampling the rows with replacement as weights --
+#' which moves the profile's optima the way refitting the resample would,
+#' at the cost of grid-many linear fits rather than a whole model fit: the
+#' non-convexity of these models lives entirely in the positions, so
+#' exploring the positions is the whole of what an excursion is for.
+#'
+#' @param term A built break-point term (see \code{\link{term_build}}).
+#' @param y A numeric vector, one value per observation of the build data:
+#'   the response, net of whatever the caller wants held.
+#' @param k How many grid points per sweep. Defaults to 50.
+#' @param sweeps At most how many passes over the positions. Defaults
+#'   to 10; the descent usually stops moving in two or three.
+#' @param weights Optional non-negative weights, one per observation; the
+#'   profile is then weighted least squares.
+#'
+#' @return The term at the polished positions.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(x = sort(runif(300, 0, 10)))
+#' dd$y <- 2 * (dd$x > 3) - 1.5 * (dd$x > 7) + rnorm(300, sd = 0.3)
+#' b <- term_build(jump(x, npsi = 2, psi = c(1, 2)), dd)
+#' seg_psi(seg_polish(b, dd$y))
+#'
+#' @seealso \code{\link{seg_start}}, \code{\link{seg_relocate}}
+#' @export
+seg_polish <- function(term, y, k = 50, sweeps = 10, weights = NULL) {
+  pr <- .seg_profile(term, y, weights)
+  grid <- unique(as.numeric(stats::quantile(
+    pr$xv, seq(0.02, 0.98, length.out = as.integer(k)), names = FALSE)))
+  grid <- pmin(pmax(grid, pr$lim[1L]), pr$lim[2L])
+  psi <- pr$psi
+  best <- pr$rss(psi)
+  K <- length(psi)
+  for (s in seq_len(as.integer(sweeps))) {
+    moved <- FALSE
+    for (j in seq_len(K)) {
+      for (g in grid) {
+        cand <- psi
+        cand[j] <- g
+        v <- pr$rss(cand)
+        if (v < best - 1e-10 * (best + 1)) {
+          best <- v
+          psi <- cand
+          moved <- TRUE
+        }
+      }
+    }
+    if (!moved) break
+  }
+  seg_relocate(term, psi)
+}
+
+#' The Exact Profile of a Break-Point Term at Its Positions
+#'
+#' @description
+#' The residual sum of squares of \code{y} on the term's own columns at its
+#' current positions -- the number \code{\link{seg_polish}} descends on,
+#' read at one point. A restarting loop screens proposals with it: two
+#' configurations of positions are compared by their profiles at the cost
+#' of two linear fits, where refitting the model to compare them costs a
+#' whole fit each.
+#'
+#' @inheritParams seg_polish
+#'
+#' @return A single number; \code{Inf} where the fit fails.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(x = sort(runif(100, 0, 10)))
+#' dd$y <- 2 * (dd$x > 6) + rnorm(100, sd = 0.3)
+#' b <- term_build(jump(x, psi = 4), dd)
+#' seg_profile_rss(b, dd$y) > seg_profile_rss(seg_relocate(b, 6), dd$y)
+#'
+#' @seealso \code{\link{seg_polish}}, \code{\link{seg_relocate}}
+#' @export
+seg_profile_rss <- function(term, y, weights = NULL) {
+  pr <- .seg_profile(term, y, weights)
+  pr$rss(pr$psi)
+}
+
+# The shared machinery of the two: validation, the fixed-position columns
+# and the (weighted) least-squares evaluator.
+.seg_profile <- function(term, y, weights = NULL) {
+  if (!S7::S7_inherits(term, SegTerm)) {
+    stop("'term' must be a break-point term.", call. = FALSE)
+  }
+  .assert_built(term)
+  bp <- term@blueprint
+  K <- bp$npsi
+  perk <- c(if (bp$kind %in% c("seg", "jseg")) paste0("gamma", seq_len(K)),
+            if (bp$kind %in% c("jump", "jseg")) paste0("delta", seq_len(K)),
+            paste0("psi", seq_len(K)))
+  if (any(vapply(perk, function(p) !is.null(bp$Z[[p]]), logical(1)))) {
+    stop(paste("a term whose per-break-point coefficients carry a",
+               "development has no single profile."), call. = FALSE)
+  }
+  xv <- bp$xv
+  y <- as.numeric(y)
+  if (length(y) != length(xv)) {
+    stop("'y' must have one value per observation of the build data.",
+         call. = FALSE)
+  }
+  sw <- NULL
+  if (!is.null(weights)) {
+    weights <- as.numeric(weights)
+    if (length(weights) != length(xv) || anyNA(weights) ||
+        any(weights < 0)) {
+      stop("'weights' must be non-negative, one per observation.",
+           call. = FALSE)
+    }
+    sw <- sqrt(weights)
+    y <- sw * y
+  }
+  cols <- function(psi) {
+    Z <- if (bp$linear) cbind(1, xv) else matrix(1, length(xv), 1L)
+    if (bp$kind %in% c("seg", "jseg")) {
+      for (p in psi) Z <- cbind(Z, pmax(xv - p, 0))
+    }
+    if (bp$kind %in% c("jump", "jseg")) {
+      for (p in psi) Z <- cbind(Z, as.numeric(xv > p))
+    }
+    if (is.null(sw)) Z else Z * sw
+  }
+  rss <- function(psi) {
+    out <- tryCatch(sum(qr.resid(qr(cols(psi)), y)^2),
+                    error = function(e) Inf)
+    if (is.finite(out)) out else Inf
+  }
+  list(xv = xv, lim = bp$lim, psi = as.numeric(bp$psi[1L, ]), rss = rss)
 }
 
 S7::method(print, SegTerm) <- function(x, ...) {

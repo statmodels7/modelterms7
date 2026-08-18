@@ -295,6 +295,52 @@ S7::method(term_coef_start, model_term) <- function(term, target = NULL, ...) {
   numeric(term_npar(term))
 }
 
+#' @title Is a Term's Block the Jacobian of Its Contribution?
+#'
+#' @description
+#' \code{TRUE} when the design block a term reports is the exact derivative
+#' of its contribution in its own coefficients, \code{FALSE} when it is a
+#' working linearization with quantities frozen at the previous iterate. The
+#' base method returns \code{TRUE}, which is what a fixed design satisfies
+#' trivially and what \code{\link{nl}} and \code{\link{seg}} satisfy by
+#' construction.
+#'
+#' @details
+#' The distinction decides how a fitting layer may treat the block. Where
+#' the block is a Jacobian, a scoring step on it is a Gauss--Newton step and
+#' a line search on the model's own objective is licensed, so the term can
+#' be fitted inside the same system as everything else. Where it is a
+#' working linearization -- \code{\link{jump}} and \code{\link{jseg}}, whose
+#' weight \eqn{W = 1/(2\lvert \tilde x - \psi\rvert)} is held at the
+#' previous break-point and whose position is read off two coefficients --
+#' the fixed-point iteration of \cite{fasola2018} is not a descent method on
+#' the model's objective, and forcing a sufficient decrease on it stalls the
+#' iteration. Such a term is fitted by alternating exact working fits at the
+#' frozen block with \code{\link{term_refresh}}, and its convergence is what
+#' \code{\link{term_converged}} answers rather than a score.
+#'
+#' @param term A term (built or not; the answer is a property of the
+#'   construction).
+#' @param ... Passed to methods.
+#'
+#' @return A single logical.
+#'
+#' @references
+#' Fasola, S., Muggeo, V. M. R. and Kuchenhoff, H. (2018). A heuristic,
+#' iterative algorithm for change-point detection in abrupt change
+#' models. \emph{Computational Statistics}, 33, 997--1015.
+#'
+#' @examples
+#' term_jacobian_block(seg(x))
+#' term_jacobian_block(jump(x))
+#'
+#' @seealso \code{\link{term_refresh}}, \code{\link{term_converged}}
+#' @export
+term_jacobian_block <- S7::new_generic("term_jacobian_block", "term",
+  function(term, ...) S7::S7_dispatch())
+
+S7::method(term_jacobian_block, model_term) <- function(term, ...) TRUE
+
 #' @title Coefficient Names of a Built Term
 #'
 #' @description

@@ -4,7 +4,16 @@
 \alias{seg}
 \title{Segmented Term: a Broken Line with Estimated Break-Points}
 \usage{
-seg(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE, label = "seg")
+seg(
+  x,
+  ...,
+  npsi = 1,
+  psi = NULL,
+  by = NULL,
+  linear = TRUE,
+  n_boot = 10,
+  label = "seg"
+)
 }
 \arguments{
 \item{x}{The covariate, an expression evaluated in the data.}
@@ -25,6 +34,17 @@ level of a factor. A bare variable is rejected; write the formula.}
 
 \item{linear}{Whether the block carries the linear effect \eqn{\beta x}.
 Defaults to \code{TRUE}.}
+
+\item{n_boot}{How many bootstrap restarts the fitting layer runs after
+the iteration first converges (Wood 2001, the device \code{segmented}
+runs by default): each restart re-estimates on a bootstrap resample
+from the current break-points and then on the data again from where
+the resample ended, keeping the better fit. The objective has local
+optima in the break-points, and with several of them a grid start does
+not reach the right basin from every placement. Defaults to 10,
+\code{segmented}'s own default; 0 disables. The term itself only
+declares the value; running the restarts is the fitting layer's,
+as with a penalty's hyperparameters.}
 
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}
@@ -165,6 +185,10 @@ Muggeo, V. M. R., Atkins, D. C., Gallop, R. J. and Dimidjian, S. (2014).
 Segmented mixed models with random changepoints: a maximum likelihood
 approach with application to treatment for depression study.
 \emph{Statistical Modelling}, 14(4), 293--313.
+
+Wood, S. N. (2001). Minimizing model fitting objectives that contain
+spurious local minima by bootstrap restarting. \emph{Biometrics}, 57(1),
+240--244.
 }
 \seealso{
 \code{\link{jump}}, \code{\link{jseg}}, \code{\link{seg_psi}},
