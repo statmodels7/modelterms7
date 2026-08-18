@@ -18,6 +18,13 @@
 filter produced, one value per observation.}
 
 \item{...}{Unused.}
+
+\item{fast, threads}{The fast context and the thread count of
+\code{\link{term_filter}}, passed to the forward pass the adjoint
+re-runs. The reverse pass reads the curvature sequence that pass
+returns, so with a covered context the adjoint evaluates no R
+callback at all; without one the callbacks run in the forward pass
+only, once per observation instead of twice.}
 }
 \value{
 A list with \code{deta} and \code{dscore}.

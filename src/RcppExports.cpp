@@ -10,9 +10,35 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// gas_curvature_sub_cpp
+List gas_curvature_sub_cpp(NumericVector eta, List groups, int p, int q, NumericVector om, NumericMatrix A, NumericMatrix B, int ap, NumericVector s_at, NumericVector c_at, NumericVector g, NumericMatrix Hc, NumericMatrix D3m, List Vs, NumericMatrix seed, int threads);
+RcppExport SEXP _modelterms7_gas_curvature_sub_cpp(SEXP etaSEXP, SEXP groupsSEXP, SEXP pSEXP, SEXP qSEXP, SEXP omSEXP, SEXP ASEXP, SEXP BSEXP, SEXP apSEXP, SEXP s_atSEXP, SEXP c_atSEXP, SEXP gSEXP, SEXP HcSEXP, SEXP D3mSEXP, SEXP VsSEXP, SEXP seedSEXP, SEXP threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type eta(etaSEXP);
+    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type q(qSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type om(omSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type A(ASEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type B(BSEXP);
+    Rcpp::traits::input_parameter< int >::type ap(apSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type s_at(s_atSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type c_at(c_atSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type g(gSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type Hc(HcSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type D3m(D3mSEXP);
+    Rcpp::traits::input_parameter< List >::type Vs(VsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type seed(seedSEXP);
+    Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(gas_curvature_sub_cpp(eta, groups, p, q, om, A, B, ap, s_at, c_at, g, Hc, D3m, Vs, seed, threads));
+    return rcpp_result_gen;
+END_RCPP
+}
 // gas_filter_cpp
-List gas_filter_cpp(NumericVector eta, List order, int p, int q, double omega, NumericVector a, NumericVector b, NumericMatrix db, double f0, NumericVector df0, IntegerVector i_a, int np, Function score, Function curvature);
-RcppExport SEXP _modelterms7_gas_filter_cpp(SEXP etaSEXP, SEXP orderSEXP, SEXP pSEXP, SEXP qSEXP, SEXP omegaSEXP, SEXP aSEXP, SEXP bSEXP, SEXP dbSEXP, SEXP f0SEXP, SEXP df0SEXP, SEXP i_aSEXP, SEXP npSEXP, SEXP scoreSEXP, SEXP curvatureSEXP) {
+List gas_filter_cpp(NumericVector eta, List order, int p, int q, double omega, NumericVector a, NumericVector b, NumericMatrix db, double f0, NumericVector df0, IntegerVector i_a, int np, Function score, Function curvature, Nullable<List> fast, int threads);
+RcppExport SEXP _modelterms7_gas_filter_cpp(SEXP etaSEXP, SEXP orderSEXP, SEXP pSEXP, SEXP qSEXP, SEXP omegaSEXP, SEXP aSEXP, SEXP bSEXP, SEXP dbSEXP, SEXP f0SEXP, SEXP df0SEXP, SEXP i_aSEXP, SEXP npSEXP, SEXP scoreSEXP, SEXP curvatureSEXP, SEXP fastSEXP, SEXP threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -30,13 +56,15 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type np(npSEXP);
     Rcpp::traits::input_parameter< Function >::type score(scoreSEXP);
     Rcpp::traits::input_parameter< Function >::type curvature(curvatureSEXP);
-    rcpp_result_gen = Rcpp::wrap(gas_filter_cpp(eta, order, p, q, omega, a, b, db, f0, df0, i_a, np, score, curvature));
+    Rcpp::traits::input_parameter< Nullable<List> >::type fast(fastSEXP);
+    Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(gas_filter_cpp(eta, order, p, q, omega, a, b, db, f0, df0, i_a, np, score, curvature, fast, threads));
     return rcpp_result_gen;
 END_RCPP
 }
 // gas_filter_sub_cpp
-List gas_filter_sub_cpp(NumericVector eta, List groups, int p, int q, NumericVector om, NumericMatrix A, NumericMatrix B, int np, Function score, Function curvature);
-RcppExport SEXP _modelterms7_gas_filter_sub_cpp(SEXP etaSEXP, SEXP groupsSEXP, SEXP pSEXP, SEXP qSEXP, SEXP omSEXP, SEXP ASEXP, SEXP BSEXP, SEXP npSEXP, SEXP scoreSEXP, SEXP curvatureSEXP) {
+List gas_filter_sub_cpp(NumericVector eta, List groups, int p, int q, NumericVector om, NumericMatrix A, NumericMatrix B, int np, Function score, Function curvature, Nullable<List> fast, int threads);
+RcppExport SEXP _modelterms7_gas_filter_sub_cpp(SEXP etaSEXP, SEXP groupsSEXP, SEXP pSEXP, SEXP qSEXP, SEXP omSEXP, SEXP ASEXP, SEXP BSEXP, SEXP npSEXP, SEXP scoreSEXP, SEXP curvatureSEXP, SEXP fastSEXP, SEXP threadsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -50,7 +78,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type np(npSEXP);
     Rcpp::traits::input_parameter< Function >::type score(scoreSEXP);
     Rcpp::traits::input_parameter< Function >::type curvature(curvatureSEXP);
-    rcpp_result_gen = Rcpp::wrap(gas_filter_sub_cpp(eta, groups, p, q, om, A, B, np, score, curvature));
+    Rcpp::traits::input_parameter< Nullable<List> >::type fast(fastSEXP);
+    Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(gas_filter_sub_cpp(eta, groups, p, q, om, A, B, np, score, curvature, fast, threads));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -94,8 +124,9 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_modelterms7_gas_filter_cpp", (DL_FUNC) &_modelterms7_gas_filter_cpp, 14},
-    {"_modelterms7_gas_filter_sub_cpp", (DL_FUNC) &_modelterms7_gas_filter_sub_cpp, 10},
+    {"_modelterms7_gas_curvature_sub_cpp", (DL_FUNC) &_modelterms7_gas_curvature_sub_cpp, 16},
+    {"_modelterms7_gas_filter_cpp", (DL_FUNC) &_modelterms7_gas_filter_cpp, 16},
+    {"_modelterms7_gas_filter_sub_cpp", (DL_FUNC) &_modelterms7_gas_filter_sub_cpp, 12},
     {"_modelterms7_regime_forward_cpp", (DL_FUNC) &_modelterms7_regime_forward_cpp, 8},
     {"_modelterms7_seg_block_cpp", (DL_FUNC) &_modelterms7_seg_block_cpp, 10},
     {NULL, NULL, 0}

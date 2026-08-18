@@ -23,6 +23,24 @@
 \code{\link{term_curvature}}.}
 
 \item{...}{Unused.}
+
+\item{score_values, curvature_values}{The score and curvature of the
+model's log-density evaluated at the CURRENT predictors, one value per
+observation, on the parameter scale the callbacks read. Supplying both,
+together with \code{blocks_data}, routes the second-order recursion of
+the subformula route through the compiled kernel; either \code{NULL}
+keeps the R route.}
+
+\item{blocks_data}{The model's derivative pieces as data rather than as a
+callback: a list with \code{H} (the mixed second derivatives, one
+column per distribution parameter), \code{D3} (the third derivatives,
+one column per parameter pair, pair \code{(r, r2)} at column
+\code{(r - 1) * np + r2}), \code{Vs} (the per-parameter jacobian rows
+of the other equations) and \code{ap} (the filter's own parameter
+index). Read only by the compiled route.}
+
+\item{threads}{Threads for the compiled route's group loop, as
+\code{numericals7::n_threads()} counts them; 1 is sequential.}
 }
 \value{
 A list with \code{jacobian} and \code{curvature}.

@@ -783,10 +783,25 @@ S7::method(term_build, GasTerm) <- function(term, data, ...) {
 #'   \eqn{\partial^2\ell/\partial\eta^2} per observation.
 #' @param psi The parameters, named as \code{\link{term_params}}.
 #' @param ... Unused.
-#' @return A list with \code{eta} and \code{jacobian}.
+#' @param fast The fast context of the caller, or \code{NULL}: a list with
+#'   \code{family} (the distribution's S7 class name), \code{link} (the
+#'   parameter's link name), \code{k} (the parameter's 1-based index),
+#'   \code{bounds}, \code{y} and \code{theta} (the per-observation
+#'   parameters). Where the C registries of \pkg{distributions7} and
+#'   \pkg{linkfunctions7} cover the pair, the recursion reads the score and
+#'   the curvature through their scalar entry points instead of the R
+#'   callbacks, bit-identically; where they do not, the context is inert
+#'   and the callbacks run as before.
+#' @param threads How many threads the recursion may use, over GROUPS and
+#'   only on the fast route: a group's filter is independent of the others
+#'   and its writes land on its own rows, so no reduction is split and the
+#'   result does not depend on the count, bit for bit.
+#' @return A list with \code{eta}, \code{jacobian} and \code{curv}, the
+#'   curvature read at each predictor.
 #' @keywords internal
 S7::method(term_filter, GasTerm) <- function(term, eta, y, score, curvature,
-                                             psi, ...) {
+                                             psi, ..., fast = NULL,
+                                             threads = 1L) {
   bp <- term@blueprint
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
@@ -799,16 +814,18 @@ S7::method(term_filter, GasTerm) <- function(term, eta, y, score, curvature,
          call. = FALSE)
   }
   if (!is.null(bp$sub)) {
-    return(.gas_filter_sub(term, eta, y, score, curvature, psi))
+    return(.gas_filter_sub(term, eta, y, score, curvature, psi,
+                           fast = fast, threads = threads))
   }
   p <- term@p
   q <- term@q
   cf <- .gas_coefs(psi[.gas_base_params(p, q)], p, q)
   out <- gas_filter_cpp(eta, bp$order, p, q, cf$omega, cf$a, cf$b, cf$db,
-                        cf$f0, cf$df0, cf$i_a, cf$np, score, curvature)
+                        cf$f0, cf$df0, cf$i_a, cf$np, score, curvature,
+                        fast = fast, threads = as.integer(threads))
   jac <- out$jacobian
   colnames(jac) <- nm
-  list(eta = out$eta, jacobian = jac)
+  list(eta = out$eta, jacobian = jac, curv = out$curv)
 }
 
 #' @title Filter a Score-Driven Term Backwards
@@ -825,10 +842,17 @@ S7::method(term_filter, GasTerm) <- function(term, eta, y, score, curvature,
 #' @param g The direct derivative of the objective in the predictor the
 #'   filter produced, one value per observation.
 #' @param ... Unused.
+#' @param fast,threads The fast context and the thread count of
+#'   \code{\link{term_filter}}, passed to the forward pass the adjoint
+#'   re-runs. The reverse pass reads the curvature sequence that pass
+#'   returns, so with a covered context the adjoint evaluates no R
+#'   callback at all; without one the callbacks run in the forward pass
+#'   only, once per observation instead of twice.
 #' @return A list with \code{deta} and \code{dscore}.
 #' @keywords internal
 S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
-                                              psi, g, ...) {
+                                              psi, g, ..., fast = NULL,
+                                              threads = 1L) {
   bp <- term@blueprint
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
@@ -846,10 +870,14 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
          call. = FALSE)
   }
   if (!is.null(bp$sub)) {
-    return(.gas_adjoint_sub(term, eta, y, score, curvature, v, g))
+    return(.gas_adjoint_sub(term, eta, y, score, curvature, v, g,
+                            fast = fast, threads = threads))
   }
-  # the predictor the recursion produced, which is where the callbacks are read
-  e <- term_filter(term, eta, y, score, curvature, psi)$eta
+  # the forward pass already read the curvature at every predictor it
+  # produced, so the reverse pass looks the sequence up rather than
+  # evaluating the callback again at the same points
+  cvv <- term_filter(term, eta, y, score, curvature, psi,
+                     fast = fast, threads = threads)$curv
 
   p <- term@p
   q <- term@q
@@ -868,7 +896,7 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
     for (t in rev(seq_len(k))) {
       row <- rows[t]
       # e_t reaches the objective directly and through every later score
-      eb <- g[row] + sb[t] * curvature(e[row], row)
+      eb <- g[row] + sb[t] * cvv[row]
       fb[t] <- fb[t] + eb
       deta[row] <- eb
       dscore[row] <- sb[t]
@@ -1085,13 +1113,34 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' @param blocks The model's own derivative pieces; see
 #'   \code{\link{term_curvature}}.
 #' @param ... Unused.
+#' @param score_values,curvature_values The score and curvature of the
+#'   model's log-density evaluated at the CURRENT predictors, one value per
+#'   observation, on the parameter scale the callbacks read. Supplying both,
+#'   together with \code{blocks_data}, routes the second-order recursion of
+#'   the subformula route through the compiled kernel; either \code{NULL}
+#'   keeps the R route.
+#' @param blocks_data The model's derivative pieces as data rather than as a
+#'   callback: a list with \code{H} (the mixed second derivatives, one
+#'   column per distribution parameter), \code{D3} (the third derivatives,
+#'   one column per parameter pair, pair \code{(r, r2)} at column
+#'   \code{(r - 1) * np + r2}), \code{Vs} (the per-parameter jacobian rows
+#'   of the other equations) and \code{ap} (the filter's own parameter
+#'   index). Read only by the compiled route.
+#' @param threads Threads for the compiled route's group loop, as
+#'   \code{numericals7::n_threads()} counts them; 1 is sequential.
 #' @return A list with \code{jacobian} and \code{curvature}.
 #' @keywords internal
 S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
                                                 curvature, psi, g, seed,
-                                                blocks, ...) {
+                                                blocks, ...,
+                                                score_values = NULL,
+                                                curvature_values = NULL,
+                                                blocks_data = NULL,
+                                                threads = 1L) {
   .gas_curvature_core(term, eta, y, score, curvature, psi, g, seed, blocks,
-                      direction = NULL)
+                      direction = NULL, score_values = score_values,
+                      curvature_values = curvature_values,
+                      blocks_data = blocks_data, threads = threads)
 }
 
 #' @title Third Derivatives of a Score-Driven Predictor
@@ -1160,7 +1209,10 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
 #'
 #' @keywords internal
 .gas_curvature_core <- function(term, eta, y, score, curvature, psi, g, seed,
-                                blocks, direction = NULL) {
+                                blocks, direction = NULL,
+                                score_values = NULL,
+                                curvature_values = NULL,
+                                blocks_data = NULL, threads = 1L) {
   bp <- term@blueprint
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
@@ -1172,7 +1224,10 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
   third <- !is.null(direction)
   if (!is.null(bp$sub)) {
     return(.gas_curvature_sub(term, eta, y, score, curvature, psiv, g,
-                              seed, blocks, direction))
+                              seed, blocks, direction,
+                              score_values = score_values,
+                              curvature_values = curvature_values,
+                              blocks_data = blocks_data, threads = threads))
   }
   base <- .gas_base_params(term@p, term@q)
   nb <- length(base)
@@ -1458,7 +1513,7 @@ S7::method(print, GasTerm) <- function(x, ...) {
 #' @param np The number of parameters.
 #' @param score,curvature The callbacks of \code{\link{term_filter}}.
 #'
-#' @return A list with \code{eta} and \code{jacobian}.
+#' @return A list with \code{eta}, \code{jacobian} and \code{curv}.
 #'
 #' @keywords internal
 gas_filter_r <- function(eta, order, p, q, omega, a, b, db, f0, df0,
@@ -1466,6 +1521,7 @@ gas_filter_r <- function(eta, order, p, q, omega, a, b, db, f0, df0,
   n <- length(eta)
   eta_out <- numeric(n)
   jac <- matrix(0, n, np)
+  cv <- numeric(n)
 
   for (rows in order) {
     m <- length(rows)
@@ -1497,11 +1553,12 @@ gas_filter_r <- function(eta, order, p, q, omega, a, b, db, f0, df0,
       }
       e_t <- eta[rows[t]] + f[t]
       s[t] <- score(e_t, rows[t])
-      ds[t, ] <- curvature(e_t, rows[t]) * df[t, ]
+      cv[rows[t]] <- curvature(e_t, rows[t])
+      ds[t, ] <- cv[rows[t]] * df[t, ]
     }
 
     eta_out[rows] <- eta[rows] + f
     jac[rows, ] <- df
   }
-  list(eta = eta_out, jacobian = jac)
+  list(eta = eta_out, jacobian = jac, curv = cv)
 }

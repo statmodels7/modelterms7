@@ -219,19 +219,151 @@ NULL
   list(groups = groups, om = vals$omega$v, A = A, B = B)
 }
 
+# The per-group preparation the compiled CURVATURE route reads
+# (gas_curvature_sub_cpp): every per-observation quantity of the
+# second-order recursion scattered once onto the group's active columns --
+# the chained rows W, the raw chart rows Z with their curvature k2 (a
+# scalar coordinate scatters a one, so k2 * (1 * 1) is its diagonal
+# entry exactly), the Levinson-chained db rows, the CONSTANT hb blocks of
+# the autoregressive chart, and the starting level with its two
+# derivatives. Every expression here is the R recursion's own, so the
+# prep is shared arithmetic and not a second derivation.
+.gas_curv_prep <- function(term, vals, bd, acts, lay, m, np, zcol,
+                           ld2_const, base, aj, pj, p, q) {
+  bp <- term@blueprint
+  groups <- vector("list", length(bp$order))
+  for (l in seq_along(bp$order)) {
+    rows <- bp$order[[l]]
+    act_t <- acts[[l]]
+    act <- c(seq_len(m - np), zcol[act_t])
+    mk <- length(act)
+    pos <- lapply(base, function(j) (m - np) + match(vals[[j]]$idx, act_t))
+    names(pos) <- base
+    ppos <- (m - np) + match(bd$pidx, act_t)
+
+    wrow_mat <- function(j) {
+      vj <- vals[[j]]
+      at <- pos[[j]]
+      ok <- !is.na(at)
+      M <- matrix(0, length(rows), mk)
+      if (any(ok)) M[, at[ok]] <- vj$W[rows, ok, drop = FALSE]
+      M
+    }
+    zrow_mat <- function(j) {
+      vj <- vals[[j]]
+      at <- pos[[j]]
+      ok <- !is.na(at)
+      M <- matrix(0, length(rows), mk)
+      if (any(ok)) {
+        M[, at[ok]] <- if (vj$developed) vj$Z[rows, ok, drop = FALSE] else 1
+      }
+      M
+    }
+    db_mat <- function(j) {
+      M <- matrix(0, length(rows), mk)
+      ok <- !is.na(ppos)
+      if (any(ok)) M[, ppos[ok]] <- bd$DB[[j]][rows, ok, drop = FALSE]
+      M
+    }
+    row_of <- function(j, r) {
+      out <- numeric(mk)
+      at <- pos[[j]]
+      ok <- !is.na(at)
+      out[at[ok]] <- vals[[j]]$W[r, ok]
+      out
+    }
+    h_of <- function(j, r) {
+      h <- matrix(0, mk, mk)
+      vj <- vals[[j]]
+      at <- pos[[j]]
+      ok <- !is.na(at)
+      if (!any(ok)) return(h)
+      if (vj$developed) {
+        z <- vj$Z[r, ok]
+        h[at[ok], at[ok]] <- vj$k2[r] * outer(z, z)
+      } else {
+        h[at[ok], at[ok]] <- vj$k2[r]
+      }
+      h
+    }
+    db_of <- function(j, r) {
+      out <- numeric(mk)
+      ok <- !is.na(ppos)
+      out[ppos[ok]] <- bd$DB[[j]][r, ok]
+      out
+    }
+
+    r1 <- rows[1L]
+    hb <- if (q > 0L) {
+      wrows <- lapply(pj, function(j) row_of(j, r1))
+      lapply(seq_len(q), function(j) {
+        h <- matrix(0, mk, mk)
+        for (k in seq_len(q)) {
+          for (ll in seq_len(q)) {
+            if (ld2_const$hessian[[j]][k, ll] != 0) {
+              h <- h + ld2_const$hessian[[j]][k, ll] *
+                outer(wrows[[k]], wrows[[ll]])
+            }
+          }
+          if (ld2_const$jacobian[j, k] != 0) {
+            h <- h + ld2_const$jacobian[j, k] * h_of(pj[k], r1)
+          }
+        }
+        h
+      })
+    } else list()
+
+    sbv <- if (q > 0L) sum(bd$B[r1, ]) else 0
+    if (abs(1 - sbv) < 1e-10) {
+      stop("the autoregressive polynomial is at the unit root; the filter has no starting level.",
+           call. = FALSE)
+    }
+    om1 <- vals$omega$v[r1]
+    om1_u <- row_of("omega", r1)
+    om1_uu <- h_of("omega", r1)
+    dbsum <- if (q > 0L) {
+      Reduce(`+`, lapply(seq_len(q), function(j) db_of(j, r1)))
+    } else numeric(mk)
+    f0 <- om1 / (1 - sbv)
+    f0_u <- om1_u / (1 - sbv) + om1 * dbsum / (1 - sbv)^2
+    f0_uu <- om1_uu / (1 - sbv) +
+      (outer(om1_u, dbsum) + outer(dbsum, om1_u)) / (1 - sbv)^2 +
+      2 * om1 * outer(dbsum, dbsum) / (1 - sbv)^3
+    if (q > 0L) {
+      f0_uu <- f0_uu + om1 * Reduce(`+`, hb) / (1 - sbv)^2
+    }
+
+    groups[[l]] <- list(
+      rows = rows, act = act,
+      wom = wrow_mat("omega"), zom = zrow_mat("omega"),
+      k2om = vals$omega$k2[rows],
+      wa = lapply(aj, wrow_mat), za = lapply(aj, zrow_mat),
+      k2a = lapply(aj, function(j) vals[[j]]$k2[rows]),
+      db = lapply(seq_len(q), db_mat), hb = hb,
+      f0 = f0, f0u = f0_u, f0uu = f0_uu)
+  }
+  A <- matrix(0, bp$n, p)
+  for (i in seq_len(p)) A[, i] <- vals[[aj[i]]]$v
+  B <- matrix(0, bp$n, q)
+  for (j in seq_len(q)) B[, j] <- bd$B[, j]
+  list(groups = groups, om = vals$omega$v, A = A, B = B)
+}
+
 # the filter of the submodel route: the general recursion with the exact
 # derivative in the term's parameters propagated beside the state, carried
 # per group on that group's active coordinates. The recursion runs
 # compiled; .gas_filter_sub_r() below is the same loop in R, kept so the
 # kernel has a twin that shares none of its code.
-.gas_filter_sub <- function(term, eta, y, score, curvature, u) {
+.gas_filter_sub <- function(term, eta, y, score, curvature, u,
+                            fast = NULL, threads = 1L) {
   vals <- .gas_sub_values(term, u, "parameter")
   bd <- .gas_sub_b(term, vals)
   acts <- .gas_sub_active(term, vals)
   prep <- .gas_sub_prep(term, vals, bd, acts)
   res <- gas_filter_sub_cpp(eta, prep$groups, term@p, term@q,
                             prep$om, prep$A, prep$B, length(u),
-                            score, curvature)
+                            score, curvature,
+                            fast = fast, threads = as.integer(threads))
   colnames(res$jacobian) <- term_params(term)
   res
 }
@@ -252,6 +384,7 @@ NULL
 
   eta_out <- numeric(bp$n)
   jac <- matrix(0, bp$n, np)
+  cv <- numeric(bp$n)
   for (l in seq_along(bp$order)) {
     rows <- bp$order[[l]]
     act <- acts[[l]]
@@ -323,25 +456,30 @@ NULL
       df[t, ] <- dft
       e_t <- eta[r] + ft
       s[t] <- score(e_t, r)
-      ds[t, ] <- curvature(e_t, r) * dft
+      cv[r] <- curvature(e_t, r)
+      ds[t, ] <- cv[r] * dft
     }
     eta_out[rows] <- eta[rows] + f
     jac[rows, act] <- df
   }
   colnames(jac) <- term_params(term)
-  list(eta = eta_out, jacobian = jac)
+  list(eta = eta_out, jacobian = jac, curv = cv)
 }
 
 # the reverse pass of the submodel route, the coefficients read at the
-# time whose equation they enter
-.gas_adjoint_sub <- function(term, eta, y, score, curvature, u, g) {
+# time whose equation they enter. The forward pass returns the curvature
+# it read at every predictor, so the reverse pass looks it up instead of
+# evaluating the callback a second time at the same points.
+.gas_adjoint_sub <- function(term, eta, y, score, curvature, u, g,
+                             fast = NULL, threads = 1L) {
   bp <- term@blueprint
   p <- term@p
   q <- term@q
   vals <- .gas_sub_values(term, u, "parameter")
   bd <- .gas_sub_b(term, vals)
   aj <- if (p > 0L) paste0("alpha", seq_len(p)) else character(0)
-  e <- .gas_filter_sub(term, eta, y, score, curvature, u)$eta
+  cvv <- .gas_filter_sub(term, eta, y, score, curvature, u,
+                         fast = fast, threads = threads)$curv
 
   deta <- numeric(bp$n)
   dscore <- numeric(bp$n)
@@ -351,7 +489,7 @@ NULL
     sb <- numeric(k)
     for (t in rev(seq_len(k))) {
       r <- rows[t]
-      eb <- g[r] + sb[t] * curvature(e[r], r)
+      eb <- g[r] + sb[t] * cvv[r]
       fb[t] <- fb[t] + eb
       deta[r] <- eb
       dscore[r] <- sb[t]
@@ -375,7 +513,9 @@ NULL
 # derivative, the chart differentiated per observation, everything carried
 # on each group's active set
 .gas_curvature_sub <- function(term, eta, y, score, curvature, psiv, g,
-                               seed, blocks, direction = NULL) {
+                               seed, blocks, direction = NULL,
+                               score_values = NULL, curvature_values = NULL,
+                               blocks_data = NULL, threads = 1L) {
   bp <- term@blueprint
   p <- term@p
   q <- term@q
@@ -428,6 +568,30 @@ NULL
   ld2_const <- if (q > 0L && !varying_b) {
     gas_levinson2(vapply(pj, function(j) vals[[j]]$v[1L], numeric(1)))
   } else NULL
+
+  # THE COMPILED ROUTE (piano_parallel.txt, voce 5's blocked stage): second
+  # order only, constant autoregressive charts, and a caller that declares
+  # its callbacks as LOOKUPS (score_values/curvature_values) and its blocks
+  # as data (H, D3, Vs, ap). Anything else keeps the R recursion below,
+  # which stays the reference and the third-order implementation. The
+  # kernel mirrors this function's arithmetic operation by operation; the
+  # twin test compares the two routes, and threads run over GROUPS with
+  # each group's W merged in group order on the main thread.
+  if (!third && !varying_b && !is.null(score_values) &&
+      !is.null(curvature_values) && !is.null(blocks_data)) {
+    prep <- .gas_curv_prep(term, vals, bd, acts, lay, m, np, zcol,
+                           ld2_const, base, aj, pj, p, q)
+    res <- gas_curvature_sub_cpp(eta, prep$groups, p, q, prep$om, prep$A,
+                                 prep$B, as.integer(blocks_data$ap),
+                                 as.numeric(score_values),
+                                 as.numeric(curvature_values),
+                                 g, blocks_data$H, blocks_data$D3,
+                                 blocks_data$Vs, seed,
+                                 as.integer(threads))
+    W <- res$curvature
+    W <- (W + t(W)) / 2
+    return(list(jacobian = res$jacobian, curvature = W))
+  }
 
   # does the caller take the active set? A three-argument callback is the
   # earlier contract and is given the full row instead

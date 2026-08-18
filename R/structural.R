@@ -116,9 +116,12 @@ S7::method(term_start, structural_term) <- function(term, ...) {
 #'   \code{\link{term_params}}.
 #' @param ... Passed to methods.
 #'
-#' @return A list with \code{eta}, the predictor the term produces, and
+#' @return A list with \code{eta}, the predictor the term produces,
 #'   \code{jacobian}, an \code{n} by \code{length(psi)} matrix of its
-#'   derivatives with respect to \code{psi}.
+#'   derivatives with respect to \code{psi}, and \code{curv}, the value of
+#'   \code{curvature} at each predictor -- returned because the recursion
+#'   evaluates it anyway, so a consumer running a second pass at the same
+#'   point (the adjoint) can read it rather than evaluate it again.
 #'
 #' @examples
 #' set.seed(1)

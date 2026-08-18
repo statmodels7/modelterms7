@@ -43,7 +43,7 @@ gas_filter_r(
 \item{score, curvature}{The callbacks of \code{\link{term_filter}}.}
 }
 \value{
-A list with \code{eta} and \code{jacobian}.
+A list with \code{eta}, \code{jacobian} and \code{curv}.
 }
 \description{
 The loop \code{gas_filter_cpp()} replaces, kept so the compiled

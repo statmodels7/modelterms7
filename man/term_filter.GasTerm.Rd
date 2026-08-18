@@ -20,9 +20,25 @@
 \item{psi}{The parameters, named as \code{\link{term_params}}.}
 
 \item{...}{Unused.}
+
+\item{fast}{The fast context of the caller, or \code{NULL}: a list with
+\code{family} (the distribution's S7 class name), \code{link} (the
+parameter's link name), \code{k} (the parameter's 1-based index),
+\code{bounds}, \code{y} and \code{theta} (the per-observation
+parameters). Where the C registries of \pkg{distributions7} and
+\pkg{linkfunctions7} cover the pair, the recursion reads the score and
+the curvature through their scalar entry points instead of the R
+callbacks, bit-identically; where they do not, the context is inert
+and the callbacks run as before.}
+
+\item{threads}{How many threads the recursion may use, over GROUPS and
+only on the fast route: a group's filter is independent of the others
+and its writes land on its own rows, so no reduction is split and the
+result does not depend on the count, bit for bit.}
 }
 \value{
-A list with \code{eta} and \code{jacobian}.
+A list with \code{eta}, \code{jacobian} and \code{curv}, the
+  curvature read at each predictor.
 }
 \description{
 Runs the score-driven recursion over each group in time order and

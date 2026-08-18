@@ -14,7 +14,11 @@
   g,
   seed,
   blocks,
-  direction = NULL
+  direction = NULL,
+  score_values = NULL,
+  curvature_values = NULL,
+  blocks_data = NULL,
+  threads = 1L
 )
 }
 \arguments{
