@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.49.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.50.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,15 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.50.0" id="modelterms7-0500">modelterms7 0.50.0<a class="anchor" aria-label="anchor" href="#modelterms7-0500"></a></h2>
+<ul><li><p><strong><code><a href="../reference/term_coef_start.html">term_coef_start()</a></code> takes a <code>target</code></strong>, the response on the scale of the predictor the term contributes to. It is the one thing a term cannot work out for itself: the term knows its formula and its charts, the fitting layer knows the distribution, the link and the equation. Every method already had <code>...</code>, so the argument is compatible, and a term with no use for it ignores it.</p></li>
+<li>
+<p><strong><code><a href="../reference/nl.html">nl()</a></code> estimates its own parameters from the data.</strong> Where a <code>target</code> is given, the parameters the caller did not pin with <code>start</code> come from a least squares fit rather than from zero, which for a nonlinear term is a degenerate point and not a neutral one: it linearizes where the function was never meant to be evaluated. On a logistic growth curve the start goes from <code>phi = 1, theta = 0, sigma = 1</code> to <code>50.71, 10.08, 2.071</code> against a truth of 50, 10, 2, in 0.7 s.</p>
+<p>Two things make it work. The grid is DETERMINISTIC, so a start does not depend on the caller’s random seed; a Latin hypercube of the same size, tried first, put the scale anywhere between 4.9e-06 and 2.07 over twenty seeds. And the parameters the function is jointly AFFINE in are separated out and solved by least squares at each point rather than searched over, read off <code><a href="https://rdrr.io/r/stats/deriv.html" class="external-link">stats::D</a></code> as the fixed point of “the derivative in the parameter names no member of the set”. Over five shapes and fifteen samples each, that is 15/15 everywhere; on a four-parameter logistic it is the difference between 13/15 and 15/15, with the worst relative error falling from 6.36 to 0.076. An opaque <code>fn</code> gets no separation, since a function does not say where its parameters enter, and still recovers the truth.</p>
+</li>
+<li><p>A <code>start</code> reaches a parameter’s submodel through a least-squares solve rather than being written at its first column, which was right only where the development carries an intercept. Where it is coded full rank – which is what <code>phi ~ 0 + lasso(~g)</code> gives – the old route gave the starting value to one level and zero to the others.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.49.0" id="modelterms7-0490">modelterms7 0.49.0<a class="anchor" aria-label="anchor" href="#modelterms7-0490"></a></h2>
 <ul><li><p><code>term_block_deriv(term, coef, v)</code> is the ADJOINT of <code><a href="../reference/term_block_contract.html">term_block_contract()</a></code>: the block’s own derivative taken along a direction, one entry per observation and column, where the other contracts over the observations and answers per coefficient. Neither computes the other. The GRADIENT of a marginal criterion needs the contraction; its HESSIAN needs the direction, <code>dK/dbeta</code> being wanted there in the direction the mode moves rather than traced.</p></li>

@@ -17,6 +17,12 @@ otherwise.
   A built
   [`SegTerm`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md).
 
+- target:
+
+  Unused: a break-point term already reads the covariate's interior
+  quantiles at
+  [`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md).
+
 - ...:
 
   Unused.

@@ -1,5 +1,44 @@
 # Changelog
 
+## modelterms7 0.50.0
+
+- **[`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)
+  takes a `target`**, the response on the scale of the predictor the
+  term contributes to. It is the one thing a term cannot work out for
+  itself: the term knows its formula and its charts, the fitting layer
+  knows the distribution, the link and the equation. Every method
+  already had `...`, so the argument is compatible, and a term with no
+  use for it ignores it.
+
+- **[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+  estimates its own parameters from the data.** Where a `target` is
+  given, the parameters the caller did not pin with `start` come from a
+  least squares fit rather than from zero, which for a nonlinear term is
+  a degenerate point and not a neutral one: it linearizes where the
+  function was never meant to be evaluated. On a logistic growth curve
+  the start goes from `phi = 1, theta = 0, sigma = 1` to
+  `50.71, 10.08, 2.071` against a truth of 50, 10, 2, in 0.7 s.
+
+  Two things make it work. The grid is DETERMINISTIC, so a start does
+  not depend on the caller’s random seed; a Latin hypercube of the same
+  size, tried first, put the scale anywhere between 4.9e-06 and 2.07
+  over twenty seeds. And the parameters the function is jointly AFFINE
+  in are separated out and solved by least squares at each point rather
+  than searched over, read off
+  [`stats::D`](https://rdrr.io/r/stats/deriv.html) as the fixed point of
+  “the derivative in the parameter names no member of the set”. Over
+  five shapes and fifteen samples each, that is 15/15 everywhere; on a
+  four-parameter logistic it is the difference between 13/15 and 15/15,
+  with the worst relative error falling from 6.36 to 0.076. An opaque
+  `fn` gets no separation, since a function does not say where its
+  parameters enter, and still recovers the truth.
+
+- A `start` reaches a parameter’s submodel through a least-squares solve
+  rather than being written at its first column, which was right only
+  where the development carries an intercept. Where it is coded full
+  rank – which is what `phi ~ 0 + lasso(~g)` gives – the old route gave
+  the starting value to one level and zero to the others.
+
 ## modelterms7 0.49.0
 
 - `term_block_deriv(term, coef, v)` is the ADJOINT of
