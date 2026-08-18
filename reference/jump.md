@@ -24,7 +24,16 @@ where the slope is to change at the same points.
 ## Usage
 
 ``` r
-jump(x, ..., npsi = 1, psi = NULL, by = NULL, c0 = 0.05, label = "jump")
+jump(
+  x,
+  ...,
+  npsi = 1,
+  psi = NULL,
+  by = NULL,
+  c0 = 0.05,
+  n_boot = 10,
+  label = "jump"
+)
 ```
 
 ## Arguments
@@ -60,6 +69,19 @@ jump(x, ..., npsi = 1, psi = NULL, by = NULL, c0 = 0.05, label = "jump")
   observations from the break-point, as a fraction of the distance to
   the ends of the range. Defaults to `0.05`, the value fasola2018
   recommend; see Details.
+
+- n_boot:
+
+  How many bootstrap restarts the fitting layer runs after the iteration
+  first converges (Wood 2001, the device `segmented` runs by default):
+  each restart re-estimates on a bootstrap resample from the current
+  break-points and then on the data again from where the resample ended,
+  keeping the better fit. The objective has local optima in the
+  break-points, and with several of them a grid start does not reach the
+  right basin from every placement. Defaults to 10, `segmented`'s own
+  default; 0 disables. The term itself only declares the value; running
+  the restarts is the fitting layer's, as with a penalty's
+  hyperparameters.
 
 - label:
 

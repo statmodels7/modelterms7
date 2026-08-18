@@ -183,6 +183,8 @@ structural term takes instead.
   : Number of Parameters of a Built Term
 - [`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)
   : Where a Term's Own Coefficients Begin
+- [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
+  : Is a Term's Block the Jacobian of Its Contribution?
 - [`term_coef_names()`](https://statmodels7.github.io/modelterms7/reference/term_coef_names.md)
   : Coefficient Names of a Built Term
 - [`term_smooth()`](https://statmodels7.github.io/modelterms7/reference/term_smooth.md)
@@ -288,6 +290,14 @@ grid rule that chooses where to start.
   : The Progress of a Break-Point Iteration
 - [`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
   : Starting Positions for a Break-Point Term
+- [`seg_reheat()`](https://statmodels7.github.io/modelterms7/reference/seg_reheat.md)
+  : Reset a Break-Point Term's Scaling Schedule
+- [`seg_relocate()`](https://statmodels7.github.io/modelterms7/reference/seg_relocate.md)
+  : Move a Break-Point Term to Given Positions
+- [`seg_polish()`](https://statmodels7.github.io/modelterms7/reference/seg_polish.md)
+  : Polish a Break-Point Term's Positions on the Exact Profile
+- [`seg_profile_rss()`](https://statmodels7.github.io/modelterms7/reference/seg_profile_rss.md)
+  : The Exact Profile of a Break-Point Term at Its Positions
 
 ## Structural terms
 

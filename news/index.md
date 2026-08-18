@@ -1,5 +1,64 @@
 # Changelog
 
+## modelterms7 0.54.0
+
+- New generic
+  [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md):
+  whether a term’s design block is the exact derivative of its
+  contribution in its own coefficients (`TRUE`, the base method and
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)’s
+  case) or a working linearization with a frozen weight
+  ([`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)).
+  It is what a fitting layer routes on: a Jacobian block licenses a
+  Gauss-Newton step inside the model’s own objective, a frozen one
+  belongs to the fixed-point iteration of Fasola, Muggeo and Kuchenhoff
+  (2018), which is not a descent method on that objective and stalls
+  under a sufficient-decrease line search.
+
+- [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
+  on a break-point term relabels crossed lineages: when the implied
+  positions come out of order, the (change, level, position) triples are
+  permuted so the positions are ascending, each carrying its own scaling
+  factor and direction – what `segmented` does at every iteration. Two
+  break-points that cross have exchanged roles, and left alone they
+  chase the same feature until the block collapses onto a collision
+  (measured on three break-points: psi = (-0.67, 0.50, -0.48) from a
+  poor start). The contribution is a sum over the break-points, so
+  relabeling moves no value; the coefficients the term stores are the
+  relabeled ones, and a caller continues from those. A term whose
+  per-break-point coefficients carry a development is left alone.
+
+- [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  take `n_boot`, how many bootstrap restarts (Wood 2001) the fitting
+  layer runs after the iteration first converges – `segmented`’s own
+  default device, and the default here is its 10. The term declares the
+  value; running the restarts belongs to the fitting layer, as with a
+  penalty’s hyperparameters. 0 disables.
+
+- The operations a restarting loop runs on:
+  [`seg_reheat()`](https://statmodels7.github.io/modelterms7/reference/seg_reheat.md)
+  puts the scaling schedule back at `c0` with the directions and step
+  record cleared – the schedule only tightens, so an iteration resumed
+  from a converged fit inherits factors at their floor and cannot travel
+  (measured: restarts without the reset returned the incumbent unchanged
+  ten times out of ten);
+  [`seg_relocate()`](https://statmodels7.github.io/modelterms7/reference/seg_relocate.md)
+  places the break-points at given positions with the changes kept and
+  the block rebuilt, the read-off returning exactly the positions given;
+  [`seg_polish()`](https://statmodels7.github.io/modelterms7/reference/seg_polish.md)
+  is coordinate descent over the positions on the exact profile, least
+  squares at fixed positions being an ordinary linear model, optionally
+  weighted so a bootstrap resample’s profile is swept the same way; and
+  [`seg_profile_rss()`](https://statmodels7.github.io/modelterms7/reference/seg_profile_rss.md)
+  reads that profile at the current positions, which is what lets two
+  configurations be compared at the cost of two linear fits rather than
+  two model fits.
+
 ## modelterms7 0.53.0
 
 - [`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)

@@ -66,7 +66,11 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/s.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/scad.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/seg.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/seg_polish.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/seg_profile_rss.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/seg_psi.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/seg_reheat.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/seg_relocate.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/seg_start.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/seg_step.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/smooth_hyper.html</loc></url>
@@ -92,6 +96,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_hessian.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_hyper.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_is_built.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_level_design.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_level_design.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_level_param.GasTerm.html</loc></url>
