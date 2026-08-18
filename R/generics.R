@@ -265,7 +265,18 @@ S7::method(term_npar, structural_term) <- function(term, ...) {
 #' records for a structural one: only the term knows what a coefficient of
 #' zero means for the block it builds.
 #'
+#' \code{target} is the response carried onto the scale of the predictor the
+#' term contributes to, which is what a term needs to estimate parameters of
+#' its own from the data and is the one thing it cannot work out for itself:
+#' the term knows its formula and its charts, the fitting layer knows the
+#' distribution, the link and the equation. It is optional, and a term that
+#' has no use for it ignores it, so the default is the behaviour every term
+#' had before it existed.
+#'
 #' @param term A built term (see \code{\link{term_build}}).
+#' @param target Optional numeric vector, one value per observation: the
+#'   response on the scale of the predictor. \code{\link{nl}} uses it to
+#'   estimate its own parameters; every other term ignores it.
 #' @param ... Passed to methods.
 #'
 #' @return A numeric vector of length \code{\link{term_npar}}.
@@ -278,9 +289,9 @@ S7::method(term_npar, structural_term) <- function(term, ...) {
 #' @seealso \code{\link{term_start}}, \code{\link{term_refresh}}
 #' @export
 term_coef_start <- S7::new_generic("term_coef_start", "term",
-  function(term, ...) S7::S7_dispatch())
+  function(term, target = NULL, ...) S7::S7_dispatch())
 
-S7::method(term_coef_start, model_term) <- function(term, ...) {
+S7::method(term_coef_start, model_term) <- function(term, target = NULL, ...) {
   numeric(term_npar(term))
 }
 

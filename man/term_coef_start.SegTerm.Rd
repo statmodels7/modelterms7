@@ -6,6 +6,9 @@
 \arguments{
 \item{term}{A built \code{\link{SegTerm}}.}
 
+\item{target}{Unused: a break-point term already reads the covariate's
+interior quantiles at \code{\link{term_build}}.}
+
 \item{...}{Unused.}
 }
 \value{

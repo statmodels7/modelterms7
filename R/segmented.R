@@ -1518,10 +1518,12 @@ S7::method(print, SegTerm) <- function(x, ...) {
 #' continuous term's Jacobian column vanishes -- so a fitting layer that
 #' starts every coefficient at zero has to be told otherwise.
 #' @param term A built \code{\link{SegTerm}}.
+#' @param target Unused: a break-point term already reads the covariate's
+#'   interior quantiles at \code{\link{term_build}}.
 #' @param ... Unused.
 #' @return A numeric vector, one value per column of the block.
 #' @keywords internal
-S7::method(term_coef_start, SegTerm) <- function(term, ...) {
+S7::method(term_coef_start, SegTerm) <- function(term, target = NULL, ...) {
   .assert_built(term)
   term@blueprint$coef
 }

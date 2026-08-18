@@ -339,3 +339,132 @@ test_that("the block's derivative along a direction is the contraction's adjoint
                      c(3, 0.7))
   expect_error(term_block_deriv(tm, c(3, 0.7), v = 1), "length 2")
 })
+
+
+# ---------------------------------------------------------------------------
+# term_coef_start(target =): a nonlinear term estimating its own parameters
+# ---------------------------------------------------------------------------
+
+nl_logistic_data <- function(seed = 456, ni = 30, nt = 20) {
+  set.seed(seed)
+  u1 <- stats::rnorm(ni, 0, 5); u2 <- stats::rnorm(ni, 0, 1.2)
+  u3 <- stats::rnorm(ni, 0, 0.3)
+  d <- data.frame(id = factor(rep(seq_len(ni), each = nt)),
+                  time = rep(0:(nt - 1), ni))
+  p1 <- abs(50 + u1[d$id]); p2 <- abs(10 + u2[d$id]); p3 <- abs(2 + u3[d$id])
+  d$y <- p1 / (1 + exp(-(d$time - p2) / p3)) + stats::rnorm(nrow(d), 0, 1.4)
+  d
+}
+nl_logistic_links <- function() {
+  list(phi = linkfunctions7::log_link(),
+       theta = linkfunctions7::identity_link(),
+       sigma = linkfunctions7::log_link())
+}
+nl_theta_at <- function(b, coef) {
+  bp <- b@blueprint
+  vapply(bp$params, function(p) {
+    e <- if (is.null(bp$Z[[p]])) coef[bp$index[[p]]] else
+      as.numeric(as.matrix(bp$Z[[p]]) %*% coef[bp$index[[p]]])
+    linkfunctions7::linkinv(bp$links[[p]], e)[1L]
+  }, numeric(1))
+}
+
+test_that("without a target the start is what term_build computed", {
+  d <- nl_logistic_data()
+  b <- term_build(nl(~ phi / (1 + exp(-(time - theta) / sigma)),
+                     links = nl_logistic_links()), d)
+  expect_identical(term_coef_start(b), b@blueprint$coef)
+  expect_true(all(term_coef_start(b) == 0))
+})
+
+test_that("a target estimates the parameters the caller did not pin", {
+  d <- nl_logistic_data()
+  lk <- nl_logistic_links()
+  b <- term_build(nl(~ phi / (1 + exp(-(time - theta) / sigma)),
+                     phi ~ 1 + lasso(~id), theta ~ 1 + lasso(~id),
+                     sigma ~ 1 + lasso(~id), links = lk), d)
+  th <- nl_theta_at(b, term_coef_start(b, target = d$y))
+  expect_equal(unname(th[["phi"]]), 50, tolerance = 0.15)
+  expect_equal(unname(th[["theta"]]), 10, tolerance = 0.15)
+  expect_equal(unname(th[["sigma"]]), 2, tolerance = 0.25)
+  # and the value it produces is far closer to the response than zero is
+  sse_at <- function(v) sum((d$y - term_value(term_refresh(b, v), v))^2)
+  expect_lt(sse_at(term_coef_start(b, target = d$y)),
+            sse_at(term_coef_start(b)) / 10)
+})
+
+test_that("start= wins over a target, and pins only what it names", {
+  d <- nl_logistic_data()
+  lk <- nl_logistic_links()
+  b <- term_build(nl(~ phi / (1 + exp(-(time - theta) / sigma)),
+                     links = lk, start = list(phi = 50, theta = 10, sigma = 2)),
+                  d)
+  expect_identical(term_coef_start(b, target = d$y), b@blueprint$coef)
+
+  b2 <- term_build(nl(~ phi / (1 + exp(-(time - theta) / sigma)),
+                      links = lk, start = list(theta = 10)), d)
+  th <- nl_theta_at(b2, term_coef_start(b2, target = d$y))
+  expect_equal(unname(th[["theta"]]), 10)          # pinned, exactly
+  expect_equal(unname(th[["phi"]]), 50, tolerance = 0.15)
+  expect_equal(unname(th[["sigma"]]), 2, tolerance = 0.25)
+})
+
+test_that("the start is deterministic and ignores the caller's seed", {
+  d <- nl_logistic_data()
+  b <- term_build(nl(~ phi / (1 + exp(-(time - theta) / sigma)),
+                     links = nl_logistic_links()), d)
+  set.seed(1); a1 <- term_coef_start(b, target = d$y)
+  set.seed(99); a2 <- term_coef_start(b, target = d$y)
+  a3 <- term_coef_start(b, target = d$y)
+  expect_identical(a1, a2)
+  expect_identical(a1, a3)
+})
+
+test_that("a constant reaches every column of a full-rank development", {
+  set.seed(2)
+  d <- data.frame(x = seq(0.2, 5, length.out = 200),
+                  g = factor(rep(1:4, each = 50)))
+  d$y <- 3 * exp(-0.8 * d$x) + stats::rnorm(200, 0, 0.05)
+  lk <- list(a = linkfunctions7::log_link(), r = linkfunctions7::log_link())
+  b <- term_build(nl(~ a * exp(-r * x), a ~ 0 + lasso(~g), links = lk), d)
+  v <- term_coef_start(b, target = d$y)
+  ia <- grep("[.]a[.]", term_coef_names(b))
+  expect_length(ia, 4L)
+  # the development carries no intercept, so the constant is every column
+  expect_equal(max(v[ia]) - min(v[ia]), 0, tolerance = 1e-10)
+  expect_equal(exp(v[ia][1L]), 3, tolerance = 0.05)
+})
+
+test_that("an opaque function gets no symbolic separation and still works", {
+  set.seed(3)
+  d <- data.frame(x = seq(0.2, 5, length.out = 200))
+  d$y <- 3 * exp(-0.8 * d$x) + stats::rnorm(200, 0, 0.05)
+  lk <- list(a = linkfunctions7::log_link(), r = linkfunctions7::log_link())
+  fn <- function(x, theta) theta$a * exp(-theta$r * x)
+  b <- term_build(nl(fn, params = c("a", "r"), x = x, links = lk), d)
+  v <- term_coef_start(b, target = d$y)
+  expect_equal(exp(v[[1L]]), 3, tolerance = 0.05)
+  expect_equal(exp(v[[2L]]), 0.8, tolerance = 0.05)
+})
+
+test_that("a target that says nothing leaves the built coefficients", {
+  d <- nl_logistic_data()
+  b <- term_build(nl(~ phi / (1 + exp(-(time - theta) / sigma)),
+                     links = nl_logistic_links()), d)
+  expect_identical(term_coef_start(b, target = rep(NA_real_, nrow(d))),
+                   b@blueprint$coef)
+  expect_identical(term_coef_start(b, target = d$y[1:3]), b@blueprint$coef)
+})
+
+test_that("the affine parameters are read off the expression", {
+  expect_identical(.nl_affine_params(quote(a * exp(-r * x)), c("a", "r")), "a")
+  expect_identical(.nl_affine_params(quote(a + b * x), c("a", "b")),
+                   c("a", "b"))
+  expect_identical(
+    .nl_affine_params(quote(phi / (1 + exp(-(time - theta) / sigma))),
+                      c("phi", "theta", "sigma")), "phi")
+  # d0 and a are affine jointly, e and b are not
+  expect_setequal(
+    .nl_affine_params(quote(d0 + (a - d0) / (1 + exp(-(x - e) / b))),
+                      c("a", "d0", "e", "b")), c("a", "d0"))
+})

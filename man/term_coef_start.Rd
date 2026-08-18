@@ -4,10 +4,14 @@
 \alias{term_coef_start}
 \title{Where a Term's Own Coefficients Begin}
 \usage{
-term_coef_start(term, ...)
+term_coef_start(term, target = NULL, ...)
 }
 \arguments{
 \item{term}{A built term (see \code{\link{term_build}}).}
+
+\item{target}{Optional numeric vector, one value per observation: the
+response on the scale of the predictor. \code{\link{nl}} uses it to
+estimate its own parameters; every other term ignores it.}
 
 \item{...}{Passed to methods.}
 }
@@ -37,6 +41,14 @@ its own parameters carried through their links.
 The value belongs to the term for the reason \code{\link{term_start}}
 records for a structural one: only the term knows what a coefficient of
 zero means for the block it builds.
+
+\code{target} is the response carried onto the scale of the predictor the
+term contributes to, which is what a term needs to estimate parameters of
+its own from the data and is the one thing it cannot work out for itself:
+the term knows its formula and its charts, the fitting layer knows the
+distribution, the link and the equation. It is optional, and a term that
+has no use for it ignores it, so the default is the behaviour every term
+had before it existed.
 }
 \examples{
 dd <- data.frame(x = sort(runif(50, 0, 10)))
