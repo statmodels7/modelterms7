@@ -121,6 +121,7 @@ reference:
   - GasTerm
   - regime
   - RegimeTerm
+  - MarginalBreakTerm
   - term_params
   - term_links
   - term_start
@@ -132,6 +133,8 @@ reference:
   - term_third
   - term_hessian
   - term_posterior
+  - term_levels
+  - term_latent
   - term_level_param
   - term_readable
 - title: The formula layer

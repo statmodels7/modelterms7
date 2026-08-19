@@ -1,3 +1,72 @@
+# modelterms7 0.56.0
+
+* `seg()`, `jump()` and `jseg()` take `marginal = FALSE` (the default: the
+  construction exactly as before, to the bit) or `marginal = TRUE`, the
+  marginal break-point terms of `piano_marginal.txt`:
+  `kind(x, psi ~ random(~1 | g), marginal = TRUE)` treats each break-point
+  as a latent variable per group and integrates it out of the likelihood.
+  The prior is part of the likelihood -- its parameters are ordinary ones
+  estimated by maximum likelihood, `term_penalties()` declares nothing --
+  and the term is structural of the likelihood shape (`MarginalBreakTerm`,
+  the contract of `regime()`).
+
+* For `jump()` the integral is EXACT: the conditional is constant on the
+  product partition of the intervals between a group's ordered
+  observations, so the sum runs over the (n_i+1)^K cells with masses
+  closed in the prior's cdf and the conditional updated by one density
+  ratio per cell, one observation changing side with respect to one
+  break-point. Up to three break-points; with one, the prior may be any
+  continuous distributions7 family with its location fixed at zero
+  (`random(distrib = fixed(student_t1_distrib(), mu = 0))`), the masses
+  and their derivatives riding the cdf surface built for the censored
+  likelihoods.
+
+* For `seg()` and `jseg()` (one break-point, gaussian prior) the
+  conditional is smooth within an interval and the integral runs on a
+  fixed Gauss-Kronrod panel per interval
+  (`numericals7::gauss_kronrod15()`), interior nodes fixed points of the
+  data so the prior-parameter derivatives read the prior alone; the region
+  below the data, where the hinge keeps moving, is covered by panels that
+  follow the prior's bulk, whose node motion the jacobian carries, and the
+  region above it contributes its closed tail mass. Measured on the real
+  integrand, GK15 per interval reaches 3e-9 where a 4-node Gauss-Legendre
+  rule is off by 0.2 to 0.95 on the log-likelihood.
+
+* The contract: `term_loglik()` returns one-step predictive contributions
+  with the exact jacobian (numDeriv 1e-10 on the step kind, 2e-5 on the
+  quadrature kinds' scale), `term_posterior()` the component weights
+  Fisher's identity takes (side patterns for the step kind, node weights
+  for the continuous ones), `term_hessian()` the exact observed Hessian --
+  the one-break-point gaussian step differentiates the interval sum twice
+  and doubles as the control; every other configuration assembles the
+  component blocks exactly and takes the prior's rows from one central
+  stencil on the analytic full gradient, the licence the toolkit's
+  non-closed derivatives run on -- and `term_start()` reads a two-stage
+  exact profile off the target: pooled positions and coefficients with
+  per-group intercepts, greedy over a quantile grid with every local
+  minimum carried through a per-group one-position refinement and the
+  winner chosen on the final per-group-position fit. A per-group profile
+  with the full design was measured overfitting its own noise (a Poisson
+  panel's linear effect at -4.7 against a truth of 0.15), and the pooled
+  single-position profile alone picks the wrong basin (rss 103.6 at
+  c = 8.3 against 104.8 at the truth's 4.4).
+
+* New generics `term_levels()` (the shifts of a likelihood-shaped term's
+  mixture components -- a vector for `regime()` and the step kind, a
+  per-observation matrix for the quadrature kinds) and `term_latent()`
+  (posterior means and standard deviations of the latent break-points,
+  the truncated-prior moments through `numericals7::mills_ratio()` for
+  the gaussian and `truncated()` + `expectation()` for an explicit prior,
+  a moment the engine cannot deliver reported NA -- a heavy-tailed prior's
+  edge intervals keep no mean below one degree of freedom and no variance
+  below two).
+
+* `smoothed`, `c0` and `n_boot` are ignored with a message under the
+  marginal; a mixed fixed/random set of break-points, `by`, developments
+  of other coefficients, several break-points for the continuous kinds
+  and a non-gaussian prior beyond the single-break-point jump are
+  rejected with the reason.
+
 # modelterms7 0.55.0
 
 * `seg()`, `jump()` and `jseg()` take `smoothed = NULL` (the default: the

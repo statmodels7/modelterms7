@@ -12,6 +12,7 @@ jump(
   by = NULL,
   c0 = 0.05,
   smoothed = NULL,
+  marginal = FALSE,
   n_boot = 10,
   label = "jump"
 )
@@ -63,6 +64,12 @@ profile start and the \code{n_boot} restarts stay necessary; a
 smoothed fit from a bad start has been measured converging to an
 absurd local optimum while reporting success.}
 
+\item{marginal}{Whether the break-points are latent variables per group,
+integrated out of the likelihood exactly; see the section below.
+Requires the subformula \code{psi ~ random(~1 | g)}, whose grouping
+carries the latents. Defaults to \code{FALSE}, the construction
+documented above.}
+
 \item{n_boot}{How many bootstrap restarts the fitting layer runs after
 the iteration first converges (Wood 2001, the device \code{segmented}
 runs by default): each restart re-estimates on a bootstrap resample
@@ -79,7 +86,8 @@ names.}
 }
 \value{
 An object of class \code{\link{SegTerm}} (a specification; see
-  \code{\link{term_build}}).
+  \code{\link{term_build}}), or of class \code{\link{MarginalBreakTerm}}
+  with \code{marginal = TRUE}.
 }
 \description{
 A covariate whose effect is a constant that steps to a new value at
@@ -199,6 +207,37 @@ rather than on the development. A penalty on the changes of level
 themselves is \code{jump(x, npsi = 4, delta ~ 0 + lasso(~1))}, the
 \code{0 +} removing the subformula's own unpenalized intercept, which
 would otherwise be the same column twice.
+}
+
+\section{The marginal construction}{
+
+\code{jump(x, psi ~ random(~1 | g), marginal = TRUE)} treats each
+break-point as a latent variable per group, \eqn{\psi_{ik} = m_k +
+u_{ik}} with independent \eqn{u_{ik} \sim N(0, \tau_k^2)}, and
+integrates them out of the likelihood exactly. Within a cell of the
+product partition of the intervals between a group's ordered covariate
+values the conditional likelihood is constant, so the integral is a
+finite sum over the \eqn{(n_i+1)^K} cells, the masses closed in the
+normal cdf and the conditional updated by one density ratio per cell,
+one observation changing side with respect to one break-point. Up to
+three break-points are covered, the cell count pricing more.
+
+The prior is part of the likelihood: \eqn{(m_k, \tau_k, \delta_k)} are
+ordinary parameters estimated by maximum likelihood, with no penalty, no
+marginal criterion and no smoothing constant, and the term is structural
+(\code{\link{MarginalBreakTerm}}, the likelihood shape of the contract)
+rather than a design block. With one break-point the prior may be any
+continuous \pkg{distributions7} distribution with its location fixed at
+zero, through \code{random(distrib = )}: the interval masses are
+differences of its cdf and their derivatives come from the cdf surface
+built for the censored likelihoods, with that surface's own caveats
+(closed for the gaussian and, in location and scale, for the t).
+\code{smoothed} and \code{c0} do not apply and are ignored with a
+message; the posterior of each group's break-points is read by
+\code{\link{term_latent}}. On the step model the marginal is the route
+that resolves what a smoothed mode cannot -- the conditional is a step
+in the position, so a Laplace approximation has no curvature to read --
+and it is the robust route on non-gaussian families.
 }
 
 \examples{

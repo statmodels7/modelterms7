@@ -187,6 +187,21 @@ SegTerm <- S7::new_class(
 #'   profile start and the \code{n_boot} restarts stay necessary; a
 #'   smoothed fit from a bad start has been measured converging to an
 #'   absurd local optimum while reporting success.
+#' @param marginal Whether the break-point is a latent variable per group,
+#'   integrated out of the likelihood exactly, rather than an estimated
+#'   position. \code{FALSE}, the default, is the construction documented
+#'   above. \code{TRUE} requires the subformula \code{psi ~ random(~1 | g)}
+#'   and returns a structural term of the likelihood shape
+#'   (\code{\link{MarginalBreakTerm}}); see the section of
+#'   \code{\link{jump}}, whose step model is where the marginal buys the
+#'   most -- for a \code{seg} term the native random-changepoint fit
+#'   (\code{psi ~ random(~1 | g)} without \code{marginal}) is measured
+#'   equivalent and remains the recommended route, the marginal being the
+#'   exact-likelihood alternative. One break-point here: the conditional is
+#'   smooth in the position, so the integral runs on a Gauss-Kronrod panel
+#'   per interval between a group's ordered observations, and several
+#'   latents would need a product quadrature whose component count no
+#'   fitting layer can carry.
 #' @param n_boot How many bootstrap restarts the fitting layer runs after
 #'   the iteration first converges (Wood 2001, the device \code{segmented}
 #'   runs by default): each restart re-estimates on a bootstrap resample
@@ -229,7 +244,14 @@ SegTerm <- S7::new_class(
 #'   \code{\link{seg_start}}, \code{\link{seg_step}}, \code{\link{nl}}
 #' @export
 seg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
-                smoothed = NULL, n_boot = 10, label = "seg") {
+                smoothed = NULL, marginal = FALSE, n_boot = 10,
+                label = "seg") {
+  .seg_check_marginal(marginal)
+  if (marginal) {
+    return(.marg_spec("seg", substitute(x), npsi, psi, substitute(by),
+                      list(...), smoothed, FALSE, !missing(n_boot), label,
+                      linear = linear))
+  }
   # a continuous term has no scaling factor, its working block being
   # bounded already; the value is carried so that one blueprint serves the
   # three constructions
@@ -356,14 +378,49 @@ seg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 #' \code{0 +} removing the subformula's own unpenalized intercept, which
 #' would otherwise be the same column twice.
 #'
+#' @section The marginal construction:
+#' \code{jump(x, psi ~ random(~1 | g), marginal = TRUE)} treats each
+#' break-point as a latent variable per group, \eqn{\psi_{ik} = m_k +
+#' u_{ik}} with independent \eqn{u_{ik} \sim N(0, \tau_k^2)}, and
+#' integrates them out of the likelihood exactly. Within a cell of the
+#' product partition of the intervals between a group's ordered covariate
+#' values the conditional likelihood is constant, so the integral is a
+#' finite sum over the \eqn{(n_i+1)^K} cells, the masses closed in the
+#' normal cdf and the conditional updated by one density ratio per cell,
+#' one observation changing side with respect to one break-point. Up to
+#' three break-points are covered, the cell count pricing more.
+#'
+#' The prior is part of the likelihood: \eqn{(m_k, \tau_k, \delta_k)} are
+#' ordinary parameters estimated by maximum likelihood, with no penalty, no
+#' marginal criterion and no smoothing constant, and the term is structural
+#' (\code{\link{MarginalBreakTerm}}, the likelihood shape of the contract)
+#' rather than a design block. With one break-point the prior may be any
+#' continuous \pkg{distributions7} distribution with its location fixed at
+#' zero, through \code{random(distrib = )}: the interval masses are
+#' differences of its cdf and their derivatives come from the cdf surface
+#' built for the censored likelihoods, with that surface's own caveats
+#' (closed for the gaussian and, in location and scale, for the t).
+#' \code{smoothed} and \code{c0} do not apply and are ignored with a
+#' message; the posterior of each group's break-points is read by
+#' \code{\link{term_latent}}. On the step model the marginal is the route
+#' that resolves what a smoothed mode cannot -- the conditional is a step
+#' in the position, so a Laplace approximation has no curvature to read --
+#' and it is the robust route on non-gaussian families.
+#'
 #' @inheritParams seg
+#' @param marginal Whether the break-points are latent variables per group,
+#'   integrated out of the likelihood exactly; see the section below.
+#'   Requires the subformula \code{psi ~ random(~1 | g)}, whose grouping
+#'   carries the latents. Defaults to \code{FALSE}, the construction
+#'   documented above.
 #' @param c0 The starting value of the scaling factor that separates the
 #'   observations from the break-point, as a fraction of the distance to
 #'   the ends of the range. Defaults to \code{0.05}, the value
 #'   \cite{fasola2018} recommend; see Details.
 #'
 #' @return An object of class \code{\link{SegTerm}} (a specification; see
-#'   \code{\link{term_build}}).
+#'   \code{\link{term_build}}), or of class \code{\link{MarginalBreakTerm}}
+#'   with \code{marginal = TRUE}.
 #'
 #' @references
 #' Fasola, S., Muggeo, V. M. R. and Kuchenhoff, H. (2018). A heuristic,
@@ -383,7 +440,14 @@ seg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 #'   \code{\link{seg_start}}, \code{\link{seg_step}}
 #' @export
 jump <- function(x, ..., npsi = 1, psi = NULL, by = NULL, c0 = 0.05,
-                 smoothed = NULL, n_boot = 10, label = "jump") {
+                 smoothed = NULL, marginal = FALSE, n_boot = 10,
+                 label = "jump") {
+  .seg_check_marginal(marginal)
+  if (marginal) {
+    return(.marg_spec("jump", substitute(x), npsi, psi, substitute(by),
+                      list(...), smoothed, !missing(c0), !missing(n_boot),
+                      label, linear = FALSE))
+  }
   if (!is.null(smoothed) && !missing(c0)) {
     message(paste("'c0' is the scaling schedule of the working",
                   "parametrization, and a smoothed term has none:",
@@ -467,11 +531,22 @@ jump <- function(x, ..., npsi = 1, psi = NULL, by = NULL, c0 = 0.05,
 #' level passes near zero mid-iteration, which on a joint model it
 #' routinely does; it is rejected rather than shipped diverging.
 #'
+#' @section The marginal construction:
+#' \code{jseg(x, psi ~ random(~1 | g), marginal = TRUE)} integrates a
+#' latent break-point per group out of the likelihood exactly, on the
+#' Gauss-Kronrod panels of \code{\link{seg}}'s marginal with the change of
+#' level entering each interval's conditional as a constant. On gaussian
+#' data the mode-based routes are measured equivalent; on non-gaussian
+#' families the marginal is the robust one, the measured comparison on a
+#' Poisson panel recovering the per-group positions where the smoothed
+#' modes lose them.
+#'
 #' @inheritParams seg
 #' @inheritParams jump
 #'
 #' @return An object of class \code{\link{SegTerm}} (a specification; see
-#'   \code{\link{term_build}}).
+#'   \code{\link{term_build}}), or of class \code{\link{MarginalBreakTerm}}
+#'   with \code{marginal = TRUE}.
 #'
 #' @references
 #' Muggeo, V. M. R. (2003). Estimating regression models with unknown
@@ -494,7 +569,14 @@ jump <- function(x, ..., npsi = 1, psi = NULL, by = NULL, c0 = 0.05,
 #'   \code{\link{seg_start}}, \code{\link{seg_step}}
 #' @export
 jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
-                 c0 = 0.05, smoothed = NULL, n_boot = 10, label = "jseg") {
+                 c0 = 0.05, smoothed = NULL, marginal = FALSE, n_boot = 10,
+                 label = "jseg") {
+  .seg_check_marginal(marginal)
+  if (marginal) {
+    return(.marg_spec("jseg", substitute(x), npsi, psi, substitute(by),
+                      list(...), smoothed, !missing(c0), !missing(n_boot),
+                      label, linear = linear))
+  }
   if (!is.null(smoothed) && !missing(c0)) {
     message(paste("'c0' is the scaling schedule of the working",
                   "parametrization, and a smoothed term has none:",
@@ -503,6 +585,13 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   .seg_spec("jseg", substitute(x), npsi, psi, linear, c0, n_boot, label,
             list(...), .seg_by_formula(substitute(by), parent.frame()),
             smoothed)
+}
+
+.seg_check_marginal <- function(marginal) {
+  if (!is.logical(marginal) || length(marginal) != 1L || is.na(marginal)) {
+    stop("'marginal' must be TRUE or FALSE.", call. = FALSE)
+  }
+  invisible(NULL)
 }
 
 # `by` is a one-sided formula and not a variable: the shorthand it stands

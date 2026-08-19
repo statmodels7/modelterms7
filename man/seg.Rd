@@ -12,6 +12,7 @@ seg(
   by = NULL,
   linear = TRUE,
   smoothed = NULL,
+  marginal = FALSE,
   n_boot = 10,
   label = "seg"
 )
@@ -60,6 +61,22 @@ smoothing rounds the local optima, it does not remove them -- so the
 profile start and the \code{n_boot} restarts stay necessary; a
 smoothed fit from a bad start has been measured converging to an
 absurd local optimum while reporting success.}
+
+\item{marginal}{Whether the break-point is a latent variable per group,
+integrated out of the likelihood exactly, rather than an estimated
+position. \code{FALSE}, the default, is the construction documented
+above. \code{TRUE} requires the subformula \code{psi ~ random(~1 | g)}
+and returns a structural term of the likelihood shape
+(\code{\link{MarginalBreakTerm}}); see the section of
+\code{\link{jump}}, whose step model is where the marginal buys the
+most -- for a \code{seg} term the native random-changepoint fit
+(\code{psi ~ random(~1 | g)} without \code{marginal}) is measured
+equivalent and remains the recommended route, the marginal being the
+exact-likelihood alternative. One break-point here: the conditional is
+smooth in the position, so the integral runs on a Gauss-Kronrod panel
+per interval between a group's ordered observations, and several
+latents would need a product quadrature whose component count no
+fitting layer can carry.}
 
 \item{n_boot}{How many bootstrap restarts the fitting layer runs after
 the iteration first converges (Wood 2001, the device \code{segmented}

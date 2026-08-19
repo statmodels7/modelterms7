@@ -13,6 +13,7 @@ jseg(
   linear = TRUE,
   c0 = 0.05,
   smoothed = NULL,
+  marginal = FALSE,
   n_boot = 10,
   label = "jseg"
 )
@@ -67,6 +68,22 @@ profile start and the \code{n_boot} restarts stay necessary; a
 smoothed fit from a bad start has been measured converging to an
 absurd local optimum while reporting success.}
 
+\item{marginal}{Whether the break-point is a latent variable per group,
+integrated out of the likelihood exactly, rather than an estimated
+position. \code{FALSE}, the default, is the construction documented
+above. \code{TRUE} requires the subformula \code{psi ~ random(~1 | g)}
+and returns a structural term of the likelihood shape
+(\code{\link{MarginalBreakTerm}}); see the section of
+\code{\link{jump}}, whose step model is where the marginal buys the
+most -- for a \code{seg} term the native random-changepoint fit
+(\code{psi ~ random(~1 | g)} without \code{marginal}) is measured
+equivalent and remains the recommended route, the marginal being the
+exact-likelihood alternative. One break-point here: the conditional is
+smooth in the position, so the integral runs on a Gauss-Kronrod panel
+per interval between a group's ordered observations, and several
+latents would need a product quadrature whose component count no
+fitting layer can carry.}
+
 \item{n_boot}{How many bootstrap restarts the fitting layer runs after
 the iteration first converges (Wood 2001, the device \code{segmented}
 runs by default): each restart re-estimates on a bootstrap resample
@@ -83,7 +100,8 @@ names.}
 }
 \value{
 An object of class \code{\link{SegTerm}} (a specification; see
-  \code{\link{term_build}}).
+  \code{\link{term_build}}), or of class \code{\link{MarginalBreakTerm}}
+  with \code{marginal = TRUE}.
 }
 \description{
 A covariate whose slope \emph{and} level both change at \eqn{K}
@@ -158,6 +176,18 @@ independent set of everything per level and a development of
 componentwise reading that would remain diverges whenever a change of
 level passes near zero mid-iteration, which on a joint model it
 routinely does; it is rejected rather than shipped diverging.
+}
+
+\section{The marginal construction}{
+
+\code{jseg(x, psi ~ random(~1 | g), marginal = TRUE)} integrates a
+latent break-point per group out of the likelihood exactly, on the
+Gauss-Kronrod panels of \code{\link{seg}}'s marginal with the change of
+level entering each interval's conditional as a constant. On gaussian
+data the mode-based routes are measured equivalent; on non-gaussian
+families the marginal is the robust one, the measured comparison on a
+Poisson panel recovering the per-group positions where the smoothed
+modes lose them.
 }
 
 \examples{
