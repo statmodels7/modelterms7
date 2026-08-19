@@ -26,8 +26,8 @@ test_that("the constructor takes the psi ~ random subformula and nothing else", 
   expect_identical(term_params(tm), c("m1", "tau1", "delta1"))
 
   expect_error(jump(x, marginal = TRUE), "requires the break-point")
-  expect_error(jump(x, psi ~ random(~1 | id), npsi = 4, marginal = TRUE),
-               "up to three")
+  expect_error(jump(x, psi ~ random(~1 | id), npsi = 9, marginal = TRUE),
+               "up to eight")
   expect_error(seg(x, psi ~ random(~1 | id), npsi = 2, marginal = TRUE),
                "one break-point")
   expect_error(jump(x, delta ~ id, psi ~ random(~1 | id), marginal = TRUE),
@@ -510,3 +510,74 @@ test_that("a t prior's masses and derivatives ride the cdf surface", {
   expect_lt(max(abs(Hn - oh$hessian)), 5e-3 * max(abs(Hn)))
 })
 
+
+test_that("three latent break-points match the bare-loop cell sum", {
+  skip_if_not_installed("numDeriv")
+  set.seed(71)
+  mI <- 2L
+  nI <- 6L
+  id <- rep(seq_len(mI), each = nI)
+  x <- as.numeric(replicate(mI, sort(runif(nI, 0, 10))))
+  y <- 1 + 1.5 * (x >= 3) - 1 * (x >= 6) + 2 * (x >= 8.5) +
+    rnorm(mI * nI, 0, 0.4)
+  dd <- data.frame(id = id, x = x, y = y)
+  tm <- term_build(jump(x, psi ~ random(~1 | id), npsi = 3, marginal = TRUE),
+                   dd)
+  cb <- marg_cb(dd)
+  eta <- rep(1, nrow(dd))
+  ms <- c(3, 6, 8.5)
+  ts <- c(0.5, 0.4, 0.5)
+  ds <- c(1.5, -1, 2)
+  psi <- list(m1 = ms[1], tau1 = ts[1], m2 = ms[2], tau2 = ts[2],
+              m3 = ms[3], tau3 = ts[3],
+              delta1 = ds[1], delta2 = ds[2], delta3 = ds[3])
+  out <- term_loglik(tm, eta, dd$y, cb$ld, cb$sc, psi)
+
+  # the independent route: bare loops over the (n+1)^3 cells, masses as
+  # direct cdf differences and the conditional evaluated from scratch
+  brute <- 0
+  for (g in unique(dd$id)) {
+    r <- which(dd$id == g)
+    xs <- sort(dd$x[r])
+    b <- c(-Inf, xs, Inf)
+    J <- length(b) - 1L
+    parts <- numeric(0)
+    for (j1 in seq_len(J)) for (j2 in seq_len(J)) for (j3 in seq_len(J)) {
+      lm <- 0
+      for (kk in 1:3) {
+        jj <- c(j1, j2, j3)[kk]
+        mss <- pnorm((b[jj + 1] - ms[kk]) / ts[kk]) -
+          pnorm((b[jj] - ms[kk]) / ts[kk])
+        lm <- lm + log(mss)
+      }
+      if (!is.finite(lm)) next
+      pt <- vapply(c(j1, j2, j3), function(jj) {
+        if (jj == 1L) xs[1] - 1 else if (jj == J) xs[length(xs)] + 1 else
+          (b[jj] + b[jj + 1]) / 2
+      }, numeric(1))
+      lc <- sum(dnorm(dd$y[r],
+                      eta[r] + ds[1] * (dd$x[r] >= pt[1]) +
+                        ds[2] * (dd$x[r] >= pt[2]) +
+                        ds[3] * (dd$x[r] >= pt[3]), 0.4, log = TRUE))
+      parts <- c(parts, lm + lc)
+    }
+    mx <- max(parts)
+    brute <- brute + mx + log(sum(exp(parts - mx)))
+  }
+  expect_equal(sum(out$loglik), brute, tolerance = 1e-8)
+
+  v0 <- c(ms[1], ts[1], ms[2], ts[2], ms[3], ts[3], ds)
+  J3 <- numDeriv::jacobian(function(v)
+    term_loglik(tm, eta, dd$y, cb$ld, cb$sc,
+                list(m1 = v[1], tau1 = v[2], m2 = v[3], tau2 = v[4],
+                     m3 = v[5], tau3 = v[6], delta1 = v[7], delta2 = v[8],
+                     delta3 = v[9]))$loglik, v0)
+  expect_lt(max(abs(J3 - out$jacobian)), 1e-6 * max(1, max(abs(J3))))
+
+  # the flip posteriors are probabilities coordinate by coordinate
+  P <- term_posterior(tm, eta, dd$y, cb$ld, psi)
+  expect_equal(rowSums(P), rep(1, nrow(dd)), tolerance = 1e-10)
+  lat <- term_latent(tm, eta, dd$y, cb$ld, psi)
+  expect_identical(nrow(lat), 6L)
+  expect_true(all(is.finite(lat$mean)))
+})

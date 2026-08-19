@@ -27,10 +27,14 @@ parameters on the parameter scale.
 }
 \details{
 For the step kind the conditional is constant on the product partition
-of the intervals between a group's ordered observations, so the
-integral over the latents is a finite sum: masses are differences of
-the prior's cdf and the conditional is updated by one density ratio per
-cell, one observation changing side with respect to one break-point.
+of the intervals between a group's ordered observations, and the exact
+sum over it is taken by the forward recursion of the side chain: the
+monotone process of active break-points is a hidden Markov chain on the
+\eqn{2^K} side patterns whose transition factors over the coordinates,
+each flip weighted by its interval's prior mass, so the cost is
+\eqn{n K 2^K} rather than the \eqn{(n+1)^K} of the cells. The
+derivatives ride the same recursion: the masses' in the prior's
+parameters, the emissions' in the changes of level.
 For the continuous kinds the conditional is smooth within an interval
 and the integral runs on a fixed Gauss-Kronrod panel per interval
 (\code{\link[numericals7]{gauss_kronrod15}}), the interior nodes fixed

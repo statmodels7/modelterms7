@@ -194,11 +194,12 @@ MarginalBreakTerm <- S7::new_class(
     stop("'npsi' must be a single integer of at least 1.", call. = FALSE)
   }
   npsi <- as.integer(npsi)
-  if (kind == "jump" && npsi > 3L) {
-    stop(paste("marginal = TRUE covers up to three break-points: the exact",
-               "sum runs over the product partition of the intervals, whose",
-               "(n+1)^K cells grow past what one evaluation can afford."),
-         call. = FALSE)
+  if (kind == "jump" && npsi > 8L) {
+    stop(paste("marginal = TRUE covers up to eight break-points: the side",
+               "chain's forward recursion costs n K 2^K, which stays cheap,",
+               "but a fitting layer reads the posterior over the 2^K side",
+               "patterns and evaluates the family once per pattern, which",
+               "past 256 components no longer is."), call. = FALSE)
   }
   if (kind != "jump" && npsi > 1L) {
     stop(sprintf(paste("marginal = TRUE covers one break-point for a %s",
@@ -520,37 +521,173 @@ S7::method(term_build, MarginalBreakTerm) <- function(term, data, ...) {
 }
 
 # ---------------------------------------------------------------------------
-# The step kind: cells. With K latent positions the conditional is constant
-# on the product partition of each coordinate's intervals, so the marginal
-# is an exact sum over (n+1)^K cells per group. The cells live in a K-array;
-# one observation of sorted rank r is on the shifted side of break-point k
-# exactly in the cells whose k-th index is at most r.
+# The step kind. With K latent positions the conditional is constant on the
+# product partition of each coordinate's intervals -- (n+1)^K cells per
+# group -- but the sum is never taken over the cells: the side process
+# S_t = {k : psi_k <= x_(t)} over the SORTED observations is monotone on
+# the subset lattice with independent coordinates, so it is a hidden
+# Markov chain on the 2^K side patterns whose transition factors over the
+# coordinates, and the forward recursion costs n K 2^K where the cell sum
+# costs (n+1)^K. A coordinate that flips at step t contributes its
+# interval's prior mass as the transition weight; one that never flips
+# contributes its upper-tail mass at the end, through the survival factor
+# of the final state.
 
-# sum_k vs[[k]][j_k] over the cell array
-.marg_outer_sum <- function(vs) {
-  A <- vs[[1L]]
-  if (length(vs) > 1L) for (k in 2L:length(vs)) A <- outer(A, vs[[k]], "+")
+# the per-coordinate interval masses with their derivatives on the
+# parameter scale, and the survivals the per-step totals read -- the
+# reverse cumulated masses, so the telescoping is exact by construction.
+# d2 adds the second derivatives, for the propagated Hessian.
+.marg_hmm_masses <- function(term, xs, v, d2 = FALSE) {
+  K <- term@npsi
+  ng <- length(xs)
+  J <- ng + 1L
+  pr <- .marg_jump_prior(term, xs, v)
+  out <- list(pcols = lapply(pr$dlm, colnames), ivs = pr$ivs, J = J)
+  out$M <- vapply(pr$lm, exp, numeric(J))
+  out$dM <- vector("list", K)
+  out$d2M <- if (d2) vector("list", K) else NULL
+  for (k in seq_len(K)) {
+    mass <- out$M[, k]
+    out$dM[[k]] <- mass * pr$dlm[[k]]
+    if (d2) {
+      npc <- ncol(pr$dlm[[k]])
+      A <- array(0, c(J, npc, npc))
+      if (is.null(term@prior)) {
+        iv <- .marg_intervals(xs, v[[paste0("m", k)]],
+                              v[[paste0("tau", k)]], d2 = TRUE)
+        # d2 mass = mass (d2 log mass + d log mass squared)
+        dl <- pr$dlm[[k]]
+        A[, 1L, 1L] <- mass * (iv$dmm + dl[, 1L]^2)
+        A[, 1L, 2L] <- mass * (iv$dmt + dl[, 1L] * dl[, 2L])
+        A[, 2L, 1L] <- A[, 1L, 2L]
+        A[, 2L, 2L] <- mass * (iv$dtt + dl[, 2L]^2)
+      } else {
+        A <- .marg_prior_d2mass(term@prior, xs, v)
+      }
+      out$d2M[[k]] <- A
+    }
+  }
+  # survivals over the steps: SV[t + 1, k] is the mass beyond x_(t), the
+  # reverse cumulated masses, with SV[1, ] = 1
+  out$SV <- apply(out$M, 2L, function(m) rev(cumsum(rev(m))))[-1L, ,
+                                                              drop = FALSE]
+  out$SV <- rbind(1, out$SV)
+  out$dSV <- lapply(seq_len(K), function(k) {
+    D <- apply(out$dM[[k]], 2L, function(m) rev(cumsum(rev(m))))
+    if (is.null(dim(D))) D <- matrix(D, nrow = J)
+    rbind(0, D[-1L, , drop = FALSE])
+  })
+  if (d2) {
+    out$d2SV <- lapply(seq_len(K), function(k) {
+      A <- out$d2M[[k]]
+      npc <- dim(A)[2L]
+      B <- array(0, c(J, npc, npc))
+      for (i in seq_len(npc)) {
+        for (j in seq_len(npc)) {
+          rc <- rev(cumsum(rev(A[, i, j])))
+          B[, i, j] <- c(0, rc[-1L])
+        }
+      }
+      B
+    })
+  }
+  out
+}
+
+# the second derivatives of an explicit prior's interval masses, from the
+# surfaces the censored likelihoods use: the position's through the
+# density's own response derivative, the mixed block through the density
+# times the score, and the prior's own through the cdf Hessian
+.marg_prior_d2mass <- function(prior, xs, v) {
+  b <- c(-Inf, xs, Inf)
+  nb <- length(b)
+  l <- b[-nb]
+  u <- b[-1L]
+  m <- v[["m1"]]
+  th <- stats::setNames(as.list(v[prior@params]), prior@params)
+  npc <- 1L + length(prior@params)
+  J <- length(l)
+  np <- length(prior@params)
+  pdfgy_at <- function(q) {
+    out <- numeric(length(q))
+    fin <- is.finite(q)
+    if (any(fin)) {
+      qq <- q[fin] - m
+      pd <- as.numeric(distributions7::distrib_pdf(prior, qq, th))
+      gy <- as.numeric(distributions7::distrib_grad_y(prior, qq, th))
+      out[fin] <- pd * gy
+    }
+    out
+  }
+  pdfg_at <- function(q) {
+    out <- matrix(0, length(q), np)
+    fin <- is.finite(q)
+    if (any(fin)) {
+      qq <- q[fin] - m
+      pd <- as.numeric(distributions7::distrib_pdf(prior, qq, th))
+      g <- distributions7::distrib_gradient(prior, qq, th)
+      for (j in seq_len(np)) {
+        out[fin, j] <- pd * rep_len(as.numeric(g[[prior@params[j]]]),
+                                    sum(fin))
+      }
+    }
+    out
+  }
+  hcdf_at <- function(q) {
+    out <- matrix(0, length(q), np * np)
+    fin <- is.finite(q)
+    if (any(fin)) {
+      qq <- q[fin] - m
+      h <- distributions7::distrib_hess_cdf(prior, qq, th,
+                                            lower.tail = TRUE, log = FALSE)
+      for (i in seq_len(np)) {
+        for (j in seq_len(np)) {
+          key <- paste(prior@params[sort(c(i, j))], collapse = "_")
+          out[fin, (i - 1L) * np + j] <- rep_len(as.numeric(h[[key]]),
+                                                 sum(fin))
+        }
+      }
+    }
+    out
+  }
+  A <- array(0, c(J, npc, npc))
+  # d2/dm2 through the density's response derivative at the endpoints
+  A[, 1L, 1L] <- -pdfgy_at(l) + pdfgy_at(u)
+  # mixed: the density times the prior's own score at the endpoints
+  fg_l <- pdfg_at(l)
+  fg_u <- pdfg_at(u)
+  for (j in seq_len(np)) {
+    A[, 1L, 1L + j] <- fg_l[, j] - fg_u[, j]
+    A[, 1L + j, 1L] <- A[, 1L, 1L + j]
+  }
+  # the prior's own block: cdf Hessian differences
+  H_l <- hcdf_at(l)
+  H_u <- hcdf_at(u)
+  for (i in seq_len(np)) {
+    for (j in seq_len(np)) {
+      A[, 1L + i, 1L + j] <- H_u[, (i - 1L) * np + j] -
+        H_l[, (i - 1L) * np + j]
+    }
+  }
   A
 }
 
-# the array of side patterns of one observation: entry sum_k 2^(k-1) *
-# 1(j_k <= r), used to index the 2^K per-pattern values
-.marg_pattern <- function(r, J, K) {
-  .marg_outer_sum(lapply(seq_len(K), function(k)
-    2^(k - 1L) * as.numeric(seq_len(J) <= r)))
+# the transition index sets of the side chain: for each coordinate, the
+# states without its bit and their partners with it
+.marg_hmm_idx <- function(K) {
+  bits <- .marg_bits(K, numeric(K))$bits
+  lapply(seq_len(K), function(k) {
+    i0 <- which(!bits[, k])
+    list(i0 = i0, i1 = i0 + 2^(k - 1L))
+  })
 }
 
-# the indicator of one coordinate's side, broadcast over the cells
-.marg_bit <- function(r, J, K, k) {
-  vs <- rep(list(numeric(J)), K)
-  vs[[k]] <- as.numeric(seq_len(J) <= r)
-  .marg_outer_sum(vs)
-}
-
-# marginal sums of a cell array along one coordinate
-.marg_margin <- function(w, k) {
-  if (is.null(dim(w)) || length(dim(w)) == 1L) return(w)
-  apply(w, k, sum)
+# the survival product of every state at one step: the product over the
+# INACTIVE coordinates of their survivals
+.marg_hmm_sp <- function(idx, SVt, P) {
+  sp <- rep(1, P)
+  for (k in seq_along(idx)) sp[idx[[k]]$i0] <- sp[idx[[k]]$i0] * SVt[k]
+  sp
 }
 
 # the per-coordinate interval structures and the prior-parameter columns
@@ -592,10 +729,14 @@ S7::method(term_build, MarginalBreakTerm) <- function(term, data, ...) {
 #' parameters on the parameter scale.
 #' @details
 #' For the step kind the conditional is constant on the product partition
-#' of the intervals between a group's ordered observations, so the
-#' integral over the latents is a finite sum: masses are differences of
-#' the prior's cdf and the conditional is updated by one density ratio per
-#' cell, one observation changing side with respect to one break-point.
+#' of the intervals between a group's ordered observations, and the exact
+#' sum over it is taken by the forward recursion of the side chain: the
+#' monotone process of active break-points is a hidden Markov chain on the
+#' \eqn{2^K} side patterns whose transition factors over the coordinates,
+#' each flip weighted by its interval's prior mass, so the cost is
+#' \eqn{n K 2^K} rather than the \eqn{(n+1)^K} of the cells. The
+#' derivatives ride the same recursion: the masses' in the prior's
+#' parameters, the emissions' in the changes of level.
 #' For the continuous kinds the conditional is smooth within an interval
 #' and the integral runs on a fixed Gauss-Kronrod panel per interval
 #' (\code{\link[numericals7]{gauss_kronrod15}}), the interior nodes fixed
@@ -644,48 +785,73 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
     LD[, p] <- as.numeric(logdens(eta + pb$shifts[p], idx))
     SC[, p] <- as.numeric(score(eta + pb$shifts[p], idx))
   }
-  if (any(!is.finite(LD[, 1L])) && all(is.finite(y))) {
-    # a non-finite log-density is the callback's to explain; the sum only
-    # propagates it
-  }
+  tix <- .marg_hmm_idx(K)
+  dcol <- match(paste0("delta", seq_len(K)), nm)
 
   ll <- numeric(n)
   jac <- matrix(0, n, length(nm), dimnames = list(NULL, nm))
   for (rs in bp$groups) {
     ng <- length(rs)
-    J <- ng + 1L
-    pr <- .marg_jump_prior(term, bp$x[rs], v)
-    A <- .marg_outer_sum(pr$lm)
-    tot <- .marg_lse(A)
-    u <- exp(A - tot)
-    Dk <- rep(list(A * 0), K)
+    hm <- .marg_hmm_masses(term, bp$x[rs], v)
+    pcol <- lapply(hm$pcols, function(pc) match(pc, nm))
+
+    alpha <- numeric(P)
+    alpha[1L] <- 1
+    Dal <- matrix(0, P, length(nm))
+    ls <- 0
+    lnum_prev <- 0
+    rat_prev <- numeric(length(nm))
     for (t in seq_len(ng)) {
       row <- rs[t]
-      PA1 <- .marg_pattern(t, J, K) + 1
-      lf <- LD[row, ][PA1]
-      scv <- SC[row, ][PA1]
-      if (K > 1L) {
-        dim(lf) <- dim(A)
-        dim(scv) <- dim(A)
-      }
-      A2 <- A + lf
-      tot2 <- .marg_lse(A2)
-      w <- exp(A2 - tot2)
-      ll[row] <- tot2 - tot
+      # the transition: each coordinate's flip moves mass onto its bit,
+      # weighted by the interval's prior mass; the factors commute, so a
+      # sequential in-place application is the product
       for (k in seq_len(K)) {
-        bit <- .marg_bit(t, J, K, k)
-        D2 <- Dk[[k]] + scv * bit
-        jac[row, paste0("delta", k)] <- sum(w * D2) - sum(u * Dk[[k]])
-        Dk[[k]] <- D2
+        i0 <- tix[[k]]$i0
+        i1 <- tix[[k]]$i1
+        q <- hm$M[t, k]
+        Dal[i1, ] <- Dal[i1, ] + q * Dal[i0, ]
+        Dal[i1, pcol[[k]]] <- Dal[i1, pcol[[k]]] +
+          alpha[i0] %o% hm$dM[[k]][t, ]
+        alpha[i1] <- alpha[i1] + q * alpha[i0]
       }
-      for (k in seq_along(pr$dlm)) {
-        wm <- .marg_margin(w, k) - .marg_margin(u, k)
-        jac[row, colnames(pr$dlm[[k]])] <-
-          jac[row, colnames(pr$dlm[[k]])] + as.numeric(wm %*% pr$dlm[[k]])
+      # the emission: the state IS the side pattern, so the per-pattern
+      # log-density indexes directly
+      lf <- LD[row, ]
+      mx <- max(lf)
+      w <- exp(lf - mx)
+      ls <- ls + mx
+      alpha <- alpha * w
+      Dal <- Dal * w
+      for (k in seq_len(K)) {
+        Dal[, dcol[k]] <- Dal[, dcol[k]] + alpha * SC[row, ] * pb$bits[, k]
       }
-      A <- A2
-      tot <- tot2
-      u <- w
+      # the per-step total: every inactive coordinate carries its survival
+      sp <- .marg_hmm_sp(tix, hm$SV[t + 1L, ], P)
+      num <- sum(alpha * sp)
+      dnum <- as.numeric(crossprod(Dal, sp))
+      for (k in seq_len(K)) {
+        spk <- rep(1, P)
+        for (k2 in seq_len(K)) {
+          if (k2 == k) next
+          spk[tix[[k2]]$i0] <- spk[tix[[k2]]$i0] * hm$SV[t + 1L, k2]
+        }
+        a0 <- sum(alpha[tix[[k]]$i0] * spk[tix[[k]]$i0])
+        dnum[pcol[[k]]] <- dnum[pcol[[k]]] + a0 * hm$dSV[[k]][t + 1L, ]
+      }
+      lnum <- log(num) + ls
+      ll[row] <- lnum - lnum_prev
+      jac[row, ] <- dnum / num - rat_prev
+      lnum_prev <- lnum
+      rat_prev <- dnum / num
+      # a constant rescale keeps the state representable and moves no
+      # derivative
+      cs <- max(alpha)
+      if (cs > 0 && (cs > 1e100 || cs < 1e-100)) {
+        alpha <- alpha / cs
+        Dal <- Dal / cs
+        ls <- ls + log(cs)
+      }
     }
   }
   list(loglik = ll, jacobian = jac)
@@ -769,10 +935,34 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
   dpsi_t <- ifelse(is_edge, (1 - tfrac) * da_t, 0)
   # the node-motion part of the prior weight's derivative: d log phi/d psi
   dlphi_dpsi <- ifelse(is.finite(z), -z / tau, 0)
+  # The second derivatives of the log weight in (m, tau), node motion
+  # included: the motion is affine, so the chain rule closes at
+  # z = (psi(theta) - m)/tau and its own first two derivatives, plus the
+  # panel widths of the lower region, which scale with the moving limit,
+  # and the closed tail through the Mills ratio.
+  fin <- is.finite(z)
+  zf <- ifelse(fin, z, 0)
+  dzm <- (dpsi_m - 1) / tau
+  dzt <- (dpsi_t - zf) / tau
+  d2zmt <- -(dpsi_m - 1) / tau^2
+  d2ztt <- -2 * (dpsi_t - zf) / tau^2
+  alw_mm <- -dzm^2
+  alw_mt <- -dzm * dzt - zf * d2zmt
+  alw_tt <- -dzt^2 - zf * d2ztt + 1 / tau^2
+  denom <- pmax(x1 - a, .Machine$double.eps)
+  alw_mm <- alw_mm - is_edge * (da_m * da_m) / denom^2
+  alw_mt <- alw_mt - is_edge * (da_m * da_t) / denom^2
+  alw_tt <- alw_tt - is_edge * (da_t * da_t) / denom^2
+  i_t <- length(p)
+  lamp <- mr * (mr - zn)
+  alw_mm[i_t] <- -lamp / tau^2
+  alw_mt[i_t] <- -lamp * zn / tau^2 - mr / tau^2
+  alw_tt[i_t] <- -lamp * zn^2 / tau^2 - 2 * mr * zn / tau^2
   list(p = p, lw = lw, z = z,
        glw_m = glw_m + dlphi_dpsi * dpsi_m,
        glw_t = glw_t + dlphi_dpsi * dpsi_t,
-       dpsi_m = dpsi_m, dpsi_t = dpsi_t)
+       dpsi_m = dpsi_m, dpsi_t = dpsi_t,
+       alw_mm = alw_mm, alw_mt = alw_mt, alw_tt = alw_tt)
 }
 
 # the shift each node adds to each of the group's observations, and its
@@ -869,61 +1059,71 @@ S7::method(term_posterior, MarginalBreakTerm) <- function(term, eta, y,
   }
 }
 
-# cumulative sums of a cell array along every coordinate, for box sums by
-# inclusion-exclusion
-.marg_prefix <- function(A) {
-  d <- dim(A)
-  if (is.null(d)) return(cumsum(A))
-  K <- length(d)
-  for (k in seq_len(K)) {
-    A <- apply(A, setdiff(seq_len(K), k), cumsum)
-    # apply puts the cumulated coordinate first; rotate it back into place
-    A <- aperm(A, order(c(k, setdiff(seq_len(K), k))))
-  }
-  A
-}
-
-# the sum of a cell array over a box, from its prefix sums
-.marg_boxsum <- function(S, lo, hi) {
-  K <- length(lo)
-  tot <- 0
-  for (c0 in seq_len(2^K) - 1L) {
-    ix <- integer(K)
-    sgn <- 1
-    ok <- TRUE
-    for (k in seq_len(K)) {
-      take_lo <- bitwAnd(c0, 2^(k - 1L)) > 0
-      if (take_lo) {
-        ix[k] <- lo[k] - 1L
-        sgn <- -sgn
-        if (ix[k] < 1L) {
-          ok <- FALSE
-          break
-        }
-      } else {
-        ix[k] <- hi[k]
-      }
-    }
-    if (!ok) next
-    tot <- tot + sgn * S[matrix(ix, 1L)]
-  }
-  tot
-}
-
-# the final cell posterior of one group of the step kind
-.marg_jump_cells <- function(term, xg, rows, v, LD) {
-  ng <- length(rows)
-  J <- ng + 1L
-  K <- term@npsi
-  pr <- .marg_jump_prior(term, xg, v)
-  A <- .marg_outer_sum(pr$lm)
+# the plain forward of one group's side chain, storing the state after
+# every step; the per-step rescales are constants and live in a log-scale
+# vector
+.marg_hmm_forward <- function(hm, LD, rs, tix, K) {
+  ng <- length(rs)
+  P <- 2^K
+  A <- matrix(0, ng, P)
+  lsA <- numeric(ng)
+  alpha <- numeric(P)
+  alpha[1L] <- 1
+  ls <- 0
   for (t in seq_len(ng)) {
-    lf <- LD[rows[t], ][.marg_pattern(t, J, K) + 1]
-    if (K > 1L) dim(lf) <- dim(A)
-    A <- A + lf
+    for (k in seq_len(K)) {
+      i0 <- tix[[k]]$i0
+      i1 <- tix[[k]]$i1
+      alpha[i1] <- alpha[i1] + hm$M[t, k] * alpha[i0]
+    }
+    lf <- LD[rs[t], ]
+    mx <- max(lf)
+    alpha <- alpha * exp(lf - mx)
+    ls <- ls + mx
+    cs <- max(alpha)
+    if (cs > 0) {
+      alpha <- alpha / cs
+      ls <- ls + log(cs)
+    }
+    A[t, ] <- alpha
+    lsA[t] <- ls
   }
-  w <- exp(A - .marg_lse(A))
-  list(w = w, pr = pr, J = J)
+  list(A = A, lsA = lsA)
+}
+
+# the matching backward: beta_t is defined so that the likelihood is
+# sum_S alpha_t(S) beta_t(S) at every t, the final one the survival product
+.marg_hmm_backward <- function(hm, LD, rs, tix, K) {
+  ng <- length(rs)
+  P <- 2^K
+  B <- matrix(0, ng, P)
+  lsB <- numeric(ng)
+  beta <- .marg_hmm_sp(tix, hm$SV[ng + 1L, ], P)
+  ls <- 0
+  B[ng, ] <- beta
+  lsB[ng] <- 0
+  if (ng > 1L) {
+    for (t in seq.int(ng, 2L)) {
+      lf <- LD[rs[t], ]
+      mx <- max(lf)
+      tmp <- beta * exp(lf - mx)
+      ls <- ls + mx
+      for (k in seq_len(K)) {
+        i0 <- tix[[k]]$i0
+        i1 <- tix[[k]]$i1
+        tmp[i0] <- tmp[i0] + hm$M[t, k] * tmp[i1]
+      }
+      cs <- max(tmp)
+      if (cs > 0) {
+        tmp <- tmp / cs
+        ls <- ls + log(cs)
+      }
+      beta <- tmp
+      B[t - 1L, ] <- beta
+      lsB[t - 1L] <- ls
+    }
+  }
+  list(B = B, lsB = lsB)
 }
 
 .marg_jump_posterior <- function(term, eta, y, logdens, psi) {
@@ -938,34 +1138,71 @@ S7::method(term_posterior, MarginalBreakTerm) <- function(term, eta, y,
   for (p in seq_len(P)) {
     LD[, p] <- as.numeric(logdens(eta + pb$shifts[p], idx))
   }
+  tix <- .marg_hmm_idx(K)
   out <- matrix(0, n, P)
   for (rs in bp$groups) {
     ng <- length(rs)
-    cl <- .marg_jump_cells(term, bp$x[rs], rs, v, LD)
-    if (K == 1L) {
-      cw <- cumsum(cl$w)
-      for (t in seq_len(ng)) {
-        out[rs[t], 2L] <- cw[t]
-        out[rs[t], 1L] <- 1 - cw[t]
-      }
-    } else {
-      S <- .marg_prefix(cl$w)
-      J <- cl$J
-      for (t in seq_len(ng)) {
-        for (p in seq_len(P)) {
-          lo <- ifelse(pb$bits[p, ], 1L, t + 1L)
-          hi <- ifelse(pb$bits[p, ], t, J)
-          out[rs[t], p] <- if (any(lo > hi)) 0 else
-            .marg_boxsum(S, as.integer(lo), as.integer(hi))
-        }
-      }
+    hm <- .marg_hmm_masses(term, bp$x[rs], v)
+    fw <- .marg_hmm_forward(hm, LD, rs, tix, K)
+    bw <- .marg_hmm_backward(hm, LD, rs, tix, K)
+    # the emission at step t already sits in alpha_t, and beta_t carries
+    # everything after it, so the product is the state posterior; the
+    # observation's side pattern IS the state, and the scales cancel in
+    # the normalization
+    for (t in seq_len(ng)) {
+      w <- fw$A[t, ] * bw$B[t, ]
+      out[rs[t], ] <- w / sum(w)
     }
   }
-  # rounding in the box sums; the rows are probabilities by construction
-  out[out < 0] <- 0
-  sw <- rowSums(out)
-  out[sw > 0, ] <- out[sw > 0, , drop = FALSE] / sw[sw > 0]
   out
+}
+
+# the posterior of each coordinate's flip interval: the probability, given
+# the data, that the latent sits between two adjacent observations, read
+# off the forward-backward pair -- the numerator forces the coordinate to
+# flip at one step and lets everything else run
+.marg_hmm_flip <- function(term, rs, hm, LD, tix, K) {
+  ng <- length(rs)
+  P <- 2^K
+  J <- ng + 1L
+  fw <- .marg_hmm_forward(hm, LD, rs, tix, K)
+  bw <- .marg_hmm_backward(hm, LD, rs, tix, K)
+  logL <- log(sum(fw$A[ng, ] * bw$B[ng, ])) + fw$lsA[ng] + bw$lsB[ng]
+  wm <- matrix(0, J, K)
+  for (t in seq_len(ng)) {
+    a_prev <- if (t == 1L) {
+      z <- numeric(P)
+      z[1L] <- 1
+      z
+    } else fw$A[t - 1L, ]
+    ls_prev <- if (t == 1L) 0 else fw$lsA[t - 1L]
+    lf <- LD[rs[t], ]
+    mx <- max(lf)
+    w_t <- exp(lf - mx)
+    for (k in seq_len(K)) {
+      af <- numeric(P)
+      af[tix[[k]]$i1] <- hm$M[t, k] * a_prev[tix[[k]]$i0]
+      for (k2 in seq_len(K)) {
+        if (k2 == k) next
+        i0 <- tix[[k2]]$i0
+        i1 <- tix[[k2]]$i1
+        af[i1] <- af[i1] + hm$M[t, k2] * af[i0]
+      }
+      contrib <- sum(af * w_t * bw$B[t, ])
+      wm[t, k] <- contrib * exp(ls_prev + mx + bw$lsB[t] - logL)
+    }
+  }
+  # never flipping is the last interval: the final states without the
+  # coordinate, under the survival product they already carry
+  for (k in seq_len(K)) {
+    i0 <- tix[[k]]$i0
+    wm[J, k] <- sum(fw$A[ng, i0] * bw$B[ng, i0]) *
+      exp(fw$lsA[ng] + bw$lsB[ng] - logL)
+  }
+  wm[wm < 0] <- 0
+  sw <- colSums(wm)
+  for (k in seq_len(K)) if (sw[k] > 0) wm[, k] <- wm[, k] / sw[k]
+  wm
 }
 
 # the node posterior of the continuous kinds, with the shift matrix the
@@ -1066,12 +1303,14 @@ S7::method(term_latent, MarginalBreakTerm) <- function(term, eta, y, logdens,
     for (p in seq_len(P)) {
       LD[, p] <- as.numeric(logdens(eta + pb$shifts[p], idx))
     }
+    tix <- .marg_hmm_idx(K)
     for (g in seq_along(bp$groups)) {
       rs <- bp$groups[[g]]
-      cl <- .marg_jump_cells(term, bp$x[rs], rs, v, LD)
+      hm <- .marg_hmm_masses(term, bp$x[rs], v)
+      wm_all <- .marg_hmm_flip(term, rs, hm, LD, tix, K)
       for (k in seq_len(K)) {
-        wm <- .marg_margin(cl$w, k)
-        mo <- .marg_interval_moments(term, bp$x[rs], v, k, wm, cl$pr)
+        mo <- .marg_interval_moments(term, bp$x[rs], v, k, wm_all[, k],
+                                     list(ivs = hm$ivs))
         rows[[length(rows) + 1L]] <- data.frame(
           group = bp$labels[g], psi = k, mean = mo$mean, sd = mo$sd,
           stringsAsFactors = FALSE)
@@ -1421,112 +1660,17 @@ S7::method(term_start, MarginalBreakTerm) <- function(term, ...,
        ch = best$ch)
 }
 
-# ---------------------------------------------------------------------------
-# The observed Hessian. The step kind with one gaussian break-point carries
-# the fully propagated one, the interval sum differentiated twice; every
-# other configuration differences the analytic full gradient once, a single
-# central stencil on the analytic order below, which is the licence the
-# toolkit's non-closed derivatives already run on. The one-break-point
-# gaussian route doubles as the control: the two must agree, and a test
-# holds them to it.
-
-# the analytic gradient of the marginal log-likelihood in ALL of a caller's
-# unknowns, on the unconstrained scale. Only the level equation's static
-# predictor is moved by the term, so it is the one handed over; the other
-# equations enter through `grad`, read at the family's current parameters.
-.marg_grad_full <- function(term, eta, y, logdens, grad, zeta, seed, cols,
-                            level, w) {
-  bp <- term@blueprint
-  nm <- term_params(term)
-  links <- term_links(term)
-  v <- stats::setNames(vapply(nm, function(j)
-    linkfunctions7::linkinv(links[[j]], zeta[[j]]), numeric(1)), nm)
-  chain <- vapply(nm, function(j)
-    linkfunctions7::dlinkinv(links[[j]], zeta[[j]]), numeric(1))
-  psi <- as.list(v)
-  n <- bp$n
-  npar <- length(seed)
-  mm <- ncol(seed[[1L]])
-  gout <- numeric(mm)
-  own_g <- stats::setNames(numeric(length(nm)), nm)
-  idx <- seq_len(n)
-
-  if (term@kind == "jump") {
-    K <- term@npsi
-    P <- 2^K
-    pb <- .marg_bits(K, v[paste0("delta", seq_len(K))])
-    LD <- matrix(0, n, P)
-    G <- vector("list", P)
-    for (p in seq_len(P)) {
-      LD[, p] <- as.numeric(logdens(eta + pb$shifts[p], idx))
-      G[[p]] <- as.matrix(grad(eta + pb$shifts[p], idx))
-    }
-    gamma <- .marg_jump_posterior(term, eta, y, logdens, psi)
-    # the coefficient block by Fisher's identity, every predictor weighted
-    # by the pattern posterior
-    gv <- matrix(0, n, npar)
-    for (p in seq_len(P)) gv <- gv + gamma[, p] * G[[p]]
-    for (q in seq_len(npar)) {
-      gout <- gout + as.numeric(crossprod(seed[[q]], w * gv[, q]))
-    }
-    # the changes of level: the level equation's score where the pattern
-    # activates the break-point
-    for (k in seq_len(K)) {
-      s <- 0
-      for (p in seq_len(P)) {
-        if (pb$bits[p, k]) s <- s + sum(w * gamma[, p] * G[[p]][, level])
-      }
-      own_g[[paste0("delta", k)]] <- own_g[[paste0("delta", k)]] + s
-    }
-    # the prior's parameters: interval-posterior expectations of the mass
-    # derivatives, per group
-    for (g in seq_along(bp$groups)) {
-      rs <- bp$groups[[g]]
-      wi <- w[rs][1L]
-      cl <- .marg_jump_cells(term, bp$x[rs], rs, v, LD)
-      for (k in seq_along(cl$pr$dlm)) {
-        wm <- .marg_margin(cl$w, k)
-        contrib <- as.numeric(wm %*% cl$pr$dlm[[k]])
-        pc <- colnames(cl$pr$dlm[[k]])
-        own_g[pc] <- own_g[pc] + wi * contrib
-      }
-    }
-  } else {
-    ps <- .marg_seg_posterior(term, eta, y, logdens, psi)
-    for (st in ps$states) {
-      rs <- st$rs
-      wi <- w[rs][1L]
-      C <- length(st$w)
-      ng <- length(rs)
-      ei <- rep(eta[rs], C) + as.numeric(st$sh$shift)
-      ii <- rep(rs, C)
-      Gf <- as.matrix(grad(ei, ii))
-      # the coefficient block: per-observation node-weighted scores
-      for (q in seq_len(npar)) {
-        Gq <- matrix(Gf[, q], ng, C)
-        gvq <- as.numeric(Gq %*% st$w)
-        gout <- gout +
-          wi * as.numeric(crossprod(seed[[q]][rs, , drop = FALSE], gvq))
-      }
-      GL <- matrix(Gf[, level], ng, C)
-      own <- list(beta = if (term@linear) matrix(bp$x[rs], ng, C),
-                  gamma1 = st$sh$hinge,
-                  delta1 = if (term@kind == "jseg") st$sh$step)
-      for (p in names(own)) {
-        if (is.null(own[[p]])) next
-        own_g[[p]] <- own_g[[p]] + wi * sum(st$w * colSums(GL * own[[p]]))
-      }
-      cpsi <- colSums(GL * st$sh$dshift_dpsi)
-      own_g[["m1"]] <- own_g[["m1"]] +
-        wi * sum(st$w * (st$nd$glw_m + cpsi * st$nd$dpsi_m))
-      own_g[["tau1"]] <- own_g[["tau1"]] +
-        wi * sum(st$w * (st$nd$glw_t + cpsi * st$nd$dpsi_t))
-    }
-  }
-  # the term's own columns onto the unconstrained scale
-  gout[cols] <- gout[cols] + own_g * chain
-  gout
-}
+# The observed Hessian, analytic throughout. The step kind propagates first
+# and second derivatives through the side chain's forward recursion: the
+# transition weights carry the prior's interval masses, whose derivatives
+# are closed for the gaussian and come from the cdf surface for an explicit
+# prior, and the emissions carry the family's derivatives at the pattern
+# shifts. The continuous kinds differentiate the node sum twice, the node
+# motion of the panels below the data being AFFINE in the prior's
+# parameters, so the chain rule closes with no curvature term from the
+# nodes themselves. The one-break-point gaussian step keeps the interval-sum
+# route, which shares none of this arithmetic and is the twin the tests
+# hold the propagation to.
 
 #' @title Observed Hessian of a Marginal Break-Point Term
 #' @name term_hessian.MarginalBreakTerm
@@ -1535,14 +1679,16 @@ S7::method(term_start, MarginalBreakTerm) <- function(term, ...,
 #' caller's unknowns, the coefficients of every equation together with the
 #' term's own parameters on the unconstrained scale.
 #' @details
-#' The step kind with one gaussian break-point differentiates the interval
-#' sum twice, the second derivatives of the conditional collapsing into
-#' per-observation Hessians weighted by each side's posterior probability
-#' and the mass curvature closed in the normal density. Every other
-#' configuration differences the analytic full gradient once -- a single
-#' central stencil on the analytic order below, the licence the toolkit's
-#' non-closed derivatives run on -- and the one-break-point gaussian route
-#' is the control the tests hold it to.
+#' Analytic throughout. The step kind propagates first and second
+#' derivatives through the side chain's forward recursion, the prior's
+#' interval-mass derivatives closed for the gaussian and read off the cdf
+#' surface for an explicit prior (whose own degrees-of-freedom column
+#' carries that surface's documented single stencil, the one non-closed
+#' piece anywhere). The continuous kinds differentiate the node sum twice;
+#' the moving panels below the data are affine in the prior's parameters,
+#' so their motion enters the chain rule with no curvature of its own. The
+#' one-break-point gaussian step keeps the interval-sum route, independent
+#' arithmetic the tests hold the propagation to.
 #'
 #' The marginal likelihood of a group does not factorize over its
 #' observations, so an observation weight has a reading only when it is
@@ -1612,46 +1758,13 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
   }
 }
 
-# One central stencil per named column on the analytic full gradient: the
-# licence the toolkit's non-closed derivatives run on, one difference on the
-# analytic order below. Used for the rows the closed mass curvature does not
-# cover -- an explicit prior's parameters, and the node motion of the
-# quadrature constructions -- and only along the term's own columns, whose
-# perturbation the callbacks support in full.
-.marg_fd_rows <- function(H, term, eta, y, logdens, grad, zeta, seed, cols,
-                          level, w, which_own) {
-  nm <- term_params(term)
-  mm <- ncol(seed[[1L]])
-  u0 <- numeric(mm)
-  u0[cols] <- zeta
-  g_at <- function(u) {
-    z <- zeta
-    z[] <- u[cols]
-    .marg_grad_full(term, eta, y, logdens, grad, as.list(z), seed, cols,
-                    level, w)
-  }
-  for (p in which_own) {
-    d <- cols[match(p, nm)]
-    h <- numericals7::fd_step(u0[d], 1L)
-    up <- u0
-    um <- u0
-    up[d] <- up[d] + h
-    um[d] <- um[d] - h
-    col <- (g_at(up) - g_at(um)) / (2 * h)
-    H[, d] <- col
-    H[d, ] <- col
-  }
-  (H + t(H)) / 2
-}
-
-# The exact Hessian of the step kind with several break-points, or one
-# break-point under an explicit prior: the cell sum differentiated twice.
-# The conditional's second derivatives collapse into per-observation
-# Hessians weighted by the pattern posterior; the first-derivative products
-# run over the cells, whose per-unknown gradients are accumulated one
-# observation at a time; the gaussian masses' own curvature is closed and
-# separable across the coordinates, and an explicit prior's rows come from
-# one stencil on the analytic gradient.
+# The propagated Hessian of the step kind: the side chain's forward
+# recursion differentiated twice in the caller's unknowns. Transitions are
+# linear with the prior's interval masses as weights, emissions multiply by
+# the pattern density, and the survival products of the final states carry
+# the tails; each is differentiated by its own product rule, and the mass
+# and survival derivative columns are chained onto the unconstrained scale
+# before the propagation so the result needs no chart correction.
 .marg_jump_hessian <- function(term, eta, y, logdens, grad, hess, psi, seed,
                                cols, level, w) {
   bp <- term@blueprint
@@ -1674,12 +1787,8 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
     H2[[p]] <- array(as.numeric(hess(eta + pb$shifts[p], idx)),
                      c(n, npar, npar))
   }
-  gamma <- .marg_jump_posterior(term, eta, y, logdens, as.list(v))
-  chain <- vapply(nm, function(j)
-    linkfunctions7::dlinkinv(links[[j]],
-                             linkfunctions7::linkfun(links[[j]], v[[j]])),
-    numeric(1))
-
+  dcol <- vapply(seq_len(K), function(k)
+    cols[match(paste0("delta", k), nm)], integer(1))
   # per-pattern per-observation scores in the unknowns, the pattern's
   # active break-points adding the level score to their delta columns
   gm <- vector("list", P)
@@ -1687,119 +1796,160 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
     g0 <- matrix(0, n, mm)
     for (q in seq_len(npar)) g0 <- g0 + G[[p]][, q] * seed[[q]]
     for (k in seq_len(K)) {
-      if (pb$bits[p, k]) {
-        dc <- cols[match(paste0("delta", k), nm)]
-        g0[, dc] <- g0[, dc] + G[[p]][, level]
-      }
+      if (pb$bits[p, k]) g0[, dcol[k]] <- g0[, dcol[k]] + G[[p]][, level]
     }
     gm[[p]] <- g0
   }
+  tix <- .marg_hmm_idx(K)
+  zch <- vapply(nm, function(j)
+    linkfunctions7::linkfun(links[[j]], v[[j]]), numeric(1))
+  J1 <- vapply(nm, function(j)
+    linkfunctions7::dlinkinv(links[[j]], zch[[j]]), numeric(1))
+  J2 <- vapply(nm, function(j)
+    linkfunctions7::d2linkinv(links[[j]], zch[[j]]), numeric(1))
 
   loglik <- numeric(n)
   gradient <- numeric(mm)
   hessian <- matrix(0, mm, mm)
-
-  for (g in seq_along(bp$groups)) {
-    rs <- bp$groups[[g]]
+  for (rs in bp$groups) {
     ng <- length(rs)
-    J <- ng + 1L
     wi <- w[rs][1L]
-    pr <- .marg_jump_prior(term, bp$x[rs], v)
-    A <- .marg_outer_sum(pr$lm)
-    ncell <- length(A)
-    # the per-cell gradient in the unknowns, one observation at a time: a
-    # cell's pattern for one observation is a box, so its rows share the
-    # observation's per-pattern score
-    DA <- matrix(0, ncell, mm)
-    tot0 <- .marg_lse(A)
+    hm <- .marg_hmm_masses(term, bp$x[rs], v, d2 = TRUE)
+    pcol <- lapply(hm$pcols, function(pc) cols[match(pc, nm)])
+    # the masses' and survivals' derivative columns onto the unconstrained
+    # scale, second order carrying the chart's own curvature
+    for (k in seq_len(K)) {
+      ii <- match(hm$pcols[[k]], nm)
+      Jk <- J1[ii]
+      Dk <- J2[ii]
+      dpar <- hm$dM[[k]]
+      hm$dM[[k]] <- sweep(dpar, 2L, Jk, `*`)
+      A <- hm$d2M[[k]]
+      for (i in seq_along(Jk)) {
+        for (j in seq_along(Jk)) {
+          A[, i, j] <- A[, i, j] * Jk[i] * Jk[j] +
+            (i == j) * dpar[, i] * Dk[i]
+        }
+      }
+      hm$d2M[[k]] <- A
+      dspar <- hm$dSV[[k]]
+      hm$dSV[[k]] <- sweep(dspar, 2L, Jk, `*`)
+      B <- hm$d2SV[[k]]
+      for (i in seq_along(Jk)) {
+        for (j in seq_along(Jk)) {
+          B[, i, j] <- B[, i, j] * Jk[i] * Jk[j] +
+            (i == j) * dspar[, i] * Dk[i]
+        }
+      }
+      hm$d2SV[[k]] <- B
+    }
+
+    alpha <- numeric(P)
+    alpha[1L] <- 1
+    Dal <- matrix(0, P, mm)
+    D2al <- array(0, c(P, mm, mm))
+    ls <- 0
+    lnum_prev <- 0
     for (t in seq_len(ng)) {
       row <- rs[t]
-      PA <- .marg_pattern(t, J, K)
-      lf <- LD[row, ][PA + 1]
-      if (K > 1L) dim(lf) <- dim(A)
-      A2 <- A + lf
-      tot2 <- .marg_lse(A2)
-      loglik[row] <- tot2 - tot0
-      tot0 <- tot2
-      A <- A2
-      byp <- split(seq_len(ncell), as.integer(PA))
-      for (pp in names(byp)) {
-        p1 <- as.integer(pp) + 1L
-        DA[byp[[pp]], ] <- DA[byp[[pp]], , drop = FALSE] +
-          matrix(gm[[p1]][row, ], length(byp[[pp]]), mm, byrow = TRUE)
-      }
-    }
-    wjA <- exp(A - .marg_lse(A))
-    wj <- as.numeric(wjA)
-    # the masses' first derivatives, on the unconstrained scale, and the
-    # closed curvature of the gaussian ones
-    for (k in seq_along(pr$dlm)) {
-      jk <- as.integer(.marg_outer_sum(
-        c(rep(list(numeric(J)), k - 1L), list(seq_len(J)),
-          rep(list(numeric(J)), length(pr$lm) - k))))
-      pc <- colnames(pr$dlm[[k]])
-      dc <- cols[match(pc, nm)]
-      DA[, dc] <- DA[, dc] +
-        pr$dlm[[k]][jk, , drop = FALSE] %*% diag(chain[match(pc, nm)],
-                                                 length(pc))
-    }
-    gbar <- as.numeric(crossprod(DA, wj))
-    gradient <- gradient + wi * gbar
-    hessian <- hessian + wi * (crossprod(DA, wj * DA) - outer(gbar, gbar))
-    if (is.null(term@prior)) {
       for (k in seq_len(K)) {
-        iv <- .marg_intervals(bp$x[rs], v[[paste0("m", k)]],
-                              v[[paste0("tau", k)]], d2 = TRUE)
-        tau <- v[[paste0("tau", k)]]
-        wm <- .marg_margin(wjA, k)
-        i1 <- cols[match(paste0("m", k), nm)]
-        i2 <- cols[match(paste0("tau", k), nm)]
-        hessian[i1, i1] <- hessian[i1, i1] + wi * sum(wm * iv$dmm)
-        smt <- sum(wm * iv$dmt) * tau
-        hessian[i1, i2] <- hessian[i1, i2] + wi * smt
-        hessian[i2, i1] <- hessian[i2, i1] + wi * smt
-        hessian[i2, i2] <- hessian[i2, i2] +
-          wi * (sum(wm * iv$dtt) * tau^2 + sum(wm * iv$dt) * tau)
+        i0 <- tix[[k]]$i0
+        i1 <- tix[[k]]$i1
+        q <- hm$M[t, k]
+        pc <- pcol[[k]]
+        npc <- length(pc)
+        dq <- hm$dM[[k]][t, ]
+        d2q <- matrix(hm$d2M[[k]][t, , ], npc, npc)
+        D2al[i1, , ] <- D2al[i1, , ] + q * D2al[i0, , ]
+        for (i in seq_len(npc)) {
+          D2al[i1, pc[i], ] <- D2al[i1, pc[i], ] + dq[i] * Dal[i0, ]
+          D2al[i1, , pc[i]] <- D2al[i1, , pc[i]] + dq[i] * Dal[i0, ]
+          for (j in seq_len(npc)) {
+            D2al[i1, pc[i], pc[j]] <- D2al[i1, pc[i], pc[j]] +
+              alpha[i0] * d2q[i, j]
+          }
+        }
+        Dal[i1, ] <- Dal[i1, ] + q * Dal[i0, ]
+        Dal[i1, pc] <- Dal[i1, pc] + alpha[i0] %o% dq
+        alpha[i1] <- alpha[i1] + q * alpha[i0]
+      }
+      lf <- LD[row, ]
+      mx <- max(lf)
+      ls <- ls + mx
+      As0 <- matrix(0, npar, mm)
+      for (q in seq_len(npar)) As0[q, ] <- seed[[q]][row, ]
+      for (s in seq_len(P)) {
+        e <- exp(lf[s] - mx)
+        glf <- gm[[s]][row, ]
+        As <- As0
+        for (k in seq_len(K)) {
+          if (pb$bits[s, k]) As[level, dcol[k]] <- As[level, dcol[k]] + 1
+        }
+        Hlf <- crossprod(As, matrix(H2[[s]][row, , ], npar, npar) %*% As)
+        d <- Dal[s, ]
+        D2al[s, , ] <- e * (D2al[s, , ] + outer(d, glf) + outer(glf, d) +
+                              alpha[s] * (outer(glf, glf) + Hlf))
+        Dal[s, ] <- e * (d + alpha[s] * glf)
+        alpha[s] <- e * alpha[s]
+      }
+      sp <- .marg_hmm_sp(tix, hm$SV[t + 1L, ], P)
+      lnum <- log(sum(alpha * sp)) + ls
+      loglik[row] <- lnum - lnum_prev
+      lnum_prev <- lnum
+      cs <- max(alpha)
+      if (cs > 0 && (cs > 1e100 || cs < 1e-100)) {
+        alpha <- alpha / cs
+        Dal <- Dal / cs
+        D2al <- D2al / cs
+        ls <- ls + log(cs)
       }
     }
-  }
-
-  # the conditional's second derivatives, collapsed over the cells: each
-  # observation's per-pattern Hessian enters weighted by its pattern
-  # posterior
-  for (p in seq_len(P)) {
-    seedp <- seed
-    for (k in seq_len(K)) {
-      if (pb$bits[p, k]) {
-        dc <- cols[match(paste0("delta", k), nm)]
-        seedp[[level]][, dc] <- seedp[[level]][, dc] + 1
+    # the total and its two derivatives, the tails entering through the
+    # survival products of the final states; the per-coordinate products
+    # are built by exclusion, so a zero survival divides nothing
+    Ft <- 0
+    DF <- numeric(mm)
+    D2F <- matrix(0, mm, mm)
+    SVv <- hm$SV[ng + 1L, ]
+    for (s in seq_len(P)) {
+      inact <- which(!pb$bits[s, ])
+      sp_s <- prod(SVv[inact])
+      dsp <- numeric(mm)
+      d2sp <- matrix(0, mm, mm)
+      for (k in inact) {
+        pk <- prod(SVv[setdiff(inact, k)])
+        dsp[pcol[[k]]] <- dsp[pcol[[k]]] + pk * hm$dSV[[k]][ng + 1L, ]
+        npc <- length(pcol[[k]])
+        d2sp[pcol[[k]], pcol[[k]]] <- d2sp[pcol[[k]], pcol[[k]]] +
+          pk * matrix(hm$d2SV[[k]][ng + 1L, , ], npc, npc)
+        for (k2 in inact) {
+          if (k2 == k) next
+          pkk <- prod(SVv[setdiff(inact, c(k, k2))])
+          d2sp[pcol[[k]], pcol[[k2]]] <- d2sp[pcol[[k]], pcol[[k2]]] +
+            pkk * hm$dSV[[k]][ng + 1L, ] %o% hm$dSV[[k2]][ng + 1L, ]
+        }
       }
+      Ft <- Ft + alpha[s] * sp_s
+      DF <- DF + Dal[s, ] * sp_s + alpha[s] * dsp
+      D2F <- D2F + sp_s * matrix(D2al[s, , ], mm, mm) +
+        outer(Dal[s, ], dsp) + outer(dsp, Dal[s, ]) + alpha[s] * d2sp
     }
-    ws <- w * gamma[, p]
-    for (aq in seq_len(npar)) {
-      for (bq in seq_len(npar)) {
-        hessian <- hessian +
-          crossprod(seedp[[aq]], (ws * H2[[p]][, aq, bq]) * seedp[[bq]])
-      }
-    }
+    g0 <- DF / Ft
+    gradient <- gradient + wi * g0
+    hessian <- hessian + wi * (D2F / Ft - outer(g0, g0))
   }
   hessian <- (hessian + t(hessian)) / 2
-
-  if (!is.null(term@prior)) {
-    zeta <- vapply(nm, function(j)
-      linkfunctions7::linkfun(links[[j]], v[[j]]), numeric(1))
-    hessian <- .marg_fd_rows(hessian, term, eta, y, logdens, grad, zeta,
-                             seed, cols, level, w,
-                             c("m1", term@prior@params))
-  }
   list(loglik = loglik, gradient = gradient, hessian = hessian)
 }
 
-# The Hessian of the continuous kinds: the node sum differentiated twice at
-# fixed nodes -- the conditional's second derivatives collapsing into
-# per-node per-observation Hessians, the first-derivative products over the
-# node posterior -- with the prior's rows, where the panels below the data
-# move with its parameters, from one stencil on the analytic gradient.
+# The Hessian of the continuous kinds: the node sum differentiated twice.
+# The conditional's second derivatives collapse into per-node
+# per-observation Hessians whose level rows carry the node's own shift
+# partials, node motion included; the first-derivative products run over
+# the node posterior; and the weights' own curvature is closed, the node
+# motion being affine in the prior's parameters so the chain rule ends at
+# first order in it. What remains is the chart's curvature on the log
+# scale of the prior's spread, added where the identity ends.
 .marg_seg_hessian <- function(term, eta, y, logdens, grad, hess, psi, seed,
                               cols, level, w) {
   bp <- term@blueprint
@@ -1891,13 +2041,38 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
         }
       }
     }
+
+    # the weights' own curvature, closed because the node motion is affine
+    Jm <- chain[match("m1", nm)]
+    Jt <- chain[match("tau1", nm)]
+    a_mm <- sum(st$w * st$nd$alw_mm)
+    a_mt <- sum(st$w * st$nd$alw_mt)
+    a_tt <- sum(st$w * st$nd$alw_tt)
+    hessian[im, im] <- hessian[im, im] + wi * a_mm * Jm * Jm
+    hessian[im, it] <- hessian[im, it] + wi * a_mt * Jm * Jt
+    hessian[it, im] <- hessian[it, im] + wi * a_mt * Jm * Jt
+    hessian[it, it] <- hessian[it, it] + wi * a_tt * Jt * Jt
+    # the shift's mixed second derivative, -1(x > psi) between the change
+    # of slope and a moving node
+    ig <- cols[match("gamma1", nm)]
+    crossg <- colSums(GL * -(st$sh$hinge > 0))
+    vm <- sum(st$w * crossg * st$nd$dpsi_m) * Jm
+    vt <- sum(st$w * crossg * st$nd$dpsi_t) * Jt
+    hessian[ig, im] <- hessian[ig, im] + wi * vm
+    hessian[im, ig] <- hessian[im, ig] + wi * vm
+    hessian[ig, it] <- hessian[ig, it] + wi * vt
+    hessian[it, ig] <- hessian[it, ig] + wi * vt
+    # the chart's own curvature, on the parameter-scale gradient
+    for (pown in nm) {
+      d2l <- linkfunctions7::d2linkinv(
+        links[[pown]], linkfunctions7::linkfun(links[[pown]], v[[pown]]))
+      if (identical(d2l, 0) || d2l == 0) next
+      cpn <- cols[match(pown, nm)]
+      hessian[cpn, cpn] <- hessian[cpn, cpn] +
+        wi * (gbar[cpn] / chain[match(pown, nm)]) * d2l
+    }
   }
   hessian <- (hessian + t(hessian)) / 2
-
-  zeta <- vapply(nm, function(j)
-    linkfunctions7::linkfun(links[[j]], v[[j]]), numeric(1))
-  hessian <- .marg_fd_rows(hessian, term, eta, y, logdens, grad, zeta, seed,
-                           cols, level, w, c("m1", "tau1"))
   list(loglik = loglik, gradient = gradient, hessian = hessian)
 }
 

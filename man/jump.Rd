@@ -214,13 +214,18 @@ would otherwise be the same column twice.
 \code{jump(x, psi ~ random(~1 | g), marginal = TRUE)} treats each
 break-point as a latent variable per group, \eqn{\psi_{ik} = m_k +
 u_{ik}} with independent \eqn{u_{ik} \sim N(0, \tau_k^2)}, and
-integrates them out of the likelihood exactly. Within a cell of the
-product partition of the intervals between a group's ordered covariate
-values the conditional likelihood is constant, so the integral is a
-finite sum over the \eqn{(n_i+1)^K} cells, the masses closed in the
-normal cdf and the conditional updated by one density ratio per cell,
-one observation changing side with respect to one break-point. Up to
-three break-points are covered, the cell count pricing more.
+integrates them out of the likelihood exactly. The conditional is
+constant on the product partition of the intervals between a group's
+ordered covariate values -- \eqn{(n_i+1)^K} cells -- but the sum is
+never taken over the cells: the side process \eqn{S_t = \{k : \psi_k
+\le x_{(t)}\}} is monotone on the subset lattice with independent
+coordinates, so it is a hidden Markov chain on the \eqn{2^K} side
+patterns whose transition factors over the coordinates, and the exact
+forward recursion costs \eqn{n K 2^K}: a coordinate that flips at a
+step contributes its interval's prior mass as the transition weight,
+one that never flips its upper-tail mass at the end. Up to eight
+break-points are covered; what prices more is not the recursion but the
+\eqn{2^K} components a fitting layer evaluates the family at.
 
 The prior is part of the likelihood: \eqn{(m_k, \tau_k, \delta_k)} are
 ordinary parameters estimated by maximum likelihood, with no penalty, no
