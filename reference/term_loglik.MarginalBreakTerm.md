@@ -39,12 +39,16 @@ A list with `loglik` and `jacobian`, the latter on the parameter scale.
 ## Details
 
 For the step kind the conditional is constant on the product partition
-of the intervals between a group's ordered observations, so the integral
-over the latents is a finite sum: masses are differences of the prior's
-cdf and the conditional is updated by one density ratio per cell, one
-observation changing side with respect to one break-point. For the
-continuous kinds the conditional is smooth within an interval and the
-integral runs on a fixed Gauss-Kronrod panel per interval
+of the intervals between a group's ordered observations, and the exact
+sum over it is taken by the forward recursion of the side chain: the
+monotone process of active break-points is a hidden Markov chain on the
+\\2^K\\ side patterns whose transition factors over the coordinates,
+each flip weighted by its interval's prior mass, so the cost is \\n K
+2^K\\ rather than the \\(n+1)^K\\ of the cells. The derivatives ride the
+same recursion: the masses' in the prior's parameters, the emissions' in
+the changes of level. For the continuous kinds the conditional is smooth
+within an interval and the integral runs on a fixed Gauss-Kronrod panel
+per interval
 ([`gauss_kronrod15`](https://statmodels7.github.io/numericals7/reference/gauss_kronrod15.html)),
 the interior nodes fixed points of the data so that the derivatives in
 the prior's parameters read the prior alone; the region below the data,

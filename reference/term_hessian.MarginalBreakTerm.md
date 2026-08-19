@@ -53,14 +53,16 @@ A list with `loglik`, `gradient` and `hessian`.
 
 ## Details
 
-The step kind with one gaussian break-point differentiates the interval
-sum twice, the second derivatives of the conditional collapsing into
-per-observation Hessians weighted by each side's posterior probability
-and the mass curvature closed in the normal density. Every other
-configuration differences the analytic full gradient once – a single
-central stencil on the analytic order below, the licence the toolkit's
-non-closed derivatives run on – and the one-break-point gaussian route
-is the control the tests hold it to.
+Analytic throughout. The step kind propagates first and second
+derivatives through the side chain's forward recursion, the prior's
+interval-mass derivatives closed for the gaussian and read off the cdf
+surface for an explicit prior (whose own degrees-of-freedom column
+carries that surface's documented single stencil, the one non-closed
+piece anywhere). The continuous kinds differentiate the node sum twice;
+the moving panels below the data are affine in the prior's parameters,
+so their motion enters the chain rule with no curvature of its own. The
+one-break-point gaussian step keeps the interval-sum route, independent
+arithmetic the tests hold the propagation to.
 
 The marginal likelihood of a group does not factorize over its
 observations, so an observation weight has a reading only when it is

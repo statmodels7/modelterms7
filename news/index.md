@@ -20,16 +20,35 @@
 
 - For
   [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
-  the integral is EXACT: the conditional is constant on the product
-  partition of the intervals between a group’s ordered observations, so
-  the sum runs over the (n_i+1)^K cells with masses closed in the
-  prior’s cdf and the conditional updated by one density ratio per cell,
-  one observation changing side with respect to one break-point. Up to
-  three break-points; with one, the prior may be any continuous
+  the integral is EXACT, and it is not taken over the cells: the side
+  process S_t = {k : psi_k \<= x\_(t)} over a group’s sorted
+  observations is monotone on the subset lattice with independent
+  coordinates, so it is a HIDDEN MARKOV CHAIN on the 2^K side patterns
+  whose transition factors over the coordinates – a flip is weighted by
+  its interval’s prior mass, a coordinate that never flips contributes
+  its tail mass through the final state’s survival product – and the
+  forward recursion costs n K 2^K where the cell sum costs (n+1)^K.
+  Measured end to end at the same answers to the printed digit: K = 2
+  goes 13.2 s to 2.5 s, K = 3 goes 721 s to 8.8 s, and K = 5,
+  unreachable before, fits in 94 s with every position recovered within
+  0.05 of the truth. The cap is eight break-points, priced by the 2^K
+  components a fitting layer evaluates the family at, not by the
+  recursion. With one break-point the prior may be any continuous
   distributions7 family with its location fixed at zero
   (`random(distrib = fixed(student_t1_distrib(), mu = 0))`), the masses
   and their derivatives riding the cdf surface built for the censored
-  likelihoods.
+  likelihoods. The jacobian rides the same recursion; the posterior side
+  patterns and the flip-interval posteriors of
+  [`term_latent()`](https://statmodels7.github.io/modelterms7/reference/term_latent.md)
+  come from the matching forward-backward pair; and
+  [`term_hessian()`](https://statmodels7.github.io/modelterms7/reference/term_hessian.md)
+  propagates first and second derivatives through the recursion itself,
+  so the observed Hessian is analytic for every K and every prior – the
+  toolkit’s own finite differences left the marginal terms entirely, the
+  continuous kinds’ prior rows closing in the affine node motion and the
+  step kind’s in the propagated chain. The one-break-point gaussian
+  interval-sum route survives as the twin the tests hold the propagation
+  to.
 
 - For
   [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
