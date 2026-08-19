@@ -1,10 +1,14 @@
 # The fast route of the score-driven filter: the C registries of
 # distributions7 and linkfunctions7 against the R callbacks they replace.
-# The two are held IDENTICAL, not close: the scalar entry points mirror the
-# vector kernels expression by expression and the composition mirrors
-# distrib_kernel()'s, so a last-bit difference is a defect. An uncovered
-# family leaves the context inert, and the threads over groups may not move
-# a bit either.
+# The scalar entry points mirror the vector kernels expression by expression
+# and the composition mirrors distrib_kernel()'s -- but a compiler is free
+# to CONTRACT a multiply-add into an FMA where R's interpreter never does,
+# and clang on the arm64 macOS runner did exactly that (last-bit differences
+# in the jacobian, 2026-08-19), so the cross-route twin carries a tolerance
+# of 1e-13: tight enough that a wrong composition, off by the factor it
+# drops, still fails it. What stays identical() is everything computed by
+# ONE route both times -- the inert-context fallbacks, and the threads over
+# groups, which may not move a bit.
 
 fast_panel <- function(seed, groups, per) {
   set.seed(seed)
@@ -41,7 +45,7 @@ run_both <- function(term, dd, psi, d7, param, theta, threads = 1L) {
   list(ref = ref, fst = fst)
 }
 
-test_that("the fast route is bit-identical to the callbacks, scalar filter", {
+test_that("the fast route reproduces the callbacks, scalar filter", {
   dd <- fast_panel(1, groups = 10, per = 25)
   psi <- list(omega = 0.2, alpha1 = 0.15, pacf1 = 0.4)
   for (case in list(
@@ -53,11 +57,11 @@ test_that("the fast route is bit-identical to the callbacks, scalar filter", {
          theta = list(mu = 3, phi = 0.4)))) {
     both <- run_both(gas(p = 1, q = 1, by = id, time = t), dd, psi,
                      case$d7, case$param, case$theta)
-    expect_identical(both$ref, both$fst)
+    expect_equal(both$ref, both$fst, tolerance = 1e-13)
   }
 })
 
-test_that("the fast route is bit-identical on the submodel route too", {
+test_that("the fast route reproduces the callbacks on the submodel route too", {
   dd <- fast_panel(2, groups = 10, per = 25)
   tb <- term_build(gas(p = 1, q = 1, omega ~ random(~1 | id),
                        by = id, time = t), dd)
@@ -72,7 +76,7 @@ test_that("the fast route is bit-identical on the submodel route too", {
   ref <- term_filter(tb, eta0, dd$y, cb$score, cb$curvature, psi)
   fst <- term_filter(tb, eta0, dd$y, cb$score, cb$curvature, psi,
                      fast = fast_spec(d7, "mu", theta, dd$y))
-  expect_identical(ref, fst)
+  expect_equal(ref, fst, tolerance = 1e-13)
 })
 
 test_that("the result does not depend on threads, bit for bit", {
@@ -85,7 +89,7 @@ test_that("the result does not depend on threads, bit for bit", {
   b2 <- run_both(gas(p = 1, q = 1, by = id, time = t), dd, psi, d7, "mu",
                  theta, threads = 2L)
   expect_identical(b1$fst, b2$fst)
-  expect_identical(b1$ref, b2$fst)
+  expect_equal(b1$ref, b2$fst, tolerance = 1e-13)
 })
 
 test_that("the adjoint rides the fast forward pass and calls nothing back", {
@@ -110,7 +114,7 @@ test_that("the adjoint rides the fast forward pass and calls nothing back", {
   fst <- term_adjoint(tb, eta0, dd$y, sc_cnt, cu_cnt, psi, g = gw,
                       fast = fast_spec(d7, "mu", theta, dd$y), threads = 2L)
   expect_identical(calls$k, 0L)
-  expect_identical(ref, fst)
+  expect_equal(ref, fst, tolerance = 1e-13)
 
   # the submodel route
   tbs <- term_build(gas(p = 1, q = 1, omega ~ random(~1 | id),
@@ -125,7 +129,7 @@ test_that("the adjoint rides the fast forward pass and calls nothing back", {
   fsts <- term_adjoint(tbs, eta0, dd$y, sc_cnt, cu_cnt, psis, g = gw,
                        fast = fast_spec(d7, "mu", theta, dd$y), threads = 2L)
   expect_identical(calls$k, 0L)
-  expect_identical(refs, fsts)
+  expect_equal(refs, fsts, tolerance = 1e-13)
 })
 
 test_that("an uncovered family or link leaves the context inert", {

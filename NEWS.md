@@ -1,3 +1,13 @@
+# modelterms7 0.56.1
+
+* The gas fast-route twins compare the C route against the R callbacks at a
+  tolerance of 1e-13 instead of `identical()`: clang on the arm64 macOS
+  runner contracts the scalar composition's multiply-adds into FMAs, which
+  R's interpreter never does, and the last bit moved. The tolerance still
+  fails a wrong composition by many orders; everything computed by one
+  route both times -- the inert-context fallbacks, the threads over
+  groups -- stays `identical()`.
+
 # modelterms7 0.56.0
 
 * `seg()`, `jump()` and `jseg()` take `marginal = FALSE` (the default: the
