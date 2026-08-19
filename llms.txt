@@ -313,6 +313,8 @@ exact derivative beside the state.
   : Markov Regime Switching
 - [`RegimeTerm()`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md)
   : S7 Class for Markov Regime Terms
+- [`MarginalBreakTerm()`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md)
+  : S7 Class for Marginal Break-Point Terms
 - [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
   : Parameters of a Structural Term
 - [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
@@ -335,6 +337,10 @@ exact derivative beside the state.
   : The Observed Hessian of a Likelihood Mixed Over States
 - [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)
   : The Smoothed State Probabilities of a Latent Markov Term
+- [`term_levels()`](https://statmodels7.github.io/modelterms7/reference/term_levels.md)
+  : The Levels of a Likelihood-Shaped Structural Term
+- [`term_latent()`](https://statmodels7.github.io/modelterms7/reference/term_latent.md)
+  : The Posterior of a Structural Term's Latent Variable
 - [`term_level_param()`](https://statmodels7.github.io/modelterms7/reference/term_level_param.md)
   : Which of a Term's Parameters Acts as an Intercept
 - [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)

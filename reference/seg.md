@@ -30,6 +30,8 @@ seg(
   psi = NULL,
   by = NULL,
   linear = TRUE,
+  smoothed = NULL,
+  marginal = FALSE,
   n_boot = 10,
   label = "seg"
 )
@@ -66,6 +68,54 @@ seg(
 
   Whether the block carries the linear effect \\\beta x\\. Defaults to
   `TRUE`.
+
+- smoothed:
+
+  `NULL` (the default: the construction exactly as documented above) or
+  a penalties7
+  [`abs_smoother`](https://statmodels7.github.io/penalties7/reference/abs_smoother.html),
+  e.g.
+  [`penalties7::smooth_probit()`](https://statmodels7.github.io/penalties7/reference/smooth_probit.html).
+  The smoother replaces the step and the hinge by their smooth versions
+  – \\(1 + s'(u))/2\\ and \\(u + s(u))/2\\ – so every break-point
+  becomes an ordinary parameter of a \\C^\infty\\ model: there is no
+  working parametrization, no auxiliary coefficient and no scaling
+  schedule (`c0` is ignored, with a message), the block is the true
+  Jacobian and the term is fitted by Gauss-Newton like
+  [`nl`](https://statmodels7.github.io/modelterms7/reference/nl.md). A
+  development of a break-point – `psi ~ random(~1 | id)`, a penalized
+  one included – is then legal for every kind, the read-off that
+  constrained the discontinuous constructions having gone. The
+  smoother's width is resolved at build from the covariate's spacing
+  (the median gap between distinct values, within groups where a
+  break-point development supplies a partition) unless the object
+  carries one, and is reported: it is the width of the transition, the
+  bent-cable reading, and the smoothing bias it buys is confined to a
+  window of that width (probit, quintic) or decays as \\c/(4\|u\|)\\
+  (hyperbolic). The objective is still multimodal in the positions –
+  smoothing rounds the local optima, it does not remove them – so the
+  profile start and the `n_boot` restarts stay necessary; a smoothed fit
+  from a bad start has been measured converging to an absurd local
+  optimum while reporting success.
+
+- marginal:
+
+  Whether the break-point is a latent variable per group, integrated out
+  of the likelihood exactly, rather than an estimated position. `FALSE`,
+  the default, is the construction documented above. `TRUE` requires the
+  subformula `psi ~ random(~1 | g)` and returns a structural term of the
+  likelihood shape
+  ([`MarginalBreakTerm`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md));
+  see the section of
+  [`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md),
+  whose step model is where the marginal buys the most – for a `seg`
+  term the native random-changepoint fit (`psi ~ random(~1 | g)` without
+  `marginal`) is measured equivalent and remains the recommended route,
+  the marginal being the exact-likelihood alternative. One break-point
+  here: the conditional is smooth in the position, so the integral runs
+  on a Gauss-Kronrod panel per interval between a group's ordered
+  observations, and several latents would need a product quadrature
+  whose component count no fitting layer can carry.
 
 - n_boot:
 

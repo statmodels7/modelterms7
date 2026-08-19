@@ -31,6 +31,8 @@ jump(
   psi = NULL,
   by = NULL,
   c0 = 0.05,
+  smoothed = NULL,
+  marginal = FALSE,
   n_boot = 10,
   label = "jump"
 )
@@ -70,6 +72,42 @@ jump(
   the ends of the range. Defaults to `0.05`, the value fasola2018
   recommend; see Details.
 
+- smoothed:
+
+  `NULL` (the default: the construction exactly as documented above) or
+  a penalties7
+  [`abs_smoother`](https://statmodels7.github.io/penalties7/reference/abs_smoother.html),
+  e.g.
+  [`penalties7::smooth_probit()`](https://statmodels7.github.io/penalties7/reference/smooth_probit.html).
+  The smoother replaces the step and the hinge by their smooth versions
+  – \\(1 + s'(u))/2\\ and \\(u + s(u))/2\\ – so every break-point
+  becomes an ordinary parameter of a \\C^\infty\\ model: there is no
+  working parametrization, no auxiliary coefficient and no scaling
+  schedule (`c0` is ignored, with a message), the block is the true
+  Jacobian and the term is fitted by Gauss-Newton like
+  [`nl`](https://statmodels7.github.io/modelterms7/reference/nl.md). A
+  development of a break-point – `psi ~ random(~1 | id)`, a penalized
+  one included – is then legal for every kind, the read-off that
+  constrained the discontinuous constructions having gone. The
+  smoother's width is resolved at build from the covariate's spacing
+  (the median gap between distinct values, within groups where a
+  break-point development supplies a partition) unless the object
+  carries one, and is reported: it is the width of the transition, the
+  bent-cable reading, and the smoothing bias it buys is confined to a
+  window of that width (probit, quintic) or decays as \\c/(4\|u\|)\\
+  (hyperbolic). The objective is still multimodal in the positions –
+  smoothing rounds the local optima, it does not remove them – so the
+  profile start and the `n_boot` restarts stay necessary; a smoothed fit
+  from a bad start has been measured converging to an absurd local
+  optimum while reporting success.
+
+- marginal:
+
+  Whether the break-points are latent variables per group, integrated
+  out of the likelihood exactly; see the section below. Requires the
+  subformula `psi ~ random(~1 | g)`, whose grouping carries the latents.
+  Defaults to `FALSE`, the construction documented above.
+
 - n_boot:
 
   How many bootstrap restarts the fitting layer runs after the iteration
@@ -92,7 +130,10 @@ jump(
 An object of class
 [`SegTerm`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md)
 (a specification; see
-[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
+[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)),
+or of class
+[`MarginalBreakTerm`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md)
+with `marginal = TRUE`.
 
 ## Details
 
@@ -194,6 +235,38 @@ the development. A penalty on the changes of level themselves is
 `jump(x, npsi = 4, delta ~ 0 + lasso(~1))`, the `0 +` removing the
 subformula's own unpenalized intercept, which would otherwise be the
 same column twice.
+
+## The marginal construction
+
+`jump(x, psi ~ random(~1 | g), marginal = TRUE)` treats each break-point
+as a latent variable per group, \\\psi\_{ik} = m_k + u\_{ik}\\ with
+independent \\u\_{ik} \sim N(0, \tau_k^2)\\, and integrates them out of
+the likelihood exactly. Within a cell of the product partition of the
+intervals between a group's ordered covariate values the conditional
+likelihood is constant, so the integral is a finite sum over the
+\\(n_i+1)^K\\ cells, the masses closed in the normal cdf and the
+conditional updated by one density ratio per cell, one observation
+changing side with respect to one break-point. Up to three break-points
+are covered, the cell count pricing more.
+
+The prior is part of the likelihood: \\(m_k, \tau_k, \delta_k)\\ are
+ordinary parameters estimated by maximum likelihood, with no penalty, no
+marginal criterion and no smoothing constant, and the term is structural
+([`MarginalBreakTerm`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md),
+the likelihood shape of the contract) rather than a design block. With
+one break-point the prior may be any continuous distributions7
+distribution with its location fixed at zero, through
+`random(distrib = )`: the interval masses are differences of its cdf and
+their derivatives come from the cdf surface built for the censored
+likelihoods, with that surface's own caveats (closed for the gaussian
+and, in location and scale, for the t). `smoothed` and `c0` do not apply
+and are ignored with a message; the posterior of each group's
+break-points is read by
+[`term_latent`](https://statmodels7.github.io/modelterms7/reference/term_latent.md).
+On the step model the marginal is the route that resolves what a
+smoothed mode cannot – the conditional is a step in the position, so a
+Laplace approximation has no curvature to read – and it is the robust
+route on non-gaussian families.
 
 ## References
 

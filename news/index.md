@@ -1,5 +1,141 @@
 # Changelog
 
+## modelterms7 0.56.0
+
+- [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  take `marginal = FALSE` (the default: the construction exactly as
+  before, to the bit) or `marginal = TRUE`, the marginal break-point
+  terms of `piano_marginal.txt`:
+  `kind(x, psi ~ random(~1 | g), marginal = TRUE)` treats each
+  break-point as a latent variable per group and integrates it out of
+  the likelihood. The prior is part of the likelihood – its parameters
+  are ordinary ones estimated by maximum likelihood,
+  [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+  declares nothing – and the term is structural of the likelihood shape
+  (`MarginalBreakTerm`, the contract of
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)).
+
+- For
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  the integral is EXACT: the conditional is constant on the product
+  partition of the intervals between a group’s ordered observations, so
+  the sum runs over the (n_i+1)^K cells with masses closed in the
+  prior’s cdf and the conditional updated by one density ratio per cell,
+  one observation changing side with respect to one break-point. Up to
+  three break-points; with one, the prior may be any continuous
+  distributions7 family with its location fixed at zero
+  (`random(distrib = fixed(student_t1_distrib(), mu = 0))`), the masses
+  and their derivatives riding the cdf surface built for the censored
+  likelihoods.
+
+- For
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  (one break-point, gaussian prior) the conditional is smooth within an
+  interval and the integral runs on a fixed Gauss-Kronrod panel per
+  interval
+  ([`numericals7::gauss_kronrod15()`](https://statmodels7.github.io/numericals7/reference/gauss_kronrod15.html)),
+  interior nodes fixed points of the data so the prior-parameter
+  derivatives read the prior alone; the region below the data, where the
+  hinge keeps moving, is covered by panels that follow the prior’s bulk,
+  whose node motion the jacobian carries, and the region above it
+  contributes its closed tail mass. Measured on the real integrand, GK15
+  per interval reaches 3e-9 where a 4-node Gauss-Legendre rule is off by
+  0.2 to 0.95 on the log-likelihood.
+
+- The contract:
+  [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
+  returns one-step predictive contributions with the exact jacobian
+  (numDeriv 1e-10 on the step kind, 2e-5 on the quadrature kinds’
+  scale),
+  [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)
+  the component weights Fisher’s identity takes (side patterns for the
+  step kind, node weights for the continuous ones),
+  [`term_hessian()`](https://statmodels7.github.io/modelterms7/reference/term_hessian.md)
+  the exact observed Hessian – the one-break-point gaussian step
+  differentiates the interval sum twice and doubles as the control;
+  every other configuration assembles the component blocks exactly and
+  takes the prior’s rows from one central stencil on the analytic full
+  gradient, the licence the toolkit’s non-closed derivatives run on –
+  and
+  [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
+  reads a two-stage exact profile off the target: pooled positions and
+  coefficients with per-group intercepts, greedy over a quantile grid
+  with every local minimum carried through a per-group one-position
+  refinement and the winner chosen on the final per-group-position fit.
+  A per-group profile with the full design was measured overfitting its
+  own noise (a Poisson panel’s linear effect at -4.7 against a truth of
+  0.15), and the pooled single-position profile alone picks the wrong
+  basin (rss 103.6 at c = 8.3 against 104.8 at the truth’s 4.4).
+
+- New generics
+  [`term_levels()`](https://statmodels7.github.io/modelterms7/reference/term_levels.md)
+  (the shifts of a likelihood-shaped term’s mixture components – a
+  vector for
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  and the step kind, a per-observation matrix for the quadrature kinds)
+  and
+  [`term_latent()`](https://statmodels7.github.io/modelterms7/reference/term_latent.md)
+  (posterior means and standard deviations of the latent break-points,
+  the truncated-prior moments through
+  [`numericals7::mills_ratio()`](https://statmodels7.github.io/numericals7/reference/mills_ratio.html)
+  for the gaussian and `truncated()` + `expectation()` for an explicit
+  prior, a moment the engine cannot deliver reported NA – a heavy-tailed
+  prior’s edge intervals keep no mean below one degree of freedom and no
+  variance below two).
+
+- `smoothed`, `c0` and `n_boot` are ignored with a message under the
+  marginal; a mixed fixed/random set of break-points, `by`, developments
+  of other coefficients, several break-points for the continuous kinds
+  and a non-gaussian prior beyond the single-break-point jump are
+  rejected with the reason.
+
+## modelterms7 0.55.0
+
+- [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  take `smoothed = NULL` (the default: the construction exactly as
+  before, to the bit) or a `penalties7` `abs_smoother`. With a smoother
+  the step and the hinge are replaced by their smooth versions, every
+  break-point becomes an ordinary parameter of a `C^infinity` model, and
+  the block is the TRUE JACOBIAN:
+  [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
+  answers `TRUE`, the term is fitted by Gauss-Newton like
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md),
+  and there is no working parametrization, no auxiliary `g` coefficient
+  and no scaling schedule (`c0` is ignored, with a message). A
+  development of a break-point – `psi ~ random(~1 | id)`, a penalized
+  one included – is then legal for every kind, the read-off that
+  constrained the discontinuous constructions having gone.
+
+- The smoother’s width is resolved at build from the covariate’s spacing
+  (the median gap between distinct values, within groups where a
+  break-point development supplies a partition; `per_group = TRUE` keeps
+  one width per group) unless the object carries one, is checked against
+  the derived floor, and is reported by
+  [`print()`](https://rdrr.io/r/base/print.html): it is the width of the
+  transition, the bent-cable reading.
+
+- [`term_block_contract()`](https://statmodels7.github.io/modelterms7/reference/term_block_contract.md)
+  and
+  [`term_block_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md)
+  have closed forms for a smoothed term of any kind, one order up in the
+  smoother’s own derivatives;
+  [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md),
+  [`seg_relocate()`](https://statmodels7.github.io/modelterms7/reference/seg_relocate.md),
+  [`seg_polish()`](https://statmodels7.github.io/modelterms7/reference/seg_polish.md)
+  (whose exact profile does not depend on the mollifier), the lineage
+  relabeling and `n_boot` all carry over. The restarts remain necessary:
+  smoothing rounds the local optima, it does not remove them, and a
+  smoothed fit from a bad start has been measured converging to an
+  absurd local optimum while reporting success.
+
 ## modelterms7 0.54.0
 
 - New generic

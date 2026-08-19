@@ -37,7 +37,7 @@ level there."><meta property="og:image" content="https://statmodels7.github.io/m
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.54.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.56.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,6 +92,8 @@ level there.</p>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  linear <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  c0 <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  smoothed <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  marginal <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  n_boot <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  label <span class="op">=</span> <span class="st">"jseg"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -139,6 +141,51 @@ the ends of the range. Defaults to <code>0.05</code>, the value
 <cite>fasola2018</cite> recommend; see Details.</p></dd>
 
 
+<dt id="arg-smoothed">smoothed<a class="anchor" aria-label="anchor" href="#arg-smoothed"></a></dt>
+<dd><p><code>NULL</code> (the default: the construction exactly as
+documented above) or a <span class="pkg">penalties7</span>
+<code><a href="https://statmodels7.github.io/penalties7/reference/abs_smoother.html" class="external-link">abs_smoother</a></code>, e.g.
+<code><a href="https://statmodels7.github.io/penalties7/reference/smooth_probit.html" class="external-link">penalties7::smooth_probit()</a></code>. The smoother replaces the step and
+the hinge by their smooth versions – \((1 + s'(u))/2\) and
+\((u + s(u))/2\) – so every break-point becomes an ordinary
+parameter of a \(C^\infty\) model: there is no working
+parametrization, no auxiliary coefficient and no scaling schedule
+(<code>c0</code> is ignored, with a message), the block is the true Jacobian
+and the term is fitted by Gauss-Newton like <code><a href="nl.html">nl</a></code>. A
+development of a break-point – <code>psi ~ random(~1 | id)</code>, a
+penalized one included – is then legal for every kind, the read-off
+that constrained the discontinuous constructions having gone. The
+smoother's width is resolved at build from the covariate's spacing
+(the median gap between distinct values, within groups where a
+break-point development supplies a partition) unless the object
+carries one, and is reported: it is the width of the transition, the
+bent-cable reading, and the smoothing bias it buys is confined to a
+window of that width (probit, quintic) or decays as \(c/(4|u|)\)
+(hyperbolic). The objective is still multimodal in the positions –
+smoothing rounds the local optima, it does not remove them – so the
+profile start and the <code>n_boot</code> restarts stay necessary; a
+smoothed fit from a bad start has been measured converging to an
+absurd local optimum while reporting success.</p></dd>
+
+
+<dt id="arg-marginal">marginal<a class="anchor" aria-label="anchor" href="#arg-marginal"></a></dt>
+<dd><p>Whether the break-point is a latent variable per group,
+integrated out of the likelihood exactly, rather than an estimated
+position. <code>FALSE</code>, the default, is the construction documented
+above. <code>TRUE</code> requires the subformula <code>psi ~ random(~1 | g)</code>
+and returns a structural term of the likelihood shape
+(<code><a href="MarginalBreakTerm.html">MarginalBreakTerm</a></code>); see the section of
+<code><a href="jump.html">jump</a></code>, whose step model is where the marginal buys the
+most – for a <code>seg</code> term the native random-changepoint fit
+(<code>psi ~ random(~1 | g)</code> without <code>marginal</code>) is measured
+equivalent and remains the recommended route, the marginal being the
+exact-likelihood alternative. One break-point here: the conditional is
+smooth in the position, so the integral runs on a Gauss-Kronrod panel
+per interval between a group's ordered observations, and several
+latents would need a product quadrature whose component count no
+fitting layer can carry.</p></dd>
+
+
 <dt id="arg-n-boot">n_boot<a class="anchor" aria-label="anchor" href="#arg-n-boot"></a></dt>
 <dd><p>How many bootstrap restarts the fitting layer runs after
 the iteration first converges (Wood 2001, the device <code>segmented</code>
@@ -160,7 +207,8 @@ names.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code><a href="SegTerm.html">SegTerm</a></code> (a specification; see
-  <code><a href="term_build.html">term_build</a></code>).</p>
+  <code><a href="term_build.html">term_build</a></code>), or of class <code><a href="MarginalBreakTerm.html">MarginalBreakTerm</a></code>
+  with <code>marginal = TRUE</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -212,6 +260,19 @@ independent set of everything per level and a development of
 componentwise reading that would remain diverges whenever a change of
 level passes near zero mid-iteration, which on a joint model it
 routinely does; it is rejected rather than shipped diverging.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="the-marginal-construction">The marginal construction<a class="anchor" aria-label="anchor" href="#the-marginal-construction"></a></h2>
+
+
+<p><code>jseg(x, psi ~ random(~1 | g), marginal = TRUE)</code> integrates a
+latent break-point per group out of the likelihood exactly, on the
+Gauss-Kronrod panels of <code><a href="seg.html">seg</a></code>'s marginal with the change of
+level entering each interval's conditional as a constant. On gaussian
+data the mode-based routes are measured equivalent; on non-gaussian
+families the marginal is the robust one, the measured comparison on a
+Poisson panel recovering the per-group positions where the smoothed
+modes lose them.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
