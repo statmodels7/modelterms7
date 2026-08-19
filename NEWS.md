@@ -1,3 +1,33 @@
+# modelterms7 0.55.0
+
+* `seg()`, `jump()` and `jseg()` take `smoothed = NULL` (the default: the
+  construction exactly as before, to the bit) or a `penalties7`
+  `abs_smoother`. With a smoother the step and the hinge are replaced by
+  their smooth versions, every break-point becomes an ordinary parameter of
+  a `C^infinity` model, and the block is the TRUE JACOBIAN:
+  `term_jacobian_block()` answers `TRUE`, the term is fitted by
+  Gauss-Newton like `nl()`, and there is no working parametrization, no
+  auxiliary `g` coefficient and no scaling schedule (`c0` is ignored, with
+  a message). A development of a break-point -- `psi ~ random(~1 | id)`, a
+  penalized one included -- is then legal for every kind, the read-off that
+  constrained the discontinuous constructions having gone.
+
+* The smoother's width is resolved at build from the covariate's spacing
+  (the median gap between distinct values, within groups where a
+  break-point development supplies a partition; `per_group = TRUE` keeps
+  one width per group) unless the object carries one, is checked against
+  the derived floor, and is reported by `print()`: it is the width of the
+  transition, the bent-cable reading.
+
+* `term_block_contract()` and `term_block_deriv()` have closed forms for a
+  smoothed term of any kind, one order up in the smoother's own
+  derivatives; `seg_psi()`, `seg_relocate()`, `seg_polish()` (whose exact
+  profile does not depend on the mollifier), the lineage relabeling and
+  `n_boot` all carry over. The restarts remain necessary: smoothing rounds
+  the local optima, it does not remove them, and a smoothed fit from a bad
+  start has been measured converging to an absurd local optimum while
+  reporting success.
+
 # modelterms7 0.54.0
 
 * New generic `term_jacobian_block()`: whether a term's design block is the

@@ -163,6 +163,30 @@ SegTerm <- S7::new_class(
 #'   level of a factor. A bare variable is rejected; write the formula.
 #' @param linear Whether the block carries the linear effect \eqn{\beta x}.
 #'   Defaults to \code{TRUE}.
+#' @param smoothed \code{NULL} (the default: the construction exactly as
+#'   documented above) or a \pkg{penalties7}
+#'   \code{\link[penalties7]{abs_smoother}}, e.g.
+#'   \code{penalties7::smooth_probit()}. The smoother replaces the step and
+#'   the hinge by their smooth versions -- \eqn{(1 + s'(u))/2} and
+#'   \eqn{(u + s(u))/2} -- so every break-point becomes an ordinary
+#'   parameter of a \eqn{C^\infty} model: there is no working
+#'   parametrization, no auxiliary coefficient and no scaling schedule
+#'   (\code{c0} is ignored, with a message), the block is the true Jacobian
+#'   and the term is fitted by Gauss-Newton like \code{\link{nl}}. A
+#'   development of a break-point -- \code{psi ~ random(~1 | id)}, a
+#'   penalized one included -- is then legal for every kind, the read-off
+#'   that constrained the discontinuous constructions having gone. The
+#'   smoother's width is resolved at build from the covariate's spacing
+#'   (the median gap between distinct values, within groups where a
+#'   break-point development supplies a partition) unless the object
+#'   carries one, and is reported: it is the width of the transition, the
+#'   bent-cable reading, and the smoothing bias it buys is confined to a
+#'   window of that width (probit, quintic) or decays as \eqn{c/(4|u|)}
+#'   (hyperbolic). The objective is still multimodal in the positions --
+#'   smoothing rounds the local optima, it does not remove them -- so the
+#'   profile start and the \code{n_boot} restarts stay necessary; a
+#'   smoothed fit from a bad start has been measured converging to an
+#'   absurd local optimum while reporting success.
 #' @param n_boot How many bootstrap restarts the fitting layer runs after
 #'   the iteration first converges (Wood 2001, the device \code{segmented}
 #'   runs by default): each restart re-estimates on a bootstrap resample
@@ -205,12 +229,13 @@ SegTerm <- S7::new_class(
 #'   \code{\link{seg_start}}, \code{\link{seg_step}}, \code{\link{nl}}
 #' @export
 seg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
-                n_boot = 10, label = "seg") {
+                smoothed = NULL, n_boot = 10, label = "seg") {
   # a continuous term has no scaling factor, its working block being
   # bounded already; the value is carried so that one blueprint serves the
   # three constructions
   .seg_spec("seg", substitute(x), npsi, psi, linear, 0.05, n_boot, label,
-            list(...), .seg_by_formula(substitute(by), parent.frame()))
+            list(...), .seg_by_formula(substitute(by), parent.frame()),
+            smoothed)
 }
 
 #' Stepmented Term: a Level that Changes at Estimated Break-Points
@@ -358,9 +383,15 @@ seg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 #'   \code{\link{seg_start}}, \code{\link{seg_step}}
 #' @export
 jump <- function(x, ..., npsi = 1, psi = NULL, by = NULL, c0 = 0.05,
-                 n_boot = 10, label = "jump") {
+                 smoothed = NULL, n_boot = 10, label = "jump") {
+  if (!is.null(smoothed) && !missing(c0)) {
+    message(paste("'c0' is the scaling schedule of the working",
+                  "parametrization, and a smoothed term has none:",
+                  "it is ignored."))
+  }
   .seg_spec("jump", substitute(x), npsi, psi, FALSE, c0, n_boot, label,
-            list(...), .seg_by_formula(substitute(by), parent.frame()))
+            list(...), .seg_by_formula(substitute(by), parent.frame()),
+            smoothed)
 }
 
 #' Segmented-with-Jump Term: Slope and Level Both Changing
@@ -463,9 +494,15 @@ jump <- function(x, ..., npsi = 1, psi = NULL, by = NULL, c0 = 0.05,
 #'   \code{\link{seg_start}}, \code{\link{seg_step}}
 #' @export
 jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
-                 c0 = 0.05, n_boot = 10, label = "jseg") {
+                 c0 = 0.05, smoothed = NULL, n_boot = 10, label = "jseg") {
+  if (!is.null(smoothed) && !missing(c0)) {
+    message(paste("'c0' is the scaling schedule of the working",
+                  "parametrization, and a smoothed term has none:",
+                  "it is ignored."))
+  }
   .seg_spec("jseg", substitute(x), npsi, psi, linear, c0, n_boot, label,
-            list(...), .seg_by_formula(substitute(by), parent.frame()))
+            list(...), .seg_by_formula(substitute(by), parent.frame()),
+            smoothed)
 }
 
 # `by` is a one-sided formula and not a variable: the shorthand it stands
@@ -572,7 +609,12 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 }
 
 .seg_spec <- function(kind, var, npsi, psi, linear, c0, n_boot, label, dots,
-                      by) {
+                      by, smoothed = NULL) {
+  if (!is.null(smoothed) &&
+      !S7::S7_inherits(smoothed, penalties7::abs_smoother)) {
+    stop(paste("'smoothed' must be NULL or a penalties7 abs_smoother, e.g.",
+               "penalties7::smooth_probit()."), call. = FALSE)
+  }
   if (!is.numeric(c0) || length(c0) != 1L || is.na(c0) ||
       c0 <= 0 || c0 >= 1) {
     stop("'c0' must be a single number strictly between 0 and 1.",
@@ -603,7 +645,8 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   subs <- .seg_gather(dots, by, kind, npsi, linear)
   SegTerm(label = label, kind = kind, var = var, npsi = npsi,
           linear = linear, subformulas = subs,
-          spec = list(psi = psi, c0 = c0, n_boot = as.integer(n_boot)),
+          spec = list(psi = psi, c0 = c0, n_boot = as.integer(n_boot),
+                      smoothed = smoothed),
           X = NULL, coef_names = character(0),
           blueprint = list(), penalty = NULL)
 }
@@ -612,8 +655,14 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 # except for a break-point of a discontinuous construction, whose
 # coefficients are the auxiliary g of the identity of Fasola et al. and not
 # the position: the position is read off, and seg_psi() is what reports it.
-.seg_coef_stem <- function(kind, p) {
-  if (kind != "seg" && grepl("^psi[0-9]+$", p)) sub("^psi", "g", p) else p
+# A SMOOTHED term holds every break-point directly, whatever its kind, so
+# the stem stays psi there.
+.seg_coef_stem <- function(kind, p, smoothed = FALSE) {
+  if (!smoothed && kind != "seg" && grepl("^psi[0-9]+$", p)) {
+    sub("^psi", "g", p)
+  } else {
+    p
+  }
 }
 
 # A design with one column per group and every observation in exactly one
@@ -625,6 +674,20 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   all(Z == 0 | Z == 1) && all(rowSums(Z) == 1)
 }
 
+# The columns of a development's design that partition the observations,
+# after dropping constant columns: `psi ~ random(~1 | id)` carries the
+# subformula's unpenalized intercept beside the indicators, and the
+# grouping a width is resolved within is the indicators'. NULL where no
+# such set exists (a numeric development, say).
+.seg_partition_cols <- function(Z) {
+  Z <- as.matrix(Z)
+  keep <- which(apply(Z, 2L, function(z) {
+    all(z %in% c(0, 1)) && any(z != z[1L])
+  }))
+  if (!length(keep)) return(NULL)
+  if (all(rowSums(Z[, keep, drop = FALSE]) == 1)) keep else NULL
+}
+
 # What each construction can carry, and why. The continuous one accepts a
 # development of anything: every coefficient enters its block linearly. The
 # discontinuous ones read the break-point off g = -delta * psi, a product
@@ -632,8 +695,11 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 # single number or where the design collapses the product; and the joint
 # construction reads it off a quadratic that also carries the change of
 # slope, so that one is constrained as well.
-.seg_check_devs <- function(kind, npsi, dev) {
-  if (kind == "seg") return(invisible(NULL))
+.seg_check_devs <- function(kind, npsi, dev, smoothed = FALSE) {
+  # a smoothed term holds every break-point directly, so there is no
+  # read-off to constrain and a development of anything is legal, as it is
+  # for the continuous construction
+  if (kind == "seg" || smoothed) return(invisible(NULL))
   for (k in seq_len(npsi)) {
     pp <- paste0("psi", k)
     involved <- c(if (kind == "jseg") paste0("gamma", k), paste0("delta", k), pp)
@@ -671,6 +737,7 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 # without forming one.
 .seg_designs <- function(term, data) {
   params <- .seg_params(term@kind, term@npsi, term@linear)
+  smoothed <- !is.null(term@spec$smoothed)
   dev <- stats::setNames(vector("list", length(params)), params)
   for (p in params) {
     sf <- term@subformulas[[p]]
@@ -681,8 +748,8 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
                      key = paste(deparse(sf), collapse = ""),
                      partition = .seg_is_partition(sub$Z))
   }
-  .seg_check_devs(term@kind, term@npsi, dev)
-  if (term@kind != "seg") {
+  .seg_check_devs(term@kind, term@npsi, dev, smoothed)
+  if (term@kind != "seg" && !smoothed) {
     for (k in seq_len(term@npsi)) {
       d <- dev[[paste0("psi", k)]]
       if (!is.null(d) && length(d$pens)) {
@@ -714,7 +781,8 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 # is exact under the conditions .seg_check_devs() enforces.
 .seg_pk <- function(bp, coef, k, prev = NULL) {
   cf <- coef[bp$index[[paste0("psi", k)]]]
-  if (bp$kind == "seg") return(cf)
+  # a smoothed term holds the break-point directly whatever its kind
+  if (bp$kind == "seg" || !is.null(bp$smooth)) return(cf)
   dk <- coef[bp$index[[paste0("delta", k)]]]
   dk[abs(dk) < 1e-12] <- 1e-12
   if (bp$kind == "jseg" && !is.null(prev)) {
@@ -840,9 +908,86 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   list(X = out$X, value = out$value, psi = pos$psi, pk = pos$pk)
 }
 
+# The smoothed derivatives at one set of points: s^(order) with the width
+# the build resolved, per observation where it was resolved per group. On
+# other rows a per-group width is recomputed from the break-point
+# development's design, which is what carries the grouping.
+.seg_sw <- function(sm, u, w, order) {
+  sm@s[[order + 1L]](u, w)
+}
+
+.seg_smooth_w <- function(sm, n, Z) {
+  if (is.null(sm$w_group)) return(rep(sm$width, length.out = n))
+  z <- as.matrix(Z[[sm$group_param]])[, sm$group_cols, drop = FALSE]
+  as.numeric(z %*% sm$w_group)
+}
+
+# The block and the contribution of a SMOOTHED term: the break-points are
+# ordinary parameters and the block is the true Jacobian of
+#
+#   f = beta x + sum_k [ gamma_k H(u_k) + delta_k S(u_k) ],  u_k = x - psi_k,
+#
+# with H(u) = (u + s(u))/2 the smooth hinge and S(u) = (1 + s'(u))/2 the
+# smooth step. The columns are
+#
+#   beta     x
+#   gamma_k  H(u_k)
+#   delta_k  S(u_k)
+#   psi_k    -( gamma_k S(u_k) + delta_k s''(u_k)/2 )
+#
+# since H' = S and S' = s''/2. Everything is the closed form of the
+# smoother's own derivatives, so the same machinery serves the three kinds
+# with a coefficient absent simply contributing nothing.
+.seg_block_smooth <- function(bp, xv, coef, Z = bp$Z, prev = bp$pk) {
+  n <- length(xv)
+  K <- bp$npsi
+  sm <- bp$smooth
+  w <- .seg_smooth_w(sm, n, Z)
+  pos <- .seg_positions(bp, coef, n, Z, prev)
+  psi <- pos$psi
+  value <- numeric(n)
+  cols <- list()
+  put <- function(p, mult) {
+    z <- Z[[p]]
+    cols[[p]] <<- if (is.null(z)) matrix(mult, ncol = 1L) else mult * z
+  }
+  val <- function(p) .seg_pval(list(Z = Z, index = bp$index), coef, p, n)
+
+  if (bp$linear) {
+    put("beta", xv)
+    value <- value + val("beta") * xv
+  }
+  has_g <- bp$kind %in% c("seg", "jseg")
+  has_d <- bp$kind %in% c("jump", "jseg")
+  for (k in seq_len(K)) {
+    u <- xv - psi[, k]
+    s0 <- .seg_sw(sm$sm, u, w, 0L)
+    s1 <- .seg_sw(sm$sm, u, w, 1L)
+    s2 <- .seg_sw(sm$sm, u, w, 2L)
+    H <- (u + s0) / 2
+    S <- (1 + s1) / 2
+    dpsi <- numeric(n)
+    if (has_g) {
+      gam <- val(paste0("gamma", k))
+      put(paste0("gamma", k), H)
+      value <- value + gam * H
+      dpsi <- dpsi + gam * S
+    }
+    if (has_d) {
+      del <- val(paste0("delta", k))
+      put(paste0("delta", k), S)
+      value <- value + del * S
+      dpsi <- dpsi + del * s2 / 2
+    }
+    put(paste0("psi", k), -dpsi)
+  }
+  list(X = .nl_bind(cols[bp$params]), value = value, psi = psi, pk = pos$pk)
+}
+
 .seg_assemble <- function(bp, xv, coef, cscale = bp$cscale, Z = bp$Z,
                           prev = bp$pk) {
-  if (bp$developed) .seg_block(bp, xv, coef, cscale, Z, prev)
+  if (!is.null(bp$smooth)) .seg_block_smooth(bp, xv, coef, Z, prev)
+  else if (bp$developed) .seg_block(bp, xv, coef, cscale, Z, prev)
   else .seg_block_cpp(bp, xv, coef, cscale, prev)
 }
 
@@ -884,11 +1029,84 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
   xv <- .seg_x(term@var, data)
   n <- length(xv)
   params <- .seg_params(term@kind, term@npsi, term@linear)
+  smoothed <- term@spec$smoothed
   dev <- .seg_designs(term, data)
 
   rr <- range(xv)
   if (diff(rr) <= 0) {
     stop("the covariate of a break-point term must vary.", call. = FALSE)
+  }
+
+  # The smoother's width, resolved from the covariate's spacing where the
+  # object carries none: the median gap between distinct values, within
+  # groups where a break-point development supplies a partition -- the
+  # validity window of a Laplace approximation being per-subject -- and
+  # globally otherwise. The floor is derived, not chosen: see
+  # penalties7::smoother_width_floor().
+  smooth <- NULL
+  if (!is.null(smoothed)) {
+    gaps_of <- function(v) {
+      u <- sort(unique(v))
+      if (length(u) > 1L) diff(u) else numeric(0)
+    }
+    # the covariate varies (checked above), so the global gap set is
+    # non-empty
+    global_sp <- stats::median(gaps_of(xv))
+    gp <- NULL
+    gcols <- NULL
+    for (k in seq_len(term@npsi)) {
+      d <- dev[[paste0("psi", k)]]
+      if (is.null(d)) next
+      pc <- .seg_partition_cols(d$Z)
+      if (!is.null(pc)) {
+        gp <- paste0("psi", k)
+        gcols <- pc
+        break
+      }
+    }
+    per <- NULL
+    if (!is.null(gp)) {
+      Zg <- as.matrix(dev[[gp]]$Z)[, gcols, drop = FALSE]
+      per <- vapply(seq_len(ncol(Zg)), function(j) {
+        g <- gaps_of(xv[Zg[, j] == 1])
+        if (length(g)) stats::median(g) else global_sp
+      }, numeric(1))
+    }
+    floorw <- penalties7::smoother_width_floor(smoothed, diff(rr))
+    if (isTRUE(smoothed@per_group)) {
+      if (is.null(per)) {
+        stop(paste("a per-group width needs a break-point development whose",
+                   "design has one column per group with each observation in",
+                   "one of them, as psi ~ 0 + g or psi ~ random(~1 | g)",
+                   "gives."), call. = FALSE)
+      }
+      wg <- if (is.null(smoothed@width)) {
+        penalties7::smoother_width(smoothed, per)
+      } else {
+        rep(smoothed@width, length(per))
+      }
+      if (any(wg < floorw)) {
+        stop(sprintf(paste("the smoother's width (%.3g) is below the floor",
+                           "%.3g = the width at which the Jacobian column,",
+                           "of order 1/h against the covariate's range,",
+                           "takes the design's condition past eps^-1/2."),
+                     min(wg), floorw), call. = FALSE)
+      }
+      smooth <- list(sm = smoothed, w_group = wg, group_param = gp,
+                     group_cols = gcols, width = stats::median(wg))
+    } else {
+      sp <- if (!is.null(per)) stats::median(per) else global_sp
+      wd <- penalties7::smoother_width(smoothed, sp)
+      if (wd < floorw) {
+        stop(sprintf(paste("the smoother's width (%.3g) is below the floor",
+                           "%.3g = the width at which the Jacobian column,",
+                           "of order 1/h against the covariate's range,",
+                           "takes the design's condition past eps^-1/2."),
+                     wd, floorw), call. = FALSE)
+      }
+      smooth <- list(sm = smoothed, w_group = NULL, group_param = NULL,
+                     group_cols = NULL, width = wd)
+    }
   }
 
   # the interval a break-point is held in: far enough inside the data
@@ -917,7 +1135,7 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
   cn <- character(0)
   pos <- 0L
   for (p in params) {
-    stem <- .seg_coef_stem(term@kind, p)
+    stem <- .seg_coef_stem(term@kind, p, !is.null(smoothed))
     d <- dev[[p]]
     q <- if (is.null(d)) 1L else ncol(d$Z)
     Z[[p]] <- if (is.null(d)) NULL else d$Z
@@ -940,7 +1158,8 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
     if (term@kind %in% c("seg", "jseg")) start_at(paste0("gamma", k), 1)
     if (term@kind %in% c("jump", "jseg")) start_at(paste0("delta", k), 1)
     start_at(paste0("psi", k),
-             if (term@kind == "seg") start_psi[k] else -start_psi[k])
+             if (term@kind == "seg" || !is.null(smoothed)) start_psi[k]
+             else -start_psi[k])
   }
 
   bp <- list(kind = term@kind, npsi = term@npsi, linear = term@linear,
@@ -951,7 +1170,7 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
              cscale = rep(term@spec$c0, term@npsi),
              sgn = rep(0, term@npsi), step = rep(NA_real_, term@npsi),
              nref = 0L, var = term@var, coef = coef0, xv = xv,
-             pk = vector("list", term@npsi))
+             pk = vector("list", term@npsi), smooth = smooth)
 
   asm <- .seg_assemble(bp, xv, coef0)
   X <- asm$X
@@ -1055,8 +1274,118 @@ S7::method(term_penalties, SegTerm) <- function(term, ...) {
 # the discontinuous ones carry the frozen weight of the identity of Fasola
 # et al., so their block is a working linearization and the fixed-point
 # iteration it belongs to is not a descent method on the model's objective.
+# A SMOOTHED term is a Jacobian whatever its kind: the break-points are
+# ordinary parameters and there is no frozen weight. The question is asked
+# of the specification, which a fitting layer routes on before the term is
+# built.
 S7::method(term_jacobian_block, SegTerm) <- function(term, ...) {
-  identical(term@kind, "seg")
+  identical(term@kind, "seg") || !is.null(term@spec$smoothed)
+}
+
+# How a smoothed block moves with the coefficients, in the two shapes the
+# generics ask: contracted against a caller's weight (per coefficient) and
+# taken along one direction (per entry of the block). Everything is the
+# closed form of the smoother's derivatives one order up from the block --
+# with u = x - psi, S = (1 + s')/2, P = s''/2 and T = s'''/2,
+#
+#   d(gamma col)/d psi = -S      d(psi col)/d gamma = -S
+#   d(delta col)/d psi = -P      d(psi col)/d delta = -P
+#   d(psi col)/d psi   = gamma P + delta T
+#
+# with the derivative in a break-point's own coefficients gated by `free`
+# where the position sits against a confinement limit, exactly as the
+# continuous construction gates its indicator.
+.seg_smooth_parts <- function(bp, cf, k) {
+  n <- length(bp$xv)
+  sm <- bp$smooth
+  wv <- .seg_smooth_w(sm, n, bp$Z)
+  pos <- .seg_positions(bp, cf, n)
+  u <- bp$xv - pos$psi[, k]
+  pk <- paste0("psi", k)
+  zp <- bp$Z[[pk]]
+  v <- if (is.null(zp)) rep(pos$pk[[k]], n) else
+    as.numeric(as.matrix(zp) %*% pos$pk[[k]])
+  list(
+    S = (1 + .seg_sw(sm$sm, u, wv, 1L)) / 2,
+    P = .seg_sw(sm$sm, u, wv, 2L) / 2,
+    T = .seg_sw(sm$sm, u, wv, 3L) / 2,
+    free = as.numeric(v > bp$lim[1L] & v < bp$lim[2L])
+  )
+}
+
+.seg_smooth_contract <- function(bp, cf, A, out) {
+  n <- length(bp$xv)
+  sfun <- function(p) {
+    idx <- bp$index[[p]]
+    z <- bp$Z[[p]]
+    Ap <- A[, idx, drop = FALSE]
+    if (is.null(z)) as.numeric(Ap[, 1L]) else
+      as.numeric(rowSums(Ap * as.matrix(z)))
+  }
+  place <- function(p, w) {
+    idx <- bp$index[[p]]
+    z <- bp$Z[[p]]
+    out[idx] <<- out[idx] +
+      if (is.null(z)) sum(w) else as.numeric(crossprod(as.matrix(z), w))
+  }
+  val <- function(p) .seg_pval(list(Z = bp$Z, index = bp$index), cf, p, n)
+  has_g <- bp$kind %in% c("seg", "jseg")
+  has_d <- bp$kind %in% c("jump", "jseg")
+  for (k in seq_len(bp$npsi)) {
+    pk <- paste0("psi", k)
+    pt <- .seg_smooth_parts(bp, cf, k)
+    dself <- numeric(n)
+    if (has_g) {
+      gk <- paste0("gamma", k)
+      place(pk, -pt$S * sfun(gk) * pt$free)
+      place(gk, -pt$S * sfun(pk))
+      dself <- dself + val(gk) * pt$P
+    }
+    if (has_d) {
+      dk <- paste0("delta", k)
+      place(pk, -pt$P * sfun(dk) * pt$free)
+      place(dk, -pt$P * sfun(pk))
+      dself <- dself + val(dk) * pt$T
+    }
+    place(pk, dself * sfun(pk) * pt$free)
+  }
+  out
+}
+
+.seg_smooth_deriv <- function(bp, cf, v, out) {
+  n <- length(bp$xv)
+  along <- function(p) {
+    idx <- bp$index[[p]]
+    z <- bp$Z[[p]]
+    if (is.null(z)) rep(v[idx], n) else as.numeric(as.matrix(z) %*% v[idx])
+  }
+  put <- function(p, w) {
+    idx <- bp$index[[p]]
+    z <- bp$Z[[p]]
+    out[, idx] <<- out[, idx] + if (is.null(z)) w else as.matrix(z) * w
+  }
+  val <- function(p) .seg_pval(list(Z = bp$Z, index = bp$index), cf, p, n)
+  has_g <- bp$kind %in% c("seg", "jseg")
+  has_d <- bp$kind %in% c("jump", "jseg")
+  for (k in seq_len(bp$npsi)) {
+    pk <- paste0("psi", k)
+    pt <- .seg_smooth_parts(bp, cf, k)
+    dself <- numeric(n)
+    if (has_g) {
+      gk <- paste0("gamma", k)
+      put(gk, -pt$S * pt$free * along(pk))
+      put(pk, -pt$S * along(gk))
+      dself <- dself + val(gk) * pt$P
+    }
+    if (has_d) {
+      dk <- paste0("delta", k)
+      put(dk, -pt$P * pt$free * along(pk))
+      put(pk, -pt$P * along(dk))
+      dself <- dself + val(dk) * pt$T
+    }
+    put(pk, dself * pt$free * along(pk))
+  }
+  out
 }
 
 S7::method(term_block_contract, SegTerm) <- function(term, coef = NULL, A,
@@ -1083,7 +1412,10 @@ S7::method(term_block_contract, SegTerm) <- function(term, coef = NULL, A,
   # Zeros here are what the base class gives, and are honest: a partial answer
   # that looked complete would be worse. Measured, this is the whole of the
   # gap on a jseg -- the contraction over its change columns reads 0 against a
-  # brute-force 1.30e+02.
+  # brute-force 1.30e+02. A SMOOTHED term of any kind is the exception: its
+  # block is a true Jacobian and its second derivatives are the smoother's
+  # own, one order up.
+  if (!is.null(bp$smooth)) return(.seg_smooth_contract(bp, cf, A, out))
   if (!identical(bp$kind, "seg")) return(out)
   # every column of the block is a multiplier times that coefficient's own
   # design, so the contraction over a parameter's columns collapses to one
@@ -1143,7 +1475,8 @@ S7::method(term_block_deriv, SegTerm) <- function(term, coef = NULL, v, ...) {
   # the continuous construction only, for the reason term_block_contract()
   # records: a discontinuous one reads its position off a product of the
   # unknowns and carries a weight whose derivative in the break-point is
-  # unbounded
+  # unbounded. A smoothed term of any kind has the closed forms instead.
+  if (!is.null(bp$smooth)) return(.seg_smooth_deriv(bp, cf, v, out))
   if (!identical(bp$kind, "seg")) return(out)
 
   along <- function(p) {
@@ -1251,6 +1584,24 @@ S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   dfar <- apply(psi_new, 2L, function(p) max(pmax(p - bp$lo, bp$hi - p)))
   dnear <- apply(psi_new, 2L, function(p) min(pmin(p - bp$lo, bp$hi - p)))
   amax <- apply(abs(psi_new), 2L, max)
+
+  # a smoothed term has no working parametrization and therefore no
+  # schedule: the block is the Jacobian and the step is a Gauss-Newton one,
+  # so only the step record (for seg_step) and the relabeling above apply
+  if (!is.null(bp$smooth)) {
+    bp$nref <- bp$nref + 1L
+    bp$step <- if (bp$nref > 1L) stepv else rep(NA_real_, length(stepv))
+    asm <- .seg_assemble(bp, bp$xv, coef)
+    X <- asm$X
+    colnames(X) <- term@coef_names
+    bp$coef <- coef
+    bp$value <- asm$value
+    bp$psi <- asm$psi
+    bp$pk <- asm$pk
+    term@X <- X
+    term@blueprint <- bp
+    return(term)
+  }
 
   s <- sign(d)
   flip <- s != 0 & bp$sgn != 0 & s != bp$sgn
@@ -1525,7 +1876,7 @@ seg_relocate <- function(term, psi) {
   cf <- bp$coef
   for (k in seq_len(K)) {
     pk <- paste0("psi", k)
-    if (bp$kind == "seg") {
+    if (bp$kind == "seg" || !is.null(bp$smooth)) {
       cf[bp$index[[pk]]] <- psi[k]
     } else {
       dk <- cf[bp$index[[paste0("delta", k)]]]
@@ -1843,6 +2194,17 @@ S7::method(print, SegTerm) <- function(x, ...) {
                 x@npsi, if (x@npsi == 1L) "" else "s",
                 if (length(dv))
                   sprintf("; %s developed", paste(dv, collapse = ", ")) else ""))
+    sm <- x@blueprint$smooth
+    if (!is.null(sm)) {
+      # the width is the transition's, the bent-cable reading, so it is
+      # reported rather than treated as a detail
+      cat(sprintf("  smoothed (%s, %s = %s%s)
+", sm$sm@smoother_name,
+                  sm$sm@width_name, format(sm$width, digits = 3),
+                  if (!is.null(sm$w_group)) sprintf(", per group [%s, %s]",
+                    format(min(sm$w_group), digits = 3),
+                    format(max(sm$w_group), digits = 3)) else ""))
+    }
     psi <- .seg_psi_report(x@blueprint)
     if (is.matrix(psi)) {
       # a developed break-point has one position per observation; what a
@@ -1971,7 +2333,7 @@ S7::method(term_readable, SegTerm) <- function(term, zeta, ...) {
   pos <- .seg_positions(bp, cf, 1L, bp$Z, bp$pk)$psi[1L, ]
   for (k in seq_len(K)) {
     ip <- at(paste0("psi", k))
-    if (bp$kind == "seg") {
+    if (bp$kind == "seg" || !is.null(bp$smooth)) {
       push(paste0("psi", k), pos[k], sel(ip))
     } else {
       id <- at(paste0("delta", k))

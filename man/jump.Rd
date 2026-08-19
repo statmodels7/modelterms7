@@ -11,6 +11,7 @@ jump(
   psi = NULL,
   by = NULL,
   c0 = 0.05,
+  smoothed = NULL,
   n_boot = 10,
   label = "jump"
 )
@@ -36,6 +37,31 @@ level of a factor. A bare variable is rejected; write the formula.}
 observations from the break-point, as a fraction of the distance to
 the ends of the range. Defaults to \code{0.05}, the value
 \cite{fasola2018} recommend; see Details.}
+
+\item{smoothed}{\code{NULL} (the default: the construction exactly as
+documented above) or a \pkg{penalties7}
+\code{\link[penalties7]{abs_smoother}}, e.g.
+\code{penalties7::smooth_probit()}. The smoother replaces the step and
+the hinge by their smooth versions -- \eqn{(1 + s'(u))/2} and
+\eqn{(u + s(u))/2} -- so every break-point becomes an ordinary
+parameter of a \eqn{C^\infty} model: there is no working
+parametrization, no auxiliary coefficient and no scaling schedule
+(\code{c0} is ignored, with a message), the block is the true Jacobian
+and the term is fitted by Gauss-Newton like \code{\link{nl}}. A
+development of a break-point -- \code{psi ~ random(~1 | id)}, a
+penalized one included -- is then legal for every kind, the read-off
+that constrained the discontinuous constructions having gone. The
+smoother's width is resolved at build from the covariate's spacing
+(the median gap between distinct values, within groups where a
+break-point development supplies a partition) unless the object
+carries one, and is reported: it is the width of the transition, the
+bent-cable reading, and the smoothing bias it buys is confined to a
+window of that width (probit, quintic) or decays as \eqn{c/(4|u|)}
+(hyperbolic). The objective is still multimodal in the positions --
+smoothing rounds the local optima, it does not remove them -- so the
+profile start and the \code{n_boot} restarts stay necessary; a
+smoothed fit from a bad start has been measured converging to an
+absurd local optimum while reporting success.}
 
 \item{n_boot}{How many bootstrap restarts the fitting layer runs after
 the iteration first converges (Wood 2001, the device \code{segmented}
