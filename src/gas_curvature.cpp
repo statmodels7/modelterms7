@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include <fenv.h>
 #include <RcppParallel.h>
 #include <vector>
 using namespace Rcpp;
@@ -32,11 +33,24 @@ using namespace Rcpp;
 
 namespace {
 
+// The same shape as gas_filter.cpp's, and for the reasons stated there:
+// one compiled copy for both branches, and the calling thread's
+// floating-point environment installed before the chunk.
+#if defined(__GNUC__) || defined(__clang__)
+#define MT7_NOINLINE __attribute__((noinline))
+#elif defined(_MSC_VER)
+#define MT7_NOINLINE __declspec(noinline)
+#else
+#define MT7_NOINLINE
+#endif
+
 template <typename Body>
 struct GroupWorker : public RcppParallel::Worker {
     const Body& body;
-    explicit GroupWorker(const Body& b) : body(b) {}
-    void operator()(std::size_t begin, std::size_t end) {
+    fenv_t env;
+    explicit GroupWorker(const Body& b) : body(b) { fegetenv(&env); }
+    MT7_NOINLINE void operator()(std::size_t begin, std::size_t end) {
+        fesetenv(&env);
         for (std::size_t g = begin; g < end; ++g) body(g);
     }
 };
@@ -278,12 +292,13 @@ List gas_curvature_sub_cpp(NumericVector eta, List groups, int p, int q,
         }
     };
 
+    // the count is passed on rather than left to the process-level setting
+    auto body = [&](std::size_t gi) { run_group(gi); };
+    GroupWorker<decltype(body)> w(body);
     if (threads > 1 && ng >= kMinGroupsPar) {
-        auto body = [&](std::size_t gi) { run_group(gi); };
-        GroupWorker<decltype(body)> w(body);
-        RcppParallel::parallelFor(0, (std::size_t) ng, w);
+        RcppParallel::parallelFor(0, (std::size_t) ng, w, 1, threads);
     } else {
-        for (int l = 0; l < ng; ++l) run_group(l);
+        w(0, (std::size_t) ng);
     }
 
     // the merge into W runs HERE, on the main thread, in group order

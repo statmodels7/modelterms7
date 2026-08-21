@@ -1,3 +1,21 @@
+# modelterms7 0.57.0
+
+* The two filter kernels and the curvature kernel take the shape
+  `distributions7`'s `d7::par_for()` settled on. The worker's loop is
+  noinline and the sequential branch runs through the worker rather than
+  through a loop of its own, so both branches execute one compiled copy
+  instead of two the compiler may optimize apart; and the worker installs
+  the calling thread's floating-point environment before its chunk, which
+  is what keeps R's `psigamma`, `bessel_k`, `pgamma` and `pbeta` from
+  returning per-thread last bits. A filter accumulates over time, so a
+  difference of that kind would be carried forward by the recursion rather
+  than confined to the element that produced it.
+
+* `threads` is passed to `parallelFor()` instead of being left to
+  `RCPP_PARALLEL_NUM_THREADS`. `term_filter(threads = 2)` called outside a
+  fit was running on every core of the machine; a fit, which sizes the pool
+  through `numericals7::local_threads()`, is unaffected.
+
 # modelterms7 0.56.1
 
 * The gas fast-route twins compare the C route against the R callbacks at a

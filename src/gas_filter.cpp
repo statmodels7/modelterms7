@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include <R_ext/Rdynload.h>
+#include <fenv.h>
 #include <RcppParallel.h>
 #include <cstring>
 #include <vector>
@@ -97,11 +98,31 @@ FastCtx fast_ctx(SEXP fastS) {
     return c;
 }
 
+// The same shape as distributions7's d7::par_for(), and for the same two
+// reasons. The loop is NOINLINE and the sequential branch runs THROUGH the
+// worker, so both branches execute one compiled copy rather than two the
+// compiler is free to optimize apart. And the worker installs the calling
+// thread's floating-point environment before its chunk: R's psigamma,
+// bessel_k, pgamma and pbeta return per-thread last bits without it
+// (measured 2026-08-21), and while the covered fast route reads only
+// digamma and trigamma, which are stable, a filter's recursion accumulates
+// over time and would carry any such difference forward rather than
+// confining it to one element.
+#if defined(__GNUC__) || defined(__clang__)
+#define MT7_NOINLINE __attribute__((noinline))
+#elif defined(_MSC_VER)
+#define MT7_NOINLINE __declspec(noinline)
+#else
+#define MT7_NOINLINE
+#endif
+
 template <typename Body>
 struct GroupWorker : public RcppParallel::Worker {
     const Body& body;
-    explicit GroupWorker(const Body& b) : body(b) {}
-    void operator()(std::size_t begin, std::size_t end) {
+    fenv_t env;
+    explicit GroupWorker(const Body& b) : body(b) { fegetenv(&env); }
+    MT7_NOINLINE void operator()(std::size_t begin, std::size_t end) {
+        fesetenv(&env);
         for (std::size_t g = begin; g < end; ++g) body(g);
     }
 };
@@ -220,12 +241,17 @@ List gas_filter_cpp(NumericVector eta, List order, int p, int q,
         }
     };
 
+    // the count is passed to parallelFor rather than left to the
+    // process-level setting: resolveValue() prefers an explicit positive
+    // value, so a fit that sized the pool keeps its size and a caller that
+    // did not gets the count it asked for instead of every core there is
+    auto body = [&](std::size_t gi) { run_group(gi, fc.ok); };
+    GroupWorker<decltype(body)> w(body);
     if (fc.ok && threads > 1 && ng >= kMinGroupsPar) {
-        auto body = [&](std::size_t gi) { run_group(gi, true); };
-        GroupWorker<decltype(body)> w(body);
-        RcppParallel::parallelFor(0, static_cast<std::size_t>(ng), w);
+        RcppParallel::parallelFor(0, static_cast<std::size_t>(ng), w, 1,
+                                  threads);
     } else {
-        for (int g = 0; g < ng; ++g) run_group(g, fc.ok);
+        w(0, static_cast<std::size_t>(ng));
     }
 
     return List::create(_["eta"] = eta_out, _["jacobian"] = jac,
@@ -360,12 +386,17 @@ List gas_filter_sub_cpp(NumericVector eta, List groups, int p, int q,
         }
     };
 
+    // the count is passed to parallelFor rather than left to the
+    // process-level setting: resolveValue() prefers an explicit positive
+    // value, so a fit that sized the pool keeps its size and a caller that
+    // did not gets the count it asked for instead of every core there is
+    auto body = [&](std::size_t gi) { run_group(gi, fc.ok); };
+    GroupWorker<decltype(body)> w(body);
     if (fc.ok && threads > 1 && ng >= kMinGroupsPar) {
-        auto body = [&](std::size_t gi) { run_group(gi, true); };
-        GroupWorker<decltype(body)> w(body);
-        RcppParallel::parallelFor(0, static_cast<std::size_t>(ng), w);
+        RcppParallel::parallelFor(0, static_cast<std::size_t>(ng), w, 1,
+                                  threads);
     } else {
-        for (int g = 0; g < ng; ++g) run_group(g, fc.ok);
+        w(0, static_cast<std::size_t>(ng));
     }
 
     return List::create(_["eta"] = eta_out, _["jacobian"] = jac,
