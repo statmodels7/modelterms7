@@ -1,5 +1,37 @@
 # Changelog
 
+## modelterms7 0.57.0
+
+- The two filter kernels and the curvature kernel take the shape
+  `distributions7`’s `d7::par_for()` settled on. The worker’s loop is
+  noinline and the sequential branch runs through the worker rather than
+  through a loop of its own, so both branches execute one compiled copy
+  instead of two the compiler may optimize apart; and the worker
+  installs the calling thread’s floating-point environment before its
+  chunk, which is what keeps R’s `psigamma`, `bessel_k`, `pgamma` and
+  `pbeta` from returning per-thread last bits. A filter accumulates over
+  time, so a difference of that kind would be carried forward by the
+  recursion rather than confined to the element that produced it.
+
+- `threads` is passed to `parallelFor()` instead of being left to
+  `RCPP_PARALLEL_NUM_THREADS`. `term_filter(threads = 2)` called outside
+  a fit was running on every core of the machine; a fit, which sizes the
+  pool through
+  [`numericals7::local_threads()`](https://statmodels7.github.io/numericals7/reference/local_threads.html),
+  is unaffected.
+
+## modelterms7 0.56.1
+
+- The gas fast-route twins compare the C route against the R callbacks
+  at a tolerance of 1e-13 instead of
+  [`identical()`](https://rdrr.io/r/base/identical.html): clang on the
+  arm64 macOS runner contracts the scalar composition’s multiply-adds
+  into FMAs, which R’s interpreter never does, and the last bit moved.
+  The tolerance still fails a wrong composition by many orders;
+  everything computed by one route both times – the inert-context
+  fallbacks, the threads over groups – stays
+  [`identical()`](https://rdrr.io/r/base/identical.html).
+
 ## modelterms7 0.56.0
 
 - [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),

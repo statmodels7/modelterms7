@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.56.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.57.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,15 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.57.0" id="modelterms7-0570">modelterms7 0.57.0<a class="anchor" aria-label="anchor" href="#modelterms7-0570"></a></h2>
+<ul><li><p>The two filter kernels and the curvature kernel take the shape <code>distributions7</code>’s <code>d7::par_for()</code> settled on. The worker’s loop is noinline and the sequential branch runs through the worker rather than through a loop of its own, so both branches execute one compiled copy instead of two the compiler may optimize apart; and the worker installs the calling thread’s floating-point environment before its chunk, which is what keeps R’s <code>psigamma</code>, <code>bessel_k</code>, <code>pgamma</code> and <code>pbeta</code> from returning per-thread last bits. A filter accumulates over time, so a difference of that kind would be carried forward by the recursion rather than confined to the element that produced it.</p></li>
+<li><p><code>threads</code> is passed to <code>parallelFor()</code> instead of being left to <code>RCPP_PARALLEL_NUM_THREADS</code>. <code>term_filter(threads = 2)</code> called outside a fit was running on every core of the machine; a fit, which sizes the pool through <code><a href="https://statmodels7.github.io/numericals7/reference/local_threads.html" class="external-link">numericals7::local_threads()</a></code>, is unaffected.</p></li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.56.1" id="modelterms7-0561">modelterms7 0.56.1<a class="anchor" aria-label="anchor" href="#modelterms7-0561"></a></h2>
+<ul><li>The gas fast-route twins compare the C route against the R callbacks at a tolerance of 1e-13 instead of <code><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical()</a></code>: clang on the arm64 macOS runner contracts the scalar composition’s multiply-adds into FMAs, which R’s interpreter never does, and the last bit moved. The tolerance still fails a wrong composition by many orders; everything computed by one route both times – the inert-context fallbacks, the threads over groups – stays <code><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical()</a></code>.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.56.0" id="modelterms7-0560">modelterms7 0.56.0<a class="anchor" aria-label="anchor" href="#modelterms7-0560"></a></h2>
 <ul><li><p><code><a href="../reference/seg.html">seg()</a></code>, <code><a href="../reference/jump.html">jump()</a></code> and <code><a href="../reference/jseg.html">jseg()</a></code> take <code>marginal = FALSE</code> (the default: the construction exactly as before, to the bit) or <code>marginal = TRUE</code>, the marginal break-point terms of <code>piano_marginal.txt</code>: <code>kind(x, psi ~ random(~1 | g), marginal = TRUE)</code> treats each break-point as a latent variable per group and integrates it out of the likelihood. The prior is part of the likelihood – its parameters are ordinary ones estimated by maximum likelihood, <code><a href="../reference/term_penalties.html">term_penalties()</a></code> declares nothing – and the term is structural of the likelihood shape (<code>MarginalBreakTerm</code>, the contract of <code><a href="../reference/regime.html">regime()</a></code>).</p></li>
