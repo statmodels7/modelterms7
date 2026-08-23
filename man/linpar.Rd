@@ -17,17 +17,17 @@ coefficient names as \code{label.name}.}
 below.}
 
 \item{contrasts}{The contrasts for the formula's factors, as a named list
-of the kind \code{\link[stats]{model.matrix}}'s \code{contrasts.arg}
+of the kind \code{\link[stats:model.matrix]{stats::model.matrix()}}'s \code{contrasts.arg}
 takes. \code{NULL}, the default, leaves them to the session's
 \code{options("contrasts")}.}
 }
 \value{
-An object of class \code{\link{LinparTerm}} (a specification;
-  see \code{\link{term_build}}).
+An object of class \code{\link[=LinparTerm]{LinparTerm()}} (a specification;
+see \code{\link[=term_build]{term_build()}}).
 }
 \description{
 Creates the specification of an unpenalized parametric block: the design
-matrix of a one-sided formula, with the usual \code{\link[stats]{model.matrix}}
+matrix of a one-sided formula, with the usual \code{\link[stats:model.matrix]{stats::model.matrix()}}
 conventions for factors, contrasts, interactions and the intercept.
 }
 \details{
@@ -37,16 +37,16 @@ contribution to the predictor is linear in its coefficients,
 \deqn{\eta = X\beta,}
 
 with no penalty attached, so all \eqn{p = \operatorname{ncol}(X)}
-coefficients are free and \code{\link{edf}} counts every one of them.
+coefficients are free and \code{\link[=edf]{edf()}} counts every one of them.
 
-\code{\link{interpret_formula}} collects the bare covariates of a model
+\code{\link[=interpret_formula]{interpret_formula()}} collects the bare covariates of a model
 formula into one term of this kind, so \code{y ~ x1 + x2} and
 \code{y ~ linpar(~ x1 + x2)} produce the same block; the explicit
 constructor exists for callers who want several parametric blocks with
 distinct labels.
 
 Building the term records a blueprint: the terms object, the factor
-levels and the contrasts. \code{\link{term_predict}} reapplies the
+levels and the contrasts. \code{\link[=term_predict]{term_predict()}} reapplies the
 mapping through that blueprint, so a factor column in new data is
 encoded against the levels seen at build time, and a level the
 blueprint does not know is rejected rather than re-encoded. Missing
@@ -56,7 +56,7 @@ stays row-aligned with the response.
 \section{Sparse storage}{
 
 \code{sparse = TRUE} builds the block through
-\code{\link[Matrix]{sparse.model.matrix}}, which BUILDS it sparse rather
+\code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}}, which BUILDS it sparse rather
 than building a dense matrix and compressing it -- the second would cost
 the memory the choice exists to avoid. Measured at 20000 rows and a factor
 of 1000 levels, 0.002 s and 1.8 MB against 0.100 s and 161.5 MB, the
@@ -69,9 +69,9 @@ whatever is asked for, and the sparse storage then costs more than it
 saves. \code{sparse = NULL}, the default, settles it at build from the
 design: the dense indicator part holds \code{n} times its column count in
 cells against one non-zero per row, and the two routes cross at about
-\eqn{10^5} of those cells, which is the rule \code{\link{.resolve_sparse}}
+\eqn{10^5} of those cells, which is the rule \code{\link[=.resolve_sparse]{.resolve_sparse()}}
 applies. \code{TRUE} and \code{FALSE} override it. The storage that was
-settled is part of the blueprint, so \code{\link{term_predict}} builds new
+settled is part of the blueprint, so \code{\link[=term_predict]{term_predict()}} builds new
 data the same way.
 }
 
@@ -83,5 +83,5 @@ term_coef_names(built)
 
 }
 \seealso{
-\code{\link{ridge}}, \code{\link{lasso}}, \code{\link{scad}}, \code{\link{mcp}}, \code{\link{enet}}
+\code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}}, \code{\link[=scad]{scad()}}, \code{\link[=mcp]{mcp()}}, \code{\link[=enet]{enet()}}
 }

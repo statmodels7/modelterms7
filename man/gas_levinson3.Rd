@@ -16,7 +16,7 @@ gas_levinson3(pacf, w)
 A list of one \code{q} by \code{q} matrix per coefficient.
 }
 \description{
-\code{\link{gas_levinson2}}'s second derivatives differentiated once more
+\code{\link[=gas_levinson2]{gas_levinson2()}}'s second derivatives differentiated once more
 and contracted against a single direction, one matrix per coefficient.
 }
 \details{
@@ -28,7 +28,7 @@ u[v])}, a derivative along the single direction the penalized mode moves
 in, so what is propagated is a matrix per coefficient and never a
 three-index array.
 
-Differentiating the hessian recursion of \code{\link{gas_levinson2}} once
+Differentiating the hessian recursion of \code{\link[=gas_levinson2]{gas_levinson2()}} once
 more along \eqn{w} adds no new kind of term, the map being bilinear:
 \deqn{T^{(k)}_i = T^{(k-1)}_i - \rho_k T^{(k-1)}_{k-i}
   - w_k H^{(k-1)}_{k-i}
@@ -45,6 +45,6 @@ function that stops at \eqn{q = 2} compares zero with zero and asserts
 nothing.
 }
 \seealso{
-\code{\link{gas_levinson2}}
+\code{\link[=gas_levinson2]{gas_levinson2()}}
 }
 \keyword{internal}

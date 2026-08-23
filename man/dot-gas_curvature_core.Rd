@@ -28,7 +28,7 @@
 
 \item{y}{The response.}
 
-\item{score, curvature}{The callbacks of \code{\link{term_filter}}.}
+\item{score, curvature}{The callbacks of \code{\link[=term_filter]{term_filter()}}.}
 
 \item{psi}{The parameters on the parameter scale.}
 
@@ -42,10 +42,10 @@
 }
 \value{
 A list with \code{jacobian} and \code{curvature}, and \code{dphi}
-  where a direction was given.
+where a direction was given.
 }
 \description{
-The body \code{\link{term_curvature}} and \code{\link{term_third}} share.
+The body \code{\link[=term_curvature]{term_curvature()}} and \code{\link[=term_third]{term_third()}} share.
 With \code{direction} \code{NULL} it propagates the first two derivatives
 of the predictor; with a direction it propagates the third as well,
 contracted against it.

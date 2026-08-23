@@ -32,9 +32,9 @@ Gauss-Newton step needs beside it.
 a predictor needs where the block is a Jacobian: there
 \code{term_predict()} times the coefficients is the linearization and
 not the contribution, and the two differ by whatever the linearization
-drops. For \code{\link{seg}} that difference is a step at the
+drops. For \code{\link[=seg]{seg()}} that difference is a step at the
 break-point in a construction that is continuous. Rows arriving here are
-treated as \code{\link{term_predict}} treats them, through the levels
+treated as \code{\link[=term_predict]{term_predict()}} treats them, through the levels
 and constants the blueprint recorded, never rebuilt.
 }
 \examples{
@@ -45,5 +45,5 @@ head(term_value(built, newdata = data.frame(x = c(0, 1, 2))), 3)
 
 }
 \seealso{
-\code{\link{term_refresh}}, \code{\link{term_predict}}
+\code{\link[=term_refresh]{term_refresh()}}, \code{\link[=term_predict]{term_predict()}}
 }

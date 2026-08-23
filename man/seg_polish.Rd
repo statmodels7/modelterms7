@@ -7,7 +7,7 @@
 seg_polish(term, y, k = 50, sweeps = 10, weights = NULL)
 }
 \arguments{
-\item{term}{A built break-point term (see \code{\link{term_build}}).}
+\item{term}{A built break-point term (see \code{\link[=term_build]{term_build()}}).}
 
 \item{y}{A numeric vector, one value per observation of the build data:
 the response, net of whatever the caller wants held.}
@@ -28,10 +28,10 @@ Coordinate descent over the break-point positions on the EXACT profile:
 one position at a time is swept over a grid with the others held, the
 least-squares fit at fixed positions being an ordinary linear model, and
 the sweeps repeat until no position moves. The term comes back relocated
-(\code{\link{seg_relocate}}) at the best positions found.
+(\code{\link[=seg_relocate]{seg_relocate()}}) at the best positions found.
 }
 \details{
-This is \code{\link{seg_start}}'s device made conditional, and it exists
+This is \code{\link[=seg_start]{seg_start()}}'s device made conditional, and it exists
 for the failure a start cannot fix: with several break-points the
 iteration can capture two of them on one feature and press the third
 against its confinement limit, and neither a bootstrap excursion --
@@ -43,7 +43,7 @@ is exact and unimodal around it.
 
 The profile is least squares of \code{y} on the term's own columns at
 fixed positions, so it is exact for a gaussian response and a starting
-rule for any other, the argument \code{\link{seg_start}} already makes.
+rule for any other, the argument \code{\link[=seg_start]{seg_start()}} already makes.
 A term whose per-break-point coefficients carry a development is
 rejected, its positions being one per observation.
 
@@ -64,5 +64,5 @@ seg_psi(seg_polish(b, dd$y))
 
 }
 \seealso{
-\code{\link{seg_start}}, \code{\link{seg_relocate}}
+\code{\link[=seg_start]{seg_start()}}, \code{\link[=seg_relocate]{seg_relocate()}}
 }

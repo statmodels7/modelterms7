@@ -7,7 +7,7 @@
 term_matrix(term, ...)
 }
 \arguments{
-\item{term}{A built term (see \code{\link{term_build}}).}
+\item{term}{A built term (see \code{\link[=term_build]{term_build()}}).}
 
 \item{...}{Passed to methods.}
 }
@@ -23,5 +23,5 @@ term_matrix(term_build(linpar(~x), data.frame(x = 1:4)))
 
 }
 \seealso{
-\code{\link{term_build}}, \code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_coef_names}}, \code{\link{term_npar}}, \code{\link{term_is_built}}
+\code{\link[=term_build]{term_build()}}, \code{\link[=term_predict]{term_predict()}}, \code{\link[=term_refresh]{term_refresh()}}, \code{\link[=term_coef_names]{term_coef_names()}}, \code{\link[=term_npar]{term_npar()}}, \code{\link[=term_is_built]{term_is_built()}}
 }

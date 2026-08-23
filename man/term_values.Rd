@@ -13,7 +13,7 @@ term_values(term, ...)
 }
 \value{
 A named list, one entry per penalty of the term, each a named list
-  of numeric vectors. Empty where the term wrote nothing out.
+of numeric vectors. Empty where the term wrote nothing out.
 }
 \description{
 The grid the caller gave verbatim, by hyperparameter. Those a term does
@@ -39,6 +39,6 @@ term_values(lasso(~x, lambda = 3))
 
 }
 \seealso{
-\code{\link{term_hyper}}, \code{\link{term_grid}},
-  \code{\link{term_penalties}}
+\code{\link[=term_hyper]{term_hyper()}}, \code{\link[=term_grid]{term_grid()}},
+\code{\link[=term_penalties]{term_penalties()}}
 }

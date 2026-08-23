@@ -21,15 +21,15 @@ answers \code{TRUE}, having no iteration of its own.
 }
 \details{
 It exists because a score cannot always answer the question. Where the
-block is the Jacobian of the contribution -- \code{\link{nl}},
-\code{\link{seg}} -- the gradient of the model's objective is the block
+block is the Jacobian of the contribution -- \code{\link[=nl]{nl()}},
+\code{\link[=seg]{seg()}} -- the gradient of the model's objective is the block
 times the derivative of the log-likelihood in the predictor, and its
 vanishing is the test. Where the block is a working LINEARIZATION with a
-frozen weight -- \code{\link{jump}}, \code{\link{jseg}} -- it is not: the
+frozen weight -- \code{\link[=jump]{jump()}}, \code{\link[=jseg]{jseg()}} -- it is not: the
 profile objective of a discontinuous term is a step function in the
 break-point, so it has no gradient to vanish, and the quantity the
 iteration actually drives to zero is the movement of the break-point.
-That movement is what \code{\link{seg_converged}} reads, and a fitting
+That movement is what \code{\link[=seg_converged]{seg_converged()}} reads, and a fitting
 layer asks for it here without knowing which construction it holds.
 }
 \examples{
@@ -38,5 +38,5 @@ term_converged(term_build(linpar(~x), dd))
 
 }
 \seealso{
-\code{\link{term_refresh}}, \code{\link{seg_converged}}
+\code{\link[=term_refresh]{term_refresh()}}, \code{\link[=seg_converged]{seg_converged()}}
 }

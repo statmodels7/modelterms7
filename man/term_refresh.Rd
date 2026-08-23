@@ -34,11 +34,11 @@ parameters is carried by the linearization
 so the design block at the current \eqn{\theta} is \eqn{J(\theta)} and
 the coefficient it multiplies is the increment \eqn{h}. Refreshing at
 the new \eqn{\theta} and solving the linear problem again is the
-Gauss-Newton iteration; \code{\link{term_value}} reports
+Gauss-Newton iteration; \code{\link[=term_value]{term_value()}} reports
 \eqn{f(x; \theta)} itself, which is the other half a step needs. For a
 break-point term the same shape holds with a different block: the
-Jacobian for \code{\link{seg}}, and the frozen-weight columns of
-\code{\link{jump}}, from which the break-point is read rather than
+Jacobian for \code{\link[=seg]{seg()}}, and the frozen-weight columns of
+\code{\link[=jump]{jump()}}, from which the break-point is read rather than
 incremented.
 }
 \examples{
@@ -49,5 +49,5 @@ max(abs(term_matrix(r1) - term_matrix(built))) > 0
 
 }
 \seealso{
-\code{\link{nl}}, \code{\link{term_value}}
+\code{\link[=nl]{nl()}}, \code{\link[=term_value]{term_value()}}
 }

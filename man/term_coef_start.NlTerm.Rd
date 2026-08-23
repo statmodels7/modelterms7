@@ -4,11 +4,11 @@
 \alias{term_coef_start.NlTerm}
 \title{Where a Nonlinear Term's Coefficients Begin}
 \arguments{
-\item{term}{A built \code{\link{NlTerm}}.}
+\item{term}{A built \code{\link[=NlTerm]{NlTerm()}}.}
 
 \item{target}{Optional numeric vector, one per observation: the response
 on the scale of the predictor. Absent, the coefficients are those
-\code{\link{term_build}} computed.}
+\code{\link[=term_build]{term_build()}} computed.}
 
 \item{...}{Unused.}
 }
@@ -16,7 +16,7 @@ on the scale of the predictor. Absent, the coefficients are those
 A numeric vector, one value per column of the block.
 }
 \description{
-The coefficients \code{\link{term_build}} built the block at: the
+The coefficients \code{\link[=term_build]{term_build()}} built the block at: the
 starting value of each of the term's own parameters carried through its
 link, from \code{start} where the caller gave one. The block is the
 Jacobian at those values, so it is not the same block at any other
@@ -37,7 +37,7 @@ the same data give the same fit; a Latin hypercube of the same size, tried
 first, put the logistic's scale anywhere between 4.9e-06 and 2.07 across
 twenty seeds. And the parameters the function is jointly AFFINE in are
 separated out and solved by least squares at each point of the grid rather
-than searched over, which is read off \code{\link[stats]{D}} as the fixed
+than searched over, which is read off \code{\link[stats:deriv]{stats::D()}} as the fixed
 point of "the derivative in \eqn{p} names no member of the set". On a
 four-parameter logistic that is the difference between recovering the
 truth on 13 of 15 samples and on all 15, with the worst relative error
@@ -50,6 +50,6 @@ cannot know whether a parameter is measured in the units of the response
 or of a covariate and the box has to cover both.
 
 It is a starting value and is allowed to be approximate; anything that
-fails leaves the coefficients \code{\link{term_build}} computed.
+fails leaves the coefficients \code{\link[=term_build]{term_build()}} computed.
 }
 \keyword{internal}

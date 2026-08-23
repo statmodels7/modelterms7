@@ -10,17 +10,17 @@
 
 \item{y}{The response, unused directly.}
 
-\item{score, curvature}{The callbacks of \code{\link{term_filter}}.}
+\item{score, curvature}{The callbacks of \code{\link[=term_filter]{term_filter()}}.}
 
 \item{psi}{The parameters on the PARAMETER scale, named as
-\code{\link{term_params}}.}
+\code{\link[=term_params]{term_params()}}.}
 
 \item{g}{The weights the second derivative is contracted against.}
 
 \item{seed}{The derivative of the static predictor in the unknowns.}
 
 \item{blocks}{The model's own derivative pieces; see
-\code{\link{term_curvature}}.}
+\code{\link[=term_curvature]{term_curvature()}}.}
 
 \item{...}{Unused.}
 
@@ -34,7 +34,7 @@ keeps the R route.}
 \item{blocks_data}{The model's derivative pieces as data rather than as a
 callback: a list with \code{H} (the mixed second derivatives, one
 column per distribution parameter), \code{D3} (the third derivatives,
-one column per parameter pair, pair \code{(r, r2)} at column
+one column per parameter pair, pair \verb{(r, r2)} at column
 \code{(r - 1) * np + r2}), \code{Vs} (the per-parameter jacobian rows
 of the other equations) and \code{ap} (the filter's own parameter
 index). Read only by the compiled route.}

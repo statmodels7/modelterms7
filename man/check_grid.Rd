@@ -35,6 +35,6 @@ beyond the caller's patience: each point of a path is a whole fit, so the
 cost is linear in the number asked for.
 }
 \seealso{
-\code{\link{check_hyper}}, \code{\link{term_grid}}
+\code{\link[=check_hyper]{check_hyper()}}, \code{\link[=term_grid]{term_grid()}}
 }
 \keyword{internal}

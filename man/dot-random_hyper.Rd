@@ -7,7 +7,7 @@
 .random_hyper(entries, hyper, label)
 }
 \arguments{
-\item{entries}{The entries from \code{\link{.random_entries}}.}
+\item{entries}{The entries from \code{\link[=.random_entries]{.random_entries()}}.}
 
 \item{hyper}{The term's \code{hyper}, already normalized.}
 

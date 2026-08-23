@@ -16,7 +16,7 @@
 }
 \value{
 A list with \code{eta}, \code{y} (\code{NULL}) and
-  \code{latent}, the state of each observation.
+\code{latent}, the state of each observation.
 }
 \description{
 A path of the latent chain, and the predictor each observation gets from
@@ -28,13 +28,13 @@ the first state or from a uniform draw: the model's likelihood is written
 with that initial law, so any other start would simulate a different
 model from the one a fit reads back. The transition matrix and the
 stationary law come from the term's own
-\code{\link[parameters7]{transition_matrix}}, so nothing about the chart
+\code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}}, so nothing about the chart
 is restated here.
 
 The response is not drawn -- the levels do not read it -- so the caller
 draws at the returned predictor, and \code{y} is \code{NULL}.
 }
 \seealso{
-\code{\link{term_simulate}}, \code{\link{regime}}
+\code{\link[=term_simulate]{term_simulate()}}, \code{\link[=regime]{regime()}}
 }
 \keyword{internal}

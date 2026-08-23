@@ -16,7 +16,7 @@
 \item{wnames}{The within-group column names.}
 }
 \value{
-A list of entries, as \code{\link{term_penalties}} documents.
+A list of entries, as \code{\link[=term_penalties]{term_penalties()}} documents.
 }
 \description{
 One entry over the whole block when the prior reads a group's effects

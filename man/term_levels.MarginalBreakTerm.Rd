@@ -4,7 +4,7 @@
 \alias{term_levels.MarginalBreakTerm}
 \title{Levels of a Marginal Break-Point Term}
 \arguments{
-\item{term}{A built \code{\link{MarginalBreakTerm}}.}
+\item{term}{A built \code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}.}
 
 \item{psi}{The term's parameters.}
 
@@ -20,7 +20,7 @@ A numeric vector, or a matrix with one row per observation.
 For the step kind, the constant shift of each side pattern, the sums of
 the changes of level over the active break-points. For the continuous
 kinds the shift varies by observation -- each node's hinge value -- and
-a matrix is returned, aligned with \code{\link{term_posterior}}'s
+a matrix is returned, aligned with \code{\link[=term_posterior]{term_posterior()}}'s
 columns; it takes the callbacks because the node set is theirs to
 rebuild.
 }

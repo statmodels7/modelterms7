@@ -25,11 +25,11 @@ parameter obeys.
 A one-dimensional smooth and an isotropic tensor product carry one
 smoothing parameter, named \code{lambda}; an anisotropic tensor product
 carries one per margin, \code{lambda1}, \code{lambda2} and so on, which is
-what \code{\link[penalties7]{additive_penalty}} names them. An unnamed
+what \code{\link[penalties7:additive_penalty]{penalties7::additive_penalty()}} names them. An unnamed
 vector is read in that order and must be as long as there are margins; a
 named one may hold some and leave the others to be estimated.
 }
 \seealso{
-\code{\link{check_hyper}}, \code{\link{s}}, \code{\link{te}}
+\code{\link[=check_hyper]{check_hyper()}}, \code{\link[=s]{s()}}, \code{\link[=te]{te()}}
 }
 \keyword{internal}

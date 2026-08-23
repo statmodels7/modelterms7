@@ -9,7 +9,7 @@ term_continue(term, psi, f_past, s_past, newdata, ...)
 \arguments{
 \item{term}{A built structural term.}
 
-\item{psi}{The term's parameters, named as \code{\link{term_params}}.}
+\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
 
 \item{f_past}{The term's contribution at each observed row.}
 
@@ -51,5 +51,5 @@ term_continue(term, psi, out$eta, sc, data.frame(t = 21:23))
 
 }
 \seealso{
-\code{\link{term_filter}}
+\code{\link[=term_filter]{term_filter()}}
 }

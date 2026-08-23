@@ -25,9 +25,9 @@ term_third(
 
 \item{y}{The response.}
 
-\item{score, curvature}{The callbacks of \code{\link{term_filter}}.}
+\item{score, curvature}{The callbacks of \code{\link[=term_filter]{term_filter()}}.}
 
-\item{psi}{The term's parameters, named as \code{\link{term_params}}.}
+\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
 
 \item{g}{The weights the third derivative is contracted against, one per
 observation.}
@@ -45,12 +45,12 @@ and \code{N}.}
 }
 \value{
 A list with \code{jacobian}, the derivative of the predictor in the
-  caller's unknowns; \code{dphi}, the second derivative contracted against
-  \code{direction}, one row per observation; and \code{curvature}, the
-  third derivative contracted against both \code{g} and \code{direction}.
+caller's unknowns; \code{dphi}, the second derivative contracted against
+\code{direction}, one row per observation; and \code{curvature}, the
+third derivative contracted against both \code{g} and \code{direction}.
 }
 \description{
-The second derivative of \code{\link{term_curvature}} differentiated once
+The second derivative of \code{\link[=term_curvature]{term_curvature()}} differentiated once
 more along a single direction, and the derivative of the term's Jacobian
 along that same direction. It is what the exact gradient of a marginal
 criterion needs when a penalty covers the term's own parameters.
@@ -108,5 +108,5 @@ all(out$curvature == 0)
 
 }
 \seealso{
-\code{\link{term_curvature}}, \code{\link{term_adjoint}}
+\code{\link[=term_curvature]{term_curvature()}}, \code{\link[=term_adjoint]{term_adjoint()}}
 }

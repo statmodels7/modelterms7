@@ -7,15 +7,15 @@
 seg_psi(term, coef = NULL)
 }
 \arguments{
-\item{term}{A built \code{\link{SegTerm}}.}
+\item{term}{A built \code{\link[=SegTerm]{SegTerm()}}.}
 
 \item{coef}{Optional coefficients; defaults to the ones the term was
 last refreshed at.}
 }
 \value{
 A numeric vector with one entry per break-point, or, where a
-  break-point carries a development, a matrix with one row per
-  observation and one column per break-point.
+break-point carries a development, a matrix with one row per
+observation and one column per break-point.
 }
 \description{
 The estimated positions of the break-points. For a continuous term
@@ -30,5 +30,5 @@ seg_psi(term_build(seg(x, npsi = 2), dd))
 
 }
 \seealso{
-\code{\link{seg}}, \code{\link{jump}}, \code{\link{jseg}}
+\code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}}, \code{\link[=jseg]{jseg()}}
 }

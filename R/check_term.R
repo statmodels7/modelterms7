@@ -38,7 +38,7 @@ NULL
 #' Runs a battery of structural checks on a term specification against a
 #' data frame: that it builds, that the block's dimensions, names and
 #' count agree, that the smoothness flag is a logical scalar, that
-#' \code{\link{term_predict}} on the same data reproduces the block
+#' [term_predict()] on the same data reproduces the block
 #' exactly, and that prediction on a subset of rows equals the
 #' corresponding rows of the block. The last check is the blueprint's: a
 #' term that re-derives factor levels from the new data instead of reusing
@@ -47,7 +47,7 @@ NULL
 #' data carry a factor.
 #'
 #' @details
-#' Writing \eqn{X = } \code{term_matrix(term_build(term, data))}, the two
+#' Writing \eqn{X = } `term_matrix(term_build(term, data))`, the two
 #' identities checked are
 #'
 #' \deqn{\texttt{term\_predict}(\text{term}, \text{data}) = X,
@@ -63,19 +63,19 @@ NULL
 #' it.
 #'
 #' @param term A term specification (an object inheriting from
-#'   \code{\link{model_term}}).
+#'   [model_term()]).
 #' @param data A data frame.
 #' @param verbose Logical; print one line per check.
 #'
-#' @return Invisibly, a data frame with columns \code{check},
-#'   \code{status} (\code{"OK"} or \code{"FAILED"}) and \code{info}.
+#' @return Invisibly, a data frame with columns `check`,
+#'   `status` (`"OK"` or `"FAILED"`) and `info`.
 #'
 #' @examples
 #' dd <- data.frame(x = 1:6, g = factor(rep(c("a", "b", "c"), 2)))
 #' res <- check_term(linpar(~ x + g), dd, verbose = FALSE)
 #' all(res$status == "OK")
 #'
-#' @seealso \code{\link{interpret_formula}}, \code{\link{cens}}
+#' @seealso [interpret_formula()], [cens()]
 #' @export
 check_term <- function(term, data, verbose = TRUE) {
   if (!S7::S7_inherits(term, model_term)) {

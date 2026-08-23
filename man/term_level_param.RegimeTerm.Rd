@@ -4,7 +4,7 @@
 \alias{term_level_param.RegimeTerm}
 \title{The Level of a Regime Term}
 \arguments{
-\item{term}{A \code{\link{RegimeTerm}}.}
+\item{term}{A \code{\link[=RegimeTerm]{RegimeTerm()}}.}
 
 \item{...}{Unused.}
 }

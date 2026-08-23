@@ -4,7 +4,7 @@
 \alias{term_level_param.GasTerm}
 \title{The Level of a Score-Driven Term}
 \arguments{
-\item{term}{A \code{\link{GasTerm}}.}
+\item{term}{A \code{\link[=GasTerm]{GasTerm()}}.}
 
 \item{...}{Unused.}
 }

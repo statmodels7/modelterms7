@@ -10,13 +10,13 @@ term_adjoint(term, eta, y, score, curvature, psi, g, ...)
 \item{term}{A built structural term.}
 
 \item{eta}{The static part of the predictor, as
-\code{\link{term_filter}} takes it.}
+\code{\link[=term_filter]{term_filter()}} takes it.}
 
 \item{y}{The response.}
 
-\item{score, curvature}{The callbacks of \code{\link{term_filter}}.}
+\item{score, curvature}{The callbacks of \code{\link[=term_filter]{term_filter()}}.}
 
-\item{psi}{The term's parameters, named as \code{\link{term_params}}.}
+\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
 
 \item{g}{The direct derivative of the objective in the predictor the term
 produced, one value per observation.}
@@ -25,7 +25,7 @@ produced, one value per observation.}
 }
 \value{
 A list with \code{deta} and \code{dscore}, each one value per
-  observation.
+observation.
 }
 \description{
 The derivative of a caller's objective with respect to the static
@@ -33,7 +33,7 @@ predictor the term was handed, and with respect to the sequence of scores
 it was given, both accounting for the recursion.
 }
 \details{
-\code{\link{term_filter}} returns the derivative of the predictor in the
+\code{\link[=term_filter]{term_filter()}} returns the derivative of the predictor in the
 term's OWN parameters, which is what estimating those needs. It is not
 what estimating the coefficients of the same equation needs: the level at
 one time is driven by the scores at earlier ones, which are read at
@@ -71,5 +71,5 @@ head(out$deta, 3)
 
 }
 \seealso{
-\code{\link{term_filter}}
+\code{\link[=term_filter]{term_filter()}}
 }

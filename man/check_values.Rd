@@ -17,7 +17,7 @@ used only to read the names and the bounds.}
 }
 \value{
 A named list of numeric vectors, one entry per hyperparameter the
-  caller wrote out.
+caller wrote out.
 }
 \description{
 Validates the hyperparameter values a constructor was given as a vector,
@@ -36,6 +36,6 @@ Which end of the order is the sparse one depends on the penalty, so the
 direction is settled where the path is built and not here.
 }
 \seealso{
-\code{\link{check_hyper}}, \code{\link{term_values}}
+\code{\link[=check_hyper]{check_hyper()}}, \code{\link[=term_values]{term_values()}}
 }
 \keyword{internal}

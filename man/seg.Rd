@@ -28,7 +28,7 @@ see the section above. Cannot be combined with \code{by}.}
 \item{psi}{Optional starting positions; defaults to evenly spaced
 quantiles of the covariate. Where a break-point carries a development
 they seed it, each starting vector solving \eqn{Wp_k \approx
-\psi_k^{0}}.}
+  \psi_k^{0}}.}
 
 \item{by}{A one-sided formula giving every coefficient of the term the
 same development, e.g. \code{by = ~0 + g} for an independent set per
@@ -39,14 +39,14 @@ Defaults to \code{TRUE}.}
 
 \item{smoothed}{\code{NULL} (the default: the construction exactly as
 documented above) or a \pkg{penalties7}
-\code{\link[penalties7]{abs_smoother}}, e.g.
+\code{\link[penalties7:abs_smoother]{penalties7::abs_smoother()}}, e.g.
 \code{penalties7::smooth_probit()}. The smoother replaces the step and
 the hinge by their smooth versions -- \eqn{(1 + s'(u))/2} and
 \eqn{(u + s(u))/2} -- so every break-point becomes an ordinary
 parameter of a \eqn{C^\infty} model: there is no working
 parametrization, no auxiliary coefficient and no scaling schedule
 (\code{c0} is ignored, with a message), the block is the true Jacobian
-and the term is fitted by Gauss-Newton like \code{\link{nl}}. A
+and the term is fitted by Gauss-Newton like \code{\link[=nl]{nl()}}. A
 development of a break-point -- \code{psi ~ random(~1 | id)}, a
 penalized one included -- is then legal for every kind, the read-off
 that constrained the discontinuous constructions having gone. The
@@ -67,8 +67,8 @@ integrated out of the likelihood exactly, rather than an estimated
 position. \code{FALSE}, the default, is the construction documented
 above. \code{TRUE} requires the subformula \code{psi ~ random(~1 | g)}
 and returns a structural term of the likelihood shape
-(\code{\link{MarginalBreakTerm}}); see the section of
-\code{\link{jump}}, whose step model is where the marginal buys the
+(\code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}); see the section of
+\code{\link[=jump]{jump()}}, whose step model is where the marginal buys the
 most -- for a \code{seg} term the native random-changepoint fit
 (\code{psi ~ random(~1 | g)} without \code{marginal}) is measured
 equivalent and remains the recommended route, the marginal being the
@@ -93,8 +93,8 @@ as with a penalty's hyperparameters.}
 names.}
 }
 \value{
-An object of class \code{\link{SegTerm}} (a specification; see
-  \code{\link{term_build}}).
+An object of class \code{\link[=SegTerm]{SegTerm()}} (a specification; see
+\code{\link[=term_build]{term_build()}}).
 }
 \description{
 A covariate whose slope changes at \eqn{K} break-points estimated with
@@ -128,21 +128,21 @@ coefficient, and the increment a Gauss-Newton step solves for is the
 update of \cite{muggeo2003}: his working variables \eqn{U} and \eqn{V}
 are the block's columns and his \eqn{\psi \leftarrow \psi +
 \gamma/\delta} is that step. Refreshing the term at the current
-coefficients (\code{\link{term_refresh}}) and fitting is one iteration
-of it, which is the same contract \code{\link{nl}} uses.
+coefficients (\code{\link[=term_refresh]{term_refresh()}}) and fitting is one iteration
+of it, which is the same contract \code{\link[=nl]{nl()}} uses.
 
 The objective has local optima in the break-points and the iteration
 converges from within a basin around where it starts, so
-\code{\link{seg_start}} chooses the starting positions on a grid rather
+\code{\link[=seg_start]{seg_start()}} chooses the starting positions on a grid rather
 than at a conventional point. A break-point is confined to the interval
 between the 5th and the 95th percentile of the covariate: outside it
 the indicator is constant, the truncated line and that constant are
 linearly dependent, and the block is singular rather than merely
 ill-conditioned. A run ending against the limit has not located a
-break-point, and \code{\link{seg_psi}} then reports the limit itself.
+break-point, and \code{\link[=seg_psi]{seg_psi()}} then reports the limit itself.
 
 The iteration can settle into a cycle of period two in the break-point,
-in which case the rule of \code{\link{seg_converged}} is never met while
+in which case the rule of \code{\link[=seg_converged]{seg_converged()}} is never met while
 the objective has long since stopped moving; a caller that can evaluate
 the objective should stop on its relative change, as \code{segmented}
 does.
@@ -153,7 +153,7 @@ does.
 \code{beta} (present when \code{linear = TRUE}), \code{gamma1} \ldots
 \code{gammaK} and \code{psi1} \ldots \code{psiK}, in that order. The
 break-points are coefficients of the working block here, which they are
-not in the discontinuous constructions, so \code{\link{seg_psi}} is the
+not in the discontinuous constructions, so \code{\link[=seg_psi]{seg_psi()}} is the
 function that reports them either way.
 }
 
@@ -168,10 +168,10 @@ seg(x, psi ~ random(~1 | id))      the random-changepoint model
 seg(x, gamma1 ~ z)                 a first slope change varying with z
 seg(x, by = ~0 + g)                every coefficient, per level of g}
 
-The right side goes through \code{\link{interpret_formula}}, so it takes
+The right side goes through \code{\link[=interpret_formula]{interpret_formula()}}, so it takes
 \emph{any} term of this package, penalized ones included, and the
 hyperparameters a sub-term declares are reported by
-\code{\link{term_penalties}} and estimated by the fitting layer. The
+\code{\link[=term_penalties]{term_penalties()}} and estimated by the fitting layer. The
 left side names either one coefficient (\code{gamma2}) or a whole kind
 (\code{gamma}, meaning every \eqn{\gamma_k}, each with coefficients of
 its own over the shared design). \code{by = ~f} is the shorthand giving
@@ -192,7 +192,7 @@ break-points are really there -- is the development on an intercept
 alone, \code{seg(x, npsi = 4, gamma ~ 0 + lasso(~1))}: the \eqn{K}
 changes are then one penalized block under one hyperparameter, the
 entries of a subformula shared by every coefficient of a kind being
-pooled into one. The \code{0 +} is not decoration. A subformula follows
+pooled into one. The \verb{0 +} is not decoration. A subformula follows
 the intercept convention of a formula, so \code{gamma ~ lasso(~1)}
 carries the subformula's own unpenalized intercept beside the penalized
 column, which for an intercept-only development is the same column
@@ -204,7 +204,7 @@ twice.
 With \code{linear = TRUE}, the default, the term carries \eqn{\beta x}
 itself, so \code{y ~ seg(x)} is the whole relationship. Writing the
 covariate again in the same equation is then exactly collinear with that
-column, and \code{\link{interpret_formula}} removes it with a warning.
+column, and \code{\link[=interpret_formula]{interpret_formula()}} removes it with a warning.
 \code{linear = FALSE} is the explicit way to keep the linear effect
 outside the term, and \code{y ~ x + seg(x, linear = FALSE)} is the same
 model written the other way round.
@@ -234,6 +234,6 @@ spurious local minima by bootstrap restarting. \emph{Biometrics}, 57(1),
 240--244.
 }
 \seealso{
-\code{\link{jump}}, \code{\link{jseg}}, \code{\link{seg_psi}},
-  \code{\link{seg_start}}, \code{\link{seg_step}}, \code{\link{nl}}
+\code{\link[=jump]{jump()}}, \code{\link[=jseg]{jseg()}}, \code{\link[=seg_psi]{seg_psi()}},
+\code{\link[=seg_start]{seg_start()}}, \code{\link[=seg_step]{seg_step()}}, \code{\link[=nl]{nl()}}
 }

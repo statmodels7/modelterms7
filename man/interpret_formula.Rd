@@ -11,7 +11,7 @@ interpret_formula(formula, data, linpar = list())
 
 \item{data}{A data frame in which the formula's symbols are evaluated.}
 
-\item{linpar}{Arguments for the IMPLICIT \code{\link{linpar}} term, the one
+\item{linpar}{Arguments for the IMPLICIT \code{\link[=linpar]{linpar()}} term, the one
 the bare covariates collapse into, as a named list -- \code{sparse} and
 \code{contrasts}. It is the only place they can be given: that term is
 never written by the caller. Empty, the default, leaves the constructor's
@@ -19,19 +19,19 @@ own.}
 }
 \value{
 A list with elements \code{response} (the evaluated left-hand
-  side, or \code{NULL} for a one-sided formula), \code{terms} (a named
-  list of term specifications, the collected parametric block first
-  under the name \code{"linpar"}), \code{intercept} (logical) and
-  \code{formula} (the input).
+side, or \code{NULL} for a one-sided formula), \code{terms} (a named
+list of term specifications, the collected parametric block first
+under the name \code{"linpar"}), \code{intercept} (logical) and
+\code{formula} (the input).
 }
 \description{
 Splits a model formula into a response specification and a list of term
 specifications. Term constructors are recognized by what they return: a
 call on the right-hand side whose value inherits from
-\code{\link{model_term}} becomes a term of its own, and everything else
+\code{\link[=model_term]{model_term()}} becomes a term of its own, and everything else
 (bare covariates, transformations such as \code{log(x)}, interactions)
-is collected into one \code{\link{linpar}} block with the usual
-\code{\link[stats]{model.matrix}} conventions.
+is collected into one \code{\link[=linpar]{linpar()}} block with the usual
+\code{\link[stats:model.matrix]{stats::model.matrix()}} conventions.
 }
 \details{
 Recognition by evaluation is what makes the interpreter extensible: a
@@ -43,13 +43,13 @@ labels and bare symbols are never evaluated directly.
 
 The left-hand side, when present, is evaluated in the data: a plain
 expression gives a numeric response, and a response constructor such as
-\code{\link{cens}} gives its response object. The intercept convention
+\code{\link[=cens]{cens()}} gives its response object. The intercept convention
 is the formula's own, carried into the collected parametric block, so
 \code{y ~ ridge_like(R)} still produces an intercept-only
 \code{linpar} block and \code{y ~ ridge_like(R) - 1} produces none.
 
-One covariate is removed rather than collected. A \code{\link{seg}} or
-\code{\link{jseg}} term carrying the linear effect contributes the same
+One covariate is removed rather than collected. A \code{\link[=seg]{seg()}} or
+\code{\link[=jseg]{jseg()}} term carrying the linear effect contributes the same
 column the bare covariate would, so \code{y ~ x + seg(x)} is rank
 deficient by one; the term owns that effect, which is what
 \code{linear = TRUE} says, so the covariate is dropped from the
@@ -66,5 +66,5 @@ names(out$terms)
 
 }
 \seealso{
-\code{\link{cens}}, \code{\link{check_term}}
+\code{\link[=cens]{cens()}}, \code{\link[=check_term]{check_term()}}
 }

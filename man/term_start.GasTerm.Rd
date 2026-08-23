@@ -4,7 +4,7 @@
 \alias{term_start.GasTerm}
 \title{Where a Score-Driven Term's Parameters Start}
 \arguments{
-\item{term}{A \code{\link{GasTerm}}.}
+\item{term}{A \code{\link[=GasTerm]{GasTerm()}}.}
 
 \item{...}{Unused.}
 }

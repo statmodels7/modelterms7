@@ -5,21 +5,21 @@ NULL
 #' @name censored_response
 #'
 #' @description
-#' The response object \code{\link{cens}} constructs: the observed values,
+#' The response object [cens()] constructs: the observed values,
 #' the per-observation censoring bounds, and the status each observation
-#' carries (\code{"observed"}, \code{"left"}, \code{"right"} or
-#' \code{"interval"}). The likelihood assembler of the model layer consumes
+#' carries (`"observed"`, `"left"`, `"right"` or
+#' `"interval"`). The likelihood assembler of the model layer consumes
 #' it, contributing a density where the observation is exact and a
 #' difference of distribution functions where it is censored.
 #'
-#' @param y The numeric response values (\code{NA} for an
+#' @param y The numeric response values (`NA` for an
 #'   interval-censored observation).
 #' @param lwr,upr The numeric censoring bounds, one value per observation.
 #' @param status The character vector of per-observation statuses.
 #'
-#' @return An object of class \code{censored_response}.
+#' @return An object of class `censored_response`.
 #'
-#' @seealso \code{\link{cens}}
+#' @seealso [cens()]
 #' @examples
 #' S7::S7_inherits(cens(c(0, 1.2), lwr = 0), censored_response)
 #' @export
@@ -53,34 +53,34 @@ censored_response <- S7::new_class(
 #'
 #' @description
 #' Marks a response as censored, for the left-hand side of a model formula:
-#' \code{cens(y, lwr = 0)} in a formula declares that values at or below
+#' `cens(y, lwr = 0)` in a formula declares that values at or below
 #' the bound are left-censored there.
 #'
 #' @details
-#' The bounds are recycled to the length of \code{y}, so a scalar bound
+#' The bounds are recycled to the length of `y`, so a scalar bound
 #' applies to every observation and a vector gives per-observation bounds.
 #' The status of each observation follows from the values: an observation
-#' with \code{y <= lwr} is left-censored (all that is known is
-#' \eqn{Y \le lwr}), one with \code{y >= upr} is right-censored, one with
-#' \code{y} strictly inside the bounds is observed exactly, and one with
-#' \code{y = NA} and both bounds finite is interval-censored
-#' (\eqn{Y \in [lwr, upr]}). An \code{NA} value without two finite bounds
+#' with `y <= lwr` is left-censored (all that is known is
+#' \eqn{Y \le lwr}), one with `y >= upr` is right-censored, one with
+#' `y` strictly inside the bounds is observed exactly, and one with
+#' `y = NA` and both bounds finite is interval-censored
+#' (\eqn{Y \in [lwr, upr]}). An `NA` value without two finite bounds
 #' carries no information and is rejected.
 #'
-#' @param y A numeric vector; \code{NA} for interval-censored
+#' @param y A numeric vector; `NA` for interval-censored
 #'   observations.
 #' @param lwr A numeric vector of lower bounds, length 1 or
-#'   \code{length(y)}. Defaults to \code{-Inf} (no left censoring).
+#'   `length(y)`. Defaults to `-Inf` (no left censoring).
 #' @param upr A numeric vector of upper bounds, length 1 or
-#'   \code{length(y)}. Defaults to \code{Inf} (no right censoring).
+#'   `length(y)`. Defaults to `Inf` (no right censoring).
 #'
-#' @return An object of class \code{\link{censored_response}}.
+#' @return An object of class [censored_response()].
 #'
 #' @examples
 #' r <- cens(c(0, 0.7, 2.4), lwr = 0)
 #' r@status
 #'
-#' @seealso \code{\link{interpret_formula}}, \code{\link{check_term}}
+#' @seealso [interpret_formula()], [check_term()]
 #' @export
 cens <- function(y, lwr = -Inf, upr = Inf) {
   y <- as.numeric(y)

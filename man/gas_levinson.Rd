@@ -12,7 +12,7 @@ gas_levinson(pacf)
 }
 \value{
 A list with \code{phi}, the coefficients, and \code{jacobian},
-  the matrix of their derivatives with respect to \code{pacf}.
+the matrix of their derivatives with respect to \code{pacf}.
 }
 \description{
 The Levinson-Durbin recursion carrying partial autocorrelations onto

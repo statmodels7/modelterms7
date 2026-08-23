@@ -17,8 +17,8 @@ row's entries, indexed as \code{dP} is.}
 }
 \value{
 A list with \code{delta} and \code{ddelta}, the latter one row
-  per element of \code{dP}, and, when \code{d2P} is given,
-  \code{d2delta}, one square matrix per state.
+per element of \code{dP}, and, when \code{d2P} is given,
+\code{d2delta}, one square matrix per state.
 }
 \description{
 The row vector \eqn{\delta} solving \eqn{\delta P = \delta} with

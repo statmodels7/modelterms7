@@ -7,7 +7,7 @@
 term_params(term, ...)
 }
 \arguments{
-\item{term}{An object inheriting from \code{\link{structural_term}}.}
+\item{term}{An object inheriting from \code{\link[=structural_term]{structural_term()}}.}
 
 \item{...}{Passed to methods.}
 }
@@ -25,5 +25,5 @@ term_params(gas(p = 1, q = 1))
 
 }
 \seealso{
-\code{\link{term_links}}, \code{\link{term_filter}}
+\code{\link[=term_links]{term_links()}}, \code{\link[=term_filter]{term_filter()}}
 }

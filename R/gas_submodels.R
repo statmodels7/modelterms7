@@ -902,7 +902,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 #' sub-term's own blueprint rather than rebuilt.
 #'
 #' @details
-#' It is \code{\link{term_predict}} on every sub-term, which is what keeps
+#' It is [term_predict()] on every sub-term, which is what keeps
 #' a basis or a set of contrasts from being relearned at other rows, and
 #' then the same chart the fit used. The persistence goes through
 #' Levinson-Durbin exactly as it does inside the filter.
@@ -911,10 +911,10 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 #' @param u The term's free vector.
 #' @param newdata The rows to read at.
 #'
-#' @return A list with \code{om}, \code{A} and \code{B}, one row each per
-#'   observation of \code{newdata}.
+#' @return A list with `om`, `A` and `B`, one row each per
+#'   observation of `newdata`.
 #'
-#' @seealso \code{\link{term_continue}}
+#' @seealso [term_continue()]
 #'
 #' @keywords internal
 .gas_sub_new <- function(term, u, newdata) {

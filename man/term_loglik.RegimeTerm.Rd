@@ -12,7 +12,7 @@
 
 \item{logdens, score}{The log-density and its derivative in the predictor.}
 
-\item{psi}{The parameters, named as \code{\link{term_params}}.}
+\item{psi}{The parameters, named as \code{\link[=term_params]{term_params()}}.}
 
 \item{...}{Unused.}
 }

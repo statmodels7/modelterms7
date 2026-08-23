@@ -5,22 +5,22 @@ NULL
 #' @name RandomTerm
 #'
 #' @description
-#' A subclass of \code{\link{additive_term}} for grouped coefficients with
+#' A subclass of [additive_term()] for grouped coefficients with
 #' a distribution on the effects: the within-group design interacted with
 #' the grouping indicators, one coefficient per group and per within-group
 #' column, with the penalty carrying the effects' distribution.
-#' Constructed by \code{\link{random}}.
+#' Constructed by [random()].
 #'
 #' @inheritParams additive_term
-#' @param formula The bar formula, e.g. \code{~ 1 | g} or \code{~ x | g}.
+#' @param formula The bar formula, e.g. `~ 1 | g` or `~ x | g`.
 #' @param correlated Logical; whether the default Gaussian lets the
 #'   within-group effects correlate.
-#' @param distrib The effects' distribution, or \code{NULL} for the default
+#' @param distrib The effects' distribution, or `NULL` for the default
 #'   Gaussian.
 #'
-#' @return An object of class \code{RandomTerm}.
+#' @return An object of class `RandomTerm`.
 #'
-#' @seealso \code{\link{random}}
+#' @seealso [random()]
 #' @examples
 #' S7::S7_inherits(random(~ 1 | g), RandomTerm)
 #' @export
@@ -38,8 +38,8 @@ RandomTerm <- S7::new_class(
 #'
 #' @description
 #' Random intercepts and slopes for a grouping factor:
-#' \code{random(~ 1 | g)} builds one coefficient per level of \code{g},
-#' and \code{random(~ x | g)} one intercept and one slope per level, with
+#' `random(~ 1 | g)` builds one coefficient per level of `g`,
+#' and `random(~ x | g)` one intercept and one slope per level, with
 #' the distribution of the effects attached as the penalty on those
 #' coefficients -- which is what a random effect is under penalized
 #' likelihood.
@@ -47,8 +47,8 @@ RandomTerm <- S7::new_class(
 #' @details
 #' The left side of the bar is an ordinary one-sided formula for the
 #' within-group design, with the usual intercept convention:
-#' \code{~ x | g} carries an intercept and a slope per group and
-#' \code{~ 0 + x | g} the slope alone. The block interacts that design
+#' `~ x | g` carries an intercept and a slope per group and
+#' `~ 0 + x | g` the slope alone. The block interacts that design
 #' with the group indicators, ordered group by group, so the coefficients
 #' of one group are adjacent.
 #'
@@ -59,13 +59,13 @@ RandomTerm <- S7::new_class(
 #' here.
 #'
 #' @section The distribution of the effects:
-#' \code{distrib} is \code{NULL}, a \pkg{distributions7} object, or a list of
+#' `distrib` is `NULL`, a \pkg{distributions7} object, or a list of
 #' them with one per within-group column.
 #'
 #' A MULTIVARIATE distribution of the within-group dimension lets the effects
 #' of one group depend on each other, its matrix parameter carrying the
-#' dependence: \code{mvgaussian_distrib(2, omega = ar1(2))} is a prior whose
-#' precision is autoregressive, \code{mvstudent_t_distrib(2)} a heavy-tailed
+#' dependence: `mvgaussian_distrib(2, omega = ar1(2))` is a prior whose
+#' precision is autoregressive, `mvstudent_t_distrib(2)` a heavy-tailed
 #' one. Correlation is available exactly for the families that carry a matrix
 #' parameter -- a location block as long as the dimension, and a covariance,
 #' precision or scale matrix -- which is a property the term reads rather than
@@ -78,20 +78,20 @@ RandomTerm <- S7::new_class(
 #' scale would price them against each other. A list of distributions gives
 #' one per column explicitly, when the columns want different priors.
 #'
-#' The default is Gaussian: \code{gaussian1_distrib} at one column, so the
+#' The default is Gaussian: `gaussian1_distrib` at one column, so the
 #' hyperparameter IS the standard deviation of the effects; the multivariate
 #' Gaussian on an unstructured covariance when there are several and
-#' \code{correlated = TRUE}; the template of the first when
-#' \code{correlated = FALSE}, one standard deviation per column.
+#' `correlated = TRUE`; the template of the first when
+#' `correlated = FALSE`, one standard deviation per column.
 #'
 #' Whatever it is, the distribution is CENTERED, its location parameters held
-#' with \code{\link[distributions7]{fixed}}. A free mean in the effects is
+#' with [distributions7::fixed()]. A free mean in the effects is
 #' confounded with the intercept of the equation the term sits in, so it is
 #' rejected rather than fitted along a flat direction. The value it is held at
 #' is usually zero and is not policed: it is identified whatever it is, and
 #' where the prior is a transformation of another family the parameter is the
 #' mean on the ORIGINAL scale --
-#' \code{fixed(transformation(gamma2_distrib(), log_transform()), mu = 1)} is
+#' `fixed(transformation(gamma2_distrib(), log_transform()), mu = 1)` is
 #' a log-gamma prior whose own mean is \eqn{\psi(a) - \log a}, within
 #' \eqn{\sigma^2/2} of zero and exactly zero in the limit.
 #'
@@ -106,9 +106,9 @@ RandomTerm <- S7::new_class(
 #' They are the distribution's own free parameters, and every one of them is
 #' estimated unless it is held. There are two ways to hold one, and they
 #' differ in what is reported rather than in the fit. Holding it inside the
-#' distribution, \code{fixed(pseudohuber_distrib(), mu = 0, nu = 2)}, removes
+#' distribution, `fixed(pseudohuber_distrib(), mu = 0, nu = 2)`, removes
 #' it: it becomes a constant of the prior and appears nowhere among the
-#' model's hyperparameters. Naming it in \code{hyper} keeps it, reported as
+#' model's hyperparameters. Naming it in `hyper` keeps it, reported as
 #' held at the value given, which is what a penalized term's own
 #' hyperparameter argument does.
 #'
@@ -125,13 +125,13 @@ RandomTerm <- S7::new_class(
 #'
 #' Which PARAMETRIZATION of a family is used matters here in a way it does
 #' not elsewhere. The centred skew normal
-#' (\code{\link[distributions7]{skewnormal2_distrib}}) carries the skewness
+#' ([distributions7::skewnormal2_distrib()]) carries the skewness
 #' itself, and its map to the direct parametrization is not twice
 #' differentiable at zero skewness: the first derivatives have a finite limit
 #' there and the second ones grow like \eqn{\gamma_1^{-2/3}}. A marginal
 #' criterion reads the second, and the symmetric bounds put the starting
 #' value at exactly that point, so the direct parametrization
-#' (\code{\link[distributions7]{skewnormal1_distrib}}) is the one to use as a
+#' ([distributions7::skewnormal1_distrib()]) is the one to use as a
 #' prior; its derivatives at \eqn{\alpha = 0} are ordinary numbers.
 #'
 #' How well a shape parameter is estimated depends on how many groups there
@@ -150,7 +150,7 @@ RandomTerm <- S7::new_class(
 #' Prediction maps new data onto the levels seen at build time; a level
 #' the term has not seen is rejected.
 #'
-#' A random effect is not standardized, and there is no \code{standardize}
+#' A random effect is not standardized, and there is no `standardize`
 #' argument to ask for it with; passing one is an error. Its columns are
 #' grouping indicators rather than measured covariates, and its
 #' hyperparameter is a variance component with a meaning of its own.
@@ -183,14 +183,14 @@ RandomTerm <- S7::new_class(
 #' \eqn{\Sigma = \sigma_b^2} it is the ridge, up to the constant that makes
 #' \eqn{\sigma_b} estimable.
 #'
-#' @param formula A bar formula, \code{~ lhs | g}, with \code{g}
+#' @param formula A bar formula, `~ lhs | g`, with `g`
 #'   evaluating to the grouping variable in the data.
-#' @param distrib The distribution of the effects: \code{NULL} (the default
+#' @param distrib The distribution of the effects: `NULL` (the default
 #'   Gaussian), a \pkg{distributions7} object, or a list of them with one per
 #'   within-group column.
 #' @param correlated Logical; whether the default Gaussian lets the
 #'   within-group effects correlate. It is an error together with
-#'   \code{distrib}, which says the same thing and more.
+#'   `distrib`, which says the same thing and more.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names.
 #' @param hyper The hyperparameters of the effects' distribution to HOLD, as
@@ -200,8 +200,8 @@ RandomTerm <- S7::new_class(
 #'   reported when the term is built, which is where the penalty first exists.
 #' @param ... Unused; a named argument here is reported rather than ignored.
 #'
-#' @return An object of class \code{\link{RandomTerm}} (a specification;
-#'   see \code{\link{term_build}}).
+#' @return An object of class [RandomTerm()] (a specification;
+#'   see [term_build()]).
 #'
 #' @examples
 #' dd <- data.frame(y = rnorm(9), x = rnorm(9),
@@ -226,9 +226,9 @@ RandomTerm <- S7::new_class(
 #'
 #' @references
 #' Laird, N. M. and Ware, J. H. (1982). Random-effects models for
-#' longitudinal data. \emph{Biometrics} 38, 963-974.
+#' longitudinal data. *Biometrics* 38, 963-974.
 #'
-#' @seealso \code{\link{s}}, \code{\link{te}}, \code{\link{nl}}
+#' @seealso [s()], [te()], [nl()]
 #' @export
 random <- function(formula, distrib = NULL, correlated = TRUE,
                    label = "random", hyper = NULL, ...) {
@@ -270,16 +270,16 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' Reports a removed argument by name rather than letting the dots swallow it.
 #'
 #' @details
-#' \code{precision} was a second spelling of a multivariate Gaussian whose
+#' `precision` was a second spelling of a multivariate Gaussian whose
 #' matrix parameter is a precision, and the first spelling did not say WHICH
-#' matrix the structure was. \code{kinks} was derived from the effects'
+#' matrix the structure was. `kinks` was derived from the effects'
 #' distribution by \pkg{penalties7} all along, and the default here overrode
 #' that derivation, so a Laplace prior declared none and a fitting layer sent
 #' its block to the scheme that cannot solve it.
 #'
-#' @param ... The dots of \code{\link{random}}.
+#' @param ... The dots of [random()].
 #'
-#' @return Invisibly \code{NULL}; called for its error.
+#' @return Invisibly `NULL`; called for its error.
 #'
 #' @keywords internal
 .random_retired <- function(...) {
@@ -357,11 +357,11 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' The Family Under Any Wrappers
 #'
 #' @description
-#' Follows \code{parent_distrib} to the distribution a wrapper wraps, so that
+#' Follows `parent_distrib` to the distribution a wrapper wraps, so that
 #' a question about the FAMILY is asked of the family.
 #'
 #' @details
-#' The property is asked for with \code{S7::prop_names()} rather than the
+#' The property is asked for with `S7::prop_names()` rather than the
 #' class being tested, which is what lets a wrapper written later be followed
 #' without an edit here.
 #'
@@ -378,13 +378,13 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' Whether a Multivariate Family Can Carry Correlated Effects
 #'
 #' @description
-#' \code{TRUE} for a family with a location block as long as its dimension
+#' `TRUE` for a family with a location block as long as its dimension
 #' and a matrix parameter, which is what a centered prior on \eqn{R^d} needs.
 #'
 #' @details
 #' The question is a PROPERTY and not a list of admitted names, so a
 #' multivariate family added later is covered without an edit here. It is
-#' read off \code{params_interpretation}, the same declaration a data-based
+#' read off `params_interpretation`, the same declaration a data-based
 #' starting value is built from. It excludes the simplex-valued families,
 #' whose mean coordinates are one fewer than the dimension and which carry no
 #' matrix parameter at all.
@@ -403,14 +403,14 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' Whether a Multivariate Family Answers Its Mixed Block
 #'
 #' @description
-#' \code{TRUE} when \code{distrib_cross_y} comes from the family rather than
+#' `TRUE` when `distrib_cross_y` comes from the family rather than
 #' from the multivariate base class, whose method rejects.
 #'
 #' @details
 #' A marginal criterion reads that block to estimate the covariance of the
 #' effects, so a family without one can be fitted at held hyperparameters and
 #' not at estimated ones. The owning class of a method is read through its
-#' signature and compared BY NAME, never with \code{identical()}, which is
+#' signature and compared BY NAME, never with `identical()`, which is
 #' object identity and fails whenever a package's code is re-evaluated rather
 #' than loaded.
 #'
@@ -446,7 +446,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' @param dim_needed The number of within-group columns.
 #' @param what How to name the argument in a message.
 #'
-#' @return Invisibly \code{TRUE}; called for its errors.
+#' @return Invisibly `TRUE`; called for its errors.
 #'
 #' @keywords internal
 .random_check_prior <- function(d, dim_needed, what) {
@@ -506,7 +506,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' The Centered Gaussian Defaults
 #'
 #' @description
-#' \code{gaussian1_distrib} at one within-group column, so the hyperparameter
+#' `gaussian1_distrib` at one within-group column, so the hyperparameter
 #' IS the standard deviation of the effects, and the multivariate Gaussian on
 #' an unstructured covariance for several correlated ones.
 #'
@@ -550,7 +550,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' @param m The number of groups.
 #' @param wnames The within-group column names.
 #'
-#' @return A list of entries, as \code{\link{term_penalties}} documents.
+#' @return A list of entries, as [term_penalties()] documents.
 #'
 #' @keywords internal
 .random_entries <- function(prior, d, m, wnames) {
@@ -574,7 +574,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' Where a Held Hyperparameter Belongs
 #'
 #' @description
-#' Splits the term's \code{hyper} over its penalty entries and checks every
+#' Splits the term's `hyper` over its penalty entries and checks every
 #' name against the penalty that carries it.
 #'
 #' @details
@@ -583,13 +583,13 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' value recycled over every column: a caller who wants the same value
 #' everywhere writes it into the distribution, where it stops being a
 #' hyperparameter at all, and silent recycling is the trap this file's
-#' history records for \code{ifelse}.
+#' history records for `ifelse`.
 #'
-#' @param entries The entries from \code{\link{.random_entries}}.
-#' @param hyper The term's \code{hyper}, already normalized.
+#' @param entries The entries from [.random_entries()].
+#' @param hyper The term's `hyper`, already normalized.
 #' @param label The term's label, for the message.
 #'
-#' @return The entries, with \code{fixed} filled in and checked.
+#' @return The entries, with `fixed` filled in and checked.
 #'
 #' @keywords internal
 .random_hyper <- function(entries, hyper, label) {
@@ -705,9 +705,9 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
 #' @description
 #' One entry over the whole block where the effects of a group are read
 #' together, and one per within-group column where they are independent.
-#' @param term A built \code{\link{RandomTerm}}.
+#' @param term A built [RandomTerm()].
 #' @param ... Unused.
-#' @return A list of entries, as \code{\link{term_penalties}} documents.
+#' @return A list of entries, as [term_penalties()] documents.
 #' @keywords internal
 S7::method(term_penalties, RandomTerm) <- function(term, ...) {
   ent <- term@blueprint$entries

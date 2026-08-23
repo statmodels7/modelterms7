@@ -25,6 +25,6 @@ geometric grid above its lower bound, and a fraction of an emptying value
 means nothing in either.
 }
 \seealso{
-\code{\link{check_grid}}, \code{\link{term_path_min}}
+\code{\link[=check_grid]{check_grid()}}, \code{\link[=term_path_min]{term_path_min()}}
 }
 \keyword{internal}

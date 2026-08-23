@@ -6,16 +6,16 @@ NULL
 #' @description
 #' The effective degrees of freedom of a built term, computed from the
 #' pieces a fitted model supplies. The counting rule follows the penalties
-#' the term declares through \code{\link{term_penalties}}, and applies to
+#' the term declares through [term_penalties()], and applies to
 #' each of them over the parameters it covers.
 #'
 #' @details
 #' A parameter no penalty reaches counts one, exactly. A parameter under a
-#' \strong{non-smooth} penalty counts one when it is away from zero and
+#' **non-smooth** penalty counts one when it is away from zero and
 #' nothing when it is at it, which for the lasso is the unbiased estimator
-#' of its degrees of freedom [Zou, Hastie & Tibshirani (2007)]. The
+#' of its degrees of freedom (Zou, Hastie & Tibshirani, 2007). The
 #' remaining parameters -- those unpenalized and those under a
-#' \strong{smooth} penalty -- are counted together by the trace of
+#' **smooth** penalty -- are counted together by the trace of
 #' \eqn{(H + S)^{-1} H} over the sub-block they occupy, where \eqn{H} is
 #' the term's unpenalized curvature there (the weighted crossproduct of its
 #' design block at the fit) and \eqn{S} carries each smooth penalty's
@@ -30,11 +30,11 @@ NULL
 #' whole block: the trace over every column for a smooth penalty, the
 #' nonzero count for a kinked one, the coefficient count for none.
 #'
-#' \code{hessian} is asked for over the whole block, and is used at the rows
+#' `hessian` is asked for over the whole block, and is used at the rows
 #' and columns the trace runs over. It is not needed at all when every
-#' penalty is kinked, since the count is then read from \code{coef} alone.
+#' penalty is kinked, since the count is then read from `coef` alone.
 #'
-#' @param term A built term (see \code{\link{term_build}}).
+#' @param term A built term (see [term_build()]).
 #' @param coef The fitted coefficients of the term's block.
 #' @param hessian The unpenalized curvature of the fit restricted to the
 #'   term's block, a \eqn{k \times k} matrix; required whenever some
@@ -42,7 +42,7 @@ NULL
 #' @param theta The estimated hyperparameters. For a term carrying one
 #'   penalty, that penalty's hyperparameters as a named list; for a term
 #'   carrying several, a list of such lists keyed by the penalty names
-#'   \code{\link{term_penalties}} gives.
+#'   [term_penalties()] gives.
 #' @param tol The threshold below which a coefficient counts as zero for
 #'   a non-smooth penalty.
 #' @param ... Passed to methods.
@@ -51,7 +51,7 @@ NULL
 #'
 #' @references
 #' Zou, H., Hastie, T. and Tibshirani, R. (2007). On the "degrees of
-#' freedom" of the lasso. \emph{The Annals of Statistics}, 35(5),
+#' freedom" of the lasso. *The Annals of Statistics*, 35(5),
 #' 2173--2192.
 #'
 #' @examples
@@ -60,7 +60,7 @@ NULL
 #' H <- crossprod(term_matrix(built))
 #' edf(built, coef = c(0.5, -0.2), hessian = H, theta = list(lambda = 0.25))
 #'
-#' @seealso \code{\link{term_penalties}}, \code{\link{term_penalty}}, \code{\link{term_smooth}}
+#' @seealso [term_penalties()], [term_penalty()], [term_smooth()]
 #' @export
 edf <- S7::new_generic("edf", "term",
   function(term, coef = NULL, hessian = NULL, theta = NULL,

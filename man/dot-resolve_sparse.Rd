@@ -12,7 +12,7 @@
 \item{n}{The number of rows.}
 
 \item{ncol_ind}{The columns coming from indicators, from
-\code{\link{.indicator_cols}}.}
+\code{\link[=.indicator_cols]{.indicator_cols()}}.}
 }
 \value{
 A single logical.
@@ -39,6 +39,6 @@ and the block is built dense, which is what the measurements ask for there
 (0.66 to 0.90 times the dense route on purely continuous covariates).
 }
 \seealso{
-\code{\link{.indicator_cols}}, \code{\link{linpar}}
+\code{\link[=.indicator_cols]{.indicator_cols()}}, \code{\link[=linpar]{linpar()}}
 }
 \keyword{internal}

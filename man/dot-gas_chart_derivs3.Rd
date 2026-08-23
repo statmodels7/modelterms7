@@ -11,16 +11,16 @@
 
 \item{p, q}{The score and autoregressive orders.}
 
-\item{links}{The links, as \code{\link{term_links}} gives them.}
+\item{links}{The links, as \code{\link[=term_links]{term_links()}} gives them.}
 
 \item{vz}{The direction, in the same coordinates as \code{zeta}.}
 }
 \value{
 A list with \code{t_omega}, \code{t_a} and \code{t_b}, each a
-  matrix or a list of matrices over the term's base coordinates.
+matrix or a list of matrices over the term's base coordinates.
 }
 \description{
-\code{\link{.gas_chart_derivs}} differentiated once more and contracted
+\code{\link[=.gas_chart_derivs]{.gas_chart_derivs()}} differentiated once more and contracted
 against a single direction in the term's own coordinates: one matrix for
 the level, one per score loading and one per autoregressive coefficient.
 }
@@ -37,6 +37,6 @@ autocorrelations, \eqn{T} the contracted third derivative of the map and
 \eqn{P}, \eqn{H} its first two.
 }
 \seealso{
-\code{\link{.gas_chart_derivs}}, \code{\link{gas_levinson3}}
+\code{\link[=.gas_chart_derivs]{.gas_chart_derivs()}}, \code{\link[=gas_levinson3]{gas_levinson3()}}
 }
 \keyword{internal}

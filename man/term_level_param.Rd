@@ -38,5 +38,5 @@ term_level_param(linpar(~x))
 
 }
 \seealso{
-\code{\link{term_params}}
+\code{\link[=term_params]{term_params()}}
 }

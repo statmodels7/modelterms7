@@ -9,33 +9,33 @@ term_levels(term, psi, ...)
 \arguments{
 \item{term}{A built structural term of the likelihood shape.}
 
-\item{psi}{The term's parameters, named as \code{\link{term_params}}.}
+\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
 
 \item{...}{Passed to methods.}
 }
 \value{
 A numeric vector with one level per component, or a matrix with
-  one row per observation and one column per component.
+one row per observation and one column per component.
 }
 \description{
 The shifts a term of the likelihood shape adds to its equation's
 predictor, one per mixture component, in the order the columns of
-\code{\link{term_posterior}} carry the components.
+\code{\link[=term_posterior]{term_posterior()}} carry the components.
 }
 \details{
 By Fisher's identity the derivative of a likelihood mixed over latent
 states, in any predictor the model carries, is the posterior-weighted
 derivative of the ordinary one, each component read at the predictor
-shifted by its own level. \code{\link{term_posterior}} supplies the
+shifted by its own level. \code{\link[=term_posterior]{term_posterior()}} supplies the
 weights; this supplies the levels, so a fitting layer assembles the
-identity without reading the term's internals. For \code{\link{regime}}
+identity without reading the term's internals. For \code{\link[=regime]{regime()}}
 the levels are the ordered regime means, one number per component; for a
 marginal break-point term of the step kind they are the sums of the
 changes of level over the active break-points, one number per side
 pattern.
 
 A component's shift may vary by observation -- the quadrature nodes of a
-marginal \code{\link{seg}} or \code{\link{jseg}} term shift each
+marginal \code{\link[=seg]{seg()}} or \code{\link[=jseg]{jseg()}} term shift each
 observation by its own hinge value -- and the method then returns a
 matrix with one row per observation and one column per component, whose
 columns a caller reads in place of the constant levels.
@@ -46,5 +46,5 @@ term_levels(regime(2), list(level1 = 0, gap2 = 3,
 
 }
 \seealso{
-\code{\link{term_posterior}}, \code{\link{term_loglik}}
+\code{\link[=term_posterior]{term_posterior()}}, \code{\link[=term_loglik]{term_loglik()}}
 }

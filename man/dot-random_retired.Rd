@@ -7,7 +7,7 @@
 .random_retired(...)
 }
 \arguments{
-\item{...}{The dots of \code{\link{random}}.}
+\item{...}{The dots of \code{\link[=random]{random()}}.}
 }
 \value{
 Invisibly \code{NULL}; called for its error.

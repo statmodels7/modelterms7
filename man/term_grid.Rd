@@ -13,7 +13,7 @@ term_grid(term, ...)
 }
 \value{
 A named list, one entry per penalty of the term, each a named
-  list of grid sizes. Empty where the term asks for nothing.
+list of grid sizes. Empty where the term asks for nothing.
 }
 \description{
 How many values a path visits for each of the term's hyperparameters.
@@ -25,5 +25,5 @@ term_grid(lasso(~x))
 
 }
 \seealso{
-\code{\link{term_hyper}}, \code{\link{term_penalties}}
+\code{\link[=term_hyper]{term_hyper()}}, \code{\link[=term_penalties]{term_penalties()}}
 }

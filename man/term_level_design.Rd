@@ -15,9 +15,9 @@ term_level_design(term, ...)
 A numeric matrix with named columns, or \code{NULL}.
 }
 \description{
-Where the parameter \code{\link{term_level_param}} names is developed
+Where the parameter \code{\link[=term_level_param]{term_level_param()}} names is developed
 with covariates, the design of that development, with one column per
-coordinate named as \code{\link{term_params}} names it. \code{NULL}
+coordinate named as \code{\link[=term_params]{term_params()}} names it. \code{NULL}
 for a scalar level and for every other term.
 }
 \details{
@@ -35,5 +35,5 @@ is.null(term_level_design(linpar(~x)))
 
 }
 \seealso{
-\code{\link{term_level_param}}
+\code{\link[=term_level_param]{term_level_param()}}
 }

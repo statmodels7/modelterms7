@@ -4,7 +4,7 @@
 \alias{term_loglik.MarginalBreakTerm}
 \title{Log-Likelihood of a Marginal Break-Point Term}
 \arguments{
-\item{term}{A built \code{\link{MarginalBreakTerm}}.}
+\item{term}{A built \code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}.}
 
 \item{eta}{The static predictor.}
 
@@ -12,13 +12,13 @@
 
 \item{logdens, score}{The log-density and its derivative in the predictor.}
 
-\item{psi}{The parameters, named as \code{\link{term_params}}.}
+\item{psi}{The parameters, named as \code{\link[=term_params]{term_params()}}.}
 
 \item{...}{Unused.}
 }
 \value{
 A list with \code{loglik} and \code{jacobian}, the latter on the
-  parameter scale.
+parameter scale.
 }
 \description{
 The exact marginal likelihood of a break-point model with latent
@@ -37,7 +37,7 @@ derivatives ride the same recursion: the masses' in the prior's
 parameters, the emissions' in the changes of level.
 For the continuous kinds the conditional is smooth within an interval
 and the integral runs on a fixed Gauss-Kronrod panel per interval
-(\code{\link[numericals7]{gauss_kronrod15}}), the interior nodes fixed
+(\code{\link[numericals7:gauss_kronrod15]{numericals7::gauss_kronrod15()}}), the interior nodes fixed
 points of the data so that the derivatives in the prior's parameters
 read the prior alone; the region below the data, where the hinge keeps
 moving, is covered by panels that follow the prior's bulk, whose node

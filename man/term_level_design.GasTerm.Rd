@@ -4,7 +4,7 @@
 \alias{term_level_design.GasTerm}
 \title{The Design of a Developed Level}
 \arguments{
-\item{term}{A built \code{\link{GasTerm}}.}
+\item{term}{A built \code{\link[=GasTerm]{GasTerm()}}.}
 
 \item{...}{Unused.}
 }

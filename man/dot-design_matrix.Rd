@@ -19,8 +19,8 @@
 A numeric matrix or a \code{dgCMatrix}.
 }
 \description{
-\code{\link[stats]{model.matrix}} or
-\code{\link[Matrix]{sparse.model.matrix}} on the same terms object, with
+\code{\link[stats:model.matrix]{stats::model.matrix()}} or
+\code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}} on the same terms object, with
 the bookkeeping stripped either way.
 }
 \details{
@@ -37,6 +37,6 @@ covariates the block is dense whatever is asked for, and the sparse
 storage then costs more than it saves.
 }
 \seealso{
-\code{\link{linpar}}
+\code{\link[=linpar]{linpar()}}
 }
 \keyword{internal}

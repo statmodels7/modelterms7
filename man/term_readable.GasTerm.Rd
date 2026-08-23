@@ -4,14 +4,14 @@
 \alias{term_readable.GasTerm}
 \title{What a Fitted Score-Driven Term Reports}
 \arguments{
-\item{term}{A \code{\link{GasTerm}}.}
+\item{term}{A \code{\link[=GasTerm]{GasTerm()}}.}
 
 \item{zeta}{The parameters on the unconstrained scale.}
 
 \item{...}{Unused.}
 }
 \value{
-A list, as \code{\link{term_readable}} documents.
+A list, as \code{\link[=term_readable]{term_readable()}} documents.
 }
 \description{
 The level, the score loadings and the AUTOREGRESSIVE COEFFICIENTS of the

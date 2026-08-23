@@ -18,42 +18,42 @@ structural_term(
 
 \item{hyper}{The hyperparameters of the term's penalty that the
 caller HELD, as a named list. Empty, the default, means every one
-of them is estimated. See \code{\link{term_hyper}}.}
+of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list. Empty, the default, leaves it to the
-criterion. See \code{\link{term_grid}}.}
+criterion. See \code{\link[=term_grid]{term_grid()}}.}
 
 \item{values}{The values a path visits, for each hyperparameter the
 caller wrote out, as a named list. Empty, the default, has the path
-build them. See \code{\link{term_values}}.}
+build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink
 reaches, as a fraction of the value that empties the block, or
 \code{numeric(0)} for the criterion's own. See
-\code{\link{term_path_min}}.}
+\code{\link[=term_path_min]{term_path_min()}}.}
 
 \item{search}{How the term's own hyperparameters are covered when it has
 several with a kink: \code{"grid"} for every combination of them,
 \code{"cyclic"} for one at a time, or \code{character(0)} for the
-default. See \code{\link{term_search}}.}
+default. See \code{\link[=term_search]{term_search()}}.}
 }
 \value{
 An object inheriting from class \code{structural_term}.
 }
 \description{
-The branch of \code{\link{model_term}} for terms that rewrite the
+The branch of \code{\link[=model_term]{model_term()}} for terms that rewrite the
 likelihood contributions rather than adding a design block:
-\code{\link{gas}}, whose predictor is a recursion, and
-\code{\link{regime}}, whose contribution is a likelihood mixed over
+\code{\link[=gas]{gas()}}, whose predictor is a recursion, and
+\code{\link[=regime]{regime()}}, whose contribution is a likelihood mixed over
 latent states. A term on this branch reports its own parameters through
-\code{\link{term_params}} rather than coefficients, so
-\code{\link{term_npar}} counts those and \code{\link{term_penalties}}
+\code{\link[=term_params]{term_params()}} rather than coefficients, so
+\code{\link[=term_npar]{term_npar()}} counts those and \code{\link[=term_penalties]{term_penalties()}}
 indexes into them.
 }
 \examples{
 S7::S7_inherits(linpar(~1), structural_term)
 }
 \seealso{
-\code{\link{model_term}}
+\code{\link[=model_term]{model_term()}}
 }

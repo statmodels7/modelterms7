@@ -28,7 +28,7 @@ path, so several numbers are not a grid it could visit. Must lie in
 \eqn{(0, \infty)}.}
 
 \item{sparse}{Governs the FORMULA route: whether the block is built as a
-\code{dgCMatrix} through \code{\link[Matrix]{sparse.model.matrix}} rather
+\code{dgCMatrix} through \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}} rather
 than as a dense model matrix. \code{NULL}, the default, settles it at
 build from the size of the design; \code{TRUE} and \code{FALSE} override
 it. A MATRIX input needs no such argument, being kept in whatever storage
@@ -38,8 +38,8 @@ it arrives in. See the section below.}
 penalty's hyperparameter is the mistake this catches.}
 }
 \value{
-An object of class \code{\link{PenalizedTerm}} (a specification;
-  see \code{\link{term_build}}).
+An object of class \code{\link[=PenalizedTerm]{PenalizedTerm()}} (a specification;
+see \code{\link[=term_build]{term_build()}}).
 }
 \description{
 A block of coefficients under a Gaussian prior at zero: every one of them
@@ -57,7 +57,7 @@ prior and a larger value shrinks harder.
 
 The penalty is twice differentiable everywhere, so the block is fitted in
 the same system as the unpenalized terms and \eqn{\lambda} is estimated by
-\code{\link[statmodels7]{reml}()} rather than swept along a path.
+\code{\link[statmodels7:reml]{statmodels7::reml()}} rather than swept along a path.
 
 \strong{Hyperparameter.} \code{lambda}, admissible on \eqn{(0, \infty)}.
 }
@@ -72,7 +72,7 @@ Hoerl, A. E. and Kennard, R. W. (1970). Ridge regression: biased
 estimation for nonorthogonal problems. \emph{Technometrics} 12, 55--67.
 }
 \seealso{
-\code{\link{penalized_terms}} for what the five share,
-  \code{\link{lasso}}, \code{\link{enet}}, \code{\link{scad}},
-  \code{\link{mcp}}, \code{\link[penalties7]{ridge_penalty}}
+\code{\link[=penalized_terms]{penalized_terms()}} for what the five share,
+\code{\link[=lasso]{lasso()}}, \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}},
+\code{\link[=mcp]{mcp()}}, \code{\link[penalties7:ridge_penalty]{penalties7::ridge_penalty()}}
 }

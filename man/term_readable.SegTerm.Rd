@@ -4,7 +4,7 @@
 \alias{term_readable.SegTerm}
 \title{What a Fitted Break-Point Term Is About}
 \arguments{
-\item{term}{A built \code{\link{SegTerm}}.}
+\item{term}{A built \code{\link[=SegTerm]{SegTerm()}}.}
 
 \item{zeta}{The term's coefficients, in the order of its block.}
 
@@ -12,8 +12,8 @@
 }
 \value{
 A list with \code{name}, \code{value}, \code{jacobian} and
-  \code{scale}, as \code{\link{term_readable}} documents, or
-  \code{NULL} where a coefficient carries a development.
+\code{scale}, as \code{\link[=term_readable]{term_readable()}} documents, or
+\code{NULL} where a coefficient carries a development.
 }
 \description{
 The quantities of the model the term defines, rather than the
@@ -39,7 +39,7 @@ which is the delta method \code{segmented} reports a break-point's
 standard error by. The joint construction reads its position from a
 quadratic that also carries the change of slope, and the two readings
 differ by the increment the iteration has left: the VALUE reported is
-the one the term holds, so that this and \code{\link{seg_psi}} cannot
+the one the term holds, so that this and \code{\link[=seg_psi]{seg_psi()}} cannot
 give two numbers for one quantity, and the Jacobian is the fixed
 point's, which the quadratic degenerates to once the increment has
 vanished.

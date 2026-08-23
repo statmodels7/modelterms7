@@ -13,7 +13,7 @@ term_search(term, ...)
 }
 \value{
 A named list, one entry per penalty of the term, each a single
-  string. Empty where the term names none.
+string. Empty where the term names none.
 }
 \description{
 \code{"grid"} for every combination of the term's kinked hyperparameters,
@@ -22,7 +22,7 @@ the way the fitting layer covers one by default.
 }
 \details{
 It matters only for a term carrying MORE THAN ONE hyperparameter with a
-kink -- \code{\link{enet}}, \code{\link{scad}} and \code{\link{mcp}} --
+kink -- \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}} and \code{\link[=mcp]{mcp()}} --
 since there is nothing to combine otherwise. Under \code{"grid"} the cost
 is the product of the term's own grids and under \code{"cyclic"} their sum
 per pass.
@@ -38,5 +38,5 @@ term_search(enet(~x))
 
 }
 \seealso{
-\code{\link{term_grid}}, \code{\link{term_path_min}}
+\code{\link[=term_grid]{term_grid()}}, \code{\link[=term_path_min]{term_path_min()}}
 }

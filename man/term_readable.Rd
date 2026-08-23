@@ -10,14 +10,14 @@ term_readable(term, zeta, ...)
 \item{term}{A built term.}
 
 \item{zeta}{The term's parameters on the unconstrained scale, named as
-\code{\link{term_params}}.}
+\code{\link[=term_params]{term_params()}}.}
 
 \item{...}{Passed to methods.}
 }
 \value{
 A list with \code{name}, \code{value}, \code{jacobian} (one row
-  per quantity and one column per parameter) and \code{scale}, the link
-  an interval for each quantity is built on.
+per quantity and one column per parameter) and \code{scale}, the link
+an interval for each quantity is built on.
 }
 \description{
 What a reader reads, with the Jacobian from the term's own parameters on
@@ -49,5 +49,5 @@ term_readable(gas(p = 1, q = 1), c(omega = 0.3, alpha1 = 0.4, pacf1 = 0.8))
 
 }
 \seealso{
-\code{\link{term_params}}, \code{\link{term_links}}
+\code{\link[=term_params]{term_params()}}, \code{\link[=term_links]{term_links()}}
 }

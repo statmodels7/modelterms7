@@ -7,7 +7,7 @@
 term_links(term, ...)
 }
 \arguments{
-\item{term}{An object inheriting from \code{\link{structural_term}}.}
+\item{term}{An object inheriting from \code{\link[=structural_term]{structural_term()}}.}
 
 \item{...}{Passed to methods.}
 }
@@ -16,7 +16,7 @@ A named list of link objects.
 }
 \description{
 One \pkg{linkfunctions7} link per parameter of
-\code{\link{term_params}}, carrying it to the unconstrained scale the
+\code{\link[=term_params]{term_params()}}, carrying it to the unconstrained scale the
 model layer optimizes on.
 }
 \examples{
@@ -24,5 +24,5 @@ vapply(term_links(gas(p = 1, q = 1)), function(l) l@link_name, character(1))
 
 }
 \seealso{
-\code{\link{term_params}}
+\code{\link[=term_params]{term_params()}}
 }

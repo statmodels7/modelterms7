@@ -5,38 +5,38 @@
 #' The abstract root of the term hierarchy. A model term records what a
 #' formula names: the recipe that turns a data frame into a contribution to
 #' the model, together with the metadata a fit reads. A term as written in a
-#' formula is a specification; \code{\link{term_build}} turns it into a
+#' formula is a specification; [term_build()] turns it into a
 #' built term carrying its design block.
 #'
-#' The formula interpreter (\code{\link{interpret_formula}}) recognizes a
+#' The formula interpreter ([interpret_formula()]) recognizes a
 #' term by this class: any call in a formula that evaluates to an object
-#' inheriting from \code{model_term} is treated as a term, so a term class
+#' inheriting from `model_term` is treated as a term, so a term class
 #' defined outside the package works in a formula without registration.
 #'
 #' @param label A character string prefixed to the term's coefficient names
 #'   when non-empty.
 #' @param hyper The hyperparameters of the term's penalty that the
 #'   caller HELD, as a named list. Empty, the default, means every one
-#'   of them is estimated. See \code{\link{term_hyper}}.
+#'   of them is estimated. See [term_hyper()].
 #' @param grid How many values a path visits for each of the term's
 #'   hyperparameters, as a named list. Empty, the default, leaves it to the
-#'   criterion. See \code{\link{term_grid}}.
+#'   criterion. See [term_grid()].
 #' @param values The values a path visits, for each hyperparameter the
 #'   caller wrote out, as a named list. Empty, the default, has the path
-#'   build them. See \code{\link{term_values}}.
+#'   build them. See [term_values()].
 #' @param min_ratio How far down the path over the size of the kink
 #'   reaches, as a fraction of the value that empties the block, or
-#'   \code{numeric(0)} for the criterion's own. See
-#'   \code{\link{term_path_min}}.
+#'   `numeric(0)` for the criterion's own. See
+#'   [term_path_min()].
 #' @param search How the term's own hyperparameters are covered when it has
-#'   several with a kink: \code{"grid"} for every combination of them,
-#'   \code{"cyclic"} for one at a time, or \code{character(0)} for the
-#'   default. See \code{\link{term_search}}.
+#'   several with a kink: `"grid"` for every combination of them,
+#'   `"cyclic"` for one at a time, or `character(0)` for the
+#'   default. See [term_search()].
 #'
-#' @return An object inheriting from class \code{model_term}.
+#' @return An object inheriting from class `model_term`.
 #'
-#' @seealso \code{\link{additive_term}}, \code{\link{structural_term}},
-#'   \code{\link{term_build}}
+#' @seealso [additive_term()], [structural_term()],
+#'   [term_build()]
 #' @examples
 #' S7::S7_inherits(linpar(~1), model_term)
 #' @export
@@ -87,43 +87,43 @@ model_term <- S7::new_class(
 #' @name additive_term
 #'
 #' @description
-#' The branch of \code{\link{model_term}} for terms that contribute a
+#' The branch of [model_term()] for terms that contribute a
 #' linear block \eqn{X_j \beta_j} to the linear predictor of one
 #' distribution parameter. A built additive term carries the design block,
 #' the coefficient names, the blueprint that reproduces the mapping on new
-#' data, and the penalty attached to its coefficients (\code{NULL} when the
+#' data, and the penalty attached to its coefficients (`NULL` when the
 #' term is unpenalized).
 #'
 #' @param label A character string prefixed to the coefficient names when
 #'   non-empty.
 #' @param hyper The hyperparameters of the term's penalty that the
 #'   caller HELD, as a named list. Empty, the default, means every one
-#'   of them is estimated. See \code{\link{term_hyper}}.
+#'   of them is estimated. See [term_hyper()].
 #' @param grid How many values a path visits for each of the term's
 #'   hyperparameters, as a named list. Empty, the default, leaves it to the
-#'   criterion. See \code{\link{term_grid}}.
+#'   criterion. See [term_grid()].
 #' @param values The values a path visits, for each hyperparameter the
 #'   caller wrote out, as a named list. Empty, the default, has the path
-#'   build them. See \code{\link{term_values}}.
+#'   build them. See [term_values()].
 #' @param min_ratio How far down the path over the size of the kink
 #'   reaches, as a fraction of the value that empties the block, or
-#'   \code{numeric(0)} for the criterion's own. See
-#'   \code{\link{term_path_min}}.
+#'   `numeric(0)` for the criterion's own. See
+#'   [term_path_min()].
 #' @param search How the term's own hyperparameters are covered when it has
-#'   several with a kink: \code{"grid"} for every combination of them,
-#'   \code{"cyclic"} for one at a time, or \code{character(0)} for the
-#'   default. See \code{\link{term_search}}.
-#' @param X The design block, filled by \code{\link{term_build}}.
+#'   several with a kink: `"grid"` for every combination of them,
+#'   `"cyclic"` for one at a time, or `character(0)` for the
+#'   default. See [term_search()].
+#' @param X The design block, filled by [term_build()].
 #' @param coef_names The coefficient names, filled by
-#'   \code{\link{term_build}}.
+#'   [term_build()].
 #' @param blueprint The information needed to reproduce the mapping on new
-#'   data, filled by \code{\link{term_build}}.
-#' @param penalty The penalty on the term's coefficients, or \code{NULL}.
+#'   data, filled by [term_build()].
+#' @param penalty The penalty on the term's coefficients, or `NULL`.
 #'
-#' @return An object inheriting from class \code{additive_term}.
+#' @return An object inheriting from class `additive_term`.
 #'
-#' @seealso \code{\link{linpar}}, \code{\link{term_build}},
-#'   \code{\link{term_predict}}
+#' @seealso [linpar()], [term_build()],
+#'   [term_predict()]
 #' @examples
 #' S7::S7_inherits(linpar(~1), additive_term)
 #' @export
@@ -143,37 +143,37 @@ additive_term <- S7::new_class(
 #' @name structural_term
 #'
 #' @description
-#' The branch of \code{\link{model_term}} for terms that rewrite the
+#' The branch of [model_term()] for terms that rewrite the
 #' likelihood contributions rather than adding a design block:
-#' \code{\link{gas}}, whose predictor is a recursion, and
-#' \code{\link{regime}}, whose contribution is a likelihood mixed over
+#' [gas()], whose predictor is a recursion, and
+#' [regime()], whose contribution is a likelihood mixed over
 #' latent states. A term on this branch reports its own parameters through
-#' \code{\link{term_params}} rather than coefficients, so
-#' \code{\link{term_npar}} counts those and \code{\link{term_penalties}}
+#' [term_params()] rather than coefficients, so
+#' [term_npar()] counts those and [term_penalties()]
 #' indexes into them.
 #'
 #' @param label A character string naming the term.
 #' @param hyper The hyperparameters of the term's penalty that the
 #'   caller HELD, as a named list. Empty, the default, means every one
-#'   of them is estimated. See \code{\link{term_hyper}}.
+#'   of them is estimated. See [term_hyper()].
 #' @param grid How many values a path visits for each of the term's
 #'   hyperparameters, as a named list. Empty, the default, leaves it to the
-#'   criterion. See \code{\link{term_grid}}.
+#'   criterion. See [term_grid()].
 #' @param values The values a path visits, for each hyperparameter the
 #'   caller wrote out, as a named list. Empty, the default, has the path
-#'   build them. See \code{\link{term_values}}.
+#'   build them. See [term_values()].
 #' @param min_ratio How far down the path over the size of the kink
 #'   reaches, as a fraction of the value that empties the block, or
-#'   \code{numeric(0)} for the criterion's own. See
-#'   \code{\link{term_path_min}}.
+#'   `numeric(0)` for the criterion's own. See
+#'   [term_path_min()].
 #' @param search How the term's own hyperparameters are covered when it has
-#'   several with a kink: \code{"grid"} for every combination of them,
-#'   \code{"cyclic"} for one at a time, or \code{character(0)} for the
-#'   default. See \code{\link{term_search}}.
+#'   several with a kink: `"grid"` for every combination of them,
+#'   `"cyclic"` for one at a time, or `character(0)` for the
+#'   default. See [term_search()].
 #'
-#' @return An object inheriting from class \code{structural_term}.
+#' @return An object inheriting from class `structural_term`.
 #'
-#' @seealso \code{\link{model_term}}
+#' @seealso [model_term()]
 #' @examples
 #' S7::S7_inherits(linpar(~1), structural_term)
 #' @export
@@ -187,22 +187,22 @@ structural_term <- S7::new_class(
 #' @name LinparTerm
 #'
 #' @description
-#' A subclass of \code{\link{additive_term}} for the unpenalized parametric
-#' block built from a one-sided formula through \code{\link[stats]{model.matrix}}.
-#' Constructed by \code{\link{linpar}}, and implicitly by
-#' \code{\link{interpret_formula}}, which collects the bare covariates of a
+#' A subclass of [additive_term()] for the unpenalized parametric
+#' block built from a one-sided formula through [stats::model.matrix()].
+#' Constructed by [linpar()], and implicitly by
+#' [interpret_formula()], which collects the bare covariates of a
 #' model formula into one term of this class.
 #'
 #' @inheritParams additive_term
 #' @param formula The one-sided formula defining the block.
-#' @param sparse Whether the block is a \code{dgCMatrix}, built sparse rather
-#'   than compressed after the fact. See \code{\link{linpar}}.
+#' @param sparse Whether the block is a `dgCMatrix`, built sparse rather
+#'   than compressed after the fact. See [linpar()].
 #' @param contrasts The contrasts for the formula's factors, as a named list,
 #'   or an empty list for the session's own.
 #'
-#' @return An object of class \code{LinparTerm}.
+#' @return An object of class `LinparTerm`.
 #'
-#' @seealso \code{\link{linpar}}
+#' @seealso [linpar()]
 #' @examples
 #' S7::S7_inherits(linpar(~1), LinparTerm)
 #' @export

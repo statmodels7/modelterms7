@@ -7,16 +7,16 @@
 term_coef_start(term, target = NULL, ...)
 }
 \arguments{
-\item{term}{A built term (see \code{\link{term_build}}).}
+\item{term}{A built term (see \code{\link[=term_build]{term_build()}}).}
 
 \item{target}{Optional numeric vector, one value per observation: the
-response on the scale of the predictor. \code{\link{nl}} uses it to
+response on the scale of the predictor. \code{\link[=nl]{nl()}} uses it to
 estimate its own parameters; every other term ignores it.}
 
 \item{...}{Passed to methods.}
 }
 \value{
-A numeric vector of length \code{\link{term_npar}}.
+A numeric vector of length \code{\link[=term_npar]{term_npar()}}.
 }
 \description{
 The coefficients a built term asks to be started at, one per column of
@@ -26,19 +26,19 @@ from anywhere, the objective being convex in those coordinates.
 }
 \details{
 A term that recomputes its block from its coefficients
-(\code{\link{term_refresh}}) is the case this exists for, because zero
+(\code{\link[=term_refresh]{term_refresh()}}) is the case this exists for, because zero
 is not a neutral point there but a degenerate one. In
-\code{\link{jump}} the break-point is read off two coefficients as
+\code{\link[=jump]{jump()}} the break-point is read off two coefficients as
 \eqn{-g_k/\delta_k}, so a vector of zeros puts every break-point at the
 same clamped position and makes the block singular; in
-\code{\link{seg}} the Jacobian column is \eqn{-\gamma_k\,\mathbb{1}(x >
+\code{\link[=seg]{seg()}} the Jacobian column is \eqn{-\gamma_k\,\mathbb{1}(x >
 \psi_k)} and vanishes identically. Those terms return the start
-\code{\link{term_build}} computed -- unit changes and the break-points
+\code{\link[=term_build]{term_build()}} computed -- unit changes and the break-points
 at the interior quantiles of the covariate, or the positions
-\code{psi} names -- and \code{\link{nl}} returns the starting values of
+\code{psi} names -- and \code{\link[=nl]{nl()}} returns the starting values of
 its own parameters carried through their links.
 
-The value belongs to the term for the reason \code{\link{term_start}}
+The value belongs to the term for the reason \code{\link[=term_start]{term_start()}}
 records for a structural one: only the term knows what a coefficient of
 zero means for the block it builds.
 
@@ -57,5 +57,5 @@ term_coef_start(term_build(jump(x), dd))
 
 }
 \seealso{
-\code{\link{term_start}}, \code{\link{term_refresh}}
+\code{\link[=term_start]{term_start()}}, \code{\link[=term_refresh]{term_refresh()}}
 }

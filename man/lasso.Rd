@@ -35,7 +35,7 @@ kink that empties the block: smaller reaches a denser fit, larger stops
 sooner. Must lie in \eqn{(0, 1)}.}
 
 \item{sparse}{Governs the FORMULA route: whether the block is built as a
-\code{dgCMatrix} through \code{\link[Matrix]{sparse.model.matrix}} rather
+\code{dgCMatrix} through \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}} rather
 than as a dense model matrix. \code{NULL}, the default, settles it at
 build from the size of the design; \code{TRUE} and \code{FALSE} override
 it. A MATRIX input needs no such argument, being kept in whatever storage
@@ -45,8 +45,8 @@ it arrives in. See the section below.}
 penalty's hyperparameter is the mistake this catches.}
 }
 \value{
-An object of class \code{\link{PenalizedTerm}} (a specification;
-  see \code{\link{term_build}}).
+An object of class \code{\link[=PenalizedTerm]{PenalizedTerm()}} (a specification;
+see \code{\link[=term_build]{term_build()}}).
 }
 \description{
 A block of coefficients under a Laplace prior at zero: the penalty has a
@@ -61,9 +61,9 @@ and keeps fewer coefficients.
 
 The kink is at zero, so the block is fitted by a proximal method or by a
 coordinate descent with the other terms held, and \eqn{\lambda} is chosen
-by a PATH over its own values -- \code{\link[statmodels7]{bic}()} by
-default, or \code{\link[statmodels7]{aic}()} or
-\code{\link[statmodels7]{cv}()} -- because a marginal criterion is a
+by a PATH over its own values -- \code{\link[statmodels7:aic]{statmodels7::bic()}} by
+default, or \code{\link[statmodels7:aic]{statmodels7::aic()}} or
+\code{\link[statmodels7:cv]{statmodels7::cv()}} -- because a marginal criterion is a
 Laplace expansion at a mode that sits on the kink.
 
 \strong{Hyperparameter.} \code{lambda}, admissible on \eqn{(0, \infty)},
@@ -85,7 +85,7 @@ Tibshirani, R. (1996). Regression shrinkage and selection via the lasso.
 \emph{Journal of the Royal Statistical Society, Series B} 58, 267--288.
 }
 \seealso{
-\code{\link{penalized_terms}} for what the five share,
-  \code{\link{ridge}}, \code{\link{enet}}, \code{\link{scad}},
-  \code{\link{mcp}}, \code{\link[penalties7]{lasso_penalty}}
+\code{\link[=penalized_terms]{penalized_terms()}} for what the five share,
+\code{\link[=ridge]{ridge()}}, \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}},
+\code{\link[=mcp]{mcp()}}, \code{\link[penalties7:ridge_penalty]{penalties7::lasso_penalty()}}
 }

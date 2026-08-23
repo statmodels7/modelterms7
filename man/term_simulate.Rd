@@ -9,18 +9,18 @@ term_simulate(term, psi, eta, draw, ...)
 \arguments{
 \item{term}{A built structural term.}
 
-\item{psi}{The term's parameters, named as \code{\link{term_params}}.}
+\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
 
 \item{eta}{The static part of the predictor, one value per observation.}
 
-\item{draw}{A function \code{(e, i)} returning one response value drawn at
+\item{draw}{A function \verb{(e, i)} returning one response value drawn at
 predictor \code{e} for observation \code{i}.}
 
 \item{...}{Passed to methods.}
 }
 \value{
 A list with \code{eta}, the predictor; \code{y}, the responses
-  drawn or \code{NULL}; and \code{latent}, whatever the term drew.
+drawn or \code{NULL}; and \code{latent}, whatever the term drew.
 }
 \description{
 The predictor a structural term produces when the response is being
@@ -53,5 +53,5 @@ head(out$y, 3)
 
 }
 \seealso{
-\code{\link{term_filter}}, \code{\link{term_continue}}
+\code{\link[=term_filter]{term_filter()}}, \code{\link[=term_continue]{term_continue()}}
 }

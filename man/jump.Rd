@@ -28,7 +28,7 @@ see the section above. Cannot be combined with \code{by}.}
 \item{psi}{Optional starting positions; defaults to evenly spaced
 quantiles of the covariate. Where a break-point carries a development
 they seed it, each starting vector solving \eqn{Wp_k \approx
-\psi_k^{0}}.}
+  \psi_k^{0}}.}
 
 \item{by}{A one-sided formula giving every coefficient of the term the
 same development, e.g. \code{by = ~0 + g} for an independent set per
@@ -41,14 +41,14 @@ the ends of the range. Defaults to \code{0.05}, the value
 
 \item{smoothed}{\code{NULL} (the default: the construction exactly as
 documented above) or a \pkg{penalties7}
-\code{\link[penalties7]{abs_smoother}}, e.g.
+\code{\link[penalties7:abs_smoother]{penalties7::abs_smoother()}}, e.g.
 \code{penalties7::smooth_probit()}. The smoother replaces the step and
 the hinge by their smooth versions -- \eqn{(1 + s'(u))/2} and
 \eqn{(u + s(u))/2} -- so every break-point becomes an ordinary
 parameter of a \eqn{C^\infty} model: there is no working
 parametrization, no auxiliary coefficient and no scaling schedule
 (\code{c0} is ignored, with a message), the block is the true Jacobian
-and the term is fitted by Gauss-Newton like \code{\link{nl}}. A
+and the term is fitted by Gauss-Newton like \code{\link[=nl]{nl()}}. A
 development of a break-point -- \code{psi ~ random(~1 | id)}, a
 penalized one included -- is then legal for every kind, the read-off
 that constrained the discontinuous constructions having gone. The
@@ -85,9 +85,9 @@ as with a penalty's hyperparameters.}
 names.}
 }
 \value{
-An object of class \code{\link{SegTerm}} (a specification; see
-  \code{\link{term_build}}), or of class \code{\link{MarginalBreakTerm}}
-  with \code{marginal = TRUE}.
+An object of class \code{\link[=SegTerm]{SegTerm()}} (a specification; see
+\code{\link[=term_build]{term_build()}}), or of class \code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}
+with \code{marginal = TRUE}.
 }
 \description{
 A covariate whose effect is a constant that steps to a new value at
@@ -109,7 +109,7 @@ predictor is a step function, the intercept of the equation being its
 level before the first break-point and \eqn{\delta_k} the change of
 level at \eqn{\psi_k}. A model that is linear in \eqn{x} \emph{and}
 steps is written by putting the covariate in the equation as well,
-\code{y ~ x + jump(x)}, or by \code{\link{jseg}} where the slope is to
+\code{y ~ x + jump(x)}, or by \code{\link[=jseg]{jseg()}} where the slope is to
 change at the same points.
 }
 \details{
@@ -126,7 +126,7 @@ with \eqn{g = -\delta\psi}, so a linear fit on \eqn{(Z, W)} returns the
 break-point as \eqn{\psi = -g/\delta} (\cite{fasola2018}). The
 break-point is therefore not a coefficient here but a quantity read off
 two of them, which is why refreshing the term recovers it before
-rebuilding the weights, and why \code{\link{seg_psi}} exists.
+rebuilding the weights, and why \code{\link[=seg_psi]{seg_psi()}} exists.
 }
 
 \subsection{The scaling schedule}{
@@ -148,17 +148,17 @@ stays on the original one.
 The factor is not a constant. It governs how far the break-point may
 travel in one step, so a large value lets the estimate leave a spurious
 optimum and a small one is faithful to the step function. \code{c0} is
-its starting value and \code{\link{term_refresh}} halves it whenever the
+its starting value and \code{\link[=term_refresh]{term_refresh()}} halves it whenever the
 break-point reverses direction, the signal that the iteration has begun
 to circle an optimum rather than travel towards one. The run has
 converged when every break-point moves less than a hundredth of the
 distance between consecutive distinct observations, which
-\code{\link{seg_converged}} reports.
+\code{\link[=seg_converged]{seg_converged()}} reports.
 
 A break-point is confined to the interval between the 5th and the 95th
 percentile of the covariate, outside which the indicator is constant and
 the block singular, and the starting positions are chosen on a grid by
-\code{\link{seg_start}}: measured over eight samples and four starting
+\code{\link[=seg_start]{seg_start()}}: measured over eight samples and four starting
 positions, the fraction of runs recovering the break-point is 0 to 0.5
 from a single conventional start and 1 from the grid.
 }
@@ -168,16 +168,16 @@ from a single conventional start and 1 from the grid.
 \code{delta1} \ldots \code{deltaK}, the changes of level, followed by
 \code{g1} \ldots \code{gK}, the auxiliary coefficients of the identity
 above, from which \eqn{\psi_k = -g_k/\delta_k} is read. The
-break-points are \emph{not} coefficients; ask \code{\link{seg_psi}}.
+break-points are \emph{not} coefficients; ask \code{\link[=seg_psi]{seg_psi()}}.
 }
 
 \section{Developing a coefficient with covariates}{
 
-As for \code{\link{seg}}, a two-sided formula in \code{...} whose left
+As for \code{\link[=seg]{seg()}}, a two-sided formula in \code{...} whose left
 side names \code{delta}, \code{deltaK} or \code{psi}, \code{psiK}
 develops that coefficient on covariates, and \code{by = ~f} gives every
 coefficient the same development. The right side goes through
-\code{\link{interpret_formula}} and takes any term of this package.
+\code{\link[=interpret_formula]{interpret_formula()}} and takes any term of this package.
 
 What the discontinuous construction can carry is narrower than what the
 continuous one can, and the reason is the read-off rather than the
@@ -186,18 +186,18 @@ product of the two quantities, so it stays linear in the unknowns only
 when one of the two factors is a single number:
 
 \itemize{
-  \item \strong{the break-point developed}, the change of level a single
-    number: exact for any design, \eqn{g_k = -\delta_k p_k} being
-    linear in \eqn{p_k}. \code{jump(x, psi ~ id)} is a break-point
-    per subject with a shared step size.
-  \item \strong{a development on group indicators}, where the design has
-    one column per group and each observation belongs to one: the
-    product collapses group by group and the read-off is exact within
-    each. \code{jump(x, by = ~0 + g)} is an independent step and
-    break-point per level.
-  \item \strong{anything else} is rejected rather than approximated,
-    the product of two developments needing the outer product of their
-    designs and no unconstrained fit returning it as one.
+\item \strong{the break-point developed}, the change of level a single
+number: exact for any design, \eqn{g_k = -\delta_k p_k} being
+linear in \eqn{p_k}. \code{jump(x, psi ~ id)} is a break-point
+per subject with a shared step size.
+\item \strong{a development on group indicators}, where the design has
+one column per group and each observation belongs to one: the
+product collapses group by group and the read-off is exact within
+each. \code{jump(x, by = ~0 + g)} is an independent step and
+break-point per level.
+\item \strong{anything else} is rejected rather than approximated,
+the product of two developments needing the outer product of their
+designs and no unconstrained fit returning it as one.
 }
 
 A sub-term carrying a penalty is rejected on a developed break-point,
@@ -205,7 +205,7 @@ since the estimated coefficients are \eqn{-\delta_k p_k}, the
 development scaled by the step size, and a penalty would act on that
 rather than on the development. A penalty on the changes of level
 themselves is \code{jump(x, npsi = 4, delta ~ 0 + lasso(~1))}, the
-\code{0 +} removing the subformula's own unpenalized intercept, which
+\verb{0 +} removing the subformula's own unpenalized intercept, which
 would otherwise be the same column twice.
 }
 
@@ -230,7 +230,7 @@ break-points are covered; what prices more is not the recursion but the
 The prior is part of the likelihood: \eqn{(m_k, \tau_k, \delta_k)} are
 ordinary parameters estimated by maximum likelihood, with no penalty, no
 marginal criterion and no smoothing constant, and the term is structural
-(\code{\link{MarginalBreakTerm}}, the likelihood shape of the contract)
+(\code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}, the likelihood shape of the contract)
 rather than a design block. With one break-point the prior may be any
 continuous \pkg{distributions7} distribution with its location fixed at
 zero, through \code{random(distrib = )}: the interval masses are
@@ -239,7 +239,7 @@ built for the censored likelihoods, with that surface's own caveats
 (closed for the gaussian and, in location and scale, for the t).
 \code{smoothed} and \code{c0} do not apply and are ignored with a
 message; the posterior of each group's break-points is read by
-\code{\link{term_latent}}. On the step model the marginal is the route
+\code{\link[=term_latent]{term_latent()}}. On the step model the marginal is the route
 that resolves what a smoothed mode cannot -- the conditional is a step
 in the position, so a Laplace approximation has no curvature to read --
 and it is the robust route on non-gaussian families.
@@ -261,6 +261,6 @@ iterative algorithm for change-point detection in abrupt change
 models. \emph{Computational Statistics}, 33, 997--1015.
 }
 \seealso{
-\code{\link{seg}}, \code{\link{jseg}}, \code{\link{seg_psi}},
-  \code{\link{seg_start}}, \code{\link{seg_step}}
+\code{\link[=seg]{seg()}}, \code{\link[=jseg]{jseg()}}, \code{\link[=seg_psi]{seg_psi()}},
+\code{\link[=seg_start]{seg_start()}}, \code{\link[=seg_step]{seg_step()}}
 }

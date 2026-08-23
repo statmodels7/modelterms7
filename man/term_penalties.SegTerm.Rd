@@ -4,12 +4,12 @@
 \alias{term_penalties.SegTerm}
 \title{Penalties of a Break-Point Term}
 \arguments{
-\item{term}{A built \code{\link{SegTerm}}.}
+\item{term}{A built \code{\link[=SegTerm]{SegTerm()}}.}
 
 \item{...}{Unused.}
 }
 \value{
-A list of entries, as \code{\link{term_penalties}} documents.
+A list of entries, as \code{\link[=term_penalties]{term_penalties()}} documents.
 }
 \description{
 One entry per penalty the developments of the term's own coefficients

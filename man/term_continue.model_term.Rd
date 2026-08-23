@@ -17,6 +17,6 @@ Nothing; the method always signals an error.
 The base method signals an error.
 }
 \seealso{
-\code{\link{term_continue}}
+\code{\link[=term_continue]{term_continue()}}
 }
 \keyword{internal}

@@ -7,7 +7,7 @@
 term_predict(term, newdata, ...)
 }
 \arguments{
-\item{term}{A built term (see \code{\link{term_build}}).}
+\item{term}{A built term (see \code{\link[=term_build]{term_build()}}).}
 
 \item{newdata}{A data frame.}
 
@@ -15,7 +15,7 @@ term_predict(term, newdata, ...)
 }
 \value{
 A numeric matrix with \code{nrow(newdata)} rows and one column
-  per coefficient.
+per coefficient.
 }
 \description{
 Applies a built term's mapping to new data, reproducing the block the
@@ -39,5 +39,5 @@ term_predict(built, data.frame(x = c(0.5, 2.5)))
 
 }
 \seealso{
-\code{\link{term_build}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_coef_names}}, \code{\link{term_npar}}, \code{\link{term_is_built}}
+\code{\link[=term_build]{term_build()}}, \code{\link[=term_refresh]{term_refresh()}}, \code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_coef_names]{term_coef_names()}}, \code{\link[=term_npar]{term_npar()}}, \code{\link[=term_is_built]{term_is_built()}}
 }

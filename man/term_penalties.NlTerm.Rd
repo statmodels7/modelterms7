@@ -4,12 +4,12 @@
 \alias{term_penalties.NlTerm}
 \title{Penalties of a Nonlinear Term}
 \arguments{
-\item{term}{A built \code{\link{NlTerm}}.}
+\item{term}{A built \code{\link[=NlTerm]{NlTerm()}}.}
 
 \item{...}{Unused.}
 }
 \value{
-A list of entries, as \code{\link{term_penalties}} documents.
+A list of entries, as \code{\link[=term_penalties]{term_penalties()}} documents.
 }
 \description{
 The penalties the sub-terms of the subformulas declare, each under the

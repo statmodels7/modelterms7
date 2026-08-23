@@ -29,7 +29,7 @@ see the section above. Cannot be combined with \code{by}.}
 \item{psi}{Optional starting positions; defaults to evenly spaced
 quantiles of the covariate. Where a break-point carries a development
 they seed it, each starting vector solving \eqn{Wp_k \approx
-\psi_k^{0}}.}
+  \psi_k^{0}}.}
 
 \item{by}{A one-sided formula giving every coefficient of the term the
 same development, e.g. \code{by = ~0 + g} for an independent set per
@@ -45,14 +45,14 @@ the ends of the range. Defaults to \code{0.05}, the value
 
 \item{smoothed}{\code{NULL} (the default: the construction exactly as
 documented above) or a \pkg{penalties7}
-\code{\link[penalties7]{abs_smoother}}, e.g.
+\code{\link[penalties7:abs_smoother]{penalties7::abs_smoother()}}, e.g.
 \code{penalties7::smooth_probit()}. The smoother replaces the step and
 the hinge by their smooth versions -- \eqn{(1 + s'(u))/2} and
 \eqn{(u + s(u))/2} -- so every break-point becomes an ordinary
 parameter of a \eqn{C^\infty} model: there is no working
 parametrization, no auxiliary coefficient and no scaling schedule
 (\code{c0} is ignored, with a message), the block is the true Jacobian
-and the term is fitted by Gauss-Newton like \code{\link{nl}}. A
+and the term is fitted by Gauss-Newton like \code{\link[=nl]{nl()}}. A
 development of a break-point -- \code{psi ~ random(~1 | id)}, a
 penalized one included -- is then legal for every kind, the read-off
 that constrained the discontinuous constructions having gone. The
@@ -73,8 +73,8 @@ integrated out of the likelihood exactly, rather than an estimated
 position. \code{FALSE}, the default, is the construction documented
 above. \code{TRUE} requires the subformula \code{psi ~ random(~1 | g)}
 and returns a structural term of the likelihood shape
-(\code{\link{MarginalBreakTerm}}); see the section of
-\code{\link{jump}}, whose step model is where the marginal buys the
+(\code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}); see the section of
+\code{\link[=jump]{jump()}}, whose step model is where the marginal buys the
 most -- for a \code{seg} term the native random-changepoint fit
 (\code{psi ~ random(~1 | g)} without \code{marginal}) is measured
 equivalent and remains the recommended route, the marginal being the
@@ -99,14 +99,14 @@ as with a penalty's hyperparameters.}
 names.}
 }
 \value{
-An object of class \code{\link{SegTerm}} (a specification; see
-  \code{\link{term_build}}), or of class \code{\link{MarginalBreakTerm}}
-  with \code{marginal = TRUE}.
+An object of class \code{\link[=SegTerm]{SegTerm()}} (a specification; see
+\code{\link[=term_build]{term_build()}}), or of class \code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}
+with \code{marginal = TRUE}.
 }
 \description{
 A covariate whose slope \emph{and} level both change at \eqn{K}
 break-points estimated with everything else, the union of
-\code{\link{seg}} and \code{\link{jump}} at the same points. Written in
+\code{\link[=seg]{seg()}} and \code{\link[=jump]{jump()}} at the same points. Written in
 the equation of any parameter of any distribution, the term contributes
 
 \deqn{\beta x_i + \sum_{k=1}^{K}
@@ -129,7 +129,7 @@ level there.
 Both devices of the two constructions are used at once: the truncated
 line is differentiable in the break-point and the step is linearized by
 the identity of \cite{fasola2018}, on the rescaled covariate its scaling
-schedule provides (see \code{\link{jump}}). What is particular to the
+schedule provides (see \code{\link[=jump]{jump()}}). What is particular to the
 joint term is the read-off, since the truncated line depends on the
 break-point as well and reading only the step's pair would discard what
 the change of slope says about it. Linearizing both parts about the
@@ -151,7 +151,7 @@ degenerates to \eqn{h = -(b + a\psi^{0})/a}, that is \eqn{\psi = -b/a},
 so the pure step is the case this contains rather than an exception to
 it.
 
-Everything \code{\link{jump}} documents about the scaling schedule, the
+Everything \code{\link[=jump]{jump()}} documents about the scaling schedule, the
 confinement of a break-point and the choice of starting positions
 applies here unchanged.
 }
@@ -161,7 +161,7 @@ applies here unchanged.
 \code{gammaK}, the changes of slope, then \code{delta1} \ldots
 \code{deltaK}, the changes of level, then \code{g1} \ldots \code{gK},
 the auxiliary coefficients from which the break-points are read. Ask
-\code{\link{seg_psi}} for the break-points.
+\code{\link[=seg_psi]{seg_psi()}} for the break-points.
 }
 
 \section{Developing a coefficient with covariates}{
@@ -182,7 +182,7 @@ routinely does; it is rejected rather than shipped diverging.
 
 \code{jseg(x, psi ~ random(~1 | g), marginal = TRUE)} integrates a
 latent break-point per group out of the likelihood exactly, on the
-Gauss-Kronrod panels of \code{\link{seg}}'s marginal with the change of
+Gauss-Kronrod panels of \code{\link[=seg]{seg()}}'s marginal with the change of
 level entering each interval's conditional as a constant. On gaussian
 data the mode-based routes are measured equivalent; on non-gaussian
 families the marginal is the robust one, the measured comparison on a
@@ -209,6 +209,6 @@ iterative algorithm for change-point detection in abrupt change
 models. \emph{Computational Statistics}, 33, 997--1015.
 }
 \seealso{
-\code{\link{seg}}, \code{\link{jump}}, \code{\link{seg_psi}},
-  \code{\link{seg_start}}, \code{\link{seg_step}}
+\code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}}, \code{\link[=seg_psi]{seg_psi()}},
+\code{\link[=seg_start]{seg_start()}}, \code{\link[=seg_step]{seg_step()}}
 }

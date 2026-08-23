@@ -14,16 +14,16 @@ term_latent(term, eta, y, logdens, psi, ...)
 \item{y}{The response.}
 
 \item{logdens}{The log-density as a function of a predictor value and a
-row index, as \code{\link{term_loglik}} takes it.}
+row index, as \code{\link[=term_loglik]{term_loglik()}} takes it.}
 
-\item{psi}{The term's parameters, named as \code{\link{term_params}}.}
+\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
 
 \item{...}{Passed to methods.}
 }
 \value{
 A data frame with one row per group and break-point:
-  \code{group}, \code{psi} (which break-point), \code{mean} and
-  \code{sd}.
+\code{group}, \code{psi} (which break-point), \code{mean} and
+\code{sd}.
 }
 \description{
 A summary of the latent variable a structural term integrates over,
@@ -31,7 +31,7 @@ given the whole sample: for a marginal break-point term, the posterior
 mean and standard deviation of each group's break-points.
 }
 \details{
-\code{\link{term_posterior}} answers the fitting layer's question, the
+\code{\link[=term_posterior]{term_posterior()}} answers the fitting layer's question, the
 component weights Fisher's identity needs at every observation. This one
 answers the reader's: where each group's latent positions sit once the
 data have been seen. For the marginal break-point term the two come from
@@ -50,5 +50,5 @@ term_latent(tm, rep(0, 24), dd$y,
 
 }
 \seealso{
-\code{\link{term_posterior}}, \code{\link{jump}}
+\code{\link[=term_posterior]{term_posterior()}}, \code{\link[=jump]{jump()}}
 }

@@ -18,7 +18,7 @@
 A matrix of \code{X}'s dimensions.
 }
 \description{
-The forward recursion of \code{\link{term_static_deriv}} for a
+The forward recursion of \code{\link[=term_static_deriv]{term_static_deriv()}} for a
 score-driven term.
 }
 \details{
@@ -34,6 +34,6 @@ once at a variance rather than at every iteration of a fit, and costs one
 pass over the data per column.
 }
 \seealso{
-\code{\link{term_static_deriv}}, \code{\link{term_filter}}
+\code{\link[=term_static_deriv]{term_static_deriv()}}, \code{\link[=term_filter]{term_filter()}}
 }
 \keyword{internal}

@@ -21,17 +21,17 @@ the log-likelihood with respect to it, one value per observation.}
 derivative of the log-likelihood with respect to it.}
 
 \item{psi}{The term's parameters, on the parameter scale, named as
-\code{\link{term_params}}.}
+\code{\link[=term_params]{term_params()}}.}
 
 \item{...}{Passed to methods.}
 }
 \value{
 A list with \code{eta}, the predictor the term produces,
-  \code{jacobian}, an \code{n} by \code{length(psi)} matrix of its
-  derivatives with respect to \code{psi}, and \code{curv}, the value of
-  \code{curvature} at each predictor -- returned because the recursion
-  evaluates it anyway, so a consumer running a second pass at the same
-  point (the adjoint) can read it rather than evaluate it again.
+\code{jacobian}, an \code{n} by \code{length(psi)} matrix of its
+derivatives with respect to \code{psi}, and \code{curv}, the value of
+\code{curvature} at each predictor -- returned because the recursion
+evaluates it anyway, so a consumer running a second pass at the same
+point (the adjoint) can read it rather than evaluate it again.
 }
 \description{
 Runs the term's recursion over the data and returns the predictor it
@@ -76,5 +76,5 @@ dim(out$jacobian)
 
 }
 \seealso{
-\code{\link{gas}}
+\code{\link[=gas]{gas()}}
 }

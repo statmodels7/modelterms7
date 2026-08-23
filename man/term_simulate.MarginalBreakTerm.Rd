@@ -4,7 +4,7 @@
 \alias{term_simulate.MarginalBreakTerm}
 \title{Drawing Break-Points From Their Prior}
 \arguments{
-\item{term}{A built \code{\link{MarginalBreakTerm}}.}
+\item{term}{A built \code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}.}
 
 \item{psi}{The term's parameters, on the parameter scale.}
 
@@ -16,7 +16,7 @@
 }
 \value{
 A list with \code{eta}, \code{y} (\code{NULL}) and
-  \code{latent}, a data frame of the drawn positions by group.
+\code{latent}, a data frame of the drawn positions by group.
 }
 \description{
 One set of latent positions per group, drawn from the prior the term
@@ -40,6 +40,6 @@ The response is not drawn -- the positions do not read it -- so the
 caller draws at the returned predictor.
 }
 \seealso{
-\code{\link{term_simulate}}, \code{\link{seg}}
+\code{\link[=term_simulate]{term_simulate()}}, \code{\link[=seg]{seg()}}
 }
 \keyword{internal}

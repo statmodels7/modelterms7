@@ -7,7 +7,7 @@
 term_build(term, data, ...)
 }
 \arguments{
-\item{term}{An object inheriting from class \code{\link{model_term}}.}
+\item{term}{An object inheriting from class \code{\link[=model_term]{model_term()}}.}
 
 \item{data}{A data frame.}
 
@@ -33,12 +33,12 @@ block:
   -\ell(\beta) + \sum_{t} \rho_t(\beta_t; \theta_t),}
 
 and building the term is what produces \eqn{X_t} from the data and
-attaches \eqn{\rho_t}. \code{\link{term_matrix}} reads the block,
-\code{\link{term_penalty}} the penalty and \code{\link{term_predict}}
+attaches \eqn{\rho_t}. \code{\link[=term_matrix]{term_matrix()}} reads the block,
+\code{\link[=term_penalty]{term_penalty()}} the penalty and \code{\link[=term_predict]{term_predict()}}
 reproduces \eqn{X_t} on new rows through the blueprint. A structural
 term is the exception: its contribution cannot be written as a block of
-columns, and it reports itself through \code{\link{term_filter}} or
-\code{\link{term_loglik}} instead.
+columns, and it reports itself through \code{\link[=term_filter]{term_filter()}} or
+\code{\link[=term_loglik]{term_loglik()}} instead.
 }
 \examples{
 built <- term_build(linpar(~x), data.frame(x = 1:4))
@@ -46,5 +46,5 @@ term_matrix(built)
 
 }
 \seealso{
-\code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_coef_names}}, \code{\link{term_npar}}, \code{\link{term_is_built}}
+\code{\link[=term_predict]{term_predict()}}, \code{\link[=term_refresh]{term_refresh()}}, \code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_coef_names]{term_coef_names()}}, \code{\link[=term_npar]{term_npar()}}, \code{\link[=term_is_built]{term_is_built()}}
 }

@@ -7,7 +7,7 @@
 seg_profile_rss(term, y, weights = NULL)
 }
 \arguments{
-\item{term}{A built break-point term (see \code{\link{term_build}}).}
+\item{term}{A built break-point term (see \code{\link[=term_build]{term_build()}}).}
 
 \item{y}{A numeric vector, one value per observation of the build data:
 the response, net of whatever the caller wants held.}
@@ -20,7 +20,7 @@ A single number; \code{Inf} where the fit fails.
 }
 \description{
 The residual sum of squares of \code{y} on the term's own columns at its
-current positions -- the number \code{\link{seg_polish}} descends on,
+current positions -- the number \code{\link[=seg_polish]{seg_polish()}} descends on,
 read at one point. A restarting loop screens proposals with it: two
 configurations of positions are compared by their profiles at the cost
 of two linear fits, where refitting the model to compare them costs a
@@ -35,5 +35,5 @@ seg_profile_rss(b, dd$y) > seg_profile_rss(seg_relocate(b, 6), dd$y)
 
 }
 \seealso{
-\code{\link{seg_polish}}, \code{\link{seg_relocate}}
+\code{\link[=seg_polish]{seg_polish()}}, \code{\link[=seg_relocate]{seg_relocate()}}
 }

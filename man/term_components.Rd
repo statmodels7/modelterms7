@@ -13,10 +13,10 @@ term_components(term, ...)
 }
 \value{
 A list, one entry per own parameter, each with \code{name} (the
-  parameter), \code{index} (its columns in the term's block),
-  \code{subs} (the sub-terms developing it, empty where there are none)
-  and \code{sub_index} (the columns belonging to each of those
-  sub-terms). Empty for a term whose columns do not divide.
+parameter), \code{index} (its columns in the term's block),
+\code{subs} (the sub-terms developing it, empty where there are none)
+and \code{sub_index} (the columns belonging to each of those
+sub-terms). Empty for a term whose columns do not divide.
 }
 \description{
 One entry per parameter the term is written in, saying which columns of its
@@ -24,8 +24,8 @@ block belong to that parameter and which sub-terms develop it, or an empty
 list for a term whose columns answer to nothing above them.
 }
 \details{
-A term written in parameters of its own -- \code{\link{nl}} in the
-parameters of \eqn{f}, \code{\link{seg}} in a slope, a change and a
+A term written in parameters of its own -- \code{\link[=nl]{nl()}} in the
+parameters of \eqn{f}, \code{\link[=seg]{seg()}} in a slope, a change and a
 break-point -- may develop any of them over covariates, and then its block
 carries several groups of columns that mean different things. What divides
 them is the TERM's answer and cannot be recovered from the coefficient
@@ -40,13 +40,13 @@ penalty. A consumer that reports a component therefore reports a sequence
 and not a single kind.
 
 A STRUCTURAL term contributes no design columns, and there \code{index}
-gives positions in \code{\link{term_params}} instead: the vector its
+gives positions in \code{\link[=term_params]{term_params()}} instead: the vector its
 state, its readable quantities and its variance matrix are all indexed by.
 In both cases the field names the term's own coefficients.
 
 The base method returns an empty list, which says that the term's columns
 are its own and divide no further. That is the honest answer for
-\code{\link{linpar}}, \code{\link{s}}, \code{\link{random}} and the
+\code{\link[=linpar]{linpar()}}, \code{\link[=s]{s()}}, \code{\link[=random]{random()}} and the
 penalized constructors, whose columns are one block with one meaning.
 }
 \examples{
@@ -61,5 +61,5 @@ term_components(term_build(linpar(~ x), dd))
 
 }
 \seealso{
-\code{\link{term_penalties}}, \code{\link{term_coef_names}}
+\code{\link[=term_penalties]{term_penalties()}}, \code{\link[=term_coef_names]{term_coef_names()}}
 }

@@ -4,7 +4,7 @@
 \alias{term_converged.SegTerm}
 \title{Whether a Break-Point Term's Break-Points Have Settled}
 \arguments{
-\item{term}{A built \code{\link{SegTerm}}.}
+\item{term}{A built \code{\link[=SegTerm]{SegTerm()}}.}
 
 \item{...}{Unused.}
 }
@@ -12,7 +12,7 @@
 A single logical.
 }
 \description{
-\code{\link{seg_converged}}, so that a fitting layer reads the rule the
+\code{\link[=seg_converged]{seg_converged()}}, so that a fitting layer reads the rule the
 construction is stopped on without knowing it is holding a break-point
 term. A term that has not been refreshed has not moved and reports
 \code{FALSE}, the first refresh being the one that measures nothing.

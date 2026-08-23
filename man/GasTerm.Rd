@@ -26,25 +26,25 @@ when non-empty.}
 
 \item{hyper}{The hyperparameters of the term's penalty that the
 caller HELD, as a named list. Empty, the default, means every one
-of them is estimated. See \code{\link{term_hyper}}.}
+of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list. Empty, the default, leaves it to the
-criterion. See \code{\link{term_grid}}.}
+criterion. See \code{\link[=term_grid]{term_grid()}}.}
 
 \item{values}{The values a path visits, for each hyperparameter the
 caller wrote out, as a named list. Empty, the default, has the path
-build them. See \code{\link{term_values}}.}
+build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink
 reaches, as a fraction of the value that empties the block, or
 \code{numeric(0)} for the criterion's own. See
-\code{\link{term_path_min}}.}
+\code{\link[=term_path_min]{term_path_min()}}.}
 
 \item{search}{How the term's own hyperparameters are covered when it has
 several with a kink: \code{"grid"} for every combination of them,
 \code{"cyclic"} for one at a time, or \code{character(0)} for the
-default. See \code{\link{term_search}}.}
+default. See \code{\link[=term_search]{term_search()}}.}
 
 \item{p}{The number of score lags.}
 
@@ -64,14 +64,14 @@ default. See \code{\link{term_search}}.}
 An object of class \code{GasTerm}.
 }
 \description{
-A subclass of \code{\link{structural_term}} for a generalized
+A subclass of \code{\link[=structural_term]{structural_term()}} for a generalized
 autoregressive score component: a time-varying level driven by the
 score of the observation density, added to the linear predictor.
-Constructed by \code{\link{gas}}.
+Constructed by \code{\link[=gas]{gas()}}.
 }
 \examples{
 S7::S7_inherits(gas(), GasTerm)
 }
 \seealso{
-\code{\link{gas}}
+\code{\link[=gas]{gas()}}
 }

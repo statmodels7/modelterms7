@@ -13,9 +13,9 @@ term_curvature(term, eta, y, score, curvature, psi, g, seed, blocks, ...)
 
 \item{y}{The response.}
 
-\item{score, curvature}{The callbacks of \code{\link{term_filter}}.}
+\item{score, curvature}{The callbacks of \code{\link[=term_filter]{term_filter()}}.}
 
-\item{psi}{The term's parameters, named as \code{\link{term_params}}.}
+\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
 
 \item{g}{The weights the second derivative is contracted against, one per
 observation.}
@@ -30,14 +30,14 @@ Jacobian row, returning \code{cross} and \code{M}.}
 }
 \value{
 A list with \code{jacobian}, the derivative of the predictor in
-  the caller's unknowns, and \code{curvature}, the contracted second
-  derivative.
+the caller's unknowns, and \code{curvature}, the contracted second
+derivative.
 }
 \description{
 The Jacobian of the predictor the term produces with respect to a
 caller's unknowns, and the second derivative of that predictor contracted
 against a caller's weights. It is what an observed information needs and
-\code{\link{term_adjoint}} does not give.
+\code{\link[=term_adjoint]{term_adjoint()}} does not give.
 }
 \details{
 The gradient of a model carrying a filter needs no second derivative and
@@ -91,5 +91,5 @@ dim(out$curvature)
 
 }
 \seealso{
-\code{\link{term_adjoint}}, \code{\link{term_filter}}
+\code{\link[=term_adjoint]{term_adjoint()}}, \code{\link[=term_filter]{term_filter()}}
 }

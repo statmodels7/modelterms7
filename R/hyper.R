@@ -13,14 +13,14 @@ NULL
 #' @description
 #' Validates the values a constructor was given against the names and the
 #' bounds of the penalty the term will build, and returns them as a named
-#' list with the \code{NULL} entries -- the ones to be estimated -- dropped.
+#' list with the `NULL` entries -- the ones to be estimated -- dropped.
 #'
 #' @details
 #' The check happens at CONSTRUCTION, where the caller can see it, and not at
 #' the fit three layers away. A name the penalty does not carry is an error
-#' naming the ones it does, which is what turns \code{mcp(x, a = 3)} --
-#' SCAD's shape written on an MCP, whose own is \code{gamma} -- into a
-#' message instead of an argument that lands in \code{...} and does
+#' naming the ones it does, which is what turns `mcp(x, a = 3)` --
+#' SCAD's shape written on an MCP, whose own is `gamma` -- into a
+#' message instead of an argument that lands in `...` and does
 #' nothing.
 #'
 #' The bounds are OPEN, as they are everywhere in the toolkit: a ridge at
@@ -28,11 +28,11 @@ NULL
 #' \eqn{\alpha = 0} has no kink and is a penalty of another kind.
 #'
 #' One argument carries three states, and they are read per hyperparameter
-#' rather than per term: \code{NULL} has the path build the grid, one number
+#' rather than per term: `NULL` has the path build the grid, one number
 #' holds the hyperparameter, and several are the grid itself. This returns
-#' the second of the three; \code{\link{check_values}} returns the third.
+#' the second of the three; [check_values()] returns the third.
 #'
-#' @param values A named list of the constructor's arguments, \code{NULL}
+#' @param values A named list of the constructor's arguments, `NULL`
 #'   where the hyperparameter is to be estimated.
 #' @param penalty A \pkg{penalties7} penalty, or a function returning one,
 #'   used only to read the names and the bounds.
@@ -40,8 +40,8 @@ NULL
 #'
 #' @return A named list of the held values, one number each.
 #'
-#' @seealso \code{\link{check_values}}, \code{\link{term_hyper}},
-#'   \code{\link{term_penalties}}
+#' @seealso [check_values()], [term_hyper()],
+#'   [term_penalties()]
 #'
 #' @keywords internal
 check_hyper <- function(values, penalty, what = "this term") {
@@ -72,7 +72,7 @@ check_hyper <- function(values, penalty, what = "this term") {
 #' @return A named list of numeric vectors, one entry per hyperparameter the
 #'   caller wrote out.
 #'
-#' @seealso \code{\link{check_hyper}}, \code{\link{term_values}}
+#' @seealso [check_hyper()], [term_values()]
 #'
 #' @keywords internal
 check_values <- function(values, penalty, what = "this term") {
@@ -92,7 +92,7 @@ check_values <- function(values, penalty, what = "this term") {
 #'
 #' @inheritParams check_hyper
 #'
-#' @return A list of \code{hyper} and \code{values}.
+#' @return A list of `hyper` and `values`.
 #'
 #' @keywords internal
 .hyper_parts <- function(values, penalty, what = "this term") {
@@ -146,8 +146,8 @@ check_values <- function(values, penalty, what = "this term") {
 #'
 #' @details
 #' A term carrying several penalties answers per penalty, under the same names
-#' \code{\link{term_penalties}} gives its entries, and every entry of that
-#' enumeration carries its own held values in the field \code{fixed} -- so a
+#' [term_penalties()] gives its entries, and every entry of that
+#' enumeration carries its own held values in the field `fixed` -- so a
 #' term that copies the entries of its sub-terms, which is what a structural
 #' term with subformulas does, propagates them without knowing they exist.
 #'
@@ -161,7 +161,7 @@ check_values <- function(values, penalty, what = "this term") {
 #' term_hyper(lasso(~x, lambda = 3))
 #' term_hyper(lasso(~x))
 #'
-#' @seealso \code{\link{term_penalties}}, \code{\link{ridge}}
+#' @seealso [term_penalties()], [ridge()]
 #' @export
 term_hyper <- S7::new_generic("term_hyper", "term",
   function(term, ...) S7::S7_dispatch())
@@ -190,25 +190,25 @@ S7::method(term_hyper, model_term) <- function(term, ...) {
 #' The Held Smoothing Parameters of a Smooth
 #'
 #' @description
-#' Carries the \code{lambda} a smooth's constructor was given onto the names
+#' Carries the `lambda` a smooth's constructor was given onto the names
 #' its penalty uses, and checks it against the positivity every smoothing
 #' parameter obeys.
 #'
 #' @details
 #' A one-dimensional smooth and an isotropic tensor product carry one
-#' smoothing parameter, named \code{lambda}; an anisotropic tensor product
-#' carries one per margin, \code{lambda1}, \code{lambda2} and so on, which is
-#' what \code{\link[penalties7]{additive_penalty}} names them. An unnamed
+#' smoothing parameter, named `lambda`; an anisotropic tensor product
+#' carries one per margin, `lambda1`, `lambda2` and so on, which is
+#' what [penalties7::additive_penalty()] names them. An unnamed
 #' vector is read in that order and must be as long as there are margins; a
 #' named one may hold some and leave the others to be estimated.
 #'
-#' @param lambda What the constructor was given, or \code{NULL}.
+#' @param lambda What the constructor was given, or `NULL`.
 #' @param names The penalty's own hyperparameter names.
 #' @param what The term's label, for the message.
 #'
 #' @return A named list of held values.
 #'
-#' @seealso \code{\link{check_hyper}}, \code{\link{s}}, \code{\link{te}}
+#' @seealso [check_hyper()], [s()], [te()]
 #'
 #' @keywords internal
 smooth_hyper <- function(lambda, names, what = "this smooth") {
@@ -258,18 +258,18 @@ smooth_hyper <- function(lambda, names, what = "this smooth") {
 #' only what can be checked before the penalty exists.
 #'
 #' @details
-#' \code{\link{random}} builds one of three penalties depending on what it was
+#' [random()] builds one of three penalties depending on what it was
 #' given -- a ridge, a structured prior over a \pkg{parameters7} matrix, or a
 #' \pkg{distributions7} family used coordinatewise -- so which names there are
 #' is not known until the term is built. The shape is checked here and the
-#' names against the penalty by \code{\link{check_hyper}} at that point.
+#' names against the penalty by [check_hyper()] at that point.
 #'
 #' A vector entry is a written-out grid rather than a held value, exactly as
 #' it is in the constructors that name their hyperparameters, so the length
-#' is not checked here either; \code{\link{.hyper_parts}} splits the two once
+#' is not checked here either; [.hyper_parts()] splits the two once
 #' the penalty exists.
 #'
-#' @param x A named vector, a named list, or \code{NULL}.
+#' @param x A named vector, a named list, or `NULL`.
 #' @param what The term's label, for the message.
 #'
 #' @return A named list, possibly empty.
@@ -299,7 +299,7 @@ as_hyper <- function(x, what = "this term") {
 #'
 #' @description
 #' Validates the number of values the constructor was given per
-#' hyperparameter, and returns them as a named list with the \code{NULL}
+#' hyperparameter, and returns them as a named list with the `NULL`
 #' entries dropped.
 #'
 #' @details
@@ -313,7 +313,7 @@ as_hyper <- function(x, what = "this term") {
 #' beyond the caller's patience: each point of a path is a whole fit, so the
 #' cost is linear in the number asked for.
 #'
-#' @param values A named list of the constructor's arguments, \code{NULL}
+#' @param values A named list of the constructor's arguments, `NULL`
 #'   where the criterion's default is wanted.
 #' @param penalty A \pkg{penalties7} penalty, or a function returning one,
 #'   used only to read the names.
@@ -321,7 +321,7 @@ as_hyper <- function(x, what = "this term") {
 #'
 #' @return A named list of grid sizes.
 #'
-#' @seealso \code{\link{check_hyper}}, \code{\link{term_grid}}
+#' @seealso [check_hyper()], [term_grid()]
 #'
 #' @keywords internal
 check_grid <- function(values, penalty, what = "this term") {
@@ -368,7 +368,7 @@ check_grid <- function(values, penalty, what = "this term") {
 #' term_grid(lasso(~x, n_lambda = 50))
 #' term_grid(lasso(~x))
 #'
-#' @seealso \code{\link{term_hyper}}, \code{\link{term_penalties}}
+#' @seealso [term_hyper()], [term_penalties()]
 #' @export
 term_grid <- S7::new_generic("term_grid", "term",
   function(term, ...) S7::S7_dispatch())
@@ -405,14 +405,14 @@ S7::method(term_grid, model_term) <- function(term, ...) {
 #' effect under a Gaussian prior are covered by the same line as a family
 #' added later.
 #'
-#' @param values The written-out grids, as \code{\link{check_values}} returns
+#' @param values The written-out grids, as [check_values()] returns
 #'   them.
-#' @param pen The penalty the term will build, or \code{NULL}.
+#' @param pen The penalty the term will build, or `NULL`.
 #' @param what The term's label, for the message.
 #'
-#' @return \code{NULL}, invisibly.
+#' @return `NULL`, invisibly.
 #'
-#' @seealso \code{\link{check_values}}, \code{\link{term_values}}
+#' @seealso [check_values()], [term_values()]
 #'
 #' @keywords internal
 reject_pathless_values <- function(values, pen, what = "this term") {
@@ -437,14 +437,14 @@ reject_pathless_values <- function(values, pen, what = "this term") {
 #'
 #' @details
 #' A hyperparameter's argument carries three states, one per hyperparameter
-#' rather than one per term: \code{NULL} has the path build the grid,
-#' \code{lambda = 3} holds it at three, and \code{lambda = c(0.1, 1, 10)}
-#' sweeps exactly those. So \code{enet(x, lambda = seq(0.1, 10, length = 10))}
+#' rather than one per term: `NULL` has the path build the grid,
+#' `lambda = 3` holds it at three, and `lambda = c(0.1, 1, 10)`
+#' sweeps exactly those. So `enet(x, lambda = seq(0.1, 10, length = 10))`
 #' is a written-out grid of \eqn{\lambda} combined with an \eqn{\alpha} the
 #' path builds for itself.
 #'
 #' A written-out grid is used as it stands. The value that empties the block
-#' does not cap it and \code{min_ratio} does not extend it: those construct a
+#' does not cap it and `min_ratio` does not extend it: those construct a
 #' grid, and here there is nothing to construct. A hyperparameter written out
 #' is still ESTIMATED -- what the caller fixed is where to look, not the
 #' answer -- so it is reported as chosen by the criterion and not as held.
@@ -459,8 +459,8 @@ reject_pathless_values <- function(values, pen, what = "this term") {
 #' term_values(lasso(~x, lambda = c(0.1, 1, 10)))
 #' term_values(lasso(~x, lambda = 3))
 #'
-#' @seealso \code{\link{term_hyper}}, \code{\link{term_grid}},
-#'   \code{\link{term_penalties}}
+#' @seealso [term_hyper()], [term_grid()],
+#'   [term_penalties()]
 #' @export
 term_values <- S7::new_generic("term_values", "term",
   function(term, ...) S7::S7_dispatch())
@@ -494,12 +494,12 @@ S7::method(term_values, model_term) <- function(term, ...) {
 #' geometric grid above its lower bound, and a fraction of an emptying value
 #' means nothing in either.
 #'
-#' @param v What the constructor was given, or \code{NULL}.
+#' @param v What the constructor was given, or `NULL`.
 #' @param what The term's label, for the message.
 #'
 #' @return A numeric vector of length one, or of length zero.
 #'
-#' @seealso \code{\link{check_grid}}, \code{\link{term_path_min}}
+#' @seealso [check_grid()], [term_path_min()]
 #'
 #' @keywords internal
 check_min_ratio <- function(v, what = "this term") {
@@ -520,7 +520,7 @@ check_min_ratio <- function(v, what = "this term") {
 #'
 #' @details
 #' The path runs from the kink that leaves every coefficient of the block at
-#' zero down to \code{min_ratio} of it, so a smaller number reaches a denser
+#' zero down to `min_ratio` of it, so a smaller number reaches a denser
 #' fit and a larger one stops sooner. It belongs to the term for the same
 #' reason as the number of values: how far the useful range of a
 #' hyperparameter extends is a property of the block, and a criterion
@@ -536,7 +536,7 @@ check_min_ratio <- function(v, what = "this term") {
 #' term_path_min(lasso(~x, min_ratio = 1e-6))
 #' term_path_min(lasso(~x))
 #'
-#' @seealso \code{\link{term_grid}}, \code{\link{term_hyper}}
+#' @seealso [term_grid()], [term_hyper()]
 #' @export
 term_path_min <- S7::new_generic("term_path_min", "term",
   function(term, ...) S7::S7_dispatch())
@@ -573,12 +573,12 @@ S7::method(term_path_min, model_term) <- function(term, ...) {
 #' hyperparameter of the model, the smooth ones included, and would be
 #' carrying an argument most of them cannot read.
 #'
-#' @param v What the constructor was given, or \code{NULL}.
+#' @param v What the constructor was given, or `NULL`.
 #' @param what The term's label, for the message.
 #'
 #' @return A character vector of length one, or of length zero.
 #'
-#' @seealso \code{\link{term_search}}, \code{\link{check_min_ratio}}
+#' @seealso [term_search()], [check_min_ratio()]
 #'
 #' @keywords internal
 check_search <- function(v, what = "this term") {
@@ -595,19 +595,19 @@ check_search <- function(v, what = "this term") {
 #' @title How a Term Covers Its Own Hyperparameters
 #'
 #' @description
-#' \code{"grid"} for every combination of the term's kinked hyperparameters,
-#' \code{"cyclic"} for one at a time. A term that names neither is covered
+#' `"grid"` for every combination of the term's kinked hyperparameters,
+#' `"cyclic"` for one at a time. A term that names neither is covered
 #' the way the fitting layer covers one by default.
 #'
 #' @details
 #' It matters only for a term carrying MORE THAN ONE hyperparameter with a
-#' kink -- \code{\link{enet}}, \code{\link{scad}} and \code{\link{mcp}} --
-#' since there is nothing to combine otherwise. Under \code{"grid"} the cost
-#' is the product of the term's own grids and under \code{"cyclic"} their sum
+#' kink -- [enet()], [scad()] and [mcp()] --
+#' since there is nothing to combine otherwise. Under `"grid"` the cost
+#' is the product of the term's own grids and under `"cyclic"` their sum
 #' per pass.
 #'
 #' Between two terms the sweep alternates whichever each one names, so
-#' \code{y ~ lasso(X) + enet(R)} costs the two blocks added and not
+#' `y ~ lasso(X) + enet(R)` costs the two blocks added and not
 #' multiplied, and one term asking for a product does not make the other pay
 #' for it.
 #'
@@ -621,7 +621,7 @@ check_search <- function(v, what = "this term") {
 #' term_search(enet(~x, search = "cyclic"))
 #' term_search(enet(~x))
 #'
-#' @seealso \code{\link{term_grid}}, \code{\link{term_path_min}}
+#' @seealso [term_grid()], [term_path_min()]
 #' @export
 term_search <- S7::new_generic("term_search", "term",
   function(term, ...) S7::S7_dispatch())

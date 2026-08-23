@@ -38,10 +38,10 @@ The bounds are OPEN, as they are everywhere in the toolkit: a ridge at
 One argument carries three states, and they are read per hyperparameter
 rather than per term: \code{NULL} has the path build the grid, one number
 holds the hyperparameter, and several are the grid itself. This returns
-the second of the three; \code{\link{check_values}} returns the third.
+the second of the three; \code{\link[=check_values]{check_values()}} returns the third.
 }
 \seealso{
-\code{\link{check_values}}, \code{\link{term_hyper}},
-  \code{\link{term_penalties}}
+\code{\link[=check_values]{check_values()}}, \code{\link[=term_hyper]{term_hyper()}},
+\code{\link[=term_penalties]{term_penalties()}}
 }
 \keyword{internal}

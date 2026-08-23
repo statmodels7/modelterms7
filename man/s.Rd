@@ -46,8 +46,8 @@ own level; without one an explicit \code{TRUE} is refused rather than
 ignored. See Details.}
 }
 \value{
-An object of class \code{\link{SmoothTerm}} (a specification;
-  see \code{\link{term_build}}).
+An object of class \code{\link[=SmoothTerm]{SmoothTerm()}} (a specification;
+see \code{\link[=term_build]{term_build()}}).
 }
 \description{
 A smooth function of a covariate, expanded in a \pkg{basis7} basis and
@@ -63,7 +63,7 @@ reads: it is the quadratic penalty of
 \eqn{\mathrm{diag}(0, 1, \dots, 1)}, rank deficient by exactly one, so
 the linear effect is unpenalized and the deviation is shrunk towards
 zero. As the smoothing parameter grows the fit approaches a straight
-line rather than a constant, and \code{\link{edf}} falls towards one.
+line rather than a constant, and \code{\link[=edf]{edf()}} falls towards one.
 
 The Demmler-Reinsch construction (\cite{demmler1975}, as used for
 effect selection by \cite{bach2024}) is empirical: it takes the inner
@@ -86,10 +86,9 @@ A factor \code{by} is where a smooth's block can be SPARSE: each row sits
 in the block of its own level and nowhere else, a density of \eqn{1/m}.
 \code{sparse = TRUE} builds it that way rather than building the dense
 matrix and compressing it -- measured at 2000 rows, \eqn{k = 10} and 200
-levels, 0.35 MB against 28.93 MB, the numbers identical. \code{sparse =
-NULL}, the default, settles it at build from the size of the block, the
+levels, 0.35 MB against 28.93 MB, the numbers identical. \code{sparse = NULL}, the default, settles it at build from the size of the block, the
 dense form holding \eqn{n m k} cells against \eqn{n k} non-zeros; see
-\code{\link{.resolve_sparse}} for the threshold and what it was measured
+\code{\link[=.resolve_sparse]{.resolve_sparse()}} for the threshold and what it was measured
 against. An explicit \code{TRUE} is refused without a factor \code{by},
 where there would be nothing to build on: the basis is dense by
 construction, the Demmler-Reinsch rotation making it so, and a numeric
@@ -118,5 +117,5 @@ Bach, P. and Klein, N. (2024). Bayesian effect selection in additive
 models with an application to time-to-event data.
 }
 \seealso{
-\code{\link{te}}, \code{\link{random}}, \code{\link{nl}}
+\code{\link[=te]{te()}}, \code{\link[=random]{random()}}, \code{\link[=nl]{nl()}}
 }

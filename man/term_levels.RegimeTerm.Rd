@@ -4,7 +4,7 @@
 \alias{term_levels.RegimeTerm}
 \title{Levels of a Regime Term}
 \arguments{
-\item{term}{A \code{\link{RegimeTerm}}.}
+\item{term}{A \code{\link[=RegimeTerm]{RegimeTerm()}}.}
 
 \item{psi}{The term's parameters.}
 

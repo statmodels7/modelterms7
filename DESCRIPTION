@@ -12,7 +12,7 @@ Description: Model terms as 'S7' objects: the mapping from a data frame to
     constructor. Part of the 'statmodels7' toolkit.
 License: MIT + file LICENSE
 Encoding: UTF-8
-Roxygen: list(markdown = FALSE)
+Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 URL: https://github.com/statmodels7/modelterms7, https://statmodels7.github.io/modelterms7/
 BugReports: https://github.com/statmodels7/modelterms7/issues

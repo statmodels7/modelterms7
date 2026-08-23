@@ -4,12 +4,12 @@
 \alias{term_penalties.RandomTerm}
 \title{The Penalties of a Random-Effect Term}
 \arguments{
-\item{term}{A built \code{\link{RandomTerm}}.}
+\item{term}{A built \code{\link[=RandomTerm]{RandomTerm()}}.}
 
 \item{...}{Unused.}
 }
 \value{
-A list of entries, as \code{\link{term_penalties}} documents.
+A list of entries, as \code{\link[=term_penalties]{term_penalties()}} documents.
 }
 \description{
 One entry over the whole block where the effects of a group are read

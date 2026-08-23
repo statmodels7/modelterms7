@@ -46,10 +46,10 @@ criterion. Only the sweep by kink size uses it.}
 
 \item{search}{\code{"grid"} to visit every combination of \eqn{\lambda}
 and \eqn{\gamma}, \code{"cyclic"} to sweep one at a time with the other
-held. See \code{\link{term_search}}.}
+held. See \code{\link[=term_search]{term_search()}}.}
 
 \item{sparse}{Governs the FORMULA route: whether the block is built as a
-\code{dgCMatrix} through \code{\link[Matrix]{sparse.model.matrix}} rather
+\code{dgCMatrix} through \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}} rather
 than as a dense model matrix. \code{NULL}, the default, settles it at
 build from the size of the design; \code{TRUE} and \code{FALSE} override
 it. A MATRIX input needs no such argument, being kept in whatever storage
@@ -59,8 +59,8 @@ it arrives in. See the section below.}
 penalty's hyperparameter is the mistake this catches.}
 }
 \value{
-An object of class \code{\link{PenalizedTerm}} (a specification;
-  see \code{\link{term_build}}).
+An object of class \code{\link[=PenalizedTerm]{PenalizedTerm()}} (a specification;
+see \code{\link[=term_build]{term_build()}}).
 }
 \description{
 The minimax concave penalty: like SCAD it selects and then flattens, and
@@ -91,7 +91,7 @@ Zhang, C.-H. (2010). Nearly unbiased variable selection under minimax
 concave penalty. \emph{The Annals of Statistics} 38, 894--942.
 }
 \seealso{
-\code{\link{penalized_terms}} for what the five share,
-  \code{\link{ridge}}, \code{\link{lasso}}, \code{\link{enet}},
-  \code{\link{scad}}, \code{\link[penalties7]{mcp_penalty}}
+\code{\link[=penalized_terms]{penalized_terms()}} for what the five share,
+\code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}}, \code{\link[=enet]{enet()}},
+\code{\link[=scad]{scad()}}, \code{\link[penalties7:scad_penalty]{penalties7::mcp_penalty()}}
 }

@@ -15,19 +15,19 @@
 }
 \value{
 A list with \code{om}, \code{A} and \code{B}, one row each per
-  observation of \code{newdata}.
+observation of \code{newdata}.
 }
 \description{
 A developed parameter's value at each new row, read through each
 sub-term's own blueprint rather than rebuilt.
 }
 \details{
-It is \code{\link{term_predict}} on every sub-term, which is what keeps
+It is \code{\link[=term_predict]{term_predict()}} on every sub-term, which is what keeps
 a basis or a set of contrasts from being relearned at other rows, and
 then the same chart the fit used. The persistence goes through
 Levinson-Durbin exactly as it does inside the filter.
 }
 \seealso{
-\code{\link{term_continue}}
+\code{\link[=term_continue]{term_continue()}}
 }
 \keyword{internal}

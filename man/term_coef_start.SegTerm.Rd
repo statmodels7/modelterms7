@@ -4,10 +4,10 @@
 \alias{term_coef_start.SegTerm}
 \title{Where a Break-Point Term's Coefficients Begin}
 \arguments{
-\item{term}{A built \code{\link{SegTerm}}.}
+\item{term}{A built \code{\link[=SegTerm]{SegTerm()}}.}
 
 \item{target}{Unused: a break-point term already reads the covariate's
-interior quantiles at \code{\link{term_build}}.}
+interior quantiles at \code{\link[=term_build]{term_build()}}.}
 
 \item{...}{Unused.}
 }
@@ -15,7 +15,7 @@ interior quantiles at \code{\link{term_build}}.}
 A numeric vector, one value per column of the block.
 }
 \description{
-The start \code{\link{term_build}} computed: unit changes, and the
+The start \code{\link[=term_build]{term_build()}} computed: unit changes, and the
 break-points at the positions \code{psi} names or at the interior
 quantiles of the covariate. Zero is degenerate here rather than neutral
 -- a discontinuous term reads its break-point off \eqn{-g_k/\delta_k},

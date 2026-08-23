@@ -7,22 +7,22 @@
 term_posterior(term, eta, y, logdens, psi, ...)
 }
 \arguments{
-\item{term}{A built \code{\link{RegimeTerm}}.}
+\item{term}{A built \code{\link[=RegimeTerm]{RegimeTerm()}}.}
 
 \item{eta}{The static predictor.}
 
 \item{y}{The response.}
 
 \item{logdens}{The log-density as a function of the predictor and the
-observation index, as \code{\link{term_loglik}} takes it.}
+observation index, as \code{\link[=term_loglik]{term_loglik()}} takes it.}
 
-\item{psi}{The term's parameters, named as \code{\link{term_params}}.}
+\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
 
 \item{...}{Passed to methods.}
 }
 \value{
 A numeric matrix with one row per observation and one column per
-  regime, whose rows sum to one.
+regime, whose rows sum to one.
 }
 \description{
 The probability of each regime at each observation given the whole
@@ -30,7 +30,7 @@ series, which is everything a model layer needs to differentiate a
 likelihood mixed over states.
 }
 \details{
-\code{\link{term_loglik}} returns the derivative of the mixed likelihood
+\code{\link[=term_loglik]{term_loglik()}} returns the derivative of the mixed likelihood
 in the term's OWN parameters, which is what estimating those needs. It is
 not what estimating the coefficients needs, and for this term the missing
 piece is not a second recursion carrying derivatives: it is one quantity,
@@ -66,5 +66,5 @@ round(head(g, 3), 4)
 
 }
 \seealso{
-\code{\link{term_loglik}}
+\code{\link[=term_loglik]{term_loglik()}}
 }

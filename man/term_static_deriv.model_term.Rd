@@ -18,6 +18,6 @@ The base method returns \code{NULL}: an ordinary term's contribution at
 one observation reads that observation alone.
 }
 \seealso{
-\code{\link{term_static_deriv}}
+\code{\link[=term_static_deriv]{term_static_deriv()}}
 }
 \keyword{internal}

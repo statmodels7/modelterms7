@@ -13,7 +13,7 @@ names.}
 coefficient on the scale of its own column. See the section below.}
 
 \item{sparse}{Governs the FORMULA route: whether the block is built as a
-\code{dgCMatrix} through \code{\link[Matrix]{sparse.model.matrix}} rather
+\code{dgCMatrix} through \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}} rather
 than as a dense model matrix. \code{NULL}, the default, settles it at
 build from the size of the design; \code{TRUE} and \code{FALSE} override
 it. A MATRIX input needs no such argument, being kept in whatever storage
@@ -23,13 +23,13 @@ it arrives in. See the section below.}
 penalty's hyperparameter is the mistake this catches.}
 }
 \value{
-An object of class \code{\link{PenalizedTerm}} (a
-  specification; see \code{\link{term_build}}).
+An object of class \code{\link[=PenalizedTerm]{PenalizedTerm()}} (a
+specification; see \code{\link[=term_build]{term_build()}}).
 }
 \description{
 The input handling, the standardization and the prediction of the five
-penalized terms, documented once. Each of them -- \code{\link{ridge}},
-\code{\link{lasso}}, \code{\link{enet}}, \code{\link{scad}}, \code{\link{mcp}} -- has a page
+penalized terms, documented once. Each of them -- \code{\link[=ridge]{ridge()}},
+\code{\link[=lasso]{lasso()}}, \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}}, \code{\link[=mcp]{mcp()}} -- has a page
 of its own carrying its formula, its hyperparameters and where those may
 lie. Each takes its block as a one-sided formula or as a numeric
 matrix and attaches the corresponding \pkg{penalties7} object to the
@@ -38,11 +38,11 @@ bounds and links, the derivatives and the kink set are the penalty's,
 never restated by the term.
 }
 \details{
-A formula input goes through the \code{\link[stats]{model.matrix}}
+A formula input goes through the \code{\link[stats:model.matrix]{stats::model.matrix()}}
 machinery with the intercept removed (a penalized block does not
 penalize an intercept; the model's intercept lives in the parametric
 block), and its blueprint records the terms, the factor levels and the
-contrasts, exactly as \code{\link{linpar}} does. The exception is a
+contrasts, exactly as \code{\link[=linpar]{linpar()}} does. The exception is a
 formula whose intercept is all it has: \code{ridge(~1)} is a block of
 that one column under the penalty, since removing it would leave no
 block. That is the form a subformula on another term's parameter uses,
@@ -61,7 +61,7 @@ builds, since its value was captured, but prediction is rejected --
 resolving it outside the new data would silently reuse the build-time
 rows.
 
-\code{\link{term_smooth}} is \code{TRUE} for \code{ridge} and
+\code{\link[=term_smooth]{term_smooth()}} is \code{TRUE} for \code{ridge} and
 \code{FALSE} for \code{lasso}, \code{enet}, \code{scad} and
 \code{mcp}, read from each penalty's kink set.
 }
@@ -71,7 +71,7 @@ A MATRIX input is kept in whatever storage it arrives in, so a
 \code{dgCMatrix} passed to any of the five stays one and nothing has to be
 said. \code{sparse = TRUE} governs the FORMULA route, where the model
 matrix would otherwise be built dense whatever the columns look like: it
-goes through \code{\link[Matrix]{sparse.model.matrix}}, which BUILDS the
+goes through \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}}, which BUILDS the
 block sparse rather than building a dense one and compressing it.
 
 It pays where the formula carries a factor of many levels, whose indicator
@@ -79,7 +79,7 @@ columns hold one non-zero per row -- \code{lasso(~ 0 + g)} over hundreds of
 groups is the case. On numeric covariates the block is dense whatever is
 asked for, and the sparse storage costs more than it saves. Left
 \code{NULL}, which is the default, the storage is settled at build by
-\code{\link{.resolve_sparse}}: the dense indicator part holds \code{n} times
+\code{\link[=.resolve_sparse]{.resolve_sparse()}}: the dense indicator part holds \code{n} times
 its column count in cells against one non-zero per row, and the two routes
 cross at about \eqn{10^5} of those cells.
 
@@ -114,7 +114,7 @@ is free.
 The spread is computed from the built block and frozen in the blueprint,
 so the same term standardizes identically in every equation of a
 distributional model and does not move with the working weights of a
-fit. A constant column takes \eqn{s_j = 1}. \code{\link{print}} shows the
+fit. A constant column takes \eqn{s_j = 1}. \code{\link[=print]{print()}} shows the
 values, a number that changes the meaning of \eqn{\lambda} having to be
 legible.
 
@@ -123,7 +123,7 @@ alone: substituting \eqn{s_j\beta_j} gives \eqn{\lambda_j = \lambda s_j}
 AND \eqn{a_j = a/s_j} (or \eqn{\gamma_j = \gamma/s_j}), a composition of
 both hyperparameters per coordinate, which the map expresses exactly.
 
-\code{\link{random}} does not standardize and takes no such argument. Its
+\code{\link[=random]{random()}} does not standardize and takes no such argument. Its
 columns are grouping indicators and its penalty is a variance component
 with a meaning of its own; weighting it by the size of the groups would
 change the model rather than its parametrization.
@@ -142,6 +142,6 @@ term_penalty(term_build(lasso(~ x1 + x3, standardize = TRUE), dd))@map
 
 }
 \seealso{
-\code{\link{linpar}}, \code{\link{s}}, \code{\link{random}}, \code{\link{term_penalty}}, \code{\link{edf}}
+\code{\link[=linpar]{linpar()}}, \code{\link[=s]{s()}}, \code{\link[=random]{random()}}, \code{\link[=term_penalty]{term_penalty()}}, \code{\link[=edf]{edf()}}
 }
 \keyword{internal}

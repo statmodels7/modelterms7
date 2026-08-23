@@ -27,6 +27,6 @@ err on: it is read against a threshold below which the sparse route loses
 little and above which it wins by orders.
 }
 \seealso{
-\code{\link{.resolve_sparse}}
+\code{\link[=.resolve_sparse]{.resolve_sparse()}}
 }
 \keyword{internal}

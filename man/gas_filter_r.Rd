@@ -40,7 +40,7 @@ gas_filter_r(
 
 \item{np}{The number of parameters.}
 
-\item{score, curvature}{The callbacks of \code{\link{term_filter}}.}
+\item{score, curvature}{The callbacks of \code{\link[=term_filter]{term_filter()}}.}
 }
 \value{
 A list with \code{eta}, \code{jacobian} and \code{curv}.

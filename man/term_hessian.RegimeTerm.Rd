@@ -4,7 +4,7 @@
 \alias{term_hessian.RegimeTerm}
 \title{Observed Hessian of a Regime Term}
 \arguments{
-\item{term}{A built \code{\link{RegimeTerm}}.}
+\item{term}{A built \code{\link[=RegimeTerm]{RegimeTerm()}}.}
 
 \item{eta}{The static predictor.}
 

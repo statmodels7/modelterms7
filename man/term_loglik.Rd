@@ -19,20 +19,20 @@ returning the log-density of that observation at that predictor.}
 \item{score}{A function of the same two arguments returning the
 derivative of that log-density with respect to the predictor.}
 
-\item{psi}{The term's parameters, named as \code{\link{term_params}}.}
+\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
 
 \item{...}{Passed to methods.}
 }
 \value{
 A list with \code{loglik}, one contribution per observation
-  summing to the term's log-likelihood, and \code{jacobian}, an
-  \code{n} by \code{length(psi)} matrix of its derivatives.
+summing to the term's log-likelihood, and \code{jacobian}, an
+\code{n} by \code{length(psi)} matrix of its derivatives.
 }
 \description{
 The per-observation log-likelihood contributions a structural term
 produces, with their derivatives in the term's own parameters. This is
 the second shape the structural branch takes, beside
-\code{\link{term_filter}}: a term that shifts the predictor implements
+\code{\link[=term_filter]{term_filter()}}: a term that shifts the predictor implements
 the filter, and one that rewrites the likelihood itself -- a mixture
 over latent states, say -- implements this, because its contribution is
 not a predictor and cannot be reported as one.
@@ -47,7 +47,7 @@ predictive density given everything before it,
 
 so the vector returned sums to the term's log-likelihood by the chain
 rule of probability whatever the dependence between observations. For
-\code{\link{regime}} it is the normalizing constant of the forward
+\code{\link[=regime]{regime()}} it is the normalizing constant of the forward
 recursion, \eqn{\ell_t = \log \sum_{k} \pi_{t \mid t-1, k}
 f(y_t \mid S_t = k)}, and the Jacobian
 \eqn{\partial \ell_t / \partial \psi_j} is propagated beside the
@@ -66,5 +66,5 @@ sum(out$loglik)
 
 }
 \seealso{
-\code{\link{regime}}, \code{\link{term_filter}}
+\code{\link[=regime]{regime()}}, \code{\link[=term_filter]{term_filter()}}
 }

@@ -7,7 +7,7 @@
 term_penalty(term, ...)
 }
 \arguments{
-\item{term}{An object inheriting from class \code{\link{additive_term}}.}
+\item{term}{An object inheriting from class \code{\link[=additive_term]{additive_term()}}.}
 
 \item{...}{Passed to methods.}
 }
@@ -23,10 +23,10 @@ are the penalty object's, not the term's.
 \details{
 A term whose penalty reaches only part of its parameters returns
 \code{NULL} here and declares that penalty through
-\code{\link{term_penalties}}, which names the parameters it covers:
-\code{\link{seg}} penalizes the changes and not the linear effect or the
-break-points, and the developments of \code{\link{nl}} and
-\code{\link{gas}} carry their sub-terms' penalties. Reading
+\code{\link[=term_penalties]{term_penalties()}}, which names the parameters it covers:
+\code{\link[=seg]{seg()}} penalizes the changes and not the linear effect or the
+break-points, and the developments of \code{\link[=nl]{nl()}} and
+\code{\link[=gas]{gas()}} carry their sub-terms' penalties. Reading
 a partial penalty here would say that it covers the block, so the
 question this generic asks is answered only where the answer is the whole
 of it.
@@ -36,5 +36,5 @@ term_penalty(linpar(~x))
 
 }
 \seealso{
-\code{\link{term_penalties}}, \code{\link{term_smooth}}, \code{\link{edf}}
+\code{\link[=term_penalties]{term_penalties()}}, \code{\link[=term_smooth]{term_smooth()}}, \code{\link[=edf]{edf()}}
 }

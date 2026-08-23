@@ -10,15 +10,15 @@ seg_step(term)
 seg_converged(term)
 }
 \arguments{
-\item{term}{A built \code{\link{SegTerm}}.}
+\item{term}{A built \code{\link[=SegTerm]{SegTerm()}}.}
 }
 \value{
 \code{seg_step} returns a numeric vector with one entry per
-  break-point; \code{seg_converged} returns a single logical.
+break-point; \code{seg_converged} returns a single logical.
 }
 \description{
 \code{seg_step} returns how far each break-point moved at the last
-call to \code{\link{term_refresh}}, and \code{seg_converged} compares
+call to \code{\link[=term_refresh]{term_refresh()}}, and \code{seg_converged} compares
 the largest of those with the tolerance of \cite{fasola2018}, a
 hundredth of the distance between consecutive distinct observations of
 the covariate. A term that has been built but not yet refreshed has
@@ -65,6 +65,6 @@ c(psi = seg_psi(b, cf), step = seg_step(b))
 
 }
 \seealso{
-\code{\link{seg}}, \code{\link{seg_psi}}, \code{\link{seg_start}}
-  \code{\link{seg_start}}
+\code{\link[=seg]{seg()}}, \code{\link[=seg_psi]{seg_psi()}}, \code{\link[=seg_start]{seg_start()}}
+\code{\link[=seg_start]{seg_start()}}
 }

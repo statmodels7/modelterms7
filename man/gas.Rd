@@ -23,15 +23,15 @@ parameter, and then no grouping is implied.}
 \item{time}{An optional ordering variable, evaluated in the data.}
 
 \item{links}{An optional named list of \pkg{linkfunctions7} links over
-the parameters of \code{\link{term_params}}, overriding the defaults
+the parameters of \code{\link[=term_params]{term_params()}}, overriding the defaults
 described above. A deviation cannot be named: it is unconstrained by
 construction, acting on the scale its parameter's own link defines.}
 
 \item{label}{A single non-empty string naming the term.}
 }
 \value{
-An object of class \code{\link{GasTerm}} (a specification; see
-  \code{\link{term_build}}).
+An object of class \code{\link[=GasTerm]{GasTerm()}} (a specification; see
+\code{\link[=term_build]{term_build()}}).
 }
 \description{
 A generalized autoregressive score component (\cite{creal2013},
@@ -46,8 +46,8 @@ evaluated at.
 \details{
 The term adds no columns. The predictor at one time depends on the
 data at the previous ones, so the contribution cannot be written as a
-block, and \code{\link{term_filter}} runs the recursion instead. That
-is what makes it a \code{\link{structural_term}}.
+block, and \code{\link[=term_filter]{term_filter()}} runs the recursion instead. That
+is what makes it a \code{\link[=structural_term]{structural_term()}}.
 
 What drives the recursion is the score of whatever distribution the
 model carries, so the same term is a GARCH-like volatility model when
@@ -116,7 +116,7 @@ Without \code{time} the rows are taken in the order they appear.
 A two-sided formula in \code{...} whose left side names a parameter
 develops it as \eqn{\psi_{j,t} = g_j^{-1}(z_t^\top\gamma_j)}, the
 design \eqn{Z} built from the right-hand side through
-\code{\link{interpret_formula}}, so it takes any additive term of the
+\code{\link[=interpret_formula]{interpret_formula()}}, so it takes any additive term of the
 package:
 \preformatted{gas(p = 1, q = 1, omega ~ ridge(~g), alpha1 ~ s(x),
     pacf1 ~ random(~1 | id), by = id)}
@@ -128,7 +128,7 @@ chart is inside \eqn{(-1, 1)} at every observation, and at \eqn{q = 1}
 that bounds the recursion's growth step by step. The coefficients
 \eqn{\gamma_j} are the term's parameters, unconstrained and on the
 identity link; the penalties the sub-terms carry are reported through
-\code{\link{term_penalties}} under the key \code{parameter::subterm}.
+\code{\link[=term_penalties]{term_penalties()}} under the key \code{parameter::subterm}.
 A parameter that varies by observation changes the recursion itself,
 \deqn{f_t = \omega_t + \sum_i a_{i,t}\, s_{t-i}
   + \sum_j b_{j,t}\, f_{t-j},}
@@ -162,8 +162,8 @@ component, here by the penalty. An unpenalized development over group
 indicators is therefore for reading a filter at given parameters rather
 than for fitting one.
 
-Earlier releases spelled this case as \code{deviations =} with a
-\code{penalty =}; both arguments are gone, the subformula reproducing
+Earlier releases spelled this case as \verb{deviations =} with a
+\verb{penalty =}; both arguments are gone, the subformula reproducing
 them exactly (the same fit to the printed digit, hyperparameter
 included) while covering what they could not.
 }
@@ -181,5 +181,5 @@ Harvey, A. C. (2013). \emph{Dynamic Models for Volatility and Heavy
 Tails}. Cambridge University Press.
 }
 \seealso{
-\code{\link{regime}}
+\code{\link[=regime]{regime()}}
 }

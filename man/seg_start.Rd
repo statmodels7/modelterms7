@@ -7,7 +7,7 @@
 seg_start(spec, data, y, k = 10)
 }
 \arguments{
-\item{spec}{An unbuilt \code{\link{SegTerm}}.}
+\item{spec}{An unbuilt \code{\link[=SegTerm]{SegTerm()}}.}
 
 \item{data}{A data frame in which the covariate is evaluated.}
 
@@ -19,8 +19,8 @@ seg_start(spec, data, y, k = 10)
 The specification, with \code{psi} set.
 }
 \description{
-Chooses the starting positions of a \code{\link{seg}}, \code{\link{jump}}
-or \code{\link{jseg}} term by scoring an equally spaced grid on the
+Chooses the starting positions of a \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}}
+or \code{\link[=jseg]{jseg()}} term by scoring an equally spaced grid on the
 least-squares profile of the term's own columns, and returns the
 specification with \code{psi} set to the best combination found.
 }
@@ -71,5 +71,5 @@ iterative algorithm for change-point detection in abrupt change
 models. \emph{Computational Statistics}, 33, 997--1015.
 }
 \seealso{
-\code{\link{seg}}, \code{\link{jump}}, \code{\link{jseg}}
+\code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}}, \code{\link[=jseg]{jseg()}}
 }

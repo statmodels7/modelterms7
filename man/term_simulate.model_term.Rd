@@ -18,6 +18,6 @@ The base method signals an error: an ordinary term contributes its block
 times its coefficients and has nothing of its own to draw.
 }
 \seealso{
-\code{\link{term_simulate}}
+\code{\link[=term_simulate]{term_simulate()}}
 }
 \keyword{internal}

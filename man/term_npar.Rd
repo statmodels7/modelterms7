@@ -7,7 +7,7 @@
 term_npar(term, ...)
 }
 \arguments{
-\item{term}{A built term (see \code{\link{term_build}}).}
+\item{term}{A built term (see \code{\link[=term_build]{term_build()}}).}
 
 \item{...}{Passed to methods.}
 }
@@ -17,8 +17,8 @@ An integer.
 \description{
 How many parameters of its own a built term carries: the columns of the
 design block for an additive term, and the entries of
-\code{\link{term_params}} for a structural one, which contributes no
-block. It is the length of the vector \code{\link{term_penalties}}
+\code{\link[=term_params]{term_params()}} for a structural one, which contributes no
+block. It is the length of the vector \code{\link[=term_penalties]{term_penalties()}}
 indexes into.
 }
 \examples{
@@ -26,5 +26,5 @@ term_npar(term_build(linpar(~x), data.frame(x = 1:4)))
 
 }
 \seealso{
-\code{\link{term_build}}, \code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_coef_names}}, \code{\link{term_is_built}}
+\code{\link[=term_build]{term_build()}}, \code{\link[=term_predict]{term_predict()}}, \code{\link[=term_refresh]{term_refresh()}}, \code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_coef_names]{term_coef_names()}}, \code{\link[=term_is_built]{term_is_built()}}
 }

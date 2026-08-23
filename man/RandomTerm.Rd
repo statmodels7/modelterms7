@@ -26,33 +26,33 @@ non-empty.}
 
 \item{hyper}{The hyperparameters of the term's penalty that the
 caller HELD, as a named list. Empty, the default, means every one
-of them is estimated. See \code{\link{term_hyper}}.}
+of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list. Empty, the default, leaves it to the
-criterion. See \code{\link{term_grid}}.}
+criterion. See \code{\link[=term_grid]{term_grid()}}.}
 
 \item{values}{The values a path visits, for each hyperparameter the
 caller wrote out, as a named list. Empty, the default, has the path
-build them. See \code{\link{term_values}}.}
+build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink
 reaches, as a fraction of the value that empties the block, or
 \code{numeric(0)} for the criterion's own. See
-\code{\link{term_path_min}}.}
+\code{\link[=term_path_min]{term_path_min()}}.}
 
 \item{search}{How the term's own hyperparameters are covered when it has
 several with a kink: \code{"grid"} for every combination of them,
 \code{"cyclic"} for one at a time, or \code{character(0)} for the
-default. See \code{\link{term_search}}.}
+default. See \code{\link[=term_search]{term_search()}}.}
 
-\item{X}{The design block, filled by \code{\link{term_build}}.}
+\item{X}{The design block, filled by \code{\link[=term_build]{term_build()}}.}
 
 \item{coef_names}{The coefficient names, filled by
-\code{\link{term_build}}.}
+\code{\link[=term_build]{term_build()}}.}
 
 \item{blueprint}{The information needed to reproduce the mapping on new
-data, filled by \code{\link{term_build}}.}
+data, filled by \code{\link[=term_build]{term_build()}}.}
 
 \item{penalty}{The penalty on the term's coefficients, or \code{NULL}.}
 
@@ -68,15 +68,15 @@ Gaussian.}
 An object of class \code{RandomTerm}.
 }
 \description{
-A subclass of \code{\link{additive_term}} for grouped coefficients with
+A subclass of \code{\link[=additive_term]{additive_term()}} for grouped coefficients with
 a distribution on the effects: the within-group design interacted with
 the grouping indicators, one coefficient per group and per within-group
 column, with the penalty carrying the effects' distribution.
-Constructed by \code{\link{random}}.
+Constructed by \code{\link[=random]{random()}}.
 }
 \examples{
 S7::S7_inherits(random(~ 1 | g), RandomTerm)
 }
 \seealso{
-\code{\link{random}}
+\code{\link[=random]{random()}}
 }

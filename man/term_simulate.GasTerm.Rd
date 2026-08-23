@@ -10,11 +10,12 @@
 
 \item{eta}{The static part of the predictor.}
 
-\item{draw}{A function \code{(e, i)} returning one response value.}
+\item{draw}{A function \verb{(e, i)} returning one response value.}
 
-\item{score, curvature}{Functions of \code{(y, e)} giving the derivatives
-of the log-density in the predictor. They take the response as an
-argument, unlike the filter's own, because here it is being made.}
+\item{score, curvature}{Functions of \verb{(y, e, i)} giving the
+derivatives of the log-density in the predictor at observation \code{i}.
+They take the response as an argument, unlike the filter's own, because
+here it is being made.}
 
 \item{...}{Ignored.}
 }
@@ -29,7 +30,7 @@ NO SEPARATE RECURSION IS WRITTEN. The filter's own recursion is the
 generative one -- the level at one time is a function of the scores
 before it, and a score is a function of a response and a predictor -- so
 the only difference is where the response comes from.
-\code{\link{term_filter}} calls its \code{score} callback exactly once
+\code{\link[=term_filter]{term_filter()}} calls its \code{score} callback exactly once
 per observation, in time order within each group, at the predictor the
 recursion has just produced; a callback that draws the response there,
 keeps it, and returns the score of what it drew turns the filter into a
@@ -43,6 +44,6 @@ C entry point, and here the response does not exist until the step that
 needs it.
 }
 \seealso{
-\code{\link{term_simulate}}, \code{\link{term_filter}}
+\code{\link[=term_simulate]{term_simulate()}}, \code{\link[=term_filter]{term_filter()}}
 }
 \keyword{internal}

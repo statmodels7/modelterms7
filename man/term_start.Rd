@@ -16,15 +16,15 @@ A named numeric vector on the unconstrained scale.
 }
 \description{
 The starting values of a structural term's parameters, on the
-unconstrained scale of \code{\link{term_links}}, one per parameter of
-\code{\link{term_params}}.
+unconstrained scale of \code{\link[=term_links]{term_links()}}, one per parameter of
+\code{\link[=term_params]{term_params()}}.
 }
 \details{
 The start belongs to the term because only the term knows what a
 coordinate of zero means on each of its charts. The base method returns
 zero everywhere, which is each link's own natural point; a term whose
 chart makes zero mean something other than "the model without the term"
-overrides it, as \code{\link{gas}} does for its score loadings, whose
+overrides it, as \code{\link[=gas]{gas()}} does for its score loadings, whose
 log chart puts a loading of one at zero.
 }
 \examples{
@@ -32,5 +32,5 @@ term_start(gas(p = 1, q = 1))
 
 }
 \seealso{
-\code{\link{term_params}}, \code{\link{term_links}}
+\code{\link[=term_params]{term_params()}}, \code{\link[=term_links]{term_links()}}
 }

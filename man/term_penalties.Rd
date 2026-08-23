@@ -13,18 +13,18 @@ term_penalties(term, ...)
 }
 \value{
 A list, possibly empty. Each entry has \code{name} (a label unique
-  WITHIN the term, empty for a penalty over the whole of it), \code{index}
-  (positions among the term's parameters) and \code{penalty} (a
-  \pkg{penalties7} object). The name is not the term's: two \code{ridge()}
-  terms in one formula are two terms with their own hyperparameters, and it
-  is the caller that knows what it called each one.
+WITHIN the term, empty for a penalty over the whole of it), \code{index}
+(positions among the term's parameters) and \code{penalty} (a
+\pkg{penalties7} object). The name is not the term's: two \code{ridge()}
+terms in one formula are two terms with their own hyperparameters, and it
+is the caller that knows what it called each one.
 }
 \description{
 What a term declares it wants penalized: a list of entries, each naming a
 subset of the term's own parameters and the penalty over them.
 }
 \details{
-\code{\link{term_penalty}} answers for the common case, one penalty over the
+\code{\link[=term_penalty]{term_penalty()}} answers for the common case, one penalty over the
 whole of a term's design block, and this generalizes it in two directions a
 model layer needs.
 
@@ -35,7 +35,7 @@ penalty over part of the parameters and none over the rest.
 
 The parameters need \strong{not be coefficients of a design block}. The
 persistence of a score-driven term, the nonlinear parameters of
-\code{\link{nl}}, the break-point of \code{\link{seg}} are parameters of the
+\code{\link[=nl]{nl()}}, the break-point of \code{\link[=seg]{seg()}} are parameters of the
 term and nothing else, and everything a penalty needs from them is a vector
 of numbers and their positions.
 
@@ -51,5 +51,5 @@ term_penalties(term_build(linpar(~x), data.frame(x = rnorm(20))))
 
 }
 \seealso{
-\code{\link{term_penalty}}, \code{\link{term_npar}}
+\code{\link[=term_penalty]{term_penalty()}}, \code{\link[=term_npar]{term_npar()}}
 }

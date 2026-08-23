@@ -7,16 +7,16 @@
 term_is_built(term)
 }
 \arguments{
-\item{term}{An object inheriting from class \code{\link{model_term}}.}
+\item{term}{An object inheriting from class \code{\link[=model_term]{model_term()}}.}
 }
 \value{
 A logical scalar.
 }
 \description{
-\code{TRUE} for a term returned by \code{\link{term_build}} and
+\code{TRUE} for a term returned by \code{\link[=term_build]{term_build()}} and
 \code{FALSE} for a bare specification. The accessors
-\code{\link{term_matrix}}, \code{\link{term_npar}},
-\code{\link{term_coef_names}} and \code{\link{term_predict}} reject a
+\code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_npar]{term_npar()}},
+\code{\link[=term_coef_names]{term_coef_names()}} and \code{\link[=term_predict]{term_predict()}} reject a
 specification, and this predicate is the test they use.
 }
 \examples{
@@ -25,5 +25,5 @@ term_is_built(term_build(linpar(~x), data.frame(x = 1:4)))
 
 }
 \seealso{
-\code{\link{term_build}}, \code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_coef_names}}, \code{\link{term_npar}}
+\code{\link[=term_build]{term_build()}}, \code{\link[=term_predict]{term_predict()}}, \code{\link[=term_refresh]{term_refresh()}}, \code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_coef_names]{term_coef_names()}}, \code{\link[=term_npar]{term_npar()}}
 }

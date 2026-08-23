@@ -9,7 +9,7 @@ NULL
 #' its parameters are not coefficients: they are estimated alongside the
 #' distribution's, on the unconstrained scale its links define.
 #'
-#' @param term An object inheriting from \code{\link{structural_term}}.
+#' @param term An object inheriting from [structural_term()].
 #' @param ... Passed to methods.
 #'
 #' @return A character vector.
@@ -17,7 +17,7 @@ NULL
 #' @examples
 #' term_params(gas(p = 1, q = 1))
 #'
-#' @seealso \code{\link{term_links}}, \code{\link{term_filter}}
+#' @seealso [term_links()], [term_filter()]
 #' @export
 term_params <- S7::new_generic("term_params", "term",
   function(term, ...) S7::S7_dispatch())
@@ -26,10 +26,10 @@ term_params <- S7::new_generic("term_params", "term",
 #'
 #' @description
 #' One \pkg{linkfunctions7} link per parameter of
-#' \code{\link{term_params}}, carrying it to the unconstrained scale the
+#' [term_params()], carrying it to the unconstrained scale the
 #' model layer optimizes on.
 #'
-#' @param term An object inheriting from \code{\link{structural_term}}.
+#' @param term An object inheriting from [structural_term()].
 #' @param ... Passed to methods.
 #'
 #' @return A named list of link objects.
@@ -37,7 +37,7 @@ term_params <- S7::new_generic("term_params", "term",
 #' @examples
 #' vapply(term_links(gas(p = 1, q = 1)), function(l) l@link_name, character(1))
 #'
-#' @seealso \code{\link{term_params}}
+#' @seealso [term_params()]
 #' @export
 term_links <- S7::new_generic("term_links", "term",
   function(term, ...) S7::S7_dispatch())
@@ -46,15 +46,15 @@ term_links <- S7::new_generic("term_links", "term",
 #'
 #' @description
 #' The starting values of a structural term's parameters, on the
-#' unconstrained scale of \code{\link{term_links}}, one per parameter of
-#' \code{\link{term_params}}.
+#' unconstrained scale of [term_links()], one per parameter of
+#' [term_params()].
 #'
 #' @details
 #' The start belongs to the term because only the term knows what a
 #' coordinate of zero means on each of its charts. The base method returns
 #' zero everywhere, which is each link's own natural point; a term whose
 #' chart makes zero mean something other than "the model without the term"
-#' overrides it, as \code{\link{gas}} does for its score loadings, whose
+#' overrides it, as [gas()] does for its score loadings, whose
 #' log chart puts a loading of one at zero.
 #'
 #' @param term A built structural term.
@@ -65,7 +65,7 @@ term_links <- S7::new_generic("term_links", "term",
 #' @examples
 #' term_start(gas(p = 1, q = 1))
 #'
-#' @seealso \code{\link{term_params}}, \code{\link{term_links}}
+#' @seealso [term_params()], [term_links()]
 #' @export
 term_start <- S7::new_generic("term_start", "term",
   function(term, ...) S7::S7_dispatch())
@@ -84,15 +84,15 @@ S7::method(term_start, structural_term) <- function(term, ...) {
 #' the others, so it cannot be written as a block of columns.
 #'
 #' @details
-#' Writing \eqn{\eta_t^{0}} for the static predictor supplied in \code{eta}
+#' Writing \eqn{\eta_t^{0}} for the static predictor supplied in `eta`
 #' and \eqn{\psi} for the term's parameters, the filter returns the pair
 #'
 #' \deqn{\eta_t = \eta_t^{0} + f_t(\psi),
 #'   \qquad J_{tj} = \frac{\partial \eta_t}{\partial \psi_j},}
 #'
 #' where \eqn{f_t} is the term's own recursion, driven by
-#' \code{score} and \code{curvature} evaluated at the predictor already
-#' produced. Both are read at \eqn{\eta_t}, so \code{curvature} is the
+#' `score` and `curvature` evaluated at the predictor already
+#' produced. Both are read at \eqn{\eta_t}, so `curvature` is the
 #' second derivative \eqn{\partial^{2} \ell_t / \partial \eta^{2}} and is
 #' negative at an ordinary observation; passing the information, its
 #' negative, gives a predictor and a Jacobian that are internally
@@ -113,13 +113,13 @@ S7::method(term_start, structural_term) <- function(term, ...) {
 #' @param curvature A function of the predictor returning the second
 #'   derivative of the log-likelihood with respect to it.
 #' @param psi The term's parameters, on the parameter scale, named as
-#'   \code{\link{term_params}}.
+#'   [term_params()].
 #' @param ... Passed to methods.
 #'
-#' @return A list with \code{eta}, the predictor the term produces,
-#'   \code{jacobian}, an \code{n} by \code{length(psi)} matrix of its
-#'   derivatives with respect to \code{psi}, and \code{curv}, the value of
-#'   \code{curvature} at each predictor -- returned because the recursion
+#' @return A list with `eta`, the predictor the term produces,
+#'   `jacobian`, an `n` by `length(psi)` matrix of its
+#'   derivatives with respect to `psi`, and `curv`, the value of
+#'   `curvature` at each predictor -- returned because the recursion
 #'   evaluates it anyway, so a consumer running a second pass at the same
 #'   point (the adjoint) can read it rather than evaluate it again.
 #'
@@ -136,7 +136,7 @@ S7::method(term_start, structural_term) <- function(term, ...) {
 #' head(out$eta, 3)
 #' dim(out$jacobian)
 #'
-#' @seealso \code{\link{gas}}
+#' @seealso [gas()]
 #' @export
 term_filter <- S7::new_generic("term_filter", "term",
   function(term, eta, y, score, curvature, psi, ...) S7::S7_dispatch())
@@ -160,26 +160,26 @@ term_filter <- S7::new_generic("term_filter", "term",
 #'   \sum_i \alpha_i \, \ell''_{t-i}
 #'     \frac{\partial \eta_{t-i}}{\partial \beta} +
 #'   \sum_j \beta_j \frac{\partial f_{t-j}}{\partial \beta}.}
-#' The curvature it needs is the one \code{\link{term_filter}} returns, so
+#' The curvature it needs is the one [term_filter()] returns, so
 #' no callback is evaluated here and the pass is arithmetic alone.
 #'
 #' Without it a standard error of the predictor counts the static part only.
 #' Measured on a score-driven mean with one covariate beside it, that
 #' understates the standard error by about a quarter.
 #'
-#' The base method returns \code{NULL}: a term that is not a filter carries
+#' The base method returns `NULL`: a term that is not a filter carries
 #' no state, so the derivative is the design row itself and the caller needs
 #' nothing from the term.
 #'
 #' @param term A built structural term.
-#' @param curv The curvature at each predictor, as \code{term_filter}
+#' @param curv The curvature at each predictor, as `term_filter`
 #'   returns it.
 #' @param X The directions to propagate, one column each -- ordinarily the
 #'   equation's design.
 #' @param psi The term's parameters, on the parameter scale.
 #' @param ... Passed to methods.
 #'
-#' @return A matrix of \code{X}'s dimensions, or \code{NULL}.
+#' @return A matrix of `X`'s dimensions, or `NULL`.
 #'
 #' @examples
 #' set.seed(1)
@@ -192,7 +192,7 @@ term_filter <- S7::new_generic("term_filter", "term",
 #' D <- term_static_deriv(term, out$curv, cbind(1, dd$x), psi)
 #' dim(D)
 #'
-#' @seealso \code{\link{term_filter}}, \code{\link{term_adjoint}}
+#' @seealso [term_filter()], [term_adjoint()]
 #' @export
 term_static_deriv <- S7::new_generic("term_static_deriv", "term",
   function(term, curv, X, psi, ...) S7::S7_dispatch())
@@ -216,13 +216,13 @@ term_static_deriv <- S7::new_generic("term_static_deriv", "term",
 #' prediction, and a zero would read as a term with no effect.
 #'
 #' @param term A built structural term.
-#' @param psi The term's parameters, named as \code{\link{term_params}}.
+#' @param psi The term's parameters, named as [term_params()].
 #' @param f_past The term's contribution at each observed row.
 #' @param s_past The driving quantity at each observed row.
 #' @param newdata The rows to continue onto.
 #' @param ... Passed to methods.
 #'
-#' @return A numeric vector of \code{nrow(newdata)} contributions.
+#' @return A numeric vector of `nrow(newdata)` contributions.
 #'
 #' @examples
 #' set.seed(1)
@@ -235,7 +235,7 @@ term_static_deriv <- S7::new_generic("term_static_deriv", "term",
 #' sc <- dd$y - out$eta
 #' term_continue(term, psi, out$eta, sc, data.frame(t = 21:23))
 #'
-#' @seealso \code{\link{term_filter}}
+#' @seealso [term_filter()]
 #' @export
 term_continue <- S7::new_generic("term_continue", "term",
   function(term, psi, f_past, s_past, newdata, ...) S7::S7_dispatch())
@@ -256,21 +256,21 @@ term_continue <- S7::new_generic("term_continue", "term",
 #' cannot: its level at one time is driven by the score of the response at
 #' the time before, so the response has to be drawn AS the recursion runs.
 #'
-#' One contract covers both. The caller supplies \code{draw}, a function of
+#' One contract covers both. The caller supplies `draw`, a function of
 #' a predictor and a row index returning one response value, and the method
 #' returns the predictor it produced; a method that drew returns the
-#' responses as well and one that did not returns \code{NULL} there, leaving
+#' responses as well and one that did not returns `NULL` there, leaving
 #' the caller to draw at the predictor.
 #'
 #' @param term A built structural term.
-#' @param psi The term's parameters, named as \code{\link{term_params}}.
+#' @param psi The term's parameters, named as [term_params()].
 #' @param eta The static part of the predictor, one value per observation.
-#' @param draw A function \code{(e, i)} returning one response value drawn at
-#'   predictor \code{e} for observation \code{i}.
+#' @param draw A function `(e, i)` returning one response value drawn at
+#'   predictor `e` for observation `i`.
 #' @param ... Passed to methods.
 #'
-#' @return A list with \code{eta}, the predictor; \code{y}, the responses
-#'   drawn or \code{NULL}; and \code{latent}, whatever the term drew.
+#' @return A list with `eta`, the predictor; `y`, the responses
+#'   drawn or `NULL`; and `latent`, whatever the term drew.
 #'
 #' @examples
 #' set.seed(1)
@@ -281,7 +281,7 @@ term_continue <- S7::new_generic("term_continue", "term",
 #'                      draw = function(e, i) stats::rnorm(1, e, 1))
 #' head(out$y, 3)
 #'
-#' @seealso \code{\link{term_filter}}, \code{\link{term_continue}}
+#' @seealso [term_filter()], [term_continue()]
 #' @export
 term_simulate <- S7::new_generic("term_simulate", "term",
   function(term, psi, eta, draw, ...) S7::S7_dispatch())
@@ -295,7 +295,7 @@ term_simulate <- S7::new_generic("term_simulate", "term",
 #' @param psi,eta,draw Ignored.
 #' @param ... Ignored.
 #' @return Nothing; the method always signals an error.
-#' @seealso \code{\link{term_simulate}}
+#' @seealso [term_simulate()]
 #' @keywords internal
 S7::method(term_simulate, model_term) <- function(term, psi, eta, draw, ...) {
   stop(sprintf("'%s' does not say how a response is drawn from it.",
@@ -310,7 +310,7 @@ S7::method(term_simulate, model_term) <- function(term, psi, eta, draw, ...) {
 #' @param psi,f_past,s_past,newdata Ignored.
 #' @param ... Ignored.
 #' @return Nothing; the method always signals an error.
-#' @seealso \code{\link{term_continue}}
+#' @seealso [term_continue()]
 #' @keywords internal
 S7::method(term_continue, model_term) <- function(term, psi, f_past, s_past,
                                                   newdata, ...) {
@@ -321,13 +321,13 @@ S7::method(term_continue, model_term) <- function(term, psi, f_past, s_past,
 #' @name term_static_deriv.model_term
 #' @title No State, No Propagation
 #' @description
-#' The base method returns \code{NULL}: an ordinary term's contribution at
+#' The base method returns `NULL`: an ordinary term's contribution at
 #' one observation reads that observation alone.
 #' @param term A term.
 #' @param curv,X,psi Ignored.
 #' @param ... Ignored.
-#' @return \code{NULL}.
-#' @seealso \code{\link{term_static_deriv}}
+#' @return `NULL`.
+#' @seealso [term_static_deriv()]
 #' @keywords internal
 S7::method(term_static_deriv, model_term) <- function(term, curv, X, psi,
                                                       ...) {
@@ -351,19 +351,19 @@ S7::method(term_static_deriv, model_term) <- function(term, curv, X, psi,
 #' the layer's decision and not the term's, since only the layer knows what
 #' else the equation carries.
 #'
-#' The base method returns \code{character(0)}, meaning the term shifts
+#' The base method returns `character(0)`, meaning the term shifts
 #' nothing by a constant and no such question arises.
 #'
 #' @param term A term.
 #' @param ... Passed to methods.
 #'
-#' @return A single string, or \code{character(0)}.
+#' @return A single string, or `character(0)`.
 #'
 #' @examples
 #' term_level_param(gas(p = 1, q = 1))
 #' term_level_param(linpar(~x))
 #'
-#' @seealso \code{\link{term_params}}
+#' @seealso [term_params()]
 #' @export
 term_level_param <- S7::new_generic("term_level_param", "term",
   function(term, ...) S7::S7_dispatch())
@@ -373,14 +373,14 @@ S7::method(term_level_param, model_term) <- function(term, ...) character(0)
 #' @title The Design of a Term's Level Development
 #'
 #' @description
-#' Where the parameter \code{\link{term_level_param}} names is developed
+#' Where the parameter [term_level_param()] names is developed
 #' with covariates, the design of that development, with one column per
-#' coordinate named as \code{\link{term_params}} names it. \code{NULL}
+#' coordinate named as [term_params()] names it. `NULL`
 #' for a scalar level and for every other term.
 #'
 #' @details
 #' It exists for the subspace form of the confounding question.
-#' \code{term_level_param} answers for the constant: a coordinate whose
+#' `term_level_param` answers for the constant: a coordinate whose
 #' column is constant shifts the equation's predictor exactly as an
 #' intercept does. With the level developed, a direction of the
 #' development's span that also lies in the span of the equation's design
@@ -391,12 +391,12 @@ S7::method(term_level_param, model_term) <- function(term, ...) character(0)
 #' @param term A built term.
 #' @param ... Passed to methods.
 #'
-#' @return A numeric matrix with named columns, or \code{NULL}.
+#' @return A numeric matrix with named columns, or `NULL`.
 #'
 #' @examples
 #' is.null(term_level_design(linpar(~x)))
 #'
-#' @seealso \code{\link{term_level_param}}
+#' @seealso [term_level_param()]
 #' @export
 term_level_design <- S7::new_generic("term_level_design", "term",
   function(term, ...) S7::S7_dispatch())
@@ -425,7 +425,7 @@ S7::method(term_level_design, model_term) <- function(term, ...) NULL
 #' \partial\zeta} at the current parameters, so a standard error is
 #' \eqn{\sqrt{J V J^\top}} and an interval is built on whichever scale keeps
 #' the quantity in its own set, exactly as \pkg{parameters7}'s
-#' \code{param_readable()} does for a matrix parameter.
+#' `param_readable()` does for a matrix parameter.
 #'
 #' The base method reports the parameters themselves on the PARAMETER scale,
 #' with the diagonal Jacobian of their links, which is what every term whose
@@ -433,17 +433,17 @@ S7::method(term_level_design, model_term) <- function(term, ...) NULL
 #'
 #' @param term A built term.
 #' @param zeta The term's parameters on the unconstrained scale, named as
-#'   \code{\link{term_params}}.
+#'   [term_params()].
 #' @param ... Passed to methods.
 #'
-#' @return A list with \code{name}, \code{value}, \code{jacobian} (one row
-#'   per quantity and one column per parameter) and \code{scale}, the link
+#' @return A list with `name`, `value`, `jacobian` (one row
+#'   per quantity and one column per parameter) and `scale`, the link
 #'   an interval for each quantity is built on.
 #'
 #' @examples
 #' term_readable(gas(p = 1, q = 1), c(omega = 0.3, alpha1 = 0.4, pacf1 = 0.8))
 #'
-#' @seealso \code{\link{term_params}}, \code{\link{term_links}}
+#' @seealso [term_params()], [term_links()]
 #' @export
 term_readable <- S7::new_generic("term_readable", "term",
   function(term, zeta, ...) S7::S7_dispatch())
@@ -470,7 +470,7 @@ S7::method(term_readable, model_term) <- function(term, zeta, ...) {
 #' it was given, both accounting for the recursion.
 #'
 #' @details
-#' \code{\link{term_filter}} returns the derivative of the predictor in the
+#' [term_filter()] returns the derivative of the predictor in the
 #' term's OWN parameters, which is what estimating those needs. It is not
 #' what estimating the coefficients of the same equation needs: the level at
 #' one time is driven by the scores at earlier ones, which are read at
@@ -482,7 +482,7 @@ S7::method(term_readable, model_term) <- function(term, zeta, ...) {
 #' Two derivatives are returned rather than one because the score the caller
 #' supplies depends on more than the predictor it is read at. Writing
 #' \eqn{s_t} for that score and \eqn{\bar{s}_t} for
-#' \code{dscore}, the derivative of the objective in anything the score
+#' `dscore`, the derivative of the objective in anything the score
 #' depends on is
 #'
 #' \deqn{\frac{\partial L}{\partial \theta}
@@ -491,21 +491,21 @@ S7::method(term_readable, model_term) <- function(term, zeta, ...) {
 #'
 #' so a model layer whose score is the derivative of its log-likelihood in
 #' one distribution parameter obtains the derivative in the predictor of
-#' ANOTHER by multiplying \code{dscore} by the mixed second derivative of
-#' that log-likelihood. \code{deta} is that formula applied to the term's own
+#' ANOTHER by multiplying `dscore` by the mixed second derivative of
+#' that log-likelihood. `deta` is that formula applied to the term's own
 #' equation, where the second factor is the curvature.
 #'
 #' @param term A built structural term.
 #' @param eta The static part of the predictor, as
-#'   \code{\link{term_filter}} takes it.
+#'   [term_filter()] takes it.
 #' @param y The response.
-#' @param score,curvature The callbacks of \code{\link{term_filter}}.
-#' @param psi The term's parameters, named as \code{\link{term_params}}.
+#' @param score,curvature The callbacks of [term_filter()].
+#' @param psi The term's parameters, named as [term_params()].
 #' @param g The direct derivative of the objective in the predictor the term
 #'   produced, one value per observation.
 #' @param ... Passed to methods.
 #'
-#' @return A list with \code{deta} and \code{dscore}, each one value per
+#' @return A list with `deta` and `dscore`, each one value per
 #'   observation.
 #'
 #' @examples
@@ -519,7 +519,7 @@ S7::method(term_readable, model_term) <- function(term, zeta, ...) {
 #'                     g = rep(1, 20))
 #' head(out$deta, 3)
 #'
-#' @seealso \code{\link{term_filter}}
+#' @seealso [term_filter()]
 #' @export
 term_adjoint <- S7::new_generic("term_adjoint", "term",
   function(term, eta, y, score, curvature, psi, g, ...) S7::S7_dispatch())
@@ -537,7 +537,7 @@ S7::method(term_adjoint, structural_term) <- function(term, eta, y, score,
 #' The Jacobian of the predictor the term produces with respect to a
 #' caller's unknowns, and the second derivative of that predictor contracted
 #' against a caller's weights. It is what an observed information needs and
-#' \code{\link{term_adjoint}} does not give.
+#' [term_adjoint()] does not give.
 #'
 #' @details
 #' The gradient of a model carrying a filter needs no second derivative and
@@ -553,9 +553,9 @@ S7::method(term_adjoint, structural_term) <- function(term, eta, y, score,
 #' second is what this returns, the weights \eqn{g_t = w_t\ell_{p,t}} being
 #' supplied.
 #'
-#' \code{seed} is \eqn{\partial \eta^{0}/\partial u}, one row per
+#' `seed` is \eqn{\partial \eta^{0}/\partial u}, one row per
 #' observation: the caller says how its unknowns reach the static predictor
-#' and the term knows nothing else about them. \code{blocks} is where the
+#' and the term knows nothing else about them. `blocks` is where the
 #' model's own derivatives enter, since the score the recursion is driven by
 #' depends on every equation and not only on the predictor it is read at. It
 #' is called once per observation with the predictor there and the Jacobian
@@ -565,26 +565,26 @@ S7::method(term_adjoint, structural_term) <- function(term, eta, y, score,
 #' \deqn{\dot S_t = \ell_{pp,t}D_t + \texttt{cross}, \qquad
 #'   \ddot S_t = \ell_{pp,t}E_t + \texttt{M},}
 #'
-#' with \code{cross} \eqn{= \sum_{q\ne p}\ell_{pq,t}C_{q,t}} and \code{M}
+#' with `cross` \eqn{= \sum_{q\ne p}\ell_{pq,t}C_{q,t}} and `M`
 #' \eqn{= \sum_{r,r'}\ell_{prr',t}V_{r,t}^\top V_{r',t}}, the third
 #' derivatives of the log-density in the predictors. A model of one equation
-#' has \code{cross} zero and \code{M} equal to \eqn{\ell_{ppp}D^\top D}.
+#' has `cross` zero and `M` equal to \eqn{\ell_{ppp}D^\top D}.
 #'
 #' @param term A built structural term.
 #' @param eta The static part of the predictor.
 #' @param y The response.
-#' @param score,curvature The callbacks of \code{\link{term_filter}}.
-#' @param psi The term's parameters, named as \code{\link{term_params}}.
+#' @param score,curvature The callbacks of [term_filter()].
+#' @param psi The term's parameters, named as [term_params()].
 #' @param g The weights the second derivative is contracted against, one per
 #'   observation.
 #' @param seed The derivative of the static predictor in the caller's
 #'   unknowns, one row per observation.
 #' @param blocks A function of the predictor, the index and the current
-#'   Jacobian row, returning \code{cross} and \code{M}.
+#'   Jacobian row, returning `cross` and `M`.
 #' @param ... Passed to methods.
 #'
-#' @return A list with \code{jacobian}, the derivative of the predictor in
-#'   the caller's unknowns, and \code{curvature}, the contracted second
+#' @return A list with `jacobian`, the derivative of the predictor in
+#'   the caller's unknowns, and `curvature`, the contracted second
 #'   derivative.
 #'
 #' @examples
@@ -606,7 +606,7 @@ S7::method(term_adjoint, structural_term) <- function(term, eta, y, score,
 #' dim(out$jacobian)
 #' dim(out$curvature)
 #'
-#' @seealso \code{\link{term_adjoint}}, \code{\link{term_filter}}
+#' @seealso [term_adjoint()], [term_filter()]
 #' @export
 term_curvature <- S7::new_generic("term_curvature", "term",
   function(term, eta, y, score, curvature, psi, g, seed, blocks, ...)
@@ -622,7 +622,7 @@ S7::method(term_curvature, structural_term) <- function(term, eta, y, score,
 #' @title Third Derivatives of a Structural Term's Predictor, in One Direction
 #'
 #' @description
-#' The second derivative of \code{\link{term_curvature}} differentiated once
+#' The second derivative of [term_curvature()] differentiated once
 #' more along a single direction, and the derivative of the term's Jacobian
 #' along that same direction. It is what the exact gradient of a marginal
 #' criterion needs when a penalty covers the term's own parameters.
@@ -636,7 +636,7 @@ S7::method(term_curvature, structural_term) <- function(term, eta, y, score,
 #' predictor, \eqn{K} carries \eqn{\sum_t w_t \ell_{p,t}E_t} as well, and
 #' differentiating it asks for \eqn{\partial^3 e_t/\partial u^3}.
 #'
-#' \strong{Only contracted.} The full third derivative is an \eqn{m^3} array
+#' **Only contracted.** The full third derivative is an \eqn{m^3} array
 #' per observation and is never formed: the criterion asks for it along the
 #' one direction the mode moves in, so what is propagated is a matrix per
 #' observation, the same size as the curvature and therefore the same
@@ -644,10 +644,10 @@ S7::method(term_curvature, structural_term) <- function(term, eta, y, score,
 #' per direction, which is cheaper than one \eqn{O(nm^3)} assembly whenever
 #' the hyperparameters are fewer than the unknowns.
 #'
-#' \strong{What the model supplies.} Each order of differentiation of the
+#' **What the model supplies.** Each order of differentiation of the
 #' predictor pulls in one more order of the family, the recursion being driven
-#' by a score read at the predictor it produces: the curvature's \code{M} is
-#' built from third derivatives, and this needs a fourth. \code{blocks}
+#' by a score read at the predictor it produces: the curvature's `M` is
+#' built from third derivatives, and this needs a fourth. `blocks`
 #' therefore returns two quantities beyond the curvature's, at an observation
 #' with the current Jacobian row \eqn{D} and its directional derivative:
 #'
@@ -655,7 +655,7 @@ S7::method(term_curvature, structural_term) <- function(term, eta, y, score,
 #'   \texttt{N} = \sum_{r,r'}\Big(\sum_{r''}\ell_{prr'r''}(V_{r''}\cdot v)\Big)
 #'     V_r^\top V_{r'},}
 #'
-#' \code{dcurv} serving both the derivative of the curvature along \eqn{v},
+#' `dcurv` serving both the derivative of the curvature along \eqn{v},
 #' which is \eqn{\texttt{dcurv}\cdot v}, and the two terms differentiating
 #' \eqn{M}'s own \eqn{V_p}.
 #'
@@ -667,22 +667,22 @@ S7::method(term_curvature, structural_term) <- function(term, eta, y, score,
 #' @param term A built term.
 #' @param eta The static part of the predictor.
 #' @param y The response.
-#' @param score,curvature The callbacks of \code{\link{term_filter}}.
-#' @param psi The term's parameters, named as \code{\link{term_params}}.
+#' @param score,curvature The callbacks of [term_filter()].
+#' @param psi The term's parameters, named as [term_params()].
 #' @param g The weights the third derivative is contracted against, one per
 #'   observation.
 #' @param seed The derivative of the static predictor in the caller's
 #'   unknowns.
 #' @param blocks A function of the predictor, the index, the current Jacobian
-#'   row and the active set, returning \code{cross}, \code{M}, \code{dcurv}
-#'   and \code{N}.
+#'   row and the active set, returning `cross`, `M`, `dcurv`
+#'   and `N`.
 #' @param direction The direction \eqn{v}, in the caller's unknowns.
 #' @param ... Passed to methods.
 #'
-#' @return A list with \code{jacobian}, the derivative of the predictor in the
-#'   caller's unknowns; \code{dphi}, the second derivative contracted against
-#'   \code{direction}, one row per observation; and \code{curvature}, the
-#'   third derivative contracted against both \code{g} and \code{direction}.
+#' @return A list with `jacobian`, the derivative of the predictor in the
+#'   caller's unknowns; `dphi`, the second derivative contracted against
+#'   `direction`, one row per observation; and `curvature`, the
+#'   third derivative contracted against both `g` and `direction`.
 #'
 #' @examples
 #' set.seed(1)
@@ -698,7 +698,7 @@ S7::method(term_curvature, structural_term) <- function(term, eta, y, score,
 #'                   direction = c(1, 0))
 #' all(out$curvature == 0)
 #'
-#' @seealso \code{\link{term_curvature}}, \code{\link{term_adjoint}}
+#' @seealso [term_curvature()], [term_adjoint()]
 #' @export
 term_third <- S7::new_generic("term_third", "term",
   function(term, eta, y, score, curvature, psi, g, seed, blocks, direction,

@@ -39,7 +39,7 @@ and the second piece obeys the recursion the filter already runs,
   \sum_i \alpha_i \, \ell''_{t-i}
     \frac{\partial \eta_{t-i}}{\partial \beta} +
   \sum_j \beta_j \frac{\partial f_{t-j}}{\partial \beta}.}
-The curvature it needs is the one \code{\link{term_filter}} returns, so
+The curvature it needs is the one \code{\link[=term_filter]{term_filter()}} returns, so
 no callback is evaluated here and the pass is arithmetic alone.
 
 Without it a standard error of the predictor counts the static part only.
@@ -63,5 +63,5 @@ dim(D)
 
 }
 \seealso{
-\code{\link{term_filter}}, \code{\link{term_adjoint}}
+\code{\link[=term_filter]{term_filter()}}, \code{\link[=term_adjoint]{term_adjoint()}}
 }

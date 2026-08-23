@@ -20,24 +20,24 @@ NULL
 #'   -\ell(\beta) + \sum_{t} \rho_t(\beta_t; \theta_t),}
 #'
 #' and building the term is what produces \eqn{X_t} from the data and
-#' attaches \eqn{\rho_t}. \code{\link{term_matrix}} reads the block,
-#' \code{\link{term_penalty}} the penalty and \code{\link{term_predict}}
+#' attaches \eqn{\rho_t}. [term_matrix()] reads the block,
+#' [term_penalty()] the penalty and [term_predict()]
 #' reproduces \eqn{X_t} on new rows through the blueprint. A structural
 #' term is the exception: its contribution cannot be written as a block of
-#' columns, and it reports itself through \code{\link{term_filter}} or
-#' \code{\link{term_loglik}} instead.
+#' columns, and it reports itself through [term_filter()] or
+#' [term_loglik()] instead.
 #'
-#' @param term An object inheriting from class \code{\link{model_term}}.
+#' @param term An object inheriting from class [model_term()].
 #' @param data A data frame.
 #' @param ... Passed to methods.
 #'
-#' @return A built term of the same class as \code{term}.
+#' @return A built term of the same class as `term`.
 #'
 #' @examples
 #' built <- term_build(linpar(~x), data.frame(x = 1:4))
 #' term_matrix(built)
 #'
-#' @seealso \code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_coef_names}}, \code{\link{term_npar}}, \code{\link{term_is_built}}
+#' @seealso [term_predict()], [term_refresh()], [term_matrix()], [term_coef_names()], [term_npar()], [term_is_built()]
 #' @export
 term_build <- S7::new_generic("term_build", "term",
   function(term, data, ...) {
@@ -60,13 +60,13 @@ S7::method(term_build, structural_term) <- function(term, data, ...) {
 #' @title Whether a Term Has Been Built
 #'
 #' @description
-#' \code{TRUE} for a term returned by \code{\link{term_build}} and
-#' \code{FALSE} for a bare specification. The accessors
-#' \code{\link{term_matrix}}, \code{\link{term_npar}},
-#' \code{\link{term_coef_names}} and \code{\link{term_predict}} reject a
+#' `TRUE` for a term returned by [term_build()] and
+#' `FALSE` for a bare specification. The accessors
+#' [term_matrix()], [term_npar()],
+#' [term_coef_names()] and [term_predict()] reject a
 #' specification, and this predicate is the test they use.
 #'
-#' @param term An object inheriting from class \code{\link{model_term}}.
+#' @param term An object inheriting from class [model_term()].
 #'
 #' @return A logical scalar.
 #'
@@ -74,7 +74,7 @@ S7::method(term_build, structural_term) <- function(term, data, ...) {
 #' term_is_built(linpar(~x))
 #' term_is_built(term_build(linpar(~x), data.frame(x = 1:4)))
 #'
-#' @seealso \code{\link{term_build}}, \code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_coef_names}}, \code{\link{term_npar}}
+#' @seealso [term_build()], [term_predict()], [term_refresh()], [term_matrix()], [term_coef_names()], [term_npar()]
 #' @export
 term_is_built <- function(term) {
   if (!S7::S7_inherits(term, model_term)) {
@@ -97,7 +97,7 @@ term_is_built <- function(term) {
 #' The \eqn{n \times k} design block of a built additive term, with the
 #' term's coefficient names as column names.
 #'
-#' @param term A built term (see \code{\link{term_build}}).
+#' @param term A built term (see [term_build()]).
 #' @param ... Passed to methods.
 #'
 #' @return A numeric matrix.
@@ -105,7 +105,7 @@ term_is_built <- function(term) {
 #' @examples
 #' term_matrix(term_build(linpar(~x), data.frame(x = 1:4)))
 #'
-#' @seealso \code{\link{term_build}}, \code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_coef_names}}, \code{\link{term_npar}}, \code{\link{term_is_built}}
+#' @seealso [term_build()], [term_predict()], [term_refresh()], [term_coef_names()], [term_npar()], [term_is_built()]
 #' @export
 term_matrix <- S7::new_generic("term_matrix", "term",
   function(term, ...) S7::S7_dispatch())
@@ -119,30 +119,30 @@ S7::method(term_matrix, additive_term) <- function(term, ...) {
 #'
 #' @description
 #' The penalty attached to the whole of the term's coefficients, or
-#' \code{NULL} when there is none. The hyperparameters, their bounds and
+#' `NULL` when there is none. The hyperparameters, their bounds and
 #' links, and every derivative in the coefficients and the hyperparameters
 #' are the penalty object's, not the term's.
 #'
 #' @details
 #' A term whose penalty reaches only part of its parameters returns
-#' \code{NULL} here and declares that penalty through
-#' \code{\link{term_penalties}}, which names the parameters it covers:
-#' \code{\link{seg}} penalizes the changes and not the linear effect or the
-#' break-points, and the developments of \code{\link{nl}} and
-#' \code{\link{gas}} carry their sub-terms' penalties. Reading
+#' `NULL` here and declares that penalty through
+#' [term_penalties()], which names the parameters it covers:
+#' [seg()] penalizes the changes and not the linear effect or the
+#' break-points, and the developments of [nl()] and
+#' [gas()] carry their sub-terms' penalties. Reading
 #' a partial penalty here would say that it covers the block, so the
 #' question this generic asks is answered only where the answer is the whole
 #' of it.
 #'
-#' @param term An object inheriting from class \code{\link{additive_term}}.
+#' @param term An object inheriting from class [additive_term()].
 #' @param ... Passed to methods.
 #'
-#' @return A penalty object, or \code{NULL}.
+#' @return A penalty object, or `NULL`.
 #'
 #' @examples
 #' term_penalty(linpar(~x))
 #'
-#' @seealso \code{\link{term_penalties}}, \code{\link{term_smooth}}, \code{\link{edf}}
+#' @seealso [term_penalties()], [term_smooth()], [edf()]
 #' @export
 term_penalty <- S7::new_generic("term_penalty", "term",
   function(term, ...) S7::S7_dispatch())
@@ -158,22 +158,22 @@ S7::method(term_penalty, additive_term) <- function(term, ...) {
 #' subset of the term's own parameters and the penalty over them.
 #'
 #' @details
-#' \code{\link{term_penalty}} answers for the common case, one penalty over the
+#' [term_penalty()] answers for the common case, one penalty over the
 #' whole of a term's design block, and this generalizes it in two directions a
 #' model layer needs.
 #'
-#' A term may carry \strong{more than one} penalty, over different parameters of
+#' A term may carry **more than one** penalty, over different parameters of
 #' its own. A panel model with a population value and a departure per group
 #' wants the population value free and the departures shrunk, which is one
 #' penalty over part of the parameters and none over the rest.
 #'
-#' The parameters need \strong{not be coefficients of a design block}. The
+#' The parameters need **not be coefficients of a design block**. The
 #' persistence of a score-driven term, the nonlinear parameters of
-#' \code{\link{nl}}, the break-point of \code{\link{seg}} are parameters of the
+#' [nl()], the break-point of [seg()] are parameters of the
 #' term and nothing else, and everything a penalty needs from them is a vector
 #' of numbers and their positions.
 #'
-#' The base method answers from \code{term_penalty()}, so a term that carries
+#' The base method answers from `term_penalty()`, so a term that carries
 #' one penalty over its whole block -- every term shipped here -- needs no
 #' method of its own and behaves exactly as before. Its single entry is named
 #' with the empty string, meaning the whole term, so a caller that keys the
@@ -182,10 +182,10 @@ S7::method(term_penalty, additive_term) <- function(term, ...) {
 #' @param term A built term.
 #' @param ... Passed to methods.
 #'
-#' @return A list, possibly empty. Each entry has \code{name} (a label unique
-#'   WITHIN the term, empty for a penalty over the whole of it), \code{index}
-#'   (positions among the term's parameters) and \code{penalty} (a
-#'   \pkg{penalties7} object). The name is not the term's: two \code{ridge()}
+#' @return A list, possibly empty. Each entry has `name` (a label unique
+#'   WITHIN the term, empty for a penalty over the whole of it), `index`
+#'   (positions among the term's parameters) and `penalty` (a
+#'   \pkg{penalties7} object). The name is not the term's: two `ridge()`
 #'   terms in one formula are two terms with their own hyperparameters, and it
 #'   is the caller that knows what it called each one.
 #'
@@ -193,7 +193,7 @@ S7::method(term_penalty, additive_term) <- function(term, ...) {
 #' term_penalties(term_build(ridge(~x), data.frame(x = rnorm(20))))
 #' term_penalties(term_build(linpar(~x), data.frame(x = rnorm(20))))
 #'
-#' @seealso \code{\link{term_penalty}}, \code{\link{term_npar}}
+#' @seealso [term_penalty()], [term_npar()]
 #' @export
 term_penalties <- S7::new_generic("term_penalties", "term",
   function(term, ...) S7::S7_dispatch())
@@ -215,8 +215,8 @@ S7::method(term_penalties, model_term) <- function(term, ...) {
 #' list for a term whose columns answer to nothing above them.
 #'
 #' @details
-#' A term written in parameters of its own -- \code{\link{nl}} in the
-#' parameters of \eqn{f}, \code{\link{seg}} in a slope, a change and a
+#' A term written in parameters of its own -- [nl()] in the
+#' parameters of \eqn{f}, [seg()] in a slope, a change and a
 #' break-point -- may develop any of them over covariates, and then its block
 #' carries several groups of columns that mean different things. What divides
 #' them is the TERM's answer and cannot be recovered from the coefficient
@@ -224,29 +224,29 @@ S7::method(term_penalties, model_term) <- function(term, ...) {
 #' mistake this package avoids everywhere else.
 #'
 #' A parameter may be developed by SEVERAL sub-terms at once, and they need
-#' not be of one kind: \code{seg(x, psi ~ random(~1 | id))} develops the
+#' not be of one kind: `seg(x, psi ~ random(~1 | id))` develops the
 #' break-point with an unpenalized intercept AND a random block, so the
-#' component's \code{subs} has two entries and only the second carries a
+#' component's `subs` has two entries and only the second carries a
 #' penalty. A consumer that reports a component therefore reports a sequence
 #' and not a single kind.
 #'
-#' A STRUCTURAL term contributes no design columns, and there \code{index}
-#' gives positions in \code{\link{term_params}} instead: the vector its
+#' A STRUCTURAL term contributes no design columns, and there `index`
+#' gives positions in [term_params()] instead: the vector its
 #' state, its readable quantities and its variance matrix are all indexed by.
 #' In both cases the field names the term's own coefficients.
 #'
 #' The base method returns an empty list, which says that the term's columns
 #' are its own and divide no further. That is the honest answer for
-#' \code{\link{linpar}}, \code{\link{s}}, \code{\link{random}} and the
+#' [linpar()], [s()], [random()] and the
 #' penalized constructors, whose columns are one block with one meaning.
 #'
 #' @param term A built term.
 #' @param ... Passed to methods.
 #'
-#' @return A list, one entry per own parameter, each with \code{name} (the
-#'   parameter), \code{index} (its columns in the term's block),
-#'   \code{subs} (the sub-terms developing it, empty where there are none)
-#'   and \code{sub_index} (the columns belonging to each of those
+#' @return A list, one entry per own parameter, each with `name` (the
+#'   parameter), `index` (its columns in the term's block),
+#'   `subs` (the sub-terms developing it, empty where there are none)
+#'   and `sub_index` (the columns belonging to each of those
 #'   sub-terms). Empty for a term whose columns do not divide.
 #'
 #' @examples
@@ -259,7 +259,7 @@ S7::method(term_penalties, model_term) <- function(term, ...) {
 #' # a term whose columns are one block answers with nothing
 #' term_components(term_build(linpar(~ x), dd))
 #'
-#' @seealso \code{\link{term_penalties}}, \code{\link{term_coef_names}}
+#' @seealso [term_penalties()], [term_coef_names()]
 #' @export
 term_components <- S7::new_generic("term_components", "term",
   function(term, ...) S7::S7_dispatch())
@@ -299,11 +299,11 @@ component_sub_index <- function(index, subs) {
 #' @description
 #' How many parameters of its own a built term carries: the columns of the
 #' design block for an additive term, and the entries of
-#' \code{\link{term_params}} for a structural one, which contributes no
-#' block. It is the length of the vector \code{\link{term_penalties}}
+#' [term_params()] for a structural one, which contributes no
+#' block. It is the length of the vector [term_penalties()]
 #' indexes into.
 #'
-#' @param term A built term (see \code{\link{term_build}}).
+#' @param term A built term (see [term_build()]).
 #' @param ... Passed to methods.
 #'
 #' @return An integer.
@@ -311,7 +311,7 @@ component_sub_index <- function(index, subs) {
 #' @examples
 #' term_npar(term_build(linpar(~x), data.frame(x = 1:4)))
 #'
-#' @seealso \code{\link{term_build}}, \code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_coef_names}}, \code{\link{term_is_built}}
+#' @seealso [term_build()], [term_predict()], [term_refresh()], [term_matrix()], [term_coef_names()], [term_is_built()]
 #' @export
 term_npar <- S7::new_generic("term_npar", "term",
   function(term, ...) S7::S7_dispatch())
@@ -336,23 +336,23 @@ S7::method(term_npar, structural_term) <- function(term, ...) {
 #'
 #' @details
 #' A term that recomputes its block from its coefficients
-#' (\code{\link{term_refresh}}) is the case this exists for, because zero
+#' ([term_refresh()]) is the case this exists for, because zero
 #' is not a neutral point there but a degenerate one. In
-#' \code{\link{jump}} the break-point is read off two coefficients as
+#' [jump()] the break-point is read off two coefficients as
 #' \eqn{-g_k/\delta_k}, so a vector of zeros puts every break-point at the
 #' same clamped position and makes the block singular; in
-#' \code{\link{seg}} the Jacobian column is \eqn{-\gamma_k\,\mathbb{1}(x >
+#' [seg()] the Jacobian column is \eqn{-\gamma_k\,\mathbb{1}(x >
 #' \psi_k)} and vanishes identically. Those terms return the start
-#' \code{\link{term_build}} computed -- unit changes and the break-points
+#' [term_build()] computed -- unit changes and the break-points
 #' at the interior quantiles of the covariate, or the positions
-#' \code{psi} names -- and \code{\link{nl}} returns the starting values of
+#' `psi` names -- and [nl()] returns the starting values of
 #' its own parameters carried through their links.
 #'
-#' The value belongs to the term for the reason \code{\link{term_start}}
+#' The value belongs to the term for the reason [term_start()]
 #' records for a structural one: only the term knows what a coefficient of
 #' zero means for the block it builds.
 #'
-#' \code{target} is the response carried onto the scale of the predictor the
+#' `target` is the response carried onto the scale of the predictor the
 #' term contributes to, which is what a term needs to estimate parameters of
 #' its own from the data and is the one thing it cannot work out for itself:
 #' the term knows its formula and its charts, the fitting layer knows the
@@ -360,20 +360,20 @@ S7::method(term_npar, structural_term) <- function(term, ...) {
 #' has no use for it ignores it, so the default is the behaviour every term
 #' had before it existed.
 #'
-#' @param term A built term (see \code{\link{term_build}}).
+#' @param term A built term (see [term_build()]).
 #' @param target Optional numeric vector, one value per observation: the
-#'   response on the scale of the predictor. \code{\link{nl}} uses it to
+#'   response on the scale of the predictor. [nl()] uses it to
 #'   estimate its own parameters; every other term ignores it.
 #' @param ... Passed to methods.
 #'
-#' @return A numeric vector of length \code{\link{term_npar}}.
+#' @return A numeric vector of length [term_npar()].
 #'
 #' @examples
 #' dd <- data.frame(x = sort(runif(50, 0, 10)))
 #' term_coef_start(term_build(linpar(~x), dd))
 #' term_coef_start(term_build(jump(x), dd))
 #'
-#' @seealso \code{\link{term_start}}, \code{\link{term_refresh}}
+#' @seealso [term_start()], [term_refresh()]
 #' @export
 term_coef_start <- S7::new_generic("term_coef_start", "term",
   function(term, target = NULL, ...) S7::S7_dispatch())
@@ -385,11 +385,11 @@ S7::method(term_coef_start, model_term) <- function(term, target = NULL, ...) {
 #' @title Is a Term's Block the Jacobian of Its Contribution?
 #'
 #' @description
-#' \code{TRUE} when the design block a term reports is the exact derivative
-#' of its contribution in its own coefficients, \code{FALSE} when it is a
+#' `TRUE` when the design block a term reports is the exact derivative
+#' of its contribution in its own coefficients, `FALSE` when it is a
 #' working linearization with quantities frozen at the previous iterate. The
-#' base method returns \code{TRUE}, which is what a fixed design satisfies
-#' trivially and what \code{\link{nl}} and \code{\link{seg}} satisfy by
+#' base method returns `TRUE`, which is what a fixed design satisfies
+#' trivially and what [nl()] and [seg()] satisfy by
 #' construction.
 #'
 #' @details
@@ -397,14 +397,14 @@ S7::method(term_coef_start, model_term) <- function(term, target = NULL, ...) {
 #' the block is a Jacobian, a scoring step on it is a Gauss--Newton step and
 #' a line search on the model's own objective is licensed, so the term can
 #' be fitted inside the same system as everything else. Where it is a
-#' working linearization -- \code{\link{jump}} and \code{\link{jseg}}, whose
+#' working linearization -- [jump()] and [jseg()], whose
 #' weight \eqn{W = 1/(2\lvert \tilde x - \psi\rvert)} is held at the
 #' previous break-point and whose position is read off two coefficients --
 #' the fixed-point iteration of \cite{fasola2018} is not a descent method on
 #' the model's objective, and forcing a sufficient decrease on it stalls the
 #' iteration. Such a term is fitted by alternating exact working fits at the
-#' frozen block with \code{\link{term_refresh}}, and its convergence is what
-#' \code{\link{term_converged}} answers rather than a score.
+#' frozen block with [term_refresh()], and its convergence is what
+#' [term_converged()] answers rather than a score.
 #'
 #' @param term A term (built or not; the answer is a property of the
 #'   construction).
@@ -415,13 +415,13 @@ S7::method(term_coef_start, model_term) <- function(term, target = NULL, ...) {
 #' @references
 #' Fasola, S., Muggeo, V. M. R. and Kuchenhoff, H. (2018). A heuristic,
 #' iterative algorithm for change-point detection in abrupt change
-#' models. \emph{Computational Statistics}, 33, 997--1015.
+#' models. *Computational Statistics*, 33, 997--1015.
 #'
 #' @examples
 #' term_jacobian_block(seg(x))
 #' term_jacobian_block(jump(x))
 #'
-#' @seealso \code{\link{term_refresh}}, \code{\link{term_converged}}
+#' @seealso [term_refresh()], [term_converged()]
 #' @export
 term_jacobian_block <- S7::new_generic("term_jacobian_block", "term",
   function(term, ...) S7::S7_dispatch())
@@ -434,7 +434,7 @@ S7::method(term_jacobian_block, model_term) <- function(term, ...) TRUE
 #' The names of the term's coefficients, prefixed by the term's label when
 #' the label is non-empty.
 #'
-#' @param term A built term (see \code{\link{term_build}}).
+#' @param term A built term (see [term_build()]).
 #' @param ... Passed to methods.
 #'
 #' @return A character vector.
@@ -442,7 +442,7 @@ S7::method(term_jacobian_block, model_term) <- function(term, ...) TRUE
 #' @examples
 #' term_coef_names(term_build(linpar(~x), data.frame(x = 1:4)))
 #'
-#' @seealso \code{\link{term_build}}, \code{\link{term_predict}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_npar}}, \code{\link{term_is_built}}
+#' @seealso [term_build()], [term_predict()], [term_refresh()], [term_matrix()], [term_npar()], [term_is_built()]
 #' @export
 term_coef_names <- S7::new_generic("term_coef_names", "term",
   function(term, ...) S7::S7_dispatch())
@@ -455,7 +455,7 @@ S7::method(term_coef_names, additive_term) <- function(term, ...) {
 #' @title Whether a Term's Penalized Objective Is Smooth
 #'
 #' @description
-#' \code{TRUE} when the term's contribution to the penalized objective is
+#' `TRUE` when the term's contribution to the penalized objective is
 #' differentiable in the coefficients. The answer is read from the penalties
 #' rather than declared by the term: an unpenalized term is smooth, and a
 #' penalized one is smooth exactly when no penalty it carries declares a
@@ -465,14 +465,14 @@ S7::method(term_coef_names, additive_term) <- function(term, ...) {
 #' strategies.
 #'
 #' @details
-#' The enumeration is \code{\link{term_penalties}}, so a term carrying one
+#' The enumeration is [term_penalties()], so a term carrying one
 #' penalty over part of its parameters and none over the rest answers for
-#' the part: \code{seg(x, penalty = penalties7::lasso_penalty)} is not
+#' the part: `seg(x, penalty = penalties7::lasso_penalty)` is not
 #' smooth, its slope
 #' changes sitting at a kink, although its linear effect and its
 #' break-points are unpenalized.
 #'
-#' @param term An object inheriting from class \code{\link{model_term}}.
+#' @param term An object inheriting from class [model_term()].
 #' @param ... Passed to methods.
 #'
 #' @return A logical scalar.
@@ -480,7 +480,7 @@ S7::method(term_coef_names, additive_term) <- function(term, ...) {
 #' @examples
 #' term_smooth(linpar(~x))
 #'
-#' @seealso \code{\link{term_penalties}}, \code{\link{term_penalty}}, \code{\link{edf}}
+#' @seealso [term_penalties()], [term_penalty()], [edf()]
 #' @export
 term_smooth <- S7::new_generic("term_smooth", "term",
   function(term, ...) S7::S7_dispatch())
@@ -598,18 +598,18 @@ S7::method(term_smooth, model_term) <- function(term, ...) {
 #' basis reparametrization would give a block of the same shape multiplying
 #' the same coefficients and meaning something else.
 #'
-#' @param term A built term (see \code{\link{term_build}}).
+#' @param term A built term (see [term_build()]).
 #' @param newdata A data frame.
 #' @param ... Passed to methods.
 #'
-#' @return A numeric matrix with \code{nrow(newdata)} rows and one column
+#' @return A numeric matrix with `nrow(newdata)` rows and one column
 #'   per coefficient.
 #'
 #' @examples
 #' built <- term_build(linpar(~x), data.frame(x = 1:4))
 #' term_predict(built, data.frame(x = c(0.5, 2.5)))
 #'
-#' @seealso \code{\link{term_build}}, \code{\link{term_refresh}}, \code{\link{term_matrix}}, \code{\link{term_coef_names}}, \code{\link{term_npar}}, \code{\link{term_is_built}}
+#' @seealso [term_build()], [term_refresh()], [term_matrix()], [term_coef_names()], [term_npar()], [term_is_built()]
 #' @export
 term_predict <- S7::new_generic("term_predict", "term",
   function(term, newdata, ...) {

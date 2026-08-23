@@ -13,7 +13,7 @@ term_hyper(term, ...)
 }
 \value{
 A named list, one entry per penalty of the term, each a named list
-  of held values. Empty where the term holds nothing.
+of held values. Empty where the term holds nothing.
 }
 \description{
 The values the caller fixed in the constructor, by hyperparameter. Those a
@@ -21,7 +21,7 @@ term does not name are estimated by whatever criterion the fit runs.
 }
 \details{
 A term carrying several penalties answers per penalty, under the same names
-\code{\link{term_penalties}} gives its entries, and every entry of that
+\code{\link[=term_penalties]{term_penalties()}} gives its entries, and every entry of that
 enumeration carries its own held values in the field \code{fixed} -- so a
 term that copies the entries of its sub-terms, which is what a structural
 term with subformulas does, propagates them without knowing they exist.
@@ -32,5 +32,5 @@ term_hyper(lasso(~x))
 
 }
 \seealso{
-\code{\link{term_penalties}}, \code{\link{ridge}}
+\code{\link[=term_penalties]{term_penalties()}}, \code{\link[=ridge]{ridge()}}
 }

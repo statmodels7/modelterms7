@@ -23,7 +23,7 @@ interval-censored observation).}
 An object of class \code{censored_response}.
 }
 \description{
-The response object \code{\link{cens}} constructs: the observed values,
+The response object \code{\link[=cens]{cens()}} constructs: the observed values,
 the per-observation censoring bounds, and the status each observation
 carries (\code{"observed"}, \code{"left"}, \code{"right"} or
 \code{"interval"}). The likelihood assembler of the model layer consumes
@@ -34,5 +34,5 @@ difference of distribution functions where it is censored.
 S7::S7_inherits(cens(c(0, 1.2), lwr = 0), censored_response)
 }
 \seealso{
-\code{\link{cens}}
+\code{\link[=cens]{cens()}}
 }

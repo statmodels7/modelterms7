@@ -20,7 +20,7 @@ A single logical.
 of its contribution in its own coefficients, \code{FALSE} when it is a
 working linearization with quantities frozen at the previous iterate. The
 base method returns \code{TRUE}, which is what a fixed design satisfies
-trivially and what \code{\link{nl}} and \code{\link{seg}} satisfy by
+trivially and what \code{\link[=nl]{nl()}} and \code{\link[=seg]{seg()}} satisfy by
 construction.
 }
 \details{
@@ -28,14 +28,14 @@ The distinction decides how a fitting layer may treat the block. Where
 the block is a Jacobian, a scoring step on it is a Gauss--Newton step and
 a line search on the model's own objective is licensed, so the term can
 be fitted inside the same system as everything else. Where it is a
-working linearization -- \code{\link{jump}} and \code{\link{jseg}}, whose
+working linearization -- \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}}, whose
 weight \eqn{W = 1/(2\lvert \tilde x - \psi\rvert)} is held at the
 previous break-point and whose position is read off two coefficients --
 the fixed-point iteration of \cite{fasola2018} is not a descent method on
 the model's objective, and forcing a sufficient decrease on it stalls the
 iteration. Such a term is fitted by alternating exact working fits at the
-frozen block with \code{\link{term_refresh}}, and its convergence is what
-\code{\link{term_converged}} answers rather than a score.
+frozen block with \code{\link[=term_refresh]{term_refresh()}}, and its convergence is what
+\code{\link[=term_converged]{term_converged()}} answers rather than a score.
 }
 \examples{
 term_jacobian_block(seg(x))
@@ -48,5 +48,5 @@ iterative algorithm for change-point detection in abrupt change
 models. \emph{Computational Statistics}, 33, 997--1015.
 }
 \seealso{
-\code{\link{term_refresh}}, \code{\link{term_converged}}
+\code{\link[=term_refresh]{term_refresh()}}, \code{\link[=term_converged]{term_converged()}}
 }

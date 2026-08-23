@@ -4,7 +4,7 @@
 \alias{term_hessian.MarginalBreakTerm}
 \title{Observed Hessian of a Marginal Break-Point Term}
 \arguments{
-\item{term}{A built \code{\link{MarginalBreakTerm}}.}
+\item{term}{A built \code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}.}
 
 \item{eta}{The static predictor of the level equation.}
 

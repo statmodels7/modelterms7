@@ -37,8 +37,8 @@ reported when the term is built, which is where the penalty first exists.}
 \item{...}{Unused; a named argument here is reported rather than ignored.}
 }
 \value{
-An object of class \code{\link{RandomTerm}} (a specification;
-  see \code{\link{term_build}}).
+An object of class \code{\link[=RandomTerm]{RandomTerm()}} (a specification;
+see \code{\link[=term_build]{term_build()}}).
 }
 \description{
 Random intercepts and slopes for a grouping factor:
@@ -90,7 +90,7 @@ Gaussian on an unstructured covariance when there are several and
 \code{correlated = FALSE}, one standard deviation per column.
 
 Whatever it is, the distribution is CENTERED, its location parameters held
-with \code{\link[distributions7]{fixed}}. A free mean in the effects is
+with \code{\link[distributions7:fixed]{distributions7::fixed()}}. A free mean in the effects is
 confounded with the intercept of the equation the term sits in, so it is
 rejected rather than fitted along a flat direction. The value it is held at
 is usually zero and is not policed: it is identified whatever it is, and
@@ -132,13 +132,13 @@ leaves a curvature of the wrong sign, and no interval follows from it.
 
 Which PARAMETRIZATION of a family is used matters here in a way it does
 not elsewhere. The centred skew normal
-(\code{\link[distributions7]{skewnormal2_distrib}}) carries the skewness
+(\code{\link[distributions7:skewnormal2_distrib]{distributions7::skewnormal2_distrib()}}) carries the skewness
 itself, and its map to the direct parametrization is not twice
 differentiable at zero skewness: the first derivatives have a finite limit
 there and the second ones grow like \eqn{\gamma_1^{-2/3}}. A marginal
 criterion reads the second, and the symmetric bounds put the starting
 value at exactly that point, so the direct parametrization
-(\code{\link[distributions7]{skewnormal1_distrib}}) is the one to use as a
+(\code{\link[distributions7:skewnormal1_distrib]{distributions7::skewnormal1_distrib()}}) is the one to use as a
 prior; its derivatives at \eqn{\alpha = 0} are ordinary numbers.
 
 How well a shape parameter is estimated depends on how many groups there
@@ -220,5 +220,5 @@ Laird, N. M. and Ware, J. H. (1982). Random-effects models for
 longitudinal data. \emph{Biometrics} 38, 963-974.
 }
 \seealso{
-\code{\link{s}}, \code{\link{te}}, \code{\link{nl}}
+\code{\link[=s]{s()}}, \code{\link[=te]{te()}}, \code{\link[=nl]{nl()}}
 }

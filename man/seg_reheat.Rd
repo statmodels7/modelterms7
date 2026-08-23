@@ -7,7 +7,7 @@
 seg_reheat(term)
 }
 \arguments{
-\item{term}{A built break-point term (see \code{\link{term_build}}).}
+\item{term}{A built break-point term (see \code{\link[=term_build]{term_build()}}).}
 }
 \value{
 The term, ready to iterate afresh from its current positions.
@@ -29,5 +29,5 @@ identical(seg_reheat(b)@blueprint$cscale, b@blueprint$cscale * 0 + 0.05)
 
 }
 \seealso{
-\code{\link{seg_step}}, \code{\link{term_refresh}}
+\code{\link[=seg_step]{seg_step()}}, \code{\link[=term_refresh]{term_refresh()}}
 }

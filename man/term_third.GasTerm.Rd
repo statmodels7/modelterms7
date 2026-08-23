@@ -10,7 +10,7 @@
 
 \item{y}{The response, unused directly.}
 
-\item{score, curvature}{The callbacks of \code{\link{term_filter}}.}
+\item{score, curvature}{The callbacks of \code{\link[=term_filter]{term_filter()}}.}
 
 \item{psi}{The parameters on the PARAMETER scale.}
 
@@ -18,7 +18,7 @@
 
 \item{seed}{The derivative of the static predictor in the unknowns.}
 
-\item{blocks}{The model's derivative pieces; see \code{\link{term_third}}.}
+\item{blocks}{The model's derivative pieces; see \code{\link[=term_third]{term_third()}}.}
 
 \item{direction}{The direction to contract against.}
 
@@ -42,7 +42,7 @@ no second recursion is run and no three-index array is formed.
 
 The chart contributes its own third derivatives: the level and the
 loadings through their scalar links, the persistence through
-\code{\link{.gas_chart_derivs3}}, which composes
-\code{\link{gas_levinson3}} with them.
+\code{\link[=.gas_chart_derivs3]{.gas_chart_derivs3()}}, which composes
+\code{\link[=gas_levinson3]{gas_levinson3()}} with them.
 }
 \keyword{internal}

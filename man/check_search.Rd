@@ -28,6 +28,6 @@ hyperparameter of the model, the smooth ones included, and would be
 carrying an argument most of them cannot read.
 }
 \seealso{
-\code{\link{term_search}}, \code{\link{check_min_ratio}}
+\code{\link[=term_search]{term_search()}}, \code{\link[=check_min_ratio]{check_min_ratio()}}
 }
 \keyword{internal}

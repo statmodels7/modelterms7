@@ -25,17 +25,17 @@ NULL
 #'
 #' The penalty is twice differentiable everywhere, so the block is fitted in
 #' the same system as the unpenalized terms and \eqn{\lambda} is estimated by
-#' \code{\link[statmodels7]{reml}()} rather than swept along a path.
+#' [statmodels7::reml()] rather than swept along a path.
 #'
-#' \strong{Hyperparameter.} \code{lambda}, admissible on \eqn{(0, \infty)}.
+#' **Hyperparameter.** `lambda`, admissible on \eqn{(0, \infty)}.
 #'
 #' @inheritParams penalized_terms
 #' @param lambda The precision of the prior. One number holds it and
-#'   \code{NULL}, the default, has it ESTIMATED. A ridge has no kink and no
+#'   `NULL`, the default, has it ESTIMATED. A ridge has no kink and no
 #'   path, so several numbers are not a grid it could visit. Must lie in
 #'   \eqn{(0, \infty)}.
-#' @return An object of class \code{\link{PenalizedTerm}} (a specification;
-#'   see \code{\link{term_build}}).
+#' @return An object of class [PenalizedTerm()] (a specification;
+#'   see [term_build()]).
 #'
 #' @examples
 #' dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
@@ -44,11 +44,11 @@ NULL
 #'
 #' @references
 #' Hoerl, A. E. and Kennard, R. W. (1970). Ridge regression: biased
-#' estimation for nonorthogonal problems. \emph{Technometrics} 12, 55--67.
+#' estimation for nonorthogonal problems. *Technometrics* 12, 55--67.
 #'
-#' @seealso \code{\link{penalized_terms}} for what the five share,
-#'   \code{\link{lasso}}, \code{\link{enet}}, \code{\link{scad}},
-#'   \code{\link{mcp}}, \code{\link[penalties7]{ridge_penalty}}
+#' @seealso [penalized_terms()] for what the five share,
+#'   [lasso()], [enet()], [scad()],
+#'   [mcp()], [penalties7::ridge_penalty()]
 #' @export
 ridge <- function(x, label = "ridge", standardize = FALSE,
                   lambda = NULL, sparse = NULL, ...) {
@@ -74,25 +74,25 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #'
 #' The kink is at zero, so the block is fitted by a proximal method or by a
 #' coordinate descent with the other terms held, and \eqn{\lambda} is chosen
-#' by a PATH over its own values -- \code{\link[statmodels7]{bic}()} by
-#' default, or \code{\link[statmodels7]{aic}()} or
-#' \code{\link[statmodels7]{cv}()} -- because a marginal criterion is a
+#' by a PATH over its own values -- [statmodels7::bic()] by
+#' default, or [statmodels7::aic()] or
+#' [statmodels7::cv()] -- because a marginal criterion is a
 #' Laplace expansion at a mode that sits on the kink.
 #'
-#' \strong{Hyperparameter.} \code{lambda}, admissible on \eqn{(0, \infty)},
-#' swept over \code{n_lambda} values from the one that empties the block
-#' down to \code{min_ratio} of it.
+#' **Hyperparameter.** `lambda`, admissible on \eqn{(0, \infty)},
+#' swept over `n_lambda` values from the one that empties the block
+#' down to `min_ratio` of it.
 #'
 #' @inheritParams penalized_terms
 #' @param lambda The rate of the prior. One number holds it, several are the
-#'   grid the path visits as they stand, and \code{NULL}, the default, has the
+#'   grid the path visits as they stand, and `NULL`, the default, has the
 #'   path build one. Must lie in \eqn{(0, \infty)}.
 #' @param n_lambda How many values the path visits, at least 2.
 #' @param min_ratio How far down the path reaches, as a fraction of the
 #'   kink that empties the block: smaller reaches a denser fit, larger stops
 #'   sooner. Must lie in \eqn{(0, 1)}.
-#' @return An object of class \code{\link{PenalizedTerm}} (a specification;
-#'   see \code{\link{term_build}}).
+#' @return An object of class [PenalizedTerm()] (a specification;
+#'   see [term_build()]).
 #'
 #' @examples
 #' dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
@@ -105,11 +105,11 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #'
 #' @references
 #' Tibshirani, R. (1996). Regression shrinkage and selection via the lasso.
-#' \emph{Journal of the Royal Statistical Society, Series B} 58, 267--288.
+#' *Journal of the Royal Statistical Society, Series B* 58, 267--288.
 #'
-#' @seealso \code{\link{penalized_terms}} for what the five share,
-#'   \code{\link{ridge}}, \code{\link{enet}}, \code{\link{scad}},
-#'   \code{\link{mcp}}, \code{\link[penalties7]{lasso_penalty}}
+#' @seealso [penalized_terms()] for what the five share,
+#'   [ridge()], [enet()], [scad()],
+#'   [mcp()], [penalties7::lasso_penalty()]
 #' @export
 lasso <- function(x, label = "lasso", standardize = FALSE,
                   lambda = NULL, n_lambda = 25, min_ratio = 1e-4,
@@ -136,7 +136,7 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #'   + p\log Z(\lambda, \alpha),}
 #' the normalizing constant being that of the product of a Laplace and a
 #' Gaussian at zero
-#' (\code{\link[distributions7]{enet_distrib}}). It depends on BOTH
+#' ([distributions7::enet_distrib()]). It depends on BOTH
 #' hyperparameters, which is what makes them estimable rather than merely
 #' settable, and what a penalty written as a formula would not have.
 #'
@@ -144,33 +144,33 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #' the lasso and at \eqn{\alpha \to 0} the ridge, and the kink at zero has
 #' half-width \eqn{\lambda\alpha}, so both hyperparameters scale it.
 #'
-#' \strong{Hyperparameters.} \code{lambda} on \eqn{(0, \infty)}, swept over
-#' \code{n_lambda} values by kink size; \code{alpha} on \eqn{(0, 1)}, swept
-#' over \code{n_alpha} values across that interval, the ends excluded
+#' **Hyperparameters.** `lambda` on \eqn{(0, \infty)}, swept over
+#' `n_lambda` values by kink size; `alpha` on \eqn{(0, 1)}, swept
+#' over `n_alpha` values across that interval, the ends excluded
 #' because the penalty there is one of the other two. Every combination of
-#' the two is visited, \code{n_lambda * n_alpha} fits, unless
-#' \code{search = "cyclic"} asks for one at a time instead.
+#' the two is visited, `n_lambda * n_alpha` fits, unless
+#' `search = "cyclic"` asks for one at a time instead.
 #'
 #' @inheritParams penalized_terms
 #' @param lambda The overall rate. One number holds it, several are the grid
-#'   the path visits as they stand, and \code{NULL}, the default, has the path
+#'   the path visits as they stand, and `NULL`, the default, has the path
 #'   build one. Must lie in \eqn{(0, \infty)}.
 #' @param alpha The mixing weight, in the same three states and settled
-#'   independently of \code{lambda}. Must lie in \eqn{(0, 1)}.
+#'   independently of `lambda`. Must lie in \eqn{(0, 1)}.
 #' @param n_lambda,n_alpha How many values the path visits for each, at
 #'   least 2. They differ because the axes do: \eqn{\lambda} descends the
 #'   size of the kink over four decades and wants that many points, while
 #'   \eqn{\alpha} spans one bounded interval and does not.
-#' @param search \code{"grid"} to visit every combination of \eqn{\lambda}
-#'   and \eqn{\alpha}, \code{"cyclic"} to sweep one at a time with the other
-#'   held. See \code{\link{term_search}}.
+#' @param search `"grid"` to visit every combination of \eqn{\lambda}
+#'   and \eqn{\alpha}, `"cyclic"` to sweep one at a time with the other
+#'   held. See [term_search()].
 #'
 #' @param min_ratio How far down the path reaches, as a fraction of the
 #'   kink that empties the block: smaller reaches a denser fit, larger
 #'   stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
 #'   criterion. Only the sweep by kink size uses it.
-#' @return An object of class \code{\link{PenalizedTerm}} (a specification;
-#'   see \code{\link{term_build}}).
+#' @return An object of class [PenalizedTerm()] (a specification;
+#'   see [term_build()]).
 #'
 #' @examples
 #' dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
@@ -181,12 +181,12 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #'
 #' @references
 #' Zou, H. and Hastie, T. (2005). Regularization and variable selection via
-#' the elastic net. \emph{Journal of the Royal Statistical Society, Series B}
+#' the elastic net. *Journal of the Royal Statistical Society, Series B*
 #' 67, 301--320.
 #'
-#' @seealso \code{\link{penalized_terms}} for what the five share,
-#'   \code{\link{ridge}}, \code{\link{lasso}}, \code{\link{scad}},
-#'   \code{\link{mcp}}, \code{\link[penalties7]{elasticnet_penalty}}
+#' @seealso [penalized_terms()] for what the five share,
+#'   [ridge()], [lasso()], [scad()],
+#'   [mcp()], [penalties7::elasticnet_penalty()]
 #' @export
 enet <- function(x, label = "enet", standardize = FALSE,
                  lambda = NULL, alpha = NULL,
@@ -219,34 +219,34 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #' carries no normalizing constant, and is therefore not a log prior and not
 #' reachable by a marginal criterion.
 #'
-#' \strong{Hyperparameters.} \code{lambda} on \eqn{(0, \infty)}, swept over
-#' \code{n_lambda} values by kink size; \code{a} on \eqn{(2, \infty)} --
+#' **Hyperparameters.** `lambda` on \eqn{(0, \infty)}, swept over
+#' `n_lambda` values by kink size; `a` on \eqn{(2, \infty)} --
 #' below 2 the penalty is not what its definition intends -- swept over
-#' \code{n_a} values on a geometric grid above that bound, since the shape
+#' `n_a` values on a geometric grid above that bound, since the shape
 #' leaves the kink at zero unchanged and no kink-size path can reach it. The
 #' literature's value is \eqn{a = 3.7}, and holding it there is what
 #' \pkg{ncvreg} does.
 #'
 #' @inheritParams penalized_terms
 #' @param lambda The scale of the penalty. One number holds it, several are
-#'   the grid the path visits as they stand, and \code{NULL}, the default, has
+#'   the grid the path visits as they stand, and `NULL`, the default, has
 #'   the path build one. Must lie in \eqn{(0, \infty)}.
 #' @param a The shape, in the same three states and settled independently of
-#'   \code{lambda}. Must lie in \eqn{(2, \infty)}.
+#'   `lambda`. Must lie in \eqn{(2, \infty)}.
 #' @param n_lambda,n_a How many values the path visits for each, at least 2.
 #'   They differ because the axes do: \eqn{\lambda} descends the size of the
 #'   kink over four decades and wants that many points, while \eqn{a} spans
 #'   the shape's useful range and does not.
-#' @param search \code{"grid"} to visit every combination of \eqn{\lambda}
-#'   and \eqn{a}, \code{"cyclic"} to sweep one at a time with the other held.
-#'   See \code{\link{term_search}}.
+#' @param search `"grid"` to visit every combination of \eqn{\lambda}
+#'   and \eqn{a}, `"cyclic"` to sweep one at a time with the other held.
+#'   See [term_search()].
 #'
 #' @param min_ratio How far down the path reaches, as a fraction of the
 #'   kink that empties the block: smaller reaches a denser fit, larger
 #'   stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
 #'   criterion. Only the sweep by kink size uses it.
-#' @return An object of class \code{\link{PenalizedTerm}} (a specification;
-#'   see \code{\link{term_build}}).
+#' @return An object of class [PenalizedTerm()] (a specification;
+#'   see [term_build()]).
 #'
 #' @examples
 #' dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
@@ -255,12 +255,12 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #'
 #' @references
 #' Fan, J. and Li, R. (2001). Variable selection via nonconcave penalized
-#' likelihood and its oracle properties. \emph{Journal of the American
-#' Statistical Association} 96, 1348--1360.
+#' likelihood and its oracle properties. *Journal of the American
+#' Statistical Association* 96, 1348--1360.
 #'
-#' @seealso \code{\link{penalized_terms}} for what the five share,
-#'   \code{\link{ridge}}, \code{\link{lasso}}, \code{\link{enet}},
-#'   \code{\link{mcp}}, \code{\link[penalties7]{scad_penalty}}
+#' @seealso [penalized_terms()] for what the five share,
+#'   [ridge()], [lasso()], [enet()],
+#'   [mcp()], [penalties7::scad_penalty()]
 #' @export
 scad <- function(x, label = "scad", standardize = FALSE,
                  lambda = NULL, a = NULL,
@@ -289,32 +289,32 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #' carries no normalizing constant and is not reachable by a marginal
 #' criterion.
 #'
-#' \strong{Hyperparameters.} \code{lambda} on \eqn{(0, \infty)}, swept over
-#' \code{n_lambda} values by kink size; \code{gamma} on \eqn{(1, \infty)} --
+#' **Hyperparameters.** `lambda` on \eqn{(0, \infty)}, swept over
+#' `n_lambda` values by kink size; `gamma` on \eqn{(1, \infty)} --
 #' at \eqn{\gamma \le 1} the penalized objective need not be convex even for
-#' an orthogonal design -- swept over \code{n_gamma} values on a geometric
+#' an orthogonal design -- swept over `n_gamma` values on a geometric
 #' grid above that bound. The literature's value is \eqn{\gamma = 3}.
 #'
 #' @inheritParams penalized_terms
 #' @param lambda The scale of the penalty. One number holds it, several are
-#'   the grid the path visits as they stand, and \code{NULL}, the default, has
+#'   the grid the path visits as they stand, and `NULL`, the default, has
 #'   the path build one. Must lie in \eqn{(0, \infty)}.
 #' @param gamma The shape, in the same three states and settled independently
-#'   of \code{lambda}. Must lie in \eqn{(1, \infty)}.
+#'   of `lambda`. Must lie in \eqn{(1, \infty)}.
 #' @param n_lambda,n_gamma How many values the path visits for each, at
 #'   least 2. They differ because the axes do: \eqn{\lambda} descends the
 #'   size of the kink over four decades and wants that many points, while
 #'   \eqn{\gamma} spans the shape's useful range and does not.
-#' @param search \code{"grid"} to visit every combination of \eqn{\lambda}
-#'   and \eqn{\gamma}, \code{"cyclic"} to sweep one at a time with the other
-#'   held. See \code{\link{term_search}}.
+#' @param search `"grid"` to visit every combination of \eqn{\lambda}
+#'   and \eqn{\gamma}, `"cyclic"` to sweep one at a time with the other
+#'   held. See [term_search()].
 #'
 #' @param min_ratio How far down the path reaches, as a fraction of the
 #'   kink that empties the block: smaller reaches a denser fit, larger
 #'   stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
 #'   criterion. Only the sweep by kink size uses it.
-#' @return An object of class \code{\link{PenalizedTerm}} (a specification;
-#'   see \code{\link{term_build}}).
+#' @return An object of class [PenalizedTerm()] (a specification;
+#'   see [term_build()]).
 #'
 #' @examples
 #' dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
@@ -323,11 +323,11 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #'
 #' @references
 #' Zhang, C.-H. (2010). Nearly unbiased variable selection under minimax
-#' concave penalty. \emph{The Annals of Statistics} 38, 894--942.
+#' concave penalty. *The Annals of Statistics* 38, 894--942.
 #'
-#' @seealso \code{\link{penalized_terms}} for what the five share,
-#'   \code{\link{ridge}}, \code{\link{lasso}}, \code{\link{enet}},
-#'   \code{\link{scad}}, \code{\link[penalties7]{mcp_penalty}}
+#' @seealso [penalized_terms()] for what the five share,
+#'   [ridge()], [lasso()], [enet()],
+#'   [scad()], [penalties7::mcp_penalty()]
 #' @export
 mcp <- function(x, label = "mcp", standardize = FALSE,
                 lambda = NULL, gamma = NULL,

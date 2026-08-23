@@ -7,7 +7,7 @@
 term_smooth(term, ...)
 }
 \arguments{
-\item{term}{An object inheriting from class \code{\link{model_term}}.}
+\item{term}{An object inheriting from class \code{\link[=model_term]{model_term()}}.}
 
 \item{...}{Passed to methods.}
 }
@@ -25,7 +25,7 @@ classical optimizers handle and the block that needs non-smooth
 strategies.
 }
 \details{
-The enumeration is \code{\link{term_penalties}}, so a term carrying one
+The enumeration is \code{\link[=term_penalties]{term_penalties()}}, so a term carrying one
 penalty over part of its parameters and none over the rest answers for
 the part: \code{seg(x, penalty = penalties7::lasso_penalty)} is not
 smooth, its slope
@@ -37,5 +37,5 @@ term_smooth(linpar(~x))
 
 }
 \seealso{
-\code{\link{term_penalties}}, \code{\link{term_penalty}}, \code{\link{edf}}
+\code{\link[=term_penalties]{term_penalties()}}, \code{\link[=term_penalty]{term_penalty()}}, \code{\link[=edf]{edf()}}
 }

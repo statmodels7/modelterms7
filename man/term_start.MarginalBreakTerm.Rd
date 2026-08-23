@@ -4,7 +4,7 @@
 \alias{term_start.MarginalBreakTerm}
 \title{Where a Marginal Break-Point Term Starts}
 \arguments{
-\item{term}{A built \code{\link{MarginalBreakTerm}}.}
+\item{term}{A built \code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}.}
 
 \item{...}{Unused.}
 

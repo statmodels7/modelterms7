@@ -7,7 +7,7 @@
 reject_pathless_values(values, pen, what = "this term")
 }
 \arguments{
-\item{values}{The written-out grids, as \code{\link{check_values}} returns
+\item{values}{The written-out grids, as \code{\link[=check_values]{check_values()}} returns
 them.}
 
 \item{pen}{The penalty the term will build, or \code{NULL}.}
@@ -31,6 +31,6 @@ effect under a Gaussian prior are covered by the same line as a family
 added later.
 }
 \seealso{
-\code{\link{check_values}}, \code{\link{term_values}}
+\code{\link[=check_values]{check_values()}}, \code{\link[=term_values]{term_values()}}
 }
 \keyword{internal}

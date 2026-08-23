@@ -21,7 +21,7 @@ nl(
 }
 \arguments{
 \item{fn}{A one-sided formula in the covariates and the parameters, or
-a function of \code{(x, theta)} vectorized in both.}
+a function of \verb{(x, theta)} vectorized in both.}
 
 \item{...}{Two-sided formulas whose left side names a parameter, one
 per parameter to be modeled with covariates, e.g.
@@ -46,7 +46,7 @@ parameters, on the parameter scale. Defaults to the inverse link at
 zero.}
 
 \item{gradient, hessian, deriv3, deriv4}{Optional functions
-\code{function(theta, data)} returning the derivatives of \code{fn} in
+\verb{function(theta, data)} returning the derivatives of \code{fn} in
 its own parameters, each a NAMED LIST of numeric vectors. Supply as many
 as are worth writing out and leave the rest; see the section below.}
 
@@ -54,8 +54,8 @@ as are worth writing out and leave the rest; see the section below.}
 names.}
 }
 \value{
-An object of class \code{\link{NlTerm}} (a specification; see
-  \code{\link{term_build}}).
+An object of class \code{\link[=NlTerm]{NlTerm()}} (a specification; see
+\code{\link[=term_build]{term_build()}}).
 }
 \description{
 A contribution \eqn{f(x; \theta)} that is nonlinear in its own
@@ -72,15 +72,15 @@ every point: the contribution is linearized as
   J = \frac{\partial f}{\partial \beta},}
 so the design block is the Jacobian, and the only thing that
 distinguishes the term from a linear one is that the block is refreshed
-as the parameters move. \code{\link{term_refresh}} does that, and
-\code{\link{term_value}} reports the contribution itself, which a
+as the parameters move. \code{\link[=term_refresh]{term_refresh()}} does that, and
+\code{\link[=term_value]{term_value()}} reports the contribution itself, which a
 Gauss-Newton step needs beside the Jacobian.
 
 \subsection{Two ways to give the function, with different reach}{
 A \strong{formula} such as \code{~ theta1 * exp(theta2 * x)} is read
 symbolically: the names it uses that are not columns of the data are
 the parameters, and the derivatives come from
-\code{\link[stats]{deriv}} where that succeeds and from a central
+\code{\link[stats:deriv]{stats::deriv()}} where that succeeds and from a central
 difference where it does not. A \strong{function} \code{f(x, theta)},
 vectorized in both, is treated as opaque: its derivatives are always
 differenced, and its parameters must be named in \code{params}.
@@ -110,13 +110,13 @@ A subformula is written in \code{...} as a two-sided formula whose
 left side names the parameter, \code{theta1 ~ z}, or programmatically
 as \code{subformulas = list(theta1 = ~z)}; the two spellings are the
 same and a parameter may carry only one. The right-hand side goes
-through \code{\link{interpret_formula}}, so it takes any term of this
+through \code{\link[=interpret_formula]{interpret_formula()}}, so it takes any term of this
 package: \code{theta1 ~ ridge(g)} is a population value (the
 intercept) plus shrunken departures, \code{theta1 ~ s(z)} lets the
 parameter move smoothly with a covariate, and
 \code{theta1 ~ random(~1 | g)} is a random intercept on the
 parameter's unconstrained scale. The penalties the sub-terms carry are
-reported through \code{\link{term_penalties}} under the key
+reported through \code{\link[=term_penalties]{term_penalties()}} under the key
 \code{parameter::subterm}, so a fitting layer estimates their
 hyperparameters as it does any other term's. A structural term, and a
 term whose block moves with its coefficients, are rejected: a
@@ -153,12 +153,12 @@ from the function. Measured on \eqn{f = a e^{-rx}} given as an opaque
 function, so that nothing is symbolic, against the closed forms:
 
 \tabular{lrrrr}{
-  \tab order 1 \tab 2 \tab 3 \tab 4 \cr
-  nothing supplied \tab 5.2e-13 \tab 8.4e-03 \tab 4.62 \tab 1.96e+03 \cr
-  gradient and hessian \tab 0 \tab 0 \tab 2.2e-12 \tab 8.9e-11
+\tab order 1 \tab 2 \tab 3 \tab 4 \cr
+nothing supplied \tab 5.2e-13 \tab 8.4e-03 \tab 4.62 \tab 1.96e+03 \cr
+gradient and hessian \tab 0 \tab 0 \tab 2.2e-12 \tab 8.9e-11
 }
 
-Each function takes \code{(theta, data)} -- a named list of the parameters,
+Each function takes \verb{(theta, data)} -- a named list of the parameters,
 each of length \code{n} or 1, and the variables the formula names -- and
 returns a named list of numeric vectors of length \code{n}. The names are
 the components of that order, keyed as \pkg{distributions7} keys its own
@@ -168,14 +168,14 @@ derivative surfaces: the parameter names joined by \code{"_"}. Order two of
 The names are normalized here, so \code{r_a} and \code{a_r} are the same
 component and the order in which they are returned does not matter; what is
 checked is the SET. A name that is not a component of this term, a missing
-component or a repeated one is an error at \code{\link{term_build}} rather
+component or a repeated one is an error at \code{\link[=term_build]{term_build()}} rather
 than a silent fall-through to the numerical route, an exact derivative that
 is quietly not used being worse than none.
 
 The derivatives are in the parameters \eqn{\theta}, not in the
 coefficients: the chain rule onto the coefficients -- each parameter's link,
 and a subformula's design -- is the term's, which is the only thing that
-knows them. \code{\link{nl_fderiv}} reads any order back.
+knows them. \code{\link[=nl_fderiv]{nl_fderiv()}} reads any order back.
 }
 }
 \examples{
@@ -214,5 +214,5 @@ names(nl_fderiv(ex, order = 3))
 
 }
 \seealso{
-\code{\link{s}}, \code{\link{te}}, \code{\link{random}}
+\code{\link[=s]{s()}}, \code{\link[=te]{te()}}, \code{\link[=random]{random()}}
 }

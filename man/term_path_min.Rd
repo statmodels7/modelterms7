@@ -13,7 +13,7 @@ term_path_min(term, ...)
 }
 \value{
 A named list, one entry per penalty of the term, each a single
-  number. Empty where the term names none.
+number. Empty where the term names none.
 }
 \description{
 The fraction of the emptying value the path descends to, where the term
@@ -33,5 +33,5 @@ term_path_min(lasso(~x))
 
 }
 \seealso{
-\code{\link{term_grid}}, \code{\link{term_hyper}}
+\code{\link[=term_grid]{term_grid()}}, \code{\link[=term_hyper]{term_hyper()}}
 }

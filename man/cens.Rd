@@ -17,7 +17,7 @@ observations.}
 \code{length(y)}. Defaults to \code{Inf} (no right censoring).}
 }
 \value{
-An object of class \code{\link{censored_response}}.
+An object of class \code{\link[=censored_response]{censored_response()}}.
 }
 \description{
 Marks a response as censored, for the left-hand side of a model formula:
@@ -41,5 +41,5 @@ r@status
 
 }
 \seealso{
-\code{\link{interpret_formula}}, \code{\link{check_term}}
+\code{\link[=interpret_formula]{interpret_formula()}}, \code{\link[=check_term]{check_term()}}
 }

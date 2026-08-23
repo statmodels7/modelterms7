@@ -6,28 +6,28 @@ NULL
 #' @description
 #' The shifts a term of the likelihood shape adds to its equation's
 #' predictor, one per mixture component, in the order the columns of
-#' \code{\link{term_posterior}} carry the components.
+#' [term_posterior()] carry the components.
 #'
 #' @details
 #' By Fisher's identity the derivative of a likelihood mixed over latent
 #' states, in any predictor the model carries, is the posterior-weighted
 #' derivative of the ordinary one, each component read at the predictor
-#' shifted by its own level. \code{\link{term_posterior}} supplies the
+#' shifted by its own level. [term_posterior()] supplies the
 #' weights; this supplies the levels, so a fitting layer assembles the
-#' identity without reading the term's internals. For \code{\link{regime}}
+#' identity without reading the term's internals. For [regime()]
 #' the levels are the ordered regime means, one number per component; for a
 #' marginal break-point term of the step kind they are the sums of the
 #' changes of level over the active break-points, one number per side
 #' pattern.
 #'
 #' A component's shift may vary by observation -- the quadrature nodes of a
-#' marginal \code{\link{seg}} or \code{\link{jseg}} term shift each
+#' marginal [seg()] or [jseg()] term shift each
 #' observation by its own hinge value -- and the method then returns a
 #' matrix with one row per observation and one column per component, whose
 #' columns a caller reads in place of the constant levels.
 #'
 #' @param term A built structural term of the likelihood shape.
-#' @param psi The term's parameters, named as \code{\link{term_params}}.
+#' @param psi The term's parameters, named as [term_params()].
 #' @param ... Passed to methods.
 #'
 #' @return A numeric vector with one level per component, or a matrix with
@@ -37,7 +37,7 @@ NULL
 #' term_levels(regime(2), list(level1 = 0, gap2 = 3,
 #'                             alr1.1 = 2, alr2.1 = -2))
 #'
-#' @seealso \code{\link{term_posterior}}, \code{\link{term_loglik}}
+#' @seealso [term_posterior()], [term_loglik()]
 #' @export
 term_levels <- S7::new_generic("term_levels", "term",
   function(term, psi, ...) S7::S7_dispatch())
@@ -54,10 +54,10 @@ S7::method(term_levels, structural_term) <- function(term, psi, ...) {
 #' @description
 #' The regime means, ordered by construction: the first level and the
 #' cumulative sums of the positive gaps.
-#' @param term A \code{\link{RegimeTerm}}.
+#' @param term A [RegimeTerm()].
 #' @param psi The term's parameters.
 #' @param ... Unused.
-#' @return A numeric vector of length \code{k}.
+#' @return A numeric vector of length `k`.
 #' @keywords internal
 S7::method(term_levels, RegimeTerm) <- function(term, psi, ...) {
   v <- unlist(psi[term_params(term)])
@@ -76,7 +76,7 @@ S7::method(term_levels, RegimeTerm) <- function(term, psi, ...) {
 #' mean and standard deviation of each group's break-points.
 #'
 #' @details
-#' \code{\link{term_posterior}} answers the fitting layer's question, the
+#' [term_posterior()] answers the fitting layer's question, the
 #' component weights Fisher's identity needs at every observation. This one
 #' answers the reader's: where each group's latent positions sit once the
 #' data have been seen. For the marginal break-point term the two come from
@@ -88,13 +88,13 @@ S7::method(term_levels, RegimeTerm) <- function(term, psi, ...) {
 #' @param eta The static predictor of the equation the term sits in.
 #' @param y The response.
 #' @param logdens The log-density as a function of a predictor value and a
-#'   row index, as \code{\link{term_loglik}} takes it.
-#' @param psi The term's parameters, named as \code{\link{term_params}}.
+#'   row index, as [term_loglik()] takes it.
+#' @param psi The term's parameters, named as [term_params()].
 #' @param ... Passed to methods.
 #'
 #' @return A data frame with one row per group and break-point:
-#'   \code{group}, \code{psi} (which break-point), \code{mean} and
-#'   \code{sd}.
+#'   `group`, `psi` (which break-point), `mean` and
+#'   `sd`.
 #'
 #' @examples
 #' set.seed(1)
@@ -105,7 +105,7 @@ S7::method(term_levels, RegimeTerm) <- function(term, psi, ...) {
 #'             logdens = function(e, i) dnorm(dd$y[i], e, 0.4, log = TRUE),
 #'             psi = list(m1 = 4.5, tau1 = 0.5, delta1 = 2))
 #'
-#' @seealso \code{\link{term_posterior}}, \code{\link{jump}}
+#' @seealso [term_posterior()], [jump()]
 #' @export
 term_latent <- S7::new_generic("term_latent", "term",
   function(term, eta, y, logdens, psi, ...) S7::S7_dispatch())
@@ -121,27 +121,27 @@ S7::method(term_latent, structural_term) <- function(term, eta, y, logdens,
 #' @name MarginalBreakTerm
 #'
 #' @description
-#' A subclass of \code{\link{structural_term}} for break-points that vary
+#' A subclass of [structural_term()] for break-points that vary
 #' by group as latent variables integrated out of the likelihood.
-#' Constructed by \code{\link{jump}}, \code{\link{seg}} or
-#' \code{\link{jseg}} with \code{marginal = TRUE}.
+#' Constructed by [jump()], [seg()] or
+#' [jseg()] with `marginal = TRUE`.
 #'
 #' @inheritParams model_term
 #' @param kind Which of the three constructions.
 #' @param var The covariate expression.
 #' @param npsi The number of break-points.
 #' @param linear Whether the term carries the linear effect as its own
-#'   parameter (\code{seg} and \code{jseg}).
+#'   parameter (`seg` and `jseg`).
 #' @param group The grouping expression, from the break-point's
-#'   \code{random()} subformula.
-#' @param prior The latent's distribution: \code{NULL} for the gaussian, or
-#'   a \pkg{distributions7} object from \code{random(distrib = )}.
+#'   `random()` subformula.
+#' @param prior The latent's distribution: `NULL` for the gaussian, or
+#'   a \pkg{distributions7} object from `random(distrib = )`.
 #' @param spec The resolved construction settings.
 #' @param blueprint The resolved grouping and interval structure.
 #'
-#' @return An object of class \code{MarginalBreakTerm}.
+#' @return An object of class `MarginalBreakTerm`.
 #'
-#' @seealso \code{\link{jump}}
+#' @seealso [jump()]
 #' @examples
 #' S7::S7_inherits(jump(x, psi ~ random(~1 | id), marginal = TRUE),
 #'                 MarginalBreakTerm)
@@ -739,7 +739,7 @@ S7::method(term_build, MarginalBreakTerm) <- function(term, data, ...) {
 #' parameters, the emissions' in the changes of level.
 #' For the continuous kinds the conditional is smooth within an interval
 #' and the integral runs on a fixed Gauss-Kronrod panel per interval
-#' (\code{\link[numericals7]{gauss_kronrod15}}), the interior nodes fixed
+#' ([numericals7::gauss_kronrod15()]), the interior nodes fixed
 #' points of the data so that the derivatives in the prior's parameters
 #' read the prior alone; the region below the data, where the hinge keeps
 #' moving, is covered by panels that follow the prior's bulk, whose node
@@ -752,13 +752,13 @@ S7::method(term_build, MarginalBreakTerm) <- function(term, data, ...) {
 #' over the component weights per observation, so the decomposition is a
 #' factor of the group's size dearer than the total alone, which the
 #' per-group cell or node count already prices.
-#' @param term A built \code{\link{MarginalBreakTerm}}.
+#' @param term A built [MarginalBreakTerm()].
 #' @param eta The static predictor.
 #' @param y The response, reaching the sum through the callbacks.
 #' @param logdens,score The log-density and its derivative in the predictor.
-#' @param psi The parameters, named as \code{\link{term_params}}.
+#' @param psi The parameters, named as [term_params()].
 #' @param ... Unused.
-#' @return A list with \code{loglik} and \code{jacobian}, the latter on the
+#' @return A list with `loglik` and `jacobian`, the latter on the
 #'   parameter scale.
 #' @keywords internal
 S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
@@ -1042,7 +1042,7 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
 #' whole sample, one column per pattern of active break-points; for the
 #' continuous kinds, each group's posterior over its quadrature nodes,
 #' repeated down the group's rows and zero-padded to the widest group.
-#' @param term A built \code{\link{MarginalBreakTerm}}.
+#' @param term A built [MarginalBreakTerm()].
 #' @param eta The static predictor.
 #' @param y The response.
 #' @param logdens The log-density.
@@ -1241,10 +1241,10 @@ S7::method(term_posterior, MarginalBreakTerm) <- function(term, eta, y,
 #' For the step kind, the constant shift of each side pattern, the sums of
 #' the changes of level over the active break-points. For the continuous
 #' kinds the shift varies by observation -- each node's hinge value -- and
-#' a matrix is returned, aligned with \code{\link{term_posterior}}'s
+#' a matrix is returned, aligned with [term_posterior()]'s
 #' columns; it takes the callbacks because the node set is theirs to
 #' rebuild.
-#' @param term A built \code{\link{MarginalBreakTerm}}.
+#' @param term A built [MarginalBreakTerm()].
 #' @param psi The term's parameters.
 #' @param eta,y,logdens For the continuous kinds, the quantities the node
 #'   set is built from; ignored by the step kind.
@@ -1273,20 +1273,20 @@ S7::method(term_levels, MarginalBreakTerm) <- function(term, psi, eta = NULL,
 #' The posterior mean and standard deviation of each group's break-points.
 #' For the step kind under the gaussian prior these are mixtures of
 #' truncated-normal moments over the interval posterior, the edge
-#' intervals read through \code{\link[numericals7]{mills_ratio}}; under an
+#' intervals read through [numericals7::mills_ratio()]; under an
 #' explicit prior the truncated moments come from
-#' \code{\link[distributions7]{truncated}} and
-#' \code{\link[distributions7]{expectation}}, one interval at a time. For
+#' [distributions7::truncated()] and
+#' [distributions7::expectation()], one interval at a time. For
 #' the continuous kinds they are the moments of the node posterior, the
 #' closed upper tail entering through its truncated-normal moments.
-#' @param term A built \code{\link{MarginalBreakTerm}}.
+#' @param term A built [MarginalBreakTerm()].
 #' @param eta The static predictor.
 #' @param y The response.
 #' @param logdens The log-density.
 #' @param psi The term's parameters.
 #' @param ... Unused.
-#' @return A data frame with \code{group}, \code{psi}, \code{mean} and
-#'   \code{sd}.
+#' @return A data frame with `group`, `psi`, `mean` and
+#'   `sd`.
 #' @keywords internal
 S7::method(term_latent, MarginalBreakTerm) <- function(term, eta, y, logdens,
                                                        psi, ...) {
@@ -1410,9 +1410,9 @@ S7::method(term_latent, MarginalBreakTerm) <- function(term, eta, y, logdens,
 #' population positions and the prior scales read off those, and the
 #' changes their pooled means. Without one, the covariate's quantiles and
 #' a scale from its spread, with the changes at zero.
-#' @param term A built \code{\link{MarginalBreakTerm}}.
+#' @param term A built [MarginalBreakTerm()].
 #' @param ... Unused.
-#' @param target The response on the predictor's scale, or \code{NULL}.
+#' @param target The response on the predictor's scale, or `NULL`.
 #' @return A named numeric vector on the unconstrained scale.
 #' @keywords internal
 S7::method(term_start, MarginalBreakTerm) <- function(term, ...,
@@ -1693,7 +1693,7 @@ S7::method(term_start, MarginalBreakTerm) <- function(term, ...,
 #' The marginal likelihood of a group does not factorize over its
 #' observations, so an observation weight has a reading only when it is
 #' constant within each group; anything else is rejected.
-#' @param term A built \code{\link{MarginalBreakTerm}}.
+#' @param term A built [MarginalBreakTerm()].
 #' @param eta The static predictor of the level equation.
 #' @param y The response.
 #' @param logdens,grad,hess The log-density and its first two derivatives
@@ -1704,7 +1704,7 @@ S7::method(term_start, MarginalBreakTerm) <- function(term, ...,
 #' @param level The distribution parameter the term shifts.
 #' @param weights Observation weights, constant within each group.
 #' @param ... Unused.
-#' @return A list with \code{loglik}, \code{gradient} and \code{hessian}.
+#' @return A list with `loglik`, `gradient` and `hessian`.
 #' @keywords internal
 S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
                                                         grad, hess, psi, seed,
@@ -2227,16 +2227,16 @@ S7::method(print, MarginalBreakTerm) <- function(x, ...) {
 #' The response is not drawn -- the positions do not read it -- so the
 #' caller draws at the returned predictor.
 #'
-#' @param term A built \code{\link{MarginalBreakTerm}}.
+#' @param term A built [MarginalBreakTerm()].
 #' @param psi The term's parameters, on the parameter scale.
 #' @param eta The static part of the predictor.
 #' @param draw Ignored: the positions do not read the response.
 #' @param ... Ignored.
 #'
-#' @return A list with \code{eta}, \code{y} (\code{NULL}) and
-#'   \code{latent}, a data frame of the drawn positions by group.
+#' @return A list with `eta`, `y` (`NULL`) and
+#'   `latent`, a data frame of the drawn positions by group.
 #'
-#' @seealso \code{\link{term_simulate}}, \code{\link{seg}}
+#' @seealso [term_simulate()], [seg()]
 #'
 #' @keywords internal
 S7::method(term_simulate, MarginalBreakTerm) <- function(term, psi, eta,

@@ -5,22 +5,22 @@ NULL
 #' @name SmoothTerm
 #'
 #' @description
-#' A subclass of \code{\link{additive_term}} for a penalized smooth of one
+#' A subclass of [additive_term()] for a penalized smooth of one
 #' or more covariates: a \pkg{basis7} expansion with a roughness penalty
-#' on its coefficients. Constructed by \code{\link{s}} for one covariate
-#' and by \code{\link{te}} for several.
+#' on its coefficients. Constructed by [s()] for one covariate
+#' and by [te()] for several.
 #'
 #' @inheritParams additive_term
 #' @param vars The expressions of the covariates being smoothed.
 #' @param by An optional expression the smooth varies with.
 #' @param spec The construction settings: the basis, its dimension and
 #'   degree, and whether the linear part is carried separately.
-#' @param sparse Whether the block is a \code{dgCMatrix}, which only a factor
-#'   \code{by} admits. See \code{\link{s}}.
+#' @param sparse Whether the block is a `dgCMatrix`, which only a factor
+#'   `by` admits. See [s()].
 #'
-#' @return An object of class \code{SmoothTerm}.
+#' @return An object of class `SmoothTerm`.
 #'
-#' @seealso \code{\link{s}}, \code{\link{te}}
+#' @seealso [s()], [te()]
 #' @examples
 #' S7::S7_inherits(s(x), SmoothTerm)
 #' @export
@@ -56,7 +56,7 @@ SmoothTerm <- S7::new_class(
 #' \eqn{\mathrm{diag}(0, 1, \dots, 1)}, rank deficient by exactly one, so
 #' the linear effect is unpenalized and the deviation is shrunk towards
 #' zero. As the smoothing parameter grows the fit approaches a straight
-#' line rather than a constant, and \code{\link{edf}} falls towards one.
+#' line rather than a constant, and [edf()] falls towards one.
 #'
 #' The Demmler-Reinsch construction (\cite{demmler1975}, as used for
 #' effect selection by \cite{bach2024}) is empirical: it takes the inner
@@ -67,28 +67,28 @@ SmoothTerm <- S7::new_class(
 #' holds on new data as it does on old.
 #'
 #' \subsection{Varying the smooth by another variable}{
-#' With \code{by} a factor the term carries one smooth per level, the
+#' With `by` a factor the term carries one smooth per level, the
 #' block being the smooth multiplied by each level's indicator and the
 #' penalty the same matrix repeated blockwise, so one smoothing parameter
-#' governs every level. With \code{by} numeric the term is a
+#' governs every level. With `by` numeric the term is a
 #' varying-coefficient one: the smooth multiplies that variable, and the
-#' fitted function is the coefficient of \code{by} as it changes with the
+#' fitted function is the coefficient of `by` as it changes with the
 #' covariate.
 #'
-#' A factor \code{by} is where a smooth's block can be SPARSE: each row sits
+#' A factor `by` is where a smooth's block can be SPARSE: each row sits
 #' in the block of its own level and nowhere else, a density of \eqn{1/m}.
-#' \code{sparse = TRUE} builds it that way rather than building the dense
+#' `sparse = TRUE` builds it that way rather than building the dense
 #' matrix and compressing it -- measured at 2000 rows, \eqn{k = 10} and 200
-#' levels, 0.35 MB against 28.93 MB, the numbers identical. \code{sparse =
-#' NULL}, the default, settles it at build from the size of the block, the
+#' levels, 0.35 MB against 28.93 MB, the numbers identical. `sparse =
+#' NULL`, the default, settles it at build from the size of the block, the
 #' dense form holding \eqn{n m k} cells against \eqn{n k} non-zeros; see
-#' \code{\link{.resolve_sparse}} for the threshold and what it was measured
-#' against. An explicit \code{TRUE} is refused without a factor \code{by},
+#' [.resolve_sparse()] for the threshold and what it was measured
+#' against. An explicit `TRUE` is refused without a factor `by`,
 #' where there would be nothing to build on: the basis is dense by
 #' construction, the Demmler-Reinsch rotation making it so, and a numeric
-#' \code{by} merely multiplies it.
+#' `by` merely multiplies it.
 #'
-#' The block alone is sparse. The PENALTY of a factor \code{by} is the same
+#' The block alone is sparse. The PENALTY of a factor `by` is the same
 #' matrix repeated blockwise, and \pkg{penalties7} returns it dense -- 25.92
 #' MB at those sizes, at a density of 0.0005 -- which is a property of that
 #' package's contract rather than of this construction.
@@ -101,25 +101,25 @@ SmoothTerm <- S7::new_class(
 #' @param basis An optional \pkg{basis7} basis to use in place of the
 #'   default B-spline; its range is taken as given.
 #' @param linear Whether the linear effect is carried in the block, and
-#'   left unpenalized there. Defaults to \code{TRUE}.
+#'   left unpenalized there. Defaults to `TRUE`.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names. Defaults to a name built from the covariate.
 #' @param lambda The smoothing parameter, held at the value given and
-#'   ESTIMATED when left \code{NULL}, which is the default. An
+#'   ESTIMATED when left `NULL`, which is the default. An
 #'   anisotropic tensor product carries one per margin, so a vector
 #'   of that length, or a named one holding some of them.
-#' @param sparse Whether the block is built as a \code{dgCMatrix}.
-#'   \code{NULL}, the default, settles it at build from the size of the block.
-#'   Only a FACTOR \code{by} admits it, each row sitting in the block of its
-#'   own level; without one an explicit \code{TRUE} is refused rather than
+#' @param sparse Whether the block is built as a `dgCMatrix`.
+#'   `NULL`, the default, settles it at build from the size of the block.
+#'   Only a FACTOR `by` admits it, each row sitting in the block of its
+#'   own level; without one an explicit `TRUE` is refused rather than
 #'   ignored. See Details.
 #'
-#' @return An object of class \code{\link{SmoothTerm}} (a specification;
-#'   see \code{\link{term_build}}).
+#' @return An object of class [SmoothTerm()] (a specification;
+#'   see [term_build()]).
 #'
 #' @references
 #' Demmler, A. and Reinsch, C. (1975). Oscillation matrices with spline
-#' smoothing. \emph{Numerische Mathematik}, 24, 375--382.
+#' smoothing. *Numerische Mathematik*, 24, 375--382.
 #'
 #' Bach, P. and Klein, N. (2024). Bayesian effect selection in additive
 #' models with an application to time-to-event data.
@@ -132,7 +132,7 @@ SmoothTerm <- S7::new_class(
 #' term_npar(built)
 #' term_penalty(built)@params
 #'
-#' @seealso \code{\link{te}}, \code{\link{random}}, \code{\link{nl}}
+#' @seealso [te()], [random()], [nl()]
 #' @export
 s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
               linear = TRUE, label = NULL, lambda = NULL,
@@ -147,7 +147,7 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #'
 #' @description
 #' A tensor-product smooth: a \pkg{basis7} basis in each covariate,
-#' combined by \code{\link[basis7]{tensor_basis}}, with a roughness
+#' combined by [basis7::tensor_basis()], with a roughness
 #' penalty on the product coefficients.
 #'
 #' @details
@@ -156,15 +156,15 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #' product, \eqn{P_v = I \otimes \cdots \otimes P_v \otimes \cdots
 #' \otimes I}, each penalizing curvature in one direction.
 #'
-#' With \code{anisotropic = TRUE}, the default, those components enter
-#' \code{\link[penalties7]{additive_penalty}} and keep a smoothing
+#' With `anisotropic = TRUE`, the default, those components enter
+#' [penalties7::additive_penalty()] and keep a smoothing
 #' parameter each, so the surface may be rough in one direction and smooth
 #' in another -- which is the usual reason for fitting a tensor smooth
-#' rather than an isotropic one. With \code{anisotropic = FALSE} they are
+#' rather than an isotropic one. With `anisotropic = FALSE` they are
 #' summed first and one parameter governs the total, which costs one
 #' hyperparameter instead of one per margin.
 #'
-#' The marginal bases are not reparametrized, so unlike \code{\link{s}}
+#' The marginal bases are not reparametrized, so unlike [s()]
 #' the marginal linear effects are not separated out: the null space of
 #' the tensor penalty contains them, and they are shrunk towards no
 #' surface at all rather than towards a plane.
@@ -175,43 +175,43 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #' block would be rank deficient by exactly one and the penalty would not
 #' cover the deficiency. The block therefore carries the sum-to-zero
 #' constraint over the observed covariates
-#' (\code{\link[basis7]{constrain_basis}}): the term has one column fewer
+#' ([basis7::constrain_basis()]): the term has one column fewer
 #' than the product of its marginal dimensions, every column sums to zero
 #' over the data it was built on, and the penalty follows by congruence
 #' with its rank unchanged, the direction removed having been one of its
 #' null directions. The transform is stored in the blueprint and reapplied
-#' by \code{\link{term_predict}}, as the Demmler-Reinsch transform of
-#' \code{\link{s}} is.
+#' by [term_predict()], as the Demmler-Reinsch transform of
+#' [s()] is.
 #'
 #' The level of the surface is then the model's intercept, so a formula
-#' that removes it (\code{y ~ te(x, z) - 1}) fits a surface constrained to
+#' that removes it (`y ~ te(x, z) - 1`) fits a surface constrained to
 #' average zero over the data.
 #' }
 #'
 #' @param ... The covariates, expressions evaluated in the data, at least
 #'   two of them.
-#' @param by An optional factor or numeric variable, as in \code{\link{s}}.
+#' @param by An optional factor or numeric variable, as in [s()].
 #' @param k The basis dimension per margin, recycled to the number of
 #'   covariates. Defaults to 5.
 #' @param degree The spline degree per margin, recycled. Defaults to 3.
 #' @param bases An optional list of \pkg{basis7} bases, one per covariate,
 #'   used in place of the default B-splines.
 #' @param anisotropic Keep a smoothing parameter per margin? Defaults to
-#'   \code{TRUE}.
+#'   `TRUE`.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names. Defaults to a name built from the covariates.
 #' @param lambda The smoothing parameter, held at the value given and
-#'   ESTIMATED when left \code{NULL}, which is the default. An
+#'   ESTIMATED when left `NULL`, which is the default. An
 #'   anisotropic tensor product carries one per margin, so a vector
 #'   of that length, or a named one holding some of them.
-#' @param sparse Whether the block is built as a \code{dgCMatrix}.
-#'   \code{NULL}, the default, settles it at build from the size of the block.
-#'   Only a FACTOR \code{by} admits it, each row sitting in the block of its
-#'   own level; without one an explicit \code{TRUE} is refused rather than
-#'   ignored. See \code{\link{s}}.
+#' @param sparse Whether the block is built as a `dgCMatrix`.
+#'   `NULL`, the default, settles it at build from the size of the block.
+#'   Only a FACTOR `by` admits it, each row sitting in the block of its
+#'   own level; without one an explicit `TRUE` is refused rather than
+#'   ignored. See [s()].
 #'
-#' @return An object of class \code{\link{SmoothTerm}} (a specification;
-#'   see \code{\link{term_build}}).
+#' @return An object of class [SmoothTerm()] (a specification;
+#'   see [term_build()]).
 #'
 #' @examples
 #' set.seed(2)
@@ -222,12 +222,12 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #'
 #' @references
 #' Wood, S. N. (2006). Low-rank scale-invariant tensor product smooths for
-#' generalized additive mixed models. \emph{Biometrics} 62, 1025-1036.
+#' generalized additive mixed models. *Biometrics* 62, 1025-1036.
 #'
-#' Wood, S. N. (2017). \emph{Generalized Additive Models: An Introduction
-#' with R}, 2nd edition. Chapman and Hall/CRC.
+#' Wood, S. N. (2017). *Generalized Additive Models: An Introduction
+#' with R*, 2nd edition. Chapman and Hall/CRC.
 #'
-#' @seealso \code{\link{s}}, \code{\link{random}}, \code{\link{nl}}
+#' @seealso [s()], [random()], [nl()]
 #' @export
 te <- function(..., by = NULL, k = 5, degree = 3, bases = NULL,
                anisotropic = TRUE, label = NULL, lambda = NULL,

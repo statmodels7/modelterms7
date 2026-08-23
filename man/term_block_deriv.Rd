@@ -17,7 +17,7 @@ term_block_deriv(term, coef = NULL, v, ...)
 }
 \value{
 A numeric matrix, one row per observation and one column per
-  coefficient of the term.
+coefficient of the term.
 }
 \description{
 \eqn{\sum_c v_c\,\partial X_{ij}/\partial\beta_c}, one entry per observation
@@ -25,7 +25,7 @@ and column of the block: the block's own derivative taken along a direction
 the caller supplies.
 }
 \details{
-It is the ADJOINT of \code{\link{term_block_contract}} and neither computes
+It is the ADJOINT of \code{\link[=term_block_contract]{term_block_contract()}} and neither computes
 the other. That one contracts over the observations and the columns and
 answers per coefficient, which is what the gradient of a marginal criterion
 needs; this one contracts over the coefficients and answers per entry of the
@@ -33,7 +33,7 @@ block, which is what its HESSIAN needs -- there \eqn{\partial K/\partial\beta}
 is required in the direction the mode moves rather than traced.
 
 Both are \eqn{O(nm)} and read the same closed form, so this needs no
-derivative the other did not: for \code{\link{nl}}, writing
+derivative the other did not: for \code{\link[=nl]{nl()}}, writing
 \eqn{q_{p_1p_2} = f_{p_1p_2}h_{p_1}'h_{p_2}' + \delta_{p_1p_2}f_{p_1}h_{p_1}''},
 \deqn{\Big(\frac{\partial X}{\partial\beta}v\Big)[i, c_1] =
   Z_{p_1}[i,c_1]\sum_{p_2} q_{p_1p_2}(i)\,(Z_{p_2}v_{p_2})[i],}
@@ -49,5 +49,5 @@ dim(term_block_deriv(b, v = c(1, 0)))
 
 }
 \seealso{
-\code{\link{term_block_contract}}, \code{\link{term_refresh}}
+\code{\link[=term_block_contract]{term_block_contract()}}, \code{\link[=term_refresh]{term_refresh()}}
 }

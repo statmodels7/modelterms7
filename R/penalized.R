@@ -5,10 +5,10 @@ NULL
 #' @name PenalizedTerm
 #'
 #' @description
-#' A subclass of \code{\link{additive_term}} for a parametric block whose
+#' A subclass of [additive_term()] for a parametric block whose
 #' coefficients carry a \pkg{penalties7} penalty. Constructed by
-#' \code{\link{ridge}}, \code{\link{lasso}}, \code{\link{scad}} and
-#' \code{\link{mcp}}; the four differ only in the penalty their factory
+#' [ridge()], [lasso()], [scad()] and
+#' [mcp()]; the four differ only in the penalty their factory
 #' attaches at build time, and every derivative, hyperparameter, bound,
 #' link and kink is the penalty object's.
 #'
@@ -16,20 +16,20 @@ NULL
 #' @param input The block as given: a one-sided formula or a numeric
 #'   matrix.
 #' @param input_expr The expression that produced a matrix input, kept so
-#'   \code{\link{term_predict}} can re-evaluate it in new data.
+#'   [term_predict()] can re-evaluate it in new data.
 #' @param factory The function mapping a coefficient count to the penalty
 #'   object. It is called with the diagonal map as a second argument where
-#'   \code{standardize} asks for one, so a factory that will never be
+#'   `standardize` asks for one, so a factory that will never be
 #'   standardized may take the count alone.
 #' @param sparse Whether the FORMULA route builds the block as a
-#'   \code{dgCMatrix}. A matrix input is kept in whatever storage it arrives
+#'   `dgCMatrix`. A matrix input is kept in whatever storage it arrives
 #'   in and needs no such argument.
 #' @param standardize Whether the block's columns are put on a common scale
 #'   by the penalty's diagonal map.
 #'
-#' @return An object of class \code{PenalizedTerm}.
+#' @return An object of class `PenalizedTerm`.
 #'
-#' @seealso \code{\link{ridge}}
+#' @seealso [ridge()]
 #' @examples
 #' S7::S7_inherits(ridge(~x), PenalizedTerm)
 #' @export
@@ -143,8 +143,8 @@ PenalizedTerm <- S7::new_class(
 #'
 #' @description
 #' The input handling, the standardization and the prediction of the five
-#' penalized terms, documented once. Each of them -- \code{\link{ridge}},
-#' \code{\link{lasso}}, \code{\link{enet}}, \code{\link{scad}}, \code{\link{mcp}} -- has a page
+#' penalized terms, documented once. Each of them -- [ridge()],
+#' [lasso()], [enet()], [scad()], [mcp()] -- has a page
 #' of its own carrying its formula, its hyperparameters and where those may
 #' lie. Each takes its block as a one-sided formula or as a numeric
 #' matrix and attaches the corresponding \pkg{penalties7} object to the
@@ -153,15 +153,15 @@ PenalizedTerm <- S7::new_class(
 #' never restated by the term.
 #'
 #' @details
-#' A formula input goes through the \code{\link[stats]{model.matrix}}
+#' A formula input goes through the [stats::model.matrix()]
 #' machinery with the intercept removed (a penalized block does not
 #' penalize an intercept; the model's intercept lives in the parametric
 #' block), and its blueprint records the terms, the factor levels and the
-#' contrasts, exactly as \code{\link{linpar}} does. The exception is a
-#' formula whose intercept is all it has: \code{ridge(~1)} is a block of
+#' contrasts, exactly as [linpar()] does. The exception is a
+#' formula whose intercept is all it has: `ridge(~1)` is a block of
 #' that one column under the penalty, since removing it would leave no
 #' block. That is the form a subformula on another term's parameter uses,
-#' \code{gamma ~ lasso(~1)} saying that the parameter itself carries a
+#' `gamma ~ lasso(~1)` saying that the parameter itself carries a
 #' lasso, there being no parametric block of its own to hold an
 #' unpenalized intercept. A matrix input is used
 #' as given, and its columns are named after the matrix's own column
@@ -169,31 +169,31 @@ PenalizedTerm <- S7::new_class(
 #'
 #' Prediction for a matrix input re-evaluates the expression that produced
 #' the matrix in the new data, and ONLY there, so the intended use is a
-#' matrix column of the model data frame (\code{dd$R <- R}; then
-#' \code{ridge(R)} in the formula): a subset of the data then carries the
+#' matrix column of the model data frame (`dd$R <- R`; then
+#' `ridge(R)` in the formula): a subset of the data then carries the
 #' matching rows. A free-standing matrix from the calling environment
 #' builds, since its value was captured, but prediction is rejected --
 #' resolving it outside the new data would silently reuse the build-time
 #' rows.
 #'
-#' \code{\link{term_smooth}} is \code{TRUE} for \code{ridge} and
-#' \code{FALSE} for \code{lasso}, \code{enet}, \code{scad} and
-#' \code{mcp}, read from each penalty's kink set.
+#' [term_smooth()] is `TRUE` for `ridge` and
+#' `FALSE` for `lasso`, `enet`, `scad` and
+#' `mcp`, read from each penalty's kink set.
 #'
 #' @section Sparse storage:
 #' A MATRIX input is kept in whatever storage it arrives in, so a
-#' \code{dgCMatrix} passed to any of the five stays one and nothing has to be
-#' said. \code{sparse = TRUE} governs the FORMULA route, where the model
+#' `dgCMatrix` passed to any of the five stays one and nothing has to be
+#' said. `sparse = TRUE` governs the FORMULA route, where the model
 #' matrix would otherwise be built dense whatever the columns look like: it
-#' goes through \code{\link[Matrix]{sparse.model.matrix}}, which BUILDS the
+#' goes through [Matrix::sparse.model.matrix()], which BUILDS the
 #' block sparse rather than building a dense one and compressing it.
 #'
 #' It pays where the formula carries a factor of many levels, whose indicator
-#' columns hold one non-zero per row -- \code{lasso(~ 0 + g)} over hundreds of
+#' columns hold one non-zero per row -- `lasso(~ 0 + g)` over hundreds of
 #' groups is the case. On numeric covariates the block is dense whatever is
 #' asked for, and the sparse storage costs more than it saves. Left
-#' \code{NULL}, which is the default, the storage is settled at build by
-#' \code{\link{.resolve_sparse}}: the dense indicator part holds \code{n} times
+#' `NULL`, which is the default, the storage is settled at build by
+#' [.resolve_sparse()]: the dense indicator part holds `n` times
 #' its column count in cells against one non-zero per row, and the two routes
 #' cross at about \eqn{10^5} of those cells.
 #'
@@ -202,11 +202,11 @@ PenalizedTerm <- S7::new_class(
 #'
 #' @section Standardization:
 #' A hyperparameter is comparable across coordinates only where the
-#' coordinates share a scale: without \code{standardize} a lasso penalizes a
+#' coordinates share a scale: without `standardize` a lasso penalizes a
 #' column measured in metres more than the same column measured in
 #' kilometres, and a reader of \eqn{\lambda} has no way to know.
 #'
-#' \code{standardize = TRUE} divides each coefficient by the standard
+#' `standardize = TRUE` divides each coefficient by the standard
 #' deviation of its own column, and it does so through the penalty's
 #' diagonal map rather than by touching the design. With \eqn{z_j = x_j/s_j}
 #' the coefficient satisfies \eqn{\beta_{z,j} = s_j\beta_{x,j}}, so
@@ -226,7 +226,7 @@ PenalizedTerm <- S7::new_class(
 #' The spread is computed from the built block and frozen in the blueprint,
 #' so the same term standardizes identically in every equation of a
 #' distributional model and does not move with the working weights of a
-#' fit. A constant column takes \eqn{s_j = 1}. \code{\link{print}} shows the
+#' fit. A constant column takes \eqn{s_j = 1}. [print()] shows the
 #' values, a number that changes the meaning of \eqn{\lambda} having to be
 #' legible.
 #'
@@ -235,7 +235,7 @@ PenalizedTerm <- S7::new_class(
 #' AND \eqn{a_j = a/s_j} (or \eqn{\gamma_j = \gamma/s_j}), a composition of
 #' both hyperparameters per coordinate, which the map expresses exactly.
 #'
-#' \code{\link{random}} does not standardize and takes no such argument. Its
+#' [random()] does not standardize and takes no such argument. Its
 #' columns are grouping indicators and its penalty is a variance component
 #' with a meaning of its own; weighting it by the size of the groups would
 #' change the model rather than its parametrization.
@@ -246,15 +246,15 @@ PenalizedTerm <- S7::new_class(
 #' @param standardize A single logical: whether to penalize each
 #'   coefficient on the scale of its own column. See the section below.
 #' @param sparse Governs the FORMULA route: whether the block is built as a
-#'   \code{dgCMatrix} through \code{\link[Matrix]{sparse.model.matrix}} rather
-#'   than as a dense model matrix. \code{NULL}, the default, settles it at
-#'   build from the size of the design; \code{TRUE} and \code{FALSE} override
+#'   `dgCMatrix` through [Matrix::sparse.model.matrix()] rather
+#'   than as a dense model matrix. `NULL`, the default, settles it at
+#'   build from the size of the design; `TRUE` and `FALSE` override
 #'   it. A MATRIX input needs no such argument, being kept in whatever storage
 #'   it arrives in. See the section below.
 #' @param ... Not used, and reported: an argument named after another
 #'   penalty's hyperparameter is the mistake this catches.
-#' @return An object of class \code{\link{PenalizedTerm}} (a
-#'   specification; see \code{\link{term_build}}).
+#' @return An object of class [PenalizedTerm()] (a
+#'   specification; see [term_build()]).
 #'
 #' @examples
 #' dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
@@ -267,7 +267,7 @@ PenalizedTerm <- S7::new_class(
 #' dd$x3 <- 1000 * dd$x2
 #' term_penalty(term_build(lasso(~ x1 + x3, standardize = TRUE), dd))@map
 #'
-#' @seealso \code{\link{linpar}}, \code{\link{s}}, \code{\link{random}}, \code{\link{term_penalty}}, \code{\link{edf}}
+#' @seealso [linpar()], [s()], [random()], [term_penalty()], [edf()]
 #' @name penalized_terms
 #' @keywords internal
 NULL

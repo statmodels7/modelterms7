@@ -20,14 +20,14 @@ term_hessian(
 )
 }
 \arguments{
-\item{term}{A built \code{\link{RegimeTerm}}.}
+\item{term}{A built \code{\link[=RegimeTerm]{RegimeTerm()}}.}
 
 \item{eta}{The static part of the predictor the regimes shift.}
 
 \item{y}{The response.}
 
 \item{logdens}{A function of a predictor value and a row index returning
-the log-density there, as \code{\link{term_loglik}} takes it.}
+the log-density there, as \code{\link[=term_loglik]{term_loglik()}} takes it.}
 
 \item{grad}{A function of the same two arguments returning a matrix with
 one row per observation and one column per distribution parameter, the
@@ -36,7 +36,7 @@ derivative of the log-density in each predictor.}
 \item{hess}{A function of the same two arguments returning an array of
 second derivatives in the predictors, one slice per observation.}
 
-\item{psi}{The term's parameters, named as \code{\link{term_params}}.}
+\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
 
 \item{seed}{A list with one matrix per distribution parameter, each with
 one row per observation and one column per unknown, giving the
@@ -44,7 +44,7 @@ derivative of that predictor in the caller's unknowns with zeros in the
 columns the term's own parameters occupy.}
 
 \item{cols}{The columns of the unknown vector the term's own parameters
-occupy, in the order of \code{\link{term_params}}.}
+occupy, in the order of \code{\link[=term_params]{term_params()}}.}
 
 \item{level}{The index, among the distribution parameters, of the one the
 regimes shift.}
@@ -55,8 +55,8 @@ regimes shift.}
 }
 \value{
 A list with \code{loglik}, the per-observation contributions,
-  \code{gradient}, their weighted sum's derivative, and \code{hessian},
-  the observed Hessian.
+\code{gradient}, their weighted sum's derivative, and \code{hessian},
+the observed Hessian.
 }
 \description{
 The log-likelihood of a term that mixes over latent states, with its
@@ -65,7 +65,7 @@ vector: the coefficients of every equation together with the term's own
 parameters.
 }
 \details{
-\code{\link{term_posterior}} gives the gradient by Fisher's identity, and
+\code{\link[=term_posterior]{term_posterior()}} gives the gradient by Fisher's identity, and
 the matrix a caller can assemble from the same smoothed probabilities is
 the COMPLETE-DATA information, the ordinary one averaged over the states.
 That is the matrix an EM step inverts. It is not the observed information
@@ -121,5 +121,5 @@ dim(out$hessian)
 
 }
 \seealso{
-\code{\link{term_posterior}}, \code{\link{term_loglik}}
+\code{\link[=term_posterior]{term_posterior()}}, \code{\link[=term_loglik]{term_loglik()}}
 }

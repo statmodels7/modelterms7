@@ -17,7 +17,7 @@
 \item{curvature}{A function of the predictor returning
 \eqn{\partial^2\ell/\partial\eta^2} per observation.}
 
-\item{psi}{The parameters, named as \code{\link{term_params}}.}
+\item{psi}{The parameters, named as \code{\link[=term_params]{term_params()}}.}
 
 \item{...}{Unused.}
 
@@ -38,7 +38,7 @@ result does not depend on the count, bit for bit.}
 }
 \value{
 A list with \code{eta}, \code{jacobian} and \code{curv}, the
-  curvature read at each predictor.
+curvature read at each predictor.
 }
 \description{
 Runs the score-driven recursion over each group in time order and

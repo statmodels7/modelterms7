@@ -28,33 +28,33 @@ non-empty.}
 
 \item{hyper}{The hyperparameters of the term's penalty that the
 caller HELD, as a named list. Empty, the default, means every one
-of them is estimated. See \code{\link{term_hyper}}.}
+of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list. Empty, the default, leaves it to the
-criterion. See \code{\link{term_grid}}.}
+criterion. See \code{\link[=term_grid]{term_grid()}}.}
 
 \item{values}{The values a path visits, for each hyperparameter the
 caller wrote out, as a named list. Empty, the default, has the path
-build them. See \code{\link{term_values}}.}
+build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink
 reaches, as a fraction of the value that empties the block, or
 \code{numeric(0)} for the criterion's own. See
-\code{\link{term_path_min}}.}
+\code{\link[=term_path_min]{term_path_min()}}.}
 
 \item{search}{How the term's own hyperparameters are covered when it has
 several with a kink: \code{"grid"} for every combination of them,
 \code{"cyclic"} for one at a time, or \code{character(0)} for the
-default. See \code{\link{term_search}}.}
+default. See \code{\link[=term_search]{term_search()}}.}
 
-\item{X}{The design block, filled by \code{\link{term_build}}.}
+\item{X}{The design block, filled by \code{\link[=term_build]{term_build()}}.}
 
 \item{coef_names}{The coefficient names, filled by
-\code{\link{term_build}}.}
+\code{\link[=term_build]{term_build()}}.}
 
 \item{blueprint}{The information needed to reproduce the mapping on new
-data, filled by \code{\link{term_build}}.}
+data, filled by \code{\link[=term_build]{term_build()}}.}
 
 \item{penalty}{The penalty on the term's coefficients, or \code{NULL}.}
 
@@ -62,7 +62,7 @@ data, filled by \code{\link{term_build}}.}
 matrix.}
 
 \item{input_expr}{The expression that produced a matrix input, kept so
-\code{\link{term_predict}} can re-evaluate it in new data.}
+\code{\link[=term_predict]{term_predict()}} can re-evaluate it in new data.}
 
 \item{factory}{The function mapping a coefficient count to the penalty
 object. It is called with the diagonal map as a second argument where
@@ -80,10 +80,10 @@ in and needs no such argument.}
 An object of class \code{PenalizedTerm}.
 }
 \description{
-A subclass of \code{\link{additive_term}} for a parametric block whose
+A subclass of \code{\link[=additive_term]{additive_term()}} for a parametric block whose
 coefficients carry a \pkg{penalties7} penalty. Constructed by
-\code{\link{ridge}}, \code{\link{lasso}}, \code{\link{scad}} and
-\code{\link{mcp}}; the four differ only in the penalty their factory
+\code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}}, \code{\link[=scad]{scad()}} and
+\code{\link[=mcp]{mcp()}}; the four differ only in the penalty their factory
 attaches at build time, and every derivative, hyperparameter, bound,
 link and kink is the penalty object's.
 }
@@ -91,5 +91,5 @@ link and kink is the penalty object's.
 S7::S7_inherits(ridge(~x), PenalizedTerm)
 }
 \seealso{
-\code{\link{ridge}}
+\code{\link[=ridge]{ridge()}}
 }

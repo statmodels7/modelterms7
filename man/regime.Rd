@@ -17,8 +17,8 @@ recursion from the stationary distribution.}
 \item{label}{A single non-empty string naming the term.}
 }
 \value{
-An object of class \code{\link{RegimeTerm}} (a specification;
-  see \code{\link{term_build}}).
+An object of class \code{\link[=RegimeTerm]{RegimeTerm()}} (a specification;
+see \code{\link[=term_build]{term_build()}}).
 }
 \description{
 A latent Markov chain of \eqn{K} regimes, each shifting the linear
@@ -40,12 +40,12 @@ is \eqn{\sum_t \log c_t}. Normalizing at every step is what keeps the
 recursion representable: the unnormalized quantities are products of
 \eqn{t} densities, so they decay geometrically and reach zero in
 double precision on a series of a few hundred observations. The
-contributions \eqn{\log c_t} are what \code{\link{term_loglik}}
+contributions \eqn{\log c_t} are what \code{\link[=term_loglik]{term_loglik()}}
 returns, one per observation, together with their exact derivatives,
 propagated through the recursion beside the state.
 
 This is the second dynamic model of the package and it is the
-complement of the first: \code{\link{gas}} is driven by the score of
+complement of the first: \code{\link[=gas]{gas()}} is driven by the score of
 the density and moves continuously, while a regime chain moves in
 jumps between a finite number of states. Both are built from the
 density rather than from an error structure, so both apply to any
@@ -57,7 +57,7 @@ each of the others is the previous one plus a positive gap, carried on
 a log link. Without an ordering the regimes are exchangeable and the
 likelihood has \eqn{K!} identical maxima, which is not a hard problem
 to fit but is one whose answer cannot be reported. The transition
-matrix is \code{\link[parameters7]{transition_matrix}}, whose free
+matrix is \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}}, whose free
 values are the additive log-ratios of each row, so every row is a
 probability vector by construction.
 
@@ -76,5 +76,5 @@ nonstationary time series and the business cycle. \emph{Econometrica},
 57(2), 357--384.
 }
 \seealso{
-\code{\link{gas}}
+\code{\link[=gas]{gas()}}
 }

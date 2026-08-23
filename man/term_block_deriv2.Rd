@@ -17,7 +17,7 @@ term_block_deriv2(term, coef = NULL, v, u, ...)
 }
 \value{
 A numeric matrix, one row per observation and one column per
-  coefficient of the term.
+coefficient of the term.
 }
 \description{
 \eqn{\sum_{q,r} v_q u_r\,\partial^2 X_{ij}/\partial\beta_q\partial\beta_r},
@@ -25,9 +25,9 @@ one entry per observation and column of the block: the block's second
 derivative contracted in two directions the caller supplies.
 }
 \details{
-It stands one order above \code{\link{term_block_deriv}}, and it is
+It stands one order above \code{\link[=term_block_deriv]{term_block_deriv()}}, and it is
 contracted rather than returned as an array for the reason
-\code{\link{term_third}} is contracted in the structural branch: the full
+\code{\link[=term_third]{term_third()}} is contracted in the structural branch: the full
 object has \eqn{m} coefficient indices twice over beside the \eqn{n} rows
 and \eqn{m} columns of the block, and only its contraction in the two
 directions the penalized mode moves is ever read.
@@ -45,12 +45,12 @@ parameter loses that symmetry.
 
 The base method returns zeros. That is exact and not an approximation: a
 design that does not move with its coefficients has a second derivative
-that is identically zero, which covers \code{\link{linpar}},
-\code{\link{s}}, \code{\link{te}}, \code{\link{random}} and the five
+that is identically zero, which covers \code{\link[=linpar]{linpar()}},
+\code{\link[=s]{s()}}, \code{\link[=te]{te()}}, \code{\link[=random]{random()}} and the five
 penalized constructors without a method of their own.
 
-For \code{\link{nl}} the closed form is one order above the one
-\code{\link{term_block_deriv}} carries. With \eqn{\theta_p = h_p(z_p)} and
+For \code{\link[=nl]{nl()}} the closed form is one order above the one
+\code{\link[=term_block_deriv]{term_block_deriv()}} carries. With \eqn{\theta_p = h_p(z_p)} and
 \eqn{z_p = Z_p\beta_{(p)}}, writing \eqn{\tilde v_p = Z_p v_{(p)}} and
 \eqn{\tilde u_p = Z_p u_{(p)}} for the directions carried onto each
 parameter's own scale,
@@ -71,25 +71,25 @@ delta carries, and the fifth from \eqn{h''_{p_1}}. Exchanging \eqn{p_2} and
 where they are, which is the symmetry in \code{v} and \code{u}.
 
 Nothing new is derived: \eqn{f_{p_1p_2p_3}} is the third order of
-\code{\link{nl_fderiv}}, served by the same four-way machinery as the lower
-orders, and \eqn{h'''} is \code{\link[linkfunctions7]{d3linkinv}}, exact for
+\code{\link[=nl_fderiv]{nl_fderiv()}}, served by the same four-way machinery as the lower
+orders, and \eqn{h'''} is \code{\link[linkfunctions7:d3linkinv]{linkfunctions7::d3linkinv()}}, exact for
 every shipped link and numerical for a user-defined one. The cost is
 \eqn{O(nP^3)} in the term's OWN parameters, of which there are two to four
 in practice, and the call is made once per pair of hyperparameters rather
 than once per observation.
 
 A break-point term answers according to its construction. With
-\code{smoothed} an \code{\link[penalties7]{abs_smoother}} the block is the
+\code{smoothed} an \code{\link[penalties7:abs_smoother]{penalties7::abs_smoother()}} the block is the
 true Jacobian and the closed forms are the smoother's own one order further
-up than \code{\link{term_block_deriv}} reads them: with \eqn{u = x - \psi},
+up than \code{\link[=term_block_deriv]{term_block_deriv()}} reads them: with \eqn{u = x - \psi},
 \eqn{P = s''/2}, \eqn{T = s'''/2} and \eqn{Q = s''''/2}, the change columns
 contribute \eqn{P} and \eqn{T} twice in the break-point and the break-point
 column contributes the two mixed pieces and \eqn{-(\gamma T + \delta Q)}.
-The sharp constructions answer zeros: for \code{\link{seg}} the second
+The sharp constructions answer zeros: for \code{\link[=seg]{seg()}} the second
 derivative is genuinely zero away from the break-points, the truncated
 line's derivative in the position being an indicator and the position
-column being linear in the change, while for \code{\link{jump}} and
-\code{\link{jseg}} the block is a working linearization with a frozen
+column being linear in the change, while for \code{\link[=jump]{jump()}} and
+\code{\link[=jseg]{jseg()}} the block is a working linearization with a frozen
 weight rather than a Jacobian, which is why the first-order generics
 already answer zeros there.
 
@@ -98,7 +98,7 @@ exact rather than approximate. Where a break-point sits against its
 confinement limit the whole contribution is zero, every addend carrying a
 direction in the break-point -- which the FIRST derivative does not, the
 position column moving with the change whatever the position does. And
-under \code{\link[penalties7]{smooth_quintic}}, which is exact outside
+under \code{\link[penalties7:smooth_quintic]{penalties7::smooth_quintic()}}, which is exact outside
 \eqn{[-h, h]}, the answer is zero on every observation further than the
 width from a break-point; that smoother is \eqn{C^3}, so its fourth
 derivative jumps at \eqn{\pm h} and the answer is exact away from those two
@@ -116,6 +116,6 @@ max(abs(term_block_deriv2(b, v = c(1, 0), u = c(0, 1)) -
 
 }
 \seealso{
-\code{\link{term_block_deriv}}, \code{\link{term_block_contract}},
-  \code{\link{nl_fderiv}}
+\code{\link[=term_block_deriv]{term_block_deriv()}}, \code{\link[=term_block_contract]{term_block_contract()}},
+\code{\link[=nl_fderiv]{nl_fderiv()}}
 }

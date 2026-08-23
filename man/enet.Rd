@@ -46,10 +46,10 @@ criterion. Only the sweep by kink size uses it.}
 
 \item{search}{\code{"grid"} to visit every combination of \eqn{\lambda}
 and \eqn{\alpha}, \code{"cyclic"} to sweep one at a time with the other
-held. See \code{\link{term_search}}.}
+held. See \code{\link[=term_search]{term_search()}}.}
 
 \item{sparse}{Governs the FORMULA route: whether the block is built as a
-\code{dgCMatrix} through \code{\link[Matrix]{sparse.model.matrix}} rather
+\code{dgCMatrix} through \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}} rather
 than as a dense model matrix. \code{NULL}, the default, settles it at
 build from the size of the design; \code{TRUE} and \code{FALSE} override
 it. A MATRIX input needs no such argument, being kept in whatever storage
@@ -59,8 +59,8 @@ it arrives in. See the section below.}
 penalty's hyperparameter is the mistake this catches.}
 }
 \value{
-An object of class \code{\link{PenalizedTerm}} (a specification;
-  see \code{\link{term_build}}).
+An object of class \code{\link[=PenalizedTerm]{PenalizedTerm()}} (a specification;
+see \code{\link[=term_build]{term_build()}}).
 }
 \description{
 The lasso and the ridge mixed: a kink at zero, so the term still selects,
@@ -73,7 +73,7 @@ of choosing arbitrarily among them.
   + p\log Z(\lambda, \alpha),}
 the normalizing constant being that of the product of a Laplace and a
 Gaussian at zero
-(\code{\link[distributions7]{enet_distrib}}). It depends on BOTH
+(\code{\link[distributions7:enet_distrib]{distributions7::enet_distrib()}}). It depends on BOTH
 hyperparameters, which is what makes them estimable rather than merely
 settable, and what a penalty written as a formula would not have.
 
@@ -102,7 +102,7 @@ the elastic net. \emph{Journal of the Royal Statistical Society, Series B}
 67, 301--320.
 }
 \seealso{
-\code{\link{penalized_terms}} for what the five share,
-  \code{\link{ridge}}, \code{\link{lasso}}, \code{\link{scad}},
-  \code{\link{mcp}}, \code{\link[penalties7]{elasticnet_penalty}}
+\code{\link[=penalized_terms]{penalized_terms()}} for what the five share,
+\code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}}, \code{\link[=scad]{scad()}},
+\code{\link[=mcp]{mcp()}}, \code{\link[penalties7:ridge_penalty]{penalties7::elasticnet_penalty()}}
 }

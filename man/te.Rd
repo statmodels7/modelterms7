@@ -20,7 +20,7 @@ te(
 \item{...}{The covariates, expressions evaluated in the data, at least
 two of them.}
 
-\item{by}{An optional factor or numeric variable, as in \code{\link{s}}.}
+\item{by}{An optional factor or numeric variable, as in \code{\link[=s]{s()}}.}
 
 \item{k}{The basis dimension per margin, recycled to the number of
 covariates. Defaults to 5.}
@@ -45,15 +45,15 @@ of that length, or a named one holding some of them.}
 \code{NULL}, the default, settles it at build from the size of the block.
 Only a FACTOR \code{by} admits it, each row sitting in the block of its
 own level; without one an explicit \code{TRUE} is refused rather than
-ignored. See \code{\link{s}}.}
+ignored. See \code{\link[=s]{s()}}.}
 }
 \value{
-An object of class \code{\link{SmoothTerm}} (a specification;
-  see \code{\link{term_build}}).
+An object of class \code{\link[=SmoothTerm]{SmoothTerm()}} (a specification;
+see \code{\link[=term_build]{term_build()}}).
 }
 \description{
 A tensor-product smooth: a \pkg{basis7} basis in each covariate,
-combined by \code{\link[basis7]{tensor_basis}}, with a roughness
+combined by \code{\link[basis7:tensor_basis]{basis7::tensor_basis()}}, with a roughness
 penalty on the product coefficients.
 }
 \details{
@@ -63,14 +63,14 @@ product, \eqn{P_v = I \otimes \cdots \otimes P_v \otimes \cdots
 \otimes I}, each penalizing curvature in one direction.
 
 With \code{anisotropic = TRUE}, the default, those components enter
-\code{\link[penalties7]{additive_penalty}} and keep a smoothing
+\code{\link[penalties7:additive_penalty]{penalties7::additive_penalty()}} and keep a smoothing
 parameter each, so the surface may be rough in one direction and smooth
 in another -- which is the usual reason for fitting a tensor smooth
 rather than an isotropic one. With \code{anisotropic = FALSE} they are
 summed first and one parameter governs the total, which costs one
 hyperparameter instead of one per margin.
 
-The marginal bases are not reparametrized, so unlike \code{\link{s}}
+The marginal bases are not reparametrized, so unlike \code{\link[=s]{s()}}
 the marginal linear effects are not separated out: the null space of
 the tensor penalty contains them, and they are shrunk towards no
 surface at all rather than towards a plane.
@@ -81,13 +81,13 @@ the penalty's null space contains as well, so beside an intercept the
 block would be rank deficient by exactly one and the penalty would not
 cover the deficiency. The block therefore carries the sum-to-zero
 constraint over the observed covariates
-(\code{\link[basis7]{constrain_basis}}): the term has one column fewer
+(\code{\link[basis7:constrain_basis]{basis7::constrain_basis()}}): the term has one column fewer
 than the product of its marginal dimensions, every column sums to zero
 over the data it was built on, and the penalty follows by congruence
 with its rank unchanged, the direction removed having been one of its
 null directions. The transform is stored in the blueprint and reapplied
-by \code{\link{term_predict}}, as the Demmler-Reinsch transform of
-\code{\link{s}} is.
+by \code{\link[=term_predict]{term_predict()}}, as the Demmler-Reinsch transform of
+\code{\link[=s]{s()}} is.
 
 The level of the surface is then the model's intercept, so a formula
 that removes it (\code{y ~ te(x, z) - 1}) fits a surface constrained to
@@ -110,5 +110,5 @@ Wood, S. N. (2017). \emph{Generalized Additive Models: An Introduction
 with R}, 2nd edition. Chapman and Hall/CRC.
 }
 \seealso{
-\code{\link{s}}, \code{\link{random}}, \code{\link{nl}}
+\code{\link[=s]{s()}}, \code{\link[=random]{random()}}, \code{\link[=nl]{nl()}}
 }

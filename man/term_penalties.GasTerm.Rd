@@ -4,12 +4,12 @@
 \alias{term_penalties.GasTerm}
 \title{Penalties of a Score-Driven Term}
 \arguments{
-\item{term}{A built \code{\link{GasTerm}}.}
+\item{term}{A built \code{\link[=GasTerm]{GasTerm()}}.}
 
 \item{...}{Unused.}
 }
 \value{
-A list of entries, as \code{\link{term_penalties}} documents.
+A list of entries, as \code{\link[=term_penalties]{term_penalties()}} documents.
 }
 \description{
 The penalties the subformulas' sub-terms declare, each under the key

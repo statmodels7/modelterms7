@@ -5,7 +5,7 @@ NULL
 #'
 #' @description
 #' Creates the specification of an unpenalized parametric block: the design
-#' matrix of a one-sided formula, with the usual \code{\link[stats]{model.matrix}}
+#' matrix of a one-sided formula, with the usual [stats::model.matrix()]
 #' conventions for factors, contrasts, interactions and the intercept.
 #'
 #' @details
@@ -15,25 +15,25 @@ NULL
 #' \deqn{\eta = X\beta,}
 #'
 #' with no penalty attached, so all \eqn{p = \operatorname{ncol}(X)}
-#' coefficients are free and \code{\link{edf}} counts every one of them.
+#' coefficients are free and [edf()] counts every one of them.
 #'
-#' \code{\link{interpret_formula}} collects the bare covariates of a model
-#' formula into one term of this kind, so \code{y ~ x1 + x2} and
-#' \code{y ~ linpar(~ x1 + x2)} produce the same block; the explicit
+#' [interpret_formula()] collects the bare covariates of a model
+#' formula into one term of this kind, so `y ~ x1 + x2` and
+#' `y ~ linpar(~ x1 + x2)` produce the same block; the explicit
 #' constructor exists for callers who want several parametric blocks with
 #' distinct labels.
 #'
 #' Building the term records a blueprint: the terms object, the factor
-#' levels and the contrasts. \code{\link{term_predict}} reapplies the
+#' levels and the contrasts. [term_predict()] reapplies the
 #' mapping through that blueprint, so a factor column in new data is
 #' encoded against the levels seen at build time, and a level the
 #' blueprint does not know is rejected rather than re-encoded. Missing
-#' values are propagated (\code{na.pass}), never dropped, so the block
+#' values are propagated (`na.pass`), never dropped, so the block
 #' stays row-aligned with the response.
 #'
 #' @section Sparse storage:
-#' \code{sparse = TRUE} builds the block through
-#' \code{\link[Matrix]{sparse.model.matrix}}, which BUILDS it sparse rather
+#' `sparse = TRUE` builds the block through
+#' [Matrix::sparse.model.matrix()], which BUILDS it sparse rather
 #' than building a dense matrix and compressing it -- the second would cost
 #' the memory the choice exists to avoid. Measured at 20000 rows and a factor
 #' of 1000 levels, 0.002 s and 1.8 MB against 0.100 s and 161.5 MB, the
@@ -43,27 +43,27 @@ NULL
 #' It pays where the formula carries a FACTOR OF MANY LEVELS, whose indicator
 #' columns hold one non-zero per row. On numeric covariates the block is dense
 #' whatever is asked for, and the sparse storage then costs more than it
-#' saves. \code{sparse = NULL}, the default, settles it at build from the
-#' design: the dense indicator part holds \code{n} times its column count in
+#' saves. `sparse = NULL`, the default, settles it at build from the
+#' design: the dense indicator part holds `n` times its column count in
 #' cells against one non-zero per row, and the two routes cross at about
-#' \eqn{10^5} of those cells, which is the rule \code{\link{.resolve_sparse}}
-#' applies. \code{TRUE} and \code{FALSE} override it. The storage that was
-#' settled is part of the blueprint, so \code{\link{term_predict}} builds new
+#' \eqn{10^5} of those cells, which is the rule [.resolve_sparse()]
+#' applies. `TRUE` and `FALSE` override it. The storage that was
+#' settled is part of the blueprint, so [term_predict()] builds new
 #' data the same way.
 #'
-#' @param formula A one-sided formula, e.g. \code{~ x1 + x2}.
+#' @param formula A one-sided formula, e.g. `~ x1 + x2`.
 #' @param label A character string; when non-empty it is prefixed to the
-#'   coefficient names as \code{label.name}.
-#' @param sparse Whether to build the block as a \code{dgCMatrix}.
-#'   \code{NULL}, the default, settles it from the design. See the section
+#'   coefficient names as `label.name`.
+#' @param sparse Whether to build the block as a `dgCMatrix`.
+#'   `NULL`, the default, settles it from the design. See the section
 #'   below.
 #' @param contrasts The contrasts for the formula's factors, as a named list
-#'   of the kind \code{\link[stats]{model.matrix}}'s \code{contrasts.arg}
-#'   takes. \code{NULL}, the default, leaves them to the session's
-#'   \code{options("contrasts")}.
+#'   of the kind [stats::model.matrix()]'s `contrasts.arg`
+#'   takes. `NULL`, the default, leaves them to the session's
+#'   `options("contrasts")`.
 #'
-#' @return An object of class \code{\link{LinparTerm}} (a specification;
-#'   see \code{\link{term_build}}).
+#' @return An object of class [LinparTerm()] (a specification;
+#'   see [term_build()]).
 #'
 #' @examples
 #' dd <- data.frame(x = 1:4, g = factor(c("a", "a", "b", "b")))
@@ -71,7 +71,7 @@ NULL
 #' term_matrix(built)
 #' term_coef_names(built)
 #'
-#' @seealso \code{\link{ridge}}, \code{\link{lasso}}, \code{\link{scad}}, \code{\link{mcp}}, \code{\link{enet}}
+#' @seealso [ridge()], [lasso()], [scad()], [mcp()], [enet()]
 #' @export
 linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
   if (!inherits(formula, "formula")) {
@@ -93,15 +93,15 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 #' The Model Matrix of a Formula, in Either Storage
 #'
 #' @description
-#' \code{\link[stats]{model.matrix}} or
-#' \code{\link[Matrix]{sparse.model.matrix}} on the same terms object, with
+#' [stats::model.matrix()] or
+#' [Matrix::sparse.model.matrix()] on the same terms object, with
 #' the bookkeeping stripped either way.
 #'
 #' @details
 #' The sparse route BUILDS the matrix sparse; it does not build a dense one
 #' and compress it, which would cost the memory the choice exists to avoid.
 #' Measured at 20000 rows and a factor of 1000 levels, 0.002 s and 1.8 MB
-#' against \code{stats::model.matrix}'s 0.100 s and 161.5 MB, the numbers
+#' against `stats::model.matrix`'s 0.100 s and 161.5 MB, the numbers
 #' identical; and a design that would be 32 GB dense builds in 0.02 s and
 #' 19 MB, which is what says there is no dense intermediate.
 #'
@@ -112,12 +112,12 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 #'
 #' @param tt A terms object.
 #' @param mf The model frame.
-#' @param contrasts The contrasts, or \code{NULL} for the session's.
-#' @param sparse Whether to build a \code{dgCMatrix}.
+#' @param contrasts The contrasts, or `NULL` for the session's.
+#' @param sparse Whether to build a `dgCMatrix`.
 #'
-#' @return A numeric matrix or a \code{dgCMatrix}.
+#' @return A numeric matrix or a `dgCMatrix`.
 #'
-#' @seealso \code{\link{linpar}}
+#' @seealso [linpar()]
 #'
 #' @keywords internal
 .design_matrix <- function(tt, mf, contrasts = NULL, sparse = FALSE) {
@@ -135,8 +135,8 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 
 #' Check a Term's Storage and Contrasts
 #'
-#' @param sparse What the constructor was given: \code{TRUE}, \code{FALSE}, or
-#'   \code{NULL} for the storage to be settled at build from the design.
+#' @param sparse What the constructor was given: `TRUE`, `FALSE`, or
+#'   `NULL` for the storage to be settled at build from the design.
 #' @param contrasts What the constructor was given.
 #' @param what The term's label, for the message.
 #'
@@ -177,7 +177,7 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 #'
 #' @return A single number, zero when no term carries a factor.
 #'
-#' @seealso \code{\link{.resolve_sparse}}
+#' @seealso [.resolve_sparse()]
 #'
 #' @keywords internal
 .indicator_cols <- function(tt, mf) {
@@ -203,14 +203,14 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 #' Settle Whether a Block Is Built Sparse
 #'
 #' @description
-#' Passes an explicit \code{TRUE} or \code{FALSE} through, and where the
-#' caller left \code{NULL} decides from the size of the block.
+#' Passes an explicit `TRUE` or `FALSE` through, and where the
+#' caller left `NULL` decides from the size of the block.
 #'
 #' @details
-#' The dense indicator part holds \code{n * ncol_ind} cells where the sparse
+#' The dense indicator part holds `n * ncol_ind` cells where the sparse
 #' one holds one non-zero per row, so that product is what the two routes are
 #' separated by, and the threshold is read off it rather than off a count of
-#' levels. Measured end to end on \code{y ~ 0 + g + s(x)} over eighteen
+#' levels. Measured end to end on `y ~ 0 + g + s(x)` over eighteen
 #' combinations of sample size and level count, the routes cross at about
 #' \eqn{10^5} cells: at \eqn{n = 1000} the sparse route loses at every level
 #' count up to sixty (\eqn{6 \times 10^4} cells, 0.93 times the dense route),
@@ -223,14 +223,14 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 #' and the block is built dense, which is what the measurements ask for there
 #' (0.66 to 0.90 times the dense route on purely continuous covariates).
 #'
-#' @param sparse \code{TRUE}, \code{FALSE}, or \code{NULL} to decide here.
+#' @param sparse `TRUE`, `FALSE`, or `NULL` to decide here.
 #' @param n The number of rows.
 #' @param ncol_ind The columns coming from indicators, from
-#'   \code{\link{.indicator_cols}}.
+#'   [.indicator_cols()].
 #'
 #' @return A single logical.
 #'
-#' @seealso \code{\link{.indicator_cols}}, \code{\link{linpar}}
+#' @seealso [.indicator_cols()], [linpar()]
 #'
 #' @keywords internal
 .resolve_sparse <- function(sparse, n, ncol_ind) {

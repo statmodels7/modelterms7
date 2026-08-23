@@ -4,7 +4,7 @@
 \alias{term_posterior.RegimeTerm}
 \title{Smoothed State Probabilities of a Regime Term}
 \arguments{
-\item{term}{A built \code{\link{RegimeTerm}}.}
+\item{term}{A built \code{\link[=RegimeTerm]{RegimeTerm()}}.}
 
 \item{eta}{The static predictor.}
 
@@ -18,10 +18,10 @@
 }
 \value{
 A numeric matrix, one row per observation and one column per
-  regime.
+regime.
 }
 \description{
-The forward pass of \code{\link{term_loglik}} with a backward pass beside
+The forward pass of \code{\link[=term_loglik]{term_loglik()}} with a backward pass beside
 it, both normalized, giving the probability of each regime at each
 observation given the whole series.
 }

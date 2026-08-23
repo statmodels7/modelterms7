@@ -12,10 +12,10 @@ gas_levinson2(pacf)
 }
 \value{
 A list with \code{phi}, \code{jacobian} and \code{hessian}, the
-  last a list of one symmetric matrix per coefficient.
+last a list of one symmetric matrix per coefficient.
 }
 \description{
-\code{\link{gas_levinson}} with the second derivatives of the
+\code{\link[=gas_levinson]{gas_levinson()}} with the second derivatives of the
 coefficients in the partial autocorrelations propagated as well.
 }
 \details{
@@ -36,6 +36,6 @@ term needs the second derivative of the predictor in the term's own
 parameters, and the persistence reaches the predictor through this map.
 }
 \seealso{
-\code{\link{gas_levinson}}
+\code{\link[=gas_levinson]{gas_levinson()}}
 }
 \keyword{internal}

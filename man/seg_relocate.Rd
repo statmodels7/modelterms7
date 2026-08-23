@@ -7,7 +7,7 @@
 seg_relocate(term, psi)
 }
 \arguments{
-\item{term}{A built break-point term (see \code{\link{term_build}}).}
+\item{term}{A built break-point term (see \code{\link[=term_build]{term_build()}}).}
 
 \item{psi}{A numeric vector, one position per break-point.}
 }
@@ -39,5 +39,5 @@ seg_psi(seg_relocate(b, 6))
 
 }
 \seealso{
-\code{\link{seg_reheat}}, \code{\link{seg_start}}
+\code{\link[=seg_reheat]{seg_reheat()}}, \code{\link[=seg_start]{seg_start()}}
 }

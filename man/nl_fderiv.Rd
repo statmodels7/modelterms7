@@ -7,7 +7,7 @@
 nl_fderiv(term, coef = NULL, order = 1L)
 }
 \arguments{
-\item{term}{A built \code{\link{NlTerm}}.}
+\item{term}{A built \code{\link[=NlTerm]{NlTerm()}}.}
 
 \item{coef}{The coefficients, or \code{NULL} for the ones the term carries.}
 
@@ -23,7 +23,7 @@ derivative surfaces.
 }
 \details{
 The route is chosen per ORDER, highest first: a function supplied to
-\code{\link{nl}} is used where there is one, then the symbolic route where
+\code{\link[=nl]{nl()}} is used where there is one, then the symbolic route where
 the expression can be differentiated, and otherwise one stencil applied to
 the highest order that is analytic -- which includes a supplied one. That is
 what makes writing out a Hessian pay twice: the third and fourth orders are
@@ -41,5 +41,5 @@ names(nl_fderiv(b, order = 2))
 
 }
 \seealso{
-\code{\link{nl}}
+\code{\link[=nl]{nl()}}
 }

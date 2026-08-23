@@ -8,7 +8,7 @@ check_term(term, data, verbose = TRUE)
 }
 \arguments{
 \item{term}{A term specification (an object inheriting from
-\code{\link{model_term}}).}
+\code{\link[=model_term]{model_term()}}).}
 
 \item{data}{A data frame.}
 
@@ -16,13 +16,13 @@ check_term(term, data, verbose = TRUE)
 }
 \value{
 Invisibly, a data frame with columns \code{check},
-  \code{status} (\code{"OK"} or \code{"FAILED"}) and \code{info}.
+\code{status} (\code{"OK"} or \code{"FAILED"}) and \code{info}.
 }
 \description{
 Runs a battery of structural checks on a term specification against a
 data frame: that it builds, that the block's dimensions, names and
 count agree, that the smoothness flag is a logical scalar, that
-\code{\link{term_predict}} on the same data reproduces the block
+\code{\link[=term_predict]{term_predict()}} on the same data reproduces the block
 exactly, and that prediction on a subset of rows equals the
 corresponding rows of the block. The last check is the blueprint's: a
 term that re-derives factor levels from the new data instead of reusing
@@ -53,5 +53,5 @@ all(res$status == "OK")
 
 }
 \seealso{
-\code{\link{interpret_formula}}, \code{\link{cens}}
+\code{\link[=interpret_formula]{interpret_formula()}}, \code{\link[=cens]{cens()}}
 }

@@ -13,7 +13,7 @@ component_sub_index(index, subs)
 }
 \value{
 A list of integer vectors, one per sub-term, empty where there are
-  no sub-terms.
+no sub-terms.
 }
 \description{
 Splits a developed parameter's columns among the sub-terms developing it,

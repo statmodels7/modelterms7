@@ -6,7 +6,7 @@
 \arguments{
 \item{term}{A built score-driven term.}
 
-\item{psi}{The term's parameters, named as \code{\link{term_params}}.}
+\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
 
 \item{f_past}{The level at each observed row.}
 
@@ -43,6 +43,6 @@ the rows named. A group the fit never saw is rejected for the same
 reason -- there is no state to continue.
 }
 \seealso{
-\code{\link{term_continue}}, \code{\link{term_filter}}
+\code{\link[=term_continue]{term_continue()}}, \code{\link[=term_filter]{term_filter()}}
 }
 \keyword{internal}
