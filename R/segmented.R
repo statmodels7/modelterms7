@@ -1668,6 +1668,23 @@ S7::method(term_block_deriv, SegTerm) <- function(term, coef = NULL, v, ...) {
   out
 }
 
+S7::method(term_components, SegTerm) <- function(term, ...) {
+  bp <- term@blueprint
+  if (!length(bp)) return(list())
+  # the same division the block is assembled from: `index` per parameter --
+  # beta, the changes, the break-points -- and `subs` where one of them is
+  # developed. A break-point developed by `psi ~ random(~1 | g)` carries TWO
+  # sub-terms, an unpenalized intercept and the random block, and the entry
+  # reports both.
+  out <- lapply(bp$params, function(p) {
+    s <- bp$subs[[p]]
+    ss <- if (is.null(s)) list() else s
+    list(name = p, index = bp$index[[p]], subs = ss,
+         sub_index = component_sub_index(bp$index[[p]], ss))
+  })
+  stats::setNames(out, bp$params)
+}
+
 S7::method(term_block_deriv2, SegTerm) <- function(term, coef = NULL, v, u,
                                                    ...) {
   bp <- term@blueprint
@@ -2487,8 +2504,15 @@ S7::method(term_coef_start, SegTerm) <- function(term, target = NULL, ...) {
 S7::method(term_readable, SegTerm) <- function(term, zeta, ...) {
   .assert_built(term)
   bp <- term@blueprint
-  if (isTRUE(bp$developed)) return(NULL)
   cf <- as.numeric(zeta)
+  # QUANTITY BY QUANTITY and not all or nothing. A developed parameter is a
+  # vector of coefficients over covariates and has no one value to report,
+  # so it is skipped; the parameters beside it are unaffected and are
+  # exactly what a reader wants, the working coefficients a discontinuous
+  # construction is fitted through being no part of the model. A jump's
+  # position is read off its change of level, so it is reported only where
+  # both are numbers.
+  dev <- function(p) !is.null(bp$subs[[p]])
   K <- bp$npsi
   np <- length(cf)
   nm <- character(0)
@@ -2502,37 +2526,44 @@ S7::method(term_readable, SegTerm) <- function(term, zeta, ...) {
   }
   sel <- function(i) { e <- numeric(np); e[i] <- 1; e }
 
-  if (bp$linear) push("beta", cf[at("beta")], sel(at("beta")))
+  if (bp$linear && !dev("beta")) push("beta", cf[at("beta")], sel(at("beta")))
   if (bp$kind %in% c("seg", "jseg")) {
     for (k in seq_len(K)) {
+      if (dev(paste0("gamma", k))) next
       i <- at(paste0("gamma", k))
       push(paste0("gamma", k), cf[i], sel(i))
     }
   }
   if (bp$kind %in% c("jump", "jseg")) {
     for (k in seq_len(K)) {
+      if (dev(paste0("delta", k))) next
       i <- at(paste0("delta", k))
       push(paste0("delta", k), cf[i], sel(i))
     }
   }
-  # the positions the TERM holds, read by the same function it reads them
-  # with, so that this and seg_psi() cannot report two numbers for one
-  # quantity
-  pos <- .seg_positions(bp, cf, 1L, bp$Z, bp$pk)$psi[1L, ]
+  # the position the TERM holds, read by the same function it reads it with,
+  # so that this and seg_psi() cannot report two numbers for one quantity
+  pos_at <- function(k) {
+    v <- .seg_pk(bp, cf, k, bp$pk[[k]])
+    min(max(v, bp$lim[1L]), bp$lim[2L])
+  }
   for (k in seq_len(K)) {
+    if (dev(paste0("psi", k))) next
     ip <- at(paste0("psi", k))
     if (bp$kind == "seg" || !is.null(bp$smooth)) {
-      push(paste0("psi", k), pos[k], sel(ip))
+      push(paste0("psi", k), pos_at(k), sel(ip))
     } else {
+      if (dev(paste0("delta", k))) next
       id <- at(paste0("delta", k))
       d <- cf[id]
       if (abs(d) < 1e-12) d <- sign(d + (d == 0)) * 1e-12
       j <- numeric(np)
       j[ip] <- -1 / d
       j[id] <- cf[ip] / d^2
-      push(paste0("psi", k), pos[k], j)
+      push(paste0("psi", k), pos_at(k), j)
     }
   }
+  if (!length(nm)) return(NULL)
   J <- do.call(rbind, rows)
   dimnames(J) <- list(nm, term@coef_names)
   list(name = nm, value = val, jacobian = J,

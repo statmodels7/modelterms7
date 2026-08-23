@@ -2200,3 +2200,78 @@ S7::method(print, MarginalBreakTerm) <- function(x, ...) {
   }
   invisible(x)
 }
+
+
+#' @name term_simulate.MarginalBreakTerm
+#'
+#' @title Drawing Break-Points From Their Prior
+#'
+#' @description
+#' One set of latent positions per group, drawn from the prior the term
+#' declares, and the predictor each observation gets from them.
+#'
+#' @details
+#' The latent positions ARE the model here -- they are integrated out of the
+#' likelihood rather than estimated -- so simulating from the model means
+#' drawing them, once per group, and then evaluating the term at what was
+#' drawn. Under the gaussian prior that is \eqn{N(m_k, \tau_k)}; under an
+#' explicit prior it is a draw from that family with its location fixed at
+#' zero, shifted by \eqn{m_1}, which is the same convention the likelihood
+#' is written with.
+#'
+#' The shift is the term's own construction read at the drawn positions: a
+#' change of level at each break-point for the step kind, a change of slope
+#' for the continuous one, both for the joint one, and the linear term
+#' beside them where the term carries it.
+#'
+#' The response is not drawn -- the positions do not read it -- so the
+#' caller draws at the returned predictor.
+#'
+#' @param term A built \code{\link{MarginalBreakTerm}}.
+#' @param psi The term's parameters, on the parameter scale.
+#' @param eta The static part of the predictor.
+#' @param draw Ignored: the positions do not read the response.
+#' @param ... Ignored.
+#'
+#' @return A list with \code{eta}, \code{y} (\code{NULL}) and
+#'   \code{latent}, a data frame of the drawn positions by group.
+#'
+#' @seealso \code{\link{term_simulate}}, \code{\link{seg}}
+#'
+#' @keywords internal
+S7::method(term_simulate, MarginalBreakTerm) <- function(term, psi, eta,
+                                                         draw, ...) {
+  bp <- .marg_built(term)
+  v <- .marg_check_psi(term, psi)
+  K <- term@npsi
+  x <- bp$x
+  out <- as.numeric(eta)
+  if (term@linear) out <- out + v[["beta"]] * x
+  rows <- list()
+  for (gi in seq_along(bp$groups)) {
+    rs <- bp$groups[[gi]]
+    ps <- numeric(K)
+    for (k in seq_len(K)) {
+      ps[[k]] <- if (is.null(term@prior)) {
+        stats::rnorm(1, v[[paste0("m", k)]], v[[paste0("tau", k)]])
+      } else {
+        # the prior's location is fixed at zero and m1 carries it, which is
+        # the convention the likelihood is written with
+        th <- as.list(v[term@prior@params])
+        v[["m1"]] + as.numeric(
+          distributions7::distrib_rng(term@prior, 1L, th))
+      }
+      if (term@kind %in% c("jump", "jseg")) {
+        out[rs] <- out[rs] + v[[paste0("delta", k)]] * (x[rs] >= ps[[k]])
+      }
+      if (term@kind %in% c("seg", "jseg")) {
+        out[rs] <- out[rs] +
+          v[[paste0("gamma", k)]] * pmax(x[rs] - ps[[k]], 0)
+      }
+    }
+    rows[[gi]] <- data.frame(group = names(bp$groups)[[gi]],
+                             psi = seq_len(K), value = ps,
+                             stringsAsFactors = FALSE)
+  }
+  list(eta = out, y = NULL, latent = do.call(rbind, rows))
+}

@@ -927,3 +927,60 @@ S7::method(print, RegimeTerm) <- function(x, ...) {
   }
   list(loglik = loglik, jacobian = jac)
 }
+
+
+#' @name term_simulate.RegimeTerm
+#'
+#' @title Drawing a Regime Path
+#'
+#' @description
+#' A path of the latent chain, and the predictor each observation gets from
+#' the level of the state it lands in.
+#'
+#' @details
+#' The chain is started from its STATIONARY distribution rather than from
+#' the first state or from a uniform draw: the model's likelihood is written
+#' with that initial law, so any other start would simulate a different
+#' model from the one a fit reads back. The transition matrix and the
+#' stationary law come from the term's own
+#' \code{\link[parameters7]{transition_matrix}}, so nothing about the chart
+#' is restated here.
+#'
+#' The response is not drawn -- the levels do not read it -- so the caller
+#' draws at the returned predictor, and \code{y} is \code{NULL}.
+#'
+#' @param term A built regime term.
+#' @param psi The term's parameters, on the parameter scale.
+#' @param eta The static part of the predictor.
+#' @param draw Ignored: the levels do not read the response.
+#' @param ... Ignored.
+#'
+#' @return A list with \code{eta}, \code{y} (\code{NULL}) and
+#'   \code{latent}, the state of each observation.
+#'
+#' @seealso \code{\link{term_simulate}}, \code{\link{regime}}
+#'
+#' @keywords internal
+S7::method(term_simulate, RegimeTerm) <- function(term, psi, eta, draw, ...) {
+  bp <- term@blueprint
+  if (!length(bp)) {
+    stop("the term has not been built; call term_build(term, data) first.",
+         call. = FALSE)
+  }
+  n <- length(eta)
+  k <- term@k
+  v <- unlist(psi[term_params(term)])
+  mu <- term_levels(term, psi)
+  P <- parameters7::param_value(term@chain, v[term@chain@free_names])
+  A <- diag(k) - P
+  A[, k] <- 1
+  delta <- as.numeric(solve(t(A), c(rep(0, k - 1L), 1)))
+  st <- integer(n)
+  if (n) {
+    st[[1L]] <- sample.int(k, 1L, prob = pmax(delta, 0))
+    for (i in seq_len(n - 1L)) {
+      st[[i + 1L]] <- sample.int(k, 1L, prob = pmax(P[st[[i]], ], 0))
+    }
+  }
+  list(eta = as.numeric(eta) + mu[st], y = NULL, latent = st)
+}

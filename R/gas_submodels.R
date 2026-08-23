@@ -40,6 +40,24 @@ NULL
   list(names = nm, idx = idx)
 }
 
+S7::method(term_components, GasTerm) <- function(term, ...) {
+  bp <- term@blueprint
+  if (!length(bp)) return(list())
+  # a structural term contributes no design columns, so what divides here is
+  # the PARAMETER vector: `index` gives positions in term_params(), which is
+  # the vector its state, its readable quantities and its variance matrix are
+  # all indexed by. For an additive term the same field gives columns of the
+  # block, and in both cases it is the term's own coefficients.
+  lay <- .gas_sub_layout(term)
+  sub <- bp$sub
+  out <- lapply(names(lay$idx), function(j) {
+    s <- if (is.null(sub[[j]])) list() else sub[[j]]$terms
+    list(name = j, index = lay$idx[[j]], subs = s,
+         sub_index = component_sub_index(lay$idx[[j]], s))
+  })
+  stats::setNames(out, names(lay$idx))
+}
+
 # the link a parameter's own chart rides, override or default; the
 # COORDINATES of a developed parameter are unconstrained, and this is the
 # link applied inside the development
@@ -874,4 +892,59 @@ NULL
   W <- (W + t(W)) / 2
   if (third) return(list(jacobian = D, dphi = dP, curvature = W))
   list(jacobian = D, curvature = W)
+}
+
+
+#' The Filter's Parameters at Rows Outside the Fitting Data
+#'
+#' @description
+#' A developed parameter's value at each new row, read through each
+#' sub-term's own blueprint rather than rebuilt.
+#'
+#' @details
+#' It is \code{\link{term_predict}} on every sub-term, which is what keeps
+#' a basis or a set of contrasts from being relearned at other rows, and
+#' then the same chart the fit used. The persistence goes through
+#' Levinson-Durbin exactly as it does inside the filter.
+#'
+#' @param term A built score-driven term.
+#' @param u The term's free vector.
+#' @param newdata The rows to read at.
+#'
+#' @return A list with \code{om}, \code{A} and \code{B}, one row each per
+#'   observation of \code{newdata}.
+#'
+#' @seealso \code{\link{term_continue}}
+#'
+#' @keywords internal
+.gas_sub_new <- function(term, u, newdata) {
+  bp <- term@blueprint
+  p <- term@p
+  q <- term@q
+  nn <- nrow(newdata)
+  base <- .gas_base_params(p, q)
+  lay <- .gas_sub_layout(term)
+  v <- list()
+  for (j in base) {
+    idx <- lay$idx[[j]]
+    lk <- .gas_param_link(term, j)
+    sj <- bp$sub[[j]]
+    if (is.null(sj)) {
+      v[[j]] <- rep(u[[idx]], nn)
+    } else {
+      Z <- .nl_bind(lapply(sj$terms, term_predict, newdata = newdata))
+      v[[j]] <- linkfunctions7::linkinv(lk, as.numeric(as.matrix(Z) %*%
+                                                         u[idx]))
+    }
+  }
+  A <- matrix(0, nn, p)
+  for (i in seq_len(p)) A[, i] <- v[[paste0("alpha", i)]]
+  B <- matrix(0, nn, q)
+  if (q > 0L) {
+    pac <- vapply(seq_len(q), function(j) v[[paste0("pacf", j)]],
+                  numeric(nn))
+    pac <- matrix(pac, nn, q)
+    for (r in seq_len(nn)) B[r, ] <- gas_levinson(pac[r, ])$phi
+  }
+  list(om = v$omega, A = A, B = B)
 }

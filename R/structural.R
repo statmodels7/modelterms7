@@ -141,6 +141,199 @@ S7::method(term_start, structural_term) <- function(term, ...) {
 term_filter <- S7::new_generic("term_filter", "term",
   function(term, eta, y, score, curvature, psi, ...) S7::S7_dispatch())
 
+#' @title The Derivative of a Filtered Predictor in the Static One
+#'
+#' @description
+#' How the predictor a structural term produces moves when the static part
+#' of the predictor moves, one row per observation and one column per
+#' direction the caller supplies.
+#'
+#' @details
+#' A score-driven term's level is driven by scores read AT the predictor the
+#' recursion is producing, so a coefficient in the same equation reaches the
+#' level as well as the static part: writing \eqn{f_t} for the level and
+#' \eqn{x_t} for a row of the design,
+#' \deqn{\frac{\partial \eta_t}{\partial \beta} = x_t +
+#'   \frac{\partial f_t}{\partial \beta},}
+#' and the second piece obeys the recursion the filter already runs,
+#' \deqn{\frac{\partial f_t}{\partial \beta} =
+#'   \sum_i \alpha_i \, \ell''_{t-i}
+#'     \frac{\partial \eta_{t-i}}{\partial \beta} +
+#'   \sum_j \beta_j \frac{\partial f_{t-j}}{\partial \beta}.}
+#' The curvature it needs is the one \code{\link{term_filter}} returns, so
+#' no callback is evaluated here and the pass is arithmetic alone.
+#'
+#' Without it a standard error of the predictor counts the static part only.
+#' Measured on a score-driven mean with one covariate beside it, that
+#' understates the standard error by about a quarter.
+#'
+#' The base method returns \code{NULL}: a term that is not a filter carries
+#' no state, so the derivative is the design row itself and the caller needs
+#' nothing from the term.
+#'
+#' @param term A built structural term.
+#' @param curv The curvature at each predictor, as \code{term_filter}
+#'   returns it.
+#' @param X The directions to propagate, one column each -- ordinarily the
+#'   equation's design.
+#' @param psi The term's parameters, on the parameter scale.
+#' @param ... Passed to methods.
+#'
+#' @return A matrix of \code{X}'s dimensions, or \code{NULL}.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(t = 1:20, y = rnorm(20), x = rnorm(20))
+#' term <- term_build(gas(p = 1, q = 1, time = t), dd)
+#' psi <- list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.5)
+#' out <- term_filter(term, eta = rep(0, 20), y = dd$y,
+#'                    score = function(e, i) dd$y[i] - e,
+#'                    curvature = function(e, i) -1, psi = psi)
+#' D <- term_static_deriv(term, out$curv, cbind(1, dd$x), psi)
+#' dim(D)
+#'
+#' @seealso \code{\link{term_filter}}, \code{\link{term_adjoint}}
+#' @export
+term_static_deriv <- S7::new_generic("term_static_deriv", "term",
+  function(term, curv, X, psi, ...) S7::S7_dispatch())
+
+#' @title Continuing a Structural Term Past the Observed Series
+#'
+#' @description
+#' The contribution a structural term makes at rows that come after the ones
+#' it was built on, continuing its recursion rather than restarting it.
+#'
+#' @details
+#' A structural term's contribution at one observation is not a function of
+#' that observation: it is the state a recursion has reached, so predicting
+#' past the series means carrying the state forward. What makes it possible
+#' without simulation is that the quantity driving the recursion has zero
+#' conditional mean -- for a score-driven term the score itself -- so beyond
+#' the data the recursion is deterministic.
+#'
+#' The base method signals an error rather than returning zero: a term with
+#' state that cannot say what its state does next has nothing to offer a
+#' prediction, and a zero would read as a term with no effect.
+#'
+#' @param term A built structural term.
+#' @param psi The term's parameters, named as \code{\link{term_params}}.
+#' @param f_past The term's contribution at each observed row.
+#' @param s_past The driving quantity at each observed row.
+#' @param newdata The rows to continue onto.
+#' @param ... Passed to methods.
+#'
+#' @return A numeric vector of \code{nrow(newdata)} contributions.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(t = 1:20, y = rnorm(20))
+#' term <- term_build(gas(p = 1, q = 1, time = t), dd)
+#' psi <- list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.5)
+#' out <- term_filter(term, eta = rep(0, 20), y = dd$y,
+#'                    score = function(e, i) dd$y[i] - e,
+#'                    curvature = function(e, i) -1, psi = psi)
+#' sc <- dd$y - out$eta
+#' term_continue(term, psi, out$eta, sc, data.frame(t = 21:23))
+#'
+#' @seealso \code{\link{term_filter}}
+#' @export
+term_continue <- S7::new_generic("term_continue", "term",
+  function(term, psi, f_past, s_past, newdata, ...) S7::S7_dispatch())
+
+#' @title Drawing a Response From a Structural Term
+#'
+#' @description
+#' The predictor a structural term produces when the response is being
+#' GENERATED rather than read, together with whatever latent quantity the
+#' term drew on the way.
+#'
+#' @details
+#' Simulating from a model that carries state is not the same operation as
+#' fitting one, and the difference is which direction the response moves in.
+#' A term whose contribution does not read the response -- a latent chain's
+#' levels, a group's break-point drawn from its prior -- can report its
+#' contribution and leave the drawing to the caller. A score-driven term
+#' cannot: its level at one time is driven by the score of the response at
+#' the time before, so the response has to be drawn AS the recursion runs.
+#'
+#' One contract covers both. The caller supplies \code{draw}, a function of
+#' a predictor and a row index returning one response value, and the method
+#' returns the predictor it produced; a method that drew returns the
+#' responses as well and one that did not returns \code{NULL} there, leaving
+#' the caller to draw at the predictor.
+#'
+#' @param term A built structural term.
+#' @param psi The term's parameters, named as \code{\link{term_params}}.
+#' @param eta The static part of the predictor, one value per observation.
+#' @param draw A function \code{(e, i)} returning one response value drawn at
+#'   predictor \code{e} for observation \code{i}.
+#' @param ... Passed to methods.
+#'
+#' @return A list with \code{eta}, the predictor; \code{y}, the responses
+#'   drawn or \code{NULL}; and \code{latent}, whatever the term drew.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(t = 1:30)
+#' term <- term_build(gas(p = 1, q = 1, time = t), dd)
+#' out <- term_simulate(term, list(omega = 0.5, alpha1 = 0.3, pacf1 = 0.6),
+#'                      rep(0, 30),
+#'                      draw = function(e, i) stats::rnorm(1, e, 1))
+#' head(out$y, 3)
+#'
+#' @seealso \code{\link{term_filter}}, \code{\link{term_continue}}
+#' @export
+term_simulate <- S7::new_generic("term_simulate", "term",
+  function(term, psi, eta, draw, ...) S7::S7_dispatch())
+
+#' @name term_simulate.model_term
+#' @title A Term Without State Draws Nothing
+#' @description
+#' The base method signals an error: an ordinary term contributes its block
+#' times its coefficients and has nothing of its own to draw.
+#' @param term A term.
+#' @param psi,eta,draw Ignored.
+#' @param ... Ignored.
+#' @return Nothing; the method always signals an error.
+#' @seealso \code{\link{term_simulate}}
+#' @keywords internal
+S7::method(term_simulate, model_term) <- function(term, psi, eta, draw, ...) {
+  stop(sprintf("'%s' does not say how a response is drawn from it.",
+               class(term)[[1L]]), call. = FALSE)
+}
+
+#' @name term_continue.model_term
+#' @title A Term Without State Is Not Continued
+#' @description
+#' The base method signals an error.
+#' @param term A term.
+#' @param psi,f_past,s_past,newdata Ignored.
+#' @param ... Ignored.
+#' @return Nothing; the method always signals an error.
+#' @seealso \code{\link{term_continue}}
+#' @keywords internal
+S7::method(term_continue, model_term) <- function(term, psi, f_past, s_past,
+                                                  newdata, ...) {
+  stop(sprintf("'%s' does not say how its contribution continues past the series.",
+               class(term)[[1L]]), call. = FALSE)
+}
+
+#' @name term_static_deriv.model_term
+#' @title No State, No Propagation
+#' @description
+#' The base method returns \code{NULL}: an ordinary term's contribution at
+#' one observation reads that observation alone.
+#' @param term A term.
+#' @param curv,X,psi Ignored.
+#' @param ... Ignored.
+#' @return \code{NULL}.
+#' @seealso \code{\link{term_static_deriv}}
+#' @keywords internal
+S7::method(term_static_deriv, model_term) <- function(term, curv, X, psi,
+                                                      ...) {
+  NULL
+}
+
 #' @title Which of a Term's Parameters Acts as an Intercept
 #'
 #' @description

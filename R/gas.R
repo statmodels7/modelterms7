@@ -714,7 +714,11 @@ S7::method(term_build, GasTerm) <- function(term, data, ...) {
   # the rows of each group, in time order: the filter walks these and
   # scatters its result back to the original positions
   ord <- split(order(grp, tm), grp[order(grp, tm)])
+  # the times are kept beside the ordering because a CONTINUATION of the
+  # series has to know where the observed part ends: a new row belongs after
+  # the last time of its own group, and nothing else records that
   term@blueprint <- list(order = ord, n = n, levels = levels(gf),
+                         times = tm, group = grp,
                          by = term@by, time = term@time)
   # the developments, each through the interpreter exactly as a parameter
   # of nl(): the built sub-terms are kept, prediction reapplying each
@@ -1561,4 +1565,281 @@ gas_filter_r <- function(eta, order, p, q, omega, a, b, db, f0, df0,
     jac[rows, ] <- df
   }
   list(eta = eta_out, jacobian = jac, curv = cv)
+}
+
+
+#' @name term_static_deriv.GasTerm
+#'
+#' @title The Filter's Sensitivity to Its Own Equation's Coefficients
+#'
+#' @description
+#' The forward recursion of \code{\link{term_static_deriv}} for a
+#' score-driven term.
+#'
+#' @details
+#' The recursion is the filter's own with the seed replaced: the starting
+#' level depends on the term's parameters and not on the static predictor,
+#' so the propagated derivative starts at zero and everything after it comes
+#' from the scores. The autoregressive and loading coefficients are read at
+#' each row, which covers a term whose parameters carry submodels of their
+#' own as well as one whose parameters are constant.
+#'
+#' It is written in R rather than compiled: it evaluates no callback, runs
+#' once at a variance rather than at every iteration of a fit, and costs one
+#' pass over the data per column.
+#'
+#' @param term A built score-driven term.
+#' @param curv The curvature at each predictor.
+#' @param X The directions to propagate.
+#' @param psi The term's parameters, on the parameter scale.
+#' @param ... Ignored.
+#'
+#' @return A matrix of \code{X}'s dimensions.
+#'
+#' @seealso \code{\link{term_static_deriv}}, \code{\link{term_filter}}
+#'
+#' @keywords internal
+S7::method(term_static_deriv, GasTerm) <- function(term, curv, X, psi, ...) {
+  bp <- term@blueprint
+  if (!length(bp)) {
+    stop("the term has not been built; call term_build(term, data) first.",
+         call. = FALSE)
+  }
+  X <- as.matrix(X)
+  n <- nrow(X)
+  k <- ncol(X)
+  if (!k) return(X)
+  p <- term@p
+  q <- term@q
+  nm <- term_params(term)
+  psi <- unlist(psi[nm])
+  if (is.null(bp$sub)) {
+    cf <- .gas_coefs(psi[.gas_base_params(p, q)], p, q)
+    A <- matrix(rep(cf$a, each = n), n, p)
+    B <- matrix(rep(cf$b, each = n), n, q)
+  } else {
+    vals <- .gas_sub_values(term, psi, "parameter")
+    bd <- .gas_sub_b(term, vals)
+    A <- matrix(0, n, p)
+    for (i in seq_len(p)) A[, i] <- vals[[paste0("alpha", i)]]$v
+    B <- matrix(0, n, q)
+    for (j in seq_len(q)) B[, j] <- bd$B[, j]
+  }
+  U <- matrix(0, n, k)
+  for (rows in bp$order) {
+    m <- length(rows)
+    u <- matrix(0, m, k)
+    dv <- matrix(0, m, k)
+    for (t in seq_len(m)) {
+      r <- rows[[t]]
+      ut <- numeric(k)
+      if (p > 0L) {
+        for (i in seq_len(p)) {
+          if (t - i >= 1L) ut <- ut + A[r, i] * dv[t - i, ]
+        }
+      }
+      if (q > 0L) {
+        for (j in seq_len(q)) {
+          if (t - j >= 1L) ut <- ut + B[r, j] * u[t - j, ]
+        }
+      }
+      u[t, ] <- ut
+      dv[t, ] <- curv[[r]] * (X[r, ] + ut)
+    }
+    U[rows, ] <- u
+  }
+  X + U
+}
+
+
+#' @name term_continue.GasTerm
+#'
+#' @title Continuing a Score-Driven Filter Past the Series
+#'
+#' @description
+#' The level the recursion reaches at rows that come after the observed
+#' ones.
+#'
+#' @details
+#' The recursion is the filter's own, started from the level and score the
+#' observed part ended at rather than from the term's own seed. What changes
+#' past the data is the score: it has zero conditional mean by construction,
+#' the model's own defining property, so at a row whose response is not
+#' observed the driving term is its expectation and the continuation is the
+#' DETERMINISTIC recursion
+#' \deqn{f_{n+h} = \omega + \sum_i \alpha_i s_{n+h-i} +
+#'   \sum_j \beta_j f_{n+h-j},}
+#' the loadings contributing only while \eqn{n+h-i} is still an observed
+#' time. No simulation and no integration is involved.
+#'
+#' A new row is placed by its own time within its own group, and must come
+#' after every observed time of that group: a row falling inside the series
+#' is not a continuation but a re-reading of it, where the response is known
+#' and the filter must be run rather than continued, so it is rejected with
+#' the rows named. A group the fit never saw is rejected for the same
+#' reason -- there is no state to continue.
+#'
+#' @param term A built score-driven term.
+#' @param psi The term's parameters, named as \code{\link{term_params}}.
+#' @param f_past The level at each observed row.
+#' @param s_past The score at each observed row.
+#' @param newdata The rows to continue onto.
+#' @param ... Ignored.
+#'
+#' @return A numeric vector of \code{nrow(newdata)} levels.
+#'
+#' @seealso \code{\link{term_continue}}, \code{\link{term_filter}}
+#'
+#' @keywords internal
+S7::method(term_continue, GasTerm) <- function(term, psi, f_past, s_past,
+                                               newdata, ...) {
+  bp <- term@blueprint
+  if (!length(bp)) {
+    stop("the term has not been built; call term_build(term, data) first.",
+         call. = FALSE)
+  }
+  nn <- nrow(newdata)
+  if (!nn) return(numeric(0))
+  p <- term@p
+  q <- term@q
+  nm <- term_params(term)
+  u <- unlist(psi[nm])
+
+  gf <- if (is.null(term@by)) factor(rep(1L, nn), levels = "1") else
+    factor(as.character(eval(term@by, newdata, baseenv())),
+           levels = bp$levels)
+  tv <- if (is.null(term@time)) rep(NA_real_, nn) else
+    eval(term@time, newdata, baseenv())
+  if (is.null(term@time)) {
+    stop("continuing a score-driven term past the series needs its `time`: ",
+         "without one a row's
+  place in the series is its position in the ",
+         "data frame, which says nothing about new rows.", call. = FALSE)
+  }
+  if (anyNA(gf)) {
+    stop(sprintf(paste0("rows %s name a group the fit never saw, so there ",
+                        "is no state to continue."),
+                 paste(utils::head(which(is.na(gf)), 5L), collapse = ", ")),
+         call. = FALSE)
+  }
+  if (anyNA(tv)) stop("`time` must not be missing.", call. = FALSE)
+
+  # the parameters at each row: constant, or the development read at the
+  # NEW rows through each sub-term's own blueprint
+  if (is.null(bp$sub)) {
+    cf <- .gas_coefs(u[.gas_base_params(p, q)], p, q)
+    om_new <- rep(cf$omega, nn)
+    A_new <- matrix(rep(cf$a, each = nn), nn, p)
+    B_new <- matrix(rep(cf$b, each = nn), nn, q)
+  } else {
+    v <- .gas_sub_new(term, u, newdata)
+    om_new <- v$om
+    A_new <- v$A
+    B_new <- v$B
+  }
+
+  out <- numeric(nn)
+  gi <- as.integer(gf)
+  for (lv in sort(unique(gi))) {
+    rows_old <- bp$order[[as.character(lv)]]
+    if (is.null(rows_old)) {
+      stop("a group of the new data has no observed rows to continue from.",
+           call. = FALSE)
+    }
+    new <- which(gi == lv)
+    new <- new[order(tv[new])]
+    last <- max(bp$times[rows_old])
+    if (any(tv[new] <= last)) {
+      bad <- new[tv[new] <= last]
+      stop(sprintf(paste0("rows %s fall inside the observed series (their ",
+                          "group ends at time %s).\n  A row whose response ",
+                          "is known is read by running the filter, not by ",
+                          "continuing it."),
+                   paste(utils::head(bad, 5L), collapse = ", "),
+                   format(last)), call. = FALSE)
+    }
+    # the history the continuation starts from, oldest first
+    f <- c(f_past[rows_old], numeric(length(new)))
+    sc <- c(s_past[rows_old], numeric(length(new)))
+    n0 <- length(rows_old)
+    for (h in seq_along(new)) {
+      t <- n0 + h
+      r <- new[[h]]
+      ft <- om_new[[r]]
+      if (p > 0L) {
+        for (i in seq_len(p)) {
+          if (t - i >= 1L) ft <- ft + A_new[r, i] * sc[[t - i]]
+        }
+      }
+      if (q > 0L) {
+        for (j in seq_len(q)) {
+          if (t - j >= 1L) ft <- ft + B_new[r, j] * f[[t - j]]
+        }
+      }
+      f[[t]] <- ft
+      # the score past the data is at its conditional mean, which is zero
+      sc[[t]] <- 0
+      out[[r]] <- ft
+    }
+  }
+  out
+}
+
+
+#' @name term_simulate.GasTerm
+#'
+#' @title Generating From a Score-Driven Filter
+#'
+#' @description
+#' Runs the recursion forward drawing the response at each step.
+#'
+#' @details
+#' NO SEPARATE RECURSION IS WRITTEN. The filter's own recursion is the
+#' generative one -- the level at one time is a function of the scores
+#' before it, and a score is a function of a response and a predictor -- so
+#' the only difference is where the response comes from.
+#' \code{\link{term_filter}} calls its \code{score} callback exactly once
+#' per observation, in time order within each group, at the predictor the
+#' recursion has just produced; a callback that draws the response there,
+#' keeps it, and returns the score of what it drew turns the filter into a
+#' generator.
+#'
+#' The curvature is read at the same point, so it reads the response the
+#' score drew rather than drawing a second one.
+#'
+#' The fast route is not taken: it reads the response through a registered
+#' C entry point, and here the response does not exist until the step that
+#' needs it.
+#'
+#' @param term A built score-driven term.
+#' @param psi The term's parameters, on the parameter scale.
+#' @param eta The static part of the predictor.
+#' @param draw A function \code{(e, i)} returning one response value.
+#' @param score,curvature Functions of \code{(y, e, i)} giving the
+#'   derivatives of the log-density in the predictor at observation \code{i}.
+#'   They take the response as an argument, unlike the filter's own, because
+#'   here it is being made.
+#' @param ... Ignored.
+#'
+#' @return A list with \code{eta}, \code{y} and \code{latent}, the level.
+#'
+#' @seealso \code{\link{term_simulate}}, \code{\link{term_filter}}
+#'
+#' @keywords internal
+S7::method(term_simulate, GasTerm) <- function(term, psi, eta, draw,
+                                               score = NULL,
+                                               curvature = NULL, ...) {
+  n <- length(eta)
+  yv <- rep(NA_real_, n)
+  if (is.null(score)) score <- function(y, e, i) y - e
+  if (is.null(curvature)) curvature <- function(y, e, i) -1
+  get <- function(e, i) {
+    if (is.na(yv[[i]])) yv[[i]] <<- as.numeric(draw(e, i))
+    yv[[i]]
+  }
+  out <- term_filter(term, eta, yv,
+                     function(e, i) as.numeric(score(get(e, i), e, i)),
+                     function(e, i) as.numeric(curvature(get(e, i), e, i)),
+                     psi, fast = NULL, threads = 1L)
+  list(eta = out$eta, y = yv, latent = as.numeric(out$eta) - as.numeric(eta))
 }

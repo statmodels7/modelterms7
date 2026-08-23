@@ -1,3 +1,79 @@
+# modelterms7 0.60.0
+
+* `term_simulate()` says how a response is DRAWN from a term that carries
+  state, which is a different operation from fitting one and differs in
+  which direction the response moves. A term whose contribution does not
+  read the response reports it and leaves the drawing to the caller; a
+  score-driven term cannot, its level being driven by the score of the
+  response at the time before, so it draws as the recursion runs. One
+  contract covers both: the caller passes a function that draws at a
+  predictor, and a method that drew returns the responses while one that did
+  not returns `NULL`. The score-driven method writes NO new recursion --
+  `term_filter()` calls its score callback exactly once per observation, in
+  time order, at the predictor just produced, so a callback that draws there
+  turns the filter into a generator. A latent chain draws its path from the
+  STATIONARY law the likelihood is written with, any other start being a
+  different model from the one a fit reads back; a marginal break-point term
+  draws each group's positions from their prior.
+
+* `term_continue()` says what a structural term's contribution does at rows
+  that come after the ones it was built on. A term with state cannot be
+  reapplied -- what it reports at one row is where a recursion has got to --
+  so a prediction past the series carries the state forward instead. What
+  makes that possible without simulation is the model's own defining
+  property: the quantity driving the recursion has zero conditional mean, so
+  beyond the data the recursion is deterministic, `f` decaying towards
+  `omega / (1 - beta)`. A row is placed by its own time within its own
+  group; one falling inside the observed series is rejected with the rows
+  named, that being a re-reading rather than a continuation, and so is a
+  group the fit never saw. Validated against the filter re-run over the
+  extended series, which shares the recursion and not the continuation:
+  identical to the bit, alone, beside a covariate, over a panel and with the
+  level developed over covariates. The base method signals an error rather
+  than returning zero, which would read as a term with no effect.
+
+* `term_static_deriv()` says how the predictor a structural term produces
+  moves when the static part of the predictor moves. A score-driven level is
+  driven by scores read AT the predictor the recursion is producing, so a
+  coefficient in the same equation reaches the level as well as the design
+  row; the derivative obeys the recursion the filter already runs, seeded at
+  zero because the starting level depends on the term's parameters alone,
+  and it needs no callback, the curvature it multiplies being the one
+  `term_filter()` returns. Measured on a score-driven mean with one
+  covariate beside it, a standard error that counts the static row alone is
+  about a quarter too small; with the propagation it agrees with a numerical
+  derivative of the predictor to 1.8e-09. The base method returns `NULL`, a
+  term without state carrying nothing to propagate.
+
+* `term_components()` says how a term's columns divide among the parameters
+  it is written in: one entry per parameter, with the columns that belong to
+  it and the sub-terms developing it. What divides them is the term's answer
+  and cannot be recovered from a coefficient name, which is built for a
+  reader; the base method returns an empty list, the honest answer for a term
+  whose columns are one block with one meaning.
+
+* Each entry also carries `sub_index`, the columns belonging to each of its
+  sub-terms. A parameter may be developed by several at once and they need
+  not be of one kind -- `seg(x, psi ~ random(~1 | id))` develops the
+  break-point with an unpenalized intercept AND a random block -- so a
+  consumer that reports a component reports a sequence. The division rests on
+  how the block is assembled, which is the term's business, and a consumer
+  that computed it from coefficient counts would be assuming it.
+
+* `term_readable()` refuses quantity by quantity rather than all at once. A
+  developed parameter is a vector of coefficients over covariates and has no
+  single value to report, so it is skipped; the parameters beside it are
+  unaffected. Refusing them along with it left a summary printing the
+  working coefficients a discontinuous construction is fitted through, which
+  are no part of the model. Where every parameter is developed nothing is
+  left and the answer is `NULL`, as before.
+
+* `term_components()` answers for a score-driven term. A structural term
+  contributes no design columns, so what divides there is the PARAMETER
+  vector: `index` gives positions in `term_params()`, which is the vector its
+  state, its readable quantities and its variance matrix are all indexed by.
+  In both cases the field names the term's own coefficients.
+
 # modelterms7 0.59.1
 
 * The zeros the sharp break-point terms answer are pinned by tests rather

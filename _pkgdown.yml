@@ -31,6 +31,7 @@ reference:
   - term_matrix
   - term_penalty
   - term_penalties
+  - term_components
   - term_hyper
   - term_grid
   - term_values
@@ -128,6 +129,9 @@ reference:
   - term_start
   - term_level_design
   - term_filter
+  - term_static_deriv
+  - term_continue
+  - term_simulate
   - term_loglik
   - term_adjoint
   - term_curvature

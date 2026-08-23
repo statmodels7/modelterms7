@@ -1401,6 +1401,25 @@ S7::method(term_block_deriv2, NlTerm) <- function(term, coef = NULL, v, u,
   out
 }
 
+S7::method(term_components, NlTerm) <- function(term, ...) {
+  .nl_components(term@blueprint)
+}
+
+# The blueprint already divides the block: `index` says which columns each
+# parameter of f owns and `subs` which sub-terms develop it, both settled at
+# the build. Nothing is read back from a coefficient name.
+.nl_components <- function(bp) {
+  if (!length(bp)) return(list())
+  out <- lapply(bp$params, function(p) {
+    s <- bp$subs[[p]]
+    ss <- if (is.null(s)) list() else s
+    list(name = p, index = bp$index[[p]], subs = ss,
+         sub_index = component_sub_index(bp$index[[p]], ss))
+  })
+  stats::setNames(out, bp$params)
+}
+
+
 # A direction carried onto each parameter's own scale, one vector per
 # parameter, with the development's design applied. A sparse submodel is
 # multiplied in its own storage and never densified.

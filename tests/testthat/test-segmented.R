@@ -675,12 +675,26 @@ test_that("a fitted break-point term reports psi, not the pair it is read from",
                  J[rows, , drop = FALSE], tolerance = 1e-7, info = kind)
   }
 
-  # a developed coefficient has no single position to report, and the
-  # method says so by answering NULL rather than by inventing one
+  # a developed coefficient is a vector over covariates and has no single
+  # value to report, so it is skipped; where EVERY coefficient is developed
+  # nothing is left and the method answers NULL rather than inventing one
   d2 <- dd
   d2$g <- factor(rep(c("a", "b"), length.out = n))
   bd <- term_build(seg(x, by = ~0 + g), d2)
   expect_null(term_readable(bd, bd@blueprint$coef))
+
+  # and the parameters BESIDE a developed one are unaffected: they are what
+  # a reader wants, and refusing them along with it would leave a summary
+  # printing the working coefficients instead
+  bs <- term_build(seg(x, gamma ~ 0 + g, psi = 6), d2)
+  rs <- term_readable(bs, bs@blueprint$coef)
+  expect_identical(rs$name, c("beta", "psi1"))
+  expect_identical(dim(rs$jacobian), c(2L, length(term_coef_names(bs))))
+  # a developed break-point is the other way round: the changes are numbers
+  # and are reported, the position is not
+  bj <- term_build(jseg(x, psi ~ 0 + g, psi = 6), d2)
+  rj <- term_readable(bj, bj@blueprint$coef)
+  expect_identical(rj$name, c("beta", "gamma1", "delta1"))
 })
 
 

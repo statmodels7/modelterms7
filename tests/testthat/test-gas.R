@@ -729,3 +729,43 @@ test_that("the third derivative of a development has the affine structure", {
   expect_equal(rowSums(b2[keep, i_dev, drop = FALSE]), b2[keep, i_int],
                tolerance = 1e-12)
 })
+
+test_that("term_continue carries the recursion past the series", {
+  set.seed(11)
+  n <- 60
+  dd <- data.frame(t = seq_len(n), y = rnorm(n))
+  psi <- list(omega = 0.2, alpha1 = 0.3, pacf1 = 0.5)
+  tm <- term_build(gas(p = 1, q = 1, time = t), dd)
+  sc <- function(e, i) if (is.na(yv[[i]])) 0 else yv[[i]] - e
+  cv <- function(e, i) if (is.na(yv[[i]])) 0 else -1
+  yv <- dd$y
+  out <- term_filter(tm, rep(0, n), yv, sc, cv, psi)
+  s0 <- yv - out$eta
+  got <- term_continue(tm, psi, out$eta, s0, data.frame(t = n + 1:5))
+
+  # the reference rebuilds the term over the whole series and runs the
+  # FILTER on it: a row whose response is missing drives the recursion at
+  # the score's conditional mean, which is what the continuation assumes
+  ext <- data.frame(t = seq_len(n + 5L), y = c(dd$y, rep(NA_real_, 5L)))
+  tmx <- term_build(gas(p = 1, q = 1, time = t), ext)
+  yv <- ext$y
+  ref <- term_filter(tmx, rep(0, n + 5L), yv, sc, cv, psi)
+  expect_equal(got, ref$eta[n + 1:5])
+
+  # the fixed point of the continuation is the stationary level, which is
+  # a property of the recursion and not of this implementation
+  far <- term_continue(tm, psi, out$eta, s0, data.frame(t = n + 1:200))
+  expect_equal(far[[200L]], 0.2 / (1 - 0.5), tolerance = 1e-8)
+
+  # a row inside the series is refused rather than answered
+  expect_error(term_continue(tm, psi, out$eta, s0, data.frame(t = 10)),
+               "inside the observed series")
+})
+
+test_that("a term without state says so rather than returning zero", {
+  dd <- data.frame(x = runif(20), y = rnorm(20))
+  tm <- term_build(linpar(~ x), dd)
+  expect_error(term_continue(tm, list(), numeric(0), numeric(0), dd),
+               "continues past the series")
+  expect_null(term_static_deriv(tm, numeric(20), matrix(1, 20, 1), list()))
+})
