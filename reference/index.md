@@ -23,6 +23,8 @@ structural term takes instead.
   : Penalty of a Term
 - [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
   : Every Penalty a Term Carries
+- [`term_components()`](https://statmodels7.github.io/modelterms7/reference/term_components.md)
+  : How a Term's Columns Divide Among Its Own Parameters
 - [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md)
   : The Hyperparameters a Term Holds
 - [`term_grid()`](https://statmodels7.github.io/modelterms7/reference/term_grid.md)
@@ -181,6 +183,12 @@ exact derivative beside the state.
   : The Design of a Term's Level Development
 - [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
   : Apply a Structural Term to a Linear Predictor
+- [`term_static_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_static_deriv.md)
+  : The Derivative of a Filtered Predictor in the Static One
+- [`term_continue()`](https://statmodels7.github.io/modelterms7/reference/term_continue.md)
+  : Continuing a Structural Term Past the Observed Series
+- [`term_simulate()`](https://statmodels7.github.io/modelterms7/reference/term_simulate.md)
+  : Drawing a Response From a Structural Term
 - [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
   : Log-Likelihood Contributions of a Structural Term
 - [`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
