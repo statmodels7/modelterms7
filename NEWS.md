@@ -1,3 +1,90 @@
+# modelterms7 0.59.1
+
+* The zeros the sharp break-point terms answer are pinned by tests rather
+  than only argued for. For `seg()` the second derivative is exactly zero --
+  not small, zero -- on every observation a perturbation does not carry
+  across the break-point, at each of three steps. The one exception is a
+  point mass and is tested as one: with an observation sitting exactly on
+  the break-point the difference on that row grows fourfold as the step is
+  quartered, which is what "almost everywhere" sets aside. Without that
+  second half the first is satisfied by a sample with no observation near
+  the break-point, which asks nothing.
+
+* And the two kinds of zero are told apart. For `seg()` the block's own
+  difference converges onto `term_block_deriv()` to 1e-10, so its first
+  derivative exists and the second is what vanishes; for `jump()` and
+  `jseg()` `term_block_deriv()` answers zeros while the block moves by five
+  orders of magnitude at the scaling factor the annealing descends to,
+  because there the block is a working linearization with a frozen weight.
+  The zeros are a refusal in one case and a description in the other.
+
+# modelterms7 0.59.0
+
+* The break-point terms answer `term_block_deriv2()`. With `smoothed` an
+  `abs_smoother` the block is the true Jacobian, so the closed forms are the
+  smoother's own one order further up than `term_block_deriv()` reads them,
+  and the only new quantity is the smoother's fourth derivative: the block
+  reads it to order two, the first derivative to order three, this to order
+  four. `abs_smoother` carries those orders as functions, so nothing in
+  `penalties7` had to change.
+
+* The sharp constructions answer zeros, and the two reasons are different.
+  For `seg()` the second derivative really is zero away from the
+  break-points, the truncated line's derivative in the position being an
+  indicator whose own derivative is a point mass, and the position column
+  being linear in the change. For `jump()` and `jseg()` the block is a
+  working linearization with a frozen weight rather than a Jacobian, which
+  is why the first-order generics already answer zeros there.
+
+* Two exact properties of the smoothed branch are pinned by tests. Where a
+  break-point sits against its confinement limit the whole contribution is
+  zero, every addend carrying a direction in the break-point -- which the
+  first derivative does not, its position column moving with the change
+  whatever the position does. And under `smooth_quintic()`, exact outside
+  the width, the answer is zero on every observation further than the width
+  from a break-point; that smoother is C^3, so its fourth derivative jumps
+  at the width and the answer is exact away from those two points rather
+  than everywhere.
+
+* `.seg_smooth_parts()` takes an `order`, so the smoother's fourth
+  derivative is computed only where this method asks for it and not at every
+  step a fit takes.
+
+* Still nothing consumes the generic. Measured against the previous release
+  on three shapes -- a moving block, a fixed design, and a smoothed jseg
+  with a penalized subformula -- the coefficients, log-likelihood, effective
+  degrees of freedom, hyperparameters, criterion, outer gradient, outer
+  Hessian and variance matrix are identical to the bit.
+
+# modelterms7 0.58.0
+
+* `term_block_deriv2()`, the second derivative of a design block in its own
+  coefficients, contracted in two directions the caller supplies rather
+  than returned as an array. It stands one order above
+  `term_block_deriv()`, and the base method answers zeros, which is exact
+  for a design that does not move with its coefficients and covers
+  `linpar()`, `s()`, `te()`, `random()` and the five penalized constructors
+  without a method of their own.
+
+* `nl()` implements it. Nothing new is derived: the third derivative of `f`
+  in its parameters is the third order of `nl_fderiv()` and the third
+  derivative of the inverse link is `linkfunctions7::d3linkinv()`, so the
+  method is an assembly of five addends, one for each way a factor of
+  `term_block_deriv()`'s own expression can be differentiated again. A
+  subformula is carried by the same expression, its design entering every
+  addend, and a sparse development is scaled in its own storage rather than
+  densified first.
+
+* Nothing consumes it yet. The quantity enters the HESSIAN of a marginal
+  criterion and nothing else, so no fit, no criterion value and no
+  criterion gradient changes; what will change when `statmodels7` reads it
+  is the standard error of a hyperparameter on a model whose block is
+  curved, and the Newton direction of an outer search.
+
+* `.nl_theta()` takes an `order`, so the third derivative of the link is
+  computed only where this method asks for it and not on every Jacobian
+  evaluation of every fit.
+
 # modelterms7 0.57.0
 
 * The two filter kernels and the curvature kernel take the shape

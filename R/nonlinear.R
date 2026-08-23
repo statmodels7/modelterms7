@@ -348,8 +348,12 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
   if (!is.null(links[[p]])) links[[p]] else linkfunctions7::identity_link()
 }
 
-# theta and d theta / d eta at the current coefficients, per parameter
-.nl_theta <- function(bp, coef) {
+# theta and its eta-derivatives at the current coefficients, per parameter.
+# `order` is the highest derivative wanted: two everywhere the block and its
+# first derivative are formed, which is every step of every fit, and three only
+# where term_block_deriv2() asks. The third is not computed by default because
+# this runs once per Jacobian evaluation and nothing on that path reads it.
+.nl_theta <- function(bp, coef, order = 2L) {
   out <- list(value = list(), deriv = list())
   for (p in bp$params) {
     idx <- bp$index[[p]]
@@ -359,6 +363,7 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
     out$value[[p]] <- linkfunctions7::linkinv(lk, eta)
     out$deriv[[p]] <- linkfunctions7::dlinkinv(lk, eta)
     out$deriv2[[p]] <- linkfunctions7::d2linkinv(lk, eta)
+    if (order >= 3L) out$deriv3[[p]] <- linkfunctions7::d3linkinv(lk, eta)
   }
   out
 }
@@ -1212,6 +1217,200 @@ S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
     out[idx] <- if (is.null(Z)) sum(acc) else
       as.numeric(crossprod(as.matrix(Z), acc))
   }
+  out
+}
+
+#' @title The Second Derivative of a Design Block in the Coefficients
+#'
+#' @description
+#' \eqn{\sum_{q,r} v_q u_r\,\partial^2 X_{ij}/\partial\beta_q\partial\beta_r},
+#' one entry per observation and column of the block: the block's second
+#' derivative contracted in two directions the caller supplies.
+#'
+#' @details
+#' It stands one order above \code{\link{term_block_deriv}}, and it is
+#' contracted rather than returned as an array for the reason
+#' \code{\link{term_third}} is contracted in the structural branch: the full
+#' object has \eqn{m} coefficient indices twice over beside the \eqn{n} rows
+#' and \eqn{m} columns of the block, and only its contraction in the two
+#' directions the penalized mode moves is ever read.
+#'
+#' The quantity enters the HESSIAN of a marginal criterion and nothing else.
+#' It is absent from the criterion's value, from its gradient and from the
+#' fit, so the coefficients, the log-likelihood, the effective degrees of
+#' freedom and the coefficients' own variance matrix do not depend on it; what
+#' does depend on it is the standard error of a hyperparameter and the Newton
+#' direction of an outer search.
+#'
+#' The result is symmetric in \code{v} and \code{u}, mixed partial derivatives
+#' being equal, and an implementation that pairs a direction with the wrong
+#' parameter loses that symmetry.
+#'
+#' The base method returns zeros. That is exact and not an approximation: a
+#' design that does not move with its coefficients has a second derivative
+#' that is identically zero, which covers \code{\link{linpar}},
+#' \code{\link{s}}, \code{\link{te}}, \code{\link{random}} and the five
+#' penalized constructors without a method of their own.
+#'
+#' For \code{\link{nl}} the closed form is one order above the one
+#' \code{\link{term_block_deriv}} carries. With \eqn{\theta_p = h_p(z_p)} and
+#' \eqn{z_p = Z_p\beta_{(p)}}, writing \eqn{\tilde v_p = Z_p v_{(p)}} and
+#' \eqn{\tilde u_p = Z_p u_{(p)}} for the directions carried onto each
+#' parameter's own scale,
+#' \deqn{\Big(\frac{\partial^2 X}{\partial\beta^2}[v, u]\Big)[i, c_1] =
+#'   Z_{p_1}[i, c_1] \sum_{p_2}\sum_{p_3} r_{p_1p_2p_3}(i)\,
+#'   \tilde v_{p_2}(i)\,\tilde u_{p_3}(i),}
+#' \deqn{r_{p_1p_2p_3} = f_{p_1p_2p_3}h'_{p_1}h'_{p_2}h'_{p_3}
+#'   + \delta_{p_1p_3} f_{p_1p_2}h''_{p_1}h'_{p_2}
+#'   + \delta_{p_2p_3} f_{p_1p_2}h'_{p_1}h''_{p_2}
+#'   + \delta_{p_1p_2} f_{p_1p_3}h''_{p_1}h'_{p_3}
+#'   + \delta_{p_1p_2p_3} f_{p_1}h'''_{p_1}.}
+#' The five addends come from differentiating the two addends of
+#' \code{term_block_deriv}'s \eqn{q_{p_1p_2}} once more: the first from
+#' \eqn{f_{p_1p_2}}, the second and third from \eqn{h'_{p_1}} and
+#' \eqn{h'_{p_2}}, the fourth from \eqn{f_{p_1}} inside the term the Kronecker
+#' delta carries, and the fifth from \eqn{h''_{p_1}}. Exchanging \eqn{p_2} and
+#' \eqn{p_3} sends the second addend to the fourth and leaves the other three
+#' where they are, which is the symmetry in \code{v} and \code{u}.
+#'
+#' Nothing new is derived: \eqn{f_{p_1p_2p_3}} is the third order of
+#' \code{\link{nl_fderiv}}, served by the same four-way machinery as the lower
+#' orders, and \eqn{h'''} is \code{\link[linkfunctions7]{d3linkinv}}, exact for
+#' every shipped link and numerical for a user-defined one. The cost is
+#' \eqn{O(nP^3)} in the term's OWN parameters, of which there are two to four
+#' in practice, and the call is made once per pair of hyperparameters rather
+#' than once per observation.
+#'
+#' A break-point term answers according to its construction. With
+#' \code{smoothed} an \code{\link[penalties7]{abs_smoother}} the block is the
+#' true Jacobian and the closed forms are the smoother's own one order further
+#' up than \code{\link{term_block_deriv}} reads them: with \eqn{u = x - \psi},
+#' \eqn{P = s''/2}, \eqn{T = s'''/2} and \eqn{Q = s''''/2}, the change columns
+#' contribute \eqn{P} and \eqn{T} twice in the break-point and the break-point
+#' column contributes the two mixed pieces and \eqn{-(\gamma T + \delta Q)}.
+#' The sharp constructions answer zeros: for \code{\link{seg}} the second
+#' derivative is genuinely zero away from the break-points, the truncated
+#' line's derivative in the position being an indicator and the position
+#' column being linear in the change, while for \code{\link{jump}} and
+#' \code{\link{jseg}} the block is a working linearization with a frozen
+#' weight rather than a Jacobian, which is why the first-order generics
+#' already answer zeros there.
+#'
+#' Two properties of the smoothed branch are worth stating because they are
+#' exact rather than approximate. Where a break-point sits against its
+#' confinement limit the whole contribution is zero, every addend carrying a
+#' direction in the break-point -- which the FIRST derivative does not, the
+#' position column moving with the change whatever the position does. And
+#' under \code{\link[penalties7]{smooth_quintic}}, which is exact outside
+#' \eqn{[-h, h]}, the answer is zero on every observation further than the
+#' width from a break-point; that smoother is \eqn{C^3}, so its fourth
+#' derivative jumps at \eqn{\pm h} and the answer is exact away from those two
+#' points rather than everywhere.
+#'
+#' @param term A built term.
+#' @param coef The coefficients, or \code{NULL} for the ones it carries.
+#' @param v,u Numeric vectors as long as the term's coefficients.
+#' @param ... Passed to methods.
+#'
+#' @return A numeric matrix, one row per observation and one column per
+#'   coefficient of the term.
+#'
+#' @examples
+#' dd <- data.frame(x = seq(0.2, 3, length.out = 20))
+#' dd$y <- 2 * exp(-1.3 * dd$x)
+#' b <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3)), dd)
+#' dim(term_block_deriv2(b, v = c(1, 0), u = c(0, 1)))
+#'
+#' # symmetric in the two directions
+#' max(abs(term_block_deriv2(b, v = c(1, 0), u = c(0, 1)) -
+#'         term_block_deriv2(b, v = c(0, 1), u = c(1, 0))))
+#'
+#' @seealso \code{\link{term_block_deriv}}, \code{\link{term_block_contract}},
+#'   \code{\link{nl_fderiv}}
+#'
+#' @export
+term_block_deriv2 <- S7::new_generic(
+  "term_block_deriv2", "term",
+  function(term, coef = NULL, v, u, ...) S7::S7_dispatch())
+
+S7::method(term_block_deriv2, model_term) <- function(term, coef = NULL, v, u,
+                                                      ...) {
+  d <- dim(term_matrix(term))
+  matrix(0, d[1L], d[2L])
+}
+
+S7::method(term_block_deriv2, NlTerm) <- function(term, coef = NULL, v, u,
+                                                  ...) {
+  bp <- term@blueprint
+  if (!length(bp)) stop("the term is not built.", call. = FALSE)
+  cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
+  v <- as.numeric(v)
+  u <- as.numeric(u)
+  for (arg in list(list(v, "v"), list(u, "u"))) {
+    if (length(arg[[1L]]) != bp$ncoef) {
+      stop(sprintf("'%s' must have length %d, the term's coefficients.",
+                   arg[[2L]], bp$ncoef), call. = FALSE)
+    }
+  }
+  params <- bp$params
+  np <- length(params)
+  th <- .nl_theta(bp, cf, order = 3L)
+  f1 <- .nl_forder(bp, th$value, 1L)
+  f2 <- .nl_forder(bp, th$value, 2L)
+  f3 <- .nl_forder(bp, th$value, 3L)
+  h1 <- th$deriv
+  h2 <- th$deriv2
+  h3 <- th$deriv3
+  tv <- .nl_direction(bp, v)
+  tu <- .nl_direction(bp, u)
+  out <- matrix(0, bp$n, bp$ncoef)
+  for (i1 in seq_len(np)) {
+    p1 <- params[i1]
+    acc <- 0 * bp$one
+    for (i2 in seq_len(np)) {
+      p2 <- params[i2]
+      for (i3 in seq_len(np)) {
+        p3 <- params[i3]
+        r <- as.numeric(f3[[.nl_key(params, c(i1, i2, i3))]]) *
+          h1[[p1]] * h1[[p2]] * h1[[p3]]
+        if (i1 == i3) {
+          r <- r + as.numeric(f2[[.nl_key(params, c(i1, i2))]]) *
+            h2[[p1]] * h1[[p2]]
+        }
+        if (i2 == i3) {
+          r <- r + as.numeric(f2[[.nl_key(params, c(i1, i2))]]) *
+            h1[[p1]] * h2[[p2]]
+        }
+        if (i1 == i2) {
+          r <- r + as.numeric(f2[[.nl_key(params, c(i1, i3))]]) *
+            h2[[p1]] * h1[[p3]]
+        }
+        if (i1 == i2 && i1 == i3) {
+          r <- r + as.numeric(f1[[p1]]) * h3[[p1]]
+        }
+        acc <- acc + r * tv[[p2]] * tu[[p3]]
+      }
+    }
+    idx <- bp$index[[p1]]
+    Z <- bp$Z[[p1]]
+    # the return is dense by contract, but a sparse development is scaled in
+    # its OWN storage and densified once rather than densified and then
+    # scaled: at order three this runs once per PAIR of hyperparameters.
+    out[, idx] <- if (is.null(Z)) acc else as.matrix(Z * acc)
+  }
+  out
+}
+
+# A direction carried onto each parameter's own scale, one vector per
+# parameter, with the development's design applied. A sparse submodel is
+# multiplied in its own storage and never densified.
+.nl_direction <- function(bp, v) {
+  out <- lapply(bp$params, function(p) {
+    idx <- bp$index[[p]]
+    Z <- bp$Z[[p]]
+    if (is.null(Z)) rep(v[idx], bp$n) else as.numeric(Z %*% v[idx])
+  })
+  names(out) <- bp$params
   out
 }
 

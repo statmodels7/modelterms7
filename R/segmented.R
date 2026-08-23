@@ -1389,7 +1389,11 @@ S7::method(term_jacobian_block, SegTerm) <- function(term, ...) {
 # with the derivative in a break-point's own coefficients gated by `free`
 # where the position sits against a confinement limit, exactly as the
 # continuous construction gates its indicator.
-.seg_smooth_parts <- function(bp, cf, k) {
+# `order` is the highest derivative of the smoother wanted: three for the
+# first-order generics, four for term_block_deriv2(), which needs one more.
+# The fourth is not computed by default because these run at every step the
+# fit takes and nothing on that path reads it.
+.seg_smooth_parts <- function(bp, cf, k, order = 3L) {
   n <- length(bp$xv)
   sm <- bp$smooth
   wv <- .seg_smooth_w(sm, n, bp$Z)
@@ -1399,12 +1403,14 @@ S7::method(term_jacobian_block, SegTerm) <- function(term, ...) {
   zp <- bp$Z[[pk]]
   v <- if (is.null(zp)) rep(pos$pk[[k]], n) else
     as.numeric(as.matrix(zp) %*% pos$pk[[k]])
-  list(
+  out <- list(
     S = (1 + .seg_sw(sm$sm, u, wv, 1L)) / 2,
     P = .seg_sw(sm$sm, u, wv, 2L) / 2,
     T = .seg_sw(sm$sm, u, wv, 3L) / 2,
     free = as.numeric(v > bp$lim[1L] & v < bp$lim[2L])
   )
+  if (order >= 4L) out$Q <- .seg_sw(sm$sm, u, wv, 4L) / 2
+  out
 }
 
 .seg_smooth_contract <- function(bp, cf, A, out) {
@@ -1478,6 +1484,64 @@ S7::method(term_jacobian_block, SegTerm) <- function(term, ...) {
       dself <- dself + val(dk) * pt$T
     }
     put(pk, dself * pt$free * along(pk))
+  }
+  out
+}
+
+# The block's SECOND derivative in the coefficients, contracted in two
+# directions. It is the same closed forms one order further up, and the only
+# new quantity is Q = s''''/2: the block reads the smoother to order two, the
+# first derivative to order three, this to order four.
+#
+# With u = x - psi and the columns H(u), S(u) and -(gamma S + delta P), and
+# writing pv and pu for the two directions carried onto the break-point --
+# each with the confinement gate, one factor per differentiation in a
+# break-point coefficient --
+#
+#   d2(gamma col) = P pv pu                 (H'' = S' = P)
+#   d2(delta col) = T pv pu                 (S'' = P' = T)
+#   d2(psi col)   = P (gamma_v pu + gamma_u pv) + T (delta_v pu + delta_u pv)
+#                   - (gamma T + delta Q) pv pu
+#
+# The psi column's three pieces come from differentiating its own first
+# derivative -gamma_v S - delta_v P + (gamma P + delta T) pv once more: the
+# first two move only through u, and the third moves through gamma, delta and
+# u at once. Exchanging the two directions maps each piece to itself, which
+# is the symmetry the generic promises.
+.seg_smooth_deriv2 <- function(bp, cf, v, u, out) {
+  n <- length(bp$xv)
+  along <- function(vec, p) {
+    idx <- bp$index[[p]]
+    z <- bp$Z[[p]]
+    if (is.null(z)) rep(vec[idx], n) else as.numeric(z %*% vec[idx])
+  }
+  put <- function(p, w) {
+    idx <- bp$index[[p]]
+    z <- bp$Z[[p]]
+    out[, idx] <<- out[, idx] + if (is.null(z)) w else as.matrix(z * w)
+  }
+  val <- function(p) .seg_pval(list(Z = bp$Z, index = bp$index), cf, p, n)
+  has_g <- bp$kind %in% c("seg", "jseg")
+  has_d <- bp$kind %in% c("jump", "jseg")
+  for (k in seq_len(bp$npsi)) {
+    pk <- paste0("psi", k)
+    pt <- .seg_smooth_parts(bp, cf, k, order = 4L)
+    pv <- pt$free * along(v, pk)
+    pu <- pt$free * along(u, pk)
+    dself <- numeric(n)
+    if (has_g) {
+      gk <- paste0("gamma", k)
+      put(gk, pt$P * pv * pu)
+      put(pk, pt$P * (along(v, gk) * pu + along(u, gk) * pv))
+      dself <- dself + val(gk) * pt$T
+    }
+    if (has_d) {
+      dk <- paste0("delta", k)
+      put(dk, pt$T * pv * pu)
+      put(pk, pt$T * (along(v, dk) * pu + along(u, dk) * pv))
+      dself <- dself + val(dk) * pt$Q
+    }
+    put(pk, -dself * pv * pu)
   }
   out
 }
@@ -1601,6 +1665,36 @@ S7::method(term_block_deriv, SegTerm) <- function(term, coef = NULL, v, ...) {
     put(gk, -ind * free * along(pk))
     put(pk, -ind * along(gk))
   }
+  out
+}
+
+S7::method(term_block_deriv2, SegTerm) <- function(term, coef = NULL, v, u,
+                                                   ...) {
+  bp <- term@blueprint
+  if (!length(bp)) stop("the term is not built.", call. = FALSE)
+  cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
+  ncoef <- length(term_coef_names(term))
+  n <- length(bp$xv)
+  v <- as.numeric(v)
+  u <- as.numeric(u)
+  for (arg in list(list(v, "v"), list(u, "u"))) {
+    if (length(arg[[1L]]) != ncoef) {
+      stop(sprintf("'%s' must have length %d, the term's coefficients.",
+                   arg[[2L]], ncoef), call. = FALSE)
+    }
+  }
+  out <- matrix(0, n, ncoef)
+  # A SMOOTHED term of any kind has the closed forms, its block being a true
+  # Jacobian; the sharp constructions answer zeros, and the two reasons are
+  # different. For the continuous one the second derivative really is zero
+  # away from the break-points: the truncated line's derivative in the
+  # position is the indicator, whose own derivative is a point mass, and the
+  # position column is linear in the change. For a jump or a jseg the block is
+  # a working LINEARIZATION with a frozen weight rather than a Jacobian, so
+  # the question the generic asks is not the one their columns answer -- which
+  # is why term_block_deriv() and term_block_contract() already answer zeros
+  # there.
+  if (!is.null(bp$smooth)) return(.seg_smooth_deriv2(bp, cf, v, u, out))
   out
 }
 
