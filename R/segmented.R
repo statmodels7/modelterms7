@@ -355,20 +355,18 @@ seg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 #' product of the two quantities, so it stays linear in the unknowns only
 #' when one of the two factors is a single number:
 #'
-#' \itemize{
-#'   \item **the break-point developed**, the change of level a single
-#'     number: exact for any design, \eqn{g_k = -\delta_k p_k} being
-#'     linear in \eqn{p_k}. `jump(x, psi ~ id)` is a break-point
-#'     per subject with a shared step size.
-#'   \item **a development on group indicators**, where the design has
-#'     one column per group and each observation belongs to one: the
-#'     product collapses group by group and the read-off is exact within
-#'     each. `jump(x, by = ~0 + g)` is an independent step and
-#'     break-point per level.
-#'   \item **anything else** is rejected rather than approximated,
-#'     the product of two developments needing the outer product of their
-#'     designs and no unconstrained fit returning it as one.
-#' }
+#' - **the break-point developed**, the change of level a single
+#'   number: exact for any design, \eqn{g_k = -\delta_k p_k} being
+#'   linear in \eqn{p_k}. `jump(x, psi ~ id)` is a break-point
+#'   per subject with a shared step size.
+#' - **a development on group indicators**, where the design has
+#'   one column per group and each observation belongs to one: the
+#'   product collapses group by group and the read-off is exact within
+#'   each. `jump(x, by = ~0 + g)` is an independent step and
+#'   break-point per level.
+#' - **anything else** is rejected rather than approximated,
+#'   the product of two developments needing the outer product of their
+#'   designs and no unconstrained fit returning it as one.
 #'
 #' A sub-term carrying a penalty is rejected on a developed break-point,
 #' since the estimated coefficients are \eqn{-\delta_k p_k}, the

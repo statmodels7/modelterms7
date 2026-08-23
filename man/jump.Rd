@@ -184,7 +184,6 @@ continuous one can, and the reason is the read-off rather than the
 model. The auxiliary coefficient is \eqn{g_k = -\delta_k\psi_k}, a
 product of the two quantities, so it stays linear in the unknowns only
 when one of the two factors is a single number:
-
 \itemize{
 \item \strong{the break-point developed}, the change of level a single
 number: exact for any design, \eqn{g_k = -\delta_k p_k} being
