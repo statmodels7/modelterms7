@@ -40,6 +40,46 @@ NULL
   list(names = nm, idx = idx)
 }
 
+#' @title How a Score-Driven Term's Parameters Divide
+#' @name term_components.GasTerm
+#'
+#' @description
+#' One entry per base parameter of the filter, giving the positions in
+#' [term_params()] that parameter owns and the sub-terms developing it. A
+#' parameter with no subformula owns one position; a developed one owns as many
+#' as its design has columns.
+#'
+#' @details
+#' For a structural term the `index` field gives positions in [term_params()]
+#' and not columns of a block, this branch having none. It is the vector the
+#' term's state, its readable quantities and its variance matrix are all
+#' indexed by.
+#'
+#' A consumer reads it to report a fitted filter parameter by parameter, and
+#' [term_penalties()] uses the same division to place each sub-term's penalty
+#' on the coordinates it covers.
+#'
+#' @param term A built [GasTerm()]. An unbuilt one gives an empty list.
+#' @param ... Unused.
+#'
+#' @return A named list, one entry per base parameter and named by it, each
+#'   with `name`, `index`, `subs` and `sub_index` as [term_components()]
+#'   describes.
+#'
+#' @seealso [term_components()] for the contract, [term_params()] for the
+#'   vector the indices point into.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(t = 1:40, y = rnorm(40), z = rnorm(40))
+#'
+#' # omega developed over one covariate: two positions for it, one each
+#' # for the loading and the persistence.
+#' b <- term_build(gas(p = 1, q = 1, omega ~ z, time = t), dd)
+#' term_params(b)
+#' lapply(term_components(b), function(z) z$index)
+#'
+#' @keywords internal
 S7::method(term_components, GasTerm) <- function(term, ...) {
   bp <- term@blueprint
   if (!length(bp)) return(list())

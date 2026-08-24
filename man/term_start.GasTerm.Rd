@@ -17,8 +17,8 @@ loadings, which start at \eqn{0.1} on the parameter scale, through
 whatever link each one carries.
 }
 \details{
-Zero is the natural point of every other chart -- a level of zero, no
-persistence, no deviation -- so the term starts as near the model
+Zero is the natural point of every other chart: a level of zero, no
+persistence, no deviation. The term therefore starts as near the model
 without it as its charts allow. The loadings are the exception because
 zero on the log scale is a loading of ONE, a response strong enough to
 destabilize the recursion at ordinary curvatures; \eqn{0.1} is a weak

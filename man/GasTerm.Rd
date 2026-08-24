@@ -46,32 +46,82 @@ more than one carrying a kink: \code{"grid"} for every combination of them,
 \code{"cyclic"} for one at a time, or \code{character(0)} for the default. See
 \code{\link[=term_search]{term_search()}}.}
 
-\item{p}{The number of score lags.}
+\item{p}{The number of score lags, an integer of at least 0.}
 
-\item{q}{The number of autoregressive lags.}
+\item{q}{The number of autoregressive lags, an integer of at least 0.}
 
-\item{by}{An optional grouping expression, filtered independently.}
+\item{by}{An optional grouping expression; each group is filtered
+independently. \code{NULL} for one series.}
 
-\item{time}{An optional ordering expression.}
+\item{time}{An optional ordering expression. \code{NULL} for row order.}
 
-\item{links}{The links overriding the defaults, if any.}
+\item{links}{A named list of \pkg{linkfunctions7} links overriding the
+defaults, empty where none was given.}
 
-\item{submodels}{One optional subformula per parameter.}
+\item{submodels}{A named list of one-sided formulas, one per parameter
+developed over covariates. Empty where none is.}
 
-\item{blueprint}{The resolved ordering and grouping.}
+\item{blueprint}{A named list of the resolved ordering, grouping and
+sub-term designs, empty until \code{\link[=term_build]{term_build()}} fills it.}
 }
 \value{
-An object of class \code{GasTerm}.
+An S7 object of class \code{GasTerm}, inheriting from
+\code{\link[=structural_term]{structural_term()}} and \code{\link[=model_term]{model_term()}}, with the seven properties above
+beside \code{\link[=model_term]{model_term()}}'s six.
 }
 \description{
-A subclass of \code{\link[=structural_term]{structural_term()}} for a generalized
-autoregressive score component: a time-varying level driven by the
-score of the observation density, added to the linear predictor.
-Constructed by \code{\link[=gas]{gas()}}.
+The subclass of \code{\link[=structural_term]{structural_term()}} holding a generalized autoregressive
+score component: a time-varying level driven by the score of the
+observation density, added to the predictor of one distribution parameter.
+\code{\link[=gas]{gas()}} constructs it. Its contribution is a state rather than a block, so
+it implements \code{\link[=term_filter]{term_filter()}} and has no \code{\link[=term_matrix]{term_matrix()}} method.
 }
+\section{The seven properties of its own}{
+\code{p} is the number of score lags and \code{q} the number of autoregressive ones,
+which together fix the parameter count at \eqn{1 + p + q} before any
+subformula.
+
+\code{by} and \code{time} are the grouping and ordering expressions as written, kept
+unevaluated; \code{NULL} means one series in row order.
+
+\code{links} holds whatever the caller overrode, empty where the defaults stand:
+the identity on the level, the log on each loading, the rhobit on each
+partial autocorrelation. \code{submodels} holds one right-hand side per
+parameter developed over covariates.
+
+\code{blueprint} is filled by \code{\link[=term_build]{term_build()}} and carries the row order within
+each group, the built sub-terms of each subformula and their designs. The
+class overrides the branch's \code{blueprint} property because a structural term
+has no design block to hang one on.
+}
+
+\section{What the class is for}{
+The recursion, its exact Jacobian, the reverse pass, the curvature and the
+contracted third derivative are all methods on it, so a fitting layer can
+estimate the term's parameters beside the coefficients of every equation
+and read the joint observed information.
+}
+
 \examples{
-S7::S7_inherits(gas(), GasTerm)
+set.seed(1)
+dd <- data.frame(t = 1:60, y = c(rnorm(30), rnorm(30, 3)))
+
+tm <- gas(p = 1, q = 2, time = t)
+S7::S7_inherits(tm, GasTerm)
+c(p = tm@p, q = tm@q)
+
+# 1 + p + q parameters, and one chart each.
+term_params(tm)
+vapply(term_links(tm), function(l) l@link_name, character(1))
+
+# The build resolves the ordering; there is no block to read.
+b <- term_build(tm, dd)
+names(b@blueprint)
+try(term_matrix(b))
+
 }
 \seealso{
-\code{\link[=gas]{gas()}}
+\code{\link[=gas]{gas()}}, the constructor; \code{\link[=term_filter]{term_filter()}} for the recursion;
+\code{\link[=term_readable]{term_readable()}} for the quantities a fitted one reports; \code{\link[=regime]{regime()}} for
+the other dynamic term.
 }

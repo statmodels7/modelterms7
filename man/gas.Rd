@@ -46,16 +46,16 @@ evaluated at.
 \details{
 The term adds no columns. The predictor at one time depends on the
 data at the previous ones, so the contribution cannot be written as a
-block, and \code{\link[=term_filter]{term_filter()}} runs the recursion instead. That
-is what makes it a \code{\link[=structural_term]{structural_term()}}.
+block, and \code{\link[=term_filter]{term_filter()}} runs the recursion instead. That is what puts
+it on the structural branch.
 
 What drives the recursion is the score of whatever distribution the
 model carries, so the same term is a GARCH-like volatility model when
 it enters the scale of a Gaussian, a dynamic count model when it enters
 the mean of a Poisson, and a robust location filter when it enters a
 Student t: a heavy-tailed score is bounded in the observation, so an
-outlier moves the level by a bounded amount rather than in proportion
-to its size.
+outlier moves the level by a bounded amount instead of in proportion to
+its size.
 
 \subsection{The parameters and their chart}{
 The parameters are the level \eqn{\omega}, the score loadings
@@ -64,11 +64,11 @@ unconstrained scale of a link, and \code{links} overrides any of them;
 the defaults are the following.
 
 The level carries the identity, being unconstrained. The loadings carry
-the \strong{log} link: a positive loading responds in the direction of
-the score, which is the case the score-driven literature writes, and
-positivity is then structural -- a deviation or a submodel moves the
-loading on the log scale and no group or observation can take a
-negative one. A loading that must be free in sign is asked for with
+the \strong{log} link: a positive loading responds in the direction of the
+score, which is the case the score-driven literature writes, and
+positivity is then structural. A deviation or a submodel moves the loading
+on the log scale, so no group and no observation can take a negative one.
+A loading that must be free in sign is asked for with
 \code{links = list(alpha1 = linkfunctions7::identity_link())}.
 
 The persistence is carried by \strong{partial autocorrelations} rather
@@ -99,7 +99,7 @@ one parameter has no place to declare it. That belongs to the model
 layer. The persistence would also need a different chart: the
 partial-autocorrelation construction below is a scalar one, and the
 stationary region of a matrix autoregression is a bound on the
-spectral radius of its companion matrix rather than a box.
+spectral radius of its companion matrix, which is not a box.
 
 The score driving the recursion is used unscaled. The general
 formulation carries a scaling matrix, usually an inverse information,
@@ -107,8 +107,8 @@ which the curvature this term already receives would supply.
 }
 
 \subsection{Groups and time}{
-\code{by} filters each group independently, which is what a panel of
-short series needs, and \code{time} gives the order within a group.
+\code{by} filters each group independently, which is what a panel of short
+series needs; \code{time} gives the order within a group.
 Without \code{time} the rows are taken in the order they appear.
 }
 
@@ -121,7 +121,7 @@ package:
 \preformatted{gas(p = 1, q = 1, omega ~ ridge(~g), alpha1 ~ s(x),
     pacf1 ~ random(~1 | id), by = id)}
 The development acts on the unconstrained scale of the parameter's own
-link, which is what keeps every per-observation value in the
+link. That is what keeps every per-observation value inside the
 parameter's own set whatever the coefficients are: a loading on the
 log link is positive at every observation, a persistence on the rhobit
 chart is inside \eqn{(-1, 1)} at every observation, and at \eqn{q = 1}
@@ -169,7 +169,53 @@ included) while covering what they could not.
 }
 }
 \examples{
-term_params(gas(p = 1, q = 2))
+# A level, one loading and one persistence coordinate.
+term_params(gas(p = 1, q = 1))
+term_params(gas(p = 2, q = 2))
+
+# The loading rides a log chart so that it stays positive, and the
+# persistence a rhobit so that the filter stays stationary.
+vapply(term_links(gas(p = 1, q = 2)), function(l) l@link_name,
+       character(1))
+
+# Running the filter: the term supplies the recursion and the caller
+# supplies the density's score and curvature. Here a Gaussian mean.
+set.seed(1)
+dd <- data.frame(t = 1:60, y = c(rnorm(30), rnorm(30, 3)))
+b <- term_build(gas(p = 1, q = 1, time = t), dd)
+out <- term_filter(b, eta = rep(0, 60), y = dd$y,
+                   score = function(e, i) dd$y[i] - e,
+                   curvature = function(e, i) -1,
+                   psi = list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.8))
+
+# The level tracks the change in the mean.
+round(out$eta[c(1, 15, 30, 32, 45, 60)], 3)
+
+# And the Jacobian it propagates is exact, not differenced: a central
+# difference of the filter agrees with it to the step's own accuracy.
+f <- function(v) sum(term_filter(b, rep(0, 60), dd$y,
+                                 function(e, i) dd$y[i] - e,
+                                 function(e, i) -1,
+                                 list(omega = v[1], alpha1 = v[2],
+                                      pacf1 = v[3]))$eta)
+v0 <- c(0.1, 0.3, 0.8)
+h  <- 1e-5
+fd <- vapply(1:3, function(j) {
+  e <- numeric(3); e[j] <- h
+  (f(v0 + e) - f(v0 - e)) / (2 * h)
+}, numeric(1))
+max(abs(colSums(out$jacobian) - fd))
+
+# A panel: each group filtered from its own starting level.
+dd$id <- rep(1:3, each = 20)
+term_build(gas(p = 1, q = 1, by = id, time = t), dd)
+
+# A developed parameter expands in place, and brings its sub-term's
+# penalty with it.
+dd$g <- factor(rep(c("u", "v"), 30))
+gb <- term_build(gas(p = 1, q = 1, omega ~ ridge(~ g), time = t), dd)
+term_params(gb)
+vapply(term_penalties(gb), function(e) e$name, character(1))
 
 }
 \references{
@@ -181,5 +227,7 @@ Harvey, A. C. (2013). \emph{Dynamic Models for Volatility and Heavy
 Tails}. Cambridge University Press.
 }
 \seealso{
-\code{\link[=regime]{regime()}}
+\code{\link[=regime]{regime()}} for the other dynamic term, \code{\link[=term_filter]{term_filter()}} for the
+recursion, \code{\link[=term_params]{term_params()}} and \code{\link[=term_links]{term_links()}} for the parameters and
+their charts, \code{\link[=term_readable]{term_readable()}} for what a fitted one reports.
 }

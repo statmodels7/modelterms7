@@ -5,25 +5,77 @@ NULL
 #' @name GasTerm
 #'
 #' @description
-#' A subclass of [structural_term()] for a generalized
-#' autoregressive score component: a time-varying level driven by the
-#' score of the observation density, added to the linear predictor.
-#' Constructed by [gas()].
+#' The subclass of [structural_term()] holding a generalized autoregressive
+#' score component: a time-varying level driven by the score of the
+#' observation density, added to the predictor of one distribution parameter.
+#' [gas()] constructs it. Its contribution is a state rather than a block, so
+#' it implements [term_filter()] and has no [term_matrix()] method.
+#'
+#' @details
+#' # The seven properties of its own
+#'
+#' `p` is the number of score lags and `q` the number of autoregressive ones,
+#' which together fix the parameter count at \eqn{1 + p + q} before any
+#' subformula.
+#'
+#' `by` and `time` are the grouping and ordering expressions as written, kept
+#' unevaluated; `NULL` means one series in row order.
+#'
+#' `links` holds whatever the caller overrode, empty where the defaults stand:
+#' the identity on the level, the log on each loading, the rhobit on each
+#' partial autocorrelation. `submodels` holds one right-hand side per
+#' parameter developed over covariates.
+#'
+#' `blueprint` is filled by [term_build()] and carries the row order within
+#' each group, the built sub-terms of each subformula and their designs. The
+#' class overrides the branch's `blueprint` property because a structural term
+#' has no design block to hang one on.
+#'
+#' # What the class is for
+#'
+#' The recursion, its exact Jacobian, the reverse pass, the curvature and the
+#' contracted third derivative are all methods on it, so a fitting layer can
+#' estimate the term's parameters beside the coefficients of every equation
+#' and read the joint observed information.
 #'
 #' @inheritParams model_term
-#' @param p The number of score lags.
-#' @param q The number of autoregressive lags.
-#' @param by An optional grouping expression, filtered independently.
-#' @param time An optional ordering expression.
-#' @param links The links overriding the defaults, if any.
-#' @param submodels One optional subformula per parameter.
-#' @param blueprint The resolved ordering and grouping.
+#' @param p The number of score lags, an integer of at least 0.
+#' @param q The number of autoregressive lags, an integer of at least 0.
+#' @param by An optional grouping expression; each group is filtered
+#'   independently. `NULL` for one series.
+#' @param time An optional ordering expression. `NULL` for row order.
+#' @param links A named list of \pkg{linkfunctions7} links overriding the
+#'   defaults, empty where none was given.
+#' @param submodels A named list of one-sided formulas, one per parameter
+#'   developed over covariates. Empty where none is.
+#' @param blueprint A named list of the resolved ordering, grouping and
+#'   sub-term designs, empty until [term_build()] fills it.
 #'
-#' @return An object of class `GasTerm`.
+#' @return An S7 object of class `GasTerm`, inheriting from
+#'   [structural_term()] and [model_term()], with the seven properties above
+#'   beside [model_term()]'s six.
 #'
-#' @seealso [gas()]
+#' @seealso [gas()], the constructor; [term_filter()] for the recursion;
+#'   [term_readable()] for the quantities a fitted one reports; [regime()] for
+#'   the other dynamic term.
+#'
 #' @examples
-#' S7::S7_inherits(gas(), GasTerm)
+#' set.seed(1)
+#' dd <- data.frame(t = 1:60, y = c(rnorm(30), rnorm(30, 3)))
+#'
+#' tm <- gas(p = 1, q = 2, time = t)
+#' S7::S7_inherits(tm, GasTerm)
+#' c(p = tm@p, q = tm@q)
+#'
+#' # 1 + p + q parameters, and one chart each.
+#' term_params(tm)
+#' vapply(term_links(tm), function(l) l@link_name, character(1))
+#'
+#' # The build resolves the ordering; there is no block to read.
+#' b <- term_build(tm, dd)
+#' names(b@blueprint)
+#' try(term_matrix(b))
+#'
 #' @export
 GasTerm <- S7::new_class(
   name = "GasTerm",
@@ -54,16 +106,16 @@ GasTerm <- S7::new_class(
 #' @details
 #' The term adds no columns. The predictor at one time depends on the
 #' data at the previous ones, so the contribution cannot be written as a
-#' block, and [term_filter()] runs the recursion instead. That
-#' is what makes it a [structural_term()].
+#' block, and [term_filter()] runs the recursion instead. That is what puts
+#' it on the structural branch.
 #'
 #' What drives the recursion is the score of whatever distribution the
 #' model carries, so the same term is a GARCH-like volatility model when
 #' it enters the scale of a Gaussian, a dynamic count model when it enters
 #' the mean of a Poisson, and a robust location filter when it enters a
 #' Student t: a heavy-tailed score is bounded in the observation, so an
-#' outlier moves the level by a bounded amount rather than in proportion
-#' to its size.
+#' outlier moves the level by a bounded amount instead of in proportion to
+#' its size.
 #'
 #' \subsection{The parameters and their chart}{
 #' The parameters are the level \eqn{\omega}, the score loadings
@@ -72,11 +124,11 @@ GasTerm <- S7::new_class(
 #' the defaults are the following.
 #'
 #' The level carries the identity, being unconstrained. The loadings carry
-#' the **log** link: a positive loading responds in the direction of
-#' the score, which is the case the score-driven literature writes, and
-#' positivity is then structural -- a deviation or a submodel moves the
-#' loading on the log scale and no group or observation can take a
-#' negative one. A loading that must be free in sign is asked for with
+#' the **log** link: a positive loading responds in the direction of the
+#' score, which is the case the score-driven literature writes, and
+#' positivity is then structural. A deviation or a submodel moves the loading
+#' on the log scale, so no group and no observation can take a negative one.
+#' A loading that must be free in sign is asked for with
 #' `links = list(alpha1 = linkfunctions7::identity_link())`.
 #'
 #' The persistence is carried by **partial autocorrelations** rather
@@ -107,7 +159,7 @@ GasTerm <- S7::new_class(
 #' layer. The persistence would also need a different chart: the
 #' partial-autocorrelation construction below is a scalar one, and the
 #' stationary region of a matrix autoregression is a bound on the
-#' spectral radius of its companion matrix rather than a box.
+#' spectral radius of its companion matrix, which is not a box.
 #'
 #' The score driving the recursion is used unscaled. The general
 #' formulation carries a scaling matrix, usually an inverse information,
@@ -115,8 +167,8 @@ GasTerm <- S7::new_class(
 #' }
 #'
 #' \subsection{Groups and time}{
-#' `by` filters each group independently, which is what a panel of
-#' short series needs, and `time` gives the order within a group.
+#' `by` filters each group independently, which is what a panel of short
+#' series needs; `time` gives the order within a group.
 #' Without `time` the rows are taken in the order they appear.
 #' }
 #'
@@ -129,7 +181,7 @@ GasTerm <- S7::new_class(
 #' \preformatted{gas(p = 1, q = 1, omega ~ ridge(~g), alpha1 ~ s(x),
 #'     pacf1 ~ random(~1 | id), by = id)}
 #' The development acts on the unconstrained scale of the parameter's own
-#' link, which is what keeps every per-observation value in the
+#' link. That is what keeps every per-observation value inside the
 #' parameter's own set whatever the coefficients are: a loading on the
 #' log link is positive at every observation, a persistence on the rhobit
 #' chart is inside \eqn{(-1, 1)} at every observation, and at \eqn{q = 1}
@@ -203,10 +255,59 @@ GasTerm <- S7::new_class(
 #' Harvey, A. C. (2013). *Dynamic Models for Volatility and Heavy
 #' Tails*. Cambridge University Press.
 #'
-#' @examples
-#' term_params(gas(p = 1, q = 2))
+#' @seealso [regime()] for the other dynamic term, [term_filter()] for the
+#'   recursion, [term_params()] and [term_links()] for the parameters and
+#'   their charts, [term_readable()] for what a fitted one reports.
 #'
-#' @seealso [regime()]
+#' @examples
+#' # A level, one loading and one persistence coordinate.
+#' term_params(gas(p = 1, q = 1))
+#' term_params(gas(p = 2, q = 2))
+#'
+#' # The loading rides a log chart so that it stays positive, and the
+#' # persistence a rhobit so that the filter stays stationary.
+#' vapply(term_links(gas(p = 1, q = 2)), function(l) l@link_name,
+#'        character(1))
+#'
+#' # Running the filter: the term supplies the recursion and the caller
+#' # supplies the density's score and curvature. Here a Gaussian mean.
+#' set.seed(1)
+#' dd <- data.frame(t = 1:60, y = c(rnorm(30), rnorm(30, 3)))
+#' b <- term_build(gas(p = 1, q = 1, time = t), dd)
+#' out <- term_filter(b, eta = rep(0, 60), y = dd$y,
+#'                    score = function(e, i) dd$y[i] - e,
+#'                    curvature = function(e, i) -1,
+#'                    psi = list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.8))
+#'
+#' # The level tracks the change in the mean.
+#' round(out$eta[c(1, 15, 30, 32, 45, 60)], 3)
+#'
+#' # And the Jacobian it propagates is exact, not differenced: a central
+#' # difference of the filter agrees with it to the step's own accuracy.
+#' f <- function(v) sum(term_filter(b, rep(0, 60), dd$y,
+#'                                  function(e, i) dd$y[i] - e,
+#'                                  function(e, i) -1,
+#'                                  list(omega = v[1], alpha1 = v[2],
+#'                                       pacf1 = v[3]))$eta)
+#' v0 <- c(0.1, 0.3, 0.8)
+#' h  <- 1e-5
+#' fd <- vapply(1:3, function(j) {
+#'   e <- numeric(3); e[j] <- h
+#'   (f(v0 + e) - f(v0 - e)) / (2 * h)
+#' }, numeric(1))
+#' max(abs(colSums(out$jacobian) - fd))
+#'
+#' # A panel: each group filtered from its own starting level.
+#' dd$id <- rep(1:3, each = 20)
+#' term_build(gas(p = 1, q = 1, by = id, time = t), dd)
+#'
+#' # A developed parameter expands in place, and brings its sub-term's
+#' # penalty with it.
+#' dd$g <- factor(rep(c("u", "v"), 30))
+#' gb <- term_build(gas(p = 1, q = 1, omega ~ ridge(~ g), time = t), dd)
+#' term_params(gb)
+#' vapply(term_penalties(gb), function(e) e$name, character(1))
+#'
 #' @export
 gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL,
                 links = NULL, label = "gas") {
@@ -317,6 +418,45 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL,
     if (q > 0L) paste0("pacf", seq_len(q)))
 }
 
+#' @title The Parameters of a Score-Driven Term
+#' @name term_params.GasTerm
+#'
+#' @description
+#' `"omega"`, then `"alpha1"` ... `"alphap"`, then `"pacf1"` ... `"pacfq"`:
+#' the level, one loading per score lag, and one partial autocorrelation per
+#' autoregressive lag. A parameter carrying a subformula is **expanded in
+#' place** into its coefficients, named `parameter.coefficient`.
+#'
+#' @details
+#' The persistence coordinates are named for the chart they live on and not
+#' for the quantity a reader reads. `pacf1` is a partial autocorrelation;
+#' the autoregressive coefficient \eqn{\beta_1} the literature writes is a
+#' function of the whole chart through Levinson-Durbin, and coincides with the
+#' coordinate only at \eqn{q = 1}. [term_readable()] is what carries the
+#' coordinates onto the coefficients.
+#'
+#' The order is the one [term_links()], [term_start()], [term_filter()]'s
+#' Jacobian columns and the joint variance matrix are all indexed by.
+#'
+#' @param term A [GasTerm()]. Unbuilt, the subformulas have not been resolved,
+#'   so a developed parameter still appears as itself.
+#' @param ... Unused.
+#'
+#' @return A character vector of length [term_npar()].
+#'
+#' @seealso [term_links()] for the charts, [term_readable()] for the
+#'   quantities, [gas()] for what they mean.
+#'
+#' @examples
+#' term_params(gas(p = 1, q = 1))
+#' term_params(gas(p = 2, q = 3))
+#'
+#' # A subformula expands its parameter in place.
+#' set.seed(1)
+#' dd <- data.frame(t = 1:40, y = rnorm(40), g = factor(rep(c("u", "v"), 20)))
+#' term_params(term_build(gas(p = 1, q = 1, omega ~ g, time = t), dd))
+#'
+#' @keywords internal
 S7::method(term_params, GasTerm) <- function(term, ...) {
   if (length(term@blueprint) && !is.null(term@blueprint$sub)) {
     return(.gas_sub_layout(term)$names)
@@ -372,7 +512,7 @@ S7::method(term_level_design, GasTerm) <- function(term, ...) {
 #' @name term_readable.GasTerm
 #' @description
 #' The level, the score loadings and the AUTOREGRESSIVE COEFFICIENTS of the
-#' literature -- `omega`, `alpha1`, `beta1` -- with the
+#' literature, `omega`, `alpha1` and `beta1`, with the
 #' Jacobian from the term's own parameters.
 #' @details
 #' The level and the loadings are reported through their own links, each a
@@ -426,6 +566,51 @@ S7::method(term_readable, GasTerm) <- function(term, zeta, ...) {
   out
 }
 
+#' @title The Charts of a Score-Driven Term's Parameters
+#' @name term_links.GasTerm
+#'
+#' @description
+#' The identity on the level, the **log** on every loading and the **rhobit**
+#' on every partial autocorrelation, unless the `links` argument of [gas()]
+#' overrode one. Each carries its parameter's own admissible set onto the whole
+#' real line, so an optimizer proposing anything at all gets an admissible
+#' filter.
+#'
+#' @details
+#' The log on a loading makes positivity structural: a subformula develops the
+#' loading on that scale, so no group and no observation can take a negative
+#' one. A loading that must be free in sign is asked for by name.
+#'
+#' The rhobit on a partial autocorrelation keeps it inside \eqn{(-1, 1)}, and
+#' Levinson-Durbin then carries the whole chart onto a stationary
+#' autoregression. That is the reason for the chart: the stationary region in
+#' the coefficients is not a box, so no collection of scalar links covers it.
+#'
+#' Where a parameter carries a subformula the link is applied **inside** the
+#' development, so the parameter is admissible at every observation and its
+#' coefficients are unconstrained on the identity.
+#'
+#' @param term A [GasTerm()].
+#' @param ... Unused.
+#'
+#' @return A named list of \pkg{linkfunctions7} links, one per entry of
+#'   [term_params()].
+#'
+#' @seealso [term_params()], [gas()], [term_start()].
+#'
+#' @examples
+#' vapply(term_links(gas(p = 2, q = 2)), function(l) l@link_name, character(1))
+#'
+#' # Each carries its own set onto the line, so nothing is out of range.
+#' lk <- term_links(gas(p = 1, q = 1))
+#' vapply(lk, function(l) paste(l@link_bounds, collapse = ", "), character(1))
+#'
+#' # Overridden: a loading free in sign.
+#' vapply(term_links(gas(p = 1, q = 1,
+#'                       links = list(alpha1 = linkfunctions7::identity_link()))),
+#'        function(l) l@link_name, character(1))
+#'
+#' @keywords internal
 S7::method(term_links, GasTerm) <- function(term, ...) {
   base <- .gas_base_params(term@p, term@q)
   nm <- term_params(term)
@@ -445,8 +630,8 @@ S7::method(term_links, GasTerm) <- function(term, ...) {
 #' loadings, which start at \eqn{0.1} on the parameter scale, through
 #' whatever link each one carries.
 #' @details
-#' Zero is the natural point of every other chart -- a level of zero, no
-#' persistence, no deviation -- so the term starts as near the model
+#' Zero is the natural point of every other chart: a level of zero, no
+#' persistence, no deviation. The term therefore starts as near the model
 #' without it as its charts allow. The loadings are the exception because
 #' zero on the log scale is a loading of ONE, a response strong enough to
 #' destabilize the recursion at ordinary curvatures; \eqn{0.1} is a weak
@@ -696,6 +881,55 @@ gas_levinson3 <- function(pacf, w) {
   thi
 }
 
+#' @title Build a Score-Driven Term
+#' @name term_build.GasTerm
+#'
+#' @description
+#' Resolves the grouping, the ordering and every subformula against the data,
+#' builds the sub-terms of the developments and records all of it in the
+#' blueprint. The recursion itself runs later, in [term_filter()].
+#'
+#' @details
+#' `by` and `time` are evaluated in the data. Each must give one non-missing
+#' value per row, and the blueprint records the row indices of each group in
+#' time order, which is what the filter iterates over.
+#'
+#' Each subformula's right-hand side goes through [interpret_formula()] and its
+#' terms are built, so their blueprints are recorded and a prediction reapplies
+#' them. A structural sub-term, and one whose own block moves with its
+#' coefficients, are rejected: a parameter's development must be a fixed
+#' design. The penalties those sub-terms carry become the term's own
+#' [term_penalties()] entries, keyed `parameter::subterm`.
+#'
+#' Without `time` the rows are taken as they come. That is a real choice: the
+#' recursion is about order, so a data frame that is not already sorted gives a
+#' different model.
+#'
+#' @param term A [GasTerm()].
+#' @param data A data frame carrying whatever `by`, `time` and the subformulas
+#'   name.
+#' @param ... Unused.
+#'
+#' @return The term with `blueprint` filled. [term_is_built()] stays `FALSE`,
+#'   that predicate testing for a design block.
+#'
+#' @seealso [gas()], [term_filter()], [term_penalties()].
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(t = 1:60, y = rnorm(60), id = rep(1:3, each = 20),
+#'                  g = factor(rep(c("u", "v"), 30)))
+#'
+#' # One series, then a panel of three.
+#' lengths(term_build(gas(p = 1, q = 1, time = t), dd)@blueprint$order)
+#' lengths(term_build(gas(p = 1, q = 1, by = id, time = t), dd)@blueprint$order)
+#'
+#' # A development expands the parameter and brings its penalty.
+#' gb <- term_build(gas(p = 1, q = 1, omega ~ ridge(~ g), time = t), dd)
+#' term_params(gb)
+#' vapply(term_penalties(gb), function(e) e$name, character(1))
+#'
+#' @keywords internal
 S7::method(term_build, GasTerm) <- function(term, data, ...) {
   n <- nrow(data)
   gf <- if (is.null(term@by)) factor(rep(1L, n)) else {
@@ -1486,6 +1720,51 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
   list(jacobian = D, curvature = W)
 }
 
+#' @title Print a Score-Driven Term
+#' @name print.GasTerm
+#'
+#' @description
+#' Prints the label, the two orders and, for a built term, over how many groups
+#' the filter runs. A second line names any developed parameters, and a third
+#' lists the parameters themselves.
+#'
+#' @details
+#' The form is
+#'
+#' ```
+#' <GasTerm> 'gas': score-driven, p = 1, q = 1; 3 group(s)
+#'   developed: omega
+#'   parameters: omega.(Intercept), omega.g2, alpha1, pacf1
+#' ```
+#'
+#' The `developed` line appears only where a subformula was given. The
+#' parameter list is [term_params()], so a developed parameter shows there as
+#' its coefficients.
+#'
+#' A built structural term is never described as "built"; the group count is
+#' the tell. [term_is_built()] tests for a design block, which this branch
+#' does not have.
+#'
+#' @param x A [GasTerm()], built or not.
+#' @param ... Unused, and accepted so that the signature matches [print()]'s.
+#'
+#' @return `x`, invisibly. Called for the lines it writes.
+#'
+#' @seealso [gas()], [term_params()].
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(t = 1:60, y = rnorm(60), id = rep(1:3, each = 20),
+#'                  g = factor(rep(c("u", "v"), 30)))
+#'
+#' # A specification, and the same term built over three groups.
+#' gas(p = 1, q = 2)
+#' term_build(gas(p = 1, q = 1, by = id, time = t), dd)
+#'
+#' # A developed parameter is named on its own line.
+#' term_build(gas(p = 1, q = 1, omega ~ g, by = id, time = t), dd)
+#'
+#' @keywords internal
 S7::method(print, GasTerm) <- function(x, ...) {
   built <- length(x@blueprint) > 0L
   cat(sprintf("<GasTerm> '%s': score-driven, p = %d, q = %d%s\n",
