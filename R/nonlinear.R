@@ -5,26 +5,78 @@ NULL
 #' @name NlTerm
 #'
 #' @description
-#' A subclass of [additive_term()] for a parametric function
-#' that is nonlinear in its own parameters. The design block is the
-#' Jacobian of that function in the parameters, so the term is linear in
-#' the sense the model layer needs while the function is not; the block
-#' depends on where the parameters currently are and is recomputed by
-#' [term_refresh()].
+#' The subclass of [additive_term()] holding a parametric function that is
+#' nonlinear in its own parameters. Its design block is the **Jacobian** of
+#' that function, so the term is linear in the sense a fitting layer needs
+#' while the function is not. The block depends on where the parameters
+#' currently are, and [term_refresh()] recomputes it as they move.
+#'
+#' @details
+#' # The six properties of its own
+#'
+#' `fn` is the function or formula as given, and `spec$is_formula` records
+#' which. `nl_params` names the parameters, inferred from a formula or taken
+#' from `params` for an opaque function.
+#'
+#' `links` holds one \pkg{linkfunctions7} link per parameter, the identity
+#' where none was named, and `subformulas` one right-hand side per parameter
+#' developed over covariates, empty otherwise.
+#'
+#' `deriv_mode` is `"symbolic"` where [stats::deriv()] could read the
+#' expression and `"numeric"` where the derivatives are differenced.
+#' [nl_fderiv()] chooses per order, so the field records the route the
+#' expression as a whole took.
+#'
+#' `spec` carries the resolved construction settings, and the blueprint what
+#' the build computed: the parameter designs, the starting coefficients and
+#' the coefficients last committed.
+#'
+#' # What makes it an additive term
+#'
+#' While \eqn{f} is differentiable the term is an ordinary additive one at
+#' every point, so it needs no branch of its own in a fitting layer. What it
+#' adds is three generics: [term_refresh()] to recompute the block,
+#' [term_value()] to report \eqn{f} itself, and [term_jacobian_block()] to say
+#' that the block really is a Jacobian, which licenses a Gauss-Newton step and
+#' a line search on the model's own objective.
 #'
 #' @inheritParams additive_term
-#' @param fn The function or formula defining the contribution.
-#' @param nl_params The names of the nonlinear parameters.
-#' @param links One link per parameter.
-#' @param subformulas One optional formula per parameter.
-#' @param deriv_mode How the derivatives are obtained.
-#' @param spec The resolved construction settings.
+#' @param fn The function or formula defining the contribution, as given.
+#' @param nl_params A character vector of the parameter names, in the order
+#'   the derivative components are keyed by.
+#' @param links A named list of one \pkg{linkfunctions7} link per parameter.
+#' @param subformulas A named list of one-sided formulas, one per parameter
+#'   developed over covariates. Empty where none is.
+#' @param deriv_mode `"symbolic"` or `"numeric"`.
+#' @param spec A named list of the resolved construction settings.
 #'
-#' @return An object of class `NlTerm`.
+#' @return An S7 object of class `NlTerm`, inheriting from [additive_term()]
+#'   and [model_term()], with the six properties above beside the ten they
+#'   supply.
 #'
-#' @seealso [nl()]
+#' @seealso [nl()], the constructor; [nl_fderiv()] for the derivatives;
+#'   [term_refresh()] and [term_value()] for the pair a Gauss-Newton step
+#'   reads.
+#'
 #' @examples
-#' S7::S7_inherits(nl(~ theta1 * exp(theta2 * x)), NlTerm)
+#' set.seed(1)
+#' dd <- data.frame(x = seq(0, 3, length.out = 60))
+#' dd$y <- 2 * exp(-1.3 * dd$x) + rnorm(60, sd = 0.05)
+#'
+#' tm <- nl(~ a * exp(-r * x), start = list(a = 1, r = 1))
+#' S7::S7_inherits(tm, NlTerm)
+#' tm@nl_params
+#' tm@deriv_mode
+#'
+#' # An opaque function cannot be read symbolically.
+#' nl(function(x, theta) theta$a * exp(-theta$r * x),
+#'    params = c("a", "r"), x = x, start = list(a = 1, r = 1))@deriv_mode
+#'
+#' # The block is the Jacobian, which is what licenses a Gauss-Newton step.
+#' b <- term_build(tm, dd)
+#' dim(term_matrix(b))
+#' term_jacobian_block(b)
+#'
 #' @export
 NlTerm <- S7::new_class(
   name = "NlTerm",
@@ -50,15 +102,14 @@ NlTerm <- S7::new_class(
 #'
 #' @details
 #' While \eqn{f} is differentiable the term is an ordinary additive one at
-#' every point: the contribution is linearized as
+#' every point. The contribution is linearized as
 #' \deqn{f(x;\theta(\beta)) \approx f(x;\theta(\beta_0))
 #'   + J(\beta_0)\,(\beta - \beta_0), \qquad
 #'   J = \frac{\partial f}{\partial \beta},}
-#' so the design block is the Jacobian, and the only thing that
-#' distinguishes the term from a linear one is that the block is refreshed
-#' as the parameters move. [term_refresh()] does that, and
-#' [term_value()] reports the contribution itself, which a
-#' Gauss-Newton step needs beside the Jacobian.
+#' so the design block is the Jacobian. What separates the term from a linear
+#' one is that the block is recomputed as the parameters move:
+#' [term_refresh()] does that, and [term_value()] reports the contribution
+#' itself, which is the second thing a Gauss-Newton step needs.
 #'
 #' \subsection{Two ways to give the function, with different reach}{
 #' A **formula** such as `~ theta1 * exp(theta2 * x)` is read
@@ -69,7 +120,7 @@ NlTerm <- S7::new_class(
 #' vectorized in both, is treated as opaque: its derivatives are always
 #' differenced, and its parameters must be named in `params`.
 #'
-#' The difference is not only in the derivatives. Modeling a parameter
+#' The two routes differ in more than the derivatives. Modeling a parameter
 #' with covariates means replacing \eqn{\theta_j} by
 #' \eqn{g_j^{-1}(Z\gamma_j)} inside \eqn{f}, which requires knowing where
 #' \eqn{\theta_j} enters; a formula says so and an opaque function does
@@ -129,37 +180,44 @@ NlTerm <- S7::new_class(
 #' a function given here, then symbolic differentiation of the expression,
 #' then one stencil applied to the highest order that IS analytic.
 #'
-#' `gradient`, `hessian`, `deriv3` and `deriv4` are
-#' independent, so the orders worth writing out by hand can be written and the
-#' rest left alone. **Writing the Hessian pays twice**: the third and
-#' fourth orders are then one difference away from an exact second rather than
-#' from the function. Measured on \eqn{f = a e^{-rx}} given as an opaque
-#' function, so that nothing is symbolic, against the closed forms:
+#' `gradient`, `hessian`, `deriv3` and `deriv4` are independent, so the orders
+#' worth writing out by hand can be written and the rest left alone.
+#' **Writing the Hessian pays twice**: the third and fourth orders are then
+#' one difference away from an exact second instead of from the function.
 #'
-#' \tabular{lrrrr}{
-#'   \tab order 1 \tab 2 \tab 3 \tab 4 \cr
-#'   nothing supplied \tab 5.2e-13 \tab 8.4e-03 \tab 4.62 \tab 1.96e+03 \cr
-#'   gradient and hessian \tab 0 \tab 0 \tab 2.2e-12 \tab 8.9e-11
-#' }
+#' Measured on \eqn{f = a e^{-rx}} at \eqn{a = 2}, \eqn{r = 0.7} over forty
+#' points of \eqn{x} in \eqn{[0, 5]}, worst absolute error against the closed
+#' forms:
+#'
+#' | route | order 1 | 2 | 3 | 4 |
+#' | --- | --- | --- | --- | --- |
+#' | opaque function, nothing supplied | 1.8e-12 | 2.1e-10 | 2.1e-07 | 3.3e-05 |
+#' | opaque function, gradient and hessian given | 0 | 0 | 4.5e-11 | 9.2e-09 |
+#' | formula, differentiated symbolically | 0 | 4.4e-16 | 1.8e-15 | 7.1e-15 |
+#'
+#' Writing the two low orders buys about four thousand times the accuracy at
+#' the two high ones. Giving the term as a formula, where it can be, buys
+#' another six orders of magnitude and costs nothing to write.
 #'
 #' Each function takes `(theta, data)` -- a named list of the parameters,
 #' each of length `n` or 1, and the variables the formula names -- and
 #' returns a named list of numeric vectors of length `n`. The names are
 #' the components of that order, keyed as \pkg{distributions7} keys its own
 #' derivative surfaces: the parameter names joined by `"_"`. Order two of
-#' `c("a", "r")` is therefore `a_a`, `a_r`, `r_r`.
+#' `c("a", "r")` is therefore `a_a`, `a_r`, `r_r`, and order three
+#' `a_a_a`, `a_a_r`, `a_r_r`, `r_r_r`.
 #'
 #' The names are normalized here, so `r_a` and `a_r` are the same
 #' component and the order in which they are returned does not matter; what is
 #' checked is the SET. A name that is not a component of this term, a missing
-#' component or a repeated one is an error at [term_build()] rather
-#' than a silent fall-through to the numerical route, an exact derivative that
-#' is quietly not used being worse than none.
+#' component or a repeated one is an error at [term_build()]. It is not a
+#' silent fall-through to the numerical route: an exact derivative quietly not
+#' used is worse than none.
 #'
 #' The derivatives are in the parameters \eqn{\theta}, not in the
-#' coefficients: the chain rule onto the coefficients -- each parameter's link,
-#' and a subformula's design -- is the term's, which is the only thing that
-#' knows them. [nl_fderiv()] reads any order back.
+#' coefficients. The chain rule onto the coefficients, meaning each
+#' parameter's link and a subformula's design, belongs to the term, which is
+#' the only thing that knows them. [nl_fderiv()] reads any order back.
 #' }
 #'
 #' @param fn A one-sided formula in the covariates and the parameters, or
@@ -647,30 +705,55 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
 #' derivative surfaces.
 #'
 #' @details
-#' The route is chosen per ORDER, highest first: a function supplied to
-#' [nl()] is used where there is one, then the symbolic route where
-#' the expression can be differentiated, and otherwise one stencil applied to
-#' the highest order that is analytic -- which includes a supplied one. That is
-#' what makes writing out a Hessian pay twice: the third and fourth orders are
-#' then one difference away from an exact second rather than from the function.
+#' The route is chosen per ORDER, in this priority: a function supplied to
+#' [nl()] where there is one, then the symbolic route where the expression
+#' can be differentiated, and otherwise one stencil applied to the highest
+#' order that is analytic, a supplied one included. That is why writing out a
+#' Hessian pays twice: the third and fourth orders are then one difference
+#' away from an exact second instead of from the function.
+#'
+#' Only **one** stencil is applied, never a chain of them. A fourth
+#' derivative built from four nested first differences is noise; the same
+#' discipline holds everywhere in the toolkit.
 #'
 #' The components are in the term's OWN parameters, not in its coefficients.
-#' The chain rule onto the coefficients -- the links, and a subformula's design
-#' -- belongs to the term, which is the only thing that knows them.
+#' The chain rule onto the coefficients, the links and a subformula's design,
+#' belongs to the term, which is the only thing that knows them.
 #'
-#' @param term A built [NlTerm()].
-#' @param coef The coefficients, or `NULL` for the ones the term carries.
-#' @param order 1, 2, 3 or 4.
+#' @param term A built [NlTerm()]. Anything else throws
+#'   `"'term' must be a built nl() term."`, and an unbuilt one
+#'   `"the term is not built."`.
+#' @param coef The coefficients to read at, or `NULL` for the ones the term
+#'   currently carries, which [term_refresh()] last committed.
+#' @param order 1, 2, 3 or 4. Anything else throws.
 #'
-#' @return A named list of numeric vectors, one per component of that order.
+#' @return A named list of numeric vectors of length `n`, one per component of
+#'   that order: `a`, `r` at order one, `a_a`, `a_r`, `r_r` at order two, and
+#'   so on, the parameter names joined by `"_"` in the term's own parameter
+#'   order.
+#'
+#' @seealso [nl()] for the four functions that may supply these,
+#'   [term_block_deriv()] for the same quantities chained onto the
+#'   coefficients.
 #'
 #' @examples
 #' dd <- data.frame(x = seq(0.2, 3, length.out = 20))
 #' dd$y <- 2 * exp(-1.3 * dd$x)
 #' b <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3)), dd)
-#' names(nl_fderiv(b, order = 2))
 #'
-#' @seealso [nl()]
+#' # One component per index multiset, at every order.
+#' names(nl_fderiv(b, order = 1))
+#' names(nl_fderiv(b, order = 2))
+#' names(nl_fderiv(b, order = 3))
+#'
+#' # On a formula they are symbolic, so they are exact.
+#' d1 <- nl_fderiv(b, order = 1)
+#' e <- exp(-1.3 * dd$x)
+#' c(a = max(abs(d1$a - e)), r = max(abs(d1$r + 2 * dd$x * e)))
+#'
+#' # Order one is the Jacobian in the parameters, so with identity links
+#' # and no subformula it is the design block itself.
+#' max(abs(cbind(d1$a, d1$r) - term_matrix(b)))
 #'
 #' @export
 nl_fderiv <- function(term, coef = NULL, order = 1L) {
@@ -715,6 +798,73 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
   Reduce(Matrix::cbind2, blocks)
 }
 
+#' @title Build a Nonlinear Term
+#' @name term_build.NlTerm
+#'
+#' @description
+#' Resolves the parameters, their links and their subformulas against the
+#' data, evaluates the function at the starting values, and takes the Jacobian
+#' there as the design block. It also chooses how each order of derivative
+#' will be obtained and checks that any function the caller supplied returns
+#' the right components.
+#'
+#' @details
+#' # What is settled here
+#'
+#' On the formula route [stats::deriv()] is tried on the expression, and
+#' `deriv_mode` records whether it succeeded. Every function given to
+#' `gradient`, `hessian`, `deriv3` or `deriv4` is called once and its names
+#' checked against the components of that order: a name that is not one of
+#' them, a missing component or a repeated one throws here. Falling back to
+#' the numerical route would leave an exact derivative silently unused, which
+#' is worse than not having it.
+#'
+#' Each parameter's subformula goes through [interpret_formula()] and its
+#' terms are built, so their blueprints are recorded and reapplied at
+#' prediction. A structural sub-term, and one whose own block moves with its
+#' coefficients, are rejected: a parameter's submodel must be a fixed design.
+#'
+#' # The starting point
+#'
+#' The block is the Jacobian **at the starting coefficients**, so it is only
+#' as good as they are. Where `start` names nothing, [term_coef_start()]
+#' estimates the parameters from the data over a deterministic grid on each
+#' free parameter's chart; zero is a degenerate point for a nonlinear function,
+#' not a neutral one.
+#'
+#' @param term An unbuilt or built [NlTerm()].
+#' @param data A data frame carrying the covariates the function names and
+#'   whatever the subformulas name.
+#' @param ... Unused.
+#'
+#' @return The term with `X`, `coef_names`, `blueprint` and, where a
+#'   subformula brought one, `penalty` filled.
+#'
+#' @seealso [nl()], [term_refresh()] for the block at other coefficients,
+#'   [term_predict.NlTerm()] for it at other rows.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(x = seq(0, 3, length.out = 60),
+#'                  g = factor(rep(c("u", "v"), 30)))
+#' dd$y <- 2 * exp(-1.3 * dd$x) + rnorm(60, sd = 0.05)
+#'
+#' b <- term_build(nl(~ a * exp(-r * x), start = list(a = 1, r = 1)), dd)
+#' term_coef_names(b)
+#' dim(term_matrix(b))
+#'
+#' # A developed parameter contributes one coefficient per column of its
+#' # own design.
+#' bs <- term_build(nl(~ a * exp(-r * x), a ~ 0 + g,
+#'                     start = list(a = 1, r = 1)), dd)
+#' term_coef_names(bs)
+#'
+#' # A supplied derivative is checked here, by name.
+#' bad <- function(theta, data) list(a = data$x, wrong = data$x)
+#' try(term_build(nl(~ a * exp(-r * x), gradient = bad,
+#'                   start = list(a = 1, r = 1)), dd))
+#'
+#' @keywords internal
 S7::method(term_build, NlTerm) <- function(term, data, ...) {
   n <- nrow(data)
   is_f <- term@spec$is_formula
@@ -956,6 +1106,58 @@ S7::method(term_penalties, NlTerm) <- function(term, ...) {
   nb
 }
 
+#' @title A Nonlinear Term's Block at New Rows
+#' @name term_predict.NlTerm
+#'
+#' @description
+#' The Jacobian of \eqn{f} evaluated at the new rows, at the coefficients the
+#' term currently carries. Each parameter's subformula is reapplied through
+#' its sub-terms' own blueprints, so a basis or a set of contrasts inside a
+#' submodel is not relearned.
+#'
+#' @details
+#' The coefficients are the ones [term_refresh()] last committed, not new
+#' ones: the block a prediction returns must multiply the same coefficients
+#' the fit reached, or \eqn{\tilde{X}\beta} is not the fitted contribution.
+#' [term_value()] is what reports \eqn{f} itself at new rows.
+#'
+#' Reading the block on its own is rarely what a caller wants for a nonlinear
+#' term. \eqn{\tilde{X}\beta} is the **linearization** of \eqn{f} and not
+#' \eqn{f}: they agree in the increment a Gauss-Newton step takes, not in the
+#' value. `term_value(term, newdata = ...)` gives the contribution.
+#'
+#' @param term A built [NlTerm()]. An unbuilt one throws
+#'   `"the term has not been built; call term_build(term, data) first."`.
+#' @param newdata A data frame carrying the covariates the function names and
+#'   whatever the subformulas name.
+#' @param ... Unused.
+#'
+#' @return A block of `nrow(newdata)` rows and [term_npar()] columns, with the
+#'   term's coefficient names as column names.
+#'
+#' @seealso [term_value()] for the contribution itself, [term_refresh()] for
+#'   the block at other coefficients, [nl_fderiv()] for the derivatives in the
+#'   parameters.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(x = seq(0, 3, length.out = 60))
+#' dd$y <- 2 * exp(-1.3 * dd$x) + rnorm(60, sd = 0.05)
+#' b <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3)), dd)
+#'
+#' # On the fitting data it is the block itself.
+#' all.equal(term_predict(b, dd), term_matrix(b))
+#'
+#' # At other rows it is the Jacobian there.
+#' nd <- data.frame(x = c(0.5, 1.5, 2.5))
+#' term_predict(b, nd)
+#'
+#' # Which is the linearization, not the function: read the value for that.
+#' cbind(linear = as.numeric(term_predict(b, nd) %*% b@blueprint$coef),
+#'       value = term_value(b, newdata = nd),
+#'       truth = 2 * exp(-1.3 * nd$x))
+#'
+#' @keywords internal
 S7::method(term_predict, NlTerm) <- function(term, newdata, ...) {
   .assert_built(term)
   X <- .nl_jacobian(.nl_blueprint_at(term, newdata), term@blueprint$coef)$J
@@ -1401,6 +1603,44 @@ S7::method(term_block_deriv2, NlTerm) <- function(term, coef = NULL, v, u,
   out
 }
 
+#' @title The Columns Each Parameter of a Nonlinear Term Owns
+#' @name term_components.NlTerm
+#'
+#' @description
+#' One entry per parameter of \eqn{f}, giving the columns of the block that
+#' parameter owns and the sub-terms developing it. A parameter with no
+#' subformula owns one column; a developed one owns as many as its own design
+#' has.
+#'
+#' @details
+#' It is what lets a consumer report a fitted nonlinear term parameter by
+#' parameter, and what [edf()] counts over. A coefficient name is built for a
+#' reader, so the division cannot be recovered by parsing one back; the term
+#' has to say it.
+#'
+#' @param term A built [NlTerm()]. An unbuilt one gives an empty list.
+#' @param ... Unused.
+#'
+#' @return A named list, one entry per parameter of \eqn{f} and named by it,
+#'   each with `name`, `index`, `subs` and `sub_index` as
+#'   [term_components()] describes.
+#'
+#' @seealso [term_components()] for the contract, [term_penalties()] for the
+#'   penalties those sub-terms bring.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(x = seq(0.2, 3, length.out = 20),
+#'                  g = factor(rep(c("a", "b"), 10)))
+#' dd$y <- 2 * exp(-1.3 * dd$x)
+#'
+#' # `a` developed over a two-level factor, `r` scalar: two columns and one.
+#' b <- term_build(nl(~ a * exp(-r * x), a ~ 0 + g,
+#'                    start = list(a = 1, r = 1.3)), dd)
+#' term_coef_names(b)
+#' lapply(term_components(b), function(z) z$index)
+#'
+#' @keywords internal
 S7::method(term_components, NlTerm) <- function(term, ...) {
   .nl_components(term@blueprint)
 }
@@ -1549,6 +1789,55 @@ S7::method(term_value, NlTerm) <- function(term, coef = NULL, newdata = NULL,
   .nl_jacobian(bp, as.numeric(coef))$value
 }
 
+#' @title Print a Nonlinear Term
+#' @name print.NlTerm
+#'
+#' @description
+#' Prints the label and, for a built term, how many coefficients it carries,
+#' which route its derivatives take, and the names of its parameters. A
+#' specification says only that it is one.
+#'
+#' @details
+#' The built form is
+#'
+#' ```
+#' <NlTerm> 'nl' built: 2 coefficients; symbolic derivatives
+#'   parameters: a, r
+#' ```
+#'
+#' `symbolic` means [stats::deriv()] could read the expression, and `numeric`
+#' that the derivatives are differenced. That is worth seeing at a glance: the
+#' two routes differ by six orders of magnitude at the higher orders, which
+#' [nl()] tabulates.
+#'
+#' The coefficient count is the block's width, so a developed parameter makes
+#' it larger than the number of parameters printed on the second line.
+#'
+#' @param x An [NlTerm()], built or not.
+#' @param ... Unused, and accepted so that the signature matches [print()]'s.
+#'
+#' @return `x`, invisibly. Called for the lines it writes.
+#'
+#' @seealso [nl()], [nl_fderiv()].
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(x = seq(0, 3, length.out = 60),
+#'                  g = factor(rep(c("u", "v"), 30)))
+#' dd$y <- 2 * exp(-1.3 * dd$x) + rnorm(60, sd = 0.05)
+#'
+#' # A specification, and the same term built.
+#' nl(~ a * exp(-r * x), start = list(a = 1, r = 1))
+#' term_build(nl(~ a * exp(-r * x), start = list(a = 1, r = 1)), dd)
+#'
+#' # An opaque function differences its derivatives, and says so.
+#' term_build(nl(function(x, theta) theta$a * exp(-theta$r * x),
+#'               params = c("a", "r"), x = x, start = list(a = 1, r = 1)), dd)
+#'
+#' # Two parameters, three coefficients: `a` is developed over a factor.
+#' term_build(nl(~ a * exp(-r * x), a ~ 0 + g, start = list(a = 1, r = 1)), dd)
+#'
+#' @keywords internal
 S7::method(print, NlTerm) <- function(x, ...) {
   if (term_is_built(x)) {
     cat(sprintf("<NlTerm> '%s' built: %d coefficient%s; %s derivatives\n",

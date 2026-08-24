@@ -62,32 +62,82 @@ term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 \item{penalty}{A \pkg{penalties7} penalty on the block's coefficients, or
 \code{NULL} when the term is unpenalized.}
 
-\item{fn}{The function or formula defining the contribution.}
+\item{fn}{The function or formula defining the contribution, as given.}
 
-\item{nl_params}{The names of the nonlinear parameters.}
+\item{nl_params}{A character vector of the parameter names, in the order
+the derivative components are keyed by.}
 
-\item{links}{One link per parameter.}
+\item{links}{A named list of one \pkg{linkfunctions7} link per parameter.}
 
-\item{subformulas}{One optional formula per parameter.}
+\item{subformulas}{A named list of one-sided formulas, one per parameter
+developed over covariates. Empty where none is.}
 
-\item{deriv_mode}{How the derivatives are obtained.}
+\item{deriv_mode}{\code{"symbolic"} or \code{"numeric"}.}
 
-\item{spec}{The resolved construction settings.}
+\item{spec}{A named list of the resolved construction settings.}
 }
 \value{
-An object of class \code{NlTerm}.
+An S7 object of class \code{NlTerm}, inheriting from \code{\link[=additive_term]{additive_term()}}
+and \code{\link[=model_term]{model_term()}}, with the six properties above beside the ten they
+supply.
 }
 \description{
-A subclass of \code{\link[=additive_term]{additive_term()}} for a parametric function
-that is nonlinear in its own parameters. The design block is the
-Jacobian of that function in the parameters, so the term is linear in
-the sense the model layer needs while the function is not; the block
-depends on where the parameters currently are and is recomputed by
-\code{\link[=term_refresh]{term_refresh()}}.
+The subclass of \code{\link[=additive_term]{additive_term()}} holding a parametric function that is
+nonlinear in its own parameters. Its design block is the \strong{Jacobian} of
+that function, so the term is linear in the sense a fitting layer needs
+while the function is not. The block depends on where the parameters
+currently are, and \code{\link[=term_refresh]{term_refresh()}} recomputes it as they move.
 }
+\section{The six properties of its own}{
+\code{fn} is the function or formula as given, and \code{spec$is_formula} records
+which. \code{nl_params} names the parameters, inferred from a formula or taken
+from \code{params} for an opaque function.
+
+\code{links} holds one \pkg{linkfunctions7} link per parameter, the identity
+where none was named, and \code{subformulas} one right-hand side per parameter
+developed over covariates, empty otherwise.
+
+\code{deriv_mode} is \code{"symbolic"} where \code{\link[stats:deriv]{stats::deriv()}} could read the
+expression and \code{"numeric"} where the derivatives are differenced.
+\code{\link[=nl_fderiv]{nl_fderiv()}} chooses per order, so the field records the route the
+expression as a whole took.
+
+\code{spec} carries the resolved construction settings, and the blueprint what
+the build computed: the parameter designs, the starting coefficients and
+the coefficients last committed.
+}
+
+\section{What makes it an additive term}{
+While \eqn{f} is differentiable the term is an ordinary additive one at
+every point, so it needs no branch of its own in a fitting layer. What it
+adds is three generics: \code{\link[=term_refresh]{term_refresh()}} to recompute the block,
+\code{\link[=term_value]{term_value()}} to report \eqn{f} itself, and \code{\link[=term_jacobian_block]{term_jacobian_block()}} to say
+that the block really is a Jacobian, which licenses a Gauss-Newton step and
+a line search on the model's own objective.
+}
+
 \examples{
-S7::S7_inherits(nl(~ theta1 * exp(theta2 * x)), NlTerm)
+set.seed(1)
+dd <- data.frame(x = seq(0, 3, length.out = 60))
+dd$y <- 2 * exp(-1.3 * dd$x) + rnorm(60, sd = 0.05)
+
+tm <- nl(~ a * exp(-r * x), start = list(a = 1, r = 1))
+S7::S7_inherits(tm, NlTerm)
+tm@nl_params
+tm@deriv_mode
+
+# An opaque function cannot be read symbolically.
+nl(function(x, theta) theta$a * exp(-theta$r * x),
+   params = c("a", "r"), x = x, start = list(a = 1, r = 1))@deriv_mode
+
+# The block is the Jacobian, which is what licenses a Gauss-Newton step.
+b <- term_build(tm, dd)
+dim(term_matrix(b))
+term_jacobian_block(b)
+
 }
 \seealso{
-\code{\link[=nl]{nl()}}
+\code{\link[=nl]{nl()}}, the constructor; \code{\link[=nl_fderiv]{nl_fderiv()}} for the derivatives;
+\code{\link[=term_refresh]{term_refresh()}} and \code{\link[=term_value]{term_value()}} for the pair a Gauss-Newton step
+reads.
 }

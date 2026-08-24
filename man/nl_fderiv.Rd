@@ -7,14 +7,20 @@
 nl_fderiv(term, coef = NULL, order = 1L)
 }
 \arguments{
-\item{term}{A built \code{\link[=NlTerm]{NlTerm()}}.}
+\item{term}{A built \code{\link[=NlTerm]{NlTerm()}}. Anything else throws
+\code{"'term' must be a built nl() term."}, and an unbuilt one
+\code{"the term is not built."}.}
 
-\item{coef}{The coefficients, or \code{NULL} for the ones the term carries.}
+\item{coef}{The coefficients to read at, or \code{NULL} for the ones the term
+currently carries, which \code{\link[=term_refresh]{term_refresh()}} last committed.}
 
-\item{order}{1, 2, 3 or 4.}
+\item{order}{1, 2, 3 or 4. Anything else throws.}
 }
 \value{
-A named list of numeric vectors, one per component of that order.
+A named list of numeric vectors of length \code{n}, one per component of
+that order: \code{a}, \code{r} at order one, \code{a_a}, \code{a_r}, \code{r_r} at order two, and
+so on, the parameter names joined by \code{"_"} in the term's own parameter
+order.
 }
 \description{
 \eqn{\partial^k f/\partial\theta^k} at the given coefficients, one named
@@ -22,24 +28,43 @@ component per index multiset, keyed as \pkg{distributions7} keys its own
 derivative surfaces.
 }
 \details{
-The route is chosen per ORDER, highest first: a function supplied to
-\code{\link[=nl]{nl()}} is used where there is one, then the symbolic route where
-the expression can be differentiated, and otherwise one stencil applied to
-the highest order that is analytic -- which includes a supplied one. That is
-what makes writing out a Hessian pay twice: the third and fourth orders are
-then one difference away from an exact second rather than from the function.
+The route is chosen per ORDER, in this priority: a function supplied to
+\code{\link[=nl]{nl()}} where there is one, then the symbolic route where the expression
+can be differentiated, and otherwise one stencil applied to the highest
+order that is analytic, a supplied one included. That is why writing out a
+Hessian pays twice: the third and fourth orders are then one difference
+away from an exact second instead of from the function.
+
+Only \strong{one} stencil is applied, never a chain of them. A fourth
+derivative built from four nested first differences is noise; the same
+discipline holds everywhere in the toolkit.
 
 The components are in the term's OWN parameters, not in its coefficients.
-The chain rule onto the coefficients -- the links, and a subformula's design
--- belongs to the term, which is the only thing that knows them.
+The chain rule onto the coefficients, the links and a subformula's design,
+belongs to the term, which is the only thing that knows them.
 }
 \examples{
 dd <- data.frame(x = seq(0.2, 3, length.out = 20))
 dd$y <- 2 * exp(-1.3 * dd$x)
 b <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3)), dd)
+
+# One component per index multiset, at every order.
+names(nl_fderiv(b, order = 1))
 names(nl_fderiv(b, order = 2))
+names(nl_fderiv(b, order = 3))
+
+# On a formula they are symbolic, so they are exact.
+d1 <- nl_fderiv(b, order = 1)
+e <- exp(-1.3 * dd$x)
+c(a = max(abs(d1$a - e)), r = max(abs(d1$r + 2 * dd$x * e)))
+
+# Order one is the Jacobian in the parameters, so with identity links
+# and no subformula it is the design block itself.
+max(abs(cbind(d1$a, d1$r) - term_matrix(b)))
 
 }
 \seealso{
-\code{\link[=nl]{nl()}}
+\code{\link[=nl]{nl()}} for the four functions that may supply these,
+\code{\link[=term_block_deriv]{term_block_deriv()}} for the same quantities chained onto the
+coefficients.
 }
