@@ -17,10 +17,10 @@ A numeric vector, one value per column of the block.
 \description{
 The start \code{\link[=term_build]{term_build()}} computed: unit changes, and the
 break-points at the positions \code{psi} names or at the interior
-quantiles of the covariate. Zero is degenerate here rather than neutral
--- a discontinuous term reads its break-point off \eqn{-g_k/\delta_k},
+quantiles of the covariate. Zero is degenerate here, never neutral: a
+discontinuous term reads its break-point off \eqn{-g_k/\delta_k},
 which at zero is the same clamped position for every one of them, and a
-continuous term's Jacobian column vanishes -- so a fitting layer that
+continuous term's Jacobian column vanishes, so a fitting layer that
 starts every coefficient at zero has to be told otherwise.
 }
 \keyword{internal}

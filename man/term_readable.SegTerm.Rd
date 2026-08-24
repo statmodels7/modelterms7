@@ -16,7 +16,7 @@ A list with \code{name}, \code{value}, \code{jacobian} and
 \code{NULL} where a coefficient carries a development.
 }
 \description{
-The quantities of the model the term defines, rather than the
+The quantities of the model the term defines, in place of the
 coefficients of the working block it is fitted through: the linear
 effect \eqn{\beta} where the term carries one, the changes of slope
 \eqn{\gamma_k} and of level \eqn{\delta_k}, and the break-points
@@ -47,8 +47,8 @@ vanished.
 Every quantity is on the identity scale: a change is unbounded and a
 break-point is a position on the covariate's own scale, held inside the
 interval between the 5th and the 95th percentile. Where a coefficient
-carries a development there is no single number to report -- a
-break-point then has one value per observation -- and the method
+carries a development there is no single number to report, a
+break-point then having one value per observation, and the method
 returns nothing, leaving a caller to report the coefficients
 themselves.
 }

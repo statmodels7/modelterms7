@@ -539,8 +539,8 @@ S7::method(term_level_design, model_term) <- function(term, ...) NULL
 #' `param_readable()` does for a matrix parameter.
 #'
 #' The base method reports the parameters themselves on the PARAMETER scale,
-#' with the diagonal Jacobian of their links, which is what every term whose
-#' coordinates are already its quantities wants.
+#' with the diagonal Jacobian of their links. That is the right answer for
+#' every term whose coordinates are already its quantities.
 #'
 #' @param term A built term.
 #' @param zeta The term's parameters on the unconstrained scale, named as
@@ -585,8 +585,8 @@ S7::method(term_readable, model_term) <- function(term, zeta, ...) {
 #'
 #' @details
 #' [term_filter()] returns the derivative of the predictor in the
-#' term's OWN parameters, which is what estimating those needs. It is not
-#' what estimating the coefficients of the same equation needs: the level at
+#' term's OWN parameters, which is the piece estimating those needs.
+#' Estimating the coefficients of the same equation needs something else: the level at
 #' one time is driven by the scores at earlier ones, which are read at
 #' predictors those coefficients also enter, so the derivative of the
 #' predictor in a coefficient carries a term the block does not. Propagating
@@ -677,7 +677,7 @@ S7::method(term_adjoint, structural_term) <- function(term, eta, y, score,
 #' observation: the caller says how its unknowns reach the static predictor
 #' and the term knows nothing else about them. `blocks` is where the
 #' model's own derivatives enter, since the score the recursion is driven by
-#' depends on every equation and not only on the predictor it is read at. It
+#' depends on every equation, beyond the predictor it is read at. It
 #' is called once per observation with the predictor there and the Jacobian
 #' the recursion has reached, and returns the two quantities that seed the
 #' first and second derivatives of that score,

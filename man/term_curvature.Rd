@@ -59,7 +59,7 @@ supplied.
 observation: the caller says how its unknowns reach the static predictor
 and the term knows nothing else about them. \code{blocks} is where the
 model's own derivatives enter, since the score the recursion is driven by
-depends on every equation and not only on the predictor it is read at. It
+depends on every equation, beyond the predictor it is read at. It
 is called once per observation with the predictor there and the Jacobian
 the recursion has reached, and returns the two quantities that seed the
 first and second derivatives of that score,

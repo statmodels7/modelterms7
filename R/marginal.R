@@ -176,8 +176,8 @@ S7::method(term_latent, structural_term) <- function(term, eta, y, logdens,
 #'
 #' Its contribution is a likelihood, not a predictor, so it implements
 #' [term_loglik()] and the prior over the positions is part of that likelihood
-#' and not a penalty. [term_penalties()] declares nothing, and the prior's
-#' parameters are estimated by plain maximum likelihood.
+#' itself. [term_penalties()] declares nothing, and the prior's parameters
+#' are estimated by plain maximum likelihood.
 #'
 #' @details
 #' # The eight properties of its own

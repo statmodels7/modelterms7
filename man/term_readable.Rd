@@ -42,8 +42,8 @@ the quantity in its own set, exactly as \pkg{parameters7}'s
 \code{param_readable()} does for a matrix parameter.
 
 The base method reports the parameters themselves on the PARAMETER scale,
-with the diagonal Jacobian of their links, which is what every term whose
-coordinates are already its quantities wants.
+with the diagonal Jacobian of their links. That is the right answer for
+every term whose coordinates are already its quantities.
 }
 \examples{
 term_readable(gas(p = 1, q = 1), c(omega = 0.3, alpha1 = 0.4, pacf1 = 0.8))

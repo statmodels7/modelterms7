@@ -43,14 +43,14 @@ the ends of the range. Defaults to \code{0.05}, the value
 documented above) or a \pkg{penalties7}
 \code{\link[penalties7:abs_smoother]{penalties7::abs_smoother()}}, e.g.
 \code{penalties7::smooth_probit()}. The smoother replaces the step and
-the hinge by their smooth versions -- \eqn{(1 + s'(u))/2} and
-\eqn{(u + s(u))/2} -- so every break-point becomes an ordinary
+the hinge by their smooth versions, \eqn{(1 + s'(u))/2} and
+\eqn{(u + s(u))/2}, so every break-point becomes an ordinary
 parameter of a \eqn{C^\infty} model: there is no working
 parametrization, no auxiliary coefficient and no scaling schedule
 (\code{c0} is ignored, with a message), the block is the true Jacobian
 and the term is fitted by Gauss-Newton like \code{\link[=nl]{nl()}}. A
-development of a break-point -- \code{psi ~ random(~1 | id)}, a
-penalized one included -- is then legal for every kind, the read-off
+development of a break-point, \code{psi ~ random(~1 | id)} and penalized
+ones included, is then legal for every kind, the read-off
 that constrained the discontinuous constructions having gone. The
 smoother's width is resolved at build from the covariate's spacing
 (the median gap between distinct values, within groups where a
@@ -59,7 +59,7 @@ carries one, and is reported: it is the width of the transition, the
 bent-cable reading, and the smoothing bias it buys is confined to a
 window of that width (probit, quintic) or decays as \eqn{c/(4|u|)}
 (hyperbolic). The objective is still multimodal in the positions --
-smoothing rounds the local optima, it does not remove them -- so the
+smoothing rounds the local optima and does not remove them, so the
 profile start and the \code{n_boot} restarts stay necessary; a
 smoothed fit from a bad start has been measured converging to an
 absurd local optimum while reporting success.}
@@ -134,7 +134,7 @@ The weight is unbounded as \eqn{x} approaches \eqn{\psi}, and since
 \eqn{Z - \psi W} is the step itself, \eqn{Z} is \eqn{\psi W} plus a
 quantity of order one: an unbounded \eqn{W} makes the two columns
 numerically collinear and drowns the signal the fit reads. The remedy of
-\cite{fasola2018} is to move the observations rather than to cap the
+\cite{fasola2018} is to move the observations instead of capping the
 weight. With a scaling factor \eqn{c} the two intervals \eqn{[x_{(1)},
 \psi]} and \eqn{(\psi, x_{(n)}]} are mapped onto
 \deqn{[x_{(1)},\, \psi - c(\psi - x_{(1)})]
@@ -150,7 +150,7 @@ travel in one step, so a large value lets the estimate leave a spurious
 optimum and a small one is faithful to the step function. \code{c0} is
 its starting value and \code{\link[=term_refresh]{term_refresh()}} halves it whenever the
 break-point reverses direction, the signal that the iteration has begun
-to circle an optimum rather than travel towards one. The run has
+to circle an optimum instead of travelling toward one. The run has
 converged when every break-point moves less than a hundredth of the
 distance between consecutive distinct observations, which
 \code{\link[=seg_converged]{seg_converged()}} reports.
@@ -180,7 +180,7 @@ coefficient the same development. The right side goes through
 \code{\link[=interpret_formula]{interpret_formula()}} and takes any term of this package.
 
 What the discontinuous construction can carry is narrower than what the
-continuous one can, and the reason is the read-off rather than the
+continuous one can, and the reason is the read-off, never the
 model. The auxiliary coefficient is \eqn{g_k = -\delta_k\psi_k}, a
 product of the two quantities, so it stays linear in the unknowns only
 when one of the two factors is a single number:
@@ -194,7 +194,7 @@ one column per group and each observation belongs to one: the
 product collapses group by group and the read-off is exact within
 each. \code{jump(x, by = ~0 + g)} is an independent step and
 break-point per level.
-\item \strong{anything else} is rejected rather than approximated,
+\item \strong{anything else} is rejected, never approximated,
 the product of two developments needing the outer product of their
 designs and no unconstrained fit returning it as one.
 }
@@ -202,7 +202,7 @@ designs and no unconstrained fit returning it as one.
 A sub-term carrying a penalty is rejected on a developed break-point,
 since the estimated coefficients are \eqn{-\delta_k p_k}, the
 development scaled by the step size, and a penalty would act on that
-rather than on the development. A penalty on the changes of level
+and never on the development. A penalty on the changes of level
 themselves is \code{jump(x, npsi = 4, delta ~ 0 + lasso(~1))}, the
 \verb{0 +} removing the subformula's own unpenalized intercept, which
 would otherwise be the same column twice.
@@ -215,7 +215,7 @@ break-point as a latent variable per group, \eqn{\psi_{ik} = m_k +
 u_{ik}} with independent \eqn{u_{ik} \sim N(0, \tau_k^2)}, and
 integrates them out of the likelihood exactly. The conditional is
 constant on the product partition of the intervals between a group's
-ordered covariate values -- \eqn{(n_i+1)^K} cells -- but the sum is
+ordered covariate values, giving \eqn{(n_i+1)^K} cells, but the sum is
 never taken over the cells: the side process \eqn{S_t = \{k : \psi_k
 \le x_{(t)}\}} is monotone on the subset lattice with independent
 coordinates, so it is a hidden Markov chain on the \eqn{2^K} side
@@ -230,7 +230,7 @@ The prior is part of the likelihood: \eqn{(m_k, \tau_k, \delta_k)} are
 ordinary parameters estimated by maximum likelihood, with no penalty, no
 marginal criterion and no smoothing constant, and the term is structural
 (\code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}, the likelihood shape of the contract)
-rather than a design block. With one break-point the prior may be any
+itself. With one break-point the prior may be any
 continuous \pkg{distributions7} distribution with its location fixed at
 zero, through \code{random(distrib = )}: the interval masses are
 differences of its cdf and their derivatives come from the cdf surface
@@ -239,7 +239,7 @@ built for the censored likelihoods, with that surface's own caveats
 \code{smoothed} and \code{c0} do not apply and are ignored with a
 message; the posterior of each group's break-points is read by
 \code{\link[=term_latent]{term_latent()}}. On the step model the marginal is the route
-that resolves what a smoothed mode cannot -- the conditional is a step
+that resolves what a smoothed mode cannot: the conditional is a step
 in the position, so a Laplace approximation has no curvature to read --
 and it is the robust route on non-gaussian families.
 }

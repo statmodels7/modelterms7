@@ -30,7 +30,7 @@ the fit reached, or \eqn{\tilde{X}\beta} is not the fitted contribution.
 
 Reading the block on its own is rarely what a caller wants for a nonlinear
 term. \eqn{\tilde{X}\beta} is the \strong{linearization} of \eqn{f}: the two
-agree in the increment a Gauss-Newton step takes and not in the value. \code{term_value(term, newdata = ...)} gives the contribution.
+agree in the increment a Gauss-Newton step takes, never in the value. \code{term_value(term, newdata = ...)} gives the contribution.
 }
 \examples{
 set.seed(1)

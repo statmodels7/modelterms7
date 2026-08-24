@@ -73,8 +73,8 @@ beside \code{\link[=model_term]{model_term()}}'s six.
 The subclass of \code{\link[=structural_term]{structural_term()}} holding a generalized autoregressive
 score component: a time-varying level driven by the score of the
 observation density, added to the predictor of one distribution parameter.
-\code{\link[=gas]{gas()}} constructs it. Its contribution is a state and not a block, so
-it implements \code{\link[=term_filter]{term_filter()}} and has no \code{\link[=term_matrix]{term_matrix()}} method.
+\code{\link[=gas]{gas()}} constructs it. Its contribution is a state, so it implements
+\code{\link[=term_filter]{term_filter()}} and has no \code{\link[=term_matrix]{term_matrix()}} method at all.
 }
 \section{The seven properties of its own}{
 \code{p} is the number of score lags and \code{q} the number of autoregressive ones,

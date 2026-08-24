@@ -27,7 +27,7 @@ specification with \code{psi} set to the best combination found.
 \details{
 \cite{fasola2018} recommend fixing the starting value by evaluating
 the objective on a small grid spanned over the range of the covariate
-rather than at a single conventional point, and the recommendation
+instead of at a single conventional point, and the recommendation
 matters more than it sounds: the objective has local optima in the
 break-point, and the iteration converges from within a basin around
 the position it starts at. Measured on a joint jump and change of
@@ -52,7 +52,7 @@ The grid is scored on the residual sum of squares of an intercept,
 the term's columns at each candidate position and, where the term
 carries one, the linear effect. That is the exact profile for a
 gaussian response and an adequate starting rule for any other, the
-quantity being used to place a starting value and not to fit. The
+quantity being used to place a starting value, never to fit. The
 positions found seed a development as well, each starting vector
 projecting the position onto the sub-design. With several break-points
 every increasing combination of grid points is scored, so \code{k}

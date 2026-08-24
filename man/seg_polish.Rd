@@ -35,7 +35,7 @@ This is \code{\link[=seg_start]{seg_start()}}'s device made conditional, and it 
 for the failure a start cannot fix: with several break-points the
 iteration can capture two of them on one feature and press the third
 against its confinement limit, and neither a bootstrap excursion --
-whose perturbation is of order \eqn{1/\sqrt{n}} -- nor a random
+whose perturbation is of order \eqn{1/\sqrt{n}}, nor a random
 relocation escapes it, the basin of the right configuration being
 narrow. A grid sweep of ONE position with the others held walks
 straight to the missing feature, because the profile at fixed positions
@@ -48,10 +48,10 @@ A term whose per-break-point coefficients carry a development is
 rejected, its positions being one per observation.
 
 With \code{weights}, the profile is weighted least squares. A restarting
-loop sweeps the profile of a bootstrap resample that way -- the
+loop sweeps the profile of a bootstrap resample that way, the
 multinomial counts of sampling the rows with replacement as weights --
 which moves the profile's optima the way refitting the resample would,
-at the cost of grid-many linear fits rather than a whole model fit: the
+at the cost of grid-many linear fits instead of a whole model fit: the
 non-convexity of these models lives entirely in the positions, so
 exploring the positions is the whole of what an excursion is for.
 }

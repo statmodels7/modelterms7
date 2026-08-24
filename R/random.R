@@ -22,7 +22,7 @@ NULL
 #' `distrib` is the effects' distribution as supplied, or `NULL` for the
 #' default. What the build turns it into is a \pkg{penalties7} penalty, read
 #' through [term_penalty()] or [term_penalties()], so the hyperparameter names
-#' and their bounds come from the distribution and not from the class.
+#' and their bounds all come from the distribution.
 #'
 #' # The block is sparse by construction
 #'

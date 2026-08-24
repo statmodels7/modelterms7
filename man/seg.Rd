@@ -41,14 +41,14 @@ Defaults to \code{TRUE}.}
 documented above) or a \pkg{penalties7}
 \code{\link[penalties7:abs_smoother]{penalties7::abs_smoother()}}, e.g.
 \code{penalties7::smooth_probit()}. The smoother replaces the step and
-the hinge by their smooth versions -- \eqn{(1 + s'(u))/2} and
-\eqn{(u + s(u))/2} -- so every break-point becomes an ordinary
+the hinge by their smooth versions, \eqn{(1 + s'(u))/2} and
+\eqn{(u + s(u))/2}, so every break-point becomes an ordinary
 parameter of a \eqn{C^\infty} model: there is no working
 parametrization, no auxiliary coefficient and no scaling schedule
 (\code{c0} is ignored, with a message), the block is the true Jacobian
 and the term is fitted by Gauss-Newton like \code{\link[=nl]{nl()}}. A
-development of a break-point -- \code{psi ~ random(~1 | id)}, a
-penalized one included -- is then legal for every kind, the read-off
+development of a break-point, \code{psi ~ random(~1 | id)} and penalized
+ones included, is then legal for every kind, the read-off
 that constrained the discontinuous constructions having gone. The
 smoother's width is resolved at build from the covariate's spacing
 (the median gap between distinct values, within groups where a
@@ -57,19 +57,19 @@ carries one, and is reported: it is the width of the transition, the
 bent-cable reading, and the smoothing bias it buys is confined to a
 window of that width (probit, quintic) or decays as \eqn{c/(4|u|)}
 (hyperbolic). The objective is still multimodal in the positions --
-smoothing rounds the local optima, it does not remove them -- so the
+smoothing rounds the local optima and does not remove them, so the
 profile start and the \code{n_boot} restarts stay necessary; a
 smoothed fit from a bad start has been measured converging to an
 absurd local optimum while reporting success.}
 
 \item{marginal}{Whether the break-point is a latent variable per group,
-integrated out of the likelihood exactly, rather than an estimated
+integrated out of the likelihood exactly instead of being an estimated
 position. \code{FALSE}, the default, is the construction documented
 above. \code{TRUE} requires the subformula \code{psi ~ random(~1 | g)}
 and returns a structural term of the likelihood shape
 (\code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}); see the section of
 \code{\link[=jump]{jump()}}, whose step model is where the marginal buys the
-most -- for a \code{seg} term the native random-changepoint fit
+most: for a \code{seg} term the native random-changepoint fit
 (\code{psi ~ random(~1 | g)} without \code{marginal}) is measured
 equivalent and remains the recommended route, the marginal being the
 exact-likelihood alternative. One break-point here: the conditional is
@@ -137,7 +137,7 @@ converges from within a basin around where it starts, so
 than at a conventional point. A break-point is confined to the interval
 between the 5th and the 95th percentile of the covariate: outside it
 the indicator is constant, the truncated line and that constant are
-linearly dependent, and the block is singular rather than merely
+linearly dependent, and the block is exactly singular, not merely
 ill-conditioned. A run ending against the limit has not located a
 break-point, and \code{\link[=seg_psi]{seg_psi()}} then reports the limit itself.
 
@@ -187,8 +187,8 @@ enter the block linearly, the truncated line becoming
 continuous construction accepts a development of any coefficient and any
 combination of them.
 
-A penalty on the changes themselves -- the lasso that selects how many
-break-points are really there -- is the development on an intercept
+A penalty on the changes themselves, the lasso that selects how many
+break-points are really there, is the development on an intercept
 alone, \code{seg(x, npsi = 4, gamma ~ 0 + lasso(~1))}: the \eqn{K}
 changes are then one penalized block under one hyperparameter, the
 entries of a subformula shared by every coefficient of a kind being

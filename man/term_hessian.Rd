@@ -103,7 +103,7 @@ that state, which is where the caller's derivatives are used. Groups are
 independent series and their contributions add.
 
 The cost is \eqn{O(nK^2m^2)} in time and \eqn{O(Km^2)} in storage, and
-the computation is meant to be run once, at a fitted point, and not per
+the computation is meant to be run once, at a fitted point, never per
 iteration.
 }
 \examples{

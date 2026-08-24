@@ -20,7 +20,7 @@ A single number; \code{Inf} where the fit fails.
 }
 \description{
 The residual sum of squares of \code{y} on the term's own columns at its
-current positions -- the number \code{\link[=seg_polish]{seg_polish()}} descends on,
+current positions, the number \code{\link[=seg_polish]{seg_polish()}} descends on,
 read at one point. A restarting loop screens proposals with it: two
 configurations of positions are compared by their profiles at the cost
 of two linear fits, where refitting the model to compare them costs a

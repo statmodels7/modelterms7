@@ -1123,7 +1123,7 @@ S7::method(term_penalties, NlTerm) <- function(term, ...) {
 #'
 #' Reading the block on its own is rarely what a caller wants for a nonlinear
 #' term. \eqn{\tilde{X}\beta} is the **linearization** of \eqn{f}: the two
-#' agree in the increment a Gauss-Newton step takes and not in the value. `term_value(term, newdata = ...)` gives the contribution.
+#' agree in the increment a Gauss-Newton step takes, never in the value. `term_value(term, newdata = ...)` gives the contribution.
 #'
 #' @param term A built [NlTerm()]. An unbuilt one throws
 #'   `"the term has not been built; call term_build(term, data) first."`.
@@ -1313,8 +1313,8 @@ S7::method(term_block_contract, model_term) <- function(term, coef = NULL, A,
 #' the other. That one contracts over the observations and the columns and
 #' answers per coefficient, as the gradient of a marginal criterion
 #' needs; this one contracts over the coefficients and answers per entry of
-#' the block, which is what its HESSIAN needs, \eqn{\partial K/\partial\beta}
-#' being required there in the direction the mode moves instead of traced.
+#' the block, as its HESSIAN needs, \eqn{\partial K/\partial\beta} being
+#' required there in the direction the mode moves instead of traced.
 #'
 #' Both are \eqn{O(nm)} and read the same closed form, so this needs no
 #' derivative the other did not: for [nl()], writing
@@ -1886,7 +1886,7 @@ S7::method(print, NlTerm) <- function(x, ...) {
 #' Where `target` is given, meaning the response on the scale of the
 #' predictor, which the fitting layer supplies, the parameters the caller
 #' did NOT pin with `start` are estimated from it by least squares,
-#' because for a nonlinear term zero is a degenerate point and not a
+#' because for a nonlinear term zero is a degenerate point, never a
 #' neutral one: it linearizes where the function was never meant to be
 #' evaluated, and every quantity read at those coefficients inherits it,
 #' the top of a kinked penalty's path among them.

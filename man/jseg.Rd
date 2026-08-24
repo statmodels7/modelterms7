@@ -47,14 +47,14 @@ the ends of the range. Defaults to \code{0.05}, the value
 documented above) or a \pkg{penalties7}
 \code{\link[penalties7:abs_smoother]{penalties7::abs_smoother()}}, e.g.
 \code{penalties7::smooth_probit()}. The smoother replaces the step and
-the hinge by their smooth versions -- \eqn{(1 + s'(u))/2} and
-\eqn{(u + s(u))/2} -- so every break-point becomes an ordinary
+the hinge by their smooth versions, \eqn{(1 + s'(u))/2} and
+\eqn{(u + s(u))/2}, so every break-point becomes an ordinary
 parameter of a \eqn{C^\infty} model: there is no working
 parametrization, no auxiliary coefficient and no scaling schedule
 (\code{c0} is ignored, with a message), the block is the true Jacobian
 and the term is fitted by Gauss-Newton like \code{\link[=nl]{nl()}}. A
-development of a break-point -- \code{psi ~ random(~1 | id)}, a
-penalized one included -- is then legal for every kind, the read-off
+development of a break-point, \code{psi ~ random(~1 | id)} and penalized
+ones included, is then legal for every kind, the read-off
 that constrained the discontinuous constructions having gone. The
 smoother's width is resolved at build from the covariate's spacing
 (the median gap between distinct values, within groups where a
@@ -63,19 +63,19 @@ carries one, and is reported: it is the width of the transition, the
 bent-cable reading, and the smoothing bias it buys is confined to a
 window of that width (probit, quintic) or decays as \eqn{c/(4|u|)}
 (hyperbolic). The objective is still multimodal in the positions --
-smoothing rounds the local optima, it does not remove them -- so the
+smoothing rounds the local optima and does not remove them, so the
 profile start and the \code{n_boot} restarts stay necessary; a
 smoothed fit from a bad start has been measured converging to an
 absurd local optimum while reporting success.}
 
 \item{marginal}{Whether the break-point is a latent variable per group,
-integrated out of the likelihood exactly, rather than an estimated
+integrated out of the likelihood exactly instead of being an estimated
 position. \code{FALSE}, the default, is the construction documented
 above. \code{TRUE} requires the subformula \code{psi ~ random(~1 | g)}
 and returns a structural term of the likelihood shape
 (\code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}); see the section of
 \code{\link[=jump]{jump()}}, whose step model is where the marginal buys the
-most -- for a \code{seg} term the native random-changepoint fit
+most: for a \code{seg} term the native random-changepoint fit
 (\code{psi ~ random(~1 | g)} without \code{marginal}) is measured
 equivalent and remains the recommended route, the marginal being the
 exact-likelihood alternative. One break-point here: the conditional is
@@ -148,7 +148,7 @@ and the increment solves
 
 the root of smaller modulus. At \eqn{\gamma = 0} the quadratic
 degenerates to \eqn{h = -(b + a\psi^{0})/a}, that is \eqn{\psi = -b/a},
-so the pure step is the case this contains rather than an exception to
+so the pure step is a case this contains, never an exception to
 it.
 
 Everything \code{\link[=jump]{jump()}} documents about the scaling schedule, the
@@ -175,7 +175,7 @@ independent set of everything per level and a development of
 \code{delta} or \code{psi} on any other design is rejected. The
 componentwise reading that would remain diverges whenever a change of
 level passes near zero mid-iteration, which on a joint model it
-routinely does; it is rejected rather than shipped diverging.
+routinely does, so it is rejected instead of shipped diverging.
 }
 
 \section{The marginal construction}{

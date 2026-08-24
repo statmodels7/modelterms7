@@ -16,7 +16,7 @@ The term at the new positions.
 }
 \description{
 The term with its break-points placed at \code{psi}, the changes kept,
-the scaling schedule fresh and the block rebuilt -- ready to iterate
+the scaling schedule fresh and the block rebuilt, ready to iterate
 from there. A restart proposal needs it: a bootstrap resample perturbs
 the objective by \eqn{1/\sqrt{n}} and stops escaping a deep basin as the
 sample grows, so the restarting loop also proposes fresh positions

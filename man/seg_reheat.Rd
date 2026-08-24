@@ -17,7 +17,7 @@ The term with its scaling factors back at \code{c0}, the directions and
 the step record cleared, and the break-points where they are. A restart
 needs it: the schedule is a state of the iteration that only ever
 tightens, so an iteration resumed from a converged fit inherits factors
-at their floor and cannot travel -- measured, bootstrap restarts without
+at their floor and cannot travel. Measured, bootstrap restarts without
 the reset returned the incumbent unchanged ten times out of ten.
 }
 \examples{

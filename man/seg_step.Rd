@@ -33,7 +33,7 @@ run stops at
   \qquad \Delta = 0.01 \cdot
     \operatorname{median}_{i}\, (x_{(i+1)} - x_{(i)}).}
 
-\cite{fasola2018} take the smallest of those gaps rather than their
+\cite{fasola2018} take the smallest of those gaps instead of their
 median, which agrees with this on the evenly spaced covariates of their
 examples and is of order \eqn{m^{-2}} on a random one, hence unreachable.
 
@@ -44,7 +44,7 @@ fixed point is reached at does not, so on a large sample the last
 iterations move the break-point by a little more than the rule allows
 and the run continues past the point where the estimate has settled.
 A caller that can evaluate the objective should stop on its relative
-change instead, which is what \code{segmented} does and what costs a
+change instead, as \code{segmented} does, at a cost of a
 continuous term nothing: its iteration can settle into a cycle of
 period two in the break-point, in which case this rule is never met
 while the objective has long since stopped moving.

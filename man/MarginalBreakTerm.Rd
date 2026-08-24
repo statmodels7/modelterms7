@@ -81,8 +81,8 @@ together with a \code{psi ~ random(~ 1 | g)} subformula.
 
 Its contribution is a likelihood, not a predictor, so it implements
 \code{\link[=term_loglik]{term_loglik()}} and the prior over the positions is part of that likelihood
-and not a penalty. \code{\link[=term_penalties]{term_penalties()}} declares nothing, and the prior's
-parameters are estimated by plain maximum likelihood.
+itself. \code{\link[=term_penalties]{term_penalties()}} declares nothing, and the prior's parameters
+are estimated by plain maximum likelihood.
 }
 \section{The eight properties of its own}{
 \code{kind} is \code{"jump"}, \code{"seg"} or \code{"jseg"}; \code{var} the covariate expression;

@@ -116,7 +116,7 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #'   path build one. Must lie in \eqn{(0, \infty)}.
 #' @param n_lambda How many values the path visits, a whole number of at
 #'   least 2, `25` by default. The axis descends four decades of kink
-#'   size, which is what that many points are for.
+#'   size, and that many points are what covers it.
 #' @param min_ratio How far down the path reaches, as a fraction of the
 #'   kink that empties the block: smaller reaches a denser fit, larger
 #'   stops sooner. A single number in \eqn{(0, 1)}, `1e-4` by default.
@@ -180,7 +180,8 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #' the normalizing constant being that of the product of a Laplace and a
 #' Gaussian at zero
 #' ([distributions7::enet_distrib()]). It depends on BOTH
-#' hyperparameters, so both are estimable and not merely settable. A penalty
+#' hyperparameters, so both are estimable, where a merely settable one would
+#' be all a dropped constant leaves. A penalty
 #' written as a formula, with the constant dropped, would not have that.
 #'
 #' \eqn{\alpha} is the mixing weight: at \eqn{\alpha \to 1} the penalty is

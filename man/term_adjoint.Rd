@@ -38,8 +38,8 @@ it was given, both accounting for the recursion.
 }
 \details{
 \code{\link[=term_filter]{term_filter()}} returns the derivative of the predictor in the
-term's OWN parameters, which is what estimating those needs. It is not
-what estimating the coefficients of the same equation needs: the level at
+term's OWN parameters, which is the piece estimating those needs.
+Estimating the coefficients of the same equation needs something else: the level at
 one time is driven by the scores at earlier ones, which are read at
 predictors those coefficients also enter, so the derivative of the
 predictor in a coefficient carries a term the block does not. Propagating

@@ -8,8 +8,8 @@ NULL
 #' The subclass of [structural_term()] holding a generalized autoregressive
 #' score component: a time-varying level driven by the score of the
 #' observation density, added to the predictor of one distribution parameter.
-#' [gas()] constructs it. Its contribution is a state and not a block, so
-#' it implements [term_filter()] and has no [term_matrix()] method.
+#' [gas()] constructs it. Its contribution is a state, so it implements
+#' [term_filter()] and has no [term_matrix()] method at all.
 #'
 #' @details
 #' # The seven properties of its own

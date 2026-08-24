@@ -640,7 +640,7 @@ S7::method(term_loglik, RegimeTerm) <- function(term, eta, y, logdens, score,
 #'
 #' @details
 #' [term_loglik()] returns the derivative of the mixed likelihood
-#' in the term's OWN parameters, which is what estimating those needs.
+#' in the term's OWN parameters, which is the piece estimating those needs.
 #' Estimating the coefficients needs something else, and for this term that
 #' something is not a second recursion carrying derivatives: it is one
 #' quantity, by Fisher's identity. Writing \eqn{\gamma_t(k)} for the probability
@@ -828,7 +828,7 @@ S7::method(term_posterior, RegimeTerm) <- function(term, eta, y, logdens,
 #' independent series and their contributions add.
 #'
 #' The cost is \eqn{O(nK^2m^2)} in time and \eqn{O(Km^2)} in storage, and
-#' the computation is meant to be run once, at a fitted point, and not per
+#' the computation is meant to be run once, at a fitted point, never per
 #' iteration.
 #'
 #' @param term A built [RegimeTerm()].

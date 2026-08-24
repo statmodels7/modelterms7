@@ -25,7 +25,7 @@ the term was never meant to be evaluated.
 Where \code{target} is given, meaning the response on the scale of the
 predictor, which the fitting layer supplies, the parameters the caller
 did NOT pin with \code{start} are estimated from it by least squares,
-because for a nonlinear term zero is a degenerate point and not a
+because for a nonlinear term zero is a degenerate point, never a
 neutral one: it linearizes where the function was never meant to be
 evaluated, and every quantity read at those coefficients inherits it,
 the top of a kinked penalty's path among them.

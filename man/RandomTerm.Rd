@@ -90,7 +90,7 @@ is \code{NULL}, the two saying the same thing.
 \code{distrib} is the effects' distribution as supplied, or \code{NULL} for the
 default. What the build turns it into is a \pkg{penalties7} penalty, read
 through \code{\link[=term_penalty]{term_penalty()}} or \code{\link[=term_penalties]{term_penalties()}}, so the hyperparameter names
-and their bounds come from the distribution and not from the class.
+and their bounds all come from the distribution.
 }
 
 \section{The block is sparse by construction}{
