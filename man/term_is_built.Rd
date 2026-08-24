@@ -2,28 +2,55 @@
 % Please edit documentation in R/generics.R
 \name{term_is_built}
 \alias{term_is_built}
-\title{Whether a Term Has Been Built}
+\title{Whether a Term Carries a Design Block}
 \usage{
 term_is_built(term)
 }
 \arguments{
-\item{term}{An object inheriting from class \code{\link[=model_term]{model_term()}}.}
+\item{term}{An object inheriting from \code{\link[=model_term]{model_term()}}. Anything else throws
+\code{"'term' must inherit from 'model_term'."}.}
 }
 \value{
-A logical scalar.
+A single logical, never \code{NA}.
 }
 \description{
-\code{TRUE} for a term returned by \code{\link[=term_build]{term_build()}} and
-\code{FALSE} for a bare specification. The accessors
-\code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_npar]{term_npar()}},
-\code{\link[=term_coef_names]{term_coef_names()}} and \code{\link[=term_predict]{term_predict()}} reject a
-specification, and this predicate is the test they use.
+\code{TRUE} for an additive term that \code{\link[=term_build]{term_build()}} has filled, \code{FALSE} for a
+bare specification. It is the test \code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_npar]{term_npar()}},
+\code{\link[=term_coef_names]{term_coef_names()}}, \code{\link[=term_predict]{term_predict()}} and \code{\link[=plot]{plot()}} apply before reading a
+block, so it decides which error a caller gets from those.
+}
+\details{
+The predicate is \code{S7::S7_inherits(term, additive_term)} together with
+\code{length(term@coef_names) > 0L}, so it asks whether the term has coefficients
+to name. Two consequences follow, and both matter to a caller writing
+against the class rather than against one term.
+
+\strong{A structural term answers \code{FALSE} whether or not it is built.} \code{\link[=gas]{gas()}}
+and \code{\link[=regime]{regime()}} contribute no design columns, so they have no coefficient
+names to count; a built one has its blueprint filled and answers every
+generic on its own branch. The test covering both branches is
+\code{length(term@blueprint) > 0L}.
+
+\strong{A built additive term with no columns would also answer \code{FALSE}.} No
+shipped constructor produces one: \code{\link[=linpar]{linpar()}} with an empty formula fails in
+the class validator before it gets here.
 }
 \examples{
-term_is_built(linpar(~x))
-term_is_built(term_build(linpar(~x), data.frame(x = 1:4)))
+d <- data.frame(x = 1:4)
+term_is_built(linpar(~ x))
+term_is_built(term_build(linpar(~ x), d))
+
+# It is what the accessors test, so it predicts the error.
+try(term_matrix(linpar(~ x)))
+
+# A structural term has no block, so it answers FALSE once built.
+gb <- term_build(gas(p = 1, q = 1), data.frame(y = rnorm(20)))
+c(predicate = term_is_built(gb), blueprint_filled = length(gb@blueprint) > 0L)
 
 }
 \seealso{
-\code{\link[=term_build]{term_build()}}, \code{\link[=term_predict]{term_predict()}}, \code{\link[=term_refresh]{term_refresh()}}, \code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_coef_names]{term_coef_names()}}, \code{\link[=term_npar]{term_npar()}}
+\code{\link[=term_build]{term_build()}}, which makes it \code{TRUE}; \code{\link[=term_matrix]{term_matrix()}} and
+\code{\link[=term_npar]{term_npar()}}, which reject a term for which it is \code{FALSE}.
+
+\code{\link[=term_build]{term_build()}}, \code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_coef_names]{term_coef_names()}}, \code{\link[=term_npar]{term_npar()}}
 }

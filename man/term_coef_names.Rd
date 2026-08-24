@@ -2,26 +2,56 @@
 % Please edit documentation in R/generics.R
 \name{term_coef_names}
 \alias{term_coef_names}
+\alias{term_coef_names.additive_term}
 \title{Coefficient Names of a Built Term}
 \usage{
 term_coef_names(term, ...)
 }
 \arguments{
-\item{term}{A built term (see \code{\link[=term_build]{term_build()}}).}
+\item{term}{A built additive term (see \code{\link[=term_build]{term_build()}}). A specification
+throws
+\code{"the term has not been built; call term_build(term, data) first."}.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
-A character vector.
+A character vector of length \code{\link[=term_npar]{term_npar()}}, in column order.
 }
 \description{
-The names of the term's coefficients, prefixed by the term's label when
-the label is non-empty.
+The names of a built additive term's coefficients, one per column of its
+block and in the block's own order. They are the names a fit reports, so a
+coefficient table is readable without knowing which term produced which row.
+}
+\details{
+A term with a non-empty \code{label} prefixes every name with it and a dot, so
+\code{linpar(~ x, label = "lin")} gives \code{lin.(Intercept)} and \code{lin.x}. The five
+penalized constructors set the label to the constructor's own name by
+default, which is why a ridge over \code{x} and \code{g} reads \code{ridge.x}, \code{ridge.ga}
+and so on; \code{\link[=linpar]{linpar()}} sets none, so its names are
+\code{\link[stats:model.matrix]{stats::model.matrix()}}'s unchanged.
+
+The names are assigned at build time and recorded, so they are also what
+\code{\link[=term_predict]{term_predict()}} labels its columns with at other rows. Uniqueness is not
+enforced here; \code{\link[=check_term]{check_term()}} checks it.
 }
 \examples{
-term_coef_names(term_build(linpar(~x), data.frame(x = 1:4)))
+d <- data.frame(x = 1:4, g = factor(c("a", "b", "a", "b")))
+
+# linpar() takes model.matrix()'s names as they come.
+term_coef_names(term_build(linpar(~ x + g), d))
+
+# A label prefixes every one of them.
+term_coef_names(term_build(linpar(~ x, label = "lin"), d))
+
+# The penalized constructors label themselves by default.
+term_coef_names(term_build(ridge(~ x + g), d))
+
+# They are the column names of the block, and of a prediction.
+b <- term_build(ridge(~ x + g), d)
+identical(term_coef_names(b), colnames(term_matrix(b)))
 
 }
 \seealso{
-\code{\link[=term_build]{term_build()}}, \code{\link[=term_predict]{term_predict()}}, \code{\link[=term_refresh]{term_refresh()}}, \code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_npar]{term_npar()}}, \code{\link[=term_is_built]{term_is_built()}}
+\code{\link[=term_npar]{term_npar()}} for the count, \code{\link[=term_matrix]{term_matrix()}} for the block they
+name, \code{\link[=term_params]{term_params()}} for a structural term's parameter names instead.
 }

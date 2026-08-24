@@ -2,49 +2,101 @@
 % Please edit documentation in R/generics.R
 \name{term_build}
 \alias{term_build}
+\alias{term_build.model_term}
+\alias{term_build.structural_term}
 \title{Build a Term on Data}
 \usage{
 term_build(term, data, ...)
 }
 \arguments{
-\item{term}{An object inheriting from class \code{\link[=model_term]{model_term()}}.}
+\item{term}{An object inheriting from \code{\link[=model_term]{model_term()}}, built or not. A built
+term is rebuilt.}
 
-\item{data}{A data frame.}
+\item{data}{A data frame carrying every variable the term names. Anything
+else throws \code{"'data' must be a data frame."} from the generic, before
+dispatch.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
-A built term of the same class as \code{term}.
+A built term of the same class as \code{term}. For an additive term the
+\code{X}, \code{coef_names} and \code{blueprint} properties are filled and
+\code{\link[=term_is_built]{term_is_built()}} is \code{TRUE}; for a structural term the \code{blueprint} is
+filled and \code{\link[=term_is_built]{term_is_built()}} stays \code{FALSE}, that predicate testing for a
+design block.
 }
 \description{
-Turns a term specification into a built term: the design block is
-computed from the data, the coefficient names are assigned, and the
-blueprint that reproduces the mapping on new data is recorded. The
-returned object is a copy of the specification with those properties
-filled; the specification itself is unchanged.
+Turns a term specification into a built term: an additive term computes its
+design block from \code{data}, assigns the coefficient names and records the
+blueprint that will reproduce the mapping on other rows; a structural term
+records whatever its recursion needs, its grouping and its ordering. The
+returned object is a copy of the specification with those properties filled,
+and the specification is unchanged.
 }
-\details{
-An additive term contributes to the linear predictor through a design
-block and, when it is penalized, a penalty on the coefficients of that
-block:
+\section{What building produces}{
+An additive term contributes to the linear predictor through a block, and
+through a penalty on that block's coefficients when it is penalized:
 
 \deqn{\eta = \sum_{t} X_t \beta_t,
   \qquad \text{penalized objective} \quad
-  -\ell(\beta) + \sum_{t} \rho_t(\beta_t; \theta_t),}
+  -\ell(\beta) + \sum_{t} \rho_t(\beta_t; \theta_t).}
 
-and building the term is what produces \eqn{X_t} from the data and
-attaches \eqn{\rho_t}. \code{\link[=term_matrix]{term_matrix()}} reads the block,
-\code{\link[=term_penalty]{term_penalty()}} the penalty and \code{\link[=term_predict]{term_predict()}}
-reproduces \eqn{X_t} on new rows through the blueprint. A structural
-term is the exception: its contribution cannot be written as a block of
-columns, and it reports itself through \code{\link[=term_filter]{term_filter()}} or
-\code{\link[=term_loglik]{term_loglik()}} instead.
+Building is what produces \eqn{X_t} from the data and attaches
+\eqn{\rho_t}. \code{\link[=term_matrix]{term_matrix()}} then reads the block, \code{\link[=term_penalties]{term_penalties()}} the
+penalties, and \code{\link[=term_predict]{term_predict()}} reproduces \eqn{X_t} at other rows through
+the blueprint.
+
+A structural term has no such block. \code{\link[=gas]{gas()}} records the group each row
+belongs to and its place in that group's series; \code{\link[=regime]{regime()}} and the marginal
+break-point terms record what their forward recursion reads. They report
+themselves through \code{\link[=term_filter]{term_filter()}} or \code{\link[=term_loglik]{term_loglik()}}, and \code{\link[=term_matrix]{term_matrix()}}
+has no method for them.
 }
+
+\section{Building twice, and building on other data}{
+Building is not idempotent in general: a term built again on new data
+re-derives its factor levels and its knots from those rows. That is what
+\code{\link[=term_predict]{term_predict()}} exists to avoid, and what \code{\link[=check_term]{check_term()}}'s subset check
+tests for. Build once, predict thereafter.
+}
+
+\section{The two defaults}{
+\code{term_build.model_term} throws
+\code{"the term class 'X' does not implement term_build()."}, naming the class,
+so a term class that supplies nothing else says so clearly.
+
+\code{term_build.structural_term} throws
+\code{"structural terms are reserved for a later release; none is implemented yet."}
+Every structural term that ships overrides it, so the message is reachable
+only from a structural class written elsewhere.
+}
+
 \examples{
-built <- term_build(linpar(~x), data.frame(x = 1:4))
-term_matrix(built)
+d <- data.frame(x = rnorm(20), g = factor(rep(letters[1:4], 5)))
+
+# A specification carries no block; building fills it.
+spec <- linpar(~ x + g)
+built <- term_build(spec, d)
+c(spec = term_is_built(spec), built = term_is_built(built))
+dim(term_matrix(built))
+term_coef_names(built)
+
+# The specification is untouched: building returns a copy.
+term_is_built(spec)
+
+# A structural term records its recursion's bookkeeping and no block.
+g <- term_build(gas(p = 1, q = 1), data.frame(y = rnorm(30)))
+term_params(g)
+try(term_matrix(g))
+
+# A class that implements nothing is told which class it is.
+Foo <- S7::new_class("Foo", parent = additive_term)
+try(term_build(Foo(), d))
 
 }
 \seealso{
-\code{\link[=term_predict]{term_predict()}}, \code{\link[=term_refresh]{term_refresh()}}, \code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_coef_names]{term_coef_names()}}, \code{\link[=term_npar]{term_npar()}}, \code{\link[=term_is_built]{term_is_built()}}
+\code{\link[=term_predict]{term_predict()}} for the block at other rows, \code{\link[=term_matrix]{term_matrix()}} and
+\code{\link[=term_coef_names]{term_coef_names()}} for what a build filled, \code{\link[=term_refresh]{term_refresh()}} for a block
+that moves with its coefficients, and \code{\link[=check_term]{check_term()}} for validating the
+result.
 }

@@ -4,41 +4,94 @@ NULL
 #' @title Build a Term on Data
 #'
 #' @description
-#' Turns a term specification into a built term: the design block is
-#' computed from the data, the coefficient names are assigned, and the
-#' blueprint that reproduces the mapping on new data is recorded. The
-#' returned object is a copy of the specification with those properties
-#' filled; the specification itself is unchanged.
+#' Turns a term specification into a built term: an additive term computes its
+#' design block from `data`, assigns the coefficient names and records the
+#' blueprint that will reproduce the mapping on other rows; a structural term
+#' records whatever its recursion needs, its grouping and its ordering. The
+#' returned object is a copy of the specification with those properties filled,
+#' and the specification is unchanged.
 #'
 #' @details
-#' An additive term contributes to the linear predictor through a design
-#' block and, when it is penalized, a penalty on the coefficients of that
-#' block:
+#' # What building produces
+#'
+#' An additive term contributes to the linear predictor through a block, and
+#' through a penalty on that block's coefficients when it is penalized:
 #'
 #' \deqn{\eta = \sum_{t} X_t \beta_t,
 #'   \qquad \text{penalized objective} \quad
-#'   -\ell(\beta) + \sum_{t} \rho_t(\beta_t; \theta_t),}
+#'   -\ell(\beta) + \sum_{t} \rho_t(\beta_t; \theta_t).}
 #'
-#' and building the term is what produces \eqn{X_t} from the data and
-#' attaches \eqn{\rho_t}. [term_matrix()] reads the block,
-#' [term_penalty()] the penalty and [term_predict()]
-#' reproduces \eqn{X_t} on new rows through the blueprint. A structural
-#' term is the exception: its contribution cannot be written as a block of
-#' columns, and it reports itself through [term_filter()] or
-#' [term_loglik()] instead.
+#' Building is what produces \eqn{X_t} from the data and attaches
+#' \eqn{\rho_t}. [term_matrix()] then reads the block, [term_penalties()] the
+#' penalties, and [term_predict()] reproduces \eqn{X_t} at other rows through
+#' the blueprint.
 #'
-#' @param term An object inheriting from class [model_term()].
-#' @param data A data frame.
-#' @param ... Passed to methods.
+#' A structural term has no such block. [gas()] records the group each row
+#' belongs to and its place in that group's series; [regime()] and the marginal
+#' break-point terms record what their forward recursion reads. They report
+#' themselves through [term_filter()] or [term_loglik()], and [term_matrix()]
+#' has no method for them.
 #'
-#' @return A built term of the same class as `term`.
+#' # Building twice, and building on other data
+#'
+#' Building is not idempotent in general: a term built again on new data
+#' re-derives its factor levels and its knots from those rows. That is what
+#' [term_predict()] exists to avoid, and what [check_term()]'s subset check
+#' tests for. Build once, predict thereafter.
+#'
+#' # The two defaults
+#'
+#' `term_build.model_term` throws
+#' `"the term class 'X' does not implement term_build()."`, naming the class,
+#' so a term class that supplies nothing else says so clearly.
+#'
+#' `term_build.structural_term` throws
+#' `"structural terms are reserved for a later release; none is implemented yet."`
+#' Every structural term that ships overrides it, so the message is reachable
+#' only from a structural class written elsewhere.
+#'
+#' @param term An object inheriting from [model_term()], built or not. A built
+#'   term is rebuilt.
+#' @param data A data frame carrying every variable the term names. Anything
+#'   else throws `"'data' must be a data frame."` from the generic, before
+#'   dispatch.
+#' @param ... Passed to methods. No shipped method reads anything here.
+#'
+#' @return A built term of the same class as `term`. For an additive term the
+#'   `X`, `coef_names` and `blueprint` properties are filled and
+#'   [term_is_built()] is `TRUE`; for a structural term the `blueprint` is
+#'   filled and [term_is_built()] stays `FALSE`, that predicate testing for a
+#'   design block.
+#'
+#' @seealso [term_predict()] for the block at other rows, [term_matrix()] and
+#'   [term_coef_names()] for what a build filled, [term_refresh()] for a block
+#'   that moves with its coefficients, and [check_term()] for validating the
+#'   result.
 #'
 #' @examples
-#' built <- term_build(linpar(~x), data.frame(x = 1:4))
-#' term_matrix(built)
+#' d <- data.frame(x = rnorm(20), g = factor(rep(letters[1:4], 5)))
 #'
-#' @seealso [term_predict()], [term_refresh()], [term_matrix()], [term_coef_names()], [term_npar()], [term_is_built()]
+#' # A specification carries no block; building fills it.
+#' spec <- linpar(~ x + g)
+#' built <- term_build(spec, d)
+#' c(spec = term_is_built(spec), built = term_is_built(built))
+#' dim(term_matrix(built))
+#' term_coef_names(built)
+#'
+#' # The specification is untouched: building returns a copy.
+#' term_is_built(spec)
+#'
+#' # A structural term records its recursion's bookkeeping and no block.
+#' g <- term_build(gas(p = 1, q = 1), data.frame(y = rnorm(30)))
+#' term_params(g)
+#' try(term_matrix(g))
+#'
+#' # A class that implements nothing is told which class it is.
+#' Foo <- S7::new_class("Foo", parent = additive_term)
+#' try(term_build(Foo(), d))
+#'
 #' @export
+#' @aliases term_build.model_term term_build.structural_term
 term_build <- S7::new_generic("term_build", "term",
   function(term, data, ...) {
     if (!is.data.frame(data)) {
@@ -57,24 +110,51 @@ S7::method(term_build, structural_term) <- function(term, data, ...) {
        call. = FALSE)
 }
 
-#' @title Whether a Term Has Been Built
+#' @title Whether a Term Carries a Design Block
 #'
 #' @description
-#' `TRUE` for a term returned by [term_build()] and
-#' `FALSE` for a bare specification. The accessors
-#' [term_matrix()], [term_npar()],
-#' [term_coef_names()] and [term_predict()] reject a
-#' specification, and this predicate is the test they use.
+#' `TRUE` for an additive term that [term_build()] has filled, `FALSE` for a
+#' bare specification. It is the test [term_matrix()], [term_npar()],
+#' [term_coef_names()], [term_predict()] and [plot()] apply before reading a
+#' block, so it decides which error a caller gets from those.
 #'
-#' @param term An object inheriting from class [model_term()].
+#' @details
+#' The predicate is `S7::S7_inherits(term, additive_term)` together with
+#' `length(term@coef_names) > 0L`, so it asks whether the term has coefficients
+#' to name. Two consequences follow, and both matter to a caller writing
+#' against the class rather than against one term.
 #'
-#' @return A logical scalar.
+#' **A structural term answers `FALSE` whether or not it is built.** [gas()]
+#' and [regime()] contribute no design columns, so they have no coefficient
+#' names to count; a built one has its blueprint filled and answers every
+#' generic on its own branch. The test covering both branches is
+#' `length(term@blueprint) > 0L`.
+#'
+#' **A built additive term with no columns would also answer `FALSE`.** No
+#' shipped constructor produces one: [linpar()] with an empty formula fails in
+#' the class validator before it gets here.
+#'
+#' @param term An object inheriting from [model_term()]. Anything else throws
+#'   `"'term' must inherit from 'model_term'."`.
+#'
+#' @return A single logical, never `NA`.
+#'
+#' @seealso [term_build()], which makes it `TRUE`; [term_matrix()] and
+#'   [term_npar()], which reject a term for which it is `FALSE`.
 #'
 #' @examples
-#' term_is_built(linpar(~x))
-#' term_is_built(term_build(linpar(~x), data.frame(x = 1:4)))
+#' d <- data.frame(x = 1:4)
+#' term_is_built(linpar(~ x))
+#' term_is_built(term_build(linpar(~ x), d))
 #'
-#' @seealso [term_build()], [term_predict()], [term_refresh()], [term_matrix()], [term_coef_names()], [term_npar()]
+#' # It is what the accessors test, so it predicts the error.
+#' try(term_matrix(linpar(~ x)))
+#'
+#' # A structural term has no block, so it answers FALSE once built.
+#' gb <- term_build(gas(p = 1, q = 1), data.frame(y = rnorm(20)))
+#' c(predicate = term_is_built(gb), blueprint_filled = length(gb@blueprint) > 0L)
+#'
+#' @seealso [term_build()], [term_matrix()], [term_coef_names()], [term_npar()]
 #' @export
 term_is_built <- function(term) {
   if (!S7::S7_inherits(term, model_term)) {
@@ -94,19 +174,59 @@ term_is_built <- function(term) {
 #' @title Design Block of a Built Term
 #'
 #' @description
-#' The \eqn{n \times k} design block of a built additive term, with the
-#' term's coefficient names as column names.
+#' Returns the \eqn{n \times k} block a built additive term contributes to the
+#' linear predictor, with the term's coefficient names as column names and one
+#' row per observation of the data it was built on. The block is the term's `X`
+#' property, returned as it is stored.
 #'
-#' @param term A built term (see [term_build()]).
-#' @param ... Passed to methods.
+#' @details
+#' The block is **not necessarily a base matrix**. [random()] builds a grouping
+#' indicator as a `dgCMatrix`, since a row belongs to one group and the density
+#' is \eqn{1/m}, and [linpar()], the penalized terms and a smooth with a factor
+#' `by` build sparse when asked. Code that reads a block therefore tests
+#' `is.matrix(x) && is.numeric(x)` or a two-dimensional S4 object;
+#' `is.matrix()` alone is `FALSE` for every \pkg{Matrix} class and would reject
+#' a block for being economical.
 #'
-#' @return A numeric matrix.
+#' For a term whose block moves with its own coefficients, [nl()] and [seg()],
+#' this returns the block at the coefficients last committed by
+#' [term_refresh()]. [term_jacobian_block()] says whether that block is a
+#' Jacobian or a frozen working linearization.
+#'
+#' A structural term contributes no block and registers no method, so
+#' `term_matrix()` on one stops with S7's method-not-found error.
+#'
+#' @param term A built additive term (see [term_build()]). A specification
+#'   throws
+#'   `"the term has not been built; call term_build(term, data) first."`.
+#' @param ... Passed to methods. No shipped method reads anything here.
+#'
+#' @return The design block: a numeric matrix, or a two-dimensional
+#'   \pkg{Matrix} object where the term built one, with `nrow` the number of
+#'   observations the term was built on and `ncol` equal to [term_npar()].
+#'
+#' @seealso [term_predict()] for the same mapping at other rows,
+#'   [term_coef_names()] for the column names, [term_npar()] for the count,
+#'   and [term_refresh()] for a block that moves.
 #'
 #' @examples
-#' term_matrix(term_build(linpar(~x), data.frame(x = 1:4)))
+#' d <- data.frame(x = 1:4, g = factor(c("a", "b", "a", "b")))
 #'
-#' @seealso [term_build()], [term_predict()], [term_refresh()], [term_coef_names()], [term_npar()], [term_is_built()]
+#' term_matrix(term_build(linpar(~ x), d))
+#'
+#' # The column names are the term's coefficient names.
+#' X <- term_matrix(term_build(linpar(~ x + g, label = "lin"), d))
+#' colnames(X)
+#'
+#' # A grouping indicator comes back sparse, not as a base matrix.
+#' R <- term_matrix(term_build(random(~ 1 | g), d))
+#' c(class = class(R)[1], is.matrix = is.matrix(R))
+#'
+#' # A specification has nothing to return.
+#' try(term_matrix(linpar(~ x)))
+#'
 #' @export
+#' @aliases term_matrix.additive_term
 term_matrix <- S7::new_generic("term_matrix", "term",
   function(term, ...) S7::S7_dispatch())
 
@@ -297,22 +417,50 @@ component_sub_index <- function(index, subs) {
 #' @title Number of Parameters of a Built Term
 #'
 #' @description
-#' How many parameters of its own a built term carries: the columns of the
-#' design block for an additive term, and the entries of
-#' [term_params()] for a structural one, which contributes no
-#' block. It is the length of the vector [term_penalties()]
-#' indexes into.
+#' How many parameters of its own a built term carries: the number of columns
+#' of the design block for an additive term, and the number of entries of
+#' [term_params()] for a structural one, which has no block. It is the length
+#' of the vector a [term_penalties()] entry indexes into, the length
+#' [edf()] measures against, and the length a fit reserves for the term.
 #'
-#' @param term A built term (see [term_build()]).
-#' @param ... Passed to methods.
+#' @details
+#' The two methods are the two branches. On [additive_term()] it is
+#' `ncol(term@X)`, so it equals `length(term_coef_names(term))` and a
+#' specification throws. On [structural_term()] it is
+#' `length(term_params(term))`, which is the count of the term's own
+#' parameters after any subformula has expanded: `gas(p = 1, q = 1)` has three,
+#' and `gas(p = 1, q = 1, omega ~ z)` has four, the level's intercept and slope
+#' in place of the level.
 #'
-#' @return An integer.
+#' @param term A built term (see [term_build()]). An unbuilt additive term
+#'   throws
+#'   `"the term has not been built; call term_build(term, data) first."`.
+#' @param ... Passed to methods. No shipped method reads anything here.
+#'
+#' @return A single whole number.
+#'
+#' @seealso [term_coef_names()] and [term_params()] for the names behind the
+#'   count, [term_matrix()] for the block, [edf()] for what the term spends of
+#'   it.
 #'
 #' @examples
-#' term_npar(term_build(linpar(~x), data.frame(x = 1:4)))
+#' d <- data.frame(x = rnorm(20), z = rnorm(20),
+#'                 g = factor(rep(letters[1:4], 5)))
 #'
-#' @seealso [term_build()], [term_predict()], [term_refresh()], [term_matrix()], [term_coef_names()], [term_is_built()]
+#' # An additive term counts columns.
+#' b <- term_build(linpar(~ x + g), d)
+#' c(npar = term_npar(b), names = length(term_coef_names(b)),
+#'   cols = ncol(term_matrix(b)))
+#'
+#' # A structural term counts its own parameters, and a subformula
+#' # replaces one of them by the coefficients developing it.
+#' term_npar(term_build(gas(p = 1, q = 1), d))
+#' gz <- term_build(gas(p = 1, q = 1, omega ~ z), d)
+#' c(npar = term_npar(gz), params = length(term_params(gz)))
+#' term_params(gz)
+#'
 #' @export
+#' @aliases term_npar.additive_term term_npar.structural_term
 term_npar <- S7::new_generic("term_npar", "term",
   function(term, ...) S7::S7_dispatch())
 
@@ -431,19 +579,50 @@ S7::method(term_jacobian_block, model_term) <- function(term, ...) TRUE
 #' @title Coefficient Names of a Built Term
 #'
 #' @description
-#' The names of the term's coefficients, prefixed by the term's label when
-#' the label is non-empty.
+#' The names of a built additive term's coefficients, one per column of its
+#' block and in the block's own order. They are the names a fit reports, so a
+#' coefficient table is readable without knowing which term produced which row.
 #'
-#' @param term A built term (see [term_build()]).
-#' @param ... Passed to methods.
+#' @details
+#' A term with a non-empty `label` prefixes every name with it and a dot, so
+#' `linpar(~ x, label = "lin")` gives `lin.(Intercept)` and `lin.x`. The five
+#' penalized constructors set the label to the constructor's own name by
+#' default, which is why a ridge over `x` and `g` reads `ridge.x`, `ridge.ga`
+#' and so on; [linpar()] sets none, so its names are
+#' [stats::model.matrix()]'s unchanged.
 #'
-#' @return A character vector.
+#' The names are assigned at build time and recorded, so they are also what
+#' [term_predict()] labels its columns with at other rows. Uniqueness is not
+#' enforced here; [check_term()] checks it.
+#'
+#' @param term A built additive term (see [term_build()]). A specification
+#'   throws
+#'   `"the term has not been built; call term_build(term, data) first."`.
+#' @param ... Passed to methods. No shipped method reads anything here.
+#'
+#' @return A character vector of length [term_npar()], in column order.
+#'
+#' @seealso [term_npar()] for the count, [term_matrix()] for the block they
+#'   name, [term_params()] for a structural term's parameter names instead.
 #'
 #' @examples
-#' term_coef_names(term_build(linpar(~x), data.frame(x = 1:4)))
+#' d <- data.frame(x = 1:4, g = factor(c("a", "b", "a", "b")))
 #'
-#' @seealso [term_build()], [term_predict()], [term_refresh()], [term_matrix()], [term_npar()], [term_is_built()]
+#' # linpar() takes model.matrix()'s names as they come.
+#' term_coef_names(term_build(linpar(~ x + g), d))
+#'
+#' # A label prefixes every one of them.
+#' term_coef_names(term_build(linpar(~ x, label = "lin"), d))
+#'
+#' # The penalized constructors label themselves by default.
+#' term_coef_names(term_build(ridge(~ x + g), d))
+#'
+#' # They are the column names of the block, and of a prediction.
+#' b <- term_build(ridge(~ x + g), d)
+#' identical(term_coef_names(b), colnames(term_matrix(b)))
+#'
 #' @export
+#' @aliases term_coef_names.additive_term
 term_coef_names <- S7::new_generic("term_coef_names", "term",
   function(term, ...) S7::S7_dispatch())
 
@@ -583,33 +762,81 @@ S7::method(term_smooth, model_term) <- function(term, ...) {
 #' @title Design Block on New Data
 #'
 #' @description
-#' Applies a built term's mapping to new data, reproducing the block the
-#' term would have produced had the new rows been part of the original
-#' data: factor levels, contrasts and any constants recorded in the
-#' blueprint at build time are reused, never recomputed. New data carrying
-#' a factor level unknown to the blueprint is rejected.
+#' Applies a built term's recorded mapping to new rows, returning the block the
+#' term would have produced had those rows been in the data it was built on.
+#' Factor levels, contrasts, spline knots, a Demmler-Reinsch reparametrization
+#' and the spreads a standardization used all come from the blueprint and are
+#' reused. A factor level the blueprint does not know is rejected.
 #'
 #' @details
+#' # The identity that makes it useful
+#'
 #' The block returned is \eqn{\tilde{X}_t} such that
-#' \eqn{\tilde{\eta} = \tilde{X}_t \beta_t} is the term's contribution at
-#' the new rows, evaluated at the coefficients the model already carries.
-#' Reapplying the recorded mapping rather than rebuilding it is what makes
-#' that identity hold: a rebuilt factor encoding, spline knot placement or
-#' basis reparametrization would give a block of the same shape multiplying
-#' the same coefficients and meaning something else.
+#' \eqn{\tilde{\eta} = \tilde{X}_t \beta_t} is the term's contribution at the
+#' new rows, at the coefficients the model already carries. The identity holds
+#' because the mapping is reused. A rebuilt encoding gives a block
+#' of the same shape multiplying the same coefficients and meaning something
+#' else: a factor whose new rows omit a level loses a column, and a basis
+#' rebuilt on a narrower range is a different set of functions.
 #'
-#' @param term A built term (see [term_build()]).
-#' @param newdata A data frame.
-#' @param ... Passed to methods.
+#' The difference is not small. On a smooth of 60 points over \eqn{[0, 1]},
+#' predicting on the first 20 rows agrees with those rows of the original block
+#' exactly, while rebuilding the term on them differs by 2.33 in the same
+#' units. [check_term()]'s subset check is exactly this comparison.
 #'
-#' @return A numeric matrix with `nrow(newdata)` rows and one column
-#'   per coefficient.
+#' Predicting on the fitting data returns the block itself, so
+#' `term_predict(b, data)` and `term_matrix(b)` agree to the last bit.
+#'
+#' # Which terms have a method
+#'
+#' Six do: [linpar()], the penalized terms, [random()], the smooths, [nl()] and
+#' the break-point terms. A structural term contributes no block and has no
+#' method, so `term_predict()` on one stops with S7's method-not-found error;
+#' [term_continue()] is the corresponding operation there.
+#'
+#' @param term A built additive term (see [term_build()]). A specification
+#'   throws
+#'   `"the term has not been built; call term_build(term, data) first."`.
+#' @param newdata A data frame carrying every variable the term names, with any
+#'   number of rows. Anything else throws `"'newdata' must be a data frame."`
+#'   from the generic, before dispatch. A factor here need carry only the
+#'   levels its own rows use; the rest come from the blueprint.
+#' @param ... Passed to methods. No shipped method reads anything here.
+#'
+#' @return A block of `nrow(newdata)` rows and [term_npar()] columns, in the
+#'   same storage the term built: a numeric matrix, or a \pkg{Matrix} object
+#'   where the block is sparse.
+#'
+#' @seealso [term_matrix()] for the block on the fitting data, [term_build()]
+#'   for what records the blueprint, [check_term()] for the check this identity
+#'   is the subject of, and [term_continue()] for a structural term.
 #'
 #' @examples
-#' built <- term_build(linpar(~x), data.frame(x = 1:4))
-#' term_predict(built, data.frame(x = c(0.5, 2.5)))
+#' d <- data.frame(x = 1:6, g = factor(rep(c("a", "b", "c"), 2)))
+#' b <- term_build(linpar(~ x + g), d)
 #'
-#' @seealso [term_build()], [term_refresh()], [term_matrix()], [term_coef_names()], [term_npar()], [term_is_built()]
+#' # New rows, the same mapping.
+#' term_predict(b, data.frame(x = c(0.5, 2.5), g = factor(c("a", "c"))))
+#'
+#' # On the fitting data it returns the block itself.
+#' all.equal(term_predict(b, d), term_matrix(b))
+#'
+#' # A subset that drops a level keeps the blueprint's columns, where a
+#' # rebuild would lose one.
+#' nd <- droplevels(d[d$g != "c", ])
+#' dim(term_predict(b, nd))
+#' dim(model.matrix(~ x + g, nd))
+#'
+#' # A basis is not replaced on the narrower range: reapplying agrees with
+#' # the original rows exactly, rebuilding does not.
+#' d2  <- data.frame(x = seq(0, 1, length.out = 60))
+#' bs  <- term_build(s(x, k = 6), d2)
+#' X   <- term_matrix(bs)
+#' sub <- 1:20
+#' max(abs(term_predict(bs, d2[sub, , drop = FALSE]) - X[sub, ]))
+#' max(abs(term_matrix(term_build(s(x, k = 6), d2[sub, , drop = FALSE])) -
+#'         X[sub, ]))
+#'
 #' @export
 term_predict <- S7::new_generic("term_predict", "term",
   function(term, newdata, ...) {
@@ -621,6 +848,53 @@ term_predict <- S7::new_generic("term_predict", "term",
 
 # --- printing ---------------------------------------------------------------
 
+#' @title Print a Model Term
+#' @name print.model_term
+#'
+#' @description
+#' Prints one line naming the term's class, its label when it has one, and
+#' whether it is built. A built term reports how many coefficients its block
+#' carries; a specification says so and names the call that would build it.
+#' This is the default for every term class, and several classes override it to
+#' add what they alone carry.
+#'
+#' @details
+#' The two forms are
+#'
+#' ```
+#' <SmoothTerm> 's(x)' built: 4 coefficients
+#' <SmoothTerm> 's(x)' (specification; call term_build() with data)
+#' ```
+#'
+#' The class name is the S7 class's own, the label comes from the `label`
+#' property and is omitted when empty, and the count is `ncol(x@X)`.
+#'
+#' The classes that override this add something of their own:
+#' [print.PenalizedTerm()] names the penalty and the standardization,
+#' [gas()]'s and [regime()]'s report their parameters, [nl()]'s its formula and
+#' [seg()]'s its break-points. A structural term is never reported as built
+#' here, [term_is_built()] testing for a design block.
+#'
+#' @param x A term, built or not.
+#' @param ... Unused, and accepted so that the signature matches [print()]'s.
+#'
+#' @return `x`, invisibly. Called for the line it writes.
+#'
+#' @seealso [term_is_built()] for the predicate it branches on,
+#'   [term_coef_names()] for the names behind the count.
+#'
+#' @examples
+#' d <- data.frame(x = 1:4)
+#'
+#' # A specification, and the same term built.
+#' linpar(~ x)
+#' term_build(linpar(~ x), d)
+#'
+#' # The label is shown when there is one.
+#' s(x, k = 5)
+#' linpar(~ x, label = "lin")
+#'
+#' @keywords internal
 S7::method(print, model_term) <- function(x, ...) {
   cls <- attr(S7::S7_class(x), "name")
   lab <- if (nzchar(x@label)) sprintf(" '%s'", x@label) else ""

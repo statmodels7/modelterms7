@@ -7,37 +7,83 @@
 term_predict(term, newdata, ...)
 }
 \arguments{
-\item{term}{A built term (see \code{\link[=term_build]{term_build()}}).}
+\item{term}{A built additive term (see \code{\link[=term_build]{term_build()}}). A specification
+throws
+\code{"the term has not been built; call term_build(term, data) first."}.}
 
-\item{newdata}{A data frame.}
+\item{newdata}{A data frame carrying every variable the term names, with any
+number of rows. Anything else throws \code{"'newdata' must be a data frame."}
+from the generic, before dispatch. A factor here need carry only the
+levels its own rows use; the rest come from the blueprint.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
-A numeric matrix with \code{nrow(newdata)} rows and one column
-per coefficient.
+A block of \code{nrow(newdata)} rows and \code{\link[=term_npar]{term_npar()}} columns, in the
+same storage the term built: a numeric matrix, or a \pkg{Matrix} object
+where the block is sparse.
 }
 \description{
-Applies a built term's mapping to new data, reproducing the block the
-term would have produced had the new rows been part of the original
-data: factor levels, contrasts and any constants recorded in the
-blueprint at build time are reused, never recomputed. New data carrying
-a factor level unknown to the blueprint is rejected.
+Applies a built term's recorded mapping to new rows, returning the block the
+term would have produced had those rows been in the data it was built on.
+Factor levels, contrasts, spline knots, a Demmler-Reinsch reparametrization
+and the spreads a standardization used all come from the blueprint and are
+reused. A factor level the blueprint does not know is rejected.
 }
-\details{
+\section{The identity that makes it useful}{
 The block returned is \eqn{\tilde{X}_t} such that
-\eqn{\tilde{\eta} = \tilde{X}_t \beta_t} is the term's contribution at
-the new rows, evaluated at the coefficients the model already carries.
-Reapplying the recorded mapping rather than rebuilding it is what makes
-that identity hold: a rebuilt factor encoding, spline knot placement or
-basis reparametrization would give a block of the same shape multiplying
-the same coefficients and meaning something else.
+\eqn{\tilde{\eta} = \tilde{X}_t \beta_t} is the term's contribution at the
+new rows, at the coefficients the model already carries. The identity holds
+because the mapping is reused. A rebuilt encoding gives a block
+of the same shape multiplying the same coefficients and meaning something
+else: a factor whose new rows omit a level loses a column, and a basis
+rebuilt on a narrower range is a different set of functions.
+
+The difference is not small. On a smooth of 60 points over \eqn{[0, 1]},
+predicting on the first 20 rows agrees with those rows of the original block
+exactly, while rebuilding the term on them differs by 2.33 in the same
+units. \code{\link[=check_term]{check_term()}}'s subset check is exactly this comparison.
+
+Predicting on the fitting data returns the block itself, so
+\code{term_predict(b, data)} and \code{term_matrix(b)} agree to the last bit.
 }
+
+\section{Which terms have a method}{
+Six do: \code{\link[=linpar]{linpar()}}, the penalized terms, \code{\link[=random]{random()}}, the smooths, \code{\link[=nl]{nl()}} and
+the break-point terms. A structural term contributes no block and has no
+method, so \code{term_predict()} on one stops with S7's method-not-found error;
+\code{\link[=term_continue]{term_continue()}} is the corresponding operation there.
+}
+
 \examples{
-built <- term_build(linpar(~x), data.frame(x = 1:4))
-term_predict(built, data.frame(x = c(0.5, 2.5)))
+d <- data.frame(x = 1:6, g = factor(rep(c("a", "b", "c"), 2)))
+b <- term_build(linpar(~ x + g), d)
+
+# New rows, the same mapping.
+term_predict(b, data.frame(x = c(0.5, 2.5), g = factor(c("a", "c"))))
+
+# On the fitting data it returns the block itself.
+all.equal(term_predict(b, d), term_matrix(b))
+
+# A subset that drops a level keeps the blueprint's columns, where a
+# rebuild would lose one.
+nd <- droplevels(d[d$g != "c", ])
+dim(term_predict(b, nd))
+dim(model.matrix(~ x + g, nd))
+
+# A basis is not replaced on the narrower range: reapplying agrees with
+# the original rows exactly, rebuilding does not.
+d2  <- data.frame(x = seq(0, 1, length.out = 60))
+bs  <- term_build(s(x, k = 6), d2)
+X   <- term_matrix(bs)
+sub <- 1:20
+max(abs(term_predict(bs, d2[sub, , drop = FALSE]) - X[sub, ]))
+max(abs(term_matrix(term_build(s(x, k = 6), d2[sub, , drop = FALSE])) -
+        X[sub, ]))
 
 }
 \seealso{
-\code{\link[=term_build]{term_build()}}, \code{\link[=term_refresh]{term_refresh()}}, \code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_coef_names]{term_coef_names()}}, \code{\link[=term_npar]{term_npar()}}, \code{\link[=term_is_built]{term_is_built()}}
+\code{\link[=term_matrix]{term_matrix()}} for the block on the fitting data, \code{\link[=term_build]{term_build()}}
+for what records the blueprint, \code{\link[=check_term]{check_term()}} for the check this identity
+is the subject of, and \code{\link[=term_continue]{term_continue()}} for a structural term.
 }

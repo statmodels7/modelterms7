@@ -2,29 +2,57 @@
 % Please edit documentation in R/generics.R
 \name{term_npar}
 \alias{term_npar}
+\alias{term_npar.additive_term}
+\alias{term_npar.structural_term}
 \title{Number of Parameters of a Built Term}
 \usage{
 term_npar(term, ...)
 }
 \arguments{
-\item{term}{A built term (see \code{\link[=term_build]{term_build()}}).}
+\item{term}{A built term (see \code{\link[=term_build]{term_build()}}). An unbuilt additive term
+throws
+\code{"the term has not been built; call term_build(term, data) first."}.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
-An integer.
+A single whole number.
 }
 \description{
-How many parameters of its own a built term carries: the columns of the
-design block for an additive term, and the entries of
-\code{\link[=term_params]{term_params()}} for a structural one, which contributes no
-block. It is the length of the vector \code{\link[=term_penalties]{term_penalties()}}
-indexes into.
+How many parameters of its own a built term carries: the number of columns
+of the design block for an additive term, and the number of entries of
+\code{\link[=term_params]{term_params()}} for a structural one, which has no block. It is the length
+of the vector a \code{\link[=term_penalties]{term_penalties()}} entry indexes into, the length
+\code{\link[=edf]{edf()}} measures against, and the length a fit reserves for the term.
+}
+\details{
+The two methods are the two branches. On \code{\link[=additive_term]{additive_term()}} it is
+\code{ncol(term@X)}, so it equals \code{length(term_coef_names(term))} and a
+specification throws. On \code{\link[=structural_term]{structural_term()}} it is
+\code{length(term_params(term))}, which is the count of the term's own
+parameters after any subformula has expanded: \code{gas(p = 1, q = 1)} has three,
+and \code{gas(p = 1, q = 1, omega ~ z)} has four, the level's intercept and slope
+in place of the level.
 }
 \examples{
-term_npar(term_build(linpar(~x), data.frame(x = 1:4)))
+d <- data.frame(x = rnorm(20), z = rnorm(20),
+                g = factor(rep(letters[1:4], 5)))
+
+# An additive term counts columns.
+b <- term_build(linpar(~ x + g), d)
+c(npar = term_npar(b), names = length(term_coef_names(b)),
+  cols = ncol(term_matrix(b)))
+
+# A structural term counts its own parameters, and a subformula
+# replaces one of them by the coefficients developing it.
+term_npar(term_build(gas(p = 1, q = 1), d))
+gz <- term_build(gas(p = 1, q = 1, omega ~ z), d)
+c(npar = term_npar(gz), params = length(term_params(gz)))
+term_params(gz)
 
 }
 \seealso{
-\code{\link[=term_build]{term_build()}}, \code{\link[=term_predict]{term_predict()}}, \code{\link[=term_refresh]{term_refresh()}}, \code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_coef_names]{term_coef_names()}}, \code{\link[=term_is_built]{term_is_built()}}
+\code{\link[=term_coef_names]{term_coef_names()}} and \code{\link[=term_params]{term_params()}} for the names behind the
+count, \code{\link[=term_matrix]{term_matrix()}} for the block, \code{\link[=edf]{edf()}} for what the term spends of
+it.
 }

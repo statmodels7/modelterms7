@@ -2,26 +2,65 @@
 % Please edit documentation in R/generics.R
 \name{term_matrix}
 \alias{term_matrix}
+\alias{term_matrix.additive_term}
 \title{Design Block of a Built Term}
 \usage{
 term_matrix(term, ...)
 }
 \arguments{
-\item{term}{A built term (see \code{\link[=term_build]{term_build()}}).}
+\item{term}{A built additive term (see \code{\link[=term_build]{term_build()}}). A specification
+throws
+\code{"the term has not been built; call term_build(term, data) first."}.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
-A numeric matrix.
+The design block: a numeric matrix, or a two-dimensional
+\pkg{Matrix} object where the term built one, with \code{nrow} the number of
+observations the term was built on and \code{ncol} equal to \code{\link[=term_npar]{term_npar()}}.
 }
 \description{
-The \eqn{n \times k} design block of a built additive term, with the
-term's coefficient names as column names.
+Returns the \eqn{n \times k} block a built additive term contributes to the
+linear predictor, with the term's coefficient names as column names and one
+row per observation of the data it was built on. The block is the term's \code{X}
+property, returned as it is stored.
+}
+\details{
+The block is \strong{not necessarily a base matrix}. \code{\link[=random]{random()}} builds a grouping
+indicator as a \code{dgCMatrix}, since a row belongs to one group and the density
+is \eqn{1/m}, and \code{\link[=linpar]{linpar()}}, the penalized terms and a smooth with a factor
+\code{by} build sparse when asked. Code that reads a block therefore tests
+\code{is.matrix(x) && is.numeric(x)} or a two-dimensional S4 object;
+\code{is.matrix()} alone is \code{FALSE} for every \pkg{Matrix} class and would reject
+a block for being economical.
+
+For a term whose block moves with its own coefficients, \code{\link[=nl]{nl()}} and \code{\link[=seg]{seg()}},
+this returns the block at the coefficients last committed by
+\code{\link[=term_refresh]{term_refresh()}}. \code{\link[=term_jacobian_block]{term_jacobian_block()}} says whether that block is a
+Jacobian or a frozen working linearization.
+
+A structural term contributes no block and registers no method, so
+\code{term_matrix()} on one stops with S7's method-not-found error.
 }
 \examples{
-term_matrix(term_build(linpar(~x), data.frame(x = 1:4)))
+d <- data.frame(x = 1:4, g = factor(c("a", "b", "a", "b")))
+
+term_matrix(term_build(linpar(~ x), d))
+
+# The column names are the term's coefficient names.
+X <- term_matrix(term_build(linpar(~ x + g, label = "lin"), d))
+colnames(X)
+
+# A grouping indicator comes back sparse, not as a base matrix.
+R <- term_matrix(term_build(random(~ 1 | g), d))
+c(class = class(R)[1], is.matrix = is.matrix(R))
+
+# A specification has nothing to return.
+try(term_matrix(linpar(~ x)))
 
 }
 \seealso{
-\code{\link[=term_build]{term_build()}}, \code{\link[=term_predict]{term_predict()}}, \code{\link[=term_refresh]{term_refresh()}}, \code{\link[=term_coef_names]{term_coef_names()}}, \code{\link[=term_npar]{term_npar()}}, \code{\link[=term_is_built]{term_is_built()}}
+\code{\link[=term_predict]{term_predict()}} for the same mapping at other rows,
+\code{\link[=term_coef_names]{term_coef_names()}} for the column names, \code{\link[=term_npar]{term_npar()}} for the count,
+and \code{\link[=term_refresh]{term_refresh()}} for a block that moves.
 }
