@@ -2,6 +2,7 @@
 % Please edit documentation in R/structural.R
 \name{term_readable}
 \alias{term_readable}
+\alias{term_readable.model_term}
 \title{The Quantities a Fitted Term Reports}
 \usage{
 term_readable(term, zeta, ...)
@@ -49,5 +50,7 @@ term_readable(gas(p = 1, q = 1), c(omega = 0.3, alpha1 = 0.4, pacf1 = 0.8))
 
 }
 \seealso{
-\code{\link[=term_params]{term_params()}}, \code{\link[=term_links]{term_links()}}
+\code{\link[=term_params]{term_params()}} for the coordinates, \code{\link[=term_links]{term_links()}} for their
+charts, \code{\link[parameters7:param_readable]{parameters7::param_readable()}} for the same shape applied to a
+matrix parameter.
 }

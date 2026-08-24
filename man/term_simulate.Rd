@@ -30,11 +30,12 @@ term drew on the way.
 \details{
 Simulating from a model that carries state is not the same operation as
 fitting one, and the difference is which direction the response moves in.
-A term whose contribution does not read the response -- a latent chain's
-levels, a group's break-point drawn from its prior -- can report its
-contribution and leave the drawing to the caller. A score-driven term
-cannot: its level at one time is driven by the score of the response at
-the time before, so the response has to be drawn AS the recursion runs.
+A term whose contribution does not read the response can report that
+contribution and leave the drawing to the caller: a latent chain's levels
+and a group's break-point drawn from its prior are both like that. A
+score-driven term cannot. Its level at one time is driven by the score of
+the response at the time before, so the response has to be drawn AS the
+recursion runs.
 
 One contract covers both. The caller supplies \code{draw}, a function of
 a predictor and a row index returning one response value, and the method

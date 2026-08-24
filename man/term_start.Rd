@@ -2,6 +2,7 @@
 % Please edit documentation in R/structural.R
 \name{term_start}
 \alias{term_start}
+\alias{term_start.structural_term}
 \title{Where a Term's Own Parameters Start}
 \usage{
 term_start(term, ...)
@@ -9,28 +10,45 @@ term_start(term, ...)
 \arguments{
 \item{term}{A built structural term.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
-A named numeric vector on the unconstrained scale.
+A named numeric vector on the unconstrained scale, of length
+\code{\link[=term_npar]{term_npar()}} and named as \code{\link[=term_params]{term_params()}}.
 }
 \description{
-The starting values of a structural term's parameters, on the
-unconstrained scale of \code{\link[=term_links]{term_links()}}, one per parameter of
-\code{\link[=term_params]{term_params()}}.
+The starting values of a structural term's parameters, on the unconstrained
+scale \code{\link[=term_links]{term_links()}} defines, one per name \code{\link[=term_params]{term_params()}} gives. A fitting
+layer reads it to begin a search.
 }
 \details{
-The start belongs to the term because only the term knows what a
-coordinate of zero means on each of its charts. The base method returns
-zero everywhere, which is each link's own natural point; a term whose
-chart makes zero mean something other than "the model without the term"
-overrides it, as \code{\link[=gas]{gas()}} does for its score loadings, whose
-log chart puts a loading of one at zero.
+The start belongs to the term because only the term knows what a coordinate
+of zero means on each of its charts. The base method returns zero
+everywhere, which is each link's own natural point, and that is right
+wherever zero means "the model without this term".
+
+It does not always. \code{\link[=gas]{gas()}} overrides it: its score loadings ride a log
+chart, so a coordinate of zero is a loading of \strong{one}, which is a strongly
+driven filter and a poor place to begin. It starts them at 0.1 through the
+chart, \eqn{\log 0.1 = -2.303}, and leaves every other coordinate at zero.
+
+A term that needs the data to place its start, as a marginal break-point
+term does, computes it at \code{\link[=term_build]{term_build()}} and returns it from here.
 }
 \examples{
+# The level and the persistence start at zero; the loading does not.
 term_start(gas(p = 1, q = 1))
+
+# Because zero on a log chart is a loading of one.
+lk <- term_links(gas(p = 1, q = 1))
+linkfunctions7::linkinv(lk$alpha1, term_start(gas(p = 1, q = 1))[["alpha1"]])
+
+# One value per parameter, whatever the order.
+g <- gas(p = 2, q = 2)
+identical(names(term_start(g)), term_params(g))
 
 }
 \seealso{
-\code{\link[=term_params]{term_params()}}, \code{\link[=term_links]{term_links()}}
+\code{\link[=term_links]{term_links()}} for the scale it is on, \code{\link[=term_params]{term_params()}} for the
+names, \code{\link[=term_coef_start]{term_coef_start()}} for the additive branch's equivalent.
 }

@@ -2,27 +2,69 @@
 % Please edit documentation in R/structural.R
 \name{term_links}
 \alias{term_links}
+\alias{term_links.structural_term}
 \title{Links of a Structural Term's Parameters}
 \usage{
 term_links(term, ...)
 }
 \arguments{
-\item{term}{An object inheriting from \code{\link[=structural_term]{structural_term()}}.}
+\item{term}{An object inheriting from \code{\link[=structural_term]{structural_term()}}. A class that
+does not implement the generic throws
+\code{"the term class 'X' does not implement term_links()."}.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
-A named list of link objects.
+A named list of \pkg{linkfunctions7} link objects, one per entry of
+\code{\link[=term_params]{term_params()}} and named by it.
 }
 \description{
-One \pkg{linkfunctions7} link per parameter of
-\code{\link[=term_params]{term_params()}}, carrying it to the unconstrained scale the
-model layer optimizes on.
+One \pkg{linkfunctions7} link per parameter of \code{\link[=term_params]{term_params()}}, carrying
+that parameter from its own admissible set onto the whole real line. A
+fitting layer optimizes on that unconstrained scale, so an optimizer never
+has to be told about the constraint.
+}
+\details{
+The charts are chosen so that a proposal from anywhere lands somewhere
+admissible. \code{\link[=gas]{gas()}} puts its level on the identity, its score loadings on
+the \strong{log} so a loading stays positive, and its persistence coordinates on
+the \strong{rhobit} so each partial autocorrelation stays inside \eqn{(-1, 1)}
+and the filter stays stationary. The \code{links} argument of a constructor
+overrides them per parameter.
+
+The persistence is the case worth understanding. The stationary region in
+the autoregressive coefficients is not a box, so no collection of scalar
+links covers it; the partial autocorrelations are each in \eqn{(-1, 1)}
+independently, and Levinson-Durbin carries them onto the coefficients.
+That is why \code{\link[=term_readable]{term_readable()}} exists: the coordinate and the quantity a
+reader reads are different things.
+
+Where a parameter carries a subformula the link is applied \strong{inside} the
+development, \eqn{\psi_{j,t} = g_j^{-1}(z_t'\gamma_j)}, so the parameter
+stays admissible at every observation and the coefficients \eqn{\gamma_j}
+are unconstrained.
+
+The method on \code{\link[=structural_term]{structural_term()}} throws, naming the class.
 }
 \examples{
-vapply(term_links(gas(p = 1, q = 1)), function(l) l@link_name, character(1))
+# Identity for the level, log for the loading, rhobit for the persistence.
+vapply(term_links(gas(p = 1, q = 2)), function(l) l@link_name, character(1))
+
+# Each carries its parameter's own set onto the whole line.
+lk <- term_links(gas(p = 1, q = 1))
+vapply(lk, function(l) paste(l@link_bounds, collapse = ", "), character(1))
+
+# So any coordinate at all gives an admissible parameter. At a
+# coordinate of 40 the persistence prints as 1 and is not: the
+# inverse link is clamped strictly inside its bounds.
+rho <- linkfunctions7::linkinv(lk$pacf1, c(-40, 0, 40))
+all(rho > -1 & rho < 1)
+1 - rho[3]
+linkfunctions7::linkinv(lk$alpha1, c(-40, 0, 40))
 
 }
 \seealso{
-\code{\link[=term_params]{term_params()}}
+\code{\link[=term_params]{term_params()}} for the names, \code{\link[=term_start]{term_start()}} for the point on
+this scale a fit begins at, \code{\link[=term_readable]{term_readable()}} for the quantities the
+coordinates map to.
 }

@@ -12,15 +12,19 @@ term_static_deriv(term, curv, X, psi, ...)
 \item{curv}{The curvature at each predictor, as \code{term_filter}
 returns it.}
 
-\item{X}{The directions to propagate, one column each -- ordinarily the
-equation's design.}
+\item{X}{The directions to propagate, one column each. Ordinarily the
+equation's design, so the result is one row per observation and one
+column per coefficient.}
 
-\item{psi}{The term's parameters, on the parameter scale.}
+\item{psi}{The term's parameters, on the parameter scale, named as
+\code{\link[=term_params]{term_params()}}.}
 
 \item{...}{Passed to methods.}
 }
 \value{
-A matrix of \code{X}'s dimensions, or \code{NULL}.
+A matrix of \code{X}'s dimensions, holding \eqn{\partial f_t/\partial
+  \beta} for each column of \code{X}, so the full derivative of the predictor
+is \code{X + result}. \code{NULL} for a term that carries no state.
 }
 \description{
 How the predictor a structural term produces moves when the static part
@@ -46,8 +50,8 @@ Without it a standard error of the predictor counts the static part only.
 Measured on a score-driven mean with one covariate beside it, that
 understates the standard error by about a quarter.
 
-The base method returns \code{NULL}: a term that is not a filter carries
-no state, so the derivative is the design row itself and the caller needs
+The base method returns \code{NULL}. A term that is not a filter carries no
+state, so the derivative is the design row itself and the caller needs
 nothing from the term.
 }
 \examples{

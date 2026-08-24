@@ -2,28 +2,63 @@
 % Please edit documentation in R/structural.R
 \name{term_params}
 \alias{term_params}
+\alias{term_params.structural_term}
 \title{Parameters of a Structural Term}
 \usage{
 term_params(term, ...)
 }
 \arguments{
-\item{term}{An object inheriting from \code{\link[=structural_term]{structural_term()}}.}
+\item{term}{An object inheriting from \code{\link[=structural_term]{structural_term()}}. A class that
+does not implement the generic throws
+\code{"the term class 'X' does not implement term_params()."}.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
-A character vector.
+A character vector, one name per parameter, of length
+\code{\link[=term_npar]{term_npar()}}.
 }
 \description{
-The names of a structural term's own parameters, in the order its
-filter expects them. A structural term contributes no design block, so
-its parameters are not coefficients: they are estimated alongside the
-distribution's, on the unconstrained scale its links define.
+The names of a structural term's own parameters, in the order its filter
+and its derivative recursions expect them. A structural term contributes no
+design block, so these are not coefficients: they are estimated beside the
+distribution's, on the unconstrained scale \code{\link[=term_links]{term_links()}} defines, and
+\code{\link[=term_npar]{term_npar()}} counts them.
+}
+\details{
+The names are the term's own vocabulary. \code{\link[=gas]{gas()}} answers \code{omega} for the
+level, \code{alpha1} ... \code{alphap} for the score loadings and \code{pacf1} ... \code{pacfq}
+for the persistence; \code{\link[=regime]{regime()}} answers its levels and the free entries of
+its transition matrix. They are what indexes everything else about the
+term: \code{\link[=term_start]{term_start()}} returns one value per name, \code{\link[=term_readable]{term_readable()}} carries
+them onto the quantities a reader reads, and a \code{\link[=term_penalties]{term_penalties()}} entry's
+\code{index} gives positions in this vector.
+
+A \strong{subformula} expands the parameter it develops in place, so
+\code{gas(p = 1, q = 1)} has three parameters and
+\code{gas(p = 1, q = 1, omega ~ z)} has four: \code{omega.(Intercept)} and \code{omega.z}
+where the level was.
+
+The method on \code{\link[=structural_term]{structural_term()}} throws, naming the class: a structural
+class supplies this itself.
 }
 \examples{
+# The score-driven vocabulary: a level, a loading, a persistence.
 term_params(gas(p = 1, q = 1))
+term_params(gas(p = 2, q = 2))
+
+# A subformula expands the parameter it develops, in place.
+set.seed(1)
+d <- data.frame(y = rnorm(30), z = rnorm(30), t = 1:30)
+term_params(term_build(gas(p = 1, q = 1, omega ~ z, time = t), d))
+
+# It is what term_npar() counts on this branch.
+g <- gas(p = 1, q = 2)
+c(npar = term_npar(g), names = length(term_params(g)))
 
 }
 \seealso{
-\code{\link[=term_links]{term_links()}}, \code{\link[=term_filter]{term_filter()}}
+\code{\link[=term_links]{term_links()}} for the chart each rides, \code{\link[=term_start]{term_start()}} for where
+they begin, \code{\link[=term_readable]{term_readable()}} for the quantities they map to,
+\code{\link[=term_coef_names]{term_coef_names()}} for the additive branch's equivalent.
 }

@@ -2,6 +2,7 @@
 % Please edit documentation in R/structural.R
 \name{term_level_param}
 \alias{term_level_param}
+\alias{term_level_param.model_term}
 \title{Which of a Term's Parameters Acts as an Intercept}
 \usage{
 term_level_param(term, ...)
@@ -20,8 +21,8 @@ a constant, and is therefore the same direction as an intercept in the
 equation the term sits in.
 }
 \details{
-It exists so that a fitting layer can resolve the confounding rather than
-refuse the model. A score-driven level \eqn{\omega} and a regime's first
+It exists so that a fitting layer can resolve the confounding instead of
+refusing the model. A score-driven level \eqn{\omega} and a regime's first
 level both add a constant to their equation's predictor: with an
 intercept there too, adding \eqn{c} to one and subtracting the matching
 amount from the other leaves every predictor unchanged, and the
@@ -38,5 +39,6 @@ term_level_param(linpar(~x))
 
 }
 \seealso{
-\code{\link[=term_params]{term_params()}}
+\code{\link[=term_level_design]{term_level_design()}} for the same question with the level
+developed, \code{\link[=term_params]{term_params()}} for the names it answers among.
 }

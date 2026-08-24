@@ -2,6 +2,7 @@
 % Please edit documentation in R/structural.R
 \name{term_filter}
 \alias{term_filter}
+\alias{term_filter.structural_term}
 \title{Apply a Structural Term to a Linear Predictor}
 \usage{
 term_filter(term, eta, y, score, curvature, psi, ...)
@@ -29,9 +30,10 @@ derivative of the log-likelihood with respect to it.}
 A list with \code{eta}, the predictor the term produces,
 \code{jacobian}, an \code{n} by \code{length(psi)} matrix of its
 derivatives with respect to \code{psi}, and \code{curv}, the value of
-\code{curvature} at each predictor -- returned because the recursion
-evaluates it anyway, so a consumer running a second pass at the same
-point (the adjoint) can read it rather than evaluate it again.
+\code{curvature} at each predictor. That last one is returned because the
+recursion evaluates it anyway, so a consumer running a second pass at
+the same point, as \code{\link[=term_adjoint]{term_adjoint()}} does, reads it instead of
+evaluating the callback again.
 }
 \description{
 Runs the term's recursion over the data and returns the predictor it
@@ -49,17 +51,16 @@ and \eqn{\psi} for the term's parameters, the filter returns the pair
 
 where \eqn{f_t} is the term's own recursion, driven by
 \code{score} and \code{curvature} evaluated at the predictor already
-produced. Both are read at \eqn{\eta_t}, so \code{curvature} is the
-second derivative \eqn{\partial^{2} \ell_t / \partial \eta^{2}} and is
-negative at an ordinary observation; passing the information, its
-negative, gives a predictor and a Jacobian that are internally
-consistent and wrong.
+produced. Both are read at \eqn{\eta_t}, so \code{curvature} is the second
+derivative \eqn{\partial^{2} \ell_t / \partial \eta^{2}} and is negative at
+an ordinary observation. \strong{Its sign is load-bearing}: passing the
+information, which is its negative, returns a predictor and a Jacobian
+that are internally consistent and wrong, with no error to say so.
 
-The derivative is returned because the recursion is the only place it
-can be computed. A model layer differencing the filter would pay one
-pass per parameter and inherit the error of the difference; propagating
-the derivative alongside the state costs one extra vector per parameter
-and is exact.
+The derivative is returned because the recursion is the only place it can
+be computed. Propagating it beside the state costs one extra vector per
+parameter and is exact; a model layer differencing the filter instead
+would pay one pass per parameter and inherit the error of the difference.
 }
 \examples{
 set.seed(1)
@@ -76,5 +77,8 @@ dim(out$jacobian)
 
 }
 \seealso{
-\code{\link[=gas]{gas()}}
+\code{\link[=gas]{gas()}} and \code{\link[=regime]{regime()}} for the two structural shapes,
+\code{\link[=term_static_deriv]{term_static_deriv()}} for the same recursion in the static predictor,
+\code{\link[=term_adjoint]{term_adjoint()}} for the reverse pass, \code{\link[=term_continue]{term_continue()}} for the
+recursion past the series.
 }

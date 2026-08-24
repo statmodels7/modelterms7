@@ -2,6 +2,7 @@
 % Please edit documentation in R/structural.R
 \name{term_level_design}
 \alias{term_level_design}
+\alias{term_level_design.model_term}
 \title{The Design of a Term's Level Development}
 \usage{
 term_level_design(term, ...)
@@ -35,5 +36,6 @@ is.null(term_level_design(linpar(~x)))
 
 }
 \seealso{
-\code{\link[=term_level_param]{term_level_param()}}
+\code{\link[=term_level_param]{term_level_param()}} for the scalar case, \code{\link[=term_params]{term_params()}} for
+the names its columns carry.
 }
