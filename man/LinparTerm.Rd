@@ -21,62 +21,117 @@ LinparTerm(
 )
 }
 \arguments{
-\item{label}{A character string prefixed to the coefficient names when
-non-empty.}
+\item{label}{A character string prefixed to the term's coefficient names
+when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag of
+\code{\link[=print]{print()}}. \code{character(0)} and \code{""} both mean no label.}
 
-\item{hyper}{The hyperparameters of the term's penalty that the
-caller HELD, as a named list. Empty, the default, means every one
-of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
+\item{hyper}{The hyperparameters of the term's penalty the caller \strong{held},
+as a named list keyed by the penalty's names. Empty, the default, means
+every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
-hyperparameters, as a named list. Empty, the default, leaves it to the
-criterion. See \code{\link[=term_grid]{term_grid()}}.}
+hyperparameters, as a named list of single whole numbers. Empty, the
+default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the
-caller wrote out, as a named list. Empty, the default, has the path
-build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values a path visits, for each hyperparameter the caller
+wrote out, as a named list of numeric vectors. Empty, the default, has the
+path build them. See \code{\link[=term_values]{term_values()}}.}
 
-\item{min_ratio}{How far down the path over the size of the kink
-reaches, as a fraction of the value that empties the block, or
-\code{numeric(0)} for the criterion's own. See
-\code{\link[=term_path_min]{term_path_min()}}.}
+\item{min_ratio}{How far down the path over the size of the kink reaches, as
+a fraction of the value that empties the block: one number in \eqn{(0, 1)},
+or \code{numeric(0)} for the fitting layer's own. See \code{\link[=term_path_min]{term_path_min()}}.}
 
 \item{search}{How the term's own hyperparameters are covered when it has
-several with a kink: \code{"grid"} for every combination of them,
-\code{"cyclic"} for one at a time, or \code{character(0)} for the
-default. See \code{\link[=term_search]{term_search()}}.}
+more than one carrying a kink: \code{"grid"} for every combination of them,
+\code{"cyclic"} for one at a time, or \code{character(0)} for the default. See
+\code{\link[=term_search]{term_search()}}.}
 
-\item{X}{The design block, filled by \code{\link[=term_build]{term_build()}}.}
+\item{X}{The design block, one row per observation: a numeric matrix or a
+two-dimensional \pkg{Matrix}. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 
-\item{coef_names}{The coefficient names, filled by
-\code{\link[=term_build]{term_build()}}.}
+\item{coef_names}{The block's coefficient names, one per column, prefixed by
+\code{label} when there is one. Filled by \code{\link[=term_build]{term_build()}}.}
 
-\item{blueprint}{The information needed to reproduce the mapping on new
-data, filled by \code{\link[=term_build]{term_build()}}.}
+\item{blueprint}{A named list of everything needed to reproduce the mapping
+on new rows. Its contents are the subclass's business; nothing outside the
+term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 
-\item{penalty}{The penalty on the term's coefficients, or \code{NULL}.}
+\item{penalty}{A \pkg{penalties7} penalty on the block's coefficients, or
+\code{NULL} when the term is unpenalized.}
 
-\item{formula}{The one-sided formula defining the block.}
+\item{formula}{The one-sided formula defining the block, such as
+\code{~ x + log(z) + f}. Its environment is kept and used when a symbol is
+absent from the data.}
 
-\item{sparse}{Whether the block is a \code{dgCMatrix}, built sparse rather
-than compressed after the fact. See \code{\link[=linpar]{linpar()}}.}
+\item{sparse}{\code{TRUE} to build the block as a \code{dgCMatrix} through
+\code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}}, \code{FALSE} for a base matrix, \code{NULL} to let
+the build choose. It is kept as given; the storage actually used is in
+\code{blueprint$sparse}.}
 
-\item{contrasts}{The contrasts for the formula's factors, as a named list,
-or an empty list for the session's own.}
+\item{contrasts}{A named list of contrasts for the formula's factors, in
+\code{\link[stats:model.matrix]{stats::model.matrix()}}'s own form, or an empty list for the session's
+defaults.}
 }
 \value{
-An object of class \code{LinparTerm}.
+An S7 object of class \code{LinparTerm}, inheriting from
+\code{\link[=additive_term]{additive_term()}} and \code{\link[=model_term]{model_term()}}, with the three properties above
+beside the ten they supply.
 }
 \description{
-A subclass of \code{\link[=additive_term]{additive_term()}} for the unpenalized parametric
-block built from a one-sided formula through \code{\link[stats:model.matrix]{stats::model.matrix()}}.
-Constructed by \code{\link[=linpar]{linpar()}}, and implicitly by
-\code{\link[=interpret_formula]{interpret_formula()}}, which collects the bare covariates of a
-model formula into one term of this class.
+The subclass of \code{\link[=additive_term]{additive_term()}} holding an unpenalized parametric block
+built from a one-sided formula through \code{\link[stats:model.matrix]{stats::model.matrix()}}. It is what
+\code{\link[=linpar]{linpar()}} constructs, and what \code{\link[=interpret_formula]{interpret_formula()}} collects a formula's
+bare covariates into, so most models carry one whether or not the caller
+wrote it.
+
+Beyond the additive branch's four properties it records the formula, whether
+the block is sparse, and the contrasts used for the formula's factors.
 }
+\section{The three properties of its own}{
+\code{formula} is the one-sided formula, kept with its environment, so a symbol
+the data do not carry is still found where the formula was written.
+
+\code{sparse} holds what the caller asked for and \code{NULL} where nothing was asked.
+The build leaves it alone and records the storage it settled on in
+\code{blueprint$sparse}, which is the value \code{\link[=term_predict]{term_predict()}} reads, so the block
+and a prediction from it never differ in storage. A formula naming a factor
+of many levels has one non-zero per row, and the dense model matrix of it is
+the memory the choice exists to avoid.
+
+\code{contrasts} is a named list, one entry per factor, or empty for the
+session's own \code{options("contrasts")}. Whatever is used is recorded in the
+blueprint and reapplied, so a fit and a prediction never disagree about the
+coding.
+
+The class carries no penalty: \code{penalty} is \code{NULL} on every \code{LinparTerm}, and
+\code{\link[=term_penalties]{term_penalties()}} returns an empty list, so \code{\link[=edf]{edf()}} counts its columns
+exactly.
+}
+
 \examples{
-S7::S7_inherits(linpar(~1), LinparTerm)
+d <- data.frame(x = rnorm(20), g = factor(rep(letters[1:4], 5)))
+
+# linpar() is the constructor; the class is what it returns.
+tm <- linpar(~ x + g)
+S7::S7_inherits(tm, LinparTerm)
+tm@formula
+
+# The property keeps what was asked for; the blueprint records what the
+# build settled on, and that is what a prediction reads.
+bt <- term_build(tm, d)
+c(asked = is.null(bt@sparse), settled = bt@blueprint$sparse)
+term_build(linpar(~ g, sparse = TRUE), d)@blueprint$sparse
+
+# The contrasts are recorded and reapplied, so the coding cannot drift.
+b <- term_build(linpar(~ g, contrasts = list(g = "contr.sum")), d)
+term_coef_names(b)
+
+# It is never penalized.
+c(penalty = is.null(b@penalty), entries = length(term_penalties(b)),
+  edf = edf(b))
+
 }
 \seealso{
-\code{\link[=linpar]{linpar()}}
+\code{\link[=linpar]{linpar()}}, the constructor to use; \code{\link[=interpret_formula]{interpret_formula()}}, which
+builds one implicitly; \code{\link[=term_build]{term_build()}} and \code{\link[=term_predict]{term_predict()}}.
 }

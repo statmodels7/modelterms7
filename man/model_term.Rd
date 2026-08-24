@@ -15,49 +15,111 @@ model_term(
 }
 \arguments{
 \item{label}{A character string prefixed to the term's coefficient names
-when non-empty.}
+when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag of
+\code{\link[=print]{print()}}. \code{character(0)} and \code{""} both mean no label.}
 
-\item{hyper}{The hyperparameters of the term's penalty that the
-caller HELD, as a named list. Empty, the default, means every one
-of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
+\item{hyper}{The hyperparameters of the term's penalty the caller \strong{held},
+as a named list keyed by the penalty's names. Empty, the default, means
+every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
-hyperparameters, as a named list. Empty, the default, leaves it to the
-criterion. See \code{\link[=term_grid]{term_grid()}}.}
+hyperparameters, as a named list of single whole numbers. Empty, the
+default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the
-caller wrote out, as a named list. Empty, the default, has the path
-build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values a path visits, for each hyperparameter the caller
+wrote out, as a named list of numeric vectors. Empty, the default, has the
+path build them. See \code{\link[=term_values]{term_values()}}.}
 
-\item{min_ratio}{How far down the path over the size of the kink
-reaches, as a fraction of the value that empties the block, or
-\code{numeric(0)} for the criterion's own. See
-\code{\link[=term_path_min]{term_path_min()}}.}
+\item{min_ratio}{How far down the path over the size of the kink reaches, as
+a fraction of the value that empties the block: one number in \eqn{(0, 1)},
+or \code{numeric(0)} for the fitting layer's own. See \code{\link[=term_path_min]{term_path_min()}}.}
 
 \item{search}{How the term's own hyperparameters are covered when it has
-several with a kink: \code{"grid"} for every combination of them,
-\code{"cyclic"} for one at a time, or \code{character(0)} for the
-default. See \code{\link[=term_search]{term_search()}}.}
+more than one carrying a kink: \code{"grid"} for every combination of them,
+\code{"cyclic"} for one at a time, or \code{character(0)} for the default. See
+\code{\link[=term_search]{term_search()}}.}
 }
 \value{
-An object inheriting from class \code{model_term}.
+Nothing: the class is abstract and cannot be instantiated. As a type
+it is the parent of every term, with the six properties above.
 }
 \description{
-The abstract root of the term hierarchy. A model term records what a
-formula names: the recipe that turns a data frame into a contribution to
-the model, together with the metadata a fit reads. A term as written in a
-formula is a specification; \code{\link[=term_build]{term_build()}} turns it into a
-built term carrying its design block.
+The abstract root of the term hierarchy. A term records what a formula
+names: the recipe turning a data frame into a contribution to the model,
+together with the metadata a fit reads. A term written in a formula is a
+\strong{specification}, carrying only what the call said; \code{\link[=term_build]{term_build()}} turns it
+into a \strong{built} term carrying the design block or the state the recipe
+produces on given data.
 
-The formula interpreter (\code{\link[=interpret_formula]{interpret_formula()}}) recognizes a
-term by this class: any call in a formula that evaluates to an object
-inheriting from \code{model_term} is treated as a term, so a term class
-defined outside the package works in a formula without registration.
+\code{\link[=interpret_formula]{interpret_formula()}} recognizes a term by this class. Any call on the right
+of a formula whose value inherits from \code{model_term} becomes a term, so a
+term class defined outside the package works in a formula the day it is
+written, with nothing to register.
 }
+\section{The two branches}{
+\code{\link[=additive_term]{additive_term()}} contributes a block of design columns \eqn{X_j\beta_j} to
+a linear predictor. \code{\link[=structural_term]{structural_term()}} rewrites the likelihood instead:
+\code{\link[=gas]{gas()}}'s predictor is a recursion, \code{\link[=regime]{regime()}}'s contribution is a
+likelihood mixed over latent states. The branch decides which generics a
+consumer may call, so \code{\link[statmodels7:statmod]{statmodels7::statmod()}} routes on it.
+}
+
+\section{What the root carries, and why}{
+Beyond \code{label} the properties are all about a hyperparameter path.
+\strong{Which hyperparameters are estimated is said by the term and by nothing
+else}: the term is where the penalty is named, so it is where a held value,
+a grid size, a written-out set of values, the depth of the path and the way
+several hyperparameters are combined all belong. An outer criterion is put
+to every hyperparameter of a model, smooth ones included, and carries none
+of this.
+
+Each of \code{hyper}, \code{grid} and \code{values} is a named list keyed by the penalty's
+own hyperparameter names, and each is empty by default. \code{min_ratio} and
+\code{search} are single values rather than one per hyperparameter, because only
+the path over the size of the kink uses a ratio: a bounded hyperparameter is
+swept over its own interval and a shape over a geometric grid above its
+lower bound.
+}
+
+\section{It cannot be constructed}{
+\code{model_term} is abstract, as are \code{additive_term} and \code{structural_term}.
+\code{model_term()} throws
+\code{"Can't construct an object from abstract class <model_term>"}. Use it as a
+parent when writing a term class, and as the test
+\code{S7::S7_inherits(x, model_term)} when asking whether an object is a term.
+
+A class inheriting from it supplies \code{\link[=term_build]{term_build()}} at the very least: the
+method registered here throws, naming the class that did not implement it.
+Most other generics carry a usable default, so a new term class starts from
+a working object and overrides what it has reason to.
+}
+
 \examples{
-S7::S7_inherits(linpar(~1), model_term)
+# Every term inherits from this class, whichever branch it is on.
+vapply(list(linpar(~ 1), ridge(~ x), s(x, k = 5), gas(p = 1, q = 1)),
+       function(t) S7::S7_inherits(t, model_term), logical(1))
+
+# The branch is what a consumer routes on.
+c(additive = S7::S7_inherits(s(x, k = 5), additive_term),
+  structural = S7::S7_inherits(s(x, k = 5), structural_term))
+c(additive = S7::S7_inherits(gas(p = 1, q = 1), additive_term),
+  structural = S7::S7_inherits(gas(p = 1, q = 1), structural_term))
+
+# The path properties are empty until a caller sets one.
+r <- ridge(~ x)
+lengths(list(hyper = r@hyper, grid = r@grid, values = r@values,
+             min_ratio = r@min_ratio, search = r@search))
+
+# Holding lambda puts it in `hyper`, where term_hyper() reads it.
+term_hyper(ridge(~ x, lambda = 0.5))
+
+# Abstract: there is nothing to construct.
+try(model_term())
+
 }
 \seealso{
-\code{\link[=additive_term]{additive_term()}}, \code{\link[=structural_term]{structural_term()}},
-\code{\link[=term_build]{term_build()}}
+\code{\link[=additive_term]{additive_term()}} and \code{\link[=structural_term]{structural_term()}} for the two branches,
+\code{\link[=term_build]{term_build()}} for turning a specification into a built term,
+\code{\link[=interpret_formula]{interpret_formula()}} for how a formula is read into terms, and
+\code{\link[=check_term]{check_term()}} for validating one.
 }

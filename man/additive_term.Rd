@@ -18,56 +18,119 @@ additive_term(
 )
 }
 \arguments{
-\item{label}{A character string prefixed to the coefficient names when
-non-empty.}
+\item{label}{A character string prefixed to the term's coefficient names
+when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag of
+\code{\link[=print]{print()}}. \code{character(0)} and \code{""} both mean no label.}
 
-\item{hyper}{The hyperparameters of the term's penalty that the
-caller HELD, as a named list. Empty, the default, means every one
-of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
+\item{hyper}{The hyperparameters of the term's penalty the caller \strong{held},
+as a named list keyed by the penalty's names. Empty, the default, means
+every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
-hyperparameters, as a named list. Empty, the default, leaves it to the
-criterion. See \code{\link[=term_grid]{term_grid()}}.}
+hyperparameters, as a named list of single whole numbers. Empty, the
+default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the
-caller wrote out, as a named list. Empty, the default, has the path
-build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values a path visits, for each hyperparameter the caller
+wrote out, as a named list of numeric vectors. Empty, the default, has the
+path build them. See \code{\link[=term_values]{term_values()}}.}
 
-\item{min_ratio}{How far down the path over the size of the kink
-reaches, as a fraction of the value that empties the block, or
-\code{numeric(0)} for the criterion's own. See
-\code{\link[=term_path_min]{term_path_min()}}.}
+\item{min_ratio}{How far down the path over the size of the kink reaches, as
+a fraction of the value that empties the block: one number in \eqn{(0, 1)},
+or \code{numeric(0)} for the fitting layer's own. See \code{\link[=term_path_min]{term_path_min()}}.}
 
 \item{search}{How the term's own hyperparameters are covered when it has
-several with a kink: \code{"grid"} for every combination of them,
-\code{"cyclic"} for one at a time, or \code{character(0)} for the
-default. See \code{\link[=term_search]{term_search()}}.}
+more than one carrying a kink: \code{"grid"} for every combination of them,
+\code{"cyclic"} for one at a time, or \code{character(0)} for the default. See
+\code{\link[=term_search]{term_search()}}.}
 
-\item{X}{The design block, filled by \code{\link[=term_build]{term_build()}}.}
+\item{X}{The design block, one row per observation: a numeric matrix or a
+two-dimensional \pkg{Matrix}. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 
-\item{coef_names}{The coefficient names, filled by
-\code{\link[=term_build]{term_build()}}.}
+\item{coef_names}{The block's coefficient names, one per column, prefixed by
+\code{label} when there is one. Filled by \code{\link[=term_build]{term_build()}}.}
 
-\item{blueprint}{The information needed to reproduce the mapping on new
-data, filled by \code{\link[=term_build]{term_build()}}.}
+\item{blueprint}{A named list of everything needed to reproduce the mapping
+on new rows. Its contents are the subclass's business; nothing outside the
+term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 
-\item{penalty}{The penalty on the term's coefficients, or \code{NULL}.}
+\item{penalty}{A \pkg{penalties7} penalty on the block's coefficients, or
+\code{NULL} when the term is unpenalized.}
 }
 \value{
-An object inheriting from class \code{additive_term}.
+Nothing: the class is abstract and cannot be instantiated.
+\code{additive_term()} throws. As a type it is the parent of every term that
+contributes design columns, carrying the four properties above beside
+\code{\link[=model_term]{model_term()}}'s six.
 }
 \description{
-The branch of \code{\link[=model_term]{model_term()}} for terms that contribute a
-linear block \eqn{X_j \beta_j} to the linear predictor of one
-distribution parameter. A built additive term carries the design block,
-the coefficient names, the blueprint that reproduces the mapping on new
-data, and the penalty attached to its coefficients (\code{NULL} when the
-term is unpenalized).
+The branch of \code{\link[=model_term]{model_term()}} whose terms contribute a block of design
+columns \eqn{X_j \beta_j} to the linear predictor of one distribution
+parameter. Everything a formula can write that is not a filter or a latent
+mixture is on this branch: \code{\link[=linpar]{linpar()}}, the five penalized terms, \code{\link[=random]{random()}},
+\code{\link[=s]{s()}} and \code{\link[=te]{te()}}, \code{\link[=nl]{nl()}} and the break-point terms.
+
+A built term on this branch carries four things beyond the root's
+properties: the block itself, the coefficient names, the blueprint that
+reproduces the block on new rows, and the penalty on its coefficients.
 }
+\section{What a build fills, and what stays empty}{
+A specification has \code{X} empty and \code{blueprint} an empty list; \code{\link[=term_build]{term_build()}}
+fills all four. The blueprint is the reason \code{\link[=term_predict]{term_predict()}} can \strong{reapply}
+the mapping instead of rebuilding it: the factor levels, the contrasts, the
+knots a basis was placed on and the spreads a standardization used are
+recorded there at build time. \code{\link[=check_term]{check_term()}}'s subset check is what tests
+that they really are.
+
+\code{penalty} is \code{NULL} for an unpenalized term. Reading it directly answers for
+a term carrying one penalty over its whole block; \code{\link[=term_penalties]{term_penalties()}} is the
+general form and covers a term whose penalty reaches part of its parameters
+or which carries several.
+}
+
+\section{The contract on this branch}{
+\code{\link[=term_matrix]{term_matrix()}} returns \code{X}, \code{\link[=term_coef_names]{term_coef_names()}} returns \code{coef_names},
+\code{\link[=term_npar]{term_npar()}} counts the columns and \code{\link[=term_penalty]{term_penalty()}} returns \code{penalty}, all
+from the properties, so a subclass gets them without writing anything. What
+a subclass owes is \code{\link[=term_build]{term_build()}} and \code{\link[=term_predict]{term_predict()}}.
+
+A term whose block moves with its own coefficients, as \code{\link[=nl]{nl()}} and \code{\link[=seg]{seg()}}
+do, also implements \code{\link[=term_refresh]{term_refresh()}} and \code{\link[=term_value]{term_value()}}, and answers
+\code{\link[=term_jacobian_block]{term_jacobian_block()}} to say whether the block it returns is a Jacobian or
+a frozen working linearization.
+}
+
+\section{The block need not be dense}{
+\code{X} is \code{class_any}, so a block may be a base matrix or any \pkg{Matrix}
+class. A grouping indicator has one non-zero per row, and \code{\link[=random]{random()}} builds
+it sparse; \code{\link[=linpar]{linpar()}} and the penalized terms build sparse when asked. Code
+reading a block tests \code{is.matrix(x) && is.numeric(x)} or a two-dimensional
+S4 object, since \code{is.matrix()} alone is \code{FALSE} for every \pkg{Matrix}
+class.
+}
+
 \examples{
-S7::S7_inherits(linpar(~1), additive_term)
+d <- data.frame(x = rnorm(20), g = factor(rep(letters[1:4], 5)))
+
+# A specification carries no block; a build fills all four properties.
+spec <- ridge(~ x + g)
+c(X = length(spec@X), blueprint = length(spec@blueprint))
+b <- term_build(spec, d)
+dim(term_matrix(b))
+term_coef_names(b)
+b@penalty
+
+# An unpenalized term has a NULL penalty.
+is.null(term_build(linpar(~ x), d)@penalty)
+
+# A grouping indicator is built sparse, so the block is not a base matrix.
+class(term_matrix(term_build(random(~ 1 | g), d)))
+
+# Abstract: there is nothing to construct.
+try(additive_term())
+
 }
 \seealso{
-\code{\link[=linpar]{linpar()}}, \code{\link[=term_build]{term_build()}},
-\code{\link[=term_predict]{term_predict()}}
+\code{\link[=structural_term]{structural_term()}} for the other branch, \code{\link[=term_build]{term_build()}},
+\code{\link[=term_predict]{term_predict()}} and \code{\link[=term_matrix]{term_matrix()}} for the contract, and \code{\link[=linpar]{linpar()}} for
+the simplest term on this branch.
 }

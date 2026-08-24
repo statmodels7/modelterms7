@@ -14,46 +14,94 @@ structural_term(
 )
 }
 \arguments{
-\item{label}{A character string naming the term.}
+\item{label}{A character string prefixed to the term's coefficient names
+when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag of
+\code{\link[=print]{print()}}. \code{character(0)} and \code{""} both mean no label.}
 
-\item{hyper}{The hyperparameters of the term's penalty that the
-caller HELD, as a named list. Empty, the default, means every one
-of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
+\item{hyper}{The hyperparameters of the term's penalty the caller \strong{held},
+as a named list keyed by the penalty's names. Empty, the default, means
+every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
-hyperparameters, as a named list. Empty, the default, leaves it to the
-criterion. See \code{\link[=term_grid]{term_grid()}}.}
+hyperparameters, as a named list of single whole numbers. Empty, the
+default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the
-caller wrote out, as a named list. Empty, the default, has the path
-build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values a path visits, for each hyperparameter the caller
+wrote out, as a named list of numeric vectors. Empty, the default, has the
+path build them. See \code{\link[=term_values]{term_values()}}.}
 
-\item{min_ratio}{How far down the path over the size of the kink
-reaches, as a fraction of the value that empties the block, or
-\code{numeric(0)} for the criterion's own. See
-\code{\link[=term_path_min]{term_path_min()}}.}
+\item{min_ratio}{How far down the path over the size of the kink reaches, as
+a fraction of the value that empties the block: one number in \eqn{(0, 1)},
+or \code{numeric(0)} for the fitting layer's own. See \code{\link[=term_path_min]{term_path_min()}}.}
 
 \item{search}{How the term's own hyperparameters are covered when it has
-several with a kink: \code{"grid"} for every combination of them,
-\code{"cyclic"} for one at a time, or \code{character(0)} for the
-default. See \code{\link[=term_search]{term_search()}}.}
+more than one carrying a kink: \code{"grid"} for every combination of them,
+\code{"cyclic"} for one at a time, or \code{character(0)} for the default. See
+\code{\link[=term_search]{term_search()}}.}
 }
 \value{
-An object inheriting from class \code{structural_term}.
+Nothing: the class is abstract and cannot be instantiated.
+\code{structural_term()} throws. As a type it is the parent of \code{\link[=gas]{gas()}},
+\code{\link[=regime]{regime()}} and the marginal break-point terms, and carries exactly
+\code{\link[=model_term]{model_term()}}'s six properties.
 }
 \description{
-The branch of \code{\link[=model_term]{model_term()}} for terms that rewrite the
-likelihood contributions rather than adding a design block:
-\code{\link[=gas]{gas()}}, whose predictor is a recursion, and
-\code{\link[=regime]{regime()}}, whose contribution is a likelihood mixed over
-latent states. A term on this branch reports its own parameters through
-\code{\link[=term_params]{term_params()}} rather than coefficients, so
-\code{\link[=term_npar]{term_npar()}} counts those and \code{\link[=term_penalties]{term_penalties()}}
-indexes into them.
+The branch of \code{\link[=model_term]{model_term()}} whose terms rewrite the likelihood instead of
+adding design columns. \code{\link[=gas]{gas()}} drives one distribution parameter by a
+score-driven recursion, so its contribution to the predictor is a state
+rather than a product \eqn{X\beta}; \code{\link[=regime]{regime()}} and the marginal break-point
+terms replace the log-likelihood outright with one mixed over latent states.
+A term on this branch has no block, no coefficients and no
+\code{\link[=term_matrix]{term_matrix()}} method.
 }
+\section{Parameters, not coefficients}{
+What such a term estimates are its \strong{own parameters}, named by
+\code{\link[=term_params]{term_params()}} and each riding a chart named by \code{\link[=term_links]{term_links()}}, so a
+persistence stays inside \eqn{(-1, 1)} and a loading stays positive whatever
+an optimizer proposes. \code{\link[=term_npar]{term_npar()}} counts those parameters,
+\code{\link[=term_start]{term_start()}} says where they start, and a \code{\link[=term_penalties]{term_penalties()}} entry indexes
+into them, where an additive term's entry indexes into columns.
+
+The class adds no properties of its own: everything a built structural term
+records goes in the root's \code{label} and in the subclass's own slots.
+}
+
+\section{The two shapes}{
+A \strong{filter} reports a predictor and its exact derivative: \code{\link[=term_filter]{term_filter()}}
+returns the level at each observation together with the Jacobian in the
+term's parameters, propagated beside the state because the recursion is the
+only place it can be computed. \code{\link[=term_adjoint]{term_adjoint()}}, \code{\link[=term_curvature]{term_curvature()}} and
+\code{\link[=term_third]{term_third()}} carry the first three orders through the same recursion.
+\code{\link[=gas]{gas()}} has this shape.
+
+A \strong{likelihood} term reports no predictor at all. \code{\link[=term_loglik]{term_loglik()}} returns
+its own contribution, \code{\link[=term_posterior]{term_posterior()}} the smoothed latent states and
+\code{\link[=term_hessian]{term_hessian()}} the observed information of the mixture. \code{\link[=regime]{regime()}} and the
+marginal break-point terms have this shape.
+
+A fitting layer tells them apart by which of the two generics answers, and
+at most one structural term is allowed per model formula.
+}
+
 \examples{
-S7::S7_inherits(linpar(~1), structural_term)
+# gas() and regime() are on this branch; every additive term is not.
+vapply(list(gas(p = 1, q = 1), regime(k = 2), s(x, k = 5), ridge(~ x)),
+       function(t) S7::S7_inherits(t, structural_term), logical(1))
+
+# A structural term names its own parameters instead of coefficients.
+g <- gas(p = 1, q = 2)
+term_params(g)
+vapply(term_links(g), function(l) l@link_name, character(1))
+
+# And has no design block at all.
+try(term_matrix(g))
+
+# Abstract: there is nothing to construct.
+try(structural_term())
+
 }
 \seealso{
-\code{\link[=model_term]{model_term()}}
+\code{\link[=additive_term]{additive_term()}} for the other branch, \code{\link[=gas]{gas()}} and \code{\link[=regime]{regime()}} for
+the two shapes, \code{\link[=term_params]{term_params()}} and \code{\link[=term_links]{term_links()}} for what such a term
+estimates.
 }
