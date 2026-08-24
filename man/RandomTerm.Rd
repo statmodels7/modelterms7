@@ -59,27 +59,65 @@ term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 \item{penalty}{A \pkg{penalties7} penalty on the block's coefficients, or
 \code{NULL} when the term is unpenalized.}
 
-\item{formula}{The bar formula, e.g. \code{~ 1 | g} or \code{~ x | g}.}
+\item{formula}{The bar formula, \code{~ 1 | g} or \code{~ x | g}, with the
+within-group design on the left and the grouping variable on the right.}
 
-\item{correlated}{Logical; whether the default Gaussian lets the
-within-group effects correlate.}
+\item{correlated}{A single logical: whether the default Gaussian lets the
+within-group effects correlate. Read only when \code{distrib} is \code{NULL}.}
 
-\item{distrib}{The effects' distribution, or \code{NULL} for the default
-Gaussian.}
+\item{distrib}{The effects' distribution, a \pkg{distributions7} object or
+a list of them with one per within-group column, or \code{NULL} for the
+default Gaussian.}
 }
 \value{
-An object of class \code{RandomTerm}.
+An S7 object of class \code{RandomTerm}, inheriting from
+\code{\link[=additive_term]{additive_term()}} and \code{\link[=model_term]{model_term()}}, with the three properties above
+beside the ten they supply.
 }
 \description{
-A subclass of \code{\link[=additive_term]{additive_term()}} for grouped coefficients with
-a distribution on the effects: the within-group design interacted with
-the grouping indicators, one coefficient per group and per within-group
-column, with the penalty carrying the effects' distribution.
-Constructed by \code{\link[=random]{random()}}.
+The subclass of \code{\link[=additive_term]{additive_term()}} holding grouped coefficients with a
+distribution attached to them: the within-group design interacted with the
+group indicators, one coefficient per group and per within-group column,
+and a penalty carrying that distribution's negative log-density. \code{\link[=random]{random()}}
+constructs it.
 }
+\section{The three properties of its own}{
+\code{formula} is the bar formula as given, \code{~ 1 | g} or \code{~ x | g}, kept with its
+environment. \code{correlated} says whether the \strong{default} Gaussian lets the
+within-group effects depend on each other; it is read only where \code{distrib}
+is \code{NULL}, the two saying the same thing.
+
+\code{distrib} is the effects' distribution as supplied, or \code{NULL} for the
+default. What the build turns it into is a \pkg{penalties7} penalty, read
+through \code{\link[=term_penalty]{term_penalty()}} or \code{\link[=term_penalties]{term_penalties()}}, so the hyperparameter names
+and their bounds come from the distribution and not from the class.
+}
+
+\section{The block is sparse by construction}{
+A row belongs to one group, so the block has a density of \eqn{1/m} and is
+always a \code{dgCMatrix}. \code{\link[=random]{random()}} takes no \code{sparse} argument for that reason,
+and passing one is an error.
+}
+
 \examples{
-S7::S7_inherits(random(~ 1 | g), RandomTerm)
+set.seed(1)
+dd <- data.frame(x = rnorm(9), g = factor(rep(c("a", "b", "c"), 3)))
+
+tm <- random(~ x | g)
+S7::S7_inherits(tm, RandomTerm)
+tm@formula
+tm@correlated
+
+# The block is one diagonal block per group and is always sparse.
+b <- term_build(tm, dd)
+class(term_matrix(b))
+term_coef_names(b)
+
+# The hyperparameters are the effects' distribution's own.
+term_penalty(b)@params
+
 }
 \seealso{
-\code{\link[=random]{random()}}
+\code{\link[=random]{random()}}, the constructor; \code{\link[=term_penalties]{term_penalties()}} for the entries a
+built one declares; \code{\link[=edf]{edf()}} for what a fitted random effect spends.
 }

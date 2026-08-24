@@ -20,8 +20,9 @@ IS the standard deviation of the effects, and the multivariate Gaussian on
 an unstructured covariance for several correlated ones.
 }
 \details{
-The structure's role is DECLARED rather than left at "either": a structure
-that does not say which matrix of the prior it is cannot be read as
-either, the two differing in the sign of the log-determinant term.
+The structure's role is DECLARED, \code{"covariance"} here. A structure left at
+\code{"either"} does not say which matrix of the prior it is, and the two cannot
+be read interchangeably: they differ in the sign of the log-determinant
+term.
 }
 \keyword{internal}

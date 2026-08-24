@@ -17,8 +17,7 @@ Follows \code{parent_distrib} to the distribution a wrapper wraps, so that
 a question about the FAMILY is asked of the family.
 }
 \details{
-The property is asked for with \code{S7::prop_names()} rather than the
-class being tested, which is what lets a wrapper written later be followed
-without an edit here.
+The property is asked for with \code{S7::prop_names()} instead of testing the
+class, so a wrapper written later is followed without an edit here.
 }
 \keyword{internal}

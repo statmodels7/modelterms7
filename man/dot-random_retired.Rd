@@ -13,7 +13,8 @@
 Invisibly \code{NULL}; called for its error.
 }
 \description{
-Reports a removed argument by name rather than letting the dots swallow it.
+Signals an error naming a removed argument, which the dots would otherwise
+swallow in silence.
 }
 \details{
 \code{precision} was a second spelling of a multivariate Gaussian whose

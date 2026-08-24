@@ -13,8 +13,9 @@
 A single logical.
 }
 \description{
-\code{TRUE} when \code{distrib_cross_y} comes from the family rather than
-from the multivariate base class, whose method rejects.
+\code{TRUE} when \code{distrib_cross_y} comes from the family itself. The
+multivariate base class rejects that generic, so a family that has not
+overridden it answers \code{FALSE}.
 }
 \details{
 A marginal criterion reads that block to estimate the covariance of the

@@ -5,24 +5,64 @@ NULL
 #' @name RandomTerm
 #'
 #' @description
-#' A subclass of [additive_term()] for grouped coefficients with
-#' a distribution on the effects: the within-group design interacted with
-#' the grouping indicators, one coefficient per group and per within-group
-#' column, with the penalty carrying the effects' distribution.
-#' Constructed by [random()].
+#' The subclass of [additive_term()] holding grouped coefficients with a
+#' distribution attached to them: the within-group design interacted with the
+#' group indicators, one coefficient per group and per within-group column,
+#' and a penalty carrying that distribution's negative log-density. [random()]
+#' constructs it.
+#'
+#' @details
+#' # The three properties of its own
+#'
+#' `formula` is the bar formula as given, `~ 1 | g` or `~ x | g`, kept with its
+#' environment. `correlated` says whether the **default** Gaussian lets the
+#' within-group effects depend on each other; it is read only where `distrib`
+#' is `NULL`, the two saying the same thing.
+#'
+#' `distrib` is the effects' distribution as supplied, or `NULL` for the
+#' default. What the build turns it into is a \pkg{penalties7} penalty, read
+#' through [term_penalty()] or [term_penalties()], so the hyperparameter names
+#' and their bounds come from the distribution and not from the class.
+#'
+#' # The block is sparse by construction
+#'
+#' A row belongs to one group, so the block has a density of \eqn{1/m} and is
+#' always a `dgCMatrix`. [random()] takes no `sparse` argument for that reason,
+#' and passing one is an error.
 #'
 #' @inheritParams additive_term
-#' @param formula The bar formula, e.g. `~ 1 | g` or `~ x | g`.
-#' @param correlated Logical; whether the default Gaussian lets the
-#'   within-group effects correlate.
-#' @param distrib The effects' distribution, or `NULL` for the default
-#'   Gaussian.
+#' @param formula The bar formula, `~ 1 | g` or `~ x | g`, with the
+#'   within-group design on the left and the grouping variable on the right.
+#' @param correlated A single logical: whether the default Gaussian lets the
+#'   within-group effects correlate. Read only when `distrib` is `NULL`.
+#' @param distrib The effects' distribution, a \pkg{distributions7} object or
+#'   a list of them with one per within-group column, or `NULL` for the
+#'   default Gaussian.
 #'
-#' @return An object of class `RandomTerm`.
+#' @return An S7 object of class `RandomTerm`, inheriting from
+#'   [additive_term()] and [model_term()], with the three properties above
+#'   beside the ten they supply.
 #'
-#' @seealso [random()]
+#' @seealso [random()], the constructor; [term_penalties()] for the entries a
+#'   built one declares; [edf()] for what a fitted random effect spends.
+#'
 #' @examples
-#' S7::S7_inherits(random(~ 1 | g), RandomTerm)
+#' set.seed(1)
+#' dd <- data.frame(x = rnorm(9), g = factor(rep(c("a", "b", "c"), 3)))
+#'
+#' tm <- random(~ x | g)
+#' S7::S7_inherits(tm, RandomTerm)
+#' tm@formula
+#' tm@correlated
+#'
+#' # The block is one diagonal block per group and is always sparse.
+#' b <- term_build(tm, dd)
+#' class(term_matrix(b))
+#' term_coef_names(b)
+#'
+#' # The hyperparameters are the effects' distribution's own.
+#' term_penalty(b)@params
+#'
 #' @export
 RandomTerm <- S7::new_class(
   name = "RandomTerm",
@@ -41,8 +81,7 @@ RandomTerm <- S7::new_class(
 #' `random(~ 1 | g)` builds one coefficient per level of `g`,
 #' and `random(~ x | g)` one intercept and one slope per level, with
 #' the distribution of the effects attached as the penalty on those
-#' coefficients -- which is what a random effect is under penalized
-#' likelihood.
+#' coefficients. That is what a random effect is under penalized likelihood.
 #'
 #' @details
 #' The left side of the bar is an ordinary one-sided formula for the
@@ -52,11 +91,10 @@ RandomTerm <- S7::new_class(
 #' with the group indicators, ordered group by group, so the coefficients
 #' of one group are adjacent.
 #'
-#' Two things are said and nothing else is: the formula, and the
-#' distribution of the effects. Which chart the hyperparameters ride, what
-#' they are called, how many there are and where the log-density has a kink
-#' are properties of that distribution, read off it rather than restated
-#' here.
+#' The constructor asks for two things: the formula and the distribution of
+#' the effects. Which chart the hyperparameters ride, what they are called,
+#' how many there are and where the log-density has a kink are all properties
+#' of that distribution, read off it at build time.
 #'
 #' @section The distribution of the effects:
 #' `distrib` is `NULL`, a \pkg{distributions7} object, or a list of
@@ -67,9 +105,9 @@ RandomTerm <- S7::new_class(
 #' dependence: `mvgaussian_distrib(2, omega = ar1(2))` is a prior whose
 #' precision is autoregressive, `mvstudent_t_distrib(2)` a heavy-tailed
 #' one. Correlation is available exactly for the families that carry a matrix
-#' parameter -- a location block as long as the dimension, and a covariance,
-#' precision or scale matrix -- which is a property the term reads rather than
-#' a list of admitted names, so a family added later is covered.
+#' parameter: a location block as long as the dimension, together with a
+#' covariance, precision or scale matrix. The term reads that property off the
+#' family, so a family added later is covered without an edit here.
 #'
 #' A UNIVARIATE distribution makes the effects independent, the penalty being
 #' the product of the densities. With more than one within-group column it is
@@ -86,13 +124,13 @@ RandomTerm <- S7::new_class(
 #'
 #' Whatever it is, the distribution is CENTERED, its location parameters held
 #' with [distributions7::fixed()]. A free mean in the effects is
-#' confounded with the intercept of the equation the term sits in, so it is
-#' rejected rather than fitted along a flat direction. The value it is held at
-#' is usually zero and is not policed: it is identified whatever it is, and
-#' where the prior is a transformation of another family the parameter is the
-#' mean on the ORIGINAL scale --
-#' `fixed(transformation(gamma2_distrib(), log_transform()), mu = 1)` is
-#' a log-gamma prior whose own mean is \eqn{\psi(a) - \log a}, within
+#' confounded with the intercept of the equation the term sits in, so a free
+#' location is rejected at build time with a message naming it. The value it
+#' is held at is usually zero and is not policed: the model is identified
+#' whatever it is. Where the prior is a transformation of another family the
+#' parameter is the mean on the ORIGINAL scale, so
+#' `fixed(transformation(gamma2_distrib(), log_transform()), mu = 1)` is a
+#' log-gamma prior whose own mean is \eqn{\psi(a) - \log a}, within
 #' \eqn{\sigma^2/2} of zero and exactly zero in the limit.
 #'
 #' A distribution used as a penalty gives joint-mode (penalized likelihood)
@@ -104,24 +142,23 @@ RandomTerm <- S7::new_class(
 #'
 #' @section The hyperparameters:
 #' They are the distribution's own free parameters, and every one of them is
-#' estimated unless it is held. There are two ways to hold one, and they
-#' differ in what is reported rather than in the fit. Holding it inside the
-#' distribution, `fixed(pseudohuber_distrib(), mu = 0, nu = 2)`, removes
+#' estimated unless it is held. There are two ways to hold one, and the fit is
+#' the same either way; what differs is what gets reported. Holding it inside
+#' the distribution, `fixed(pseudohuber_distrib(), mu = 0, nu = 2)`, removes
 #' it: it becomes a constant of the prior and appears nowhere among the
-#' model's hyperparameters. Naming it in `hyper` keeps it, reported as
-#' held at the value given, which is what a penalized term's own
-#' hyperparameter argument does.
+#' model's hyperparameters. Naming it in `hyper` keeps it, reported as held at
+#' the value given, as a penalized term's own hyperparameter argument does.
 #'
 #' A smooth prior's hyperparameters are estimated by a marginal criterion. A
-#' prior whose log-density has a kink -- a Laplace, an elastic net -- has none
-#' a marginal criterion can reach, and its hyperparameter is chosen by a path
-#' on a prediction criterion instead.
+#' prior whose log-density has a kink, a Laplace or an elastic net, has none a
+#' marginal criterion can reach, and its hyperparameter is chosen by a path on
+#' a prediction criterion instead.
 #'
 #' Every estimated hyperparameter is reported with a standard error and an
 #' interval, shape parameters included. Where one is absent the cause is the
-#' POINT and not a missing derivative: a run that ended where the criterion
-#' has no maximum -- a shape escaping towards a limit is the common case --
-#' leaves a curvature of the wrong sign, and no interval follows from it.
+#' POINT the run ended at: a criterion with no maximum there leaves a
+#' curvature of the wrong sign, and no interval follows from it. A shape
+#' escaping toward a limit is the common case.
 #'
 #' Which PARAMETRIZATION of a family is used matters here in a way it does
 #' not elsewhere. The centred skew normal
@@ -135,28 +172,40 @@ RandomTerm <- S7::new_class(
 #' prior; its derivatives at \eqn{\alpha = 0} are ordinary numbers.
 #'
 #' How well a shape parameter is estimated depends on how many groups there
-#' are, since it is read off that many latent values, and the prior shrinks
-#' them. Measured on effects drawn from a Student t with four degrees of
-#' freedom, twelve observations per group, the prior being a Student t with
-#' \eqn{\nu} free: \eqn{\hat\nu} is 17.1 at 20 groups, 3.95 at 100 and 4.06 at
-#' 500. At 100 the profile has an interior maximum, the criterion falling from
-#' -1618.7 at \eqn{\nu = 4} to -1619.3 either side and -1622.0 in the Gaussian
-#' limit. So a shape is worth estimating from a hundred groups or so and worth
-#' holding below that, where it escapes towards the Gaussian limit and only
-#' the scale is really being fitted. A pseudo-Huber's \eqn{\nu} is the weaker
-#' case: it is where the loss stops being quadratic rather than a tail index,
-#' and at 40 groups it escapes.
+#' are, since it is read off that many latent values and the prior shrinks
+#' them. Measured on effects drawn from a standard Student t with four
+#' degrees of freedom, twelve observations per group and unit residual
+#' standard deviation, the prior being a Student t with \eqn{\nu} free and
+#' the criterion [statmodels7::reml()]:
+#'
+#' | groups | \eqn{\hat\nu} | \eqn{\hat\sigma} |
+#' | --- | --- | --- |
+#' | 20 | 5.97e+04 | 0.769 |
+#' | 100 | 1.98 | 0.817 |
+#' | 500 | 2.65 | 0.923 |
+#'
+#' At twenty groups the shape escapes to the Gaussian limit and only the
+#' scale is really being fitted. From a hundred it stays finite, and the
+#' profile is decisive about that much: with \eqn{\nu} held, the criterion is
+#' -1922.4 at 3, -1923.7 at 4, -1924.9 at 5 and -1936.1 in the Gaussian
+#' limit. What it is not decisive about is the value, the profile being flat
+#' enough over the small integers that a single sample locates \eqn{\nu} to
+#' little better than its order of magnitude. Estimate a shape from a hundred
+#' groups or so, hold it below that, and read the estimate as a statement
+#' about the tail rather than a measurement of it.
+#'
+#' A pseudo-Huber's \eqn{\nu} is the weaker case, being the point at which
+#' the loss stops being quadratic; at 40 groups it escapes.
 #'
 #' Prediction maps new data onto the levels seen at build time; a level
 #' the term has not seen is rejected.
 #'
 #' A random effect is not standardized, and there is no `standardize`
 #' argument to ask for it with; passing one is an error. Its columns are
-#' grouping indicators rather than measured covariates, and its
-#' hyperparameter is a variance component with a meaning of its own.
-#' Dividing each coefficient by the spread of its indicator would weight
-#' the effects by the sizes of the groups, which changes the model rather
-#' than the scale its hyperparameter is read on.
+#' grouping indicators and its hyperparameter is a variance component with a
+#' meaning of its own. Dividing each coefficient by the spread of its
+#' indicator would weight the effects by the sizes of the groups, which
+#' changes the model itself.
 #'
 #' @section The block and its penalty:
 #' With \eqn{m} levels and a within-group design \eqn{Z_i} of \eqn{d}
@@ -198,7 +247,9 @@ RandomTerm <- S7::new_class(
 #'   distribution's own parameters, with the within-group column appended
 #'   where there is one copy per column. A name the penalty does not carry is
 #'   reported when the term is built, which is where the penalty first exists.
-#' @param ... Unused; a named argument here is reported rather than ignored.
+#' @param ... Unused. A named argument here is reported by name, so a removed
+#'   one such as `precision` or `kinks` gets a message saying what replaced
+#'   it.
 #'
 #' @return An object of class [RandomTerm()] (a specification;
 #'   see [term_build()]).
@@ -267,7 +318,8 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' The Arguments random() No Longer Takes
 #'
 #' @description
-#' Reports a removed argument by name rather than letting the dots swallow it.
+#' Signals an error naming a removed argument, which the dots would otherwise
+#' swallow in silence.
 #'
 #' @details
 #' `precision` was a second spelling of a multivariate Gaussian whose
@@ -361,9 +413,8 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' a question about the FAMILY is asked of the family.
 #'
 #' @details
-#' The property is asked for with `S7::prop_names()` rather than the
-#' class being tested, which is what lets a wrapper written later be followed
-#' without an edit here.
+#' The property is asked for with `S7::prop_names()` instead of testing the
+#' class, so a wrapper written later is followed without an edit here.
 #'
 #' @param d A \pkg{distributions7} object.
 #'
@@ -378,12 +429,13 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' Whether a Multivariate Family Can Carry Correlated Effects
 #'
 #' @description
-#' `TRUE` for a family with a location block as long as its dimension
-#' and a matrix parameter, which is what a centered prior on \eqn{R^d} needs.
+#' `TRUE` for a family with a location block as long as its dimension and a
+#' matrix parameter, which together are what a centered prior on \eqn{R^d}
+#' needs.
 #'
 #' @details
-#' The question is a PROPERTY and not a list of admitted names, so a
-#' multivariate family added later is covered without an edit here. It is
+#' The question is a PROPERTY of the family, so a multivariate family added
+#' later is covered without an edit here. It is
 #' read off `params_interpretation`, the same declaration a data-based
 #' starting value is built from. It excludes the simplex-valued families,
 #' whose mean coordinates are one fewer than the dimension and which carry no
@@ -403,8 +455,9 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' Whether a Multivariate Family Answers Its Mixed Block
 #'
 #' @description
-#' `TRUE` when `distrib_cross_y` comes from the family rather than
-#' from the multivariate base class, whose method rejects.
+#' `TRUE` when `distrib_cross_y` comes from the family itself. The
+#' multivariate base class rejects that generic, so a family that has not
+#' overridden it answers `FALSE`.
 #'
 #' @details
 #' A marginal criterion reads that block to estimate the covariance of the
@@ -433,14 +486,16 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' names what is wrong with it.
 #'
 #' @details
-#' What is rejected is a FREE location: it is confounded with the intercept of
-#' the equation the term sits in, which is a flat direction and not a model.
-#' A location HELD at a value is identified, whatever the value, and is not
-#' policed -- it shrinks the effects towards that value, which is a modelling
-#' statement rather than a defect. Nor could the value be policed in general:
-#' where the prior is a transformation of another family, the parameter
-#' interpreted as its mean is the mean on the ORIGINAL scale, and holding the
-#' mean of a gamma at one is what centers its logarithm.
+#' What is rejected is a FREE location. It is confounded with the intercept of
+#' the equation the term sits in, leaving a flat direction along which the fit
+#' has no answer.
+#'
+#' A location HELD at a value is identified whatever that value is, and it is
+#' not policed: it shrinks the effects toward that value, which is a modelling
+#' statement. Nor could the value be policed in general. Where the prior is a
+#' transformation of another family, the parameter interpreted as its mean is
+#' the mean on the ORIGINAL scale, and holding the mean of a gamma at one is
+#' what centers its logarithm.
 #'
 #' @param d A \pkg{distributions7} object.
 #' @param dim_needed The number of within-group columns.
@@ -511,9 +566,10 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' an unstructured covariance for several correlated ones.
 #'
 #' @details
-#' The structure's role is DECLARED rather than left at "either": a structure
-#' that does not say which matrix of the prior it is cannot be read as
-#' either, the two differing in the sign of the log-determinant term.
+#' The structure's role is DECLARED, `"covariance"` here. A structure left at
+#' `"either"` does not say which matrix of the prior it is, and the two cannot
+#' be read interchangeably: they differ in the sign of the log-determinant
+#' term.
 #'
 #' @param d The number of within-group columns.
 #' @param correlated Whether the effects may correlate.
@@ -540,10 +596,10 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #'
 #' @details
 #' The coefficients are ordered group by group, so column \eqn{j} is the
-#' stride \eqn{j, d+j, 2d+j, \dots} -- a subset of the term's own parameters,
-#' NAMED rather than selected with a map, which is what keeps a kinked
-#' prior's proximal operator available: a separable penalty under a selection
-#' map is the generalized-lasso problem and has none.
+#' stride \eqn{j, d+j, 2d+j, \dots}. Those positions are NAMED as a subset of
+#' the term's own parameters, never selected with a map, and that is what
+#' keeps a kinked prior's proximal operator available: a separable penalty
+#' under a selection map is the generalized-lasso problem, which has none.
 #'
 #' @param prior The effects' distribution, or a list of one per column.
 #' @param d The number of within-group columns.
@@ -621,6 +677,68 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
   })
 }
 
+#' @title Build a Random-Effect Term
+#' @name term_build.RandomTerm
+#'
+#' @description
+#' Builds the within-group design from the left of the bar, interacts it with
+#' the group indicators, and attaches the effects' distribution as the penalty
+#' on the resulting coefficients. The levels of the grouping variable are
+#' recorded, so [term_predict()] maps new rows onto the same ones.
+#'
+#' @details
+#' # The block
+#'
+#' With \eqn{m} levels and a within-group design \eqn{Z_i} of \eqn{d} columns,
+#' the block is \eqn{\mathrm{diag}(Z_1, \dots, Z_m)}, ordered **group-major**,
+#' so the \eqn{d} coefficients of one group are adjacent. It is built as a
+#' `dgCMatrix`: a row belongs to one group, so the density is \eqn{1/m}.
+#'
+#' The coefficient names are `label.level.column`, so `random(~ x | g)` over
+#' three levels gives `random.a.(Intercept)`, `random.a.x`,
+#' `random.b.(Intercept)` and so on, which is the group-major order read off.
+#'
+#' # The penalty, and what the build checks
+#'
+#' Where `distrib` is `NULL` the default is chosen here: a centered
+#' `gaussian1_distrib` at one column or under `correlated = FALSE`, and a
+#' centered multivariate Gaussian on an unstructured covariance for several
+#' correlated ones.
+#'
+#' Whatever the distribution, its location parameters must be **held**. A free
+#' location is confounded with the intercept of the equation the term sits in,
+#' and the build rejects it with a message naming the parameter and the fix. A
+#' multivariate distribution must also match the within-group dimension, and
+#' one that carries no matrix parameter cannot express correlated effects at
+#' all.
+#'
+#' Any value named in `hyper` is checked here too, against the penalty's own
+#' names, this being the first point at which the penalty exists.
+#'
+#' @param term An unbuilt or built [RandomTerm()].
+#' @param data A data frame carrying the grouping variable and the
+#'   within-group covariates.
+#' @param ... Unused.
+#'
+#' @return The term with `X` (a `dgCMatrix` of \eqn{md} columns),
+#'   `coef_names`, `blueprint` and `penalty` filled.
+#'
+#' @seealso [random()], [term_predict.RandomTerm()], [term_penalties()].
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(x = rnorm(9), g = factor(rep(c("a", "b", "c"), 3)))
+#'
+#' # Group-major: the two coefficients of one level are adjacent.
+#' b <- term_build(random(~ x | g), dd)
+#' term_coef_names(b)
+#' as.matrix(term_matrix(b))
+#'
+#' # A free location is refused, naming the parameter.
+#' try(term_build(random(~ 1 | g,
+#'                       distrib = distributions7::gaussian1_distrib()), dd))
+#'
+#' @keywords internal
 S7::method(term_build, RandomTerm) <- function(term, data, ...) {
   e <- term@formula[[2L]]
   g <- .random_group(e[[3L]], data)
@@ -714,6 +832,55 @@ S7::method(term_penalties, RandomTerm) <- function(term, ...) {
   if (is.null(ent)) list() else ent
 }
 
+#' @title A Random-Effect Block at New Rows
+#' @name term_predict.RandomTerm
+#'
+#' @description
+#' Rebuilds the within-group design at `newdata` and interacts it with the
+#' group indicators **of the levels recorded at build time**, so the block has
+#' the same columns in the same order however few levels the new rows happen to
+#' use. A level the term never saw is refused.
+#'
+#' @details
+#' The refusal is the right answer rather than a limitation: a coefficient was
+#' never fitted for an unseen group, so there is nothing to predict with. The
+#' message names the level. Predicting a new group's response means predicting
+#' at the population value, which is the model without this term's
+#' contribution.
+#'
+#' The block comes back sparse, as the fitted one is.
+#'
+#' @param term A built [RandomTerm()]. An unbuilt one throws
+#'   `"the term has not been built; call term_build(term, data) first."`.
+#' @param newdata A data frame carrying the grouping variable and the
+#'   within-group covariates. Its grouping factor need carry only the levels
+#'   its own rows use.
+#' @param ... Unused.
+#'
+#' @return A `dgCMatrix` of `nrow(newdata)` rows and [term_npar()] columns,
+#'   with the term's coefficient names as column names.
+#'
+#' @seealso [term_predict()] for the generic, [term_build.RandomTerm()] for
+#'   what recorded the levels.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(x = rnorm(9), g = factor(rep(c("a", "b", "c"), 3)))
+#' b <- term_build(random(~ 1 | g), dd)
+#'
+#' # A subset using two levels still gets all three columns.
+#' nd <- droplevels(dd[dd$g != "c", ])
+#' c(levels_here = nlevels(nd$g), cols = ncol(term_predict(b, nd)))
+#'
+#' # On the fitting data it returns the block itself.
+#' all.equal(term_predict(b, dd), term_matrix(b))
+#'
+#' # A level the fit never saw has no coefficient, so it is refused.
+#' bad <- dd
+#' levels(bad$g) <- c("a", "b", "zz")
+#' try(term_predict(b, bad))
+#'
+#' @keywords internal
 S7::method(term_predict, RandomTerm) <- function(term, newdata, ...) {
   .assert_built(term)
   bp <- term@blueprint

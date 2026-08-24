@@ -13,12 +13,13 @@
 A single logical.
 }
 \description{
-\code{TRUE} for a family with a location block as long as its dimension
-and a matrix parameter, which is what a centered prior on \eqn{R^d} needs.
+\code{TRUE} for a family with a location block as long as its dimension and a
+matrix parameter, which together are what a centered prior on \eqn{R^d}
+needs.
 }
 \details{
-The question is a PROPERTY and not a list of admitted names, so a
-multivariate family added later is covered without an edit here. It is
+The question is a PROPERTY of the family, so a multivariate family added
+later is covered without an edit here. It is
 read off \code{params_interpretation}, the same declaration a data-based
 starting value is built from. It excludes the simplex-valued families,
 whose mean coordinates are one fewer than the dimension and which carry no

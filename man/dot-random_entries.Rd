@@ -24,9 +24,9 @@ together, and one per within-group column when they are independent.
 }
 \details{
 The coefficients are ordered group by group, so column \eqn{j} is the
-stride \eqn{j, d+j, 2d+j, \dots} -- a subset of the term's own parameters,
-NAMED rather than selected with a map, which is what keeps a kinked
-prior's proximal operator available: a separable penalty under a selection
-map is the generalized-lasso problem and has none.
+stride \eqn{j, d+j, 2d+j, \dots}. Those positions are NAMED as a subset of
+the term's own parameters, never selected with a map, and that is what
+keeps a kinked prior's proximal operator available: a separable penalty
+under a selection map is the generalized-lasso problem, which has none.
 }
 \keyword{internal}
