@@ -17,98 +17,122 @@ te(
 )
 }
 \arguments{
-\item{...}{The covariates, expressions evaluated in the data, at least
-two of them.}
+\item{...}{The covariates, bare expressions evaluated in the data, at least
+two of them. One throws \code{"'te' needs at least two covariates; use s() for one."}.}
 
-\item{by}{An optional factor or numeric variable, as in \code{\link[=s]{s()}}.}
+\item{by}{An optional factor or numeric variable, as in \code{\link[=s]{s()}}, with the same
+two readings and the same sparsity rule.}
 
-\item{k}{The basis dimension per margin, recycled to the number of
-covariates. Defaults to 5.}
+\item{k}{The basis dimension per margin, \code{5} by default, recycled to the
+number of covariates. As in \code{\link[=s]{s()}} it must exceed \code{degree}.}
 
-\item{degree}{The spline degree per margin, recycled. Defaults to 3.}
+\item{degree}{The spline degree per margin, \code{3} by default, recycled.}
 
-\item{bases}{An optional list of \pkg{basis7} bases, one per covariate,
-used in place of the default B-splines.}
+\item{bases}{An optional list of \pkg{basis7} bases, one per covariate, used
+in place of the default B-splines.}
 
-\item{anisotropic}{Keep a smoothing parameter per margin? Defaults to
-\code{TRUE}.}
+\item{anisotropic}{\code{TRUE}, the default, for one smoothing parameter per
+margin; \code{FALSE} for one over their sum. Anything that is not a single
+logical throws.}
 
-\item{label}{A single non-empty string prefixed to the coefficient
-names. Defaults to a name built from the covariates.}
+\item{label}{A single non-empty string prefixed to the coefficient names.
+\code{NULL}, the default, builds one from the covariates: \code{te(x,z)}.}
 
-\item{lambda}{The smoothing parameter, held at the value given and
-ESTIMATED when left \code{NULL}, which is the default. An
-anisotropic tensor product carries one per margin, so a vector
-of that length, or a named one holding some of them.}
+\item{lambda}{The smoothing parameters, held at the values given and
+\strong{estimated} when left \code{NULL}, which is the default. An anisotropic
+product carries one per margin, so a vector of that length, or a named one
+holding some of them.}
 
-\item{sparse}{Whether the block is built as a \code{dgCMatrix}.
-\code{NULL}, the default, settles it at build from the size of the block.
-Only a FACTOR \code{by} admits it, each row sitting in the block of its
-own level; without one an explicit \code{TRUE} is refused rather than
-ignored. See \code{\link[=s]{s()}}.}
+\item{sparse}{\code{TRUE}, \code{FALSE}, or \code{NULL} to settle it at build. Only a
+factor \code{by} admits \code{TRUE}. See \code{\link[=s]{s()}}.}
 }
 \value{
-An object of class \code{\link[=SmoothTerm]{SmoothTerm()}} (a specification;
-see \code{\link[=term_build]{term_build()}}).
+An unbuilt \code{\link[=SmoothTerm]{SmoothTerm()}}: a specification, with \code{X}, \code{coef_names},
+\code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}} fills them.
 }
 \description{
-A tensor-product smooth: a \pkg{basis7} basis in each covariate,
-combined by \code{\link[basis7:tensor_basis]{basis7::tensor_basis()}}, with a roughness
-penalty on the product coefficients.
+A tensor-product smooth: a \pkg{basis7} basis in each covariate, combined by
+\code{\link[basis7:tensor_basis]{basis7::tensor_basis()}}, with a roughness penalty on the product
+coefficients. By default each margin keeps a smoothing parameter of its own,
+so the surface may be rough in one direction and smooth in another.
 }
-\details{
-The block is the tensor basis evaluated at the covariates, and the
-penalty is built from the marginal roughness penalties carried into the
-product, \eqn{P_v = I \otimes \cdots \otimes P_v \otimes \cdots
-\otimes I}, each penalizing curvature in one direction.
+\section{The block and its penalty}{
+The block is the tensor basis evaluated at the covariates, and the penalty
+is built from the marginal roughness penalties carried into the product,
+\eqn{P_v = I \otimes \cdots \otimes P_v \otimes \cdots \otimes I}, each
+penalizing curvature in one direction.
 
-With \code{anisotropic = TRUE}, the default, those components enter
-\code{\link[penalties7:additive_penalty]{penalties7::additive_penalty()}} and keep a smoothing
-parameter each, so the surface may be rough in one direction and smooth
-in another -- which is the usual reason for fitting a tensor smooth
-rather than an isotropic one. With \code{anisotropic = FALSE} they are
-summed first and one parameter governs the total, which costs one
-hyperparameter instead of one per margin.
+With \code{anisotropic = TRUE}, the default, those components go to
+\code{\link[penalties7:additive_penalty]{penalties7::additive_penalty()}} and keep one smoothing parameter each,
+named \code{lambda1}, \code{lambda2}, and so on. That is the usual reason for fitting
+a tensor smooth. With \code{anisotropic = FALSE} they are summed first and one
+\code{lambda} governs the total, which costs one hyperparameter instead of one
+per margin.
 
-The marginal bases are not reparametrized, so unlike \code{\link[=s]{s()}}
-the marginal linear effects are not separated out: the null space of
-the tensor penalty contains them, and they are shrunk towards no
-surface at all rather than towards a plane.
-
-\subsection{Centering}{
-The tensor product of the marginal bases contains the constant, which
-the penalty's null space contains as well, so beside an intercept the
-block would be rank deficient by exactly one and the penalty would not
-cover the deficiency. The block therefore carries the sum-to-zero
-constraint over the observed covariates
-(\code{\link[basis7:constrain_basis]{basis7::constrain_basis()}}): the term has one column fewer
-than the product of its marginal dimensions, every column sums to zero
-over the data it was built on, and the penalty follows by congruence
-with its rank unchanged, the direction removed having been one of its
-null directions. The transform is stored in the blueprint and reapplied
-by \code{\link[=term_predict]{term_predict()}}, as the Demmler-Reinsch transform of
-\code{\link[=s]{s()}} is.
-
-The level of the surface is then the model's intercept, so a formula
-that removes it (\code{y ~ te(x, z) - 1}) fits a surface constrained to
-average zero over the data.
+The marginal bases are \strong{not} reparametrized, so the marginal linear
+effects are not separated out as \code{\link[=s]{s()}} separates its one. They lie in the
+null space of the tensor penalty, and a strongly penalized fit is shrunk
+toward no surface at all rather than toward a plane.
 }
+
+\section{Centering}{
+
+The tensor product of the marginal bases contains the constant, which the
+penalty's null space contains as well, so beside an intercept the block
+would be rank deficient by exactly one and the penalty would not cover the
+deficiency.
+
+The block therefore carries the sum-to-zero constraint over the observed
+covariates (\code{\link[basis7:constrain_basis]{basis7::constrain_basis()}}). The term has \strong{one column fewer}
+than the product of its marginal dimensions, so \code{te(x, z, k = 4)} gives 15
+and not 16; every column sums to zero over the data it was built on, to
+machine precision;
+and the penalty follows by congruence with its rank unchanged, the direction
+removed having been one of its null directions.
+
+The transform is stored in the blueprint and reapplied by \code{\link[=term_predict]{term_predict()}},
+as the Demmler-Reinsch transform of \code{\link[=s]{s()}} is.
+
+The level of the surface is then the model's intercept, so a formula that
+removes it, \code{y ~ te(x, z) - 1}, fits a surface constrained to average zero
+over the data.
 }
+
 \examples{
 set.seed(2)
 dd <- data.frame(x = runif(120), z = runif(120))
 dd$y <- dd$x * dd$z + rnorm(120, sd = 0.1)
-built <- term_build(te(x, z, k = 4), dd)
-term_npar(built)
+
+# Four by four margins give fifteen columns: the centering removes one.
+b <- term_build(te(x, z, k = 4), dd)
+c(npar = term_npar(b), product = 4 * 4)
+
+# Every column sums to zero over the data, to machine precision.
+max(abs(colSums(term_matrix(b))))
+
+# Anisotropic by default: one smoothing parameter per margin.
+term_penalty(b)@penalty_name
+term_penalty(b)@params
+term_penalty(term_build(te(x, z, k = 4, anisotropic = FALSE), dd))@params
+
+# Holding both of them.
+term_hyper(te(x, z, k = 4, lambda = c(1, 5)))
+
+# The centering transform is reapplied, not recomputed.
+max(abs(term_predict(b, dd[1:10, ]) - term_matrix(b)[1:10, ]))
+
+# One covariate is s(), not te().
+try(te(x, k = 4))
 
 }
 \references{
 Wood, S. N. (2006). Low-rank scale-invariant tensor product smooths for
-generalized additive mixed models. \emph{Biometrics} 62, 1025-1036.
+generalized additive mixed models. \emph{Biometrics} 62, 1025--1036.
 
-Wood, S. N. (2017). \emph{Generalized Additive Models: An Introduction
-with R}, 2nd edition. Chapman and Hall/CRC.
+Wood, S. N. (2017). \emph{Generalized Additive Models: An Introduction with R},
+2nd edition. Chapman and Hall/CRC.
 }
 \seealso{
-\code{\link[=s]{s()}}, \code{\link[=random]{random()}}, \code{\link[=nl]{nl()}}
+\code{\link[=s]{s()}} for one covariate, \code{\link[basis7:tensor_basis]{basis7::tensor_basis()}} for the product,
+\code{\link[penalties7:additive_penalty]{penalties7::additive_penalty()}} for the anisotropic penalty.
 }

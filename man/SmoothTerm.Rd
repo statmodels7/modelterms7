@@ -60,28 +60,61 @@ term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 \item{penalty}{A \pkg{penalties7} penalty on the block's coefficients, or
 \code{NULL} when the term is unpenalized.}
 
-\item{vars}{The expressions of the covariates being smoothed.}
+\item{vars}{A list of the covariate expressions being smoothed.}
 
-\item{by}{An optional expression the smooth varies with.}
+\item{by}{The expression the smooth varies with, or \code{NULL}.}
 
-\item{spec}{The construction settings: the basis, its dimension and
-degree, and whether the linear part is carried separately.}
+\item{spec}{A named list of construction settings: the basis, its dimension
+and degree, whether the linear part is carried separately, and for \code{\link[=te]{te()}}
+the \code{anisotropic} flag.}
 
-\item{sparse}{Whether the block is a \code{dgCMatrix}, which only a factor
-\code{by} admits. See \code{\link[=s]{s()}}.}
+\item{sparse}{\code{TRUE}, \code{FALSE} or \code{NULL} for the block's storage; only a
+factor \code{by} admits \code{TRUE}. See \code{\link[=s]{s()}}.}
 }
 \value{
-An object of class \code{SmoothTerm}.
+An S7 object of class \code{SmoothTerm}, inheriting from
+\code{\link[=additive_term]{additive_term()}} and \code{\link[=model_term]{model_term()}}, with the four properties above
+beside the ten they supply.
 }
 \description{
-A subclass of \code{\link[=additive_term]{additive_term()}} for a penalized smooth of one
-or more covariates: a \pkg{basis7} expansion with a roughness penalty
-on its coefficients. Constructed by \code{\link[=s]{s()}} for one covariate
-and by \code{\link[=te]{te()}} for several.
+The subclass of \code{\link[=additive_term]{additive_term()}} for a penalized smooth: a \pkg{basis7}
+expansion of one or more covariates with a roughness penalty on its
+coefficients. \code{\link[=s]{s()}} constructs it for one covariate and \code{\link[=te]{te()}} for several,
+and the two differ in the basis they build and the penalty they attach, not
+in the class.
 }
+\section{The four properties of its own}{
+\code{vars} holds the covariate expressions, one for \code{\link[=s]{s()}} and two or more for
+\code{\link[=te]{te()}}, kept unevaluated so that a build reads them in whatever data it is
+given. \code{by} is the expression the smooth varies with, or \code{NULL}.
+
+\code{spec} carries the construction settings the build reads: the basis or
+bases, the dimension \code{k}, the degree, whether the linear part is separated
+out, and for \code{\link[=te]{te()}} whether the penalty is anisotropic. What a build then
+computes from the data goes into the blueprint instead: the
+Demmler-Reinsch transform, the centering constraint, the \code{by} levels.
+
+\code{sparse} is \code{NULL} until the build settles it. A smooth's block is sparse
+only under a \strong{factor} \code{by}, where each row sits in the block of its own
+level: the basis itself is dense by construction, the Demmler-Reinsch
+rotation making it so, and a numeric \code{by} merely multiplies it.
+}
+
 \examples{
-S7::S7_inherits(s(x), SmoothTerm)
+set.seed(1)
+dd <- data.frame(x = sort(runif(80)), z = runif(80))
+
+# Both constructors return this class.
+c(s = S7::S7_inherits(s(x), SmoothTerm),
+  te = S7::S7_inherits(te(x, z), SmoothTerm))
+
+# The settings are on `spec`; what the data decide is in the blueprint.
+tm <- s(x, k = 8)
+names(tm@spec)
+names(term_build(tm, dd)@blueprint)
+
 }
 \seealso{
-\code{\link[=s]{s()}}, \code{\link[=te]{te()}}
+\code{\link[=s]{s()}} and \code{\link[=te]{te()}}, the two constructors; \code{\link[=term_penalty]{term_penalty()}} for the
+roughness penalty; \code{\link[=edf]{edf()}} for what a fitted smooth spends.
 }

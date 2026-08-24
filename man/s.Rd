@@ -19,103 +19,157 @@ s(
 \arguments{
 \item{x}{The covariate, an expression evaluated in the data.}
 
-\item{by}{An optional factor or numeric variable; see Details.}
+\item{by}{An optional factor or numeric variable, given as a bare
+expression; \code{NULL} by default. See the section above.}
 
-\item{k}{The basis dimension before reparametrization. Defaults to 10.}
+\item{k}{The basis dimension before reparametrization, \code{10} by default. It
+must exceed \code{degree}: a cubic spline needs at least four basis functions,
+and anything smaller throws. The block has \code{k - 1} columns with \code{linear = TRUE} and \code{k - 2} without it.}
 
-\item{degree}{The spline degree. Defaults to 3, a cubic spline.}
+\item{degree}{The spline degree, \code{3} by default, a cubic spline.}
 
-\item{basis}{An optional \pkg{basis7} basis to use in place of the
-default B-spline; its range is taken as given.}
+\item{basis}{An optional \pkg{basis7} basis used in place of the default
+B-spline. Its range is taken as given, so a basis built on one interval is
+not re-placed on the data's.}
 
-\item{linear}{Whether the linear effect is carried in the block, and
-left unpenalized there. Defaults to \code{TRUE}.}
+\item{linear}{Whether the linear effect is carried in the block and left
+unpenalized there, \code{TRUE} by default.}
 
-\item{label}{A single non-empty string prefixed to the coefficient
-names. Defaults to a name built from the covariate.}
+\item{label}{A single non-empty string prefixed to the coefficient names.
+\code{NULL}, the default, builds one from the covariate: \code{s(x)}.}
 
 \item{lambda}{The smoothing parameter, held at the value given and
-ESTIMATED when left \code{NULL}, which is the default. An
-anisotropic tensor product carries one per margin, so a vector
-of that length, or a named one holding some of them.}
+\strong{estimated} when left \code{NULL}, which is the default.}
 
-\item{sparse}{Whether the block is built as a \code{dgCMatrix}.
-\code{NULL}, the default, settles it at build from the size of the block.
-Only a FACTOR \code{by} admits it, each row sitting in the block of its
-own level; without one an explicit \code{TRUE} is refused rather than
-ignored. See Details.}
+\item{sparse}{\code{TRUE}, \code{FALSE}, or \code{NULL} to settle it at build. Only a
+factor \code{by} admits \code{TRUE}; without one it is refused rather than ignored.
+See the section above.}
 }
 \value{
-An object of class \code{\link[=SmoothTerm]{SmoothTerm()}} (a specification;
-see \code{\link[=term_build]{term_build()}}).
+An unbuilt \code{\link[=SmoothTerm]{SmoothTerm()}}: a specification, with \code{X}, \code{coef_names},
+\code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}} fills them.
 }
 \description{
-A smooth function of a covariate, expanded in a \pkg{basis7} basis and
-penalized for roughness. The default construction is a cubic B-spline
-basis under the Demmler-Reinsch reparametrization, which separates the
-linear effect from the nonlinear deviation and turns the roughness
-penalty into the identity on the deviation.
+A smooth function of one covariate, expanded in a \pkg{basis7} basis and
+penalized for roughness. The default is a cubic B-spline basis under the
+Demmler-Reinsch reparametrization, which separates the linear effect from
+the nonlinear deviation and turns the roughness penalty into the identity on
+the deviation.
+
+As the smoothing parameter grows the fit approaches a straight line, and
+\code{\link[=edf]{edf()}} falls to exactly one.
 }
-\details{
+\section{The block and its penalty}{
 The block has one column for the linear effect, centered and scaled,
-followed by the reparametrized basis. That ordering is what the penalty
-reads: it is the quadratic penalty of
-\eqn{\mathrm{diag}(0, 1, \dots, 1)}, rank deficient by exactly one, so
-the linear effect is unpenalized and the deviation is shrunk towards
-zero. As the smoothing parameter grows the fit approaches a straight
-line rather than a constant, and \code{\link[=edf]{edf()}} falls towards one.
+followed by the reparametrized basis, so \code{s(x, k = 8)} gives seven columns
+named \verb{s(x).lin}, \verb{s(x).z1} ... \verb{s(x).z6}. That ordering is what the penalty
+reads: it is the quadratic penalty of \eqn{\mathrm{diag}(0, 1, \dots, 1)},
+rank deficient by exactly one, so the linear effect is unpenalized and the
+deviation is shrunk toward zero.
 
-The Demmler-Reinsch construction (\cite{demmler1975}, as used for
-effect selection by \cite{bach2024}) is empirical: it takes the inner
-product at the observed covariate values, so it is built when the term
-is, and the transform is stored in the blueprint. Prediction at new
-points is the parent basis evaluated there and multiplied by the same
-transform, so the separation of the linear from the nonlinear part
-holds on new data as it does on old.
+Two consequences a reader of a fit needs. At a large smoothing parameter the
+fit tends to a straight line, so \code{edf()} runs from \code{k - 1} down to 1 and
+never to 0. And the linear column is orthogonal to the rest over the
+observed covariate, so the linear and the nonlinear parts of a fitted smooth
+are separately readable.
 
-\subsection{Varying the smooth by another variable}{
-With \code{by} a factor the term carries one smooth per level, the
-block being the smooth multiplied by each level's indicator and the
-penalty the same matrix repeated blockwise, so one smoothing parameter
-governs every level. With \code{by} numeric the term is a
-varying-coefficient one: the smooth multiplies that variable, and the
-fitted function is the coefficient of \code{by} as it changes with the
-covariate.
-
-A factor \code{by} is where a smooth's block can be SPARSE: each row sits
-in the block of its own level and nowhere else, a density of \eqn{1/m}.
-\code{sparse = TRUE} builds it that way rather than building the dense
-matrix and compressing it -- measured at 2000 rows, \eqn{k = 10} and 200
-levels, 0.35 MB against 28.93 MB, the numbers identical. \code{sparse = NULL}, the default, settles it at build from the size of the block, the
-dense form holding \eqn{n m k} cells against \eqn{n k} non-zeros; see
-\code{\link[=.resolve_sparse]{.resolve_sparse()}} for the threshold and what it was measured
-against. An explicit \code{TRUE} is refused without a factor \code{by},
-where there would be nothing to build on: the basis is dense by
-construction, the Demmler-Reinsch rotation making it so, and a numeric
-\code{by} merely multiplies it.
-
-The block alone is sparse. The PENALTY of a factor \code{by} is the same
-matrix repeated blockwise, and \pkg{penalties7} returns it dense -- 25.92
-MB at those sizes, at a density of 0.0005 -- which is a property of that
-package's contract rather than of this construction.
+\code{linear = FALSE} drops that first column, and the penalty is then the
+identity over the whole block, of full rank.
 }
+
+\section{The construction is empirical}{
+The Demmler-Reinsch transform (Demmler and Reinsch, 1975; used for effect
+selection by Bach and Klein, 2024) takes the inner product \strong{at the observed
+covariate values}, so it is computed when the term is built and stored in
+the blueprint. Prediction is the parent basis evaluated at the new points
+and multiplied by that same transform, so the separation of the linear from
+the nonlinear part holds at new rows as it does at old.
+
+Rebuilding on other rows instead would place the knots on their range and
+compute another transform. Measured on 80 points, predicting on the first
+ten agrees with those rows of the original block exactly and rebuilding
+differs by 2.85.
 }
+
+\section{Varying the smooth by another variable}{
+
+A \strong{factor} \code{by} gives one smooth per level: the block is the smooth
+multiplied by each level's indicator, and the penalty is the same matrix
+repeated blockwise, so one smoothing parameter governs every level.
+\code{s(x, k = 5, by = g)} over a four-level factor has 16 columns.
+
+A \strong{numeric} \code{by} gives a varying-coefficient term: the smooth multiplies
+that variable, and the fitted function is the coefficient of \code{by} as it
+changes with the covariate.
+}
+
+\section{Sparse storage}{
+
+A factor \code{by} is the one place a smooth's block can be sparse, each row
+sitting in the block of its own level and nowhere else, a density of
+\eqn{1/m}. \code{sparse = TRUE} builds it that way instead of building the dense
+matrix and compressing it: measured at 2000 rows, \eqn{k = 10} and 200
+levels, 0.35 MB against 28.93 MB with the numbers identical.
+
+\code{sparse = NULL}, the default, settles it at build from the size of the
+block through \code{\link[=.resolve_sparse]{.resolve_sparse()}}, the dense form holding \eqn{n m k} cells
+against \eqn{n k} non-zeros.
+
+An explicit \code{TRUE} is \strong{refused} without a factor \code{by}, and the message
+says why: the basis is dense by construction and a numeric \code{by} merely
+multiplies it, so there would be nothing to build on.
+
+The block alone is sparse. The penalty of a factor \code{by} is the same matrix
+repeated blockwise and \pkg{penalties7} returns it dense, 25.92 MB at those
+sizes; that is a property of that package's contract.
+}
+
 \examples{
 set.seed(1)
-dd <- data.frame(x = sort(runif(80)))
+dd <- data.frame(x = sort(runif(80)), g = factor(rep(letters[1:4], 20)))
 dd$y <- sin(2 * pi * dd$x) + rnorm(80, sd = 0.2)
-built <- term_build(s(x, k = 8), dd)
-term_npar(built)
-term_penalty(built)@params
+
+# k = 8 gives seven columns: the linear effect and six deviations.
+b <- term_build(s(x, k = 8), dd)
+term_coef_names(b)
+
+# The penalty is diag(0, 1, ..., 1): the linear column is free.
+penalties7::penalty_matrix(term_penalty(b), list(lambda = 1))
+
+# The linear column really is the linear effect, and is orthogonal to
+# the rest over the observed covariate.
+X <- term_matrix(b)
+cor(X[, 1], dd$x)
+max(abs(crossprod(X[, 1], X[, -1])))
+
+# So edf runs from k - 1 down to one, not to zero.
+H <- crossprod(X)
+cf <- rnorm(ncol(X))
+vapply(c(1e-8, 1, 1e12),
+       function(l) edf(b, coef = cf, hessian = H, theta = list(lambda = l)),
+       numeric(1))
+
+# A factor `by` is one smooth per level under one smoothing parameter.
+bf <- term_build(s(x, k = 5, by = g), dd)
+c(npar = term_npar(bf), levels = nlevels(dd$g))
+
+# The transform is computed on the data and reapplied, never rebuilt.
+max(abs(term_predict(b, dd[1:10, ]) - X[1:10, ]))
+max(abs(term_matrix(term_build(s(x, k = 8), dd[1:10, ])) - X[1:10, ]))
+
+# Sparsity needs a factor `by`, and says so when there is none.
+try(term_build(s(x, k = 5, sparse = TRUE), dd))
 
 }
 \references{
 Demmler, A. and Reinsch, C. (1975). Oscillation matrices with spline
 smoothing. \emph{Numerische Mathematik}, 24, 375--382.
 
-Bach, P. and Klein, N. (2024). Bayesian effect selection in additive
-models with an application to time-to-event data.
+Bach, P. and Klein, N. (2024). Bayesian effect selection in additive models
+with an application to time-to-event data.
 }
 \seealso{
-\code{\link[=te]{te()}}, \code{\link[=random]{random()}}, \code{\link[=nl]{nl()}}
+\code{\link[=te]{te()}} for several covariates, \code{\link[=random]{random()}} for a grouped effect,
+\code{\link[=nl]{nl()}} for a parametric nonlinear shape, \code{\link[=edf]{edf()}} for what a fitted smooth
+spends.
 }
