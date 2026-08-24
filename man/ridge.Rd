@@ -14,28 +14,31 @@ ridge(
 )
 }
 \arguments{
-\item{x}{A one-sided formula or a numeric matrix.}
+\item{x}{A one-sided formula, such as \code{~ x1 + x2} or \code{~ 0 + g}, or a numeric
+matrix, ideally a matrix column of the model data frame. A two-sided
+formula throws.}
 
-\item{label}{A single non-empty string prefixed to the coefficient
-names.}
+\item{label}{A single non-empty character string prefixed to the coefficient
+names as \code{label.name}. Each constructor defaults it to its own name, so a
+ridge over \code{x1} reads \code{ridge.x1}, and two penalized terms in one formula
+stay apart by their labels.}
 
-\item{standardize}{A single logical: whether to penalize each
-coefficient on the scale of its own column. See the section below.}
+\item{standardize}{A single logical, \code{FALSE} by default: whether to penalize
+each coefficient on the scale of its own column. See the section above.}
 
 \item{lambda}{The precision of the prior. One number holds it and
 \code{NULL}, the default, has it ESTIMATED. A ridge has no kink and no
 path, so several numbers are not a grid it could visit. Must lie in
 \eqn{(0, \infty)}.}
 
-\item{sparse}{Governs the FORMULA route: whether the block is built as a
-\code{dgCMatrix} through \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}} rather
-than as a dense model matrix. \code{NULL}, the default, settles it at
-build from the size of the design; \code{TRUE} and \code{FALSE} override
-it. A MATRIX input needs no such argument, being kept in whatever storage
-it arrives in. See the section below.}
+\item{sparse}{Governs the formula route: \code{TRUE} builds a \code{dgCMatrix} through
+\code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}}, \code{FALSE} a dense model matrix, and \code{NULL},
+the default, settles it at build from the size of the design. A matrix
+input needs no such argument. See the section above.}
 
-\item{...}{Not used, and reported: an argument named after another
-penalty's hyperparameter is the mistake this catches.}
+\item{...}{Not used, and reported. An argument named after another penalty's
+hyperparameter is the mistake this catches: \code{scad(~ x, gamma = 1)} throws
+\code{"'scad' has no argument 'gamma'."} and lists the ones it does have.}
 }
 \value{
 An object of class \code{\link[=PenalizedTerm]{PenalizedTerm()}} (a specification;

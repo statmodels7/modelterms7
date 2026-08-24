@@ -61,38 +61,84 @@ term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 \item{penalty}{A \pkg{penalties7} penalty on the block's coefficients, or
 \code{NULL} when the term is unpenalized.}
 
-\item{input}{The block as given: a one-sided formula or a numeric
-matrix.}
+\item{input}{The block as given: a one-sided formula or a numeric matrix.}
 
-\item{input_expr}{The expression that produced a matrix input, kept so
-\code{\link[=term_predict]{term_predict()}} can re-evaluate it in new data.}
+\item{input_expr}{The expression that produced a matrix input, kept so that
+\code{\link[=term_predict]{term_predict()}} can re-evaluate it in new data. \code{NULL} on the formula
+route.}
 
-\item{factory}{The function mapping a coefficient count to the penalty
-object. It is called with the diagonal map as a second argument where
-\code{standardize} asks for one, so a factory that will never be
-standardized may take the count alone.}
+\item{factory}{A function of the coefficient count, returning the
+\pkg{penalties7} penalty over that many coefficients, and taking the
+diagonal map as a second argument where \code{standardize} asks for one.}
 
-\item{standardize}{Whether the block's columns are put on a common scale
-by the penalty's diagonal map.}
+\item{standardize}{A single logical: whether the block's columns are put on
+a common scale by the penalty's diagonal map. \code{FALSE} by default.}
 
-\item{sparse}{Whether the FORMULA route builds the block as a
-\code{dgCMatrix}. A matrix input is kept in whatever storage it arrives
-in and needs no such argument.}
+\item{sparse}{\code{TRUE}, \code{FALSE} or \code{NULL} for the formula route's storage;
+see \code{\link[=linpar]{linpar()}} for the rule \code{NULL} is settled by. A matrix input needs no
+such argument.}
 }
 \value{
-An object of class \code{PenalizedTerm}.
+An S7 object of class \code{PenalizedTerm}, inheriting from
+\code{\link[=additive_term]{additive_term()}} and \code{\link[=model_term]{model_term()}}, with the five properties above
+beside the ten they supply.
 }
 \description{
-A subclass of \code{\link[=additive_term]{additive_term()}} for a parametric block whose
-coefficients carry a \pkg{penalties7} penalty. Constructed by
-\code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}}, \code{\link[=scad]{scad()}} and
-\code{\link[=mcp]{mcp()}}; the four differ only in the penalty their factory
-attaches at build time, and every derivative, hyperparameter, bound,
-link and kink is the penalty object's.
+The subclass of \code{\link[=additive_term]{additive_term()}} for a parametric block whose coefficients
+carry a \pkg{penalties7} penalty. \code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}}, \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}}
+and \code{\link[=mcp]{mcp()}} all construct it; the five differ only in the penalty their
+factory attaches at build time, so every derivative, hyperparameter, bound,
+link and kink belongs to the penalty object and none of it is restated here.
 }
+\section{The five properties of its own}{
+\code{input} is the block as it was given, a one-sided formula or a matrix.
+\code{input_expr} is the expression that produced a matrix input, kept so that
+\code{\link[=term_predict]{term_predict()}} can re-evaluate it in new data.
+
+\code{factory} maps a coefficient count to the penalty. It is called at build,
+when the count is finally known, and with the diagonal map as a second
+argument when \code{standardize} asks for one, so a factory that will never be
+standardized may take the count alone.
+
+\code{standardize} is a single logical on the specification; after a build the
+spreads themselves are in \code{blueprint$standardize}, one per column.
+
+\code{sparse} governs the formula route only, a matrix input being kept in
+whatever storage it arrives in. \code{NULL} until the build settles it.
+}
+
+\section{What the class does not decide}{
+Which hyperparameters are estimated, over what grid and how far down a path
+are recorded in \code{\link[=model_term]{model_term()}}'s own properties, read through
+\code{\link[=term_hyper]{term_hyper()}}, \code{\link[=term_grid]{term_grid()}}, \code{\link[=term_values]{term_values()}}, \code{\link[=term_path_min]{term_path_min()}} and
+\code{\link[=term_search]{term_search()}}. \code{\link[=term_smooth]{term_smooth()}} is \code{TRUE} for a built \code{\link[=ridge]{ridge()}} and \code{FALSE}
+for the other four, read from each penalty's kink set.
+}
+
 \examples{
-S7::S7_inherits(ridge(~x), PenalizedTerm)
+set.seed(3)
+dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
+
+# Every one of the five returns this class.
+vapply(list(ridge(~ x1), lasso(~ x1), enet(~ x1), scad(~ x1), mcp(~ x1)),
+       function(t) S7::S7_inherits(t, PenalizedTerm), logical(1))
+
+# The penalty is attached at build, when the column count is known.
+spec <- lasso(~ x1 + x2)
+c(spec = is.null(spec@penalty))
+b <- term_build(spec, dd)
+b@penalty
+b@penalty@n_coef
+
+# standardize is a flag before the build and the spreads after it.
+dd$x3 <- 1000 * dd$x2
+bs <- term_build(lasso(~ x1 + x3, standardize = TRUE), dd)
+bs@standardize
+bs@blueprint$standardize
+
 }
 \seealso{
-\code{\link[=ridge]{ridge()}}
+\code{\link[=penalized_terms]{penalized_terms()}} for what the five constructors share,
+\code{\link[=ridge]{ridge()}} and its four siblings for their own hyperparameters,
+\code{\link[=print.PenalizedTerm]{print.PenalizedTerm()}} for how one displays.
 }
