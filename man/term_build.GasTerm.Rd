@@ -23,7 +23,7 @@ blueprint. The recursion itself runs later, in \code{\link[=term_filter]{term_fi
 \details{
 \code{by} and \code{time} are evaluated in the data. Each must give one non-missing
 value per row, and the blueprint records the row indices of each group in
-time order, which is what the filter iterates over.
+time order, and the filter iterates over exactly that.
 
 Each subformula's right-hand side goes through \code{\link[=interpret_formula]{interpret_formula()}} and its
 terms are built, so their blueprints are recorded and a prediction reapplies

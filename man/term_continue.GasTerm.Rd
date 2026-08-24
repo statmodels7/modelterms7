@@ -25,7 +25,7 @@ ones.
 }
 \details{
 The recursion is the filter's own, started from the level and score the
-observed part ended at rather than from the term's own seed. What changes
+observed part ended at, never from the term's own seed. What changes
 past the data is the score: it has zero conditional mean by construction,
 the model's own defining property, so at a row whose response is not
 observed the driving term is its expectation and the continuation is the
@@ -38,9 +38,9 @@ time. No simulation and no integration is involved.
 A new row is placed by its own time within its own group, and must come
 after every observed time of that group: a row falling inside the series
 is not a continuation but a re-reading of it, where the response is known
-and the filter must be run rather than continued, so it is rejected with
+and the filter must be run instead of continued, so it is rejected with
 the rows named. A group the fit never saw is rejected for the same
-reason -- there is no state to continue.
+reason: there is no state to continue.
 }
 \seealso{
 \code{\link[=term_continue]{term_continue()}}, \code{\link[=term_filter]{term_filter()}}

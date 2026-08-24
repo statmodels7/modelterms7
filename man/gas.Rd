@@ -107,8 +107,8 @@ which the curvature this term already receives would supply.
 }
 
 \subsection{Groups and time}{
-\code{by} filters each group independently, which is what a panel of short
-series needs; \code{time} gives the order within a group.
+\code{by} filters each group independently, as a panel of short series needs,
+and \code{time} gives the order within a group.
 Without \code{time} the rows are taken in the order they appear.
 }
 

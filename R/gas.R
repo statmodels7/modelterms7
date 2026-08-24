@@ -8,7 +8,7 @@ NULL
 #' The subclass of [structural_term()] holding a generalized autoregressive
 #' score component: a time-varying level driven by the score of the
 #' observation density, added to the predictor of one distribution parameter.
-#' [gas()] constructs it. Its contribution is a state rather than a block, so
+#' [gas()] constructs it. Its contribution is a state and not a block, so
 #' it implements [term_filter()] and has no [term_matrix()] method.
 #'
 #' @details
@@ -167,8 +167,8 @@ GasTerm <- S7::new_class(
 #' }
 #'
 #' \subsection{Groups and time}{
-#' `by` filters each group independently, which is what a panel of short
-#' series needs; `time` gives the order within a group.
+#' `by` filters each group independently, as a panel of short series needs,
+#' and `time` gives the order within a group.
 #' Without `time` the rows are taken in the order they appear.
 #' }
 #'
@@ -428,7 +428,7 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL,
 #' place** into its coefficients, named `parameter.coefficient`.
 #'
 #' @details
-#' The persistence coordinates are named for the chart they live on and not
+#' The persistence coordinates are named for the chart they live on, never
 #' for the quantity a reader reads. `pacf1` is a partial autocorrelation;
 #' the autoregressive coefficient \eqn{\beta_1} the literature writes is a
 #' function of the whole chart through Levinson-Durbin, and coincides with the
@@ -892,7 +892,7 @@ gas_levinson3 <- function(pacf, w) {
 #' @details
 #' `by` and `time` are evaluated in the data. Each must give one non-missing
 #' value per row, and the blueprint records the row indices of each group in
-#' time order, which is what the filter iterates over.
+#' time order, and the filter iterates over exactly that.
 #'
 #' Each subformula's right-hand side goes through [interpret_formula()] and its
 #' terms are built, so their blueprints are recorded and a prediction reapplies
@@ -1165,8 +1165,8 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' link, so their first derivative is the link's and their second, on the
 #' diagonal, is [linkfunctions7::d2linkinv()]; on the identity
 #' both collapse to one and zero. The persistence reaches the coefficients
-#' through two maps -- the link onto the partial autocorrelations and
-#' Levinson-Durbin onto the coefficients -- so its second derivative
+#' through two maps, the link onto the partial autocorrelations and
+#' Levinson-Durbin onto the coefficients, so its second derivative
 #' carries both a term in the map's own curvature and one in the link's.
 #'
 #' @param zeta The term's parameters on the unconstrained scale.
@@ -1357,7 +1357,7 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #'   together with `blocks_data`, routes the second-order recursion of
 #'   the subformula route through the compiled kernel; either `NULL`
 #'   keeps the R route.
-#' @param blocks_data The model's derivative pieces as data rather than as a
+#' @param blocks_data The model's derivative pieces as data instead of as a
 #'   callback: a list with `H` (the mixed second derivatives, one
 #'   column per distribution parameter), `D3` (the third derivatives,
 #'   one column per parameter pair, pair `(r, r2)` at column
@@ -1390,8 +1390,8 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
 #' @details
 #' The recursion gains one state, \eqn{\Psi_t = \partial^3f_t/\partial u^3[v]},
 #' seeded by the third derivative of the score in the same way \eqn{\Phi} is
-#' seeded by its second. Everything else it needs -- the directional
-#' derivatives of \eqn{F}, \eqn{\Phi}, \eqn{\dot S} and \eqn{\ddot S} -- is a
+#' seeded by its second. Everything else it needs, meaning the directional
+#' derivatives of \eqn{F}, \eqn{\Phi}, \eqn{\dot S} and \eqn{\ddot S}, is a
 #' contraction of a quantity the second-order recursion already carries, so
 #' no second recursion is run and no three-index array is formed.
 #'
@@ -1427,7 +1427,7 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
 #' contracted against it.
 #'
 #' @details
-#' The two orders are written here once rather than in a method each. The
+#' The two orders are written here once, in place of a method each. The
 #' third order's recursion reads \eqn{F}, \eqn{\Phi}, \eqn{\dot S} and
 #' \eqn{\ddot S} at every lag, so a separate implementation would carry a
 #' second copy of the first two orders, and the two would drift.
@@ -1857,14 +1857,14 @@ gas_filter_r <- function(eta, order, p, q, omega, a, b, db, f0, df0,
 #'
 #' @details
 #' The recursion is the filter's own with the seed replaced: the starting
-#' level depends on the term's parameters and not on the static predictor,
+#' level depends on the term's parameters, never on the static predictor,
 #' so the propagated derivative starts at zero and everything after it comes
 #' from the scores. The autoregressive and loading coefficients are read at
 #' each row, which covers a term whose parameters carry submodels of their
 #' own as well as one whose parameters are constant.
 #'
-#' It is written in R rather than compiled: it evaluates no callback, runs
-#' once at a variance rather than at every iteration of a fit, and costs one
+#' It is written in R. It evaluates no callback, runs once at a variance
+#' instead of at every iteration of a fit, and costs one
 #' pass over the data per column.
 #'
 #' @param term A built score-driven term.
@@ -1941,7 +1941,7 @@ S7::method(term_static_deriv, GasTerm) <- function(term, curv, X, psi, ...) {
 #'
 #' @details
 #' The recursion is the filter's own, started from the level and score the
-#' observed part ended at rather than from the term's own seed. What changes
+#' observed part ended at, never from the term's own seed. What changes
 #' past the data is the score: it has zero conditional mean by construction,
 #' the model's own defining property, so at a row whose response is not
 #' observed the driving term is its expectation and the continuation is the
@@ -1954,9 +1954,9 @@ S7::method(term_static_deriv, GasTerm) <- function(term, curv, X, psi, ...) {
 #' A new row is placed by its own time within its own group, and must come
 #' after every observed time of that group: a row falling inside the series
 #' is not a continuation but a re-reading of it, where the response is known
-#' and the filter must be run rather than continued, so it is rejected with
+#' and the filter must be run instead of continued, so it is rejected with
 #' the rows named. A group the fit never saw is rejected for the same
-#' reason -- there is no state to continue.
+#' reason: there is no state to continue.
 #'
 #' @param term A built score-driven term.
 #' @param psi The term's parameters, named as [term_params()].
@@ -2074,8 +2074,8 @@ S7::method(term_continue, GasTerm) <- function(term, psi, f_past, s_past,
 #'
 #' @details
 #' NO SEPARATE RECURSION IS WRITTEN. The filter's own recursion is the
-#' generative one -- the level at one time is a function of the scores
-#' before it, and a score is a function of a response and a predictor -- so
+#' generative one. The level at one time is a function of the scores before
+#' it, and a score is a function of a response and a predictor, so
 #' the only difference is where the response comes from.
 #' [term_filter()] calls its `score` callback exactly once
 #' per observation, in time order within each group, at the predictor the
@@ -2084,7 +2084,7 @@ S7::method(term_continue, GasTerm) <- function(term, psi, f_past, s_past,
 #' generator.
 #'
 #' The curvature is read at the same point, so it reads the response the
-#' score drew rather than drawing a second one.
+#' score drew, drawing no second one.
 #'
 #' The fast route is not taken: it reads the response through a registered
 #' C entry point, and here the response does not exist until the step that

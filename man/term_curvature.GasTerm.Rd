@@ -31,7 +31,7 @@ together with \code{blocks_data}, routes the second-order recursion of
 the subformula route through the compiled kernel; either \code{NULL}
 keeps the R route.}
 
-\item{blocks_data}{The model's derivative pieces as data rather than as a
+\item{blocks_data}{The model's derivative pieces as data instead of as a
 callback: a list with \code{H} (the mixed second derivatives, one
 column per distribution parameter), \code{D3} (the third derivatives,
 one column per parameter pair, pair \verb{(r, r2)} at column

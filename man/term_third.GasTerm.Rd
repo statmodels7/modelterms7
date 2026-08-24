@@ -35,8 +35,8 @@ orders are.
 \details{
 The recursion gains one state, \eqn{\Psi_t = \partial^3f_t/\partial u^3[v]},
 seeded by the third derivative of the score in the same way \eqn{\Phi} is
-seeded by its second. Everything else it needs -- the directional
-derivatives of \eqn{F}, \eqn{\Phi}, \eqn{\dot S} and \eqn{\ddot S} -- is a
+seeded by its second. Everything else it needs, meaning the directional
+derivatives of \eqn{F}, \eqn{\Phi}, \eqn{\dot S} and \eqn{\ddot S}, is a
 contraction of a quantity the second-order recursion already carries, so
 no second recursion is run and no three-index array is formed.
 

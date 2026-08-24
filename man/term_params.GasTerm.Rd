@@ -19,7 +19,7 @@ autoregressive lag. A parameter carrying a subformula is \strong{expanded in
 place} into its coefficients, named \code{parameter.coefficient}.
 }
 \details{
-The persistence coordinates are named for the chart they live on and not
+The persistence coordinates are named for the chart they live on, never
 for the quantity a reader reads. \code{pacf1} is a partial autocorrelation;
 the autoregressive coefficient \eqn{\beta_1} the literature writes is a
 function of the whole chart through Levinson-Durbin, and coincides with the

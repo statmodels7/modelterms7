@@ -51,7 +51,7 @@ of the predictor; with a direction it propagates the third as well,
 contracted against it.
 }
 \details{
-The two orders are written here once rather than in a method each. The
+The two orders are written here once, in place of a method each. The
 third order's recursion reads \eqn{F}, \eqn{\Phi}, \eqn{\dot S} and
 \eqn{\ddot S} at every lag, so a separate implementation would carry a
 second copy of the first two orders, and the two would drift.

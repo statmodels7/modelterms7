@@ -23,14 +23,14 @@ score-driven term.
 }
 \details{
 The recursion is the filter's own with the seed replaced: the starting
-level depends on the term's parameters and not on the static predictor,
+level depends on the term's parameters, never on the static predictor,
 so the propagated derivative starts at zero and everything after it comes
 from the scores. The autoregressive and loading coefficients are read at
 each row, which covers a term whose parameters carry submodels of their
 own as well as one whose parameters are constant.
 
-It is written in R rather than compiled: it evaluates no callback, runs
-once at a variance rather than at every iteration of a fit, and costs one
+It is written in R. It evaluates no callback, runs once at a variance
+instead of at every iteration of a fit, and costs one
 pass over the data per column.
 }
 \seealso{
