@@ -78,7 +78,7 @@ of choosing arbitrarily among them.
   + p\log Z(\lambda, \alpha),}
 the normalizing constant being that of the product of a Laplace and a
 Gaussian at zero
-(\code{\link[distributions7:enet_distrib]{distributions7::enet_distrib()}}). It depends on BOTH
+(\code{\link[distributions7:enet_distrib]{distributions7::enet_distrib()}}). It depends on both
 hyperparameters, so both are estimable, where a merely settable one would
 be all a dropped constant leaves. A penalty
 written as a formula, with the constant dropped, would not have that.

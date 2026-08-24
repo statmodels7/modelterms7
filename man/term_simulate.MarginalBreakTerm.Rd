@@ -23,7 +23,7 @@ One set of latent positions per group, drawn from the prior the term
 declares, and the predictor each observation gets from them.
 }
 \details{
-The latent positions ARE the model here, integrated out of the likelihood
+The latent positions \strong{are} the model here, integrated out of the likelihood
 and never estimated, so simulating from the model means
 drawing them, once per group, and then evaluating the term at what was
 drawn. Under the gaussian prior that is \eqn{N(m_k, \tau_k)}; under an

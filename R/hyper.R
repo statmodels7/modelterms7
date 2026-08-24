@@ -16,13 +16,13 @@ NULL
 #' list, dropping the `NULL` entries, which are the ones to be estimated.
 #'
 #' @details
-#' The check happens at CONSTRUCTION, where the caller can see it, instead of
+#' The check happens at construction, where the caller can see it, instead of
 #' at the fit three layers away. A name the penalty does not carry is an error
 #' naming the ones it does. That is what turns `mcp(x, a = 3)`, SCAD's shape
 #' written on an MCP whose own shape is `gamma`, into a message instead of an
 #' argument that lands in `...` and does nothing.
 #'
-#' The bounds are OPEN, as they are everywhere in the toolkit: a ridge at
+#' The bounds are open, as they are everywhere in the toolkit: a ridge at
 #' \eqn{\lambda = 0} is no penalty at all, and an elastic net at
 #' \eqn{\alpha = 0} has no kink and is a penalty of another kind.
 #'
@@ -471,7 +471,7 @@ S7::method(term_grid, model_term) <- function(term, ...) {
 #' whose penalty has no kink.
 #'
 #' @details
-#' Several values are a grid for a PATH to visit, and only a penalty with a
+#' Several values are a grid for a path to visit, and only a penalty with a
 #' kink is swept along one: everything else has its hyperparameter read at the
 #' mode by a marginal criterion, which would take the vector and do nothing
 #' with it. The question is put to the penalty at a probe value of its own
@@ -581,7 +581,7 @@ S7::method(term_values, model_term) <- function(term, ...) {
 #'
 #' @details
 #' One number per term, one per hyperparameter being unnecessary: only the
-#' path over the SIZE OF THE KINK uses it: a bounded hyperparameter is swept
+#' path over the size of the kink uses it: a bounded hyperparameter is swept
 #' over its own interval and a shape that does not move the kink over a
 #' geometric grid above its lower bound, and a fraction of an emptying value
 #' means nothing in either.
@@ -677,7 +677,7 @@ S7::method(term_path_min, model_term) <- function(term, ...) {
 #'
 #' @details
 #' One word per term, one per hyperparameter being meaningless: it says how the
-#' hyperparameters are combined WITH EACH OTHER, which is not a property any
+#' hyperparameters are combined with each other, which is not a property any
 #' one of them has. It belongs to the term because a penalty with a kink is
 #' fitted by a scheme of its own, and how that scheme sweeps its own
 #' hyperparameters is part of the scheme. A criterion applies to every

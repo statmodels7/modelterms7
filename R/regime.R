@@ -358,7 +358,7 @@ S7::method(term_params, RegimeTerm) <- function(term, ...) {
 #' @name term_level_param.RegimeTerm
 #' @description
 #' `"level1"`. The levels are ordered by construction, each the
-#' previous plus a positive gap, so the first one shifts EVERY regime and is
+#' previous plus a positive gap, so the first one shifts every regime and is
 #' the direction an intercept in the same equation also spans. The gaps are
 #' unaffected: what a constant cannot express is a difference between
 #' regimes.
@@ -640,7 +640,7 @@ S7::method(term_loglik, RegimeTerm) <- function(term, eta, y, logdens, score,
 #'
 #' @details
 #' [term_loglik()] returns the derivative of the mixed likelihood
-#' in the term's OWN parameters, which is the piece estimating those needs.
+#' in the term's own parameters, which is the piece estimating those needs.
 #' Estimating the coefficients needs something else, and for this term that
 #' something is not a second recursion carrying derivatives: it is one
 #' quantity, by Fisher's identity. Writing \eqn{\gamma_t(k)} for the probability
@@ -651,7 +651,7 @@ S7::method(term_loglik, RegimeTerm) <- function(term, eta, y, logdens, score,
 #'   = \sum_k \gamma_t(k)\,
 #'     \frac{\partial \ell(y_t; \theta_t(k))}{\partial \eta_q},}
 #'
-#' for EVERY predictor the model carries, not only the one the regimes
+#' for every predictor the model carries, not only the one the regimes
 #' shift. A caller therefore differentiates its own likelihood \eqn{K} times
 #' vectorized and weights the results, and needs no callback per
 #' observation: the regimes shift a predictor that is known before the
@@ -796,7 +796,7 @@ S7::method(term_posterior, RegimeTerm) <- function(term, eta, y, logdens,
 #' @details
 #' [term_posterior()] gives the gradient by Fisher's identity, and
 #' the matrix a caller can assemble from the same smoothed probabilities is
-#' the COMPLETE-DATA information, the ordinary one averaged over the states.
+#' the complete-data information, the ordinary one averaged over the states.
 #' That is the matrix an EM step inverts. It is not the observed information
 #' of the mixture, which is smaller by the information the unobserved states
 #' cost, and a standard error read off it is too small.
@@ -1246,7 +1246,7 @@ S7::method(print, RegimeTerm) <- function(x, ...) {
 #' the level of the state it lands in.
 #'
 #' @details
-#' The chain is started from its STATIONARY distribution. The model's
+#' The chain is started from its stationary distribution. The model's
 #' likelihood is written with that initial law, so starting from a fixed
 #' first state or from a uniform draw would simulate a different model from
 #' the one a fit reads back. The transition matrix and the

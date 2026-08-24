@@ -69,7 +69,7 @@ as the block turns out to have.
 }
 \description{
 The minimax concave penalty: like SCAD it selects and then flattens, and
-it begins to flatten IMMEDIATELY, where SCAD waits for a first threshold.
+it begins to flatten immediately, where SCAD waits for a first threshold.
 }
 \details{
 Defined by its derivative, for \eqn{t = \lvert\beta_j\rvert \ge 0},

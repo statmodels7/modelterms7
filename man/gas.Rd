@@ -17,7 +17,7 @@ per parameter to be developed with covariates, e.g.
 
 \item{by}{An optional grouping variable, evaluated in the data; each
 group is filtered independently, from its own starting level. A
-FORMULA here is the shorthand giving the same subformula to every
+formula here is the shorthand giving the same subformula to every
 parameter, and then no grouping is implied.}
 
 \item{time}{An optional ordering variable, evaluated in the data.}

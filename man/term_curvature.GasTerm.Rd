@@ -12,7 +12,7 @@
 
 \item{score, curvature}{The callbacks of \code{\link[=term_filter]{term_filter()}}.}
 
-\item{psi}{The parameters on the PARAMETER scale, named as
+\item{psi}{The parameters on the parameter scale, named as
 \code{\link[=term_params]{term_params()}}.}
 
 \item{g}{The weights the second derivative is contracted against.}
@@ -25,7 +25,7 @@
 \item{...}{Unused.}
 
 \item{score_values, curvature_values}{The score and curvature of the
-model's log-density evaluated at the CURRENT predictors, one value per
+model's log-density evaluated at the current predictors, one value per
 observation, on the parameter scale the callbacks read. Supplying both,
 together with \code{blocks_data}, routes the second-order recursion of
 the subformula route through the compiled kernel; either \code{NULL}
@@ -52,7 +52,7 @@ propagated through the recursion beside the state.
 }
 \details{
 With subformulas the general per-observation route runs instead, and
-the second derivative is accumulated on each group's ACTIVE SET rather
+the second derivative is accumulated on each group's active set rather
 than as a square over all the unknowns: a development's coordinate
 reaches only the groups where its column is not identically zero, so
 with grouping indicators the active set has the same size whether the
@@ -60,7 +60,7 @@ panel has ten groups or a thousand. Measured, the full square cost
 0.39 s at 124 unknowns over 1600 rows and would have reached about
 twelve minutes at five hundred groups.
 
-\code{blocks} is called with the row of the jacobian RESTRICTED to the
+\code{blocks} is called with the row of the jacobian restricted to the
 active set and with that set, and returns its pieces in the same
 coordinates. A callback of the earlier three-argument shape is still
 accepted and given the full row, its result being subset here; it costs

@@ -35,7 +35,7 @@ object has \eqn{m} coefficient indices twice over beside the \eqn{n} rows
 and \eqn{m} columns of the block, and only its contraction in the two
 directions the penalized mode moves is ever read.
 
-The quantity enters the HESSIAN of a marginal criterion and nothing else.
+The quantity enters the Hessian of a marginal criterion and nothing else.
 It is absent from the criterion's value, from its gradient and from the
 fit, so the coefficients, the log-likelihood, the effective degrees of
 freedom and the coefficients' own variance matrix do not depend on it; what
@@ -77,7 +77,7 @@ Nothing new is derived: \eqn{f_{p_1p_2p_3}} is the third order of
 \code{\link[=nl_fderiv]{nl_fderiv()}}, served by the same four-way machinery as the lower
 orders, and \eqn{h'''} is \code{\link[linkfunctions7:d3linkinv]{linkfunctions7::d3linkinv()}}, exact for
 every shipped link and numerical for a user-defined one. The cost is
-\eqn{O(nP^3)} in the term's OWN parameters, of which there are two to four
+\eqn{O(nP^3)} in the term's own parameters, of which there are two to four
 in practice, and the call is made once per pair of hyperparameters rather
 than once per observation.
 
@@ -99,7 +99,7 @@ already answer zeros there.
 Two properties of the smoothed branch are worth stating because they are
 exact. Where a break-point sits against its
 confinement limit the whole contribution is zero, every addend carrying a
-direction in the break-point, which the FIRST derivative does not, the
+direction in the break-point, which the first derivative does not, the
 position column moving with the change whatever the position does. And
 under \code{\link[penalties7:smooth_quintic]{penalties7::smooth_quintic()}}, which is exact outside
 \eqn{[-h, h]}, the answer is zero on every observation further than the

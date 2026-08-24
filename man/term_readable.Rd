@@ -26,7 +26,7 @@ the unconstrained scale, so that a caller holding their variance matrix
 can carry it across by the delta method.
 }
 \details{
-A term's parameters are the coordinates it is ESTIMATED on, chosen so
+A term's parameters are the coordinates it is estimated on, chosen so
 that a search runs unconstrained, and they are not always the quantities
 the model is about. The clearest case is a score-driven persistence,
 which rides a partial autocorrelation because the stationary region is
@@ -41,7 +41,7 @@ Each row gives a value and the row of \eqn{\partial(\text{value}) /
 the quantity in its own set, exactly as \pkg{parameters7}'s
 \code{param_readable()} does for a matrix parameter.
 
-The base method reports the parameters themselves on the PARAMETER scale,
+The base method reports the parameters themselves on the parameter scale,
 with the diagonal Jacobian of their links. That is the right answer for
 every term whose coordinates are already its quantities.
 }

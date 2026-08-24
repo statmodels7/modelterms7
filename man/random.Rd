@@ -28,7 +28,7 @@ within-group effects correlate. It is an error together with
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}
 
-\item{hyper}{The hyperparameters of the effects' distribution to HOLD, as
+\item{hyper}{The hyperparameters of the effects' distribution to hold, as
 a named vector or list; those not named are estimated. The names are the
 distribution's own parameters, with the within-group column appended
 where there is one copy per column. A name the penalty does not carry is
@@ -67,7 +67,7 @@ of that distribution, read off it at build time.
 \code{distrib} is \code{NULL}, a \pkg{distributions7} object, or a list of
 them with one per within-group column.
 
-A MULTIVARIATE distribution of the within-group dimension lets the effects
+A multivariate distribution of the within-group dimension lets the effects
 of one group depend on each other, its matrix parameter carrying the
 dependence: \code{mvgaussian_distrib(2, omega = ar1(2))} is a prior whose
 precision is autoregressive, \code{mvstudent_t_distrib(2)} a heavy-tailed
@@ -76,9 +76,9 @@ parameter: a location block as long as the dimension, together with a
 covariance, precision or scale matrix. The term reads that property off the
 family, so a family added later is covered without an edit here.
 
-A UNIVARIATE distribution makes the effects independent, the penalty being
+A univariate distribution makes the effects independent, the penalty being
 the product of the densities. With more than one within-group column it is
-a TEMPLATE: one copy per column, each with its own hyperparameters, since
+a template: one copy per column, each with its own hyperparameters, since
 an intercept and a slope are quantities of different units and a shared
 scale would price them against each other. A list of distributions gives
 one per column explicitly, when the columns want different priors.
@@ -89,13 +89,13 @@ Gaussian on an unstructured covariance when there are several and
 \code{correlated = TRUE}; the template of the first when
 \code{correlated = FALSE}, one standard deviation per column.
 
-Whatever it is, the distribution is CENTERED, its location parameters held
+Whatever it is, the distribution is centered, its location parameters held
 with \code{\link[distributions7:fixed]{distributions7::fixed()}}. A free mean in the effects is
 confounded with the intercept of the equation the term sits in, so a free
 location is rejected at build time with a message naming it. The value it
 is held at is usually zero and is not policed: the model is identified
 whatever it is. Where the prior is a transformation of another family the
-parameter is the mean on the ORIGINAL scale, so
+parameter is the mean on the original scale, so
 \code{fixed(transformation(gamma2_distrib(), log_transform()), mu = 1)} is a
 log-gamma prior whose own mean is \eqn{\psi(a) - \log a}, within
 \eqn{\sigma^2/2} of zero and exactly zero in the limit.
@@ -125,12 +125,12 @@ a prediction criterion instead.
 
 Every estimated hyperparameter is reported with a standard error and an
 interval, shape parameters included. Where one is absent the cause is the
-POINT the run ended at: a criterion with no maximum there leaves a
+point the run ended at: a criterion with no maximum there leaves a
 curvature of the wrong sign, and no interval follows from it. A shape
 escaping toward a limit is the common case.
 
-Which PARAMETRIZATION of a family is used matters here in a way it does
-not elsewhere. The centred skew normal
+Which parametrization of a family is used matters here in a way it does
+not elsewhere. The centered skew normal
 (\code{\link[distributions7:skewnormal2_distrib]{distributions7::skewnormal2_distrib()}}) carries the skewness
 itself, and its map to the direct parametrization is not twice
 differentiable at zero skewness: the first derivatives have a finite limit

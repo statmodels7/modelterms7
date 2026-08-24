@@ -292,7 +292,7 @@ PenalizedTerm <- S7::new_class(
 #' @section Standardization:
 #' A hyperparameter is comparable across coordinates only where the coordinates
 #' share a scale. Without `standardize` a lasso penalizes a column measured in
-#' metres more than the same column measured in kilometres, and a reader of
+#' meters more than the same column measured in kilometers, and a reader of
 #' \eqn{\lambda} has no way to tell.
 #'
 #' `standardize = TRUE` divides each coefficient by the standard deviation of

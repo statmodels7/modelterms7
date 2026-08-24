@@ -31,7 +31,7 @@ the curvature through their scalar entry points instead of the R
 callbacks, bit-identically; where they do not, the context is inert
 and the callbacks run as before.}
 
-\item{threads}{How many threads the recursion may use, over GROUPS and
+\item{threads}{How many threads the recursion may use, over groups and
 only on the fast route: a group's filter is independent of the others
 and its writes land on its own rows, so no reduction is split and the
 result does not depend on the count, bit for bit.}

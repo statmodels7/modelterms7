@@ -58,7 +58,7 @@ as the block turns out to have.
 }
 \description{
 A block of coefficients under a Laplace prior at zero: the penalty has a
-kink there, so coefficients are set EXACTLY to zero and the term selects.
+kink there, so coefficients are set exactly to zero and the term selects.
 }
 \details{
 \deqn{\rho(\beta) = \lambda\lVert\beta\rVert_1
@@ -69,7 +69,7 @@ and keeps fewer coefficients.
 
 The kink is at zero, so the block is fitted by a proximal method or by a
 coordinate descent with the other terms held, and \eqn{\lambda} is chosen
-by a PATH over its own values, scored by \code{\link[statmodels7:aic]{statmodels7::bic()}} by default
+by a path over its own values, scored by \code{\link[statmodels7:aic]{statmodels7::bic()}} by default
 or by \code{\link[statmodels7:aic]{statmodels7::aic()}} or \code{\link[statmodels7:cv]{statmodels7::cv()}}. A marginal criterion
 cannot be used: it is a Laplace expansion at a mode that sits on the kink.
 

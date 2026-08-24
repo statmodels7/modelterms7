@@ -28,11 +28,11 @@ and column of the block: the block's own derivative taken along a direction
 the caller supplies.
 }
 \details{
-It is the ADJOINT of \code{\link[=term_block_contract]{term_block_contract()}} and neither computes
+It is the adjoint of \code{\link[=term_block_contract]{term_block_contract()}} and neither computes
 the other. That one contracts over the observations and the columns and
 answers per coefficient, as the gradient of a marginal criterion
 needs; this one contracts over the coefficients and answers per entry of
-the block, as its HESSIAN needs, \eqn{\partial K/\partial\beta} being
+the block, as its Hessian needs, \eqn{\partial K/\partial\beta} being
 required there in the direction the mode moves instead of traced.
 
 Both are \eqn{O(nm)} and read the same closed form, so this needs no

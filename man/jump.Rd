@@ -150,7 +150,7 @@ travel in one step, so a large value lets the estimate leave a spurious
 optimum and a small one is faithful to the step function. \code{c0} is
 its starting value and \code{\link[=term_refresh]{term_refresh()}} halves it whenever the
 break-point reverses direction, the signal that the iteration has begun
-to circle an optimum instead of travelling toward one. The run has
+to circle an optimum instead of traveling toward one. The run has
 converged when every break-point moves less than a hundredth of the
 distance between consecutive distinct observations, which
 \code{\link[=seg_converged]{seg_converged()}} reports.

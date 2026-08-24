@@ -66,8 +66,8 @@ reference:
   - PenalizedTerm
 - title: The random-effect term
   desc: >
-    Grouped intercepts and slopes, the effects' distribution attached
-    as the penalty, which is what a random effect is under
+    Grouped intercepts and slopes, with the effects' distribution
+    attached as the penalty. That is what a random effect is under
     penalized likelihood.
   contents:
   - random
@@ -115,7 +115,7 @@ reference:
   - seg_profile_rss
 - title: Structural terms
   desc: >
-    Terms that rewrite the likelihood rather than adding to the
+    Terms that rewrite the likelihood instead of adding to the
     predictor: score-driven dynamics and a latent Markov chain,
     both propagating their exact derivative beside the state.
   contents:
@@ -145,8 +145,8 @@ reference:
 - title: The formula layer
   desc: >
     Reading a model formula into terms, by what each call evaluates
-    to rather than by its name, so a term class defined outside
-    the package needs no registration.
+    to and never by its name, so a term class defined outside the
+    package needs no registration.
   contents:
   - interpret_formula
 - title: The response

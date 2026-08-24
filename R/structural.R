@@ -350,7 +350,7 @@ term_continue <- S7::new_generic("term_continue", "term",
 #'
 #' @description
 #' The predictor a structural term produces when the response is being
-#' GENERATED rather than read, together with whatever latent quantity the
+#' generated rather than read, together with whatever latent quantity the
 #' term drew on the way.
 #'
 #' @details
@@ -523,7 +523,7 @@ S7::method(term_level_design, model_term) <- function(term, ...) NULL
 #' can carry it across by the delta method.
 #'
 #' @details
-#' A term's parameters are the coordinates it is ESTIMATED on, chosen so
+#' A term's parameters are the coordinates it is estimated on, chosen so
 #' that a search runs unconstrained, and they are not always the quantities
 #' the model is about. The clearest case is a score-driven persistence,
 #' which rides a partial autocorrelation because the stationary region is
@@ -538,7 +538,7 @@ S7::method(term_level_design, model_term) <- function(term, ...) NULL
 #' the quantity in its own set, exactly as \pkg{parameters7}'s
 #' `param_readable()` does for a matrix parameter.
 #'
-#' The base method reports the parameters themselves on the PARAMETER scale,
+#' The base method reports the parameters themselves on the parameter scale,
 #' with the diagonal Jacobian of their links. That is the right answer for
 #' every term whose coordinates are already its quantities.
 #'
@@ -585,7 +585,7 @@ S7::method(term_readable, model_term) <- function(term, zeta, ...) {
 #'
 #' @details
 #' [term_filter()] returns the derivative of the predictor in the
-#' term's OWN parameters, which is the piece estimating those needs.
+#' term's own parameters, which is the piece estimating those needs.
 #' Estimating the coefficients of the same equation needs something else: the level at
 #' one time is driven by the scores at earlier ones, which are read at
 #' predictors those coefficients also enter, so the derivative of the
@@ -605,7 +605,7 @@ S7::method(term_readable, model_term) <- function(term, zeta, ...) {
 #'
 #' so a model layer whose score is the derivative of its log-likelihood in
 #' one distribution parameter obtains the derivative in the predictor of
-#' ANOTHER by multiplying `dscore` by the mixed second derivative of
+#' **another** by multiplying `dscore` by the mixed second derivative of
 #' that log-likelihood. `deta` is that formula applied to the term's own
 #' equation, where the second factor is the curvature.
 #'

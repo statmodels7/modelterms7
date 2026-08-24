@@ -38,7 +38,7 @@ Jacobian rows are then
 which is the delta method \code{segmented} reports a break-point's
 standard error by. The joint construction reads its position from a
 quadratic that also carries the change of slope, and the two readings
-differ by the increment the iteration has left: the VALUE reported is
+differ by the increment the iteration has left: the value reported is
 the one the term holds, so that this and \code{\link[=seg_psi]{seg_psi()}} cannot
 give two numbers for one quantity, and the Jacobian is the fixed
 point's, which the quadratic degenerates to once the increment has

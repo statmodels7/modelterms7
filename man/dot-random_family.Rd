@@ -14,7 +14,7 @@ A \pkg{distributions7} object.
 }
 \description{
 Follows \code{parent_distrib} to the distribution a wrapper wraps, so that
-a question about the FAMILY is asked of the family.
+a question about the family is asked of the family.
 }
 \details{
 The property is asked for with \code{S7::prop_names()} instead of testing the

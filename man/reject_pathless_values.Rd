@@ -22,7 +22,7 @@ Signals an error when the caller gave several values for a hyperparameter
 whose penalty has no kink.
 }
 \details{
-Several values are a grid for a PATH to visit, and only a penalty with a
+Several values are a grid for a path to visit, and only a penalty with a
 kink is swept along one: everything else has its hyperparameter read at the
 mode by a marginal criterion, which would take the vector and do nothing
 with it. The question is put to the penalty at a probe value of its own

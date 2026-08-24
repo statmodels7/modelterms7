@@ -28,7 +28,7 @@ component per index multiset, keyed as \pkg{distributions7} keys its own
 derivative surfaces.
 }
 \details{
-The route is chosen per ORDER, in this priority: a function supplied to
+The route is chosen per order, in this priority: a function supplied to
 \code{\link[=nl]{nl()}} where there is one, then the symbolic route where the expression
 can be differentiated, and otherwise one stencil applied to the highest
 order that is analytic, a supplied one included. That is why writing out a
@@ -39,7 +39,7 @@ Only \strong{one} stencil is applied, never a chain of them. A fourth
 derivative built from four nested first differences is noise; the same
 discipline holds everywhere in the toolkit.
 
-The components are in the term's OWN parameters, not in its coefficients.
+The components are in the term's own parameters, not in its coefficients.
 The chain rule onto the coefficients, the links and a subformula's design,
 belongs to the term, which is the only thing that knows them.
 }

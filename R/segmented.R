@@ -374,7 +374,7 @@ seg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 #' optimum and a small one is faithful to the step function. `c0` is
 #' its starting value and [term_refresh()] halves it whenever the
 #' break-point reverses direction, the signal that the iteration has begun
-#' to circle an optimum instead of travelling toward one. The run has
+#' to circle an optimum instead of traveling toward one. The run has
 #' converged when every break-point moves less than a hundredth of the
 #' distance between consecutive distinct observations, which
 #' [seg_converged()] reports.
@@ -1967,7 +1967,7 @@ S7::method(term_block_deriv2, SegTerm) <- function(term, coef = NULL, v, u,
 #' truncated line depending on the position as well.
 #'
 #' Every new position is clamped into the confinement interval the build
-#' settled, and crossed break-points are relabelled so that each keeps
+#' settled, and crossed break-points are relabeled so that each keeps
 #' travelling with its own scaling factor and direction.
 #'
 #' # The scaling schedule
@@ -1975,7 +1975,7 @@ S7::method(term_block_deriv2, SegTerm) <- function(term, coef = NULL, v, u,
 #' The rescaling of Fasola, Muggeo and Kuchenhoff (2018) opens a gap of
 #' relative width \eqn{c} around each break-point, and the factor is **halved
 #' whenever that break-point reverses direction**, which is the signal that the
-#' iteration has begun to circle an optimum instead of travelling toward one.
+#' iteration has begun to circle an optimum instead of traveling toward one.
 #' The factor is both the conditioning device and the step control, so it must
 #' advance once per committed step: refreshing inside a line search would
 #' anneal at every trial point, and refreshing from the specification would
@@ -2592,7 +2592,7 @@ seg_start <- function(spec, data, y, k = 10) {
 #' Polish a Break-Point Term's Positions on the Exact Profile
 #'
 #' @description
-#' Coordinate descent over the break-point positions on the EXACT profile:
+#' Coordinate descent over the break-point positions on the exact profile:
 #' one position at a time is swept over a grid with the others held, the
 #' least-squares fit at fixed positions being an ordinary linear model, and
 #' the sweeps repeat until no position moves. The term comes back relocated
@@ -2605,7 +2605,7 @@ seg_start <- function(spec, data, y, k = 10) {
 #' against its confinement limit, and neither a bootstrap excursion --
 #' whose perturbation is of order \eqn{1/\sqrt{n}}, nor a random
 #' relocation escapes it, the basin of the right configuration being
-#' narrow. A grid sweep of ONE position with the others held walks
+#' narrow. A grid sweep of one position with the others held walks
 #' straight to the missing feature, because the profile at fixed positions
 #' is exact and unimodal around it.
 #'
@@ -2885,7 +2885,7 @@ S7::method(term_coef_start, SegTerm) <- function(term, target = NULL, ...) {
 #' which is the delta method `segmented` reports a break-point's
 #' standard error by. The joint construction reads its position from a
 #' quadratic that also carries the change of slope, and the two readings
-#' differ by the increment the iteration has left: the VALUE reported is
+#' differ by the increment the iteration has left: the value reported is
 #' the one the term holds, so that this and [seg_psi()] cannot
 #' give two numbers for one quantity, and the Jacobian is the fixed
 #' point's, which the quadratic degenerates to once the increment has

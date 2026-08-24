@@ -23,7 +23,7 @@ A path of the latent chain, and the predictor each observation gets from
 the level of the state it lands in.
 }
 \details{
-The chain is started from its STATIONARY distribution. The model's
+The chain is started from its stationary distribution. The model's
 likelihood is written with that initial law, so starting from a fixed
 first state or from a uniform draw would simulate a different model from
 the one a fit reads back. The transition matrix and the

@@ -27,7 +27,7 @@ apart by their labels.}
 each coefficient on the scale of its own column. See the section above.}
 
 \item{lambda}{The precision of the prior. One number holds it and
-\code{NULL}, the default, has it ESTIMATED. A ridge has no kink and no
+\code{NULL}, the default, has it estimated. A ridge has no kink and no
 path, so several numbers are not a grid it could visit. Must lie in
 \eqn{(0, \infty)}.}
 
@@ -57,7 +57,7 @@ number,
   - \frac{p}{2}\log\!\left(\frac{\lambda}{2\pi}\right).}
 The constant is kept, and that is what a marginal criterion needs to
 estimate \eqn{\lambda}: the value is minus the log density of
-\eqn{N(0, \lambda^{-1}I)}, so \eqn{\lambda} is the PRECISION of that
+\eqn{N(0, \lambda^{-1}I)}, so \eqn{\lambda} is the precision of that
 prior and a larger value shrinks harder.
 
 The penalty is twice differentiable everywhere, so the block is fitted in

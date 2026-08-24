@@ -20,7 +20,7 @@ NULL
 #'   - \frac{p}{2}\log\!\left(\frac{\lambda}{2\pi}\right).}
 #' The constant is kept, and that is what a marginal criterion needs to
 #' estimate \eqn{\lambda}: the value is minus the log density of
-#' \eqn{N(0, \lambda^{-1}I)}, so \eqn{\lambda} is the PRECISION of that
+#' \eqn{N(0, \lambda^{-1}I)}, so \eqn{\lambda} is the precision of that
 #' prior and a larger value shrinks harder.
 #'
 #' The penalty is twice differentiable everywhere, so the block is fitted in
@@ -35,7 +35,7 @@ NULL
 #'   over `x1` reads `ridge.x1`. Two penalized terms in one formula stay
 #'   apart by their labels.
 #' @param lambda The precision of the prior. One number holds it and
-#'   `NULL`, the default, has it ESTIMATED. A ridge has no kink and no
+#'   `NULL`, the default, has it estimated. A ridge has no kink and no
 #'   path, so several numbers are not a grid it could visit. Must lie in
 #'   \eqn{(0, \infty)}.
 #' @return An unbuilt [PenalizedTerm()]: a specification, with `X`,
@@ -87,7 +87,7 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #'
 #' @description
 #' A block of coefficients under a Laplace prior at zero: the penalty has a
-#' kink there, so coefficients are set EXACTLY to zero and the term selects.
+#' kink there, so coefficients are set exactly to zero and the term selects.
 #'
 #' @details
 #' \deqn{\rho(\beta) = \lambda\lVert\beta\rVert_1
@@ -98,7 +98,7 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #'
 #' The kink is at zero, so the block is fitted by a proximal method or by a
 #' coordinate descent with the other terms held, and \eqn{\lambda} is chosen
-#' by a PATH over its own values, scored by [statmodels7::bic()] by default
+#' by a path over its own values, scored by [statmodels7::bic()] by default
 #' or by [statmodels7::aic()] or [statmodels7::cv()]. A marginal criterion
 #' cannot be used: it is a Laplace expansion at a mode that sits on the kink.
 #'
@@ -179,7 +179,7 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #'   + p\log Z(\lambda, \alpha),}
 #' the normalizing constant being that of the product of a Laplace and a
 #' Gaussian at zero
-#' ([distributions7::enet_distrib()]). It depends on BOTH
+#' ([distributions7::enet_distrib()]). It depends on both
 #' hyperparameters, so both are estimable, where a merely settable one would
 #' be all a dropped constant leaves. A penalty
 #' written as a formula, with the constant dropped, would not have that.
@@ -274,7 +274,7 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #'
 #' @description
 #' Smoothly clipped absolute deviation: the lasso's kink at zero, so the
-#' term selects, and a penalty that FLATTENS beyond a threshold, so a large
+#' term selects, and a penalty that flattens beyond a threshold, so a large
 #' coefficient is not shrunk at all.
 #'
 #' @details
@@ -372,7 +372,7 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #'
 #' @description
 #' The minimax concave penalty: like SCAD it selects and then flattens, and
-#' it begins to flatten IMMEDIATELY, where SCAD waits for a first threshold.
+#' it begins to flatten immediately, where SCAD waits for a first threshold.
 #'
 #' @details
 #' Defined by its derivative, for \eqn{t = \lvert\beta_j\rvert \ge 0},

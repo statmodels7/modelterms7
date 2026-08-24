@@ -100,7 +100,7 @@ RandomTerm <- S7::new_class(
 #' `distrib` is `NULL`, a \pkg{distributions7} object, or a list of
 #' them with one per within-group column.
 #'
-#' A MULTIVARIATE distribution of the within-group dimension lets the effects
+#' A multivariate distribution of the within-group dimension lets the effects
 #' of one group depend on each other, its matrix parameter carrying the
 #' dependence: `mvgaussian_distrib(2, omega = ar1(2))` is a prior whose
 #' precision is autoregressive, `mvstudent_t_distrib(2)` a heavy-tailed
@@ -109,9 +109,9 @@ RandomTerm <- S7::new_class(
 #' covariance, precision or scale matrix. The term reads that property off the
 #' family, so a family added later is covered without an edit here.
 #'
-#' A UNIVARIATE distribution makes the effects independent, the penalty being
+#' A univariate distribution makes the effects independent, the penalty being
 #' the product of the densities. With more than one within-group column it is
-#' a TEMPLATE: one copy per column, each with its own hyperparameters, since
+#' a template: one copy per column, each with its own hyperparameters, since
 #' an intercept and a slope are quantities of different units and a shared
 #' scale would price them against each other. A list of distributions gives
 #' one per column explicitly, when the columns want different priors.
@@ -122,13 +122,13 @@ RandomTerm <- S7::new_class(
 #' `correlated = TRUE`; the template of the first when
 #' `correlated = FALSE`, one standard deviation per column.
 #'
-#' Whatever it is, the distribution is CENTERED, its location parameters held
+#' Whatever it is, the distribution is centered, its location parameters held
 #' with [distributions7::fixed()]. A free mean in the effects is
 #' confounded with the intercept of the equation the term sits in, so a free
 #' location is rejected at build time with a message naming it. The value it
 #' is held at is usually zero and is not policed: the model is identified
 #' whatever it is. Where the prior is a transformation of another family the
-#' parameter is the mean on the ORIGINAL scale, so
+#' parameter is the mean on the original scale, so
 #' `fixed(transformation(gamma2_distrib(), log_transform()), mu = 1)` is a
 #' log-gamma prior whose own mean is \eqn{\psi(a) - \log a}, within
 #' \eqn{\sigma^2/2} of zero and exactly zero in the limit.
@@ -156,12 +156,12 @@ RandomTerm <- S7::new_class(
 #'
 #' Every estimated hyperparameter is reported with a standard error and an
 #' interval, shape parameters included. Where one is absent the cause is the
-#' POINT the run ended at: a criterion with no maximum there leaves a
+#' point the run ended at: a criterion with no maximum there leaves a
 #' curvature of the wrong sign, and no interval follows from it. A shape
 #' escaping toward a limit is the common case.
 #'
-#' Which PARAMETRIZATION of a family is used matters here in a way it does
-#' not elsewhere. The centred skew normal
+#' Which parametrization of a family is used matters here in a way it does
+#' not elsewhere. The centered skew normal
 #' ([distributions7::skewnormal2_distrib()]) carries the skewness
 #' itself, and its map to the direct parametrization is not twice
 #' differentiable at zero skewness: the first derivatives have a finite limit
@@ -242,7 +242,7 @@ RandomTerm <- S7::new_class(
 #'   `distrib`, which says the same thing and more.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names.
-#' @param hyper The hyperparameters of the effects' distribution to HOLD, as
+#' @param hyper The hyperparameters of the effects' distribution to hold, as
 #'   a named vector or list; those not named are estimated. The names are the
 #'   distribution's own parameters, with the within-group column appended
 #'   where there is one copy per column. A name the penalty does not carry is
@@ -323,7 +323,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #'
 #' @details
 #' `precision` was a second spelling of a multivariate Gaussian whose
-#' matrix parameter is a precision, and the first spelling did not say WHICH
+#' matrix parameter is a precision, and the first spelling did not say which
 #' matrix the structure was. `kinks` was derived from the effects'
 #' distribution by \pkg{penalties7} all along, and the default here overrode
 #' that derivation, so a Laplace prior declared none and a fitting layer sent
@@ -410,7 +410,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #'
 #' @description
 #' Follows `parent_distrib` to the distribution a wrapper wraps, so that
-#' a question about the FAMILY is asked of the family.
+#' a question about the family is asked of the family.
 #'
 #' @details
 #' The property is asked for with `S7::prop_names()` instead of testing the
@@ -434,7 +434,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' needs.
 #'
 #' @details
-#' The question is a PROPERTY of the family, so a multivariate family added
+#' The question is a property of the family, so a multivariate family added
 #' later is covered without an edit here. It is
 #' read off `params_interpretation`, the same declaration a data-based
 #' starting value is built from. It excludes the simplex-valued families,
@@ -463,7 +463,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' A marginal criterion reads that block to estimate the covariance of the
 #' effects, so a family without one can be fitted at held hyperparameters and
 #' not at estimated ones. The owning class of a method is read through its
-#' signature and compared BY NAME, never with `identical()`, which is
+#' signature and compared by name, never with `identical()`, which is
 #' object identity and fails whenever a package's code is re-evaluated rather
 #' than loaded.
 #'
@@ -486,15 +486,15 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' names what is wrong with it.
 #'
 #' @details
-#' What is rejected is a FREE location. It is confounded with the intercept of
+#' What is rejected is a free location. It is confounded with the intercept of
 #' the equation the term sits in, leaving a flat direction along which the fit
 #' has no answer.
 #'
-#' A location HELD at a value is identified whatever that value is, and it is
-#' not policed: it shrinks the effects toward that value, which is a modelling
+#' A location held at a value is identified whatever that value is, and it is
+#' not policed: it shrinks the effects toward that value, which is a modeling
 #' statement. Nor could the value be policed in general. Where the prior is a
 #' transformation of another family, the parameter interpreted as its mean is
-#' the mean on the ORIGINAL scale, and holding the mean of a gamma at one is
+#' the mean on the original scale, and holding the mean of a gamma at one is
 #' what centers its logarithm.
 #'
 #' @param d A \pkg{distributions7} object.
@@ -566,7 +566,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' an unstructured covariance for several correlated ones.
 #'
 #' @details
-#' The structure's role is DECLARED, `"covariance"` here. A structure left at
+#' The structure's role is declared, `"covariance"` here. A structure left at
 #' `"either"` does not say which matrix of the prior it is, and the two cannot
 #' be read interchangeably: they differ in the sign of the log-determinant
 #' term.
@@ -596,7 +596,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #'
 #' @details
 #' The coefficients are ordered group by group, so column \eqn{j} is the
-#' stride \eqn{j, d+j, 2d+j, \dots}. Those positions are NAMED as a subset of
+#' stride \eqn{j, d+j, 2d+j, \dots}. Those positions are named as a subset of
 #' the term's own parameters, never selected with a map, and that is what
 #' keeps a kinked prior's proximal operator available: a separable penalty
 #' under a selection map is the generalized-lasso problem, which has none.
@@ -635,7 +635,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #'
 #' @details
 #' A name is qualified by the within-group column where there is one penalty
-#' per column. An unqualified one is an ERROR that lists what there is, not a
+#' per column. An unqualified one is an error that lists what there is, not a
 #' value recycled over every column: a caller who wants the same value
 #' everywhere writes it into the distribution, where it stops being a
 #' hyperparameter at all, and silent recycling is the trap this file's

@@ -38,7 +38,7 @@ it was given, both accounting for the recursion.
 }
 \details{
 \code{\link[=term_filter]{term_filter()}} returns the derivative of the predictor in the
-term's OWN parameters, which is the piece estimating those needs.
+term's own parameters, which is the piece estimating those needs.
 Estimating the coefficients of the same equation needs something else: the level at
 one time is driven by the scores at earlier ones, which are read at
 predictors those coefficients also enter, so the derivative of the
@@ -58,7 +58,7 @@ depends on is
 
 so a model layer whose score is the derivative of its log-likelihood in
 one distribution parameter obtains the derivative in the predictor of
-ANOTHER by multiplying \code{dscore} by the mixed second derivative of
+\strong{another} by multiplying \code{dscore} by the mixed second derivative of
 that log-likelihood. \code{deta} is that formula applied to the term's own
 equation, where the second factor is the curvature.
 }

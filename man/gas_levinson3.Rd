@@ -23,7 +23,7 @@ and contracted against a single direction, one matrix per coefficient.
 The exact gradient of a marginal criterion over a penalty on this term's
 own parameters needs the third derivative of the predictor, and the
 persistence reaches the predictor through this map. It is needed only
-CONTRACTED: the criterion asks for \eqn{\mathrm{tr}(M\,\partial K/\partial
+contracted: the criterion asks for \eqn{\mathrm{tr}(M\,\partial K/\partial
 u[v])}, a derivative along the single direction the penalized mode moves
 in, so what is propagated is a matrix per coefficient and never a
 three-index array.

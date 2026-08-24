@@ -32,10 +32,10 @@ the top of a kinked penalty's path among them.
 
 The search is a deterministic grid on each free parameter's own chart,
 polished by a derivative-free step. Two things make it work. The grid is
-DETERMINISTIC, so a start does not depend on the caller's random seed and
+deterministic, so a start does not depend on the caller's random seed and
 the same data give the same fit; a Latin hypercube of the same size, tried
 first, put the logistic's scale anywhere between 4.9e-06 and 2.07 across
-twenty seeds. And the parameters the function is jointly AFFINE in are
+twenty seeds. And the parameters the function is jointly affine in are
 separated out and solved by least squares at each point of the grid rather
 than searched over, which is read off \code{\link[stats:deriv]{stats::D()}} as the fixed
 point of "the derivative in \eqn{p} names no member of the set". On a

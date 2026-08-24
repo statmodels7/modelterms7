@@ -14,7 +14,7 @@
 A list, as \code{\link[=term_readable]{term_readable()}} documents.
 }
 \description{
-The level, the score loadings and the AUTOREGRESSIVE COEFFICIENTS of the
+The level, the score loadings and the autoregressive coefficients of the
 literature, \code{omega}, \code{alpha1} and \code{beta1}, with the
 Jacobian from the term's own parameters.
 }

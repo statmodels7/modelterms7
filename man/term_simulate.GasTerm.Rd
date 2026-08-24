@@ -26,7 +26,7 @@ A list with \code{eta}, \code{y} and \code{latent}, the level.
 Runs the recursion forward drawing the response at each step.
 }
 \details{
-NO SEPARATE RECURSION IS WRITTEN. The filter's own recursion is the
+No separate recursion is written. The filter's own recursion is the
 generative one. The level at one time is a function of the scores before
 it, and a score is a function of a response and a predictor, so
 the only difference is where the response comes from.

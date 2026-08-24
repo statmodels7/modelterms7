@@ -20,7 +20,7 @@ hyperparameters.
 }
 \details{
 One word per term, one per hyperparameter being meaningless: it says how the
-hyperparameters are combined WITH EACH OTHER, which is not a property any
+hyperparameters are combined with each other, which is not a property any
 one of them has. It belongs to the term because a penalty with a kink is
 fitted by a scheme of its own, and how that scheme sweeps its own
 hyperparameters is part of the scheme. A criterion applies to every

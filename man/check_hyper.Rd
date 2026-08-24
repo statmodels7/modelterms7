@@ -26,13 +26,13 @@ bounds of the penalty the term will build, and returns them as a named
 list, dropping the \code{NULL} entries, which are the ones to be estimated.
 }
 \details{
-The check happens at CONSTRUCTION, where the caller can see it, instead of
+The check happens at construction, where the caller can see it, instead of
 at the fit three layers away. A name the penalty does not carry is an error
 naming the ones it does. That is what turns \code{mcp(x, a = 3)}, SCAD's shape
 written on an MCP whose own shape is \code{gamma}, into a message instead of an
 argument that lands in \code{...} and does nothing.
 
-The bounds are OPEN, as they are everywhere in the toolkit: a ridge at
+The bounds are open, as they are everywhere in the toolkit: a ridge at
 \eqn{\lambda = 0} is no penalty at all, and an elastic net at
 \eqn{\alpha = 0} has no kink and is a penalty of another kind.
 

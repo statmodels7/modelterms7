@@ -30,7 +30,7 @@ step linear in \eqn{\psi} once the weight is frozen, and
 truncated line depending on the position as well.
 
 Every new position is clamped into the confinement interval the build
-settled, and crossed break-points are relabelled so that each keeps
+settled, and crossed break-points are relabeled so that each keeps
 travelling with its own scaling factor and direction.
 }
 
@@ -38,7 +38,7 @@ travelling with its own scaling factor and direction.
 The rescaling of Fasola, Muggeo and Kuchenhoff (2018) opens a gap of
 relative width \eqn{c} around each break-point, and the factor is \strong{halved
 whenever that break-point reverses direction}, which is the signal that the
-iteration has begun to circle an optimum instead of travelling toward one.
+iteration has begun to circle an optimum instead of traveling toward one.
 The factor is both the conditioning device and the step control, so it must
 advance once per committed step: refreshing inside a line search would
 anneal at every trial point, and refreshing from the specification would

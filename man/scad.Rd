@@ -69,7 +69,7 @@ as the block turns out to have.
 }
 \description{
 Smoothly clipped absolute deviation: the lasso's kink at zero, so the
-term selects, and a penalty that FLATTENS beyond a threshold, so a large
+term selects, and a penalty that flattens beyond a threshold, so a large
 coefficient is not shrunk at all.
 }
 \details{

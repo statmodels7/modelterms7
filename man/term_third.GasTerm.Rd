@@ -12,7 +12,7 @@
 
 \item{score, curvature}{The callbacks of \code{\link[=term_filter]{term_filter()}}.}
 
-\item{psi}{The parameters on the PARAMETER scale.}
+\item{psi}{The parameters on the parameter scale.}
 
 \item{g}{The weights the third derivative is contracted against.}
 

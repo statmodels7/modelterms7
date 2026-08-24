@@ -29,7 +29,7 @@ observed part ended at, never from the term's own seed. What changes
 past the data is the score: it has zero conditional mean by construction,
 the model's own defining property, so at a row whose response is not
 observed the driving term is its expectation and the continuation is the
-DETERMINISTIC recursion
+deterministic recursion
 \deqn{f_{n+h} = \omega + \sum_i \alpha_i s_{n+h-i} +
   \sum_j \beta_j f_{n+h-j},}
 the loadings contributing only while \eqn{n+h-i} is still an observed

@@ -105,7 +105,7 @@ it.
 
 A hyperparameter is comparable across coordinates only where the coordinates
 share a scale. Without \code{standardize} a lasso penalizes a column measured in
-metres more than the same column measured in kilometres, and a reader of
+meters more than the same column measured in kilometers, and a reader of
 \eqn{\lambda} has no way to tell.
 
 \code{standardize = TRUE} divides each coefficient by the standard deviation of

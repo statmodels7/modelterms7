@@ -13,7 +13,7 @@ A single string.
 }
 \description{
 \code{"level1"}. The levels are ordered by construction, each the
-previous plus a positive gap, so the first one shifts EVERY regime and is
+previous plus a positive gap, so the first one shifts every regime and is
 the direction an intercept in the same equation also spans. The gaps are
 unaffected: what a constant cannot express is a difference between
 regimes.

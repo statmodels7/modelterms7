@@ -47,7 +47,7 @@ zero.}
 
 \item{gradient, hessian, deriv3, deriv4}{Optional functions
 \verb{function(theta, data)} returning the derivatives of \code{fn} in
-its own parameters, each a NAMED LIST of numeric vectors. Supply as many
+its own parameters, each a named list of numeric vectors. Supply as many
 as are worth writing out and leave the rest; see the section below.}
 
 \item{label}{A single non-empty string prefixed to the coefficient
@@ -140,7 +140,7 @@ the right place.
 The derivatives of \eqn{f} in its own parameters drive everything: the
 first is the design block, and a fitting layer reads the second and third
 where the block moves with the coefficients. They come from whichever of
-four routes is available, and the choice is made ONE ORDER AT A TIME:
+four routes is available, and the choice is made one order at a time:
 a function given here, then symbolic differentiation of the expression,
 then one stencil applied to the highest order that IS analytic.
 
@@ -173,7 +173,7 @@ derivative surfaces: the parameter names joined by \code{"_"}. Order two of
 
 The names are normalized here, so \code{r_a} and \code{a_r} are the same
 component and the order in which they are returned does not matter; what is
-checked is the SET. A name that is not a component of this term, a missing
+checked is the set. A name that is not a component of this term, a missing
 component or a repeated one is an error at \code{\link[=term_build]{term_build()}}. It is not a
 silent fall-through to the numerical route: an exact derivative quietly not
 used is worse than none.

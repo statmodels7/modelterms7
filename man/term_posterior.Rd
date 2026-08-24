@@ -32,7 +32,7 @@ likelihood mixed over states.
 }
 \details{
 \code{\link[=term_loglik]{term_loglik()}} returns the derivative of the mixed likelihood
-in the term's OWN parameters, which is the piece estimating those needs.
+in the term's own parameters, which is the piece estimating those needs.
 Estimating the coefficients needs something else, and for this term that
 something is not a second recursion carrying derivatives: it is one
 quantity, by Fisher's identity. Writing \eqn{\gamma_t(k)} for the probability
@@ -43,7 +43,7 @@ observation \eqn{t} under regime \eqn{k},
   = \sum_k \gamma_t(k)\,
     \frac{\partial \ell(y_t; \theta_t(k))}{\partial \eta_q},}
 
-for EVERY predictor the model carries, not only the one the regimes
+for every predictor the model carries, not only the one the regimes
 shift. A caller therefore differentiates its own likelihood \eqn{K} times
 vectorized and weights the results, and needs no callback per
 observation: the regimes shift a predictor that is known before the

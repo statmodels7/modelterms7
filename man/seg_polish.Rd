@@ -24,7 +24,7 @@ profile is then weighted least squares.}
 The term at the polished positions.
 }
 \description{
-Coordinate descent over the break-point positions on the EXACT profile:
+Coordinate descent over the break-point positions on the exact profile:
 one position at a time is swept over a grid with the others held, the
 least-squares fit at fixed positions being an ordinary linear model, and
 the sweeps repeat until no position moves. The term comes back relocated
@@ -37,7 +37,7 @@ iteration can capture two of them on one feature and press the third
 against its confinement limit, and neither a bootstrap excursion --
 whose perturbation is of order \eqn{1/\sqrt{n}}, nor a random
 relocation escapes it, the basin of the right configuration being
-narrow. A grid sweep of ONE position with the others held walks
+narrow. A grid sweep of one position with the others held walks
 straight to the missing feature, because the profile at fixed positions
 is exact and unimodal around it.
 

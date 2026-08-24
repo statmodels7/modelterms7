@@ -21,7 +21,7 @@ overridden it answers \code{FALSE}.
 A marginal criterion reads that block to estimate the covariance of the
 effects, so a family without one can be fitted at held hyperparameters and
 not at estimated ones. The owning class of a method is read through its
-signature and compared BY NAME, never with \code{identical()}, which is
+signature and compared by name, never with \code{identical()}, which is
 object identity and fails whenever a package's code is re-evaluated rather
 than loaded.
 }

@@ -2477,7 +2477,7 @@ S7::method(print, MarginalBreakTerm) <- function(x, ...) {
 #' declares, and the predictor each observation gets from them.
 #'
 #' @details
-#' The latent positions ARE the model here, integrated out of the likelihood
+#' The latent positions **are** the model here, integrated out of the likelihood
 #' and never estimated, so simulating from the model means
 #' drawing them, once per group, and then evaluating the term at what was
 #' drawn. Under the gaussian prior that is \eqn{N(m_k, \tau_k)}; under an

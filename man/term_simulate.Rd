@@ -24,7 +24,7 @@ drawn or \code{NULL}; and \code{latent}, whatever the term drew.
 }
 \description{
 The predictor a structural term produces when the response is being
-GENERATED rather than read, together with whatever latent quantity the
+generated rather than read, together with whatever latent quantity the
 term drew on the way.
 }
 \details{

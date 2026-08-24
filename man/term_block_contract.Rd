@@ -56,15 +56,15 @@ its break-point, so the quotient diverges as the step shrinks. Measured at
 instead. The truncated line \eqn{(x-\psi)_+} has derivative
 \eqn{-\mathbf{1}(x>\psi)} in the break-point, and the break-point column
 \eqn{-\gamma(x)\mathbf{1}(x>\psi)} has the same indicator as its derivative
-in the CHANGE and zero almost everywhere in the break-point, which is the
+in the change and zero almost everywhere in the break-point, which is the
 value taken.
 
-⚠️ \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}} keep the base method's zeros.
-Their position is READ OFF a product of the unknowns, \eqn{\psi = -g/\delta},
+\code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}} keep the base method's zeros.
+Their position is read off a product of the unknowns, \eqn{\psi = -g/\delta},
 so a column's derivative runs through that read-off instead of through a
 development's design, and the weight \eqn{W = 1/(2\lvert\tilde x-\psi\rvert)}
 they carry has an unbounded derivative in the break-point. Their block is a
-working LINEARIZATION with a frozen weight, which is
+working linearization with a frozen weight, which is
 the same fact that makes \code{\link[=term_converged]{term_converged()}} answer differently for
 them.
 }

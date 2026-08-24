@@ -71,7 +71,7 @@ parameters.
 \details{
 \code{\link[=term_posterior]{term_posterior()}} gives the gradient by Fisher's identity, and
 the matrix a caller can assemble from the same smoothed probabilities is
-the COMPLETE-DATA information, the ordinary one averaged over the states.
+the complete-data information, the ordinary one averaged over the states.
 That is the matrix an EM step inverts. It is not the observed information
 of the mixture, which is smaller by the information the unobserved states
 cost, and a standard error read off it is too small.

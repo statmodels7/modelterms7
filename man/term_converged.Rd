@@ -27,7 +27,7 @@ block is the Jacobian of the contribution, as it is for \code{\link[=nl]{nl()}} 
 derivative of the log-likelihood in the predictor, and its vanishing is
 the test.
 
-Where the block is a working LINEARIZATION with a frozen weight, as it is
+Where the block is a working linearization with a frozen weight, as it is
 for \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}}, there is no such gradient: the profile
 objective of a discontinuous term is a step function in the break-point.
 What the iteration drives to zero there is the movement of the break-point

@@ -21,15 +21,15 @@ Checks a caller-supplied effects distribution where the term is built and
 names what is wrong with it.
 }
 \details{
-What is rejected is a FREE location. It is confounded with the intercept of
+What is rejected is a free location. It is confounded with the intercept of
 the equation the term sits in, leaving a flat direction along which the fit
 has no answer.
 
-A location HELD at a value is identified whatever that value is, and it is
-not policed: it shrinks the effects toward that value, which is a modelling
+A location held at a value is identified whatever that value is, and it is
+not policed: it shrinks the effects toward that value, which is a modeling
 statement. Nor could the value be policed in general. Where the prior is a
 transformation of another family, the parameter interpreted as its mean is
-the mean on the ORIGINAL scale, and holding the mean of a gamma at one is
+the mean on the original scale, and holding the mean of a gamma at one is
 what centers its logarithm.
 }
 \keyword{internal}

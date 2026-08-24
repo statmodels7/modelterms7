@@ -176,7 +176,7 @@ NlTerm <- S7::new_class(
 #' The derivatives of \eqn{f} in its own parameters drive everything: the
 #' first is the design block, and a fitting layer reads the second and third
 #' where the block moves with the coefficients. They come from whichever of
-#' four routes is available, and the choice is made ONE ORDER AT A TIME:
+#' four routes is available, and the choice is made one order at a time:
 #' a function given here, then symbolic differentiation of the expression,
 #' then one stencil applied to the highest order that IS analytic.
 #'
@@ -209,7 +209,7 @@ NlTerm <- S7::new_class(
 #'
 #' The names are normalized here, so `r_a` and `a_r` are the same
 #' component and the order in which they are returned does not matter; what is
-#' checked is the SET. A name that is not a component of this term, a missing
+#' checked is the set. A name that is not a component of this term, a missing
 #' component or a repeated one is an error at [term_build()]. It is not a
 #' silent fall-through to the numerical route: an exact derivative quietly not
 #' used is worse than none.
@@ -240,7 +240,7 @@ NlTerm <- S7::new_class(
 #'   zero.
 #' @param gradient,hessian,deriv3,deriv4 Optional functions
 #'   `function(theta, data)` returning the derivatives of `fn` in
-#'   its own parameters, each a NAMED LIST of numeric vectors. Supply as many
+#'   its own parameters, each a named list of numeric vectors. Supply as many
 #'   as are worth writing out and leave the rest; see the section below.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names.
@@ -705,7 +705,7 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
 #' derivative surfaces.
 #'
 #' @details
-#' The route is chosen per ORDER, in this priority: a function supplied to
+#' The route is chosen per order, in this priority: a function supplied to
 #' [nl()] where there is one, then the symbolic route where the expression
 #' can be differentiated, and otherwise one stencil applied to the highest
 #' order that is analytic, a supplied one included. That is why writing out a
@@ -716,7 +716,7 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
 #' derivative built from four nested first differences is noise; the same
 #' discipline holds everywhere in the toolkit.
 #'
-#' The components are in the term's OWN parameters, not in its coefficients.
+#' The components are in the term's own parameters, not in its coefficients.
 #' The chain rule onto the coefficients, the links and a subformula's design,
 #' belongs to the term, which is the only thing that knows them.
 #'
@@ -1262,15 +1262,15 @@ S7::method(term_refresh, model_term) <- function(term, coef, ...) term
 #' instead. The truncated line \eqn{(x-\psi)_+} has derivative
 #' \eqn{-\mathbf{1}(x>\psi)} in the break-point, and the break-point column
 #' \eqn{-\gamma(x)\mathbf{1}(x>\psi)} has the same indicator as its derivative
-#' in the CHANGE and zero almost everywhere in the break-point, which is the
+#' in the change and zero almost everywhere in the break-point, which is the
 #' value taken.
 #'
-#' ⚠️ [jump()] and [jseg()] keep the base method's zeros.
-#' Their position is READ OFF a product of the unknowns, \eqn{\psi = -g/\delta},
+#' [jump()] and [jseg()] keep the base method's zeros.
+#' Their position is read off a product of the unknowns, \eqn{\psi = -g/\delta},
 #' so a column's derivative runs through that read-off instead of through a
 #' development's design, and the weight \eqn{W = 1/(2\lvert\tilde x-\psi\rvert)}
 #' they carry has an unbounded derivative in the break-point. Their block is a
-#' working LINEARIZATION with a frozen weight, which is
+#' working linearization with a frozen weight, which is
 #' the same fact that makes [term_converged()] answer differently for
 #' them.
 #'
@@ -1309,11 +1309,11 @@ S7::method(term_block_contract, model_term) <- function(term, coef = NULL, A,
 #' the caller supplies.
 #'
 #' @details
-#' It is the ADJOINT of [term_block_contract()] and neither computes
+#' It is the adjoint of [term_block_contract()] and neither computes
 #' the other. That one contracts over the observations and the columns and
 #' answers per coefficient, as the gradient of a marginal criterion
 #' needs; this one contracts over the coefficients and answers per entry of
-#' the block, as its HESSIAN needs, \eqn{\partial K/\partial\beta} being
+#' the block, as its Hessian needs, \eqn{\partial K/\partial\beta} being
 #' required there in the direction the mode moves instead of traced.
 #'
 #' Both are \eqn{O(nm)} and read the same closed form, so this needs no
@@ -1451,7 +1451,7 @@ S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
 #' and \eqn{m} columns of the block, and only its contraction in the two
 #' directions the penalized mode moves is ever read.
 #'
-#' The quantity enters the HESSIAN of a marginal criterion and nothing else.
+#' The quantity enters the Hessian of a marginal criterion and nothing else.
 #' It is absent from the criterion's value, from its gradient and from the
 #' fit, so the coefficients, the log-likelihood, the effective degrees of
 #' freedom and the coefficients' own variance matrix do not depend on it; what
@@ -1493,7 +1493,7 @@ S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
 #' [nl_fderiv()], served by the same four-way machinery as the lower
 #' orders, and \eqn{h'''} is [linkfunctions7::d3linkinv()], exact for
 #' every shipped link and numerical for a user-defined one. The cost is
-#' \eqn{O(nP^3)} in the term's OWN parameters, of which there are two to four
+#' \eqn{O(nP^3)} in the term's own parameters, of which there are two to four
 #' in practice, and the call is made once per pair of hyperparameters rather
 #' than once per observation.
 #'
@@ -1515,7 +1515,7 @@ S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
 #' Two properties of the smoothed branch are worth stating because they are
 #' exact. Where a break-point sits against its
 #' confinement limit the whole contribution is zero, every addend carrying a
-#' direction in the break-point, which the FIRST derivative does not, the
+#' direction in the break-point, which the first derivative does not, the
 #' position column moving with the change whatever the position does. And
 #' under [penalties7::smooth_quintic()], which is exact outside
 #' \eqn{[-h, h]}, the answer is zero on every observation further than the
@@ -1702,7 +1702,7 @@ S7::method(term_components, NlTerm) <- function(term, ...) {
 #' derivative of the log-likelihood in the predictor, and its vanishing is
 #' the test.
 #'
-#' Where the block is a working LINEARIZATION with a frozen weight, as it is
+#' Where the block is a working linearization with a frozen weight, as it is
 #' for [jump()] and [jseg()], there is no such gradient: the profile
 #' objective of a discontinuous term is a step function in the break-point.
 #' What the iteration drives to zero there is the movement of the break-point
@@ -1893,10 +1893,10 @@ S7::method(print, NlTerm) <- function(x, ...) {
 #'
 #' The search is a deterministic grid on each free parameter's own chart,
 #' polished by a derivative-free step. Two things make it work. The grid is
-#' DETERMINISTIC, so a start does not depend on the caller's random seed and
+#' deterministic, so a start does not depend on the caller's random seed and
 #' the same data give the same fit; a Latin hypercube of the same size, tried
 #' first, put the logistic's scale anywhere between 4.9e-06 and 2.07 across
-#' twenty seeds. And the parameters the function is jointly AFFINE in are
+#' twenty seeds. And the parameters the function is jointly affine in are
 #' separated out and solved by least squares at each point of the grid rather
 #' than searched over, which is read off [stats::D()] as the fixed
 #' point of "the derivative in \eqn{p} names no member of the set". On a

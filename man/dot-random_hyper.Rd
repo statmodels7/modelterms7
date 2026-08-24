@@ -22,7 +22,7 @@ name against the penalty that carries it.
 }
 \details{
 A name is qualified by the within-group column where there is one penalty
-per column. An unqualified one is an ERROR that lists what there is, not a
+per column. An unqualified one is an error that lists what there is, not a
 value recycled over every column: a caller who wants the same value
 everywhere writes it into the distribution, where it stops being a
 hyperparameter at all, and silent recycling is the trap this file's

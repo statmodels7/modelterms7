@@ -18,7 +18,7 @@ swallow in silence.
 }
 \details{
 \code{precision} was a second spelling of a multivariate Gaussian whose
-matrix parameter is a precision, and the first spelling did not say WHICH
+matrix parameter is a precision, and the first spelling did not say which
 matrix the structure was. \code{kinks} was derived from the effects'
 distribution by \pkg{penalties7} all along, and the default here overrode
 that derivation, so a Laplace prior declared none and a fitting layer sent

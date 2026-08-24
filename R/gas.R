@@ -235,7 +235,7 @@ GasTerm <- S7::new_class(
 #'   `alpha1 ~ s(x)`; see the section above.
 #' @param by An optional grouping variable, evaluated in the data; each
 #'   group is filtered independently, from its own starting level. A
-#'   FORMULA here is the shorthand giving the same subformula to every
+#'   formula here is the shorthand giving the same subformula to every
 #'   parameter, and then no grouping is implied.
 #' @param time An optional ordering variable, evaluated in the data.
 #' @param links An optional named list of \pkg{linkfunctions7} links over
@@ -511,7 +511,7 @@ S7::method(term_level_design, GasTerm) <- function(term, ...) {
 #' @title What a Fitted Score-Driven Term Reports
 #' @name term_readable.GasTerm
 #' @description
-#' The level, the score loadings and the AUTOREGRESSIVE COEFFICIENTS of the
+#' The level, the score loadings and the autoregressive coefficients of the
 #' literature, `omega`, `alpha1` and `beta1`, with the
 #' Jacobian from the term's own parameters.
 #' @details
@@ -633,7 +633,7 @@ S7::method(term_links, GasTerm) <- function(term, ...) {
 #' Zero is the natural point of every other chart: a level of zero, no
 #' persistence, no deviation. The term therefore starts as near the model
 #' without it as its charts allow. The loadings are the exception because
-#' zero on the log scale is a loading of ONE, a response strong enough to
+#' zero on the log scale is a loading of one, a response strong enough to
 #' destabilize the recursion at ordinary curvatures; \eqn{0.1} is a weak
 #' response, and it is applied on the parameter scale so the start means
 #' the same thing whatever chart a loading rides.
@@ -811,7 +811,7 @@ gas_levinson2 <- function(pacf) {
 #' The exact gradient of a marginal criterion over a penalty on this term's
 #' own parameters needs the third derivative of the predictor, and the
 #' persistence reaches the predictor through this map. It is needed only
-#' CONTRACTED: the criterion asks for \eqn{\mathrm{tr}(M\,\partial K/\partial
+#' contracted: the criterion asks for \eqn{\mathrm{tr}(M\,\partial K/\partial
 #' u[v])}, a derivative along the single direction the penalized mode moves
 #' in, so what is propagated is a matrix per coefficient and never a
 #' three-index array.
@@ -1030,7 +1030,7 @@ S7::method(term_build, GasTerm) <- function(term, data, ...) {
 #'   the curvature through their scalar entry points instead of the R
 #'   callbacks, bit-identically; where they do not, the context is inert
 #'   and the callbacks run as before.
-#' @param threads How many threads the recursion may use, over GROUPS and
+#' @param threads How many threads the recursion may use, over groups and
 #'   only on the fast route: a group's filter is independent of the others
 #'   and its writes land on its own rows, so no reduction is split and the
 #'   result does not depend on the count, bit for bit.
@@ -1327,7 +1327,7 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' propagated through the recursion beside the state.
 #' @details
 #' With subformulas the general per-observation route runs instead, and
-#' the second derivative is accumulated on each group's ACTIVE SET rather
+#' the second derivative is accumulated on each group's active set rather
 #' than as a square over all the unknowns: a development's coordinate
 #' reaches only the groups where its column is not identically zero, so
 #' with grouping indicators the active set has the same size whether the
@@ -1335,7 +1335,7 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' 0.39 s at 124 unknowns over 1600 rows and would have reached about
 #' twelve minutes at five hundred groups.
 #'
-#' `blocks` is called with the row of the jacobian RESTRICTED to the
+#' `blocks` is called with the row of the jacobian restricted to the
 #' active set and with that set, and returns its pieces in the same
 #' coordinates. A callback of the earlier three-argument shape is still
 #' accepted and given the full row, its result being subset here; it costs
@@ -1344,7 +1344,7 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' @param eta The static part of the predictor.
 #' @param y The response, unused directly.
 #' @param score,curvature The callbacks of [term_filter()].
-#' @param psi The parameters on the PARAMETER scale, named as
+#' @param psi The parameters on the parameter scale, named as
 #'   [term_params()].
 #' @param g The weights the second derivative is contracted against.
 #' @param seed The derivative of the static predictor in the unknowns.
@@ -1352,7 +1352,7 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #'   [term_curvature()].
 #' @param ... Unused.
 #' @param score_values,curvature_values The score and curvature of the
-#'   model's log-density evaluated at the CURRENT predictors, one value per
+#'   model's log-density evaluated at the current predictors, one value per
 #'   observation, on the parameter scale the callbacks read. Supplying both,
 #'   together with `blocks_data`, routes the second-order recursion of
 #'   the subformula route through the compiled kernel; either `NULL`
@@ -1403,7 +1403,7 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
 #' @param eta The static part of the predictor.
 #' @param y The response, unused directly.
 #' @param score,curvature The callbacks of [term_filter()].
-#' @param psi The parameters on the PARAMETER scale.
+#' @param psi The parameters on the parameter scale.
 #' @param g The weights the third derivative is contracted against.
 #' @param seed The derivative of the static predictor in the unknowns.
 #' @param blocks The model's derivative pieces; see [term_third()].
@@ -1945,7 +1945,7 @@ S7::method(term_static_deriv, GasTerm) <- function(term, curv, X, psi, ...) {
 #' past the data is the score: it has zero conditional mean by construction,
 #' the model's own defining property, so at a row whose response is not
 #' observed the driving term is its expectation and the continuation is the
-#' DETERMINISTIC recursion
+#' deterministic recursion
 #' \deqn{f_{n+h} = \omega + \sum_i \alpha_i s_{n+h-i} +
 #'   \sum_j \beta_j f_{n+h-j},}
 #' the loadings contributing only while \eqn{n+h-i} is still an observed
@@ -2073,7 +2073,7 @@ S7::method(term_continue, GasTerm) <- function(term, psi, f_past, s_past,
 #' Runs the recursion forward drawing the response at each step.
 #'
 #' @details
-#' NO SEPARATE RECURSION IS WRITTEN. The filter's own recursion is the
+#' No separate recursion is written. The filter's own recursion is the
 #' generative one. The level at one time is a function of the scores before
 #' it, and a score is a function of a response and a predictor, so
 #' the only difference is where the response comes from.
