@@ -7,74 +7,119 @@
 regime(k = 2, by = NULL, time = NULL, label = "regime")
 }
 \arguments{
-\item{k}{The number of regimes, at least 2.}
+\item{k}{The number of regimes, a single whole number of at least 2.
+Anything else throws.}
 
-\item{by}{An optional grouping variable; each group runs its own
-recursion from the stationary distribution.}
+\item{by}{An optional grouping variable, given as a bare expression. Each
+group runs its own recursion from the stationary distribution, so a panel
+of independent series is \code{by = id}. \code{NULL}, the default, is one group.}
 
-\item{time}{An optional ordering variable.}
+\item{time}{An optional ordering variable, a bare expression. \code{NULL}, the
+default, takes the rows in the order they are given. Both \code{by} and \code{time}
+must evaluate to one non-missing value per row at build time.}
 
-\item{label}{A single non-empty string naming the term.}
+\item{label}{A single non-empty character string naming the term,
+\code{"regime"} by default.}
 }
 \value{
-An object of class \code{\link[=RegimeTerm]{RegimeTerm()}} (a specification;
-see \code{\link[=term_build]{term_build()}}).
+An unbuilt \code{\link[=RegimeTerm]{RegimeTerm()}}: a specification, whose \code{blueprint} is
+empty until \code{\link[=term_build]{term_build()}} resolves the ordering.
 }
 \description{
 A latent Markov chain of \eqn{K} regimes, each shifting the linear
-predictor by a level of its own (\cite{hamilton1989}). The likelihood
-is the mixture over the unobserved state path, evaluated by the forward
-recursion, and it is built from whatever density the model carries: the
-term supplies the chain and the levels, the distribution supplies
-everything else.
+predictor by a level of its own (Hamilton, 1989). The likelihood is the
+mixture over the unobserved state path, evaluated by the forward recursion,
+and it is built from whatever density the model carries: the term supplies
+the chain and the levels, the distribution supplies everything else.
 }
-\details{
+\section{The forward recursion}{
 Writing \eqn{f_j(t)} for the density of observation \eqn{t} at the
-predictor shifted by the level of regime \eqn{j}, the forward recursion
-is
+predictor shifted by the level of regime \eqn{j},
+
 \deqn{\tilde\alpha_t(j) = f_j(t) \sum_i \alpha_{t-1}(i) P_{ij},
   \qquad c_t = \sum_j \tilde\alpha_t(j), \qquad
   \alpha_t = \tilde\alpha_t / c_t,}
-started at the chain's stationary distribution, and the log-likelihood
-is \eqn{\sum_t \log c_t}. Normalizing at every step is what keeps the
-recursion representable: the unnormalized quantities are products of
-\eqn{t} densities, so they decay geometrically and reach zero in
-double precision on a series of a few hundred observations. The
-contributions \eqn{\log c_t} are what \code{\link[=term_loglik]{term_loglik()}}
-returns, one per observation, together with their exact derivatives,
-propagated through the recursion beside the state.
 
-This is the second dynamic model of the package and it is the
-complement of the first: \code{\link[=gas]{gas()}} is driven by the score of
-the density and moves continuously, while a regime chain moves in
-jumps between a finite number of states. Both are built from the
-density rather than from an error structure, so both apply to any
-family the model carries.
+started at the chain's stationary distribution, with the log-likelihood
+\eqn{\sum_t \log c_t}. Those contributions are what \code{\link[=term_loglik]{term_loglik()}}
+returns, one per observation, with their exact derivatives propagated
+beside the state.
 
-\subsection{The parameters and their charts}{
-The levels are \strong{ordered by construction}: the first is free and
-each of the others is the previous one plus a positive gap, carried on
-a log link. Without an ordering the regimes are exchangeable and the
-likelihood has \eqn{K!} identical maxima, which is not a hard problem
-to fit but is one whose answer cannot be reported. The transition
-matrix is \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}}, whose free
-values are the additive log-ratios of each row, so every row is a
-probability vector by construction.
+Normalizing at every step is what keeps the recursion representable. The
+unnormalized quantities are products of \eqn{t} densities, so they decay
+geometrically and reach zero in double precision on a series of a few
+hundred observations.
+}
+
+\section{It is the complement of the other dynamic term}{
+\code{\link[=gas]{gas()}} is driven by the score of the density and moves continuously; a
+regime chain moves in jumps between a finite number of states. Both are
+built from the density itself, so both apply to any family the model
+carries, and both propagate their exact derivative beside the state.
+}
+
+\section{The parameters and their charts}{
+
+The levels are \strong{ordered by construction}: \code{level1} is free on the
+identity, and each of the others is the previous one plus a positive gap,
+\code{gap2} ... \code{gapK}, each carried on a log link. Without an ordering the
+regimes are exchangeable and the likelihood has \eqn{K!} identical maxima,
+which is not a hard problem to fit but is one whose answer cannot be
+reported.
+
+The transition matrix is \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}}, whose free
+values are the additive log-ratios of each row, named \code{alr1.1}, \code{alr2.1}
+and so on, so every row is a probability vector at any coordinate. A chain
+of \eqn{K} regimes therefore has \eqn{K(K-1)} of them, and
+\code{\link[=term_params]{term_params()}} returns \eqn{K + K(K-1)} names in all: one level, \eqn{K-1}
+gaps and the rest.
 
 The initial distribution is the chain's stationary one, which costs no
-parameters and whose derivative is obtained from the linear system it
-solves.
+parameters; its derivative comes from the linear system it solves.
+
+\code{\link[=term_level_param]{term_level_param()}} answers \code{"level1"}, since a constant added to it
+shifts every regime and is the direction an intercept in the same equation
+also spans. The gaps are unaffected: what a constant cannot express is a
+difference between regimes.
 }
-}
+
 \examples{
+# One level, one gap, and two log-ratios of a two-state chain.
 term_params(regime(2))
+vapply(term_links(regime(2)), function(l) l@link_name, character(1))
+
+# K + K(K-1) parameters in all.
+c(k3 = length(term_params(regime(3))), expected = 3 + 3 * 2)
+
+# The levels are ordered, so level1 is the one an intercept collides with.
+term_level_param(regime(2))
+
+# Fitted through a model, the term is what carries the state; on its own
+# it computes the mixed likelihood from a density the caller supplies.
+set.seed(1)
+dd <- data.frame(t = 1:40, y = c(rnorm(20), rnorm(20, 3)))
+b <- term_build(regime(2, time = t), dd)
+out <- term_loglik(b, rep(0, 40), dd$y,
+                   logdens = function(e, i) dnorm(dd$y[i], e, log = TRUE),
+                   score = function(e, i) dd$y[i] - e,
+                   psi = list(level1 = 0, gap2 = 3, alr1.1 = 2, alr2.1 = -2))
+sum(out$loglik)
+
+# And the smoothed probability of the second regime finds the change.
+pp <- term_posterior(b, rep(0, 40), dd$y,
+                     logdens = function(e, i) dnorm(dd$y[i], e, log = TRUE),
+                     psi = list(level1 = 0, gap2 = 3, alr1.1 = 2,
+                                alr2.1 = -2))
+round(pp[c(1, 19, 20, 21, 22, 40), 2], 3)
 
 }
 \references{
 Hamilton, J. D. (1989). A new approach to the economic analysis of
-nonstationary time series and the business cycle. \emph{Econometrica},
-57(2), 357--384.
+nonstationary time series and the business cycle. \emph{Econometrica}, 57(2),
+357--384.
 }
 \seealso{
-\code{\link[=gas]{gas()}}
+\code{\link[=gas]{gas()}} for the continuous dynamic term, \code{\link[=term_loglik]{term_loglik()}} for the
+likelihood it computes, \code{\link[=term_posterior]{term_posterior()}} for the smoothed state
+probabilities, \code{\link[=term_hessian]{term_hessian()}} for the observed information.
 }

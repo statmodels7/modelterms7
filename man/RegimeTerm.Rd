@@ -44,27 +44,64 @@ more than one carrying a kink: \code{"grid"} for every combination of them,
 \code{"cyclic"} for one at a time, or \code{character(0)} for the default. See
 \code{\link[=term_search]{term_search()}}.}
 
-\item{k}{The number of regimes.}
+\item{k}{The number of regimes, an integer of at least 2.}
 
-\item{by}{An optional grouping expression, run independently.}
+\item{by}{An optional grouping expression; each group runs its own
+recursion. \code{NULL} for one group.}
 
-\item{time}{An optional ordering expression.}
+\item{time}{An optional ordering expression. \code{NULL} for row order.}
 
-\item{chain}{The \pkg{parameters7} transition matrix.}
+\item{chain}{A \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}} of side \code{k}.}
 
-\item{blueprint}{The resolved ordering and grouping.}
+\item{blueprint}{A named list of the resolved ordering and grouping, empty
+until \code{\link[=term_build]{term_build()}} fills it.}
 }
 \value{
-An object of class \code{RegimeTerm}.
+An S7 object of class \code{RegimeTerm}, inheriting from
+\code{\link[=structural_term]{structural_term()}} and \code{\link[=model_term]{model_term()}}, with the five properties above
+beside \code{\link[=model_term]{model_term()}}'s six.
 }
 \description{
-A subclass of \code{\link[=structural_term]{structural_term()}} for a latent Markov chain
-of regimes, each shifting the linear predictor by a level of its own.
-Constructed by \code{\link[=regime]{regime()}}.
+The subclass of \code{\link[=structural_term]{structural_term()}} holding a latent Markov chain of
+regimes, each shifting the linear predictor by a level of its own.
+\code{\link[=regime]{regime()}} constructs it. Its contribution is a likelihood mixed over the
+unobserved state path, so it implements \code{\link[=term_loglik]{term_loglik()}} and has no
+predictor to report.
 }
+\section{The five properties of its own}{
+\code{k} is the number of regimes. \code{by} and \code{time} are the grouping and ordering
+expressions as written, kept unevaluated; \code{NULL} means one group in row
+order.
+
+\code{chain} is the \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}} object, whose free values
+are the additive log-ratios of each row, so every row is a probability
+vector at any coordinate. Its \code{free_names} are the tail of
+\code{\link[=term_params]{term_params()}}.
+
+\code{blueprint} is filled by \code{\link[=term_build]{term_build()}} and holds the row order within each
+group and the observation count. The class overrides the branch's
+\code{blueprint} property because a structural term carries no design block to
+hang one on.
+}
+
 \examples{
-S7::S7_inherits(regime(2), RegimeTerm)
+set.seed(1)
+dd <- data.frame(t = 1:40, y = c(rnorm(20), rnorm(20, 3)))
+
+tm <- regime(2, time = t)
+S7::S7_inherits(tm, RegimeTerm)
+c(k = tm@k, chain = class(tm@chain)[1])
+
+# The build resolves the order and fills the blueprint.
+b <- term_build(tm, dd)
+names(b@blueprint)
+
+# It is on the structural branch, so there is no block.
+try(term_matrix(b))
+
 }
 \seealso{
-\code{\link[=regime]{regime()}}
+\code{\link[=regime]{regime()}}, the constructor; \code{\link[=term_loglik]{term_loglik()}} for what it computes;
+\code{\link[=term_posterior]{term_posterior()}} for the smoothed states; \code{\link[=gas]{gas()}} for the other
+dynamic term.
 }

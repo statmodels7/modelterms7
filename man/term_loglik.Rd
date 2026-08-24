@@ -2,6 +2,7 @@
 % Please edit documentation in R/regime.R
 \name{term_loglik}
 \alias{term_loglik}
+\alias{term_loglik.structural_term}
 \title{Log-Likelihood Contributions of a Structural Term}
 \usage{
 term_loglik(term, eta, y, logdens, score, psi, ...)
@@ -9,35 +10,38 @@ term_loglik(term, eta, y, logdens, score, psi, ...)
 \arguments{
 \item{term}{A built structural term.}
 
-\item{eta}{The static part of the linear predictor.}
+\item{eta}{The static part of the linear predictor, one value per
+observation.}
 
-\item{y}{The response.}
+\item{y}{The response. It reaches the recursion through the callbacks; the
+argument is passed for methods that need it directly.}
 
-\item{logdens}{A function of a predictor value and a row index,
-returning the log-density of that observation at that predictor.}
+\item{logdens}{A function \verb{(e, i)} returning the log-density of
+observation \code{i} at predictor \code{e}.}
 
-\item{score}{A function of the same two arguments returning the
-derivative of that log-density with respect to the predictor.}
+\item{score}{A function \verb{(e, i)} returning the derivative of that
+log-density with respect to the predictor.}
 
-\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
+\item{psi}{The term's parameters on the \strong{parameter} scale, named as
+\code{\link[=term_params]{term_params()}}.}
 
 \item{...}{Passed to methods.}
 }
 \value{
-A list with \code{loglik}, one contribution per observation
-summing to the term's log-likelihood, and \code{jacobian}, an
-\code{n} by \code{length(psi)} matrix of its derivatives.
+A list of two: \code{loglik}, a numeric vector of \code{n} contributions
+summing to the term's log-likelihood, and \code{jacobian}, an \code{n} by
+\code{length(psi)} matrix of their derivatives in the term's parameters,
+exact and propagated through the recursion.
 }
 \description{
 The per-observation log-likelihood contributions a structural term
-produces, with their derivatives in the term's own parameters. This is
-the second shape the structural branch takes, beside
-\code{\link[=term_filter]{term_filter()}}: a term that shifts the predictor implements
-the filter, and one that rewrites the likelihood itself -- a mixture
-over latent states, say -- implements this, because its contribution is
-not a predictor and cannot be reported as one.
+produces, with their derivatives in the term's own parameters. This is the
+second shape the structural branch takes, beside \code{\link[=term_filter]{term_filter()}}: a term
+that shifts the predictor implements the filter, and one that rewrites the
+likelihood itself implements this, its contribution being no predictor at
+all.
 }
-\details{
+\section{What the contributions are}{
 The contribution of observation \eqn{t} is the logarithm of its one-step
 predictive density given everything before it,
 
@@ -45,26 +49,71 @@ predictive density given everything before it,
   \qquad \sum_{t=1}^{n} \ell_t(\psi)
     = \log f(y_1, \dots, y_n; \psi),}
 
-so the vector returned sums to the term's log-likelihood by the chain
-rule of probability whatever the dependence between observations. For
-\code{\link[=regime]{regime()}} it is the normalizing constant of the forward
-recursion, \eqn{\ell_t = \log \sum_{k} \pi_{t \mid t-1, k}
-f(y_t \mid S_t = k)}, and the Jacobian
-\eqn{\partial \ell_t / \partial \psi_j} is propagated beside the
-filtered distribution rather than differenced.
+so the vector returned sums to the term's log-likelihood by the chain rule
+of probability, whatever the dependence between observations.
+
+For \code{\link[=regime]{regime()}} it is the normalizing constant of the forward recursion,
+\eqn{\ell_t = \log \sum_{k} \pi_{t \mid t-1, k} f(y_t \mid S_t = k)}, and
+the Jacobian \eqn{\partial \ell_t / \partial \psi_j} is propagated beside
+the filtered distribution rather than differenced.
 }
+
+\section{How the model reaches it}{
+The term knows the chain and the levels and nothing about the family. The
+two callbacks are how the model's own density enters: \code{logdens} returns the
+log-density of one observation at a given predictor and \code{score} its
+derivative in that predictor. Both are called with the predictor shifted by
+each regime's level, so a term of \eqn{K} regimes evaluates them \eqn{K}
+times per observation.
+
+Unlike \code{\link[=term_filter]{term_filter()}}'s callbacks these do \strong{not} depend on the state the
+recursion has reached: a regime shifts a predictor known in advance. That
+is why the density and the score of every observation under every regime
+can be computed once, vectorized, before the recursion starts.
+
+The method on \code{\link[=structural_term]{structural_term()}} throws, naming the class: a term of the
+filter shape implements \code{\link[=term_filter]{term_filter()}} instead, and a fitting layer tells
+the two apart by which one answers.
+}
+
 \examples{
 set.seed(1)
 dd <- data.frame(t = 1:40, y = c(rnorm(20), rnorm(20, 3)))
 term <- term_build(regime(2, time = t), dd)
+psi <- list(level1 = 0, gap2 = 3, alr1.1 = 2, alr2.1 = -2)
+
 out <- term_loglik(term, rep(0, 40), dd$y,
                    logdens = function(e, i) dnorm(dd$y[i], e, log = TRUE),
                    score = function(e, i) dd$y[i] - e,
-                   psi = list(level1 = 0, gap2 = 3,
-                              alr1.1 = 2, alr2.1 = -2))
+                   psi = psi)
 sum(out$loglik)
+dim(out$jacobian)
+
+# The forward recursion is the sum over every state path. On eight
+# observations that sum can be taken in full, and it agrees exactly.
+d2 <- data.frame(t = 1:8, y = c(rnorm(4), rnorm(4, 3)))
+t2 <- term_build(regime(2, time = t), d2)
+fwd <- sum(term_loglik(t2, rep(0, 8), d2$y,
+                       logdens = function(e, i) dnorm(d2$y[i], e, log = TRUE),
+                       score = function(e, i) d2$y[i] - e,
+                       psi = psi)$loglik)
+
+P <- as.matrix(parameters7::param_value(
+  parameters7::transition_matrix(2), c(alr1.1 = 2, alr2.1 = -2)))
+p0 <- Re(eigen(t(P))$vectors[, 1]); p0 <- p0 / sum(p0)
+lev <- c(0, 3)                       # psi is on the parameter scale
+paths <- as.matrix(expand.grid(rep(list(1:2), 8)))
+tot <- sum(apply(paths, 1, function(s) {
+  pr <- p0[s[1]]
+  for (j in 2:8) pr <- pr * P[s[j - 1], s[j]]
+  pr * prod(dnorm(d2$y, lev[s]))
+}))
+c(forward = fwd, all_256_paths = log(tot))
 
 }
 \seealso{
-\code{\link[=regime]{regime()}}, \code{\link[=term_filter]{term_filter()}}
+\code{\link[=regime]{regime()}} and the marginal break-point terms for the two
+implementations, \code{\link[=term_filter]{term_filter()}} for the other structural shape,
+\code{\link[=term_posterior]{term_posterior()}} for the smoothed states, \code{\link[=term_hessian]{term_hessian()}} for the
+observed information.
 }
