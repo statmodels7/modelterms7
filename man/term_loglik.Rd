@@ -55,7 +55,7 @@ of probability, whatever the dependence between observations.
 For \code{\link[=regime]{regime()}} it is the normalizing constant of the forward recursion,
 \eqn{\ell_t = \log \sum_{k} \pi_{t \mid t-1, k} f(y_t \mid S_t = k)}, and
 the Jacobian \eqn{\partial \ell_t / \partial \psi_j} is propagated beside
-the filtered distribution rather than differenced.
+the filtered distribution, never differenced.
 }
 
 \section{How the model reaches it}{

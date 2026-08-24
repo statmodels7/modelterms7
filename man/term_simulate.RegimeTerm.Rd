@@ -23,16 +23,16 @@ A path of the latent chain, and the predictor each observation gets from
 the level of the state it lands in.
 }
 \details{
-The chain is started from its STATIONARY distribution rather than from
-the first state or from a uniform draw: the model's likelihood is written
-with that initial law, so any other start would simulate a different
-model from the one a fit reads back. The transition matrix and the
+The chain is started from its STATIONARY distribution. The model's
+likelihood is written with that initial law, so starting from a fixed
+first state or from a uniform draw would simulate a different model from
+the one a fit reads back. The transition matrix and the
 stationary law come from the term's own
 \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}}, so nothing about the chart
 is restated here.
 
-The response is not drawn -- the levels do not read it -- so the caller
-draws at the returned predictor, and \code{y} is \code{NULL}.
+The response is not drawn, the levels not reading it, so \code{y} comes back
+\code{NULL} and the caller draws at the returned predictor.
 }
 \seealso{
 \code{\link[=term_simulate]{term_simulate()}}, \code{\link[=regime]{regime()}}

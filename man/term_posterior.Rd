@@ -2,6 +2,7 @@
 % Please edit documentation in R/regime.R
 \name{term_posterior}
 \alias{term_posterior}
+\alias{term_posterior.structural_term}
 \title{The Smoothed State Probabilities of a Latent Markov Term}
 \usage{
 term_posterior(term, eta, y, logdens, psi, ...)
@@ -21,8 +22,8 @@ observation index, as \code{\link[=term_loglik]{term_loglik()}} takes it.}
 \item{...}{Passed to methods.}
 }
 \value{
-A numeric matrix with one row per observation and one column per
-regime, whose rows sum to one.
+A numeric matrix of \code{n} rows and \eqn{K} columns, every row
+summing to one, giving \eqn{P(S_t = k \mid y_1, \dots, y_n)}.
 }
 \description{
 The probability of each regime at each observation given the whole
@@ -31,10 +32,10 @@ likelihood mixed over states.
 }
 \details{
 \code{\link[=term_loglik]{term_loglik()}} returns the derivative of the mixed likelihood
-in the term's OWN parameters, which is what estimating those needs. It is
-not what estimating the coefficients needs, and for this term the missing
-piece is not a second recursion carrying derivatives: it is one quantity,
-by Fisher's identity. Writing \eqn{\gamma_t(k)} for the probability
+in the term's OWN parameters, which is what estimating those needs.
+Estimating the coefficients needs something else, and for this term that
+something is not a second recursion carrying derivatives: it is one
+quantity, by Fisher's identity. Writing \eqn{\gamma_t(k)} for the probability
 returned here and \eqn{\theta_t(k)} for the parameters the model has at
 observation \eqn{t} under regime \eqn{k},
 
@@ -58,13 +59,21 @@ zero in double precision within a few hundred observations.
 set.seed(1)
 dd <- data.frame(t = 1:40, y = c(rnorm(20), rnorm(20, 3)))
 term <- term_build(regime(2, time = t), dd)
+psi <- list(level1 = 0, gap2 = 3, alr1.1 = 2, alr2.1 = -2)
 g <- term_posterior(term, rep(0, 40), dd$y,
                     logdens = function(e, i) dnorm(dd$y[i], e, log = TRUE),
-                    psi = list(level1 = 0, gap2 = 3,
-                               alr1.1 = 2, alr2.1 = -2))
-round(head(g, 3), 4)
+                    psi = psi)
+
+# Every row is a distribution over the regimes.
+dim(g)
+range(rowSums(g))
+
+# The data switch level at observation 20, and the smoothed
+# probability of the second regime finds it.
+round(g[c(1, 19, 20, 21, 22, 40), 2], 3)
 
 }
 \seealso{
-\code{\link[=term_loglik]{term_loglik()}}
+\code{\link[=term_loglik]{term_loglik()}} for the likelihood the same recursion computes,
+\code{\link[=term_hessian]{term_hessian()}} for the observed information, \code{\link[=regime]{regime()}} for the model.
 }

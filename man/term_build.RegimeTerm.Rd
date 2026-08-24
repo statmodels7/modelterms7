@@ -30,7 +30,7 @@ per group in that order, each from the chain's stationary distribution, so
 a panel of independent series is fitted by giving \code{by}.
 
 Without \code{time} the rows are taken in the order they appear. That is a real
-choice and not a default to ignore: the recursion is about order, so a data
+choice worth making deliberately: the recursion is about order, so a data
 frame that is not already sorted gives a different model.
 }
 \examples{

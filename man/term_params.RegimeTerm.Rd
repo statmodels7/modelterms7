@@ -24,7 +24,7 @@ The order matters: it is the order \code{\link[=term_links]{term_links()}}, \cod
 indexed by, and \code{psi} must supply the names whatever order they come in.
 
 The log-ratio names come from \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}}'s own
-\code{free_names}, so they are that package's spelling and not this one's.
+\code{free_names}, so the spelling is that package's.
 }
 \examples{
 term_params(regime(2))

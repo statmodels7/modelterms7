@@ -2,6 +2,7 @@
 % Please edit documentation in R/regime.R
 \name{term_hessian}
 \alias{term_hessian}
+\alias{term_hessian.structural_term}
 \title{The Observed Hessian of a Likelihood Mixed Over States}
 \usage{
 term_hessian(
@@ -54,9 +55,12 @@ regimes shift.}
 \item{...}{Passed to methods.}
 }
 \value{
-A list with \code{loglik}, the per-observation contributions,
-\code{gradient}, their weighted sum's derivative, and \code{hessian},
-the observed Hessian.
+A list of three: \code{loglik}, the \code{n} per-observation contributions;
+\code{gradient}, the derivative of their weighted sum in the caller's whole
+unknown vector; and \code{hessian}, the observed Hessian of the mixture in
+that same vector, an \code{m} by \code{m} matrix with \code{m} its length. The Hessian
+is the mixture's own, smaller in the Loewner order than the
+complete-data information by the information the unobserved states cost.
 }
 \description{
 The log-likelihood of a term that mixes over latent states, with its
@@ -99,8 +103,8 @@ that state, which is where the caller's derivatives are used. Groups are
 independent series and their contributions add.
 
 The cost is \eqn{O(nK^2m^2)} in time and \eqn{O(Km^2)} in storage, and
-the computation is meant to be run once, at a fitted point, rather than
-per iteration.
+the computation is meant to be run once, at a fitted point, and not per
+iteration.
 }
 \examples{
 set.seed(1)
