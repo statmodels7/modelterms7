@@ -26,14 +26,14 @@ which a path visits as they stand.
 \details{
 Several values are neither a held hyperparameter nor a request to build a
 grid: they are the grid. Each is checked against the penalty's bounds as a
-held value would be, and nothing else is applied to them -- the value that
+held value would be. Nothing else is applied to them: the value that
 empties the block does not cap them and the depth of the path does not
 reach them, the caller having said which values to visit.
 
 They are sorted, because a path is walked from the emptiest fit towards the
 fullest and its warm starts follow that order, and duplicates are dropped.
 Which end of the order is the sparse one depends on the penalty, so the
-direction is settled where the path is built and not here.
+direction is settled where the path is built.
 }
 \seealso{
 \code{\link[=check_hyper]{check_hyper()}}, \code{\link[=term_values]{term_values()}}

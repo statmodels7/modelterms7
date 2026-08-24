@@ -16,7 +16,10 @@ used only to read the names and the bounds.}
 \item{what}{The constructor's name, for the message.}
 }
 \value{
-A list of \code{hyper} and \code{values}.
+A list of two named lists: \code{hyper}, the hyperparameters given one
+value each, and \code{values}, those given several, sorted and deduplicated.
+Both are keyed by the penalty's own hyperparameter names, and either may
+be empty.
 }
 \description{
 Validates each against the penalty and files it as held or as a grid.

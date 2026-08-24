@@ -2,6 +2,7 @@
 % Please edit documentation in R/hyper.R
 \name{term_grid}
 \alias{term_grid}
+\alias{term_grid.model_term}
 \title{The Grid a Term Asks For}
 \usage{
 term_grid(term, ...)
@@ -9,21 +10,49 @@ term_grid(term, ...)
 \arguments{
 \item{term}{A term, built or not.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
-A named list, one entry per penalty of the term, each a named
-list of grid sizes. Empty where the term asks for nothing.
+A named list, one entry per penalty of the term, each a named list
+of single whole numbers keyed by hyperparameter. Empty where the term
+names no grid at all.
 }
 \description{
-How many values a path visits for each of the term's hyperparameters.
-Those a term does not name are swept at the criterion's own default.
+Reports how many values a path visits for each of the term's
+hyperparameters, one entry per penalty. A hyperparameter the term names
+nothing for is swept at the fitting layer's own default.
+}
+\details{
+How finely a hyperparameter is swept belongs to the term because the term is
+where the penalty is named: a block of four columns and one of four hundred
+want different grids, and an outer criterion, which is put to every
+hyperparameter of the model, does not know which it is looking at.
+
+Only a hyperparameter with a \strong{path} has a grid. \code{\link[=ridge]{ridge()}}, \code{\link[=s]{s()}}, \code{\link[=te]{te()}}
+and \code{\link[=random]{random()}} report nothing, their hyperparameters being estimated at the
+mode by a marginal criterion; \code{\link[=lasso]{lasso()}} reports its \code{n_lambda}, and
+\code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}} and \code{\link[=mcp]{mcp()}} report both of theirs. Those constructors
+write their defaults into the term, so \code{lasso(~ x)} reports \code{lambda = 25}
+where an unset argument would give an empty list.
+
+The keys are \code{\link[=term_penalties]{term_penalties()}}'s entry names, \code{""} for a penalty over the
+whole term.
 }
 \examples{
-term_grid(lasso(~x, n_lambda = 50))
-term_grid(lasso(~x))
+# A path term reports its grid, at the default and when set.
+term_grid(lasso(~ x))
+term_grid(lasso(~ x, n_lambda = 50))
+
+# Two axes, and their two sizes: the kink axis is swept far more finely.
+term_grid(enet(~ x))
+
+# A penalty with no kink has no path, so nothing to count.
+term_grid(ridge(~ x))
+term_grid(s(x, k = 5))
 
 }
 \seealso{
-\code{\link[=term_hyper]{term_hyper()}}, \code{\link[=term_penalties]{term_penalties()}}
+\code{\link[=term_path_min]{term_path_min()}} for how far down the path reaches,
+\code{\link[=term_search]{term_search()}} for how several of them are combined, \code{\link[=term_values]{term_values()}} for
+a grid written out instead of counted.
 }

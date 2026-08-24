@@ -16,29 +16,30 @@ used only to read the names and the bounds.}
 \item{what}{The constructor's name, for the message.}
 }
 \value{
-A named list of the held values, one number each.
+A named list, keyed by the penalty's own hyperparameter names, of
+the values given exactly one number. Empty where every hyperparameter
+was left \code{NULL} or written out as a grid.
 }
 \description{
 Validates the values a constructor was given against the names and the
 bounds of the penalty the term will build, and returns them as a named
-list with the \code{NULL} entries -- the ones to be estimated -- dropped.
+list, dropping the \code{NULL} entries, which are the ones to be estimated.
 }
 \details{
-The check happens at CONSTRUCTION, where the caller can see it, and not at
-the fit three layers away. A name the penalty does not carry is an error
-naming the ones it does, which is what turns \code{mcp(x, a = 3)} --
-SCAD's shape written on an MCP, whose own is \code{gamma} -- into a
-message instead of an argument that lands in \code{...} and does
-nothing.
+The check happens at CONSTRUCTION, where the caller can see it, instead of
+at the fit three layers away. A name the penalty does not carry is an error
+naming the ones it does. That is what turns \code{mcp(x, a = 3)}, SCAD's shape
+written on an MCP whose own shape is \code{gamma}, into a message instead of an
+argument that lands in \code{...} and does nothing.
 
 The bounds are OPEN, as they are everywhere in the toolkit: a ridge at
 \eqn{\lambda = 0} is no penalty at all, and an elastic net at
 \eqn{\alpha = 0} has no kink and is a penalty of another kind.
 
-One argument carries three states, and they are read per hyperparameter
-rather than per term: \code{NULL} has the path build the grid, one number
-holds the hyperparameter, and several are the grid itself. This returns
-the second of the three; \code{\link[=check_values]{check_values()}} returns the third.
+One argument carries three states, each read for one hyperparameter at a
+time: \code{NULL} has the path build the grid, one number holds the
+hyperparameter, and several are the grid itself. This returns the second of
+the three; \code{\link[=check_values]{check_values()}} returns the third.
 }
 \seealso{
 \code{\link[=check_values]{check_values()}}, \code{\link[=term_hyper]{term_hyper()}},

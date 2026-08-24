@@ -12,22 +12,23 @@ as_hyper(x, what = "this term")
 \item{what}{The term's label, for the message.}
 }
 \value{
-A named list, possibly empty.
+A named list, one entry per hyperparameter named, each a numeric
+vector of length one or more. Empty for \code{NULL} or a zero-length input.
 }
 \description{
 Accepts a named vector or a named list and returns a named list, checking
 only what can be checked before the penalty exists.
 }
 \details{
-\code{\link[=random]{random()}} builds one of three penalties depending on what it was
-given -- a ridge, a structured prior over a \pkg{parameters7} matrix, or a
-\pkg{distributions7} family used coordinatewise -- so which names there are
-is not known until the term is built. The shape is checked here and the
+\code{\link[=random]{random()}} builds one of three penalties depending on what it was given: a
+ridge, a structured prior over a \pkg{parameters7} matrix, or a
+\pkg{distributions7} family used coordinatewise. Which names there are is
+therefore not known until the term is built. The shape is checked here and the
 names against the penalty by \code{\link[=check_hyper]{check_hyper()}} at that point.
 
-A vector entry is a written-out grid rather than a held value, exactly as
-it is in the constructors that name their hyperparameters, so the length
-is not checked here either; \code{\link[=.hyper_parts]{.hyper_parts()}} splits the two once
-the penalty exists.
+A vector entry is a written-out grid, exactly as it is in the constructors
+that name their hyperparameters, so the length is not
+checked here either; \code{\link[=.hyper_parts]{.hyper_parts()}} splits the two once the penalty
+exists.
 }
 \keyword{internal}

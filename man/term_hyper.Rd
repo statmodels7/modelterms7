@@ -2,6 +2,7 @@
 % Please edit documentation in R/hyper.R
 \name{term_hyper}
 \alias{term_hyper}
+\alias{term_hyper.model_term}
 \title{The Hyperparameters a Term Holds}
 \usage{
 term_hyper(term, ...)
@@ -9,28 +10,64 @@ term_hyper(term, ...)
 \arguments{
 \item{term}{A term, built or not.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
-A named list, one entry per penalty of the term, each a named list
-of held values. Empty where the term holds nothing.
+A named list, one entry per penalty of the term and named as
+\code{\link[=term_penalties]{term_penalties()}} names it, each entry a named list of single numbers
+keyed by the penalty's own hyperparameter names. Empty where the term
+holds nothing.
 }
 \description{
-The values the caller fixed in the constructor, by hyperparameter. Those a
-term does not name are estimated by whatever criterion the fit runs.
+Reports the hyperparameter values the caller fixed in the constructor, one
+entry per penalty the term carries. A hyperparameter left \code{NULL} is
+\strong{estimated} by whatever criterion the fit runs and does not appear here,
+so an empty result means every one of them is free.
 }
-\details{
-A term carrying several penalties answers per penalty, under the same names
-\code{\link[=term_penalties]{term_penalties()}} gives its entries, and every entry of that
-enumeration carries its own held values in the field \code{fixed} -- so a
-term that copies the entries of its sub-terms, which is what a structural
-term with subformulas does, propagates them without knowing they exist.
+\section{The three states of one argument}{
+A constructor's hyperparameter argument carries three meanings, read per
+hyperparameter at a time. \code{NULL}, the default, has the path build a
+grid or a marginal criterion estimate the value at the mode. \strong{One number}
+holds it, and that is what this reports. \strong{Several numbers} are a grid the
+path visits as they stand, which \code{\link[=term_values]{term_values()}} reports; the
+hyperparameter is still estimated there, the caller having said where to
+look, leaving the answer to the fit.
 }
+
+\section{How the entries are keyed}{
+The names are the ones \code{\link[=term_penalties]{term_penalties()}} gives its entries: \code{""} for a
+penalty covering the whole term, and \code{parameter::label} for one a
+subformula brought in. A term whose penalties come from sub-terms, which is
+what a structural term with subformulas is, propagates their held values
+without a method of its own, every entry of that enumeration carrying its
+own in the field \code{fixed}.
+
+A built term answers from those entries and an unbuilt one from its own
+\code{hyper} property, so the answer is the same before and after a build.
+}
+
 \examples{
-term_hyper(lasso(~x, lambda = 3))
-term_hyper(lasso(~x))
+# Held, and free.
+term_hyper(lasso(~ x, lambda = 3))
+term_hyper(lasso(~ x))
+
+# Several values are a grid, not a held value, so they go elsewhere.
+term_hyper(lasso(~ x, lambda = c(0.1, 1, 10)))
+term_values(lasso(~ x, lambda = c(0.1, 1, 10)))
+
+# One of two held, the other estimated.
+term_hyper(enet(~ x, alpha = 0.5))
+
+# A held value on a sub-term is reported under that entry's name.
+set.seed(4)
+d <- data.frame(x = runif(40, 0, 5), g = factor(rep(1:4, 10)))
+nb <- term_build(nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g, lambda = 2),
+                    r ~ 1), d)
+term_hyper(nb)
 
 }
 \seealso{
-\code{\link[=term_penalties]{term_penalties()}}, \code{\link[=ridge]{ridge()}}
+\code{\link[=term_values]{term_values()}} for a written-out grid, \code{\link[=term_grid]{term_grid()}} for how many
+values a built grid visits, \code{\link[=term_penalties]{term_penalties()}} for the entries this is
+keyed by.
 }

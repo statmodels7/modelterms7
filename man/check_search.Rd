@@ -19,7 +19,7 @@ Validates the sweep a constructor was given for the term's own kinked
 hyperparameters.
 }
 \details{
-One word per term rather than one per hyperparameter: it says how the
+One word per term, one per hyperparameter being meaningless: it says how the
 hyperparameters are combined WITH EACH OTHER, which is not a property any
 one of them has. It belongs to the term because a penalty with a kink is
 fitted by a scheme of its own, and how that scheme sweeps its own

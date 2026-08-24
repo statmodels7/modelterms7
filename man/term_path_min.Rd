@@ -2,36 +2,54 @@
 % Please edit documentation in R/hyper.R
 \name{term_path_min}
 \alias{term_path_min}
-\title{How Far Down a Term's Path Reaches}
+\alias{term_path_min.model_term}
+\title{How Far Down Its Path a Term Reaches}
 \usage{
 term_path_min(term, ...)
 }
 \arguments{
 \item{term}{A term, built or not.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
 A named list, one entry per penalty of the term, each a single
-number. Empty where the term names none.
+number in \eqn{(0, 1)}. Empty where the term names none.
 }
 \description{
-The fraction of the emptying value the path descends to, where the term
-named one. A term that names none is swept to the criterion's own depth.
+Reports the fraction of the emptying value the path descends to. The path
+runs from the kink that leaves every coefficient of the block at zero down
+to that fraction of it, so a smaller number reaches a denser fit and a
+larger one stops sooner.
 }
 \details{
-The path runs from the kink that leaves every coefficient of the block at
-zero down to \code{min_ratio} of it, so a smaller number reaches a denser
-fit and a larger one stops sooner. It belongs to the term for the same
-reason as the number of values: how far the useful range of a
-hyperparameter extends is a property of the block, and a criterion
-applies to every term of the model at once.
+It belongs to the term for the same reason the grid size does: how far the
+useful range of a hyperparameter extends is a property of the block, and a
+criterion applies to every term of the model at once.
+
+It is \strong{one number per penalty}, one per hyperparameter being unnecessary:
+only the path over the size of the kink uses it. A bounded hyperparameter
+is swept over its own interval, and a shape that does not move the kink over
+a geometric grid above its lower bound; a fraction of an emptying value
+means nothing in either.
+
+\code{\link[=lasso]{lasso()}}, \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}} and \code{\link[=mcp]{mcp()}} write their \code{min_ratio} default of
+\code{1e-4} into the term, so they report it whether or not the caller set one.
+\code{\link[=ridge]{ridge()}}, \code{\link[=s]{s()}}, \code{\link[=te]{te()}} and \code{\link[=random]{random()}} have no path and report nothing.
+
+The keys are \code{\link[=term_penalties]{term_penalties()}}'s entry names, \code{""} for a penalty over the
+whole term.
 }
 \examples{
-term_path_min(lasso(~x, min_ratio = 1e-6))
-term_path_min(lasso(~x))
+# The default, and a deeper path.
+term_path_min(lasso(~ x))
+term_path_min(lasso(~ x, min_ratio = 1e-6))
+
+# No path, nothing to report.
+term_path_min(ridge(~ x))
 
 }
 \seealso{
-\code{\link[=term_grid]{term_grid()}}, \code{\link[=term_hyper]{term_hyper()}}
+\code{\link[=term_grid]{term_grid()}} for how many values the path visits,
+\code{\link[=term_search]{term_search()}} for how several hyperparameters are combined.
 }

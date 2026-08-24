@@ -18,7 +18,7 @@ A numeric vector of length one, or of length zero.
 Validates the fraction of the emptying value a path descends to.
 }
 \details{
-One number per term rather than one per hyperparameter, because only the
+One number per term, one per hyperparameter being unnecessary: only the
 path over the SIZE OF THE KINK uses it: a bounded hyperparameter is swept
 over its own interval and a shape that does not move the kink over a
 geometric grid above its lower bound, and a fraction of an emptying value

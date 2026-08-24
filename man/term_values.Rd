@@ -2,43 +2,60 @@
 % Please edit documentation in R/hyper.R
 \name{term_values}
 \alias{term_values}
-\title{The Values a Term Wrote Out}
+\alias{term_values.model_term}
+\title{The Hyperparameter Values a Term Writes Out}
 \usage{
 term_values(term, ...)
 }
 \arguments{
 \item{term}{A term, built or not.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
 A named list, one entry per penalty of the term, each a named list
-of numeric vectors. Empty where the term wrote nothing out.
+of numeric vectors keyed by hyperparameter, sorted and without
+duplicates. Empty where the term wrote nothing out.
 }
 \description{
-The grid the caller gave verbatim, by hyperparameter. Those a term does
-not write out are swept over a grid the path builds.
+Reports the values a path visits, for each hyperparameter the caller wrote
+out as a vector instead of leaving to be built. It is the third state of a
+constructor's hyperparameter argument, beside \code{NULL} for a built grid and
+one number for a held value.
 }
 \details{
-A hyperparameter's argument carries three states, one per hyperparameter
-rather than one per term: \code{NULL} has the path build the grid,
-\code{lambda = 3} holds it at three, and \code{lambda = c(0.1, 1, 10)}
-sweeps exactly those. So \code{enet(x, lambda = seq(0.1, 10, length = 10))}
-is a written-out grid of \eqn{\lambda} combined with an \eqn{\alpha} the
-path builds for itself.
-
 A written-out grid is used as it stands. The value that empties the block
-does not cap it and \code{min_ratio} does not extend it: those construct a
-grid, and here there is nothing to construct. A hyperparameter written out
-is still ESTIMATED -- what the caller fixed is where to look, not the
-answer -- so it is reported as chosen by the criterion and not as held.
+does not cap it and \code{\link[=term_path_min]{term_path_min()}} does not extend it: those two
+construct a grid, and here there is nothing to construct.
+
+A hyperparameter written out is still \strong{estimated}. What the caller fixed
+is where to look, not the answer, so a fit reports it as chosen by the
+criterion, and \code{\link[=term_hyper]{term_hyper()}} does not carry it.
+
+The values are sorted and deduplicated at construction, because a path is
+walked from the emptiest fit toward the fullest and its warm starts follow
+that order. Which end of the sorted order is the sparse one depends on the
+penalty, so the direction is settled where the path is built.
+
+The keys are \code{\link[=term_penalties]{term_penalties()}}'s entry names, \code{""} for a penalty over the
+whole term.
 }
 \examples{
-term_values(lasso(~x, lambda = c(0.1, 1, 10)))
-term_values(lasso(~x, lambda = 3))
+# Written out, and reported as the grid to visit.
+term_values(lasso(~ x, lambda = c(0.1, 1, 10)))
+
+# Sorted and deduplicated at construction.
+term_values(lasso(~ x, lambda = c(10, 0.1, 1, 1)))
+
+# One number is a held value, and belongs to the other reporter.
+term_values(lasso(~ x, lambda = 3))
+term_hyper(lasso(~ x, lambda = 3))
+
+# A penalty with no kink has no path, so several values are refused.
+try(ridge(~ x, lambda = c(1, 2)))
 
 }
 \seealso{
-\code{\link[=term_hyper]{term_hyper()}}, \code{\link[=term_grid]{term_grid()}},
-\code{\link[=term_penalties]{term_penalties()}}
+\code{\link[=term_hyper]{term_hyper()}} for a held value, \code{\link[=term_grid]{term_grid()}} for a grid to be
+built, \code{\link[=term_penalties]{term_penalties()}} for the entries this is keyed by.
 }
