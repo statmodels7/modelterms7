@@ -2,6 +2,8 @@
 % Please edit documentation in R/structural.R
 \name{term_third}
 \alias{term_third}
+\alias{term_third.model_term}
+\alias{term_third.structural_term}
 \title{Third Derivatives of a Structural Term's Predictor, in One Direction}
 \usage{
 term_third(
@@ -87,10 +89,11 @@ with the current Jacobian row \eqn{D} and its directional derivative:
 which is \eqn{\texttt{dcurv}\cdot v}, and the two terms differentiating
 \eqn{M}'s own \eqn{V_p}.
 
-The base method returns zeros, so an additive term -- whose second
-derivative is already zero -- is covered without writing anything, and a
-term written later that does not implement this reports no third
-derivative rather than a wrong one.
+The base method returns zeros. An additive term's second derivative is
+already zero, so it is covered without writing anything, and a term written
+later that does not implement this reports no third derivative instead of a
+wrong one. A structural term refuses: it has a second derivative, so zero
+there would be a false statement rather than a true one.
 }
 \examples{
 set.seed(1)
@@ -108,5 +111,7 @@ all(out$curvature == 0)
 
 }
 \seealso{
-\code{\link[=term_curvature]{term_curvature()}}, \code{\link[=term_adjoint]{term_adjoint()}}
+\code{\link[=term_curvature]{term_curvature()}} for the second order this differentiates,
+\code{\link[=term_adjoint]{term_adjoint()}} for the first, \code{\link[statmodels7:reml]{statmodels7::reml()}} for the criterion
+whose gradient asks for it.
 }

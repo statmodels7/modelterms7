@@ -2,6 +2,7 @@
 % Please edit documentation in R/structural.R
 \name{term_adjoint}
 \alias{term_adjoint}
+\alias{term_adjoint.structural_term}
 \title{Differentiate a Structural Term Backwards}
 \usage{
 term_adjoint(term, eta, y, score, curvature, psi, g, ...)
@@ -24,8 +25,11 @@ produced, one value per observation.}
 \item{...}{Passed to methods.}
 }
 \value{
-A list with \code{deta} and \code{dscore}, each one value per
-observation.
+A list of two numeric vectors, each of one value per observation:
+\code{deta}, the derivative of the objective in the static predictor the term
+was handed, and \code{dscore}, its derivative in the sequence of scores. A
+caller multiplies \code{dscore} by a mixed second derivative of its
+log-density to obtain the derivative in another equation's predictor.
 }
 \description{
 The derivative of a caller's objective with respect to the static
@@ -42,8 +46,8 @@ predictor in a coefficient carries a term the block does not. Propagating
 that forward would cost one derivative array per coefficient; the reverse
 recursion here costs one pass whatever their number, and is exact.
 
-Two derivatives are returned rather than one because the score the caller
-supplies depends on more than the predictor it is read at. Writing
+Two derivatives are returned because the score the caller supplies depends
+on more than the predictor it is read at. Writing
 \eqn{s_t} for that score and \eqn{\bar{s}_t} for
 \code{dscore}, the derivative of the objective in anything the score
 depends on is
@@ -71,5 +75,7 @@ head(out$deta, 3)
 
 }
 \seealso{
-\code{\link[=term_filter]{term_filter()}}
+\code{\link[=term_filter]{term_filter()}} for the forward pass and the callbacks,
+\code{\link[=term_curvature]{term_curvature()}} for the second order, \code{\link[=term_static_deriv]{term_static_deriv()}} for the
+forward derivative in the static predictor.
 }

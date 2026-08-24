@@ -2,6 +2,7 @@
 % Please edit documentation in R/structural.R
 \name{term_curvature}
 \alias{term_curvature}
+\alias{term_curvature.structural_term}
 \title{Second Derivatives of a Structural Term's Predictor}
 \usage{
 term_curvature(term, eta, y, score, curvature, psi, g, seed, blocks, ...)
@@ -29,9 +30,10 @@ Jacobian row, returning \code{cross} and \code{M}.}
 \item{...}{Passed to methods.}
 }
 \value{
-A list with \code{jacobian}, the derivative of the predictor in
-the caller's unknowns, and \code{curvature}, the contracted second
-derivative.
+A list of two: \code{jacobian}, an \code{n} by \code{ncol(seed)} matrix holding
+the derivative of the predictor in the caller's unknowns, and
+\code{curvature}, the \code{ncol(seed)} by \code{ncol(seed)} second derivative
+contracted against \code{g}. Both are exact.
 }
 \description{
 The Jacobian of the predictor the term produces with respect to a
@@ -91,5 +93,6 @@ dim(out$curvature)
 
 }
 \seealso{
-\code{\link[=term_adjoint]{term_adjoint()}}, \code{\link[=term_filter]{term_filter()}}
+\code{\link[=term_adjoint]{term_adjoint()}} for the first order, \code{\link[=term_third]{term_third()}} for the
+third, \code{\link[=term_filter]{term_filter()}} for the callbacks.
 }

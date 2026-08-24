@@ -593,8 +593,8 @@ S7::method(term_readable, model_term) <- function(term, zeta, ...) {
 #' that forward would cost one derivative array per coefficient; the reverse
 #' recursion here costs one pass whatever their number, and is exact.
 #'
-#' Two derivatives are returned rather than one because the score the caller
-#' supplies depends on more than the predictor it is read at. Writing
+#' Two derivatives are returned because the score the caller supplies depends
+#' on more than the predictor it is read at. Writing
 #' \eqn{s_t} for that score and \eqn{\bar{s}_t} for
 #' `dscore`, the derivative of the objective in anything the score
 #' depends on is
@@ -619,8 +619,11 @@ S7::method(term_readable, model_term) <- function(term, zeta, ...) {
 #'   produced, one value per observation.
 #' @param ... Passed to methods.
 #'
-#' @return A list with `deta` and `dscore`, each one value per
-#'   observation.
+#' @return A list of two numeric vectors, each of one value per observation:
+#'   `deta`, the derivative of the objective in the static predictor the term
+#'   was handed, and `dscore`, its derivative in the sequence of scores. A
+#'   caller multiplies `dscore` by a mixed second derivative of its
+#'   log-density to obtain the derivative in another equation's predictor.
 #'
 #' @examples
 #' set.seed(1)
@@ -633,8 +636,11 @@ S7::method(term_readable, model_term) <- function(term, zeta, ...) {
 #'                     g = rep(1, 20))
 #' head(out$deta, 3)
 #'
-#' @seealso [term_filter()]
+#' @seealso [term_filter()] for the forward pass and the callbacks,
+#'   [term_curvature()] for the second order, [term_static_deriv()] for the
+#'   forward derivative in the static predictor.
 #' @export
+#' @aliases term_adjoint.structural_term
 term_adjoint <- S7::new_generic("term_adjoint", "term",
   function(term, eta, y, score, curvature, psi, g, ...) S7::S7_dispatch())
 
@@ -697,9 +703,10 @@ S7::method(term_adjoint, structural_term) <- function(term, eta, y, score,
 #'   Jacobian row, returning `cross` and `M`.
 #' @param ... Passed to methods.
 #'
-#' @return A list with `jacobian`, the derivative of the predictor in
-#'   the caller's unknowns, and `curvature`, the contracted second
-#'   derivative.
+#' @return A list of two: `jacobian`, an `n` by `ncol(seed)` matrix holding
+#'   the derivative of the predictor in the caller's unknowns, and
+#'   `curvature`, the `ncol(seed)` by `ncol(seed)` second derivative
+#'   contracted against `g`. Both are exact.
 #'
 #' @examples
 #' set.seed(1)
@@ -720,8 +727,10 @@ S7::method(term_adjoint, structural_term) <- function(term, eta, y, score,
 #' dim(out$jacobian)
 #' dim(out$curvature)
 #'
-#' @seealso [term_adjoint()], [term_filter()]
+#' @seealso [term_adjoint()] for the first order, [term_third()] for the
+#'   third, [term_filter()] for the callbacks.
 #' @export
+#' @aliases term_curvature.structural_term
 term_curvature <- S7::new_generic("term_curvature", "term",
   function(term, eta, y, score, curvature, psi, g, seed, blocks, ...)
     S7::S7_dispatch())
@@ -773,10 +782,11 @@ S7::method(term_curvature, structural_term) <- function(term, eta, y, score,
 #' which is \eqn{\texttt{dcurv}\cdot v}, and the two terms differentiating
 #' \eqn{M}'s own \eqn{V_p}.
 #'
-#' The base method returns zeros, so an additive term -- whose second
-#' derivative is already zero -- is covered without writing anything, and a
-#' term written later that does not implement this reports no third
-#' derivative rather than a wrong one.
+#' The base method returns zeros. An additive term's second derivative is
+#' already zero, so it is covered without writing anything, and a term written
+#' later that does not implement this reports no third derivative instead of a
+#' wrong one. A structural term refuses: it has a second derivative, so zero
+#' there would be a false statement rather than a true one.
 #'
 #' @param term A built term.
 #' @param eta The static part of the predictor.
@@ -812,8 +822,11 @@ S7::method(term_curvature, structural_term) <- function(term, eta, y, score,
 #'                   direction = c(1, 0))
 #' all(out$curvature == 0)
 #'
-#' @seealso [term_curvature()], [term_adjoint()]
+#' @seealso [term_curvature()] for the second order this differentiates,
+#'   [term_adjoint()] for the first, [statmodels7::reml()] for the criterion
+#'   whose gradient asks for it.
 #' @export
+#' @aliases term_third.model_term term_third.structural_term
 term_third <- S7::new_generic("term_third", "term",
   function(term, eta, y, score, curvature, psi, g, seed, blocks, direction,
            ...) S7::S7_dispatch())
