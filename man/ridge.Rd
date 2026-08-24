@@ -18,10 +18,10 @@ ridge(
 matrix, ideally a matrix column of the model data frame. A two-sided
 formula throws.}
 
-\item{label}{A single non-empty character string prefixed to the coefficient
-names as \code{label.name}. Each constructor defaults it to its own name, so a
-ridge over \code{x1} reads \code{ridge.x1}, and two penalized terms in one formula
-stay apart by their labels.}
+\item{label}{A single non-empty character string prefixed to the
+coefficient names as \code{label.name}, \code{"ridge"} by default, so a block
+over \code{x1} reads \code{ridge.x1}. Two penalized terms in one formula stay
+apart by their labels.}
 
 \item{standardize}{A single logical, \code{FALSE} by default: whether to penalize
 each coefficient on the scale of its own column. See the section above.}
@@ -41,8 +41,10 @@ hyperparameter is the mistake this catches: \code{scad(~ x, gamma = 1)} throws
 \code{"'scad' has no argument 'gamma'."} and lists the ones it does have.}
 }
 \value{
-An object of class \code{\link[=PenalizedTerm]{PenalizedTerm()}} (a specification;
-see \code{\link[=term_build]{term_build()}}).
+An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification, with \code{X},
+\code{coef_names}, \code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}}
+fills them, and the penalty attached there over as many coefficients
+as the block turns out to have.
 }
 \description{
 A block of coefficients under a Gaussian prior at zero: every one of them
@@ -53,8 +55,8 @@ Writing \eqn{\beta} for the block's coefficients and \eqn{p} for their
 number,
 \deqn{\rho(\beta) = \frac{\lambda\lVert\beta\rVert_2^2}{2}
   - \frac{p}{2}\log\!\left(\frac{\lambda}{2\pi}\right).}
-The constant is kept, which is what makes \eqn{\lambda} estimable by a
-marginal criterion: it is minus the log density of
+The constant is kept, and that is what a marginal criterion needs to
+estimate \eqn{\lambda}: the value is minus the log density of
 \eqn{N(0, \lambda^{-1}I)}, so \eqn{\lambda} is the PRECISION of that
 prior and a larger value shrinks harder.
 
@@ -65,9 +67,27 @@ the same system as the unpenalized terms and \eqn{\lambda} is estimated by
 \strong{Hyperparameter.} \code{lambda}, admissible on \eqn{(0, \infty)}.
 }
 \examples{
-dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
-term_penalty(term_build(ridge(~ x1 + x2), dd))@params
+set.seed(3)
+dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
+b <- term_build(ridge(~ x1 + x2), dd)
+
+# One hyperparameter, positive, on the log scale for an optimizer.
+p <- term_penalty(b)
+p@params
+p@params_bounds
+
+# The value is exactly minus a Gaussian log-density at precision lambda.
+beta <- c(0.4, -1.1)
+all.equal(penalties7::penalty_value(p, beta, list(lambda = 2.5)),
+          -sum(dnorm(beta, 0, 1 / sqrt(2.5), log = TRUE)))
+
+# No kink, so the block is smooth and lambda is estimated at the mode.
+c(smooth = term_smooth(b),
+  kinks = length(penalties7::penalty_kinks(p, list(lambda = 1))))
+
+# Holding it, and the refusal of a grid it has no path to visit.
 term_hyper(ridge(~ x1 + x2, lambda = 2))
+try(ridge(~ x1 + x2, lambda = c(1, 2)))
 
 }
 \references{

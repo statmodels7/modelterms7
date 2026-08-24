@@ -18,8 +18,8 @@ NULL
 #' number,
 #' \deqn{\rho(\beta) = \frac{\lambda\lVert\beta\rVert_2^2}{2}
 #'   - \frac{p}{2}\log\!\left(\frac{\lambda}{2\pi}\right).}
-#' The constant is kept, which is what makes \eqn{\lambda} estimable by a
-#' marginal criterion: it is minus the log density of
+#' The constant is kept, and that is what a marginal criterion needs to
+#' estimate \eqn{\lambda}: the value is minus the log density of
 #' \eqn{N(0, \lambda^{-1}I)}, so \eqn{\lambda} is the PRECISION of that
 #' prior and a larger value shrinks harder.
 #'
@@ -30,17 +30,41 @@ NULL
 #' **Hyperparameter.** `lambda`, admissible on \eqn{(0, \infty)}.
 #'
 #' @inheritParams penalized_terms
+#' @param label A single non-empty character string prefixed to the
+#'   coefficient names as `label.name`, `"ridge"` by default, so a block
+#'   over `x1` reads `ridge.x1`. Two penalized terms in one formula stay
+#'   apart by their labels.
 #' @param lambda The precision of the prior. One number holds it and
 #'   `NULL`, the default, has it ESTIMATED. A ridge has no kink and no
 #'   path, so several numbers are not a grid it could visit. Must lie in
 #'   \eqn{(0, \infty)}.
-#' @return An object of class [PenalizedTerm()] (a specification;
-#'   see [term_build()]).
+#' @return An unbuilt [PenalizedTerm()]: a specification, with `X`,
+#'   `coef_names`, `blueprint` and `penalty` empty until [term_build()]
+#'   fills them, and the penalty attached there over as many coefficients
+#'   as the block turns out to have.
 #'
 #' @examples
-#' dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
-#' term_penalty(term_build(ridge(~ x1 + x2), dd))@params
+#' set.seed(3)
+#' dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
+#' b <- term_build(ridge(~ x1 + x2), dd)
+#'
+#' # One hyperparameter, positive, on the log scale for an optimizer.
+#' p <- term_penalty(b)
+#' p@params
+#' p@params_bounds
+#'
+#' # The value is exactly minus a Gaussian log-density at precision lambda.
+#' beta <- c(0.4, -1.1)
+#' all.equal(penalties7::penalty_value(p, beta, list(lambda = 2.5)),
+#'           -sum(dnorm(beta, 0, 1 / sqrt(2.5), log = TRUE)))
+#'
+#' # No kink, so the block is smooth and lambda is estimated at the mode.
+#' c(smooth = term_smooth(b),
+#'   kinks = length(penalties7::penalty_kinks(p, list(lambda = 1))))
+#'
+#' # Holding it, and the refusal of a grid it has no path to visit.
 #' term_hyper(ridge(~ x1 + x2, lambda = 2))
+#' try(ridge(~ x1 + x2, lambda = c(1, 2)))
 #'
 #' @references
 #' Hoerl, A. E. and Kennard, R. W. (1970). Ridge regression: biased
@@ -74,34 +98,53 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #'
 #' The kink is at zero, so the block is fitted by a proximal method or by a
 #' coordinate descent with the other terms held, and \eqn{\lambda} is chosen
-#' by a PATH over its own values -- [statmodels7::bic()] by
-#' default, or [statmodels7::aic()] or
-#' [statmodels7::cv()] -- because a marginal criterion is a
-#' Laplace expansion at a mode that sits on the kink.
+#' by a PATH over its own values, scored by [statmodels7::bic()] by default
+#' or by [statmodels7::aic()] or [statmodels7::cv()]. A marginal criterion
+#' cannot be used: it is a Laplace expansion at a mode that sits on the kink.
 #'
 #' **Hyperparameter.** `lambda`, admissible on \eqn{(0, \infty)},
 #' swept over `n_lambda` values from the one that empties the block
 #' down to `min_ratio` of it.
 #'
 #' @inheritParams penalized_terms
+#' @param label A single non-empty character string prefixed to the
+#'   coefficient names as `label.name`, `"lasso"` by default, so a block
+#'   over `x1` reads `lasso.x1`. Two penalized terms in one formula stay
+#'   apart by their labels.
 #' @param lambda The rate of the prior. One number holds it, several are the
 #'   grid the path visits as they stand, and `NULL`, the default, has the
 #'   path build one. Must lie in \eqn{(0, \infty)}.
-#' @param n_lambda How many values the path visits, at least 2.
+#' @param n_lambda How many values the path visits, a whole number of at
+#'   least 2, `25` by default. The axis descends four decades of kink
+#'   size, which is what that many points are for.
 #' @param min_ratio How far down the path reaches, as a fraction of the
-#'   kink that empties the block: smaller reaches a denser fit, larger stops
-#'   sooner. Must lie in \eqn{(0, 1)}.
-#' @return An object of class [PenalizedTerm()] (a specification;
-#'   see [term_build()]).
+#'   kink that empties the block: smaller reaches a denser fit, larger
+#'   stops sooner. A single number in \eqn{(0, 1)}, `1e-4` by default.
+#'   Only the sweep by kink size reads it.
+#' @return An unbuilt [PenalizedTerm()]: a specification, with `X`,
+#'   `coef_names`, `blueprint` and `penalty` empty until [term_build()]
+#'   fills them, and the penalty attached there over as many coefficients
+#'   as the block turns out to have.
 #'
 #' @examples
-#' dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
-#' built <- term_build(lasso(~ x1 + x2), dd)
-#' term_penalty(built)@params
-#' term_smooth(built)
+#' set.seed(3)
+#' dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
+#' b <- term_build(lasso(~ x1 + x2), dd)
+#' p <- term_penalty(b)
 #'
-#' # a finer path for a wide block
+#' # The kink is at zero, so the block is not smooth and needs a path.
+#' c(smooth = term_smooth(b))
+#' penalties7::penalty_kinks(p, list(lambda = 1))
+#'
+#' # The value is minus a Laplace log-density at rate lambda.
+#' beta <- c(0.4, -1.1)
+#' all.equal(penalties7::penalty_value(p, beta, list(lambda = 2)),
+#'           2 * sum(abs(beta)) - 2 * log(2 / 2))
+#'
+#' # The path's length and depth, at the defaults and set.
+#' term_grid(lasso(~ x1 + x2))
 #' term_grid(lasso(~ x1 + x2, n_lambda = 60))
+#' term_path_min(lasso(~ x1 + x2, min_ratio = 1e-3))
 #'
 #' @references
 #' Tibshirani, R. (1996). Regression shrinkage and selection via the lasso.
@@ -137,8 +180,8 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #' the normalizing constant being that of the product of a Laplace and a
 #' Gaussian at zero
 #' ([distributions7::enet_distrib()]). It depends on BOTH
-#' hyperparameters, which is what makes them estimable rather than merely
-#' settable, and what a penalty written as a formula would not have.
+#' hyperparameters, so both are estimable and not merely settable. A penalty
+#' written as a formula, with the constant dropped, would not have that.
 #'
 #' \eqn{\alpha} is the mixing weight: at \eqn{\alpha \to 1} the penalty is
 #' the lasso and at \eqn{\alpha \to 0} the ridge, and the kink at zero has
@@ -152,6 +195,10 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #' `search = "cyclic"` asks for one at a time instead.
 #'
 #' @inheritParams penalized_terms
+#' @param label A single non-empty character string prefixed to the
+#'   coefficient names as `label.name`, `"enet"` by default, so a block
+#'   over `x1` reads `enet.x1`. Two penalized terms in one formula stay
+#'   apart by their labels.
 #' @param lambda The overall rate. One number holds it, several are the grid
 #'   the path visits as they stand, and `NULL`, the default, has the path
 #'   build one. Must lie in \eqn{(0, \infty)}.
@@ -167,17 +214,38 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #'
 #' @param min_ratio How far down the path reaches, as a fraction of the
 #'   kink that empties the block: smaller reaches a denser fit, larger
-#'   stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
-#'   criterion. Only the sweep by kink size uses it.
-#' @return An object of class [PenalizedTerm()] (a specification;
-#'   see [term_build()]).
+#'   stops sooner. A single number in \eqn{(0, 1)}, `1e-4` by default.
+#'   Only the sweep by kink size reads it.
+#' @return An unbuilt [PenalizedTerm()]: a specification, with `X`,
+#'   `coef_names`, `blueprint` and `penalty` empty until [term_build()]
+#'   fills them, and the penalty attached there over as many coefficients
+#'   as the block turns out to have.
 #'
 #' @examples
-#' dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
-#' term_penalty(term_build(enet(~ x1 + x2), dd))@params
+#' set.seed(3)
+#' dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
+#' pe <- term_penalty(term_build(enet(~ x1 + x2), dd))
+#' pe@params
+#' pe@params_bounds
 #'
-#' # alpha held at the halfway mixture, lambda still estimated
+#' # The two ends really are the other two penalties.
+#' pl <- term_penalty(term_build(lasso(~ x1 + x2), dd))
+#' pr <- term_penalty(term_build(ridge(~ x1 + x2), dd))
+#' beta <- c(0.4, -1.1)
+#' all.equal(penalties7::penalty_value(pe, beta, list(lambda = 2, alpha = 1 - 1e-9)),
+#'           penalties7::penalty_value(pl, beta, list(lambda = 2)))
+#' all.equal(penalties7::penalty_value(pe, beta, list(lambda = 2, alpha = 1e-9)),
+#'           penalties7::penalty_value(pr, beta, list(lambda = 2)))
+#'
+#' # alpha held at the halfway mixture, lambda still estimated.
 #' term_hyper(enet(~ x1 + x2, alpha = 0.5))
+#'
+#' # The grid is 25 by 5 by default; cyclic sweeps one axis at a time.
+#' term_grid(enet(~ x1 + x2))
+#' term_search(enet(~ x1 + x2, search = "cyclic"))
+#'
+#' # The open interval is enforced: an end is one of the other penalties.
+#' try(enet(~ x1 + x2, alpha = 1))
 #'
 #' @references
 #' Zou, H. and Hastie, T. (2005). Regularization and variable selection via
@@ -209,25 +277,28 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #' coefficient is not shrunk at all.
 #'
 #' @details
-#' It is defined by its derivative rather than by its value, for
-#' \eqn{t = \lvert\beta_j\rvert \ge 0},
+#' It is defined by its derivative, for \eqn{t = \lvert\beta_j\rvert \ge 0},
 #' \deqn{\rho'(t) = \lambda\min\!\left\{1,
 #'   \frac{(a\lambda - t)_+}{(a-1)\lambda}\right\},}
 #' summed over the coefficients. It rises like the lasso near zero, bends
-#' from \eqn{t = \lambda}, and is flat past \eqn{t = a\lambda}: the bias the
-#' lasso puts on a large coefficient is what this removes. Being improper it
+#' from \eqn{t = \lambda}, and is flat past \eqn{t = a\lambda}, which removes
+#' the bias the lasso puts on a large coefficient. Being improper it
 #' carries no normalizing constant, and is therefore not a log prior and not
 #' reachable by a marginal criterion.
 #'
 #' **Hyperparameters.** `lambda` on \eqn{(0, \infty)}, swept over
-#' `n_lambda` values by kink size; `a` on \eqn{(2, \infty)} --
-#' below 2 the penalty is not what its definition intends -- swept over
+#' `n_lambda` values by kink size; `a` on \eqn{(2, \infty)}, below which the
+#' penalty is not what its definition intends, swept over
 #' `n_a` values on a geometric grid above that bound, since the shape
 #' leaves the kink at zero unchanged and no kink-size path can reach it. The
 #' literature's value is \eqn{a = 3.7}, and holding it there is what
 #' \pkg{ncvreg} does.
 #'
 #' @inheritParams penalized_terms
+#' @param label A single non-empty character string prefixed to the
+#'   coefficient names as `label.name`, `"scad"` by default, so a block
+#'   over `x1` reads `scad.x1`. Two penalized terms in one formula stay
+#'   apart by their labels.
 #' @param lambda The scale of the penalty. One number holds it, several are
 #'   the grid the path visits as they stand, and `NULL`, the default, has
 #'   the path build one. Must lie in \eqn{(0, \infty)}.
@@ -243,15 +314,36 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #'
 #' @param min_ratio How far down the path reaches, as a fraction of the
 #'   kink that empties the block: smaller reaches a denser fit, larger
-#'   stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
-#'   criterion. Only the sweep by kink size uses it.
-#' @return An object of class [PenalizedTerm()] (a specification;
-#'   see [term_build()]).
+#'   stops sooner. A single number in \eqn{(0, 1)}, `1e-4` by default.
+#'   Only the sweep by kink size reads it.
+#' @return An unbuilt [PenalizedTerm()]: a specification, with `X`,
+#'   `coef_names`, `blueprint` and `penalty` empty until [term_build()]
+#'   fills them, and the penalty attached there over as many coefficients
+#'   as the block turns out to have.
 #'
 #' @examples
-#' dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
-#' term_penalty(term_build(scad(~ x1 + x2), dd))@params
+#' set.seed(3)
+#' dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
+#' p <- term_penalty(term_build(scad(~ x1 + x2), dd))
+#' p@params
+#' p@params_bounds
+#'
+#' # The derivative is the definition: lasso-like to lambda, then bending,
+#' # then flat past a * lambda.
+#' rho1 <- function(t, lambda, a)
+#'   lambda * pmin(1, pmax(a * lambda - t, 0) / ((a - 1) * lambda))
+#' rho1(c(0.5, 1.5, 4), lambda = 1, a = 3.7)
+#'
+#' # penalty_kinks() reports every point where some derivative breaks:
+#' # the origin, and the two pairs where the second derivative changes
+#' # branch, at plus and minus lambda and a * lambda.
+#' penalties7::penalty_kinks(p, list(lambda = 1, a = 3))
+#'
+#' # The literature's shape, held.
 #' term_hyper(scad(~ x1 + x2, a = 3.7))
+#'
+#' # Below 2 the shape is refused.
+#' try(scad(~ x1 + x2, a = 2))
 #'
 #' @references
 #' Fan, J. and Li, R. (2001). Variable selection via nonconcave penalized
@@ -279,7 +371,7 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #'
 #' @description
 #' The minimax concave penalty: like SCAD it selects and then flattens, and
-#' it begins to flatten IMMEDIATELY rather than after a first threshold.
+#' it begins to flatten IMMEDIATELY, where SCAD waits for a first threshold.
 #'
 #' @details
 #' Defined by its derivative, for \eqn{t = \lvert\beta_j\rvert \ge 0},
@@ -290,12 +382,16 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #' criterion.
 #'
 #' **Hyperparameters.** `lambda` on \eqn{(0, \infty)}, swept over
-#' `n_lambda` values by kink size; `gamma` on \eqn{(1, \infty)} --
-#' at \eqn{\gamma \le 1} the penalized objective need not be convex even for
-#' an orthogonal design -- swept over `n_gamma` values on a geometric
-#' grid above that bound. The literature's value is \eqn{\gamma = 3}.
+#' `n_lambda` values by kink size; `gamma` on \eqn{(1, \infty)}, at or below
+#' which the penalized objective need not be convex even for an orthogonal
+#' design, swept over `n_gamma` values on a geometric grid above that bound.
+#' The literature's value is \eqn{\gamma = 3}.
 #'
 #' @inheritParams penalized_terms
+#' @param label A single non-empty character string prefixed to the
+#'   coefficient names as `label.name`, `"mcp"` by default, so a block
+#'   over `x1` reads `mcp.x1`. Two penalized terms in one formula stay
+#'   apart by their labels.
 #' @param lambda The scale of the penalty. One number holds it, several are
 #'   the grid the path visits as they stand, and `NULL`, the default, has
 #'   the path build one. Must lie in \eqn{(0, \infty)}.
@@ -311,15 +407,33 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #'
 #' @param min_ratio How far down the path reaches, as a fraction of the
 #'   kink that empties the block: smaller reaches a denser fit, larger
-#'   stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
-#'   criterion. Only the sweep by kink size uses it.
-#' @return An object of class [PenalizedTerm()] (a specification;
-#'   see [term_build()]).
+#'   stops sooner. A single number in \eqn{(0, 1)}, `1e-4` by default.
+#'   Only the sweep by kink size reads it.
+#' @return An unbuilt [PenalizedTerm()]: a specification, with `X`,
+#'   `coef_names`, `blueprint` and `penalty` empty until [term_build()]
+#'   fills them, and the penalty attached there over as many coefficients
+#'   as the block turns out to have.
 #'
 #' @examples
-#' dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
-#' term_penalty(term_build(mcp(~ x1 + x2), dd))@params
+#' set.seed(3)
+#' dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
+#' p <- term_penalty(term_build(mcp(~ x1 + x2), dd))
+#' p@params
+#' p@params_bounds
+#'
+#' # The derivative starts at lambda and falls linearly to zero at
+#' # gamma * lambda, where SCAD would still be on its first segment.
+#' rho1 <- function(t, lambda, gamma) pmax(lambda - t / gamma, 0)
+#' rho1(c(0, 1, 2, 3), lambda = 1, gamma = 2)
+#'
+#' # The kink at zero, and the pair where the second derivative breaks.
+#' penalties7::penalty_kinks(p, list(lambda = 1, gamma = 2))
+#'
+#' # The literature's shape, held.
 #' term_hyper(mcp(~ x1 + x2, gamma = 3))
+#'
+#' # At or below 1 the objective need not be convex, so it is refused.
+#' try(mcp(~ x1 + x2, gamma = 1))
 #'
 #' @references
 #' Zhang, C.-H. (2010). Nearly unbiased variable selection under minimax

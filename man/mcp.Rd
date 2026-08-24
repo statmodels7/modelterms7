@@ -23,10 +23,10 @@ mcp(
 matrix, ideally a matrix column of the model data frame. A two-sided
 formula throws.}
 
-\item{label}{A single non-empty character string prefixed to the coefficient
-names as \code{label.name}. Each constructor defaults it to its own name, so a
-ridge over \code{x1} reads \code{ridge.x1}, and two penalized terms in one formula
-stay apart by their labels.}
+\item{label}{A single non-empty character string prefixed to the
+coefficient names as \code{label.name}, \code{"mcp"} by default, so a block
+over \code{x1} reads \code{mcp.x1}. Two penalized terms in one formula stay
+apart by their labels.}
 
 \item{standardize}{A single logical, \code{FALSE} by default: whether to penalize
 each coefficient on the scale of its own column. See the section above.}
@@ -45,8 +45,8 @@ size of the kink over four decades and wants that many points, while
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
-stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
-criterion. Only the sweep by kink size uses it.}
+stops sooner. A single number in \eqn{(0, 1)}, \code{1e-4} by default.
+Only the sweep by kink size reads it.}
 
 \item{search}{\code{"grid"} to visit every combination of \eqn{\lambda}
 and \eqn{\gamma}, \code{"cyclic"} to sweep one at a time with the other
@@ -62,12 +62,14 @@ hyperparameter is the mistake this catches: \code{scad(~ x, gamma = 1)} throws
 \code{"'scad' has no argument 'gamma'."} and lists the ones it does have.}
 }
 \value{
-An object of class \code{\link[=PenalizedTerm]{PenalizedTerm()}} (a specification;
-see \code{\link[=term_build]{term_build()}}).
+An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification, with \code{X},
+\code{coef_names}, \code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}}
+fills them, and the penalty attached there over as many coefficients
+as the block turns out to have.
 }
 \description{
 The minimax concave penalty: like SCAD it selects and then flattens, and
-it begins to flatten IMMEDIATELY rather than after a first threshold.
+it begins to flatten IMMEDIATELY, where SCAD waits for a first threshold.
 }
 \details{
 Defined by its derivative, for \eqn{t = \lvert\beta_j\rvert \ge 0},
@@ -78,15 +80,31 @@ carries no normalizing constant and is not reachable by a marginal
 criterion.
 
 \strong{Hyperparameters.} \code{lambda} on \eqn{(0, \infty)}, swept over
-\code{n_lambda} values by kink size; \code{gamma} on \eqn{(1, \infty)} --
-at \eqn{\gamma \le 1} the penalized objective need not be convex even for
-an orthogonal design -- swept over \code{n_gamma} values on a geometric
-grid above that bound. The literature's value is \eqn{\gamma = 3}.
+\code{n_lambda} values by kink size; \code{gamma} on \eqn{(1, \infty)}, at or below
+which the penalized objective need not be convex even for an orthogonal
+design, swept over \code{n_gamma} values on a geometric grid above that bound.
+The literature's value is \eqn{\gamma = 3}.
 }
 \examples{
-dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
-term_penalty(term_build(mcp(~ x1 + x2), dd))@params
+set.seed(3)
+dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
+p <- term_penalty(term_build(mcp(~ x1 + x2), dd))
+p@params
+p@params_bounds
+
+# The derivative starts at lambda and falls linearly to zero at
+# gamma * lambda, where SCAD would still be on its first segment.
+rho1 <- function(t, lambda, gamma) pmax(lambda - t / gamma, 0)
+rho1(c(0, 1, 2, 3), lambda = 1, gamma = 2)
+
+# The kink at zero, and the pair where the second derivative breaks.
+penalties7::penalty_kinks(p, list(lambda = 1, gamma = 2))
+
+# The literature's shape, held.
 term_hyper(mcp(~ x1 + x2, gamma = 3))
+
+# At or below 1 the objective need not be convex, so it is refused.
+try(mcp(~ x1 + x2, gamma = 1))
 
 }
 \references{

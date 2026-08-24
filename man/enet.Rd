@@ -23,10 +23,10 @@ enet(
 matrix, ideally a matrix column of the model data frame. A two-sided
 formula throws.}
 
-\item{label}{A single non-empty character string prefixed to the coefficient
-names as \code{label.name}. Each constructor defaults it to its own name, so a
-ridge over \code{x1} reads \code{ridge.x1}, and two penalized terms in one formula
-stay apart by their labels.}
+\item{label}{A single non-empty character string prefixed to the
+coefficient names as \code{label.name}, \code{"enet"} by default, so a block
+over \code{x1} reads \code{enet.x1}. Two penalized terms in one formula stay
+apart by their labels.}
 
 \item{standardize}{A single logical, \code{FALSE} by default: whether to penalize
 each coefficient on the scale of its own column. See the section above.}
@@ -45,8 +45,8 @@ size of the kink over four decades and wants that many points, while
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
-stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
-criterion. Only the sweep by kink size uses it.}
+stops sooner. A single number in \eqn{(0, 1)}, \code{1e-4} by default.
+Only the sweep by kink size reads it.}
 
 \item{search}{\code{"grid"} to visit every combination of \eqn{\lambda}
 and \eqn{\alpha}, \code{"cyclic"} to sweep one at a time with the other
@@ -62,8 +62,10 @@ hyperparameter is the mistake this catches: \code{scad(~ x, gamma = 1)} throws
 \code{"'scad' has no argument 'gamma'."} and lists the ones it does have.}
 }
 \value{
-An object of class \code{\link[=PenalizedTerm]{PenalizedTerm()}} (a specification;
-see \code{\link[=term_build]{term_build()}}).
+An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification, with \code{X},
+\code{coef_names}, \code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}}
+fills them, and the penalty attached there over as many coefficients
+as the block turns out to have.
 }
 \description{
 The lasso and the ridge mixed: a kink at zero, so the term still selects,
@@ -77,8 +79,8 @@ of choosing arbitrarily among them.
 the normalizing constant being that of the product of a Laplace and a
 Gaussian at zero
 (\code{\link[distributions7:enet_distrib]{distributions7::enet_distrib()}}). It depends on BOTH
-hyperparameters, which is what makes them estimable rather than merely
-settable, and what a penalty written as a formula would not have.
+hyperparameters, so both are estimable and not merely settable. A penalty
+written as a formula, with the constant dropped, would not have that.
 
 \eqn{\alpha} is the mixing weight: at \eqn{\alpha \to 1} the penalty is
 the lasso and at \eqn{\alpha \to 0} the ridge, and the kink at zero has
@@ -92,11 +94,30 @@ the two is visited, \code{n_lambda * n_alpha} fits, unless
 \code{search = "cyclic"} asks for one at a time instead.
 }
 \examples{
-dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
-term_penalty(term_build(enet(~ x1 + x2), dd))@params
+set.seed(3)
+dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
+pe <- term_penalty(term_build(enet(~ x1 + x2), dd))
+pe@params
+pe@params_bounds
 
-# alpha held at the halfway mixture, lambda still estimated
+# The two ends really are the other two penalties.
+pl <- term_penalty(term_build(lasso(~ x1 + x2), dd))
+pr <- term_penalty(term_build(ridge(~ x1 + x2), dd))
+beta <- c(0.4, -1.1)
+all.equal(penalties7::penalty_value(pe, beta, list(lambda = 2, alpha = 1 - 1e-9)),
+          penalties7::penalty_value(pl, beta, list(lambda = 2)))
+all.equal(penalties7::penalty_value(pe, beta, list(lambda = 2, alpha = 1e-9)),
+          penalties7::penalty_value(pr, beta, list(lambda = 2)))
+
+# alpha held at the halfway mixture, lambda still estimated.
 term_hyper(enet(~ x1 + x2, alpha = 0.5))
+
+# The grid is 25 by 5 by default; cyclic sweeps one axis at a time.
+term_grid(enet(~ x1 + x2))
+term_search(enet(~ x1 + x2, search = "cyclic"))
+
+# The open interval is enforced: an end is one of the other penalties.
+try(enet(~ x1 + x2, alpha = 1))
 
 }
 \references{

@@ -23,10 +23,10 @@ scad(
 matrix, ideally a matrix column of the model data frame. A two-sided
 formula throws.}
 
-\item{label}{A single non-empty character string prefixed to the coefficient
-names as \code{label.name}. Each constructor defaults it to its own name, so a
-ridge over \code{x1} reads \code{ridge.x1}, and two penalized terms in one formula
-stay apart by their labels.}
+\item{label}{A single non-empty character string prefixed to the
+coefficient names as \code{label.name}, \code{"scad"} by default, so a block
+over \code{x1} reads \code{scad.x1}. Two penalized terms in one formula stay
+apart by their labels.}
 
 \item{standardize}{A single logical, \code{FALSE} by default: whether to penalize
 each coefficient on the scale of its own column. See the section above.}
@@ -45,8 +45,8 @@ the shape's useful range and does not.}
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
-stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
-criterion. Only the sweep by kink size uses it.}
+stops sooner. A single number in \eqn{(0, 1)}, \code{1e-4} by default.
+Only the sweep by kink size reads it.}
 
 \item{search}{\code{"grid"} to visit every combination of \eqn{\lambda}
 and \eqn{a}, \code{"cyclic"} to sweep one at a time with the other held.
@@ -62,8 +62,10 @@ hyperparameter is the mistake this catches: \code{scad(~ x, gamma = 1)} throws
 \code{"'scad' has no argument 'gamma'."} and lists the ones it does have.}
 }
 \value{
-An object of class \code{\link[=PenalizedTerm]{PenalizedTerm()}} (a specification;
-see \code{\link[=term_build]{term_build()}}).
+An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification, with \code{X},
+\code{coef_names}, \code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}}
+fills them, and the penalty attached there over as many coefficients
+as the block turns out to have.
 }
 \description{
 Smoothly clipped absolute deviation: the lasso's kink at zero, so the
@@ -71,28 +73,46 @@ term selects, and a penalty that FLATTENS beyond a threshold, so a large
 coefficient is not shrunk at all.
 }
 \details{
-It is defined by its derivative rather than by its value, for
-\eqn{t = \lvert\beta_j\rvert \ge 0},
+It is defined by its derivative, for \eqn{t = \lvert\beta_j\rvert \ge 0},
 \deqn{\rho'(t) = \lambda\min\!\left\{1,
   \frac{(a\lambda - t)_+}{(a-1)\lambda}\right\},}
 summed over the coefficients. It rises like the lasso near zero, bends
-from \eqn{t = \lambda}, and is flat past \eqn{t = a\lambda}: the bias the
-lasso puts on a large coefficient is what this removes. Being improper it
+from \eqn{t = \lambda}, and is flat past \eqn{t = a\lambda}, which removes
+the bias the lasso puts on a large coefficient. Being improper it
 carries no normalizing constant, and is therefore not a log prior and not
 reachable by a marginal criterion.
 
 \strong{Hyperparameters.} \code{lambda} on \eqn{(0, \infty)}, swept over
-\code{n_lambda} values by kink size; \code{a} on \eqn{(2, \infty)} --
-below 2 the penalty is not what its definition intends -- swept over
+\code{n_lambda} values by kink size; \code{a} on \eqn{(2, \infty)}, below which the
+penalty is not what its definition intends, swept over
 \code{n_a} values on a geometric grid above that bound, since the shape
 leaves the kink at zero unchanged and no kink-size path can reach it. The
 literature's value is \eqn{a = 3.7}, and holding it there is what
 \pkg{ncvreg} does.
 }
 \examples{
-dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
-term_penalty(term_build(scad(~ x1 + x2), dd))@params
+set.seed(3)
+dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
+p <- term_penalty(term_build(scad(~ x1 + x2), dd))
+p@params
+p@params_bounds
+
+# The derivative is the definition: lasso-like to lambda, then bending,
+# then flat past a * lambda.
+rho1 <- function(t, lambda, a)
+  lambda * pmin(1, pmax(a * lambda - t, 0) / ((a - 1) * lambda))
+rho1(c(0.5, 1.5, 4), lambda = 1, a = 3.7)
+
+# penalty_kinks() reports every point where some derivative breaks:
+# the origin, and the two pairs where the second derivative changes
+# branch, at plus and minus lambda and a * lambda.
+penalties7::penalty_kinks(p, list(lambda = 1, a = 3))
+
+# The literature's shape, held.
 term_hyper(scad(~ x1 + x2, a = 3.7))
+
+# Below 2 the shape is refused.
+try(scad(~ x1 + x2, a = 2))
 
 }
 \references{

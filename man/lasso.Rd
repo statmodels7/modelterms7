@@ -20,10 +20,10 @@ lasso(
 matrix, ideally a matrix column of the model data frame. A two-sided
 formula throws.}
 
-\item{label}{A single non-empty character string prefixed to the coefficient
-names as \code{label.name}. Each constructor defaults it to its own name, so a
-ridge over \code{x1} reads \code{ridge.x1}, and two penalized terms in one formula
-stay apart by their labels.}
+\item{label}{A single non-empty character string prefixed to the
+coefficient names as \code{label.name}, \code{"lasso"} by default, so a block
+over \code{x1} reads \code{lasso.x1}. Two penalized terms in one formula stay
+apart by their labels.}
 
 \item{standardize}{A single logical, \code{FALSE} by default: whether to penalize
 each coefficient on the scale of its own column. See the section above.}
@@ -32,11 +32,14 @@ each coefficient on the scale of its own column. See the section above.}
 grid the path visits as they stand, and \code{NULL}, the default, has the
 path build one. Must lie in \eqn{(0, \infty)}.}
 
-\item{n_lambda}{How many values the path visits, at least 2.}
+\item{n_lambda}{How many values the path visits, a whole number of at
+least 2, \code{25} by default. The axis descends four decades of kink
+size, which is what that many points are for.}
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
-kink that empties the block: smaller reaches a denser fit, larger stops
-sooner. Must lie in \eqn{(0, 1)}.}
+kink that empties the block: smaller reaches a denser fit, larger
+stops sooner. A single number in \eqn{(0, 1)}, \code{1e-4} by default.
+Only the sweep by kink size reads it.}
 
 \item{sparse}{Governs the formula route: \code{TRUE} builds a \code{dgCMatrix} through
 \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}}, \code{FALSE} a dense model matrix, and \code{NULL},
@@ -48,8 +51,10 @@ hyperparameter is the mistake this catches: \code{scad(~ x, gamma = 1)} throws
 \code{"'scad' has no argument 'gamma'."} and lists the ones it does have.}
 }
 \value{
-An object of class \code{\link[=PenalizedTerm]{PenalizedTerm()}} (a specification;
-see \code{\link[=term_build]{term_build()}}).
+An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification, with \code{X},
+\code{coef_names}, \code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}}
+fills them, and the penalty attached there over as many coefficients
+as the block turns out to have.
 }
 \description{
 A block of coefficients under a Laplace prior at zero: the penalty has a
@@ -64,23 +69,33 @@ and keeps fewer coefficients.
 
 The kink is at zero, so the block is fitted by a proximal method or by a
 coordinate descent with the other terms held, and \eqn{\lambda} is chosen
-by a PATH over its own values -- \code{\link[statmodels7:aic]{statmodels7::bic()}} by
-default, or \code{\link[statmodels7:aic]{statmodels7::aic()}} or
-\code{\link[statmodels7:cv]{statmodels7::cv()}} -- because a marginal criterion is a
-Laplace expansion at a mode that sits on the kink.
+by a PATH over its own values, scored by \code{\link[statmodels7:aic]{statmodels7::bic()}} by default
+or by \code{\link[statmodels7:aic]{statmodels7::aic()}} or \code{\link[statmodels7:cv]{statmodels7::cv()}}. A marginal criterion
+cannot be used: it is a Laplace expansion at a mode that sits on the kink.
 
 \strong{Hyperparameter.} \code{lambda}, admissible on \eqn{(0, \infty)},
 swept over \code{n_lambda} values from the one that empties the block
 down to \code{min_ratio} of it.
 }
 \examples{
-dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
-built <- term_build(lasso(~ x1 + x2), dd)
-term_penalty(built)@params
-term_smooth(built)
+set.seed(3)
+dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
+b <- term_build(lasso(~ x1 + x2), dd)
+p <- term_penalty(b)
 
-# a finer path for a wide block
+# The kink is at zero, so the block is not smooth and needs a path.
+c(smooth = term_smooth(b))
+penalties7::penalty_kinks(p, list(lambda = 1))
+
+# The value is minus a Laplace log-density at rate lambda.
+beta <- c(0.4, -1.1)
+all.equal(penalties7::penalty_value(p, beta, list(lambda = 2)),
+          2 * sum(abs(beta)) - 2 * log(2 / 2))
+
+# The path's length and depth, at the defaults and set.
+term_grid(lasso(~ x1 + x2))
 term_grid(lasso(~ x1 + x2, n_lambda = 60))
+term_path_min(lasso(~ x1 + x2, min_ratio = 1e-3))
 
 }
 \references{
