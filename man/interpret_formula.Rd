@@ -7,64 +7,147 @@
 interpret_formula(formula, data, linpar = list())
 }
 \arguments{
-\item{formula}{A model formula.}
+\item{formula}{A two-sided or one-sided model formula. Anything else throws
+\code{"'formula' must be a formula."}. Its environment is where a term call's
+symbols are looked up when \code{data} does not carry them, and it is carried
+onto the formula of the implicit \code{linpar} block.}
 
-\item{data}{A data frame in which the formula's symbols are evaluated.}
+\item{data}{A data frame in which the formula's symbols are evaluated.
+Anything else throws \code{"'data' must be a data frame."}.}
 
-\item{linpar}{Arguments for the IMPLICIT \code{\link[=linpar]{linpar()}} term, the one
-the bare covariates collapse into, as a named list -- \code{sparse} and
-\code{contrasts}. It is the only place they can be given: that term is
-never written by the caller. Empty, the default, leaves the constructor's
-own.}
+\item{linpar}{A named list of arguments for the \strong{implicit} \code{\link[=linpar]{linpar()}}
+term, the one the bare covariates collapse into: \code{sparse} and \code{contrasts}.
+This is the only place they can be given, that term never being written by
+the caller. Empty by default, which leaves \code{\link[=linpar]{linpar()}}'s own defaults. A
+\code{linpar()} term the caller writes out takes its own arguments and ignores
+this one. Anything that is not a list throws.}
 }
 \value{
-A list with elements \code{response} (the evaluated left-hand
-side, or \code{NULL} for a one-sided formula), \code{terms} (a named
-list of term specifications, the collected parametric block first
-under the name \code{"linpar"}), \code{intercept} (logical) and
-\code{formula} (the input).
+A list of four elements:
+\describe{
+\item{\code{response}}{The evaluated left-hand side: a numeric vector, a
+\code{\link[=censored_response]{censored_response()}}, or \code{NULL} for a one-sided formula.}
+\item{\code{terms}}{A named list of unbuilt term specifications. The
+collected parametric block comes first under the name \code{"linpar"} and
+is absent when the formula has no bare covariates and no intercept.
+Every other name is the term's label as it appears in the formula,
+deparsed, such as \code{"s(x2, k = 5)"}.}
+\item{\code{intercept}}{\code{TRUE} unless the formula removes the intercept.}
+\item{\code{formula}}{The input, unchanged.}
+}
 }
 \description{
-Splits a model formula into a response specification and a list of term
-specifications. Term constructors are recognized by what they return: a
-call on the right-hand side whose value inherits from
-\code{\link[=model_term]{model_term()}} becomes a term of its own, and everything else
-(bare covariates, transformations such as \code{log(x)}, interactions)
-is collected into one \code{\link[=linpar]{linpar()}} block with the usual
-\code{\link[stats:model.matrix]{stats::model.matrix()}} conventions.
+Splits a model formula into a response and a named list of term
+specifications. A call on the right-hand side is evaluated, and if its value
+inherits from \code{\link[=model_term]{model_term()}} it becomes a term of its own; everything else,
+meaning bare covariates, transformations such as \code{log(x)} and interactions,
+is collected into a single \code{\link[=linpar]{linpar()}} block with the usual
+\code{\link[stats:model.matrix]{stats::model.matrix()}} conventions. The terms come back unbuilt, so the
+caller decides which data each is built against.
 }
-\details{
-Recognition by evaluation is what makes the interpreter extensible: a
-term class defined outside the package works in a formula the day it is
-written, with no list of special names to amend. \code{log(x)}
-evaluates to a numeric vector and stays a covariate; a constructor call
-evaluates to a term specification and is routed as one. Interaction
-labels and bare symbols are never evaluated directly.
+\section{Recognition by evaluation}{
+A term constructor is identified by what its call returns, so a term class
+defined outside the package works in a formula the day it is written, with
+no list of special names to amend. \code{log(x)} evaluates to a numeric vector
+and stays a covariate; \code{s(x, k = 5)} evaluates to a \code{SmoothTerm} and is
+routed as a term.
 
-The left-hand side, when present, is evaluated in the data: a plain
-expression gives a numeric response, and a response constructor such as
-\code{\link[=cens]{cens()}} gives its response object. The intercept convention
-is the formula's own, carried into the collected parametric block, so
-\code{y ~ ridge_like(R)} still produces an intercept-only
-\code{linpar} block and \code{y ~ ridge_like(R) - 1} produces none.
+Some labels are never evaluated: \code{:}, \code{*}, \code{^}, \code{\%in\%}, \code{+}, \code{-}, \code{(} and
+\code{I}. A bare interaction \code{x1:x2} parses as a call to \code{:}, which on numeric
+vectors is the sequence operator and would return something unrelated to the
+column \code{\link[stats:model.matrix]{stats::model.matrix()}} builds. Those labels go straight to the
+parametric block.
 
-One covariate is removed rather than collected. A \code{\link[=seg]{seg()}} or
-\code{\link[=jseg]{jseg()}} term carrying the linear effect contributes the same
-column the bare covariate would, so \code{y ~ x + seg(x)} is rank
-deficient by one; the term owns that effect, which is what
-\code{linear = TRUE} says, so the covariate is dropped from the
-parametric block and the removal is reported with a warning.
-\code{seg(x, linear = FALSE)} keeps the linear effect outside the term
-instead. Only the bare main effect is removed: an interaction spans no
-main effect and is left alone, and another term spanning the same
-direction, as a spline basis does, is reported without being modified.
+A call whose value is neither a term nor something a model matrix can hold
+throws, naming the label and the class it produced. The commonest way to
+arrive there is a masked name. \code{mgcv} also exports \code{s()} and \code{te()} and
+\code{segmented} exports \code{seg()}, so where the package exports a term of that
+name and the name resolves elsewhere, the message says where it was found
+and suggests \verb{modelterms7::}.
 }
+
+\section{The response and the intercept}{
+The left-hand side, when there is one, is evaluated in \code{data}: a plain
+expression gives a numeric vector, and a response constructor such as
+\code{\link[=cens]{cens()}} gives its object. A one-sided formula gives \code{response = NULL}.
+
+The intercept convention is the formula's own, carried into the collected
+parametric block. \code{y ~ ridge(~ g)} still produces an intercept-only
+\code{linpar} block, and \code{y ~ ridge(~ g) - 1} produces no \code{linpar} block at all.
+}
+
+\section{One covariate is removed}{
+A \code{\link[=seg]{seg()}} or \code{\link[=jseg]{jseg()}} term built with \code{linear = TRUE}, which is the default,
+contributes the same column the bare covariate would, so \code{y ~ x + seg(x)} is
+rank deficient by one. The term owns that effect, so the covariate is
+dropped from the parametric block and a warning names both. Writing
+\code{seg(x, linear = FALSE)} keeps the linear effect outside the term.
+
+Only the bare main effect is removed, matched on the deparsed expression: an
+interaction spans no main effect and is left alone. A term that spans the
+same direction without being that one column is reported by a warning and
+left unmodified. A spline basis is the case: it contains the line, and its
+penalty leaves the line unpenalized, so \code{s(x) + seg(x)} is confounded too.
+There is no single column to remove there, and reshaping another term is
+not this function's business.
+}
+
+\section{What it does not do}{
+Nothing is built: every element of \code{terms} is a specification, and
+\code{\link[=term_is_built]{term_is_built()}} is \code{FALSE} for all of them. \code{data} is read for
+\code{\link[stats:terms]{stats::terms()}}'s variable classification and for evaluating the term calls
+and the response, and the term constructors themselves do not touch it.
+
+Labels are deduplicated by \code{\link[stats:terms]{stats::terms()}} before any of this, so
+\code{y ~ ridge(~ x) + ridge(~ x)} gives one term, as \code{y ~ x + x} gives one
+column.
+}
+
 \examples{
-dd <- data.frame(y = rnorm(6), x1 = 1:6, x2 = runif(6))
+dd <- data.frame(y = rnorm(20), x1 = 1:20, x2 = runif(20),
+                 g = factor(rep(letters[1:4], 5)))
+
+# Covariates and transformations collapse into one parametric block.
 out <- interpret_formula(y ~ x1 + log(x2), dd)
 names(out$terms)
+out$terms$linpar@formula
+
+# A constructor call becomes a term, keyed by its label in the formula.
+out2 <- interpret_formula(y ~ x1 + s(x2, k = 5) + ridge(~ g), dd)
+names(out2$terms)
+vapply(out2$terms, function(t) class(t)[1], character(1))
+
+# Nothing is built yet.
+vapply(out2$terms, term_is_built, logical(1))
+
+# The intercept convention is the formula's own.
+names(interpret_formula(y ~ ridge(~ g), dd)$terms)
+names(interpret_formula(y ~ ridge(~ g) - 1, dd)$terms)
+
+# An interaction is a covariate: `:` is never evaluated.
+interpret_formula(y ~ x1:x2 + g, dd)$terms$linpar@formula
+
+# seg() carries the linear effect, so the bare covariate is removed.
+w <- interpret_formula(y ~ x1 + seg(x1), dd)
+w$terms$linpar@formula          # x1 is gone; the term carries it
+
+# Unless the term is told not to own it.
+interpret_formula(y ~ x1 + seg(x1, linear = FALSE), dd)$terms$linpar@formula
+
+# Arguments for the implicit block go through `linpar`.
+sp <- interpret_formula(y ~ g, dd, linpar = list(sparse = TRUE))
+class(term_matrix(term_build(sp$terms$linpar, dd)))
+
+# A call that returns neither a term nor a covariate is refused by name.
+e <- new.env(parent = globalenv())
+assign("s", function(x, ...) structure(list(), class = "gamObject"), envir = e)
+f <- y ~ s(x1)
+environment(f) <- e
+try(interpret_formula(f, dd))
 
 }
 \seealso{
-\code{\link[=cens]{cens()}}, \code{\link[=check_term]{check_term()}}
+\code{\link[=linpar]{linpar()}} for the block the covariates collapse into, \code{\link[=cens]{cens()}} for
+the response constructor, \code{\link[=check_term]{check_term()}} for validating one of the
+returned specifications, and \code{\link[=term_build]{term_build()}} for building it.
 }
