@@ -32,7 +32,7 @@ sum over it is taken by the forward recursion of the side chain: the
 monotone process of active break-points is a hidden Markov chain on the
 \eqn{2^K} side patterns whose transition factors over the coordinates,
 each flip weighted by its interval's prior mass, so the cost is
-\eqn{n K 2^K} rather than the \eqn{(n+1)^K} of the cells. The
+\eqn{n K 2^K}, against the \eqn{(n+1)^K} of the cells. The
 derivatives ride the same recursion: the masses' in the prior's
 parameters, the emissions' in the changes of level.
 For the continuous kinds the conditional is smooth within an interval

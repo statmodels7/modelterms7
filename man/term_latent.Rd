@@ -2,6 +2,7 @@
 % Please edit documentation in R/marginal.R
 \name{term_latent}
 \alias{term_latent}
+\alias{term_latent.structural_term}
 \title{The Posterior of a Structural Term's Latent Variable}
 \usage{
 term_latent(term, eta, y, logdens, psi, ...)
@@ -9,46 +10,65 @@ term_latent(term, eta, y, logdens, psi, ...)
 \arguments{
 \item{term}{A built structural term.}
 
-\item{eta}{The static predictor of the equation the term sits in.}
+\item{eta}{The static predictor of the equation the term sits in, one value
+per observation.}
 
 \item{y}{The response.}
 
-\item{logdens}{The log-density as a function of a predictor value and a
-row index, as \code{\link[=term_loglik]{term_loglik()}} takes it.}
+\item{logdens}{A function \verb{(e, i)} returning the log-density of observation
+\code{i} at predictor \code{e}, as \code{\link[=term_loglik]{term_loglik()}} takes it.}
 
-\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
+\item{psi}{The term's parameters on the parameter scale, named as
+\code{\link[=term_params]{term_params()}}.}
 
 \item{...}{Passed to methods.}
 }
 \value{
-A data frame with one row per group and break-point:
-\code{group}, \code{psi} (which break-point), \code{mean} and
-\code{sd}.
+A data frame with one row per group and break-point and four
+columns: \code{group}, the grouping level; \code{psi}, which break-point;
+\code{mean} and \code{sd}, the posterior moments of its position. \code{NA} in a moment
+the prior does not possess.
 }
 \description{
-A summary of the latent variable a structural term integrates over,
-given the whole sample: for a marginal break-point term, the posterior
-mean and standard deviation of each group's break-points.
+A summary of the latent variable a structural term integrates over, given
+the whole sample. For a marginal break-point term it is the posterior mean
+and standard deviation of each group's break-points. That is what a reader
+wants from such a fit: where each group's change happened, and how sure the
+data are about it.
 }
 \details{
-\code{\link[=term_posterior]{term_posterior()}} answers the fitting layer's question, the
-component weights Fisher's identity needs at every observation. This one
-answers the reader's: where each group's latent positions sit once the
-data have been seen. For the marginal break-point term the two come from
-the same decomposition; the mean and variance within an interval are
-those of the prior truncated to it, and under quadrature the moments of
-the node posterior.
+\code{\link[=term_posterior]{term_posterior()}} answers the fitting layer's question, the component
+weights Fisher's identity needs at every observation. This one answers the
+reader's. For the marginal break-point term the two come from the same
+decomposition: the mean and variance within an interval are those of the
+prior truncated to it, and under quadrature the moments of the node
+posterior.
 }
+\section{What a heavy-tailed prior can refuse}{
+The moments are the prior's, so a prior without them has none to report. A
+Student t below one degree of freedom has no mean on an edge interval and
+below two no variance, and the quadrature returns \code{NA} there instead of a
+number. That is a property of the prior the caller chose.
+
+The method on \code{\link[=structural_term]{structural_term()}} throws, naming the class: \code{\link[=gas]{gas()}} and
+\code{\link[=regime]{regime()}} have no continuous latent to summarize this way, a regime's
+latent being the discrete state \code{\link[=term_posterior]{term_posterior()}} already reports.
+}
+
 \examples{
 set.seed(1)
 dd <- data.frame(id = rep(1:3, each = 8), x = rep(1:8, 3))
 dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
-tm <- term_build(jump(x, psi ~ random(~1 | id), marginal = TRUE), dd)
+tm <- term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd)
+
+# Every group's step is at 4.5, and the posterior finds it there,
+# with a spread well inside the prior's own 0.5.
 term_latent(tm, rep(0, 24), dd$y,
             logdens = function(e, i) dnorm(dd$y[i], e, 0.4, log = TRUE),
             psi = list(m1 = 4.5, tau1 = 0.5, delta1 = 2))
 
 }
 \seealso{
-\code{\link[=term_posterior]{term_posterior()}}, \code{\link[=jump]{jump()}}
+\code{\link[=term_posterior]{term_posterior()}} for the component weights a fit reads,
+\code{\link[=jump]{jump()}} and \code{\link[=seg]{seg()}} for the terms that implement it.
 }

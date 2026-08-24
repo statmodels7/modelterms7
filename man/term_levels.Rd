@@ -2,6 +2,7 @@
 % Please edit documentation in R/marginal.R
 \name{term_levels}
 \alias{term_levels}
+\alias{term_levels.structural_term}
 \title{The Levels of a Likelihood-Shaped Structural Term}
 \usage{
 term_levels(term, psi, ...)
@@ -9,42 +10,67 @@ term_levels(term, psi, ...)
 \arguments{
 \item{term}{A built structural term of the likelihood shape.}
 
-\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
+\item{psi}{The term's parameters on the parameter scale, named as
+\code{\link[=term_params]{term_params()}}.}
 
 \item{...}{Passed to methods.}
 }
 \value{
-A numeric vector with one level per component, or a matrix with
-one row per observation and one column per component.
+A numeric vector of one level per component, or a numeric matrix of
+\code{n} rows and one column per component where a shift varies by
+observation. The order matches \code{\link[=term_posterior]{term_posterior()}}'s columns.
 }
 \description{
-The shifts a term of the likelihood shape adds to its equation's
-predictor, one per mixture component, in the order the columns of
-\code{\link[=term_posterior]{term_posterior()}} carry the components.
+The shifts a term of the likelihood shape adds to its equation's predictor,
+one per mixture component, in the order the columns of \code{\link[=term_posterior]{term_posterior()}}
+carry the components. A fitting layer reads the two together to assemble
+Fisher's identity.
 }
 \details{
 By Fisher's identity the derivative of a likelihood mixed over latent
-states, in any predictor the model carries, is the posterior-weighted
+states, in \strong{any} predictor the model carries, is the posterior-weighted
 derivative of the ordinary one, each component read at the predictor
-shifted by its own level. \code{\link[=term_posterior]{term_posterior()}} supplies the
-weights; this supplies the levels, so a fitting layer assembles the
-identity without reading the term's internals. For \code{\link[=regime]{regime()}}
-the levels are the ordered regime means, one number per component; for a
-marginal break-point term of the step kind they are the sums of the
-changes of level over the active break-points, one number per side
-pattern.
+shifted by its own level:
 
-A component's shift may vary by observation -- the quadrature nodes of a
-marginal \code{\link[=seg]{seg()}} or \code{\link[=jseg]{jseg()}} term shift each
-observation by its own hinge value -- and the method then returns a
-matrix with one row per observation and one column per component, whose
-columns a caller reads in place of the constant levels.
+\deqn{\frac{\partial L}{\partial \eta_{q,t}}
+  = \sum_k \gamma_t(k)\,
+    \frac{\partial \ell(y_t; \theta_t(k))}{\partial \eta_q}.}
+
+\code{\link[=term_posterior]{term_posterior()}} supplies the \eqn{\gamma_t(k)} and this supplies the
+shifts, so a fitting layer assembles the identity without reading the
+term's internals.
+
+For \code{\link[=regime]{regime()}} the levels are the ordered regime means, one number per
+component. For a marginal break-point term of the step kind they are the
+sums of the changes of level over the active break-points, one number per
+side pattern.
 }
+\section{A shift may vary by observation}{
+The quadrature nodes of a marginal \code{\link[=seg]{seg()}} or \code{\link[=jseg]{jseg()}} term shift each
+observation by its own hinge value, so the method may return a \strong{matrix}
+of one row per observation and one column per component. A caller reads a
+column of it wherever it would read a constant level, and must accept both
+shapes.
+
+The method on \code{\link[=structural_term]{structural_term()}} throws, naming the class: a term of the
+filter shape reports a predictor instead of components, and answers
+\code{\link[=term_filter]{term_filter()}}.
+}
+
 \examples{
-term_levels(regime(2), list(level1 = 0, gap2 = 3,
-                            alr1.1 = 2, alr2.1 = -2))
+# A two-regime chain: the first level and the cumulated gap.
+term_levels(regime(2), list(level1 = 0, gap2 = 3, alr1.1 = 2, alr2.1 = -2))
+
+# A one-break-point step term: no shift where no break-point is active,
+# and the change of level where one is.
+set.seed(1)
+dd <- data.frame(id = rep(1:3, each = 8), x = rep(1:8, 3))
+dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
+tm <- term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd)
+term_levels(tm, list(m1 = 4.5, tau1 = 0.5, delta1 = 2))
 
 }
 \seealso{
-\code{\link[=term_posterior]{term_posterior()}}, \code{\link[=term_loglik]{term_loglik()}}
+\code{\link[=term_posterior]{term_posterior()}} for the weights, \code{\link[=term_loglik]{term_loglik()}} for the
+likelihood, \code{\link[=regime]{regime()}} and \code{\link[=jump]{jump()}} for the two implementations.
 }

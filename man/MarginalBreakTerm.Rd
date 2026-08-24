@@ -47,38 +47,95 @@ more than one carrying a kink: \code{"grid"} for every combination of them,
 \code{"cyclic"} for one at a time, or \code{character(0)} for the default. See
 \code{\link[=term_search]{term_search()}}.}
 
-\item{kind}{Which of the three constructions.}
+\item{kind}{One of \code{"jump"}, \code{"seg"} or \code{"jseg"}.}
 
-\item{var}{The covariate expression.}
+\item{var}{The covariate expression, unevaluated.}
 
-\item{npsi}{The number of break-points.}
+\item{npsi}{The number of break-points per group, an integer between 1 and
+8 for \code{"jump"} and exactly 1 for the other two.}
 
 \item{linear}{Whether the term carries the linear effect as its own
-parameter (\code{seg} and \code{jseg}).}
+parameter, \code{TRUE} for \code{"seg"} and \code{"jseg"}.}
 
-\item{group}{The grouping expression, from the break-point's
-\code{random()} subformula.}
+\item{group}{The grouping expression, from the break-point's \code{random()}
+subformula.}
 
-\item{prior}{The latent's distribution: \code{NULL} for the gaussian, or
-a \pkg{distributions7} object from \code{random(distrib = )}.}
+\item{prior}{The latent's distribution: \code{NULL} for the Gaussian, or a
+\pkg{distributions7} object with its location held at zero.}
 
-\item{spec}{The resolved construction settings.}
+\item{spec}{A named list of the resolved construction settings.}
 
-\item{blueprint}{The resolved grouping and interval structure.}
+\item{blueprint}{A named list of the resolved grouping and interval
+structure, empty until \code{\link[=term_build]{term_build()}} fills it.}
 }
 \value{
-An object of class \code{MarginalBreakTerm}.
+An S7 object of class \code{MarginalBreakTerm}, inheriting from
+\code{\link[=structural_term]{structural_term()}} and \code{\link[=model_term]{model_term()}}, with the eight properties above
+beside \code{\link[=model_term]{model_term()}}'s six.
 }
 \description{
-A subclass of \code{\link[=structural_term]{structural_term()}} for break-points that vary
-by group as latent variables integrated out of the likelihood.
-Constructed by \code{\link[=jump]{jump()}}, \code{\link[=seg]{seg()}} or
-\code{\link[=jseg]{jseg()}} with \code{marginal = TRUE}.
+The subclass of \code{\link[=structural_term]{structural_term()}} holding break-points that vary by group
+as latent variables \strong{integrated out} of the likelihood.
+\code{\link[=jump]{jump()}}, \code{\link[=seg]{seg()}} and \code{\link[=jseg]{jseg()}} construct it when given \code{marginal = TRUE}
+together with a \code{psi ~ random(~ 1 | g)} subformula.
+
+Its contribution is a likelihood, not a predictor, so it implements
+\code{\link[=term_loglik]{term_loglik()}} and the prior over the positions is part of that likelihood
+and not a penalty. \code{\link[=term_penalties]{term_penalties()}} declares nothing, and the prior's
+parameters are estimated by plain maximum likelihood.
 }
+\section{The eight properties of its own}{
+\code{kind} is \code{"jump"}, \code{"seg"} or \code{"jseg"}; \code{var} the covariate expression;
+\code{npsi} the number of break-points per group; \code{linear} whether the term
+carries the linear effect as a parameter of its own, which \code{seg} and \code{jseg}
+do.
+
+\code{group} is the grouping expression, taken from the break-point's \code{random()}
+subformula. \code{prior} is the latent's distribution: \code{NULL} for the Gaussian,
+or a \pkg{distributions7} object where \code{random(distrib = )} named one, and
+its location must be fixed at zero, \code{m1} carrying the position.
+
+\code{spec} holds the resolved construction settings and \code{blueprint} the
+grouping and the interval structure \code{\link[=term_build]{term_build()}} worked out.
+}
+
+\section{The parameters}{
+They are numbered, one set per break-point: \code{m1}, \code{tau1}, \code{delta1} for a
+one-break-point step term, with \code{m} the prior's location, \code{tau} its scale on
+a log chart, and \code{delta} the change of level. A continuous kind adds \code{beta}
+for the linear effect and \code{gamma1} for the change of slope.
+}
+
+\section{What it costs}{
+At most \strong{eight} break-points. The forward recursion of the step kind costs
+\eqn{n K 2^K} and stays cheap well past that; what does not is the fitting
+layer, which reads a posterior over the \eqn{2^K} side patterns and
+evaluates the family once per pattern. The continuous kinds stay at one
+break-point, a product quadrature over more being far dearer still.
+}
+
 \examples{
-S7::S7_inherits(jump(x, psi ~ random(~1 | id), marginal = TRUE),
-                MarginalBreakTerm)
+set.seed(1)
+dd <- data.frame(id = rep(1:3, each = 8), x = rep(1:8, 3))
+dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
+
+tm <- term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd)
+S7::S7_inherits(tm, MarginalBreakTerm)
+c(kind = tm@kind, npsi = tm@npsi, linear = tm@linear)
+
+# Numbered parameters: the prior's location and scale, and the change.
+term_params(tm)
+vapply(term_links(tm), function(l) l@link_name, character(1))
+
+# The prior is part of the likelihood, so nothing is declared penalized.
+length(term_penalties(tm))
+
+# A continuous kind adds the linear effect and the change of slope.
+term_params(term_build(seg(x, psi ~ random(~ 1 | id), marginal = TRUE), dd))
+
 }
 \seealso{
-\code{\link[=jump]{jump()}}
+\code{\link[=jump]{jump()}}, \code{\link[=seg]{seg()}} and \code{\link[=jseg]{jseg()}} for the constructors;
+\code{\link[=term_loglik]{term_loglik()}} for the likelihood; \code{\link[=term_latent]{term_latent()}} for the posterior
+positions a reader wants.
 }
