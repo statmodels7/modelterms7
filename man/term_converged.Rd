@@ -2,6 +2,7 @@
 % Please edit documentation in R/nonlinear.R
 \name{term_converged}
 \alias{term_converged}
+\alias{term_converged.model_term}
 \title{Has a Term's Own Iteration Settled?}
 \usage{
 term_converged(term, ...)
@@ -21,14 +22,16 @@ answers \code{TRUE}, having no iteration of its own.
 }
 \details{
 It exists because a score cannot always answer the question. Where the
-block is the Jacobian of the contribution -- \code{\link[=nl]{nl()}},
-\code{\link[=seg]{seg()}} -- the gradient of the model's objective is the block
-times the derivative of the log-likelihood in the predictor, and its
-vanishing is the test. Where the block is a working LINEARIZATION with a
-frozen weight -- \code{\link[=jump]{jump()}}, \code{\link[=jseg]{jseg()}} -- it is not: the
-profile objective of a discontinuous term is a step function in the
-break-point, so it has no gradient to vanish, and the quantity the
-iteration actually drives to zero is the movement of the break-point.
+block is the Jacobian of the contribution, as it is for \code{\link[=nl]{nl()}} and
+\code{\link[=seg]{seg()}}, the gradient of the model's objective is the block times the
+derivative of the log-likelihood in the predictor, and its vanishing is
+the test.
+
+Where the block is a working LINEARIZATION with a frozen weight, as it is
+for \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}}, there is no such gradient: the profile
+objective of a discontinuous term is a step function in the break-point.
+What the iteration drives to zero there is the movement of the break-point
+itself.
 That movement is what \code{\link[=seg_converged]{seg_converged()}} reads, and a fitting
 layer asks for it here without knowing which construction it holds.
 }

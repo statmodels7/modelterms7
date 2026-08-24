@@ -2,6 +2,8 @@
 % Please edit documentation in R/nonlinear.R
 \name{term_block_contract}
 \alias{term_block_contract}
+\alias{term_block_contract.model_term}
+\alias{term_block_contract.NlTerm}
 \title{How a Term's Block Moves With Its Coefficients}
 \usage{
 term_block_contract(term, coef = NULL, A, ...)
@@ -33,9 +35,8 @@ marginal criterion reads \eqn{\log|K|} with
 \eqn{\partial K/\partial\beta} gains everything coming from
 \eqn{\partial X/\partial\beta}.
 
-\strong{The contraction and not the derivative}, because
-\eqn{\partial X/\partial\beta} is \eqn{n \times m \times m} and nothing
-needs it whole. For \code{\link[=nl]{nl()}} it is closed form at \eqn{O(nm)}:
+\strong{Only the contraction is computed.} \eqn{\partial X/\partial\beta} is
+\eqn{n \times m \times m} and nothing needs it whole. For \code{\link[=nl]{nl()}} it is closed form at \eqn{O(nm)}:
 writing \eqn{X_{i,c} = w_{p}(i) Z_p[i,c]} with
 \eqn{w_p = (\partial f/\partial\theta_p)\,h_p'},
 \deqn{\frac{\partial X_{i,c_1}}{\partial\beta_{c_2}} =
@@ -43,14 +44,14 @@ writing \eqn{X_{i,c} = w_{p}(i) Z_p[i,c]} with
   + \delta_{p_1p_2} f_{p_1} h_{p_1}''\Big),}
 so with \eqn{s_{p}(i) = \sum_{c\in p} A_{ic}Z_{p}[i,c]} the answer is
 \eqn{Z_{p_2}'\sum_{p_1} q_{p_1p_2}s_{p_1}}, one crossprod per parameter.
-The chain rule onto the coefficients -- each parameter's link and its
-subformula's design -- stays here, which is the only place that knows them.
+The chain rule onto the coefficients, each parameter's link and its
+subformula's design, stays here, this being the only place that knows them.
 
-\code{\link[=seg]{seg()}} has its own, written from the closed forms, because
-theirs is not a difference a caller could take: a break-point column is a
-step function in its break-point, so the quotient diverges as the step
-shrinks -- measured at h, h/4 and h/16, 3.6e4, 1.4e5 and 5.8e5, against
-\code{\link[=nl]{nl()}}'s 0.6038 throughout. What is bounded is written out
+\code{\link[=seg]{seg()}} has its own, written from the closed forms. Theirs is not a
+difference a caller could take: a break-point column is a step function in
+its break-point, so the quotient diverges as the step shrinks. Measured at
+\eqn{h}, \eqn{h/4} and \eqn{h/16} it reads 3.6e4, 1.4e5 and 5.8e5, where
+\code{\link[=nl]{nl()}}'s stays at 0.6038 throughout. What is bounded is written out
 instead. The truncated line \eqn{(x-\psi)_+} has derivative
 \eqn{-\mathbf{1}(x>\psi)} in the break-point, and the break-point column
 \eqn{-\gamma(x)\mathbf{1}(x>\psi)} has the same indicator as its derivative
@@ -59,10 +60,10 @@ value taken.
 
 ⚠️ \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}} keep the base method's zeros.
 Their position is READ OFF a product of the unknowns, \eqn{\psi = -g/\delta},
-so a column's derivative runs through that read-off rather than through a
+so a column's derivative runs through that read-off instead of through a
 development's design, and the weight \eqn{W = 1/(2\lvert\tilde x-\psi\rvert)}
 they carry has an unbounded derivative in the break-point. Their block is a
-working LINEARIZATION with a frozen weight rather than a Jacobian, which is
+working LINEARIZATION with a frozen weight, which is
 the same fact that makes \code{\link[=term_converged]{term_converged()}} answer differently for
 them.
 }

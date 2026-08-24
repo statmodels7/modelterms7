@@ -130,7 +130,7 @@ tm@deriv_mode
 nl(function(x, theta) theta$a * exp(-theta$r * x),
    params = c("a", "r"), x = x, start = list(a = 1, r = 1))@deriv_mode
 
-# The block is the Jacobian, which is what licenses a Gauss-Newton step.
+# The block is the Jacobian, so a linear fit on it is a Gauss-Newton step.
 b <- term_build(tm, dd)
 dim(term_matrix(b))
 term_jacobian_block(b)

@@ -2,6 +2,8 @@
 % Please edit documentation in R/nonlinear.R
 \name{term_block_deriv}
 \alias{term_block_deriv}
+\alias{term_block_deriv.model_term}
+\alias{term_block_deriv.NlTerm}
 \title{How a Term's Block Moves Along One Direction}
 \usage{
 term_block_deriv(term, coef = NULL, v, ...)
@@ -27,17 +29,17 @@ the caller supplies.
 \details{
 It is the ADJOINT of \code{\link[=term_block_contract]{term_block_contract()}} and neither computes
 the other. That one contracts over the observations and the columns and
-answers per coefficient, which is what the gradient of a marginal criterion
-needs; this one contracts over the coefficients and answers per entry of the
-block, which is what its HESSIAN needs -- there \eqn{\partial K/\partial\beta}
-is required in the direction the mode moves rather than traced.
+answers per coefficient, as the gradient of a marginal criterion
+needs; this one contracts over the coefficients and answers per entry of
+the block, which is what its HESSIAN needs, \eqn{\partial K/\partial\beta}
+being required there in the direction the mode moves instead of traced.
 
 Both are \eqn{O(nm)} and read the same closed form, so this needs no
 derivative the other did not: for \code{\link[=nl]{nl()}}, writing
 \eqn{q_{p_1p_2} = f_{p_1p_2}h_{p_1}'h_{p_2}' + \delta_{p_1p_2}f_{p_1}h_{p_1}''},
 \deqn{\Big(\frac{\partial X}{\partial\beta}v\Big)[i, c_1] =
   Z_{p_1}[i,c_1]\sum_{p_2} q_{p_1p_2}(i)\,(Z_{p_2}v_{p_2})[i],}
-which is the second derivative of \eqn{f} and not the third.
+the second derivative of \eqn{f}, one order below what an array would need.
 
 The base method returns zeros, right for a block that does not move.
 }

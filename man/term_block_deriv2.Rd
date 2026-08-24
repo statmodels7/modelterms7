@@ -2,6 +2,8 @@
 % Please edit documentation in R/nonlinear.R
 \name{term_block_deriv2}
 \alias{term_block_deriv2}
+\alias{term_block_deriv2.model_term}
+\alias{term_block_deriv2.NlTerm}
 \title{The Second Derivative of a Design Block in the Coefficients}
 \usage{
 term_block_deriv2(term, coef = NULL, v, u, ...)
@@ -26,8 +28,8 @@ derivative contracted in two directions the caller supplies.
 }
 \details{
 It stands one order above \code{\link[=term_block_deriv]{term_block_deriv()}}, and it is
-contracted rather than returned as an array for the reason
-\code{\link[=term_third]{term_third()}} is contracted in the structural branch: the full
+contracted, never returned as an array, for the reason \code{\link[=term_third]{term_third()}} is
+contracted in the structural branch: the full
 object has \eqn{m} coefficient indices twice over beside the \eqn{n} rows
 and \eqn{m} columns of the block, and only its contraction in the two
 directions the penalized mode moves is ever read.
@@ -43,9 +45,9 @@ The result is symmetric in \code{v} and \code{u}, mixed partial derivatives
 being equal, and an implementation that pairs a direction with the wrong
 parameter loses that symmetry.
 
-The base method returns zeros. That is exact and not an approximation: a
-design that does not move with its coefficients has a second derivative
-that is identically zero, which covers \code{\link[=linpar]{linpar()}},
+The base method returns zeros, and that is exact. A design that does not
+move with its coefficients has a second derivative that is identically
+zero, which covers \code{\link[=linpar]{linpar()}},
 \code{\link[=s]{s()}}, \code{\link[=te]{te()}}, \code{\link[=random]{random()}} and the five
 penalized constructors without a method of their own.
 
@@ -90,19 +92,19 @@ derivative is genuinely zero away from the break-points, the truncated
 line's derivative in the position being an indicator and the position
 column being linear in the change, while for \code{\link[=jump]{jump()}} and
 \code{\link[=jseg]{jseg()}} the block is a working linearization with a frozen
-weight rather than a Jacobian, which is why the first-order generics
+weight, which is why the first-order generics
 already answer zeros there.
 
 Two properties of the smoothed branch are worth stating because they are
-exact rather than approximate. Where a break-point sits against its
+exact. Where a break-point sits against its
 confinement limit the whole contribution is zero, every addend carrying a
-direction in the break-point -- which the FIRST derivative does not, the
+direction in the break-point, which the FIRST derivative does not, the
 position column moving with the change whatever the position does. And
 under \code{\link[penalties7:smooth_quintic]{penalties7::smooth_quintic()}}, which is exact outside
 \eqn{[-h, h]}, the answer is zero on every observation further than the
 width from a break-point; that smoother is \eqn{C^3}, so its fourth
 derivative jumps at \eqn{\pm h} and the answer is exact away from those two
-points rather than everywhere.
+points, leaving it exact everywhere else.
 }
 \examples{
 dd <- data.frame(x = seq(0.2, 3, length.out = 20))

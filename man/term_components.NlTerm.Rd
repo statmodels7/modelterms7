@@ -20,8 +20,8 @@ subformula owns one column; a developed one owns as many as its own design
 has.
 }
 \details{
-It is what lets a consumer report a fitted nonlinear term parameter by
-parameter, and what \code{\link[=edf]{edf()}} counts over. A coefficient name is built for a
+A consumer reads it to report a fitted nonlinear term parameter by
+parameter, and \code{\link[=edf]{edf()}} counts over it. A coefficient name is built for a
 reader, so the division cannot be recovered by parsing one back; the term
 has to say it.
 }

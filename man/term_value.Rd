@@ -2,6 +2,8 @@
 % Please edit documentation in R/nonlinear.R
 \name{term_value}
 \alias{term_value}
+\alias{term_value.additive_term}
+\alias{term_value.NlTerm}
 \title{The Contribution of a Term at Its Current Coefficients}
 \usage{
 term_value(term, coef = NULL, newdata = NULL, ...)
@@ -18,14 +20,16 @@ its rows instead of on the ones the term was built from.}
 \item{...}{Passed to methods.}
 }
 \value{
-A numeric vector, one value per observation.
+A numeric vector of one value per observation: \code{nrow(newdata)} of
+them where \code{newdata} was given, and as many as the term was built on
+otherwise.
 }
 \description{
-The values a term contributes to the linear predictor. For a linear
-term this is the block times the coefficients and carries no
-information the block does not; for a nonlinear one it is
-\eqn{f(x;\theta)}, which the Jacobian alone does not give, and which a
-Gauss-Newton step needs beside it.
+The values a term contributes to the linear predictor. For a linear term
+this is the block times the coefficients and carries no information the
+block does not. For a nonlinear one it is \eqn{f(x;\theta)}, which the
+Jacobian alone does not give and which a Gauss-Newton step needs beside
+it.
 }
 \details{
 \code{newdata} asks for the same contribution on other rows, and is what
@@ -45,5 +49,7 @@ head(term_value(built, newdata = data.frame(x = c(0, 1, 2))), 3)
 
 }
 \seealso{
-\code{\link[=term_refresh]{term_refresh()}}, \code{\link[=term_predict]{term_predict()}}
+\code{\link[=term_refresh]{term_refresh()}} for the block at the same coefficients,
+\code{\link[=term_predict]{term_predict()}} for the block at other rows, \code{\link[=seg_psi]{seg_psi()}} for a
+break-point read off the same coefficients.
 }

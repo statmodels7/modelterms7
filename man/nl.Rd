@@ -163,9 +163,9 @@ Writing the two low orders buys about four thousand times the accuracy at
 the two high ones. Giving the term as a formula, where it can be, buys
 another six orders of magnitude and costs nothing to write.
 
-Each function takes \verb{(theta, data)} -- a named list of the parameters,
-each of length \code{n} or 1, and the variables the formula names -- and
-returns a named list of numeric vectors of length \code{n}. The names are
+Each function takes \verb{(theta, data)}: a named list of the parameters, each
+of length \code{n} or 1, and the variables the formula names. It returns a
+named list of numeric vectors of length \code{n}. The names are
 the components of that order, keyed as \pkg{distributions7} keys its own
 derivative surfaces: the parameter names joined by \code{"_"}. Order two of
 \code{c("a", "r")} is therefore \code{a_a}, \code{a_r}, \code{r_r}, and order three

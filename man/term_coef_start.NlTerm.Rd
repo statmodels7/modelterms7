@@ -22,10 +22,10 @@ link, from \code{start} where the caller gave one. The block is the
 Jacobian at those values, so it is not the same block at any other
 point, and a fitting layer that started at zero would linearize where
 the term was never meant to be evaluated.
-Where \code{target} is given -- the response on the scale of the
-predictor, which the fitting layer supplies -- the parameters the caller
+Where \code{target} is given, meaning the response on the scale of the
+predictor, which the fitting layer supplies, the parameters the caller
 did NOT pin with \code{start} are estimated from it by least squares,
-because zero is a degenerate point for a nonlinear term rather than a
+because for a nonlinear term zero is a degenerate point and not a
 neutral one: it linearizes where the function was never meant to be
 evaluated, and every quantity read at those coefficients inherits it,
 the top of a kinked penalty's path among them.
