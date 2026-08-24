@@ -15,30 +15,32 @@
 \code{\link[=.indicator_cols]{.indicator_cols()}}.}
 }
 \value{
-A single logical.
+A single logical, never \code{NA}. A non-finite \code{n} or \code{ncol_ind} gives
+\code{FALSE}.
 }
 \description{
-Passes an explicit \code{TRUE} or \code{FALSE} through, and where the
-caller left \code{NULL} decides from the size of the block.
+Passes an explicit \code{TRUE} or \code{FALSE} through, and where the caller left
+\code{NULL} decides from the size of the indicator part: sparse when
+\code{n * ncol_ind} exceeds \eqn{10^5}.
 }
 \details{
-The dense indicator part holds \code{n * ncol_ind} cells where the sparse
-one holds one non-zero per row, so that product is what the two routes are
-separated by, and the threshold is read off it rather than off a count of
-levels. Measured end to end on \code{y ~ 0 + g + s(x)} over eighteen
-combinations of sample size and level count, the routes cross at about
-\eqn{10^5} cells: at \eqn{n = 1000} the sparse route loses at every level
-count up to sixty (\eqn{6 \times 10^4} cells, 0.93 times the dense route),
-at \eqn{n = 5000} it crosses between fifteen and twenty-five levels, and at
-\eqn{n = 20000} between six and ten. The same threshold accounts for the
-large cases: four hundred levels at \eqn{n = 20000} are \eqn{8 \times 10^6}
-cells and run 43.75 times faster, with the log-likelihood identical.
+The dense indicator part holds \code{n * ncol_ind} cells where the sparse one
+holds one non-zero per row, so that product is what separates the two
+routes, and the threshold is read off it rather than off a count of levels.
+
+Measured over fifteen combinations of sample size and level count, building
+the block and forming its crossproduct, the routes cross between
+\eqn{10^5} and \eqn{3 \times 10^5} cells. Below that the sparse route loses
+a little (0.6 to 0.9 times the dense route); above it the gap opens quickly:
+at 20000 rows the ratios are 1.4 at 15 levels, 12.3 at 25, 14.4 at 60,
+139 at 200 and 445 at 400.
 
 A design carrying no factor has no indicator part, so the product is zero
-and the block is built dense, which is what the measurements ask for there
-(0.66 to 0.90 times the dense route on purely continuous covariates).
+and the block is built dense, which is the right answer for a purely
+continuous design.
 }
 \seealso{
-\code{\link[=.indicator_cols]{.indicator_cols()}}, \code{\link[=linpar]{linpar()}}
+\code{\link[=.indicator_cols]{.indicator_cols()}} for the count it reads, \code{\link[=linpar]{linpar()}} for the
+argument it settles.
 }
 \keyword{internal}

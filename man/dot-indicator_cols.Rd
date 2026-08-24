@@ -12,21 +12,27 @@
 \item{mf}{The model frame it was built from.}
 }
 \value{
-A single number, zero when no term carries a factor.
+A single number, \code{0} when no term carries a factor.
 }
 \description{
-The number of columns a terms object contributes through indicator
-variables, counted from the model frame without building the matrix.
+Counts the columns a terms object contributes through indicator variables,
+read from the model frame without building the matrix. It is the second
+factor of the product \code{\link[=.resolve_sparse]{.resolve_sparse()}} compares against its threshold.
 }
 \details{
 A term contributes the product of its variables' level counts, a numeric
-variable counting one; a term carrying no factor contributes columns that
-are dense whatever the storage, and is not counted. The count is an upper
-bound, contrasts dropping one level per factor, which is the right side to
-err on: it is read against a threshold below which the sparse route loses
-little and above which it wins by orders.
+variable counting one, and a term carrying no factor at all is skipped: its
+columns are dense whatever the storage, so they say nothing about the
+choice. Character and logical columns are counted by their number of
+distinct values, since \code{\link[stats:model.matrix]{stats::model.matrix()}} will code them as factors.
+
+The count is an \strong{upper bound}: contrasts drop one level per factor, and an
+interaction of two factors is counted at the product of their full level
+counts. That is the right side to err on, the number being read against a
+threshold below which the sparse route loses little and above which it wins
+by orders.
 }
 \seealso{
-\code{\link[=.resolve_sparse]{.resolve_sparse()}}
+\code{\link[=.resolve_sparse]{.resolve_sparse()}}, which reads it; \code{\link[=linpar]{linpar()}}.
 }
 \keyword{internal}

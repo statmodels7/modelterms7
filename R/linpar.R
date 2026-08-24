@@ -4,74 +4,119 @@ NULL
 #' Unpenalized Parametric Term
 #'
 #' @description
-#' Creates the specification of an unpenalized parametric block: the design
-#' matrix of a one-sided formula, with the usual [stats::model.matrix()]
-#' conventions for factors, contrasts, interactions and the intercept.
+#' Specifies an unpenalized parametric block: the model matrix of a one-sided
+#' formula, with the usual [stats::model.matrix()] conventions for factors,
+#' contrasts, interactions and the intercept. It is the plainest term in the
+#' package, and the one [interpret_formula()] collects a formula's bare
+#' covariates into.
+#'
+#' The term's contribution to the predictor is \eqn{X\beta}, with no penalty,
+#' so every column costs one degree of freedom and [edf()] returns the column
+#' count exactly.
 #'
 #' @details
-#' The block is the model matrix \eqn{X} of the formula and the term's
-#' contribution to the predictor is linear in its coefficients,
+#' # The block, and what a build records
 #'
-#' \deqn{\eta = X\beta,}
+#' Building runs [stats::model.frame()] with `na.action = na.pass` and
+#' `drop.unused.levels = FALSE`, so a row with a missing covariate keeps its
+#' place and the block stays aligned with the response, and a factor level
+#' present in the data but used by no row still gets its column.
 #'
-#' with no penalty attached, so all \eqn{p = \operatorname{ncol}(X)}
-#' coefficients are free and [edf()] counts every one of them.
+#' The blueprint records the terms object, the factor levels
+#' ([stats::.getXlevels()]), the contrasts actually used and the storage
+#' settled on. [term_predict()] reapplies all four, so a factor column at new
+#' rows is encoded against the levels seen at build time. A level the blueprint
+#' does not know is rejected by [stats::model.frame()] with
+#' `"factor g has new levels zz"`.
 #'
-#' [interpret_formula()] collects the bare covariates of a model
-#' formula into one term of this kind, so `y ~ x1 + x2` and
-#' `y ~ linpar(~ x1 + x2)` produce the same block; the explicit
-#' constructor exists for callers who want several parametric blocks with
-#' distinct labels.
+#' # Several parametric blocks
 #'
-#' Building the term records a blueprint: the terms object, the factor
-#' levels and the contrasts. [term_predict()] reapplies the
-#' mapping through that blueprint, so a factor column in new data is
-#' encoded against the levels seen at build time, and a level the
-#' blueprint does not know is rejected rather than re-encoded. Missing
-#' values are propagated (`na.pass`), never dropped, so the block
-#' stays row-aligned with the response.
+#' `y ~ x1 + x2` and `y ~ linpar(~ x1 + x2)` produce the same block, so the
+#' explicit constructor is for callers wanting more than one parametric block
+#' with distinct labels, or wanting to set `sparse` or `contrasts` on it.
+#' Arguments for the block [interpret_formula()] builds implicitly go through
+#' that function's own `linpar` argument.
 #'
 #' @section Sparse storage:
-#' `sparse = TRUE` builds the block through
-#' [Matrix::sparse.model.matrix()], which BUILDS it sparse rather
-#' than building a dense matrix and compressing it -- the second would cost
-#' the memory the choice exists to avoid. Measured at 20000 rows and a factor
-#' of 1000 levels, 0.002 s and 1.8 MB against 0.100 s and 161.5 MB, the
-#' numbers identical; and a design that would be 32 GB dense builds in 0.02 s
-#' and 19 MB, which is what says there is no dense intermediate.
+#' `sparse = TRUE` builds through [Matrix::sparse.model.matrix()], which builds
+#' the block sparse. Building a dense matrix and compressing it would cost the
+#' memory the choice exists to avoid. Measured at 20000 rows and a factor of
+#' 1000 levels, the two routes give identical numbers at 0.007 s and 1.8 MB
+#' against 0.164 s and 161.3 MB; a design of 20000 by 19014 that would be 3.0
+#' GB dense builds sparse in 0.3 s and 3.1 MB.
 #'
-#' It pays where the formula carries a FACTOR OF MANY LEVELS, whose indicator
-#' columns hold one non-zero per row. On numeric covariates the block is dense
-#' whatever is asked for, and the sparse storage then costs more than it
-#' saves. `sparse = NULL`, the default, settles it at build from the
-#' design: the dense indicator part holds `n` times its column count in
-#' cells against one non-zero per row, and the two routes cross at about
-#' \eqn{10^5} of those cells, which is the rule [.resolve_sparse()]
-#' applies. `TRUE` and `FALSE` override it. The storage that was
-#' settled is part of the blueprint, so [term_predict()] builds new
-#' data the same way.
+#' It pays where the formula carries a **factor of many levels**, whose
+#' indicator columns hold one non-zero per row. On numeric covariates the block
+#' is dense whatever is asked for, and the sparse storage then costs more than
+#' it saves.
 #'
-#' @param formula A one-sided formula, e.g. `~ x1 + x2`.
-#' @param label A character string; when non-empty it is prefixed to the
-#'   coefficient names as `label.name`.
-#' @param sparse Whether to build the block as a `dgCMatrix`.
-#'   `NULL`, the default, settles it from the design. See the section
-#'   below.
-#' @param contrasts The contrasts for the formula's factors, as a named list
-#'   of the kind [stats::model.matrix()]'s `contrasts.arg`
-#'   takes. `NULL`, the default, leaves them to the session's
-#'   `options("contrasts")`.
+#' `sparse = NULL`, the default, settles it at build from the size of the
+#' indicator part: `n * ncol_ind > 1e5`, where `ncol_ind` counts the columns
+#' coming from factors ([.indicator_cols()]). Measured over fifteen
+#' combinations, building the block and forming its crossproduct, the two
+#' routes cross between \eqn{10^5} and \eqn{3 \times 10^5} cells and the sparse
+#' route then wins by orders: at 20000 rows it is 1.4 times faster at 15
+#' levels, 14 times at 60 and 445 times at 400.
 #'
-#' @return An object of class [LinparTerm()] (a specification;
-#'   see [term_build()]).
+#' The settled storage is part of the blueprint, so [term_predict()] returns
+#' the same kind of block at new rows.
+#'
+#' @param formula A one-sided formula, `~ x1 + x2`. A two-sided formula throws
+#'   `"'formula' must be one-sided, e.g. ~ x1 + x2."`, and anything that is not
+#'   a formula throws. Its environment is kept and used for symbols the data do
+#'   not carry. A formula with no columns at all, `~ 0`, fails in the class
+#'   validator at build time.
+#' @param label A single character string, `""` by default. When non-empty it
+#'   is prefixed to every coefficient name as `label.name`, and it is the title
+#'   [plot()] uses. Anything that is not one string throws.
+#' @param sparse `TRUE` to build a `dgCMatrix`, `FALSE` for a base matrix, or
+#'   `NULL`, the default, to settle it from the design by the rule above.
+#'   Anything else throws
+#'   `"'sparse' in 'linpar' must be TRUE, FALSE, or NULL to settle it from the design."`.
+#' @param contrasts A named list of contrasts for the formula's factors, of the
+#'   kind [stats::model.matrix()]'s `contrasts.arg` takes, or `NULL`, the
+#'   default, for the session's `options("contrasts")`. Anything that is not a
+#'   list throws.
+#'
+#' @return An unbuilt [LinparTerm()]: a specification, with `X`, `coef_names`
+#'   and `blueprint` empty until [term_build()] fills them, and `penalty`
+#'   `NULL` permanently.
+#'
+#' @seealso [ridge()], [lasso()], [scad()], [mcp()] and [enet()] for the
+#'   penalized blocks; [s()] and [random()] for the penalized structures;
+#'   [interpret_formula()], which builds one of these implicitly;
+#'   [term_build()] and [term_predict()].
 #'
 #' @examples
-#' dd <- data.frame(x = 1:4, g = factor(c("a", "a", "b", "b")))
+#' dd <- data.frame(x = 1:8, g = factor(rep(c("a", "b", "c", "d"), 2)))
+#'
 #' built <- term_build(linpar(~ x + g), dd)
 #' term_matrix(built)
 #' term_coef_names(built)
 #'
-#' @seealso [ridge()], [lasso()], [scad()], [mcp()], [enet()]
+#' # Unpenalized: every column costs one degree of freedom.
+#' c(npar = term_npar(built), edf = edf(built))
+#'
+#' # A label prefixes the names, which is how two blocks stay apart.
+#' term_coef_names(term_build(linpar(~ x, label = "lin"), dd))
+#'
+#' # Contrasts are recorded at build and reapplied at prediction.
+#' bc <- term_build(linpar(~ g, contrasts = list(g = "contr.sum")), dd)
+#' term_coef_names(bc)
+#'
+#' # A missing covariate keeps its row, so the block stays aligned.
+#' term_matrix(term_build(linpar(~ x),
+#'                        data.frame(x = c(1, NA, 3))))
+#'
+#' # Storage is settled from the design: a small factor stays dense.
+#' small <- data.frame(g = factor(rep(1:3, 10)))
+#' class(term_matrix(term_build(linpar(~ g), small)))
+#'
+#' # Two hundred levels over two thousand rows is 4e5 cells, so sparse.
+#' set.seed(1)
+#' big <- data.frame(g = factor(sample(1:200, 2000, TRUE)))
+#' class(term_matrix(term_build(linpar(~ g), big)))
+#'
 #' @export
 linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
   if (!inherits(formula, "formula")) {
@@ -93,31 +138,32 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 #' The Model Matrix of a Formula, in Either Storage
 #'
 #' @description
-#' [stats::model.matrix()] or
-#' [Matrix::sparse.model.matrix()] on the same terms object, with
-#' the bookkeeping stripped either way.
+#' Runs [stats::model.matrix()] or [Matrix::sparse.model.matrix()] on the same
+#' terms object and model frame, strips the `assign` and `contrasts`
+#' attributes, and returns the block beside the contrasts that were used.
 #'
 #' @details
-#' The sparse route BUILDS the matrix sparse; it does not build a dense one
-#' and compress it, which would cost the memory the choice exists to avoid.
-#' Measured at 20000 rows and a factor of 1000 levels, 0.002 s and 1.8 MB
-#' against `stats::model.matrix`'s 0.100 s and 161.5 MB, the numbers
-#' identical; and a design that would be 32 GB dense builds in 0.02 s and
-#' 19 MB, which is what says there is no dense intermediate.
+#' The two routes give identical numbers; what differs is the storage and the
+#' cost of producing it. The sparse route builds the matrix sparse and never
+#' forms a dense intermediate: at 20000 rows and a factor of 1000 levels,
+#' 0.007 s and 1.8 MB against 0.164 s and 161.3 MB.
 #'
-#' It is worth it where the formula carries a factor of MANY LEVELS, whose
-#' indicator columns are one non-zero per row. On a formula of numeric
-#' covariates the block is dense whatever is asked for, and the sparse
-#' storage then costs more than it saves.
+#' The contrasts come back beside the block instead of staying on it: the block
+#' is what a consumer reads, and the contrasts are what the blueprint records.
 #'
-#' @param tt A terms object.
-#' @param mf The model frame.
-#' @param contrasts The contrasts, or `NULL` for the session's.
-#' @param sparse Whether to build a `dgCMatrix`.
+#' @param tt A terms object, from [stats::model.frame()] or
+#'   [stats::delete.response()].
+#' @param mf The model frame `tt` was built from, or one built against the same
+#'   levels.
+#' @param contrasts A named list of contrasts, or `NULL` for the session's.
+#' @param sparse `TRUE` for a `dgCMatrix`, `FALSE` for a base matrix.
 #'
-#' @return A numeric matrix or a `dgCMatrix`.
+#' @return A list of two: `X`, the block, and `contrasts`, the named list
+#'   [stats::model.matrix()] recorded, which is `NULL` when no factor was
+#'   coded.
 #'
-#' @seealso [linpar()]
+#' @seealso [linpar()], whose build and prediction both call this;
+#'   [.resolve_sparse()] for the choice of storage.
 #'
 #' @keywords internal
 .design_matrix <- function(tt, mf, contrasts = NULL, sparse = FALSE) {
@@ -133,14 +179,26 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 }
 
 
-#' Check a Term's Storage and Contrasts
+#' @title Check a Term's Storage and Contrasts
 #'
-#' @param sparse What the constructor was given: `TRUE`, `FALSE`, or
-#'   `NULL` for the storage to be settled at build from the design.
-#' @param contrasts What the constructor was given.
-#' @param what The term's label, for the message.
+#' @description
+#' Validates the `sparse` and `contrasts` arguments the design-building
+#' constructors share, and normalizes `contrasts = NULL` to an empty list so
+#' that the class property is always a list. Called from the constructor, so a
+#' mistake is reported where it was written.
 #'
-#' @return A list of the two, validated.
+#' @param sparse What the constructor was given: `TRUE`, `FALSE`, or `NULL` for
+#'   the storage to be settled at build. Anything else throws, the message
+#'   naming `what`.
+#' @param contrasts What the constructor was given: a named list, or `NULL`.
+#'   Anything else throws. The names are not checked against the formula's
+#'   factors; [stats::model.matrix()] does that at build.
+#' @param what The constructor's name, used in the two messages.
+#'
+#' @return A list of two: `sparse` unchanged, and `contrasts` as given or an
+#'   empty list.
+#'
+#' @seealso [linpar()] and [penalized_terms()], the constructors that call it.
 #'
 #' @keywords internal
 .check_design_opts <- function(sparse, contrasts, what = "this term") {
@@ -158,26 +216,32 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 }
 
 
-#' How Many Columns of a Model Matrix Come From Factors
+#' @title How Many Columns of a Model Matrix Come From Factors
 #'
 #' @description
-#' The number of columns a terms object contributes through indicator
-#' variables, counted from the model frame without building the matrix.
+#' Counts the columns a terms object contributes through indicator variables,
+#' read from the model frame without building the matrix. It is the second
+#' factor of the product [.resolve_sparse()] compares against its threshold.
 #'
 #' @details
 #' A term contributes the product of its variables' level counts, a numeric
-#' variable counting one; a term carrying no factor contributes columns that
-#' are dense whatever the storage, and is not counted. The count is an upper
-#' bound, contrasts dropping one level per factor, which is the right side to
-#' err on: it is read against a threshold below which the sparse route loses
-#' little and above which it wins by orders.
+#' variable counting one, and a term carrying no factor at all is skipped: its
+#' columns are dense whatever the storage, so they say nothing about the
+#' choice. Character and logical columns are counted by their number of
+#' distinct values, since [stats::model.matrix()] will code them as factors.
+#'
+#' The count is an **upper bound**: contrasts drop one level per factor, and an
+#' interaction of two factors is counted at the product of their full level
+#' counts. That is the right side to err on, the number being read against a
+#' threshold below which the sparse route loses little and above which it wins
+#' by orders.
 #'
 #' @param tt A terms object.
 #' @param mf The model frame it was built from.
 #'
-#' @return A single number, zero when no term carries a factor.
+#' @return A single number, `0` when no term carries a factor.
 #'
-#' @seealso [.resolve_sparse()]
+#' @seealso [.resolve_sparse()], which reads it; [linpar()].
 #'
 #' @keywords internal
 .indicator_cols <- function(tt, mf) {
@@ -200,37 +264,39 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 }
 
 
-#' Settle Whether a Block Is Built Sparse
+#' @title Settle Whether a Block Is Built Sparse
 #'
 #' @description
-#' Passes an explicit `TRUE` or `FALSE` through, and where the
-#' caller left `NULL` decides from the size of the block.
+#' Passes an explicit `TRUE` or `FALSE` through, and where the caller left
+#' `NULL` decides from the size of the indicator part: sparse when
+#' `n * ncol_ind` exceeds \eqn{10^5}.
 #'
 #' @details
-#' The dense indicator part holds `n * ncol_ind` cells where the sparse
-#' one holds one non-zero per row, so that product is what the two routes are
-#' separated by, and the threshold is read off it rather than off a count of
-#' levels. Measured end to end on `y ~ 0 + g + s(x)` over eighteen
-#' combinations of sample size and level count, the routes cross at about
-#' \eqn{10^5} cells: at \eqn{n = 1000} the sparse route loses at every level
-#' count up to sixty (\eqn{6 \times 10^4} cells, 0.93 times the dense route),
-#' at \eqn{n = 5000} it crosses between fifteen and twenty-five levels, and at
-#' \eqn{n = 20000} between six and ten. The same threshold accounts for the
-#' large cases: four hundred levels at \eqn{n = 20000} are \eqn{8 \times 10^6}
-#' cells and run 43.75 times faster, with the log-likelihood identical.
+#' The dense indicator part holds `n * ncol_ind` cells where the sparse one
+#' holds one non-zero per row, so that product is what separates the two
+#' routes, and the threshold is read off it rather than off a count of levels.
+#'
+#' Measured over fifteen combinations of sample size and level count, building
+#' the block and forming its crossproduct, the routes cross between
+#' \eqn{10^5} and \eqn{3 \times 10^5} cells. Below that the sparse route loses
+#' a little (0.6 to 0.9 times the dense route); above it the gap opens quickly:
+#' at 20000 rows the ratios are 1.4 at 15 levels, 12.3 at 25, 14.4 at 60,
+#' 139 at 200 and 445 at 400.
 #'
 #' A design carrying no factor has no indicator part, so the product is zero
-#' and the block is built dense, which is what the measurements ask for there
-#' (0.66 to 0.90 times the dense route on purely continuous covariates).
+#' and the block is built dense, which is the right answer for a purely
+#' continuous design.
 #'
 #' @param sparse `TRUE`, `FALSE`, or `NULL` to decide here.
 #' @param n The number of rows.
 #' @param ncol_ind The columns coming from indicators, from
 #'   [.indicator_cols()].
 #'
-#' @return A single logical.
+#' @return A single logical, never `NA`. A non-finite `n` or `ncol_ind` gives
+#'   `FALSE`.
 #'
-#' @seealso [.indicator_cols()], [linpar()]
+#' @seealso [.indicator_cols()] for the count it reads, [linpar()] for the
+#'   argument it settles.
 #'
 #' @keywords internal
 .resolve_sparse <- function(sparse, n, ncol_ind) {
@@ -239,6 +305,53 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 }
 
 
+#' @title Build a Parametric Block
+#' @name term_build.LinparTerm
+#'
+#' @description
+#' Builds the model matrix of a [linpar()] term's formula against `data`,
+#' prefixes the coefficient names with the term's label, and records the
+#' blueprint [term_predict()] will reapply: the terms object with the response
+#' deleted, the factor levels, the contrasts used, and the storage settled on.
+#'
+#' @details
+#' # The model frame
+#'
+#' [stats::model.frame()] is called with `na.action = na.pass`, so a row with a
+#' missing covariate keeps its place and the block stays aligned with the
+#' response, and with `drop.unused.levels = FALSE`, so a factor level present
+#' in the data but used by no row still gets a column. Both choices are about
+#' alignment: a block whose rows have been silently dropped no longer matches
+#' the response it is fitted against.
+#'
+#' # The storage
+#'
+#' Where the constructor left `sparse = NULL`, [.resolve_sparse()] settles it
+#' from `n` times the indicator column count. The value settled on goes into
+#' `blueprint$sparse` and the `sparse` property is left as the caller wrote it,
+#' because new rows may be any number and a prediction deciding again could
+#' build a block of a different kind from the fitted one.
+#'
+#' @param term An unbuilt or built [LinparTerm()].
+#' @param data A data frame carrying every variable the formula names.
+#' @param ... Unused.
+#'
+#' @return The term with `X`, `coef_names` and `blueprint` filled, so that
+#'   [term_is_built()] is `TRUE`. The block has `nrow(data)` rows, and its
+#'   column names are the coefficient names.
+#'
+#' @seealso [linpar()], [term_predict.LinparTerm()], [.resolve_sparse()].
+#'
+#' @examples
+#' dd <- data.frame(x = 1:8, g = factor(rep(c("a", "b", "c", "d"), 2)))
+#' b <- term_build(linpar(~ x + g), dd)
+#' term_matrix(b)
+#' names(b@blueprint)
+#'
+#' # A missing value keeps its row.
+#' term_matrix(term_build(linpar(~ x), data.frame(x = c(1, NA, 3))))
+#'
+#' @keywords internal
 S7::method(term_build, LinparTerm) <- function(term, data, ...) {
   mf <- stats::model.frame(term@formula, data,
                            na.action = stats::na.pass,
@@ -269,6 +382,56 @@ S7::method(term_build, LinparTerm) <- function(term, data, ...) {
   term
 }
 
+#' @title A Parametric Block at New Rows
+#' @name term_predict.LinparTerm
+#'
+#' @description
+#' Rebuilds the model frame at `newdata` against the levels recorded at build
+#' time, then the model matrix with the recorded contrasts and in the recorded
+#' storage, and labels the columns with the term's coefficient names. Nothing
+#' is re-derived from the new rows.
+#'
+#' @details
+#' The levels come from `blueprint$xlev`, so a factor in `newdata` need carry
+#' only the levels its own rows use and still gets the full set of columns. A
+#' level the blueprint does not know is rejected by [stats::model.frame()] with
+#' `"factor g has new levels zz"`, which is the right answer: a coefficient was
+#' never fitted for it.
+#'
+#' The storage comes from `blueprint$sparse` rather than being decided again,
+#' so a prediction does not spend at new rows what the build was careful not
+#' to. `na.action = na.pass` again keeps every row.
+#'
+#' @param term A built [LinparTerm()]. An unbuilt one throws
+#'   `"the term has not been built; call term_build(term, data) first."`.
+#' @param newdata A data frame carrying every variable the formula names.
+#' @param ... Unused.
+#'
+#' @return A block of `nrow(newdata)` rows and [term_npar()] columns, in the
+#'   storage the build settled on, with the term's coefficient names as column
+#'   names.
+#'
+#' @seealso [term_predict()] for the generic and the identity it satisfies,
+#'   [term_build.LinparTerm()] for what recorded the blueprint.
+#'
+#' @examples
+#' dd <- data.frame(x = 1:8, g = factor(rep(c("a", "b", "c", "d"), 2)))
+#' b <- term_build(linpar(~ x + g), dd)
+#'
+#' # On the fitting data it returns the block itself.
+#' all.equal(term_predict(b, dd), term_matrix(b))
+#'
+#' # A subset that drops two levels keeps all five columns.
+#' nd <- droplevels(dd[dd$g %in% c("a", "b"), ])
+#' levels(nd$g)
+#' dim(term_predict(b, nd))
+#'
+#' # A level the fit never saw is refused.
+#' bad <- dd
+#' levels(bad$g) <- c("a", "b", "c", "zz")
+#' try(term_predict(b, bad))
+#'
+#' @keywords internal
 S7::method(term_predict, LinparTerm) <- function(term, newdata, ...) {
   .assert_built(term)
   bp <- term@blueprint

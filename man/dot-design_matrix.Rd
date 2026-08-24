@@ -7,36 +7,37 @@
 .design_matrix(tt, mf, contrasts = NULL, sparse = FALSE)
 }
 \arguments{
-\item{tt}{A terms object.}
+\item{tt}{A terms object, from \code{\link[stats:model.frame]{stats::model.frame()}} or
+\code{\link[stats:delete.response]{stats::delete.response()}}.}
 
-\item{mf}{The model frame.}
+\item{mf}{The model frame \code{tt} was built from, or one built against the same
+levels.}
 
-\item{contrasts}{The contrasts, or \code{NULL} for the session's.}
+\item{contrasts}{A named list of contrasts, or \code{NULL} for the session's.}
 
-\item{sparse}{Whether to build a \code{dgCMatrix}.}
+\item{sparse}{\code{TRUE} for a \code{dgCMatrix}, \code{FALSE} for a base matrix.}
 }
 \value{
-A numeric matrix or a \code{dgCMatrix}.
+A list of two: \code{X}, the block, and \code{contrasts}, the named list
+\code{\link[stats:model.matrix]{stats::model.matrix()}} recorded, which is \code{NULL} when no factor was
+coded.
 }
 \description{
-\code{\link[stats:model.matrix]{stats::model.matrix()}} or
-\code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}} on the same terms object, with
-the bookkeeping stripped either way.
+Runs \code{\link[stats:model.matrix]{stats::model.matrix()}} or \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}} on the same
+terms object and model frame, strips the \code{assign} and \code{contrasts}
+attributes, and returns the block beside the contrasts that were used.
 }
 \details{
-The sparse route BUILDS the matrix sparse; it does not build a dense one
-and compress it, which would cost the memory the choice exists to avoid.
-Measured at 20000 rows and a factor of 1000 levels, 0.002 s and 1.8 MB
-against \code{stats::model.matrix}'s 0.100 s and 161.5 MB, the numbers
-identical; and a design that would be 32 GB dense builds in 0.02 s and
-19 MB, which is what says there is no dense intermediate.
+The two routes give identical numbers; what differs is the storage and the
+cost of producing it. The sparse route builds the matrix sparse and never
+forms a dense intermediate: at 20000 rows and a factor of 1000 levels,
+0.007 s and 1.8 MB against 0.164 s and 161.3 MB.
 
-It is worth it where the formula carries a factor of MANY LEVELS, whose
-indicator columns are one non-zero per row. On a formula of numeric
-covariates the block is dense whatever is asked for, and the sparse
-storage then costs more than it saves.
+The contrasts come back beside the block instead of staying on it: the block
+is what a consumer reads, and the contrasts are what the blueprint records.
 }
 \seealso{
-\code{\link[=linpar]{linpar()}}
+\code{\link[=linpar]{linpar()}}, whose build and prediction both call this;
+\code{\link[=.resolve_sparse]{.resolve_sparse()}} for the choice of storage.
 }
 \keyword{internal}

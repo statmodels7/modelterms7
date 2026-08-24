@@ -7,17 +7,27 @@
 .check_design_opts(sparse, contrasts, what = "this term")
 }
 \arguments{
-\item{sparse}{What the constructor was given: \code{TRUE}, \code{FALSE}, or
-\code{NULL} for the storage to be settled at build from the design.}
+\item{sparse}{What the constructor was given: \code{TRUE}, \code{FALSE}, or \code{NULL} for
+the storage to be settled at build. Anything else throws, the message
+naming \code{what}.}
 
-\item{contrasts}{What the constructor was given.}
+\item{contrasts}{What the constructor was given: a named list, or \code{NULL}.
+Anything else throws. The names are not checked against the formula's
+factors; \code{\link[stats:model.matrix]{stats::model.matrix()}} does that at build.}
 
-\item{what}{The term's label, for the message.}
+\item{what}{The constructor's name, used in the two messages.}
 }
 \value{
-A list of the two, validated.
+A list of two: \code{sparse} unchanged, and \code{contrasts} as given or an
+empty list.
 }
 \description{
-Check a Term's Storage and Contrasts
+Validates the \code{sparse} and \code{contrasts} arguments the design-building
+constructors share, and normalizes \code{contrasts = NULL} to an empty list so
+that the class property is always a list. Called from the constructor, so a
+mistake is reported where it was written.
+}
+\seealso{
+\code{\link[=linpar]{linpar()}} and \code{\link[=penalized_terms]{penalized_terms()}}, the constructors that call it.
 }
 \keyword{internal}

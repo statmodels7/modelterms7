@@ -7,81 +7,124 @@
 linpar(formula, label = "", sparse = NULL, contrasts = NULL)
 }
 \arguments{
-\item{formula}{A one-sided formula, e.g. \code{~ x1 + x2}.}
+\item{formula}{A one-sided formula, \code{~ x1 + x2}. A two-sided formula throws
+\code{"'formula' must be one-sided, e.g. ~ x1 + x2."}, and anything that is not
+a formula throws. Its environment is kept and used for symbols the data do
+not carry. A formula with no columns at all, \code{~ 0}, fails in the class
+validator at build time.}
 
-\item{label}{A character string; when non-empty it is prefixed to the
-coefficient names as \code{label.name}.}
+\item{label}{A single character string, \code{""} by default. When non-empty it
+is prefixed to every coefficient name as \code{label.name}, and it is the title
+\code{\link[=plot]{plot()}} uses. Anything that is not one string throws.}
 
-\item{sparse}{Whether to build the block as a \code{dgCMatrix}.
-\code{NULL}, the default, settles it from the design. See the section
-below.}
+\item{sparse}{\code{TRUE} to build a \code{dgCMatrix}, \code{FALSE} for a base matrix, or
+\code{NULL}, the default, to settle it from the design by the rule above.
+Anything else throws
+\code{"'sparse' in 'linpar' must be TRUE, FALSE, or NULL to settle it from the design."}.}
 
-\item{contrasts}{The contrasts for the formula's factors, as a named list
-of the kind \code{\link[stats:model.matrix]{stats::model.matrix()}}'s \code{contrasts.arg}
-takes. \code{NULL}, the default, leaves them to the session's
-\code{options("contrasts")}.}
+\item{contrasts}{A named list of contrasts for the formula's factors, of the
+kind \code{\link[stats:model.matrix]{stats::model.matrix()}}'s \code{contrasts.arg} takes, or \code{NULL}, the
+default, for the session's \code{options("contrasts")}. Anything that is not a
+list throws.}
 }
 \value{
-An object of class \code{\link[=LinparTerm]{LinparTerm()}} (a specification;
-see \code{\link[=term_build]{term_build()}}).
+An unbuilt \code{\link[=LinparTerm]{LinparTerm()}}: a specification, with \code{X}, \code{coef_names}
+and \code{blueprint} empty until \code{\link[=term_build]{term_build()}} fills them, and \code{penalty}
+\code{NULL} permanently.
 }
 \description{
-Creates the specification of an unpenalized parametric block: the design
-matrix of a one-sided formula, with the usual \code{\link[stats:model.matrix]{stats::model.matrix()}}
-conventions for factors, contrasts, interactions and the intercept.
+Specifies an unpenalized parametric block: the model matrix of a one-sided
+formula, with the usual \code{\link[stats:model.matrix]{stats::model.matrix()}} conventions for factors,
+contrasts, interactions and the intercept. It is the plainest term in the
+package, and the one \code{\link[=interpret_formula]{interpret_formula()}} collects a formula's bare
+covariates into.
+
+The term's contribution to the predictor is \eqn{X\beta}, with no penalty,
+so every column costs one degree of freedom and \code{\link[=edf]{edf()}} returns the column
+count exactly.
 }
-\details{
-The block is the model matrix \eqn{X} of the formula and the term's
-contribution to the predictor is linear in its coefficients,
+\section{The block, and what a build records}{
+Building runs \code{\link[stats:model.frame]{stats::model.frame()}} with \code{na.action = na.pass} and
+\code{drop.unused.levels = FALSE}, so a row with a missing covariate keeps its
+place and the block stays aligned with the response, and a factor level
+present in the data but used by no row still gets its column.
 
-\deqn{\eta = X\beta,}
-
-with no penalty attached, so all \eqn{p = \operatorname{ncol}(X)}
-coefficients are free and \code{\link[=edf]{edf()}} counts every one of them.
-
-\code{\link[=interpret_formula]{interpret_formula()}} collects the bare covariates of a model
-formula into one term of this kind, so \code{y ~ x1 + x2} and
-\code{y ~ linpar(~ x1 + x2)} produce the same block; the explicit
-constructor exists for callers who want several parametric blocks with
-distinct labels.
-
-Building the term records a blueprint: the terms object, the factor
-levels and the contrasts. \code{\link[=term_predict]{term_predict()}} reapplies the
-mapping through that blueprint, so a factor column in new data is
-encoded against the levels seen at build time, and a level the
-blueprint does not know is rejected rather than re-encoded. Missing
-values are propagated (\code{na.pass}), never dropped, so the block
-stays row-aligned with the response.
+The blueprint records the terms object, the factor levels
+(\code{\link[stats:checkMFClasses]{stats::.getXlevels()}}), the contrasts actually used and the storage
+settled on. \code{\link[=term_predict]{term_predict()}} reapplies all four, so a factor column at new
+rows is encoded against the levels seen at build time. A level the blueprint
+does not know is rejected by \code{\link[stats:model.frame]{stats::model.frame()}} with
+\code{"factor g has new levels zz"}.
 }
+
+\section{Several parametric blocks}{
+\code{y ~ x1 + x2} and \code{y ~ linpar(~ x1 + x2)} produce the same block, so the
+explicit constructor is for callers wanting more than one parametric block
+with distinct labels, or wanting to set \code{sparse} or \code{contrasts} on it.
+Arguments for the block \code{\link[=interpret_formula]{interpret_formula()}} builds implicitly go through
+that function's own \code{linpar} argument.
+}
+
 \section{Sparse storage}{
 
-\code{sparse = TRUE} builds the block through
-\code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}}, which BUILDS it sparse rather
-than building a dense matrix and compressing it -- the second would cost
-the memory the choice exists to avoid. Measured at 20000 rows and a factor
-of 1000 levels, 0.002 s and 1.8 MB against 0.100 s and 161.5 MB, the
-numbers identical; and a design that would be 32 GB dense builds in 0.02 s
-and 19 MB, which is what says there is no dense intermediate.
+\code{sparse = TRUE} builds through \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}}, which builds
+the block sparse. Building a dense matrix and compressing it would cost the
+memory the choice exists to avoid. Measured at 20000 rows and a factor of
+1000 levels, the two routes give identical numbers at 0.007 s and 1.8 MB
+against 0.164 s and 161.3 MB; a design of 20000 by 19014 that would be 3.0
+GB dense builds sparse in 0.3 s and 3.1 MB.
 
-It pays where the formula carries a FACTOR OF MANY LEVELS, whose indicator
-columns hold one non-zero per row. On numeric covariates the block is dense
-whatever is asked for, and the sparse storage then costs more than it
-saves. \code{sparse = NULL}, the default, settles it at build from the
-design: the dense indicator part holds \code{n} times its column count in
-cells against one non-zero per row, and the two routes cross at about
-\eqn{10^5} of those cells, which is the rule \code{\link[=.resolve_sparse]{.resolve_sparse()}}
-applies. \code{TRUE} and \code{FALSE} override it. The storage that was
-settled is part of the blueprint, so \code{\link[=term_predict]{term_predict()}} builds new
-data the same way.
+It pays where the formula carries a \strong{factor of many levels}, whose
+indicator columns hold one non-zero per row. On numeric covariates the block
+is dense whatever is asked for, and the sparse storage then costs more than
+it saves.
+
+\code{sparse = NULL}, the default, settles it at build from the size of the
+indicator part: \code{n * ncol_ind > 1e5}, where \code{ncol_ind} counts the columns
+coming from factors (\code{\link[=.indicator_cols]{.indicator_cols()}}). Measured over fifteen
+combinations, building the block and forming its crossproduct, the two
+routes cross between \eqn{10^5} and \eqn{3 \times 10^5} cells and the sparse
+route then wins by orders: at 20000 rows it is 1.4 times faster at 15
+levels, 14 times at 60 and 445 times at 400.
+
+The settled storage is part of the blueprint, so \code{\link[=term_predict]{term_predict()}} returns
+the same kind of block at new rows.
 }
 
 \examples{
-dd <- data.frame(x = 1:4, g = factor(c("a", "a", "b", "b")))
+dd <- data.frame(x = 1:8, g = factor(rep(c("a", "b", "c", "d"), 2)))
+
 built <- term_build(linpar(~ x + g), dd)
 term_matrix(built)
 term_coef_names(built)
 
+# Unpenalized: every column costs one degree of freedom.
+c(npar = term_npar(built), edf = edf(built))
+
+# A label prefixes the names, which is how two blocks stay apart.
+term_coef_names(term_build(linpar(~ x, label = "lin"), dd))
+
+# Contrasts are recorded at build and reapplied at prediction.
+bc <- term_build(linpar(~ g, contrasts = list(g = "contr.sum")), dd)
+term_coef_names(bc)
+
+# A missing covariate keeps its row, so the block stays aligned.
+term_matrix(term_build(linpar(~ x),
+                       data.frame(x = c(1, NA, 3))))
+
+# Storage is settled from the design: a small factor stays dense.
+small <- data.frame(g = factor(rep(1:3, 10)))
+class(term_matrix(term_build(linpar(~ g), small)))
+
+# Two hundred levels over two thousand rows is 4e5 cells, so sparse.
+set.seed(1)
+big <- data.frame(g = factor(sample(1:200, 2000, TRUE)))
+class(term_matrix(term_build(linpar(~ g), big)))
+
 }
 \seealso{
-\code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}}, \code{\link[=scad]{scad()}}, \code{\link[=mcp]{mcp()}}, \code{\link[=enet]{enet()}}
+\code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}}, \code{\link[=scad]{scad()}}, \code{\link[=mcp]{mcp()}} and \code{\link[=enet]{enet()}} for the
+penalized blocks; \code{\link[=s]{s()}} and \code{\link[=random]{random()}} for the penalized structures;
+\code{\link[=interpret_formula]{interpret_formula()}}, which builds one of these implicitly;
+\code{\link[=term_build]{term_build()}} and \code{\link[=term_predict]{term_predict()}}.
 }
