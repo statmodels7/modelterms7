@@ -2,39 +2,70 @@
 % Please edit documentation in R/generics.R
 \name{term_penalty}
 \alias{term_penalty}
+\alias{term_penalty.additive_term}
 \title{Penalty of a Term}
 \usage{
 term_penalty(term, ...)
 }
 \arguments{
-\item{term}{An object inheriting from class \code{\link[=additive_term]{additive_term()}}.}
+\item{term}{An object inheriting from \code{\link[=additive_term]{additive_term()}}, built or not.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
-A penalty object, or \code{NULL}.
+A \pkg{penalties7} penalty object, or \code{NULL} when the term is
+unpenalized, when its penalty covers only part of its parameters, or when
+it has not been built.
 }
 \description{
-The penalty attached to the whole of the term's coefficients, or
-\code{NULL} when there is none. The hyperparameters, their bounds and
-links, and every derivative in the coefficients and the hyperparameters
-are the penalty object's, not the term's.
+Returns the \pkg{penalties7} penalty attached to the whole of a term's
+coefficients, or \code{NULL} where there is none. The hyperparameters, their
+bounds and links, and every derivative in the coefficients and in the
+hyperparameters belong to the penalty object; the term only carries it.
 }
-\details{
-A term whose penalty reaches only part of its parameters returns
-\code{NULL} here and declares that penalty through
-\code{\link[=term_penalties]{term_penalties()}}, which names the parameters it covers:
-\code{\link[=seg]{seg()}} penalizes the changes and not the linear effect or the
-break-points, and the developments of \code{\link[=nl]{nl()}} and
-\code{\link[=gas]{gas()}} carry their sub-terms' penalties. Reading
-a partial penalty here would say that it covers the block, so the
-question this generic asks is answered only where the answer is the whole
-of it.
+\section{It answers only for a penalty over the whole block}{
+A term whose penalty reaches part of its parameters returns \code{NULL} here and
+declares that penalty through \code{\link[=term_penalties]{term_penalties()}}, which names the parameters
+it covers. \code{\link[=seg]{seg()}} penalizes its changes of slope and leaves the linear
+effect and the break-points free; \code{\link[=nl]{nl()}} and \code{\link[=gas]{gas()}} carry the penalties of
+whatever sub-terms develop their own parameters. Reporting one of those here
+would say it covers the block, so this generic answers only where that is
+true.
+
+\code{\link[=term_penalties]{term_penalties()}} is therefore the general question, and it is the one a
+fitting layer asks. This one is the convenience for the common case.
 }
+
+\section{A specification carries no penalty}{
+The penalty is attached at \code{\link[=term_build]{term_build()}}, its width being the number of
+columns the data produce, so \code{term_penalty(ridge(~ x))} is \code{NULL} and
+\code{term_penalty(term_build(ridge(~ x), d))} is the quadratic penalty. The same
+holds for \code{\link[=term_penalties]{term_penalties()}} and, through it, for \code{\link[=term_smooth]{term_smooth()}}.
+
+The one method is registered on \code{\link[=additive_term]{additive_term()}} and reads the \code{penalty}
+property. A structural term has no such property, so \code{term_penalty()} on one
+stops with S7's method-not-found error.
+}
+
 \examples{
-term_penalty(linpar(~x))
+d <- data.frame(x = rnorm(20), g = factor(rep(c("a", "b"), 10)))
+
+# Unpenalized, and unbuilt: both give NULL.
+term_penalty(linpar(~ x))
+term_penalty(ridge(~ x))
+
+# Built, it is the penalty object itself.
+p <- term_penalty(term_build(ridge(~ x), d))
+c(name = p@penalty_name, params = p@params, n_coef = p@n_coef)
+
+# A term whose penalty covers part of its parameters answers NULL here
+# and declares it through term_penalties() instead.
+sb <- term_build(seg(x, npsi = 1), data.frame(x = sort(runif(50, 0, 10))))
+term_penalty(sb)
 
 }
 \seealso{
-\code{\link[=term_penalties]{term_penalties()}}, \code{\link[=term_smooth]{term_smooth()}}, \code{\link[=edf]{edf()}}
+\code{\link[=term_penalties]{term_penalties()}} for the general form, \code{\link[=term_smooth]{term_smooth()}} for
+whether the result has a kink, \code{\link[=edf]{edf()}} for what it costs, and
+\code{\link[penalties7:penalty_value]{penalties7::penalty_value()}} for what the returned object computes.
 }

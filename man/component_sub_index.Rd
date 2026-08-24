@@ -7,23 +7,34 @@
 component_sub_index(index, subs)
 }
 \arguments{
-\item{index}{The component's columns in the term's block.}
+\item{index}{An integer vector: the component's columns in the term's block,
+as long as the sub-terms' coefficient counts sum to.}
 
-\item{subs}{The sub-terms developing the parameter.}
+\item{subs}{A list of built sub-terms developing the parameter, in the order
+their blocks were bound.}
 }
 \value{
-A list of integer vectors, one per sub-term, empty where there are
-no sub-terms.
+A list of integer vectors, one per sub-term, partitioning \code{index} in
+order. An empty list when \code{subs} is empty.
 }
 \description{
-Splits a developed parameter's columns among the sub-terms developing it,
-in the order the block binds them.
+Splits a developed parameter's columns among the sub-terms developing it, in
+the order the block binds them. It is what fills the \code{sub_index} field of a
+\code{\link[=term_components]{term_components()}} entry.
 }
 \details{
-A developed parameter's block is its sub-terms' blocks bound side by side
-in the order they were given, so the division is their coefficient counts
-cumulated. It is computed by the term rather than left to a consumer
-because it rests on how the block is assembled, which is the term's
-business and not something a name can be parsed for.
+A developed parameter's block is its sub-terms' blocks bound side by side in
+the order they were given, so the division is their coefficient counts
+cumulated: with counts \eqn{k_1, \dots, k_m} the \eqn{i}-th sub-term takes
+\code{index} at positions \eqn{k_1 + \dots + k_{i-1} + 1} to
+\eqn{k_1 + \dots + k_i}. The counts come from \code{\link[=term_npar]{term_npar()}}, so every
+sub-term must be built.
+
+The term computes this rather than a consumer, because it rests on how the
+block was assembled.
+}
+\seealso{
+\code{\link[=term_components]{term_components()}}, the only caller; \code{\link[=term_npar]{term_npar()}} for the counts
+it divides by.
 }
 \keyword{internal}

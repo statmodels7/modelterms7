@@ -2,64 +2,88 @@
 % Please edit documentation in R/generics.R
 \name{term_components}
 \alias{term_components}
+\alias{term_components.model_term}
 \title{How a Term's Columns Divide Among Its Own Parameters}
 \usage{
 term_components(term, ...)
 }
 \arguments{
-\item{term}{A built term.}
+\item{term}{A built term. An unbuilt one returns an empty list.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
-A list, one entry per own parameter, each with \code{name} (the
-parameter), \code{index} (its columns in the term's block),
-\code{subs} (the sub-terms developing it, empty where there are none)
-and \code{sub_index} (the columns belonging to each of those
-sub-terms). Empty for a term whose columns do not divide.
+A named list, one element per own parameter and named by it, each a
+list with
+\describe{
+\item{\code{name}}{the parameter's name, the same as the element's.}
+\item{\code{index}}{its columns in the term's block, or its positions in
+\code{\link[=term_params]{term_params()}} for a structural term.}
+\item{\code{subs}}{the sub-terms developing it, an empty list where none do.}
+\item{\code{sub_index}}{one integer vector per sub-term, splitting \code{index}
+among them; empty where \code{subs} is.}
+}
+An empty list for a term whose columns do not divide.
 }
 \description{
-One entry per parameter the term is written in, saying which columns of its
-block belong to that parameter and which sub-terms develop it, or an empty
-list for a term whose columns answer to nothing above them.
+Returns one entry per parameter a term is written in, saying which of its
+columns belong to that parameter and which sub-terms develop it. A term
+whose columns are one block with one meaning answers with an empty list.
 }
-\details{
-A term written in parameters of its own -- \code{\link[=nl]{nl()}} in the
-parameters of \eqn{f}, \code{\link[=seg]{seg()}} in a slope, a change and a
-break-point -- may develop any of them over covariates, and then its block
-carries several groups of columns that mean different things. What divides
-them is the TERM's answer and cannot be recovered from the coefficient
-names: a name is built for a reader and parsing one back is the shape of
-mistake this package avoids everywhere else.
-
-A parameter may be developed by SEVERAL sub-terms at once, and they need
-not be of one kind: \code{seg(x, psi ~ random(~1 | id))} develops the
-break-point with an unpenalized intercept AND a random block, so the
-component's \code{subs} has two entries and only the second carries a
-penalty. A consumer that reports a component therefore reports a sequence
-and not a single kind.
-
-A STRUCTURAL term contributes no design columns, and there \code{index}
-gives positions in \code{\link[=term_params]{term_params()}} instead: the vector its
-state, its readable quantities and its variance matrix are all indexed by.
-In both cases the field names the term's own coefficients.
-
-The base method returns an empty list, which says that the term's columns
-are its own and divide no further. That is the honest answer for
-\code{\link[=linpar]{linpar()}}, \code{\link[=s]{s()}}, \code{\link[=random]{random()}} and the
-penalized constructors, whose columns are one block with one meaning.
+\section{Why the term has to say it}{
+A term may be written in parameters of its own: \code{\link[=nl]{nl()}} in the parameters of
+\eqn{f}, \code{\link[=seg]{seg()}} in a slope, a change and a break-point. Any of them may be
+developed over covariates, and the block then carries several groups of
+columns meaning different things. Only the term knows which group is which. A
+coefficient name is built for a reader, and recovering the division by
+parsing one back is the shape of mistake this package avoids everywhere
+else.
 }
+
+\section{A parameter may have several sub-terms, of different kinds}{
+\code{seg(x, psi ~ random(~ 1 | id))} develops the break-point with an
+unpenalized intercept and a random block, so that component's \code{subs} has two
+entries and only the second carries a penalty. A consumer reporting a
+component reports a sequence.
+
+\code{sub_index} splits \code{index} among those sub-terms, in the order the block
+binds them, which is \code{\link[=component_sub_index]{component_sub_index()}} applied to their coefficient
+counts.
+}
+
+\section{Structural terms}{
+A structural term contributes no design columns, and \code{index} gives positions
+in \code{\link[=term_params]{term_params()}}: the vector its state, its readable quantities and its
+variance matrix are all indexed by. In both branches the field names the
+term's own coefficients.
+
+The base method returns an empty list, which is the answer for \code{\link[=linpar]{linpar()}},
+\code{\link[=s]{s()}}, \code{\link[=random]{random()}} and the five penalized constructors, whose columns are one
+block with one meaning.
+}
+
 \examples{
+set.seed(1)
 dd <- data.frame(x = seq(0.2, 3, length.out = 20),
                  g = factor(rep(c("a", "b"), 10)))
 dd$y <- 2 * exp(-1.3 * dd$x)
+
+# nl() in two parameters, the first developed over a factor: two
+# columns for `a` and one for `r`.
 b <- term_build(nl(~ a * exp(-r * x), a ~ 0 + g, start = list(r = 1.3)), dd)
 lapply(term_components(b), function(z) z$index)
+term_coef_names(b)
 
-# a term whose columns are one block answers with nothing
+# The sub-terms of the developed parameter, and its columns split
+# among them.
+term_components(b)$a$sub_index
+
+# A term whose columns are one block answers with nothing.
 term_components(term_build(linpar(~ x), dd))
 
 }
 \seealso{
-\code{\link[=term_penalties]{term_penalties()}}, \code{\link[=term_coef_names]{term_coef_names()}}
+\code{\link[=component_sub_index]{component_sub_index()}} for the split, \code{\link[=term_penalties]{term_penalties()}} for the
+penalties those sub-terms bring, \code{\link[=term_coef_names]{term_coef_names()}} for the names of the
+columns being divided.
 }

@@ -2,54 +2,108 @@
 % Please edit documentation in R/generics.R
 \name{term_penalties}
 \alias{term_penalties}
+\alias{term_penalties.model_term}
 \title{Every Penalty a Term Carries}
 \usage{
 term_penalties(term, ...)
 }
 \arguments{
-\item{term}{A built term.}
+\item{term}{A built term. An unbuilt one is accepted and reports what it has,
+which is usually nothing.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
-A list, possibly empty. Each entry has \code{name} (a label unique
-WITHIN the term, empty for a penalty over the whole of it), \code{index}
-(positions among the term's parameters) and \code{penalty} (a
-\pkg{penalties7} object). The name is not the term's: two \code{ridge()}
-terms in one formula are two terms with their own hyperparameters, and it
-is the caller that knows what it called each one.
+An unnamed list, possibly empty, one element per declared penalty.
+Each element is a list with
+\describe{
+\item{\code{name}}{a character label unique within the term, \code{""} for a
+penalty covering the whole of it.}
+\item{\code{index}}{integer positions among the term's own parameters:
+columns of the block for an additive term, positions in
+\code{\link[=term_params]{term_params()}} for a structural one.}
+\item{\code{penalty}}{a \pkg{penalties7} penalty over exactly those
+parameters, so \code{penalty@n_coef} equals \code{length(index)}.}
+\item{\code{fixed}}{the hyperparameters the caller held, a named list, empty
+when all of them are estimated.}
+\item{\code{n_values}, \code{values}, \code{min_ratio}, \code{search}}{what the caller said
+about the path over this penalty's hyperparameters, from the term's
+properties of the same names.}
+}
 }
 \description{
-What a term declares it wants penalized: a list of entries, each naming a
-subset of the term's own parameters and the penalty over them.
+Returns what a term declares it wants penalized: a list of entries, each
+naming a subset of the term's own parameters, the penalty over them, and
+whatever the caller fixed about that penalty's hyperparameters. This is the
+enumeration a fitting layer runs over, and it is what \code{\link[=term_smooth]{term_smooth()}} and
+\code{\link[=edf]{edf()}} read.
 }
-\details{
-\code{\link[=term_penalty]{term_penalty()}} answers for the common case, one penalty over the
-whole of a term's design block, and this generalizes it in two directions a
-model layer needs.
+\section{Two ways it generalizes \code{\link[=term_penalty]{term_penalty()}}}{
+\strong{A term may carry more than one penalty}, over different parameters of its
+own. A panel model with a population value and a departure per group wants
+the population value free and the departures shrunk, which is one penalty
+over part of the parameters and none over the rest. \code{nl()} developing two of
+its parameters by two different penalized sub-terms carries two entries.
 
-A term may carry \strong{more than one} penalty, over different parameters of
-its own. A panel model with a population value and a departure per group
-wants the population value free and the departures shrunk, which is one
-penalty over part of the parameters and none over the rest.
-
-The parameters need \strong{not be coefficients of a design block}. The
-persistence of a score-driven term, the nonlinear parameters of
-\code{\link[=nl]{nl()}}, the break-point of \code{\link[=seg]{seg()}} are parameters of the
-term and nothing else, and everything a penalty needs from them is a vector
-of numbers and their positions.
-
-The base method answers from \code{term_penalty()}, so a term that carries
-one penalty over its whole block -- every term shipped here -- needs no
-method of its own and behaves exactly as before. Its single entry is named
-with the empty string, meaning the whole term, so a caller that keys the
-hyperparameters by term name keys them exactly as it did.
+\strong{The parameters need not be coefficients of a design block.} The
+persistence of a score-driven term, the nonlinear parameters of \code{\link[=nl]{nl()}} and
+the break-point of \code{\link[=seg]{seg()}} are parameters of the term and of nothing else,
+and all a penalty needs from them is a vector of numbers and their
+positions. For a structural term \code{index} gives positions in
+\code{\link[=term_params]{term_params()}}; for an additive one, columns of the block.
 }
+
+\section{The base method, and the name of an entry}{
+The method on \code{\link[=model_term]{model_term()}} answers from \code{\link[=term_penalty]{term_penalty()}}, so a term
+carrying one penalty over its whole block needs no method of its own. Its
+single entry is named \code{""}, meaning the whole term.
+
+A name is unique \strong{within} the term and is not the term's own name. Two
+\code{ridge()} terms in one formula are two terms with their own
+hyperparameters, and it is the caller who knows what it called each of them;
+\code{\link[statmodels7:statmod]{statmodels7::statmod()}} composes a key as \code{term} or \code{term::entry}.
+
+The list itself is \strong{unnamed}: read \code{e$name}, not \code{names(entries)}.
+}
+
+\section{A specification carries no entries}{
+The penalty is attached at \code{\link[=term_build]{term_build()}}, so \code{term_penalties()} on an
+unbuilt penalized term is an empty list. That is why \code{\link[=term_smooth]{term_smooth()}}, which
+reads this, answers \code{TRUE} for \code{lasso(~ x)} and \code{FALSE} once it is built.
+}
+
 \examples{
-term_penalties(term_build(ridge(~x), data.frame(x = rnorm(20))))
-term_penalties(term_build(linpar(~x), data.frame(x = rnorm(20))))
+set.seed(1)
+d <- data.frame(x = sort(runif(50, 0, 10)), g = factor(rep(c("a", "b"), 25)))
+
+# One penalty over the whole block: one entry, named with the empty string.
+e <- term_penalties(term_build(ridge(~ x), d))
+length(e)
+str(e[[1]][c("name", "index")])
+e[[1]]$penalty
+
+# An unpenalized term declares nothing.
+term_penalties(term_build(linpar(~ x), d))
+
+# A penalty over part of a term's parameters: nl() with one of its two
+# parameters developed by a lasso, so the entry covers columns 1 and 2
+# of a block of three.
+nb <- term_build(nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g),
+                    start = list(r = 1.3)), d)
+ent <- term_penalties(nb)
+vapply(ent, function(z) z$name, character(1))
+ent[[1]]$index
+term_npar(nb)
+
+# The list is unnamed: the key is the entry's own field.
+names(ent)
+
+# Unbuilt, there is nothing to report yet.
+term_penalties(lasso(~ x))
 
 }
 \seealso{
-\code{\link[=term_penalty]{term_penalty()}}, \code{\link[=term_npar]{term_npar()}}
+\code{\link[=term_penalty]{term_penalty()}} for the single-penalty case, \code{\link[=term_components]{term_components()}}
+for how a term's columns divide among its own parameters, \code{\link[=term_hyper]{term_hyper()}}
+for the held values alone, and \code{\link[=edf]{edf()}} for what the entries cost.
 }

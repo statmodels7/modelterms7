@@ -2,40 +2,78 @@
 % Please edit documentation in R/generics.R
 \name{term_smooth}
 \alias{term_smooth}
+\alias{term_smooth.model_term}
 \title{Whether a Term's Penalized Objective Is Smooth}
 \usage{
 term_smooth(term, ...)
 }
 \arguments{
-\item{term}{An object inheriting from class \code{\link[=model_term]{model_term()}}.}
+\item{term}{An object inheriting from \code{\link[=model_term]{model_term()}}. Build it first, or the
+answer is \code{TRUE} by default.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
-A logical scalar.
+A single logical, never \code{NA}.
 }
 \description{
 \code{TRUE} when the term's contribution to the penalized objective is
-differentiable in the coefficients. The answer is read from the penalties
-rather than declared by the term: an unpenalized term is smooth, and a
-penalized one is smooth exactly when no penalty it carries declares a
-kink, so a term cannot disagree with its own penalties. The model layer
-uses this flag to split the coefficient vector into the block the
-classical optimizers handle and the block that needs non-smooth
-strategies.
+differentiable in the coefficients. A fitting layer reads it to split the
+coefficient vector into the block a classical optimizer handles and the
+block that needs a proximal step or a coordinate descent.
 }
-\details{
-The enumeration is \code{\link[=term_penalties]{term_penalties()}}, so a term carrying one
-penalty over part of its parameters and none over the rest answers for
-the part: \code{seg(x, penalty = penalties7::lasso_penalty)} is not
-smooth, its slope
-changes sitting at a kink, although its linear effect and its
-break-points are unpenalized.
+\section{The answer comes from the penalties}{
+The term does not declare it. Every entry of \code{\link[=term_penalties]{term_penalties()}} is asked for
+its kink set through \code{\link[penalties7:penalty_kinks]{penalties7::penalty_kinks()}}, at a probe value inside
+each hyperparameter's bounds, and the answer is \code{FALSE} as soon as one
+entry reports a point. So an unpenalized term is smooth, a ridge or a
+Gaussian prior is smooth, and lasso, SCAD, MCP and the elastic net are not.
+A term cannot disagree with its own penalties.
+
+The probe is any admissible value, the kink set being structural: the
+midpoint of a bounded interval, one step inside a half-bounded one, zero
+where the interval is the whole line.
 }
+
+\section{It answers for the whole term}{
+A term carrying a penalty over part of its parameters and none over the rest
+answers for the part. \code{nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g))} is not
+smooth: the coefficients developing \code{a} sit at a kink, although \code{r} is
+unpenalized.
+}
+
+\section{A specification is always smooth}{
+The penalty is attached at \code{\link[=term_build]{term_build()}}, so \code{term_penalties()} on an
+unbuilt term is empty and this answers \code{TRUE} whatever penalty the term will
+carry. \code{term_smooth(lasso(~ x))} is \code{TRUE} and
+\code{term_smooth(term_build(lasso(~ x), d))} is \code{FALSE}. Ask a built term.
+}
+
 \examples{
-term_smooth(linpar(~x))
+set.seed(1)
+d <- data.frame(x = rnorm(30), g = factor(rep(c("a", "b"), 15)))
+
+# Unpenalized and quadratically penalized terms are smooth.
+vapply(list(linpar(~ x), ridge(~ x), s(x, k = 5), random(~ 1 | g)),
+       function(t) term_smooth(term_build(t, d)), logical(1))
+
+# The four kinked penalties are not.
+vapply(list(lasso(~ x), scad(~ x), mcp(~ x), enet(~ x)),
+       function(t) term_smooth(term_build(t, d)), logical(1))
+
+# A kink on part of a term's parameters makes the term non-smooth.
+d$y <- 2 * exp(-1.3 * d$x)
+nb <- term_build(nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g),
+                    start = list(r = 1.3)), d)
+term_smooth(nb)
+c(npar = term_npar(nb), penalized = length(term_penalties(nb)[[1]]$index))
+
+# Unbuilt, there is no penalty to read yet.
+c(spec = term_smooth(lasso(~ x)), built = term_smooth(term_build(lasso(~ x), d)))
 
 }
 \seealso{
-\code{\link[=term_penalties]{term_penalties()}}, \code{\link[=term_penalty]{term_penalty()}}, \code{\link[=edf]{edf()}}
+\code{\link[=term_penalties]{term_penalties()}} for the entries it runs over,
+\code{\link[penalties7:penalty_kinks]{penalties7::penalty_kinks()}} for the set it reads, \code{\link[=edf]{edf()}}, which uses
+the same split to count degrees of freedom.
 }

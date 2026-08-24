@@ -2,51 +2,75 @@
 % Please edit documentation in R/generics.R
 \name{term_jacobian_block}
 \alias{term_jacobian_block}
+\alias{term_jacobian_block.model_term}
 \title{Is a Term's Block the Jacobian of Its Contribution?}
 \usage{
 term_jacobian_block(term, ...)
 }
 \arguments{
-\item{term}{A term (built or not; the answer is a property of the
-construction).}
+\item{term}{A term, built or not: the answer is a property of the
+construction.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
 A single logical.
 }
 \description{
-\code{TRUE} when the design block a term reports is the exact derivative
-of its contribution in its own coefficients, \code{FALSE} when it is a
-working linearization with quantities frozen at the previous iterate. The
-base method returns \code{TRUE}, which is what a fixed design satisfies
-trivially and what \code{\link[=nl]{nl()}} and \code{\link[=seg]{seg()}} satisfy by
-construction.
+\code{TRUE} when the block a term reports is the exact derivative of its
+contribution in its own coefficients, \code{FALSE} when it is a working
+linearization with quantities frozen at the previous iterate. The base
+method returns \code{TRUE}, which a fixed design satisfies trivially and which
+\code{\link[=nl]{nl()}} and \code{\link[=seg]{seg()}} satisfy by construction; \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}} answer
+\code{FALSE}.
 }
-\details{
-The distinction decides how a fitting layer may treat the block. Where
-the block is a Jacobian, a scoring step on it is a Gauss--Newton step and
-a line search on the model's own objective is licensed, so the term can
-be fitted inside the same system as everything else. Where it is a
-working linearization -- \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}}, whose
-weight \eqn{W = 1/(2\lvert \tilde x - \psi\rvert)} is held at the
-previous break-point and whose position is read off two coefficients --
-the fixed-point iteration of \cite{fasola2018} is not a descent method on
-the model's objective, and forcing a sufficient decrease on it stalls the
-iteration. Such a term is fitted by alternating exact working fits at the
-frozen block with \code{\link[=term_refresh]{term_refresh()}}, and its convergence is what
-\code{\link[=term_converged]{term_converged()}} answers rather than a score.
+\section{What the answer decides}{
+Where the block is a Jacobian, a scoring step on it is a Gauss-Newton step,
+a line search on the model's own objective is licensed, and the term is
+fitted inside the same system as everything else.
+
+Where it is a working linearization the fixed-point iteration of Fasola,
+Muggeo and Kuchenhoff (2018) is not a descent method on the model's
+objective. Its early steps go uphill on purpose, under a scaling factor that
+anneals, so forcing a sufficient decrease on it stalls the iteration.
+Such a term is fitted by alternating exact working fits at the frozen block
+with \code{\link[=term_refresh]{term_refresh()}}, and its convergence is what \code{\link[=term_converged]{term_converged()}}
+answers instead of a score.
+
+The two discontinuous constructions are the ones that answer \code{FALSE}. Their
+weight \eqn{W = 1/(2\lvert\tilde x - \psi\rvert)} is held at the previous
+break-point, and the position is read off two coefficients rather than being
+one.
 }
+
+\section{Smoothing changes the answer}{
+\code{jump(x, smoothed = ...)} replaces the step by a smooth surrogate, and the
+break-point becomes an ordinary parameter with a true Jacobian, so a
+smoothed break-point term answers \code{TRUE}. That is how a fitting layer routes
+it without a special case.
+}
+
 \examples{
-term_jacobian_block(seg(x))
-term_jacobian_block(jump(x))
+# The continuous construction differentiates; the two discontinuous
+# ones report a working linearization.
+vapply(list(seg = seg(x), jump = jump(x), jseg = jseg(x)),
+       term_jacobian_block, logical(1))
+
+# A fixed design is a Jacobian trivially, and so is nl().
+term_jacobian_block(linpar(~ x))
+term_jacobian_block(nl(~ a * x, start = list(a = 1)))
+
+# Smoothing the step makes the break-point an ordinary parameter.
+term_jacobian_block(jump(x, smoothed = penalties7::smooth_probit()))
 
 }
 \references{
 Fasola, S., Muggeo, V. M. R. and Kuchenhoff, H. (2018). A heuristic,
-iterative algorithm for change-point detection in abrupt change
-models. \emph{Computational Statistics}, 33, 997--1015.
+iterative algorithm for change-point detection in abrupt change models.
+\emph{Computational Statistics}, 33, 997--1015.
 }
 \seealso{
-\code{\link[=term_refresh]{term_refresh()}}, \code{\link[=term_converged]{term_converged()}}
+\code{\link[=term_refresh]{term_refresh()}} for the block being recomputed,
+\code{\link[=term_converged]{term_converged()}} for the verdict on such a term, \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}} and
+\code{\link[=jseg]{jseg()}}.
 }

@@ -2,60 +2,80 @@
 % Please edit documentation in R/generics.R
 \name{term_coef_start}
 \alias{term_coef_start}
+\alias{term_coef_start.model_term}
 \title{Where a Term's Own Coefficients Begin}
 \usage{
 term_coef_start(term, target = NULL, ...)
 }
 \arguments{
-\item{term}{A built term (see \code{\link[=term_build]{term_build()}}).}
+\item{term}{A built term (see \code{\link[=term_build]{term_build()}}). An unbuilt one throws through
+\code{\link[=term_npar]{term_npar()}}.}
 
 \item{target}{Optional numeric vector, one value per observation: the
-response on the scale of the predictor. \code{\link[=nl]{nl()}} uses it to
-estimate its own parameters; every other term ignores it.}
+response on the scale of the predictor, \code{NULL} by default. Supplied only
+where \code{params_interpretation} says the response reads the parameter
+directly, so a term in a scale's equation is handed nothing.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. No shipped method reads anything here.}
 }
 \value{
-A numeric vector of length \code{\link[=term_npar]{term_npar()}}.
+A numeric vector of length \code{\link[=term_npar]{term_npar()}}, in the block's column
+order.
 }
 \description{
-The coefficients a built term asks to be started at, one per column of
-its block. The base method returns zero everywhere, which is what a term
-whose block is a fixed design wants: the fit reaches the same optimum
-from anywhere, the objective being convex in those coordinates.
+The coefficients a built term asks to be started at, one per column of its
+block. The base method returns zero everywhere. A term whose block is a
+fixed design wants exactly that: the objective is convex in those
+coordinates and the fit reaches the same optimum from anywhere.
 }
-\details{
-A term that recomputes its block from its coefficients
-(\code{\link[=term_refresh]{term_refresh()}}) is the case this exists for, because zero
-is not a neutral point there but a degenerate one. In
-\code{\link[=jump]{jump()}} the break-point is read off two coefficients as
-\eqn{-g_k/\delta_k}, so a vector of zeros puts every break-point at the
-same clamped position and makes the block singular; in
-\code{\link[=seg]{seg()}} the Jacobian column is \eqn{-\gamma_k\,\mathbb{1}(x >
-\psi_k)} and vanishes identically. Those terms return the start
-\code{\link[=term_build]{term_build()}} computed -- unit changes and the break-points
-at the interior quantiles of the covariate, or the positions
-\code{psi} names -- and \code{\link[=nl]{nl()}} returns the starting values of
-its own parameters carried through their links.
+\section{Why any term needs a start of its own}{
+A term that recomputes its block from its coefficients (\code{\link[=term_refresh]{term_refresh()}}) is
+the case this exists for, because zero there is degenerate. In \code{\link[=jump]{jump()}} the
+break-point is read off two coefficients as \eqn{-g_k/\delta_k}, so a vector
+of zeros puts every break-point at the same clamped position and makes the
+block singular. In \code{\link[=seg]{seg()}} the Jacobian column is
+\eqn{-\gamma_k \mathbb{1}(x > \psi_k)} and vanishes identically at
+\eqn{\gamma_k = 0}.
 
-The value belongs to the term for the reason \code{\link[=term_start]{term_start()}}
-records for a structural one: only the term knows what a coefficient of
-zero means for the block it builds.
+Those terms return the start \code{\link[=term_build]{term_build()}} computed: unit changes, and the
+break-points at the interior quantiles of the covariate or at the positions
+\code{psi} names. \code{\link[=nl]{nl()}} returns the starting values of its own parameters
+carried through their links.
 
-\code{target} is the response carried onto the scale of the predictor the
-term contributes to, which is what a term needs to estimate parameters of
-its own from the data and is the one thing it cannot work out for itself:
-the term knows its formula and its charts, the fitting layer knows the
-distribution, the link and the equation. It is optional, and a term that
-has no use for it ignores it, so the default is the behaviour every term
-had before it existed.
+Only the term knows what a coefficient of zero means for the block it
+builds, which is the same reason \code{\link[=term_start]{term_start()}} belongs to a structural
+term.
 }
+
+\section{What \code{target} is for}{
+\code{target} is the response carried onto the scale of the predictor the term
+contributes to. It is the one thing a term cannot work out for itself: the
+term knows its formula and its charts, and the fitting layer knows the
+distribution, the link and the equation. \code{\link[=nl]{nl()}} uses it to estimate its own
+parameters from the data, over a deterministic grid on each free parameter's
+chart; every other term ignores it. It is optional, so the default is what
+every term did before it existed.
+}
+
 \examples{
+set.seed(1)
 dd <- data.frame(x = sort(runif(50, 0, 10)))
-term_coef_start(term_build(linpar(~x), dd))
-term_coef_start(term_build(jump(x), dd))
+
+# A fixed design starts at zero.
+term_coef_start(term_build(linpar(~ x), dd))
+
+# A break-point term does not: its block would be singular there.
+jb <- term_build(jump(x), dd)
+setNames(term_coef_start(jb), term_coef_names(jb))
+
+# seg() starts the change at one and the break-point inside the data.
+sb <- term_build(seg(x, npsi = 1), dd)
+setNames(term_coef_start(sb), term_coef_names(sb))
+range(dd$x)
 
 }
 \seealso{
-\code{\link[=term_start]{term_start()}}, \code{\link[=term_refresh]{term_refresh()}}
+\code{\link[=term_start]{term_start()}} for a structural term's own parameters,
+\code{\link[=term_refresh]{term_refresh()}} for the terms this exists for, \code{\link[=seg_start]{seg_start()}} for the grid
+rule behind a break-point start.
 }
