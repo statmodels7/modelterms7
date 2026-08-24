@@ -5,27 +5,78 @@ NULL
 #' @name SegTerm
 #'
 #' @description
-#' A subclass of [additive_term()] for a covariate whose effect
-#' changes at estimated break-points: a change of slope
-#' ([seg()]), a change of level ([jump()]), or both at
-#' the same points ([jseg()]). The design block is the working
-#' one of the iteration that estimates the break-points, and is
-#' recomputed by [term_refresh()] as they move.
+#' The subclass of [additive_term()] for a covariate whose effect changes at
+#' estimated break-points: a change of slope ([seg()]), a change of level
+#' ([jump()]), or both at the same points ([jseg()]). Its design block is the
+#' **working** block of the iteration that estimates the break-points, and
+#' [term_refresh()] recomputes it as they move.
+#'
+#' @details
+#' # The six properties of its own
+#'
+#' `kind` is `"seg"`, `"jump"` or `"jseg"`, and it decides almost everything
+#' else: which coefficients the term has, whether its block is a Jacobian, and
+#' which developments it will accept.
+#'
+#' `var` is the covariate expression, `npsi` the number of break-points, and
+#' `linear` whether the block carries the linear effect \eqn{\beta x}, which
+#' `seg` and `jseg` do by default and `jump` never does.
+#'
+#' `subformulas` holds one right-hand side per developed coefficient, and
+#' `spec` the resolved construction settings: the starting positions, the
+#' scaling factor `c0`, the restart budget `n_boot` and any smoother.
+#'
+#' # Two kinds of block, and what distinguishes them
+#'
+#' For [seg()] the block is the exact Jacobian: the contribution is
+#' differentiable in \eqn{\psi_k} away from the break-point, so the
+#' break-point is an ordinary coefficient and a linear fit on the block is a
+#' Gauss-Newton step. [term_jacobian_block()] answers `TRUE`.
+#'
+#' For [jump()] and [jseg()] it is a working linearization with the weight
+#' \eqn{W = 1/(2\lvert\tilde{x} - \psi\rvert)} frozen at the previous
+#' break-point, and the break-point is **read off** two coefficients rather
+#' than incremented. [term_jacobian_block()] answers `FALSE`, and a fitting
+#' layer routes such a term to exact working fits alternating with committed
+#' read-offs. Smoothing the step ([seg()]'s `smoothed` argument) turns the
+#' break-point back into an ordinary parameter, and the answer back to `TRUE`.
+#'
+#' [seg_psi()] is the one function that reports the position under either
+#' construction.
 #'
 #' @inheritParams additive_term
-#' @param kind Which of the three constructions.
-#' @param var The covariate expression.
-#' @param npsi The number of break-points.
+#' @param kind One of `"seg"`, `"jump"` or `"jseg"`.
+#' @param var The covariate expression, unevaluated.
+#' @param npsi The number of break-points, an integer of at least 1.
 #' @param linear Whether the block carries the linear effect.
 #' @param subformulas A named list of one-sided formulas, one per developed
-#'   parameter.
-#' @param spec The resolved construction settings.
+#'   coefficient. Empty where none is.
+#' @param spec A named list of the resolved construction settings.
 #'
-#' @return An object of class `SegTerm`.
+#' @return An S7 object of class `SegTerm`, inheriting from [additive_term()]
+#'   and [model_term()], with the six properties above beside the ten they
+#'   supply.
 #'
-#' @seealso [seg()], [jump()], [jseg()]
+#' @seealso [seg()], [jump()] and [jseg()] for the three constructions;
+#'   [seg_psi()] for the positions; [term_refresh()] for the block as they
+#'   move; [seg_start()] for where to begin.
+#'
 #' @examples
-#' S7::S7_inherits(seg(x), SegTerm)
+#' set.seed(1)
+#' d <- data.frame(x = sort(runif(120, 0, 10)))
+#' d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0) + rnorm(120, sd = 0.4)
+#'
+#' # All three constructions are this class, and differ in `kind`.
+#' vapply(list(seg(x), jump(x), jseg(x)), function(t) t@kind, character(1))
+#'
+#' # Which decides the coefficients the term carries.
+#' lapply(list(seg = seg(x), jump = jump(x), jseg = jseg(x)),
+#'        function(t) term_coef_names(term_build(t, d)))
+#'
+#' # And whether its block is a Jacobian or a working linearization.
+#' vapply(list(seg = seg(x), jump = jump(x), jseg = jseg(x)),
+#'        term_jacobian_block, logical(1))
+#'
 #' @export
 SegTerm <- S7::new_class(
   name = "SegTerm",
@@ -1117,6 +1168,72 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   out
 }
 
+#' @title Build a Break-Point Term
+#' @name term_build.SegTerm
+#'
+#' @description
+#' Evaluates the covariate, resolves any development of the term's own
+#' coefficients, places the break-points at their starting positions and builds
+#' the working block there. It also settles the confinement limits, the
+#' scaling schedule and, where the term is smoothed, the transition width.
+#'
+#' @details
+#' # What is settled here
+#'
+#' The covariate must vary. The break-points are confined to the interval
+#' between the 5th and the 95th percentile of it: outside that the indicator is
+#' constant, the truncated line and that constant are linearly dependent, and
+#' the block is exactly singular. A run ending against the limit has found no
+#' break-point, and [seg_psi()] then reports the limit itself.
+#'
+#' The starting positions are `psi` where it was given and evenly spaced
+#' quantiles of the covariate otherwise. Zero is degenerate here, so
+#' [term_coef_start()] returns these rather than a vector of zeros.
+#'
+#' Each subformula's right-hand side goes through [interpret_formula()] and its
+#' terms are built, so their blueprints are recorded and reapplied at
+#' prediction. What a development may carry depends on `kind`: the continuous
+#' construction takes any of them, and the discontinuous ones only a scalar
+#' change of level or a design that partitions the rows, their read-off being a
+#' product of two unknowns.
+#'
+#' # The smoothed form
+#'
+#' With `smoothed` the step and the hinge are replaced by a
+#' [penalties7::abs_smoother()]'s versions, and the transition width is
+#' resolved here from the covariate's spacing, within groups where a
+#' development of the break-point supplies a partition. The width is checked
+#' against the derived floor \eqn{\sqrt{\epsilon}D} and reported by [print()],
+#' a number that changes what the term means having to be legible.
+#'
+#' @param term A [SegTerm()], built or not.
+#' @param data A data frame carrying the covariate and whatever the
+#'   subformulas name.
+#' @param ... Unused.
+#'
+#' @return The term with `X`, `coef_names`, `blueprint` and, where a
+#'   subformula brought one, `penalty` filled.
+#'
+#' @seealso [seg()], [jump()], [jseg()]; [term_refresh.SegTerm()] for the block
+#'   as the break-points move; [seg_start()] for a better starting position
+#'   than the quantiles.
+#'
+#' @examples
+#' set.seed(1)
+#' d <- data.frame(x = sort(runif(120, 0, 10)), id = factor(rep(1:4, each = 30)))
+#' d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0) + rnorm(120, sd = 0.4)
+#'
+#' b <- term_build(seg(x, npsi = 1), d)
+#' term_coef_names(b)
+#' seg_psi(b)                     # the starting quantile
+#' setNames(term_coef_start(b), term_coef_names(b))
+#'
+#' # A developed break-point expands into its own design's coefficients.
+#' bd <- term_build(seg(x, psi ~ id), d)
+#' term_coef_names(bd)
+#' lapply(term_components(bd), function(z) z$index)
+#'
+#' @keywords internal
 S7::method(term_build, SegTerm) <- function(term, data, ...) {
   xv <- .seg_x(term@var, data)
   n <- length(xv)
@@ -1370,6 +1487,52 @@ S7::method(term_penalties, SegTerm) <- function(term, ...) {
 # ordinary parameters and there is no frozen weight. The question is asked
 # of the specification, which a fitting layer routes on before the term is
 # built.
+#' @title Whether a Break-Point Term's Block Is a Jacobian
+#' @name term_jacobian_block.SegTerm
+#'
+#' @description
+#' `TRUE` for [seg()] and for any smoothed construction, `FALSE` for the sharp
+#' [jump()] and [jseg()]. It is the predicate a fitting layer routes on: a
+#' Jacobian licenses a Gauss-Newton step and a line search on the model's own
+#' objective, and a working linearization does not.
+#'
+#' @details
+#' [seg()] is differentiable in its break-points away from them, so its block
+#' is the exact derivative. [jump()] and [jseg()] freeze the weight
+#' \eqn{W = 1/(2\lvert\tilde{x}-\psi\rvert)} at the previous position and read
+#' the break-point off two coefficients, so their block is a working
+#' linearization: the fixed-point iteration on it is not a descent method on
+#' the model's objective, its early steps going uphill on purpose under a large
+#' scaling factor, and forcing a sufficient decrease stalls it.
+#'
+#' `smoothed` changes the answer for all three. Replacing the step and the
+#' hinge by an [penalties7::abs_smoother()]'s smooth versions makes every
+#' break-point an ordinary parameter with a true derivative, so a smoothed
+#' `jump` answers `TRUE` and is routed like an [nl()] term.
+#'
+#' @param term A [SegTerm()], built or not: the answer is a property of the
+#'   construction.
+#' @param ... Unused.
+#'
+#' @return A single logical.
+#'
+#' @seealso [term_jacobian_block()] for the generic and what the answer
+#'   decides, [term_converged()] for the verdict a working linearization gets
+#'   instead of a score.
+#'
+#' @examples
+#' # The continuous construction differentiates; the two discontinuous
+#' # ones report a working linearization.
+#' vapply(list(seg = seg(x), jump = jump(x), jseg = jseg(x)),
+#'        term_jacobian_block, logical(1))
+#'
+#' # Smoothing the step makes every break-point an ordinary parameter.
+#' vapply(list(seg = seg(x, smoothed = penalties7::smooth_probit()),
+#'             jump = jump(x, smoothed = penalties7::smooth_probit()),
+#'             jseg = jseg(x, smoothed = penalties7::smooth_probit())),
+#'        term_jacobian_block, logical(1))
+#'
+#' @keywords internal
 S7::method(term_jacobian_block, SegTerm) <- function(term, ...) {
   identical(term@kind, "seg") || !is.null(term@spec$smoothed)
 }
@@ -1666,6 +1829,43 @@ S7::method(term_block_deriv, SegTerm) <- function(term, coef = NULL, v, ...) {
   out
 }
 
+#' @title How a Break-Point Term's Columns Divide
+#' @name term_components.SegTerm
+#'
+#' @description
+#' One entry per coefficient of the term, `beta`, `gamma1` ... , `delta1` ... ,
+#' `psi1` ... , giving the columns that coefficient owns and the sub-terms
+#' developing it. A coefficient with no development owns one column; a
+#' developed one owns as many as its own design has.
+#'
+#' @details
+#' It is what lets a consumer report a fitted break-point term coefficient by
+#' coefficient, and what [term_penalties()] uses to place a sub-term's penalty
+#' on exactly the coordinates it covers. Those coordinates are **named** as a
+#' subset of the term's own parameters and never selected with a map: a
+#' separable penalty under a selection map is the generalized-lasso problem,
+#' which has no proximal operator.
+#'
+#' @param term A built [SegTerm()]. An unbuilt one gives an empty list.
+#' @param ... Unused.
+#'
+#' @return A named list, one entry per coefficient and named by it, each with
+#'   `name`, `index`, `subs` and `sub_index` as [term_components()] describes.
+#'
+#' @seealso [term_components()] for the contract, [term_penalties()] for the
+#'   penalties the sub-terms bring.
+#'
+#' @examples
+#' set.seed(1)
+#' d <- data.frame(x = sort(runif(120, 0, 10)), id = factor(rep(1:4, each = 30)))
+#' d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0) + rnorm(120, sd = 0.4)
+#'
+#' # A break-point per subject: psi1 owns four columns, the others one each.
+#' b <- term_build(seg(x, psi ~ id), d)
+#' term_coef_names(b)
+#' lapply(term_components(b), function(z) z$index)
+#'
+#' @keywords internal
 S7::method(term_components, SegTerm) <- function(term, ...) {
   bp <- term@blueprint
   if (!length(bp)) return(list())
@@ -1747,6 +1947,68 @@ S7::method(term_block_deriv2, SegTerm) <- function(term, coef = NULL, v, u,
   list(coef = coef, bp = bp, psi_new = psi_new[, o, drop = FALSE])
 }
 
+#' @title Recompute a Break-Point Term at New Coefficients
+#' @name term_refresh.SegTerm
+#'
+#' @description
+#' Moves the break-points to where the coefficients put them, rebuilds the
+#' working block there, and advances the scaling schedule. It is one step of
+#' the iteration that estimates the break-points, and the block it returns is
+#' what the next linear fit is taken on.
+#'
+#' @details
+#' # How the new positions are found
+#'
+#' For `seg` the break-point is a coefficient, so the new position is read
+#' straight out of `coef`. For `jump` and `jseg` it is **read off** two of
+#' them: the identity \eqn{1(x > \psi) = 1/2 + (x-\psi)/(2|x-\psi|)} makes the
+#' step linear in \eqn{\psi} once the weight is frozen, and
+#' \eqn{\psi = -g_k/\delta_k} follows. `jseg` reads a quadratic instead, its
+#' truncated line depending on the position as well.
+#'
+#' Every new position is clamped into the confinement interval the build
+#' settled, and crossed break-points are relabelled so that each keeps
+#' travelling with its own scaling factor and direction.
+#'
+#' # The scaling schedule
+#'
+#' The rescaling of Fasola, Muggeo and Kuchenhoff (2018) opens a gap of
+#' relative width \eqn{c} around each break-point, and the factor is **halved
+#' whenever that break-point reverses direction**, which is the signal that the
+#' iteration has begun to circle an optimum instead of travelling toward one.
+#' The factor is both the conditioning device and the step control, so it must
+#' advance once per committed step: refreshing inside a line search would
+#' anneal at every trial point, and refreshing from the specification would
+#' freeze it at `c0`. [seg_reheat()] resets it.
+#'
+#' @param term A built [SegTerm()].
+#' @param coef The coefficients to move to, of length `ncol(term@X)`. Any
+#'   other length throws with the required length named.
+#' @param ... Unused.
+#'
+#' @return The term with its block, its break-points, its contribution and its
+#'   scaling schedule all recomputed at `coef`.
+#'
+#' @seealso [term_refresh()] for the generic, [seg_psi()] for the positions
+#'   after a refresh, [seg_step()] and [term_converged()] for the verdict,
+#'   [seg_reheat()] to start the schedule again.
+#'
+#' @examples
+#' set.seed(1)
+#' d <- data.frame(x = sort(runif(120, 0, 10)))
+#' d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0) + rnorm(120, sd = 0.4)
+#' b <- term_build(seg(x, npsi = 1), d)
+#'
+#' # Moving the break-point coefficient moves the block.
+#' cf <- b@blueprint$coef
+#' r <- term_refresh(b, c(cf[1], cf[2], 6))
+#' c(before = seg_psi(b), after = seg_psi(r))
+#' max(abs(term_matrix(r) - term_matrix(b))) > 0
+#'
+#' # A wrong length is refused.
+#' try(term_refresh(b, c(1, 2)))
+#'
+#' @keywords internal
 S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   .assert_built(term)
   bp <- term@blueprint
@@ -1850,6 +2112,57 @@ S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   })
 }
 
+#' @title The Contribution of a Break-Point Term
+#' @name term_value.SegTerm
+#'
+#' @description
+#' The values the term contributes to the linear predictor at its current
+#' break-points: the broken line for [seg()], the step for [jump()], both for
+#' [jseg()]. It is what a Gauss-Newton step needs beside the block, and for
+#' the continuous construction it is **not** the block times the coefficients.
+#'
+#' @details
+#' For `seg` the block is the Jacobian, so \eqn{X\beta} is the linearization
+#' and the two differ by whatever that drops: a step at the break-point, in a
+#' construction that is continuous. For `jump` the columns satisfy
+#' \eqn{X\beta = } the contribution exactly, the identity behind the read-off
+#' making them so, and the two agree to the last bit.
+#'
+#' With `newdata` the contribution is returned on those rows, at the
+#' break-points the term **carries**. They are not re-derived from the new
+#' rows, exactly as [term_predict()] reapplies rather than rebuilds.
+#'
+#' @param term A built [SegTerm()].
+#' @param coef Optional coefficients to evaluate at; `NULL`, the default,
+#'   uses the ones [term_refresh()] last committed.
+#' @param newdata An optional data frame; the contribution comes back on its
+#'   rows instead of the fitting ones.
+#' @param ... Unused.
+#'
+#' @return A numeric vector of one value per observation.
+#'
+#' @seealso [term_value()] for the generic, [term_refresh.SegTerm()] for the
+#'   block at the same coefficients, [seg_psi()] for the positions.
+#'
+#' @examples
+#' set.seed(1)
+#' d <- data.frame(x = sort(runif(120, 0, 10)))
+#' d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0) + rnorm(120, sd = 0.4)
+#'
+#' # seg: the block is the Jacobian, so X beta is the linearization and
+#' # differs from the contribution.
+#' b <- term_refresh(term_build(seg(x, npsi = 1), d), c(0.5, 2, 6))
+#' max(abs(as.numeric(term_matrix(b) %*% b@blueprint$coef) - term_value(b)))
+#'
+#' # jump: the columns reproduce the contribution exactly.
+#' bj <- term_build(jump(x, npsi = 1), d)
+#' max(abs(as.numeric(term_matrix(bj) %*% bj@blueprint$coef) - term_value(bj)))
+#'
+#' # And the seg contribution really is the broken line at psi.
+#' cf <- b@blueprint$coef
+#' max(abs(term_value(b) - (cf[1] * d$x + cf[2] * pmax(d$x - cf[3], 0))))
+#'
+#' @keywords internal
 S7::method(term_value, SegTerm) <- function(term, coef = NULL, newdata = NULL,
                                             ...) {
   .assert_built(term)
@@ -1866,6 +2179,53 @@ S7::method(term_value, SegTerm) <- function(term, coef = NULL, newdata = NULL,
   term_refresh(term, coef)@blueprint$value
 }
 
+#' @title A Break-Point Term's Block at New Rows
+#' @name term_predict.SegTerm
+#'
+#' @description
+#' The working block evaluated at `newdata`, at the break-points and the
+#' coefficients the term currently carries. The positions are not re-derived
+#' from the new rows, and any development of a coefficient is reapplied through
+#' its sub-terms' own blueprints.
+#'
+#' @details
+#' Re-deriving the break-points would give a different model at every set of
+#' rows, which is the general reason [term_predict()] reapplies instead of
+#' rebuilding. For a break-point term it is sharper than usual: the positions
+#' are what the fit estimated, and a subset of the data may not even contain
+#' one.
+#'
+#' [term_value()] with `newdata` is what gives the contribution there. For
+#' `seg` the two differ, the block being a Jacobian.
+#'
+#' @param term A built [SegTerm()]. An unbuilt one throws
+#'   `"the term has not been built; call term_build(term, data) first."`.
+#' @param newdata A data frame carrying the covariate and whatever the
+#'   subformulas name.
+#' @param ... Unused.
+#'
+#' @return A block of `nrow(newdata)` rows and [term_npar()] columns, with the
+#'   term's coefficient names as column names.
+#'
+#' @seealso [term_predict()] for the generic, [term_value()] for the
+#'   contribution, [seg_psi()] for the positions it is evaluated at.
+#'
+#' @examples
+#' set.seed(1)
+#' d <- data.frame(x = sort(runif(120, 0, 10)))
+#' d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0) + rnorm(120, sd = 0.4)
+#' b <- term_refresh(term_build(seg(x, npsi = 1), d), c(0.5, 2, 6))
+#'
+#' # On the fitting data it is the block itself.
+#' max(abs(term_predict(b, d) - term_matrix(b)))
+#'
+#' # At other rows the break-point is the fitted one, not one re-derived
+#' # from those rows: here every row is below it.
+#' nd <- data.frame(x = c(1, 2, 3))
+#' term_predict(b, nd)
+#' seg_psi(b)
+#'
+#' @keywords internal
 S7::method(term_predict, SegTerm) <- function(term, newdata, ...) {
   .assert_built(term)
   bp <- term@blueprint
@@ -2389,6 +2749,55 @@ seg_profile_rss <- function(term, y, weights = NULL) {
   list(xv = xv, lim = bp$lim, psi = as.numeric(bp$psi[1L, ]), rss = rss)
 }
 
+#' @title Print a Break-Point Term
+#' @name print.SegTerm
+#'
+#' @description
+#' Prints the label, the construction and how many break-points the term
+#' carries, followed by where they currently sit. A smoothed term adds a line
+#' naming its smoother and the transition width, and a term with a developed
+#' coefficient says which one.
+#'
+#' @details
+#' The form is
+#'
+#' ```
+#' <SegTerm> 'seg': seg, 1 break-point
+#'   at: 6.501
+#' ```
+#'
+#' The positions come from [seg_psi()], so they are the current ones and move
+#' with every [term_refresh()]. Where a break-point carries a development
+#' there is no single number, a position then being one value per observation,
+#' and the range is printed instead.
+#'
+#' The smoother line reports the width because it changes what the term means:
+#' the transition is a real feature of the model, not an implementation
+#' detail, and a fit at one width is not a fit at another.
+#'
+#' @param x A [SegTerm()], built or not.
+#' @param ... Unused, and accepted so that the signature matches [print()]'s.
+#'
+#' @return `x`, invisibly. Called for the lines it writes.
+#'
+#' @seealso [seg_psi()] for the positions, [seg()], [jump()] and [jseg()].
+#'
+#' @examples
+#' set.seed(1)
+#' d <- data.frame(x = sort(runif(120, 0, 10)), id = factor(rep(1:4, each = 30)))
+#' d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0) + rnorm(120, sd = 0.4)
+#'
+#' # A specification, and the same term built at its starting quantile.
+#' seg(x, npsi = 2)
+#' term_build(seg(x, npsi = 2), d)
+#'
+#' # A smoothed term names its smoother and its width.
+#' term_build(jump(x, smoothed = penalties7::smooth_probit()), d)
+#'
+#' # A developed break-point has a range instead of a number.
+#' term_build(seg(x, psi ~ id), d)
+#'
+#' @keywords internal
 S7::method(print, SegTerm) <- function(x, ...) {
   if (term_is_built(x)) {
     dv <- names(x@subformulas)

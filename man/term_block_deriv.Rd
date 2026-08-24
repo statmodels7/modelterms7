@@ -4,6 +4,7 @@
 \alias{term_block_deriv}
 \alias{term_block_deriv.model_term}
 \alias{term_block_deriv.NlTerm}
+\alias{term_block_deriv.SegTerm}
 \title{How a Term's Block Moves Along One Direction}
 \usage{
 term_block_deriv(term, coef = NULL, v, ...)
@@ -31,8 +32,8 @@ It is the ADJOINT of \code{\link[=term_block_contract]{term_block_contract()}} a
 the other. That one contracts over the observations and the columns and
 answers per coefficient, as the gradient of a marginal criterion
 needs; this one contracts over the coefficients and answers per entry of
-the block, which is what its HESSIAN needs, \eqn{\partial K/\partial\beta}
-being required there in the direction the mode moves instead of traced.
+the block, as its HESSIAN needs, \eqn{\partial K/\partial\beta} being
+required there in the direction the mode moves instead of traced.
 
 Both are \eqn{O(nm)} and read the same closed form, so this needs no
 derivative the other did not: for \code{\link[=nl]{nl()}}, writing

@@ -1291,7 +1291,7 @@ S7::method(term_refresh, model_term) <- function(term, coef, ...) term
 #' @seealso [term_refresh()], [nl_fderiv()]
 #'
 #' @export
-#' @aliases term_block_contract.model_term term_block_contract.NlTerm
+#' @aliases term_block_contract.model_term term_block_contract.NlTerm term_block_contract.SegTerm
 term_block_contract <- S7::new_generic(
   "term_block_contract", "term",
   function(term, coef = NULL, A, ...) S7::S7_dispatch())
@@ -1342,7 +1342,7 @@ S7::method(term_block_contract, model_term) <- function(term, coef = NULL, A,
 #' @seealso [term_block_contract()], [term_refresh()]
 #'
 #' @export
-#' @aliases term_block_deriv.model_term term_block_deriv.NlTerm
+#' @aliases term_block_deriv.model_term term_block_deriv.NlTerm term_block_deriv.SegTerm
 term_block_deriv <- S7::new_generic(
   "term_block_deriv", "term",
   function(term, coef = NULL, v, ...) S7::S7_dispatch())
@@ -1545,7 +1545,7 @@ S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
 #'   [nl_fderiv()]
 #'
 #' @export
-#' @aliases term_block_deriv2.model_term term_block_deriv2.NlTerm
+#' @aliases term_block_deriv2.model_term term_block_deriv2.NlTerm term_block_deriv2.SegTerm
 term_block_deriv2 <- S7::new_generic(
   "term_block_deriv2", "term",
   function(term, coef = NULL, v, u, ...) S7::S7_dispatch())

@@ -32,7 +32,7 @@ likelihood mixed over states.
 }
 \details{
 \code{\link[=term_loglik]{term_loglik()}} returns the derivative of the mixed likelihood
-in the term's OWN parameters, which is what estimating those needs.
+in the term's OWN parameters, which is the piece estimating those needs.
 Estimating the coefficients needs something else, and for this term that
 something is not a second recursion carrying derivatives: it is one
 quantity, by Fisher's identity. Writing \eqn{\gamma_t(k)} for the probability

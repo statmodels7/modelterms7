@@ -62,33 +62,82 @@ term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 \item{penalty}{A \pkg{penalties7} penalty on the block's coefficients, or
 \code{NULL} when the term is unpenalized.}
 
-\item{kind}{Which of the three constructions.}
+\item{kind}{One of \code{"seg"}, \code{"jump"} or \code{"jseg"}.}
 
-\item{var}{The covariate expression.}
+\item{var}{The covariate expression, unevaluated.}
 
-\item{npsi}{The number of break-points.}
+\item{npsi}{The number of break-points, an integer of at least 1.}
 
 \item{linear}{Whether the block carries the linear effect.}
 
 \item{subformulas}{A named list of one-sided formulas, one per developed
-parameter.}
+coefficient. Empty where none is.}
 
-\item{spec}{The resolved construction settings.}
+\item{spec}{A named list of the resolved construction settings.}
 }
 \value{
-An object of class \code{SegTerm}.
+An S7 object of class \code{SegTerm}, inheriting from \code{\link[=additive_term]{additive_term()}}
+and \code{\link[=model_term]{model_term()}}, with the six properties above beside the ten they
+supply.
 }
 \description{
-A subclass of \code{\link[=additive_term]{additive_term()}} for a covariate whose effect
-changes at estimated break-points: a change of slope
-(\code{\link[=seg]{seg()}}), a change of level (\code{\link[=jump]{jump()}}), or both at
-the same points (\code{\link[=jseg]{jseg()}}). The design block is the working
-one of the iteration that estimates the break-points, and is
-recomputed by \code{\link[=term_refresh]{term_refresh()}} as they move.
+The subclass of \code{\link[=additive_term]{additive_term()}} for a covariate whose effect changes at
+estimated break-points: a change of slope (\code{\link[=seg]{seg()}}), a change of level
+(\code{\link[=jump]{jump()}}), or both at the same points (\code{\link[=jseg]{jseg()}}). Its design block is the
+\strong{working} block of the iteration that estimates the break-points, and
+\code{\link[=term_refresh]{term_refresh()}} recomputes it as they move.
 }
+\section{The six properties of its own}{
+\code{kind} is \code{"seg"}, \code{"jump"} or \code{"jseg"}, and it decides almost everything
+else: which coefficients the term has, whether its block is a Jacobian, and
+which developments it will accept.
+
+\code{var} is the covariate expression, \code{npsi} the number of break-points, and
+\code{linear} whether the block carries the linear effect \eqn{\beta x}, which
+\code{seg} and \code{jseg} do by default and \code{jump} never does.
+
+\code{subformulas} holds one right-hand side per developed coefficient, and
+\code{spec} the resolved construction settings: the starting positions, the
+scaling factor \code{c0}, the restart budget \code{n_boot} and any smoother.
+}
+
+\section{Two kinds of block, and what distinguishes them}{
+For \code{\link[=seg]{seg()}} the block is the exact Jacobian: the contribution is
+differentiable in \eqn{\psi_k} away from the break-point, so the
+break-point is an ordinary coefficient and a linear fit on the block is a
+Gauss-Newton step. \code{\link[=term_jacobian_block]{term_jacobian_block()}} answers \code{TRUE}.
+
+For \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}} it is a working linearization with the weight
+\eqn{W = 1/(2\lvert\tilde{x} - \psi\rvert)} frozen at the previous
+break-point, and the break-point is \strong{read off} two coefficients rather
+than incremented. \code{\link[=term_jacobian_block]{term_jacobian_block()}} answers \code{FALSE}, and a fitting
+layer routes such a term to exact working fits alternating with committed
+read-offs. Smoothing the step (\code{\link[=seg]{seg()}}'s \code{smoothed} argument) turns the
+break-point back into an ordinary parameter, and the answer back to \code{TRUE}.
+
+\code{\link[=seg_psi]{seg_psi()}} is the one function that reports the position under either
+construction.
+}
+
 \examples{
-S7::S7_inherits(seg(x), SegTerm)
+set.seed(1)
+d <- data.frame(x = sort(runif(120, 0, 10)))
+d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0) + rnorm(120, sd = 0.4)
+
+# All three constructions are this class, and differ in `kind`.
+vapply(list(seg(x), jump(x), jseg(x)), function(t) t@kind, character(1))
+
+# Which decides the coefficients the term carries.
+lapply(list(seg = seg(x), jump = jump(x), jseg = jseg(x)),
+       function(t) term_coef_names(term_build(t, d)))
+
+# And whether its block is a Jacobian or a working linearization.
+vapply(list(seg = seg(x), jump = jump(x), jseg = jseg(x)),
+       term_jacobian_block, logical(1))
+
 }
 \seealso{
-\code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}}, \code{\link[=jseg]{jseg()}}
+\code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}} for the three constructions;
+\code{\link[=seg_psi]{seg_psi()}} for the positions; \code{\link[=term_refresh]{term_refresh()}} for the block as they
+move; \code{\link[=seg_start]{seg_start()}} for where to begin.
 }

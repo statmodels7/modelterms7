@@ -4,6 +4,7 @@
 \alias{term_block_contract}
 \alias{term_block_contract.model_term}
 \alias{term_block_contract.NlTerm}
+\alias{term_block_contract.SegTerm}
 \title{How a Term's Block Moves With Its Coefficients}
 \usage{
 term_block_contract(term, coef = NULL, A, ...)

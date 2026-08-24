@@ -4,6 +4,7 @@
 \alias{term_block_deriv2}
 \alias{term_block_deriv2.model_term}
 \alias{term_block_deriv2.NlTerm}
+\alias{term_block_deriv2.SegTerm}
 \title{The Second Derivative of a Design Block in the Coefficients}
 \usage{
 term_block_deriv2(term, coef = NULL, v, u, ...)

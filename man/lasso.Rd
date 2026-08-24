@@ -34,7 +34,7 @@ path build one. Must lie in \eqn{(0, \infty)}.}
 
 \item{n_lambda}{How many values the path visits, a whole number of at
 least 2, \code{25} by default. The axis descends four decades of kink
-size, which is what that many points are for.}
+size, and that many points are what covers it.}
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
