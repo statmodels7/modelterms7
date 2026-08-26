@@ -125,8 +125,9 @@ one.
 [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
 for the second order this differentiates,
 [`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
-for the first, `statmodels7::reml()` for the criterion whose gradient
-asks for it.
+for the first,
+[`statmodels7::reml()`](https://statmodels7.github.io/statmodels7/reference/reml.html)
+for the criterion whose gradient asks for it.
 
 ## Examples
 

@@ -177,7 +177,7 @@ returned specifications, and <code><a href="term_build.html">term_build()</a></c
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "linpar"</span>
 <span class="r-in"><span><span class="va">out</span><span class="op">$</span><span class="va">terms</span><span class="op">$</span><span class="va">linpar</span><span class="op">@</span><span class="va">formula</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x1 + log(x2)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55a800135038&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55e62ddfa018&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A constructor call becomes a term, keyed by its label in the formula.</span></span></span>
 <span class="r-in"><span><span class="va">out2</span> <span class="op">&lt;-</span> <span class="fu">interpret_formula</span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="fu"><a href="s.html">s</a></span><span class="op">(</span><span class="va">x2</span>, k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="ridge.html">ridge</a></span><span class="op">(</span><span class="op">~</span> <span class="va">g</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
@@ -203,19 +203,19 @@ returned specifications, and <code><a href="term_build.html">term_build()</a></c
 <span class="r-in"><span><span class="co"># An interaction is a covariate: `:` is never evaluated.</span></span></span>
 <span class="r-in"><span><span class="fu">interpret_formula</span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span><span class="op">:</span><span class="va">x2</span> <span class="op">+</span> <span class="va">g</span>, <span class="va">dd</span><span class="op">)</span><span class="op">$</span><span class="va">terms</span><span class="op">$</span><span class="va">linpar</span><span class="op">@</span><span class="va">formula</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~g + x1:x2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55a800135038&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55e62ddfa018&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># seg() carries the linear effect, so the bare covariate is removed.</span></span></span>
 <span class="r-in"><span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu">interpret_formula</span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="fu"><a href="seg.html">seg</a></span><span class="op">(</span><span class="va">x1</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>the covariate 'x1' is exactly collinear with the linear effect that 'seg' carries, and has been removed from the parametric part. Write seg(x1, linear = FALSE) to keep the linear effect outside the term instead.</span>
 <span class="r-in"><span><span class="va">w</span><span class="op">$</span><span class="va">terms</span><span class="op">$</span><span class="va">linpar</span><span class="op">@</span><span class="va">formula</span>          <span class="co"># x1 is gone; the term carries it</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55a800135038&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55e62ddfa018&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Unless the term is told not to own it.</span></span></span>
 <span class="r-in"><span><span class="fu">interpret_formula</span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="fu"><a href="seg.html">seg</a></span><span class="op">(</span><span class="va">x1</span>, linear <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">$</span><span class="va">terms</span><span class="op">$</span><span class="va">linpar</span><span class="op">@</span><span class="va">formula</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55a800135038&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55e62ddfa018&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Arguments for the implicit block go through `linpar`.</span></span></span>
 <span class="r-in"><span><span class="va">sp</span> <span class="op">&lt;-</span> <span class="fu">interpret_formula</span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">g</span>, <span class="va">dd</span>, linpar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sparse <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>

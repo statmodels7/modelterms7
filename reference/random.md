@@ -164,7 +164,8 @@ are, since it is read off that many latent values and the prior shrinks
 them. Measured on effects drawn from a standard Student t with four
 degrees of freedom, twelve observations per group and unit residual
 standard deviation, the prior being a Student t with \\\nu\\ free and
-the criterion `statmodels7::reml()`:
+the criterion
+[`statmodels7::reml()`](https://statmodels7.github.io/statmodels7/reference/reml.html):
 
 |        |             |                |
 |--------|-------------|----------------|
@@ -261,4 +262,21 @@ t4 <- distributions7::fixed(distributions7::student_t1_distrib(),
                             mu = 0, nu = 4)
 term_penalty(term_build(random(~ 1 | g, distrib = t4), dd))@params
 #> [1] "sigma"
+
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(6)
+  fd <- data.frame(gr = factor(rep(1:20, each = 15)), x = rnorm(300))
+  bb <- rnorm(20, sd = 0.8)
+  fd$y <- 1 + 0.5 * fd$x + bb[fd$gr] + rnorm(300, sd = 0.5)
+  cf <- coef(statmodels7::statmod(y ~ x + random(~1 | gr),
+                                  distributions7::gaussian1_distrib(), fd))$mu
+  # truth: a slope of 0.5, and the shrunken effects track the ones drawn
+  round(c(slope = cf[["x"]],
+          cor = cor(cf[grep("^random", names(cf))], bb)), 3)
+}
+#> slope   cor 
+#> 0.471 0.989 
 ```

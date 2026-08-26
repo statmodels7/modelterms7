@@ -92,10 +92,14 @@ a larger \\\lambda\\ shrinks harder and keeps fewer coefficients.
 
 The kink is at zero, so the block is fitted by a proximal method or by a
 coordinate descent with the other terms held, and \\\lambda\\ is chosen
-by a path over its own values, scored by `statmodels7::bic()` by default
-or by `statmodels7::aic()` or `statmodels7::cv()`. A marginal criterion
-cannot be used: it is a Laplace expansion at a mode that sits on the
-kink.
+by a path over its own values, scored by
+[`statmodels7::bic()`](https://statmodels7.github.io/statmodels7/reference/aic.html)
+by default or by
+[`statmodels7::aic()`](https://statmodels7.github.io/statmodels7/reference/aic.html)
+or
+[`statmodels7::cv()`](https://statmodels7.github.io/statmodels7/reference/cv.html).
+A marginal criterion cannot be used: it is a Laplace expansion at a mode
+that sits on the kink.
 
 **Hyperparameter.** `lambda`, admissible on \\(0, \infty)\\, swept over
 `n_lambda` values from the one that empties the block down to
@@ -154,4 +158,22 @@ term_path_min(lasso(~ x1 + x2, min_ratio = 1e-3))
 #> [[1]]
 #> [1] 0.001
 #> 
+
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(11)
+  XX <- matrix(rnorm(150 * 8), 150, 8)
+  fd <- data.frame(y = as.numeric(XX %*% c(2, -1.5, 1, rep(0, 5))) +
+                     rnorm(150, sd = 0.4))
+  fd$X <- XX
+  cf <- coef(statmodels7::statmod(y ~ lasso(X),
+                                  distributions7::gaussian1_distrib(), fd))$mu
+  # truth: the first three columns carry 2, -1.5 and 1, the other five
+  # nothing. The hyperparameter is chosen by BIC.
+  c(round(cf[2:5], 2), kept = sum(cf[-1] != 0))
+}
+#> lasso.1 lasso.2 lasso.3 lasso.4    kept 
+#>    1.97   -1.51    0.99    0.00    5.00 
 ```

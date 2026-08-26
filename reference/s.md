@@ -198,7 +198,7 @@ X <- term_matrix(b)
 cor(X[, 1], dd$x)
 #> [1] 1
 max(abs(crossprod(X[, 1], X[, -1])))
-#> [1] 4.418688e-14
+#> [1] 8.992806e-14
 
 # So edf runs from k - 1 down to one, not to zero.
 H <- crossprod(X)
@@ -218,11 +218,27 @@ c(npar = term_npar(bf), levels = nlevels(dd$g))
 max(abs(term_predict(b, dd[1:10, ]) - X[1:10, ]))
 #> [1] 0
 max(abs(term_matrix(term_build(s(x, k = 8), dd[1:10, ])) - X[1:10, ]))
-#> [1] 3.628495
+#> [1] 2.849289
 
 # Sparsity needs a factor `by`, and says so when there is none.
 try(term_build(s(x, k = 5, sparse = TRUE), dd))
 #> Error : 'sparse' has nothing to build on here: a smooth's basis is dense by
 #>   construction. Sparsity comes from a FACTOR 'by', whose indicators put each
 #>   row in the block of its own level.
+
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(4)
+  fd <- data.frame(z = sort(runif(200, -3, 3)))
+  fd$y <- sin(fd$z) + rnorm(200, sd = 0.3)
+  ft <- statmodels7::statmod(y ~ s(z),
+                             distributions7::gaussian1_distrib(), fd)
+  # the smoothing parameter is chosen by REML, and the fit follows sin()
+  round(c(edf = sum(ft@edf$edf),
+          rmse = sqrt(mean((fitted(ft) - sin(fd$z))^2))), 3)
+}
+#>   edf  rmse 
+#> 8.510 0.027 
 ```

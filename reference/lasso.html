@@ -124,8 +124,8 @@ zero with rate \(\lambda\), and a larger \(\lambda\) shrinks harder
 and keeps fewer coefficients.</p>
 <p>The kink is at zero, so the block is fitted by a proximal method or by a
 coordinate descent with the other terms held, and \(\lambda\) is chosen
-by a path over its own values, scored by <code>statmodels7::bic()</code> by default
-or by <code>statmodels7::aic()</code> or <code>statmodels7::cv()</code>. A marginal criterion
+by a path over its own values, scored by <code><a href="https://statmodels7.github.io/statmodels7/reference/aic.html" class="external-link">statmodels7::bic()</a></code> by default
+or by <code><a href="https://statmodels7.github.io/statmodels7/reference/aic.html" class="external-link">statmodels7::aic()</a></code> or <code><a href="https://statmodels7.github.io/statmodels7/reference/cv.html" class="external-link">statmodels7::cv()</a></code>. A marginal criterion
 cannot be used: it is a Laplace expansion at a mode that sits on the kink.</p>
 <p><strong>Hyperparameter.</strong> <code>lambda</code>, admissible on \((0, \infty)\),
 swept over <code>n_lambda</code> values from the one that empties the block
@@ -181,6 +181,23 @@ down to <code>min_ratio</code> of it.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.001</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Fitted. The data are simulated from a known truth, so the</span></span></span>
+<span class="r-in"><span><span class="co"># estimates below can be read against it.</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"statmodels7"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">11</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">XX</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">150</span> <span class="op">*</span> <span class="fl">8</span><span class="op">)</span>, <span class="fl">150</span>, <span class="fl">8</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">fd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="va">XX</span> <span class="op"><a href="https://rdrr.io/r/base/matmult.html" class="external-link">%*%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="op">-</span><span class="fl">1.5</span>, <span class="fl">1</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span>                     <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">150</span>, sd <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">fd</span><span class="op">$</span><span class="va">X</span> <span class="op">&lt;-</span> <span class="va">XX</span></span></span>
+<span class="r-in"><span>  <span class="va">cf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="fu">statmodels7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/statmodels7/reference/statmod.html" class="external-link">statmod</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="fu">lasso</span><span class="op">(</span><span class="va">X</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                  <span class="fu">distributions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/distributions7/reference/gaussian1_distrib.html" class="external-link">gaussian1_distrib</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">fd</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">mu</span></span></span>
+<span class="r-in"><span>  <span class="co"># truth: the first three columns carry 2, -1.5 and 1, the other five</span></span></span>
+<span class="r-in"><span>  <span class="co"># nothing. The hyperparameter is chosen by BIC.</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">cf</span><span class="op">[</span><span class="fl">2</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span>, <span class="fl">2</span><span class="op">)</span>, kept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">cf</span><span class="op">[</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span> <span class="op">!=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> lasso.1 lasso.2 lasso.3 lasso.4    kept </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>    1.97   -1.51    0.99    0.00    5.00 </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -185,9 +185,23 @@ term_hyper(te(x, z, k = 4, lambda = c(1, 5)))
 
 # The centering transform is reapplied, not recomputed.
 max(abs(term_predict(b, dd[1:10, ]) - term_matrix(b)[1:10, ]))
-#> [1] 4.163336e-17
+#> [1] 6.938894e-18
 
 # One covariate is s(), not te().
 try(te(x, k = 4))
 #> Error : 'te' needs at least two covariates; use s() for one.
+
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(5)
+  fd <- data.frame(a = runif(300, -2, 2), b = runif(300, -2, 2))
+  fd$y <- sin(fd$a) * cos(fd$b) + rnorm(300, sd = 0.3)
+  ft <- statmodels7::statmod(y ~ te(a, b, k = 5),
+                             distributions7::gaussian1_distrib(), fd)
+  # one smoothing parameter per margin, against a truth of sin(a) cos(b)
+  round(sqrt(mean((fitted(ft) - sin(fd$a) * cos(fd$b))^2)), 3)
+}
+#> [1] 0.081
 ```

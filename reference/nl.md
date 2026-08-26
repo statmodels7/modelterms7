@@ -253,4 +253,20 @@ ex <- term_build(nl(~ a * exp(-r * x), gradient = g, hessian = h,
                     start = list(a = 1, r = 1)), dd)
 names(nl_fderiv(ex, order = 3))
 #> [1] "a_a_a" "a_a_r" "a_r_r" "r_r_r"
+
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(8)
+  fd <- data.frame(x = sort(runif(150, 0, 5)))
+  fd$y <- 3 * exp(-0.8 * fd$x) + rnorm(150, sd = 0.1)
+  ft <- statmodels7::statmod(
+    y ~ 0 + nl(~ a * exp(-r * x), start = list(a = 1, r = 1)),
+    distributions7::gaussian1_distrib(), fd)
+  # truth: a = 3 and r = 0.8
+  round(coef(ft)$mu, 2)
+}
+#> nl.a nl.r 
+#> 2.98 0.80 
 ```

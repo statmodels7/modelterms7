@@ -298,4 +298,19 @@ term_coef_names(built)
 #> [1] "jump.delta1" "jump.g1"    
 seg_psi(built)
 #> [1] 5.054907
+
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(2)
+  fd <- data.frame(x = sort(runif(200, 0, 10)))
+  fd$y <- 1 + 2 * (fd$x > 6) + rnorm(200, sd = 0.3)
+  ft <- statmodels7::statmod(y ~ jump(x),
+                             distributions7::gaussian1_distrib(), fd)
+  # truth: intercept 1, a jump of 2, and the break-point at 6
+  round(coef(ft)$mu, 2)
+}
+#> (Intercept) jump.delta1   jump.psi1 
+#>        1.02        2.01        5.96 
 ```

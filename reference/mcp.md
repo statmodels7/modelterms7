@@ -164,4 +164,22 @@ term_hyper(mcp(~ x1 + x2, gamma = 3))
 # At or below 1 the objective need not be convex, so it is refused.
 try(mcp(~ x1 + x2, gamma = 1))
 #> Error : 'gamma' in 'mcp' must lie strictly inside (1, Inf); it is 1.
+
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(11)
+  XX <- matrix(rnorm(150 * 8), 150, 8)
+  fd <- data.frame(y = as.numeric(XX %*% c(2, -1.5, 1, rep(0, 5))) +
+                     rnorm(150, sd = 0.4))
+  fd$X <- XX
+  cf <- coef(statmodels7::statmod(y ~ mcp(X),
+                                  distributions7::gaussian1_distrib(), fd))$mu
+  # truth: the first three columns carry 2, -1.5 and 1, the other five
+  # nothing. The shape is estimated beside lambda.
+  c(round(cf[2:5], 2), kept = sum(cf[-1] != 0))
+}
+#> mcp.1 mcp.2 mcp.3 mcp.4  kept 
+#>  1.97 -1.51  0.99  0.00  5.00 
 ```

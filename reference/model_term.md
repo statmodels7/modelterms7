@@ -88,7 +88,8 @@ rewrites the likelihood instead:
 predictor is a recursion,
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)'s
 contribution is a likelihood mixed over latent states. The branch
-decides which generics a consumer may call, so `statmodels7::statmod()`
+decides which generics a consumer may call, so
+[`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
 routes on it.
 
 ## What the root carries, and why

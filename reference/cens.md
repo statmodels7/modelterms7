@@ -72,9 +72,9 @@ information the bare vector does.
 On the left of a formula passed to
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
 which returns the object as its `response` element.
-`statmodels7::statmod()` refuses that response with a message naming the
-gap: the toolkit marks censoring and does not yet assemble a censored
-likelihood from it. See
+[`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
+refuses that response with a message naming the gap: the toolkit marks
+censoring and does not yet assemble a censored likelihood from it. See
 [`censored_response()`](https://statmodels7.github.io/modelterms7/reference/censored_response.md)
 for the four contributions such an assembler would need.
 

@@ -185,4 +185,20 @@ class(term_matrix(term_build(linpar(~ g), big)))
 #> [1] "dgCMatrix"
 #> attr(,"package")
 #> [1] "Matrix"
+
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(1)
+  fd <- data.frame(x = runif(200, -2, 2),
+                   g = factor(sample(c("a", "b"), 200, TRUE)))
+  fd$y <- 1 + 2 * fd$x + 0.5 * (fd$g == "b") + rnorm(200, sd = 0.4)
+  ft <- statmodels7::statmod(y ~ x + g,
+                             distributions7::gaussian1_distrib(), fd)
+  # truth: intercept 1, slope 2, and 0.5 for the second level
+  round(coef(ft)$mu, 2)
+}
+#> (Intercept)           x          gb 
+#>        1.04        2.00        0.45 
 ```

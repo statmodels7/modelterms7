@@ -79,7 +79,9 @@ larger value shrinks harder.
 
 The penalty is twice differentiable everywhere, so the block is fitted
 in the same system as the unpenalized terms and \\\lambda\\ is estimated
-by `statmodels7::reml()` rather than swept along a path.
+by
+[`statmodels7::reml()`](https://statmodels7.github.io/statmodels7/reference/reml.html)
+rather than swept along a path.
 
 **Hyperparameter.** `lambda`, admissible on \\(0, \infty)\\.
 
@@ -137,4 +139,22 @@ try(ridge(~ x1 + x2, lambda = c(1, 2)))
 #> Error : 'lambda' in 'ridge' has several values, and this term has no path to visit them
 #>   on: its penalty has no kink, so the hyperparameter is estimated by the
 #>   criterion at the mode. Give one number to hold it, or NULL to estimate it.
+
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(11)
+  XX <- matrix(rnorm(150 * 8), 150, 8)
+  fd <- data.frame(y = as.numeric(XX %*% c(2, -1.5, 1, rep(0, 5))) +
+                     rnorm(150, sd = 0.4))
+  fd$X <- XX
+  cf <- coef(statmodels7::statmod(y ~ ridge(X),
+                                  distributions7::gaussian1_distrib(), fd))$mu
+  # truth: the first three columns carry 2, -1.5 and 1, the other five
+  # nothing. A ridge shrinks and keeps every column.
+  round(cf[2:5], 2)
+}
+#> ridge.1 ridge.2 ridge.3 ridge.4 
+#>    2.00   -1.54    1.02    0.02 
 ```

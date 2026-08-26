@@ -92,7 +92,8 @@ A name is unique **within** the term and is not the term's own name. Two
 [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
 terms in one formula are two terms with their own hyperparameters, and
 it is the caller who knows what it called each of them;
-`statmodels7::statmod()` composes a key as `term` or `term::entry`.
+[`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
+composes a key as `term` or `term::entry`.
 
 The list itself is **unnamed**: read `e$name`, not `names(entries)`.
 

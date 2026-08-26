@@ -68,9 +68,10 @@ value being unknown; every other status carries a number.
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
 accepts `cens(...)` on the left of a formula and returns the object as
 the `response` element of its result. Nothing then assembles the four
-contributions above: `statmodels7::statmod()` stops with a message
-naming the gap, and no other function in the toolkit reads the class.
-The pieces exist:
+contributions above:
+[`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
+stops with a message naming the gap, and no other function in the
+toolkit reads the class. The pieces exist:
 [`distributions7::distrib_grad_cdf()`](https://statmodels7.github.io/distributions7/reference/distrib_grad_cdf.html)
 and `distrib_hess_cdf()` carry the derivatives of \\F\\ in the
 parameters. The assembler that would use them is not written, so the
