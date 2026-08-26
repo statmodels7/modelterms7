@@ -36,7 +36,8 @@ Suggests:
     pkgdown,
     rmarkdown,
     testthat (>= 3.0.0),
-    knitr
+    knitr,
+    statmodels7
 VignetteBuilder: knitr
 Remotes:
     statmodels7/penalties7,
@@ -45,7 +46,8 @@ Remotes:
     statmodels7/parameters7,
     statmodels7/linkfunctions7,
     statmodels7/numericals7,
-    statmodels7/optimizers7
+    statmodels7/optimizers7,
+    statmodels7/statmodels7
 LinkingTo:
     Rcpp,
     RcppParallel

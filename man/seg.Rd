@@ -219,6 +219,18 @@ built <- term_build(seg(x), dd)
 term_coef_names(built)
 seg_psi(built)
 
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(1)
+  fd <- data.frame(x = sort(runif(200, 0, 10)))
+  fd$y <- 1 + 0.5 * fd$x + 2 * pmax(fd$x - 6, 0) + rnorm(200, sd = 0.3)
+  ft <- statmodels7::statmod(y ~ seg(x),
+                             distributions7::gaussian1_distrib(), fd)
+  # truth: intercept 1, slope 0.5, change of slope 2, break-point 6
+  round(coef(ft)$mu, 2)
+}
 }
 \references{
 Muggeo, V. M. R. (2003). Estimating regression models with unknown

@@ -291,6 +291,18 @@ SegTerm <- S7::new_class(
 #' term_coef_names(built)
 #' seg_psi(built)
 #'
+#'
+#' # Fitted. The data are simulated from a known truth, so the
+#' # estimates below can be read against it.
+#' if (requireNamespace("statmodels7", quietly = TRUE)) {
+#'   set.seed(1)
+#'   fd <- data.frame(x = sort(runif(200, 0, 10)))
+#'   fd$y <- 1 + 0.5 * fd$x + 2 * pmax(fd$x - 6, 0) + rnorm(200, sd = 0.3)
+#'   ft <- statmodels7::statmod(y ~ seg(x),
+#'                              distributions7::gaussian1_distrib(), fd)
+#'   # truth: intercept 1, slope 0.5, change of slope 2, break-point 6
+#'   round(coef(ft)$mu, 2)
+#' }
 #' @seealso [jump()], [jseg()], [seg_psi()],
 #'   [seg_start()], [seg_step()], [nl()]
 #' @export
@@ -490,6 +502,18 @@ seg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 #' term_coef_names(built)
 #' seg_psi(built)
 #'
+#'
+#' # Fitted. The data are simulated from a known truth, so the
+#' # estimates below can be read against it.
+#' if (requireNamespace("statmodels7", quietly = TRUE)) {
+#'   set.seed(2)
+#'   fd <- data.frame(x = sort(runif(200, 0, 10)))
+#'   fd$y <- 1 + 2 * (fd$x > 6) + rnorm(200, sd = 0.3)
+#'   ft <- statmodels7::statmod(y ~ jump(x),
+#'                              distributions7::gaussian1_distrib(), fd)
+#'   # truth: intercept 1, a jump of 2, and the break-point at 6
+#'   round(coef(ft)$mu, 2)
+#' }
 #' @seealso [seg()], [jseg()], [seg_psi()],
 #'   [seg_start()], [seg_step()]
 #' @export
@@ -619,6 +643,20 @@ jump <- function(x, ..., npsi = 1, psi = NULL, by = NULL, c0 = 0.05,
 #' built <- term_build(jseg(x), dd)
 #' term_coef_names(built)
 #'
+#'
+#' # Fitted. The data are simulated from a known truth, so the
+#' # estimates below can be read against it.
+#' if (requireNamespace("statmodels7", quietly = TRUE)) {
+#'   set.seed(3)
+#'   fd <- data.frame(x = sort(runif(300, 0, 10)))
+#'   fd$y <- 1 + 0.3 * fd$x + 1.5 * (fd$x > 6) + 1.2 * pmax(fd$x - 6, 0) +
+#'     rnorm(300, sd = 0.3)
+#'   ft <- statmodels7::statmod(y ~ jseg(x),
+#'                              distributions7::gaussian1_distrib(), fd)
+#'   # truth: intercept 1, slope 0.3, and at 6 a jump of 1.5 with a change
+#'   # of slope of 1.2
+#'   round(coef(ft)$mu, 2)
+#' }
 #' @seealso [seg()], [jump()], [seg_psi()],
 #'   [seg_start()], [seg_step()]
 #' @export

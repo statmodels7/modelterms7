@@ -199,6 +199,20 @@ dd$y <- 1 + 0.3 * dd$x + 2 * (dd$x > 6) +
 built <- term_build(jseg(x), dd)
 term_coef_names(built)
 
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(3)
+  fd <- data.frame(x = sort(runif(300, 0, 10)))
+  fd$y <- 1 + 0.3 * fd$x + 1.5 * (fd$x > 6) + 1.2 * pmax(fd$x - 6, 0) +
+    rnorm(300, sd = 0.3)
+  ft <- statmodels7::statmod(y ~ jseg(x),
+                             distributions7::gaussian1_distrib(), fd)
+  # truth: intercept 1, slope 0.3, and at 6 a jump of 1.5 with a change
+  # of slope of 1.2
+  round(coef(ft)$mu, 2)
+}
 }
 \references{
 Muggeo, V. M. R. (2003). Estimating regression models with unknown

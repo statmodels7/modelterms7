@@ -253,6 +253,18 @@ built <- term_build(jump(x), dd)
 term_coef_names(built)
 seg_psi(built)
 
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(2)
+  fd <- data.frame(x = sort(runif(200, 0, 10)))
+  fd$y <- 1 + 2 * (fd$x > 6) + rnorm(200, sd = 0.3)
+  ft <- statmodels7::statmod(y ~ jump(x),
+                             distributions7::gaussian1_distrib(), fd)
+  # truth: intercept 1, a jump of 2, and the break-point at 6
+  round(coef(ft)$mu, 2)
+}
 }
 \references{
 Fasola, S., Muggeo, V. M. R. and Kuchenhoff, H. (2018). A heuristic,

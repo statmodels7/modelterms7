@@ -120,6 +120,22 @@ term_search(enet(~ x1 + x2, search = "cyclic"))
 # The open interval is enforced: an end is one of the other penalties.
 try(enet(~ x1 + x2, alpha = 1))
 
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(11)
+  XX <- matrix(rnorm(150 * 8), 150, 8)
+  fd <- data.frame(y = as.numeric(XX \%*\% c(2, -1.5, 1, rep(0, 5))) +
+                     rnorm(150, sd = 0.4))
+  fd$X <- XX
+  cf <- coef(statmodels7::statmod(y ~ enet(X, n_alpha = 3),
+                                  distributions7::gaussian1_distrib(), fd))$mu
+  # truth: the first three columns carry 2, -1.5 and 1, the other five
+  # nothing. Both hyperparameters are chosen by BIC, over a
+  # shortened alpha axis so that the product grid stays quick.
+  c(round(cf[2:5], 2), kept = sum(cf[-1] != 0))
+}
 }
 \references{
 Zou, H. and Hastie, T. (2005). Regularization and variable selection via

@@ -124,6 +124,18 @@ max(abs(term_predict(b, dd[1:10, ]) - term_matrix(b)[1:10, ]))
 # One covariate is s(), not te().
 try(te(x, k = 4))
 
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(5)
+  fd <- data.frame(a = runif(300, -2, 2), b = runif(300, -2, 2))
+  fd$y <- sin(fd$a) * cos(fd$b) + rnorm(300, sd = 0.3)
+  ft <- statmodels7::statmod(y ~ te(a, b, k = 5),
+                             distributions7::gaussian1_distrib(), fd)
+  # one smoothing parameter per margin, against a truth of sin(a) cos(b)
+  round(sqrt(mean((fitted(ft) - sin(fd$a) * cos(fd$b))^2)), 3)
+}
 }
 \references{
 Wood, S. N. (2006). Low-rank scale-invariant tensor product smooths for

@@ -217,6 +217,26 @@ gb <- term_build(gas(p = 1, q = 1, omega ~ ridge(~ g), time = t), dd)
 term_params(gb)
 vapply(term_penalties(gb), function(e) e$name, character(1))
 
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  # drawn from the recursion the term implements, with a gaussian mean
+  set.seed(2)
+  om <- 0.05; al <- 0.3; be <- 0.9
+  lev <- om / (1 - be)
+  yy <- numeric(600)
+  for (i in seq_len(600)) {
+    yy[i] <- lev + rnorm(1)
+    lev <- om + al * (yy[i] - lev) + be * lev
+  }
+  fd <- data.frame(t = seq_len(600), y = yy)
+  ft <- statmodels7::statmod(y ~ 0 + gas(p = 1, q = 1, time = t),
+                             distributions7::gaussian1_distrib(), fd)
+  # truth: omega 0.05, alpha 0.3, beta 0.9. beta is reported as the
+  # autoregressive coefficient, which its coordinate is not.
+  round(coef(ft)$mu, 3)
+}
 }
 \references{
 Creal, D., Koopman, S. J. and Lucas, A. (2013). Generalized

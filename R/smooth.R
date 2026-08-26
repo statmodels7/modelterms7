@@ -220,6 +220,19 @@ SmoothTerm <- S7::new_class(
 #' # Sparsity needs a factor `by`, and says so when there is none.
 #' try(term_build(s(x, k = 5, sparse = TRUE), dd))
 #'
+#'
+#' # Fitted. The data are simulated from a known truth, so the
+#' # estimates below can be read against it.
+#' if (requireNamespace("statmodels7", quietly = TRUE)) {
+#'   set.seed(4)
+#'   fd <- data.frame(z = sort(runif(200, -3, 3)))
+#'   fd$y <- sin(fd$z) + rnorm(200, sd = 0.3)
+#'   ft <- statmodels7::statmod(y ~ s(z),
+#'                              distributions7::gaussian1_distrib(), fd)
+#'   # the smoothing parameter is chosen by REML, and the fit follows sin()
+#'   round(c(edf = sum(ft@edf$edf),
+#'           rmse = sqrt(mean((fitted(ft) - sin(fd$z))^2))), 3)
+#' }
 #' @export
 s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
               linear = TRUE, label = NULL, lambda = NULL,
@@ -340,6 +353,18 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #' # One covariate is s(), not te().
 #' try(te(x, k = 4))
 #'
+#'
+#' # Fitted. The data are simulated from a known truth, so the
+#' # estimates below can be read against it.
+#' if (requireNamespace("statmodels7", quietly = TRUE)) {
+#'   set.seed(5)
+#'   fd <- data.frame(a = runif(300, -2, 2), b = runif(300, -2, 2))
+#'   fd$y <- sin(fd$a) * cos(fd$b) + rnorm(300, sd = 0.3)
+#'   ft <- statmodels7::statmod(y ~ te(a, b, k = 5),
+#'                              distributions7::gaussian1_distrib(), fd)
+#'   # one smoothing parameter per margin, against a truth of sin(a) cos(b)
+#'   round(sqrt(mean((fitted(ft) - sin(fd$a) * cos(fd$b))^2)), 3)
+#' }
 #' @export
 te <- function(..., by = NULL, k = 5, degree = 3, bases = NULL,
                anisotropic = TRUE, label = NULL, lambda = NULL,

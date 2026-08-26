@@ -97,6 +97,21 @@ term_grid(lasso(~ x1 + x2))
 term_grid(lasso(~ x1 + x2, n_lambda = 60))
 term_path_min(lasso(~ x1 + x2, min_ratio = 1e-3))
 
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(11)
+  XX <- matrix(rnorm(150 * 8), 150, 8)
+  fd <- data.frame(y = as.numeric(XX \%*\% c(2, -1.5, 1, rep(0, 5))) +
+                     rnorm(150, sd = 0.4))
+  fd$X <- XX
+  cf <- coef(statmodels7::statmod(y ~ lasso(X),
+                                  distributions7::gaussian1_distrib(), fd))$mu
+  # truth: the first three columns carry 2, -1.5 and 1, the other five
+  # nothing. The hyperparameter is chosen by BIC.
+  c(round(cf[2:5], 2), kept = sum(cf[-1] != 0))
+}
 }
 \references{
 Tibshirani, R. (1996). Regression shrinkage and selection via the lasso.

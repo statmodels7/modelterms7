@@ -160,6 +160,19 @@ max(abs(term_matrix(term_build(s(x, k = 8), dd[1:10, ])) - X[1:10, ]))
 # Sparsity needs a factor `by`, and says so when there is none.
 try(term_build(s(x, k = 5, sparse = TRUE), dd))
 
+
+# Fitted. The data are simulated from a known truth, so the
+# estimates below can be read against it.
+if (requireNamespace("statmodels7", quietly = TRUE)) {
+  set.seed(4)
+  fd <- data.frame(z = sort(runif(200, -3, 3)))
+  fd$y <- sin(fd$z) + rnorm(200, sd = 0.3)
+  ft <- statmodels7::statmod(y ~ s(z),
+                             distributions7::gaussian1_distrib(), fd)
+  # the smoothing parameter is chosen by REML, and the fit follows sin()
+  round(c(edf = sum(ft@edf$edf),
+          rmse = sqrt(mean((fitted(ft) - sin(fd$z))^2))), 3)
+}
 }
 \references{
 Demmler, A. and Reinsch, C. (1975). Oscillation matrices with spline

@@ -297,6 +297,22 @@ RegimeTerm <- S7::new_class(
 #'                                 alr2.1 = -2))
 #' round(pp[c(1, 19, 20, 21, 22, 40), 2], 3)
 #'
+#'
+#' # Fitted. The data are simulated from a known truth, so the
+#' # estimates below can be read against it.
+#' if (requireNamespace("statmodels7", quietly = TRUE)) {
+#'   set.seed(4)
+#'   st <- integer(200)
+#'   st[1] <- 1L
+#'   for (i in 2:200) {
+#'     st[i] <- if (runif(1) < 0.05) 3L - st[i - 1L] else st[i - 1L]
+#'   }
+#'   fd <- data.frame(t = 1:200, y = c(-2, 2)[st] + rnorm(200, sd = 0.7))
+#'   ft <- statmodels7::statmod(y ~ 0 + regime(k = 2, time = t),
+#'                              distributions7::gaussian1_distrib(), fd)
+#'   # truth: levels at -2 and 2, so a first level of -2 and a gap of 4
+#'   round(coef(ft)$mu[1:2], 2)
+#' }
 #' @export
 regime <- function(k = 2, by = NULL, time = NULL, label = "regime") {
   if (!is.numeric(k) || length(k) != 1L || is.na(k) || k < 2 ||
