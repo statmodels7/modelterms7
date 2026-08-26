@@ -247,7 +247,7 @@
   the one-break-point gaussian step differentiates the interval sum twice
   and doubles as the control; every other configuration assembles the
   component blocks exactly and takes the prior's rows from one central
-  stencil on the analytic full gradient, the licence the toolkit's
+  stencil on the analytic full gradient, the license the toolkit's
   non-closed derivatives run on -- and `term_start()` reads a two-stage
   exact profile off the target: pooled positions and coefficients with
   per-group intercepts, greedy over a quantile grid with every local
@@ -670,7 +670,7 @@
 * A location HELD away from zero is no longer rejected. What is unidentified
   is a FREE location, which competes with the intercept of the equation the
   term sits in; a held one shrinks the effects towards its value, which is a
-  modelling statement. Nor could the value be policed in general: where the
+  modeling statement. Nor could the value be policed in general: where the
   prior is a transformation of another family the parameter is the mean on
   the ORIGINAL scale, and holding a gamma's mean at one is what centers its
   logarithm -- at a value zero would put outside the parameter's own domain.
