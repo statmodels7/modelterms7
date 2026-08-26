@@ -203,8 +203,8 @@ f <- interpret_formula(y ~ x + season(t, period = 1), data = d)
 vapply(f$terms, function(z) class(z)[[1]], character(1))
 ```
 
-A bare covariate collapses into one parametric block, and a call whose value is
-not a term stays a covariate, so `log(x)` is arithmetic, not a term.
+A bare covariate collapses into one parametric block, and a call whose value
+does not inherit `model_term` stays a covariate, so `log(x)` is arithmetic.
 
 ⚠️ Recognition by evaluation has one consequence worth knowing: a **masked
 name** is a third case. `mgcv` exports `s()` and `te()`, `segmented` exports
