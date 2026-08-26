@@ -28,11 +28,14 @@ The two forms are
 The class name is the S7 class's own, the label comes from the \code{label}
 property and is omitted when empty, and the count is \code{ncol(x@X)}.
 
+A structural term has no \code{X} to count, so it gets the word \code{built} and no
+count. Every shipped structural term registers a method of its own, so this
+line is reached only by a structural class written outside the package.
+
 The classes that override this add something of their own:
 \code{\link[=print.PenalizedTerm]{print.PenalizedTerm()}} names the penalty and the standardization,
 \code{\link[=gas]{gas()}}'s and \code{\link[=regime]{regime()}}'s report their parameters, \code{\link[=nl]{nl()}}'s its formula and
-\code{\link[=seg]{seg()}}'s its break-points. A structural term is never reported as built
-here, \code{\link[=term_is_built]{term_is_built()}} testing for a design block.
+\code{\link[=seg]{seg()}}'s its break-points.
 }
 \examples{
 d <- data.frame(x = 1:4)

@@ -39,16 +39,13 @@ NULL
 #' [term_predict()] exists to avoid, and what [check_term()]'s subset check
 #' tests for. Build once, predict thereafter.
 #'
-#' # The two defaults
+#' # The default
 #'
-#' `term_build.model_term` throws
+#' There is one, on [model_term()], and it throws
 #' `"the term class 'X' does not implement term_build()."`, naming the class,
-#' so a term class that supplies nothing else says so clearly.
-#'
-#' `term_build.structural_term` throws
-#' `"structural terms are reserved for a later release; none is implemented yet."`
-#' Every structural term that ships overrides it, so the message is reachable
-#' only from a structural class written elsewhere.
+#' so a term class that supplies nothing else says so clearly. It covers both
+#' branches: every shipped structural term registers a method of its own, and
+#' a structural class written elsewhere that does not is named the same way.
 #'
 #' @param term An object inheriting from [model_term()], built or not. A built
 #'   term is rebuilt.
@@ -58,10 +55,9 @@ NULL
 #' @param ... Passed to methods. No shipped method reads anything here.
 #'
 #' @return A built term of the same class as `term`. For an additive term the
-#'   `X`, `coef_names` and `blueprint` properties are filled and
-#'   [term_is_built()] is `TRUE`; for a structural term the `blueprint` is
-#'   filled and [term_is_built()] stays `FALSE`, that predicate testing for a
-#'   design block.
+#'   `X`, `coef_names` and `blueprint` properties are filled; for a structural
+#'   term the `blueprint` is. [term_is_built()] is `TRUE` either way, reading
+#'   whichever of the two the branch fills.
 #'
 #' @seealso [term_predict()] for the block at other rows, [term_matrix()] and
 #'   [term_coef_names()] for what a build filled, [term_refresh()] for a block
@@ -105,34 +101,37 @@ S7::method(term_build, model_term) <- function(term, data, ...) {
                attr(S7::S7_class(term), "name")), call. = FALSE)
 }
 
-S7::method(term_build, structural_term) <- function(term, data, ...) {
-  stop("structural terms are reserved for a later release; none is implemented yet.",
-       call. = FALSE)
-}
+# No structural default: the `model_term` one above names the class, which is
+# the useful message. A structural default saying the branch is unimplemented
+# was unreachable for gas(), regime() and the marginal break-point terms, all
+# of which register term_build(), and misleading for a class written outside
+# the package, which is the only caller that can reach it.
 
-#' @title Whether a Term Carries a Design Block
+#' @title Whether a Term Has Been Built
 #'
 #' @description
-#' `TRUE` for an additive term that [term_build()] has filled, `FALSE` for a
-#' bare specification. It is the test [term_matrix()], [term_npar()],
+#' `TRUE` for a term that [term_build()] has filled, `FALSE` for a bare
+#' specification. It is the test [term_matrix()], [term_npar()],
 #' [term_coef_names()], [term_predict()] and [plot()] apply before reading a
-#' block, so it decides which error a caller gets from those.
+#' design block, so it decides which error a caller gets from those.
 #'
 #' @details
-#' The predicate is `S7::S7_inherits(term, additive_term)` together with
-#' `length(term@coef_names) > 0L`, so it asks whether the term has coefficients
-#' to name. Two consequences follow, and both matter to a caller writing
-#' against the class rather than against one term.
+#' The two branches record being built in different places, so the predicate
+#' asks each about its own. An additive term is built when it has coefficient
+#' names, `length(term@coef_names) > 0L`; a structural term contributes no
+#' design columns and so has none to count, and is built when its blueprint is
+#' filled, `length(term@blueprint) > 0L`.
 #'
-#' **A structural term answers `FALSE` whether or not it is built.** [gas()]
-#' and [regime()] contribute no design columns, so they have no coefficient
-#' names to count; a built one has its blueprint filled and answers every
-#' generic on its own branch. The test covering both branches is
-#' `length(term@blueprint) > 0L`.
+#' **A built additive term with no columns would answer `FALSE`.** No shipped
+#' constructor produces one: [linpar()] with an empty formula fails in the
+#' class validator before it gets here.
 #'
-#' **A built additive term with no columns would also answer `FALSE`.** No
-#' shipped constructor produces one: [linpar()] with an empty formula fails in
-#' the class validator before it gets here.
+#' **`blueprint` is asked for rather than assumed.** It is declared on
+#' [additive_term()] and on each of the three shipped structural classes, and
+#' not on the abstract [structural_term()], so a structural class written
+#' outside the package need not carry one. Where it does not, the answer is
+#' `FALSE` rather than an error, this predicate promising a logical for
+#' anything inheriting from [model_term()].
 #'
 #' @param term An object inheriting from [model_term()]. Anything else throws
 #'   `"'term' must inherit from 'model_term'."`.
@@ -150,15 +149,31 @@ S7::method(term_build, structural_term) <- function(term, data, ...) {
 #' # It is what the accessors test, so it predicts the error.
 #' try(term_matrix(linpar(~ x)))
 #'
-#' # A structural term has no block, so it answers FALSE once built.
-#' gb <- term_build(gas(p = 1, q = 1), data.frame(y = rnorm(20)))
-#' c(predicate = term_is_built(gb), blueprint_filled = length(gb@blueprint) > 0L)
+#' # A structural term carries no design block, so it is asked about the
+#' # blueprint instead, and the answer is the same question either way.
+#' gs <- gas(p = 1, q = 1)
+#' gb <- term_build(gs, data.frame(y = rnorm(20)))
+#' c(spec = term_is_built(gs), built = term_is_built(gb))
 #'
 #' @seealso [term_build()], [term_matrix()], [term_coef_names()], [term_npar()]
 #' @export
 term_is_built <- function(term) {
   if (!S7::S7_inherits(term, model_term)) {
     stop("'term' must inherit from 'model_term'.", call. = FALSE)
+  }
+  # The two branches record being built in different places: an additive term
+  # in its coefficient names, a structural one in its blueprint, having no
+  # design block to name coefficients of.
+  #
+  # The property is ASKED FOR rather than assumed. `blueprint` is declared on
+  # additive_term and on each of the three shipped structural classes, and
+  # not on the abstract structural_term, so a structural class written
+  # outside the package need not carry one; reading it there would raise
+  # S7's "Can't find property" from inside a predicate whose own guard
+  # promises a logical for any model_term.
+  if (S7::S7_inherits(term, structural_term)) {
+    return("blueprint" %in% S7::prop_names(term) &&
+             length(term@blueprint) > 0L)
   }
   S7::S7_inherits(term, additive_term) && length(term@coef_names) > 0L
 }
@@ -1082,11 +1097,14 @@ term_predict <- S7::new_generic("term_predict", "term",
 #' The class name is the S7 class's own, the label comes from the `label`
 #' property and is omitted when empty, and the count is `ncol(x@X)`.
 #'
+#' A structural term has no `X` to count, so it gets the word `built` and no
+#' count. Every shipped structural term registers a method of its own, so this
+#' line is reached only by a structural class written outside the package.
+#'
 #' The classes that override this add something of their own:
 #' [print.PenalizedTerm()] names the penalty and the standardization,
 #' [gas()]'s and [regime()]'s report their parameters, [nl()]'s its formula and
-#' [seg()]'s its break-points. A structural term is never reported as built
-#' here, [term_is_built()] testing for a design block.
+#' [seg()]'s its break-points.
 #'
 #' @param x A term, built or not.
 #' @param ... Unused, and accepted so that the signature matches [print()]'s.
@@ -1111,7 +1129,14 @@ term_predict <- S7::new_generic("term_predict", "term",
 S7::method(print, model_term) <- function(x, ...) {
   cls <- attr(S7::S7_class(x), "name")
   lab <- if (nzchar(x@label)) sprintf(" '%s'", x@label) else ""
-  if (term_is_built(x)) {
+  # A structural term has no `X` to count, so the coefficient line is asked
+  # of the branch that has one. Every shipped structural term registers a
+  # print method of its own; one written outside the package arrives here.
+  if (S7::S7_inherits(x, structural_term)) {
+    cat(sprintf("<%s>%s %s\n", cls, lab,
+                if (term_is_built(x)) "built"
+                else "(specification; call term_build() with data)"))
+  } else if (term_is_built(x)) {
     cat(sprintf("<%s>%s built: %d coefficient%s\n", cls, lab,
                 ncol(x@X), if (ncol(x@X) == 1L) "" else "s"))
   } else {

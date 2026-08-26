@@ -28,9 +28,8 @@ The \code{developed} line appears only where a subformula was given. The
 parameter list is \code{\link[=term_params]{term_params()}}, so a developed parameter shows there as
 its coefficients.
 
-A built structural term is never described as "built"; the group count is
-the tell. \code{\link[=term_is_built]{term_is_built()}} tests for a design block, which this branch
-does not have.
+A built term is described by its group count rather than by the word
+"built", the count being the more useful line.
 }
 \examples{
 set.seed(1)

@@ -1,6 +1,6 @@
 Package: modelterms7
 Title: Model Terms as Objects for Formula-Based Modeling
-Version: 0.60.0
+Version: 0.61.0
 Authors@R:
     person("Giovanni", "Tinervia", , "giovannitinervia9@gmail.com", role = c("aut", "cre"))
 Description: Model terms as 'S7' objects: the mapping from a data frame to

@@ -1,3 +1,36 @@
+# modelterms7 0.61.0
+
+* `term_is_built()` answers for a structural term. It tested
+  `length(term@coef_names) > 0L` on the additive branch alone, so `gas()`,
+  `regime()` and the marginal break-point terms answered `FALSE` whether or
+  not they were built: they contribute no design columns and so have no
+  coefficient names to count. Each branch is now asked about the property it
+  fills -- coefficient names for an additive term, the blueprint for a
+  structural one -- and the additive answer is unchanged.
+
+  Every caller was on the additive side except one, `print.model_term()`,
+  which reads `ncol(x@X)` behind the predicate and is registered on the base
+  class. Every shipped structural term overrides it, so a structural class
+  written outside the package was the only thing that could reach it; it now
+  tests the branch before reading `X` and reports a built structural term
+  without a coefficient count.
+
+  `blueprint` is asked for with `S7::prop_names()` rather than assumed. It is
+  declared on `additive_term` and on each of the three shipped structural
+  classes, and not on the abstract `structural_term`, so a structural class
+  written elsewhere need not carry one; where it does not, the answer is
+  `FALSE` and not S7's "Can't find property".
+
+* `term_build.structural_term()` is removed, leaving the `model_term`
+  default. It threw "structural terms are reserved for a later release; none
+  is implemented yet", which `gas()`, `regime()` and `MarginalBreakTerm` have
+  made false since 0.6.0, 0.9.0 and 0.56.0 and which none of them can reach,
+  all three registering a method. The only caller that could read it was a
+  structural class written outside the package, and it was told the branch
+  does not exist. The `model_term` default names the class instead, as it
+  does for an additive one: "the term class 'X' does not implement
+  term_build()."
+
 # modelterms7 0.60.0
 
 * `term_simulate()` says how a response is DRAWN from a term that carries

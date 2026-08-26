@@ -539,8 +539,8 @@ S7::method(term_links, MarginalBreakTerm) <- function(term, ...) {
 #' @param data A data frame carrying the covariate and the grouping variable.
 #' @param ... Unused.
 #'
-#' @return The term with `blueprint` filled. [term_is_built()] stays `FALSE`,
-#'   that predicate testing for a design block.
+#' @return The term with `blueprint` filled. [term_is_built()] reads that
+#'   property on this branch, so it is `TRUE` for the result.
 #'
 #' @seealso [jump()], [term_loglik()], [term_start()].
 #'
@@ -2432,8 +2432,8 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
 #'
 #' The prior line appears only where `random(distrib = )` named a family; under
 #' the default Gaussian there is nothing to name. A built structural term is
-#' never described as "built", the group count being the tell:
-#' [term_is_built()] tests for a design block, which this branch does not have.
+#' described by its group count rather than by the word "built", the count
+#' being the more useful line.
 #'
 #' @param x A [MarginalBreakTerm()], built or not.
 #' @param ... Unused, and accepted so that the signature matches [print()]'s.

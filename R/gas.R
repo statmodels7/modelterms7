@@ -910,8 +910,8 @@ gas_levinson3 <- function(pacf, w) {
 #'   name.
 #' @param ... Unused.
 #'
-#' @return The term with `blueprint` filled. [term_is_built()] stays `FALSE`,
-#'   that predicate testing for a design block.
+#' @return The term with `blueprint` filled. [term_is_built()] reads that
+#'   property on this branch, so it is `TRUE` for the result.
 #'
 #' @seealso [gas()], [term_filter()], [term_penalties()].
 #'
@@ -1741,9 +1741,8 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
 #' parameter list is [term_params()], so a developed parameter shows there as
 #' its coefficients.
 #'
-#' A built structural term is never described as "built"; the group count is
-#' the tell. [term_is_built()] tests for a design block, which this branch
-#' does not have.
+#' A built term is described by its group count rather than by the word
+#' "built", the count being the more useful line.
 #'
 #' @param x A [GasTerm()], built or not.
 #' @param ... Unused, and accepted so that the signature matches [print()]'s.

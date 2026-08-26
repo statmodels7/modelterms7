@@ -78,10 +78,15 @@ test_that("inputs are validated", {
   expect_error(interpret_formula(~x, "not a data frame"), "data frame")
 })
 
-test_that("structural terms are reserved and say so", {
+test_that("a structural class without term_build is named, like an additive one", {
+  # There is one default and it names the class. The structural default it
+  # replaces said structural terms were reserved for a later release, which
+  # gas(), regime() and the marginal break-point terms had made false, and
+  # which only a class written outside the package could ever have read.
   Gassy <- S7::new_class("Gassy", parent = structural_term, package = NULL)
   g <- Gassy(label = "gas")
-  expect_error(term_build(g, data.frame(x = 1)), "reserved")
+  expect_error(term_build(g, data.frame(x = 1)), "Gassy")
+  expect_error(term_build(g, data.frame(x = 1)), "does not implement")
 })
 
 test_that("a term class without term_build is told which class is missing it", {

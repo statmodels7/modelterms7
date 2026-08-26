@@ -30,9 +30,8 @@ The group count is \code{length(blueprint$order)}, which is 1 unless the term
 was given a \code{by}. The parameter list is \code{\link[=term_params]{term_params()}}, the same before
 and after a build, \code{k} alone determining it.
 
-Note that a built structural term is never described as "built": the count
-of groups is the tell. \code{\link[=term_is_built]{term_is_built()}} tests for a design block, which
-this branch does not have.
+Note that a built term is described by its count of groups rather than by
+the word "built", the count being the more useful line.
 }
 \examples{
 set.seed(1)

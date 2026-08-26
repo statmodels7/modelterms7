@@ -20,10 +20,9 @@ dispatch.}
 }
 \value{
 A built term of the same class as \code{term}. For an additive term the
-\code{X}, \code{coef_names} and \code{blueprint} properties are filled and
-\code{\link[=term_is_built]{term_is_built()}} is \code{TRUE}; for a structural term the \code{blueprint} is
-filled and \code{\link[=term_is_built]{term_is_built()}} stays \code{FALSE}, that predicate testing for a
-design block.
+\code{X}, \code{coef_names} and \code{blueprint} properties are filled; for a structural
+term the \code{blueprint} is. \code{\link[=term_is_built]{term_is_built()}} is \code{TRUE} either way, reading
+whichever of the two the branch fills.
 }
 \description{
 Turns a term specification into a built term: an additive term computes its
@@ -60,15 +59,12 @@ re-derives its factor levels and its knots from those rows. That is what
 tests for. Build once, predict thereafter.
 }
 
-\section{The two defaults}{
-\code{term_build.model_term} throws
+\section{The default}{
+There is one, on \code{\link[=model_term]{model_term()}}, and it throws
 \code{"the term class 'X' does not implement term_build()."}, naming the class,
-so a term class that supplies nothing else says so clearly.
-
-\code{term_build.structural_term} throws
-\code{"structural terms are reserved for a later release; none is implemented yet."}
-Every structural term that ships overrides it, so the message is reachable
-only from a structural class written elsewhere.
+so a term class that supplies nothing else says so clearly. It covers both
+branches: every shipped structural term registers a method of its own, and
+a structural class written elsewhere that does not is named the same way.
 }
 
 \examples{

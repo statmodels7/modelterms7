@@ -2,7 +2,7 @@
 % Please edit documentation in R/generics.R
 \name{term_is_built}
 \alias{term_is_built}
-\title{Whether a Term Carries a Design Block}
+\title{Whether a Term Has Been Built}
 \usage{
 term_is_built(term)
 }
@@ -14,26 +14,28 @@ term_is_built(term)
 A single logical, never \code{NA}.
 }
 \description{
-\code{TRUE} for an additive term that \code{\link[=term_build]{term_build()}} has filled, \code{FALSE} for a
-bare specification. It is the test \code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_npar]{term_npar()}},
+\code{TRUE} for a term that \code{\link[=term_build]{term_build()}} has filled, \code{FALSE} for a bare
+specification. It is the test \code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_npar]{term_npar()}},
 \code{\link[=term_coef_names]{term_coef_names()}}, \code{\link[=term_predict]{term_predict()}} and \code{\link[=plot]{plot()}} apply before reading a
-block, so it decides which error a caller gets from those.
+design block, so it decides which error a caller gets from those.
 }
 \details{
-The predicate is \code{S7::S7_inherits(term, additive_term)} together with
-\code{length(term@coef_names) > 0L}, so it asks whether the term has coefficients
-to name. Two consequences follow, and both matter to a caller writing
-against the class rather than against one term.
+The two branches record being built in different places, so the predicate
+asks each about its own. An additive term is built when it has coefficient
+names, \code{length(term@coef_names) > 0L}; a structural term contributes no
+design columns and so has none to count, and is built when its blueprint is
+filled, \code{length(term@blueprint) > 0L}.
 
-\strong{A structural term answers \code{FALSE} whether or not it is built.} \code{\link[=gas]{gas()}}
-and \code{\link[=regime]{regime()}} contribute no design columns, so they have no coefficient
-names to count; a built one has its blueprint filled and answers every
-generic on its own branch. The test covering both branches is
-\code{length(term@blueprint) > 0L}.
+\strong{A built additive term with no columns would answer \code{FALSE}.} No shipped
+constructor produces one: \code{\link[=linpar]{linpar()}} with an empty formula fails in the
+class validator before it gets here.
 
-\strong{A built additive term with no columns would also answer \code{FALSE}.} No
-shipped constructor produces one: \code{\link[=linpar]{linpar()}} with an empty formula fails in
-the class validator before it gets here.
+\strong{\code{blueprint} is asked for rather than assumed.} It is declared on
+\code{\link[=additive_term]{additive_term()}} and on each of the three shipped structural classes, and
+not on the abstract \code{\link[=structural_term]{structural_term()}}, so a structural class written
+outside the package need not carry one. Where it does not, the answer is
+\code{FALSE} rather than an error, this predicate promising a logical for
+anything inheriting from \code{\link[=model_term]{model_term()}}.
 }
 \examples{
 d <- data.frame(x = 1:4)
@@ -43,9 +45,11 @@ term_is_built(term_build(linpar(~ x), d))
 # It is what the accessors test, so it predicts the error.
 try(term_matrix(linpar(~ x)))
 
-# A structural term has no block, so it answers FALSE once built.
-gb <- term_build(gas(p = 1, q = 1), data.frame(y = rnorm(20)))
-c(predicate = term_is_built(gb), blueprint_filled = length(gb@blueprint) > 0L)
+# A structural term carries no design block, so it is asked about the
+# blueprint instead, and the answer is the same question either way.
+gs <- gas(p = 1, q = 1)
+gb <- term_build(gs, data.frame(y = rnorm(20)))
+c(spec = term_is_built(gs), built = term_is_built(gb))
 
 }
 \seealso{

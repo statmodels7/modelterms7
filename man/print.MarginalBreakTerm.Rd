@@ -26,8 +26,8 @@ The form is
 
 The prior line appears only where \code{random(distrib = )} named a family; under
 the default Gaussian there is nothing to name. A built structural term is
-never described as "built", the group count being the tell:
-\code{\link[=term_is_built]{term_is_built()}} tests for a design block, which this branch does not have.
+described by its group count rather than by the word "built", the count
+being the more useful line.
 }
 \examples{
 set.seed(1)

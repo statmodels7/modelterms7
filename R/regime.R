@@ -433,8 +433,8 @@ S7::method(term_links, RegimeTerm) <- function(term, ...) {
 #' @param data A data frame carrying whatever `by` and `time` name.
 #' @param ... Unused.
 #'
-#' @return The term with `blueprint` filled. [term_is_built()] stays `FALSE`,
-#'   that predicate testing for a design block.
+#' @return The term with `blueprint` filled. [term_is_built()] reads that
+#'   property on this branch, so it is `TRUE` for the result.
 #'
 #' @seealso [regime()], [term_loglik()].
 #'
@@ -1154,9 +1154,8 @@ S7::method(term_hessian, RegimeTerm) <- function(term, eta, y, logdens, grad,
 #' was given a `by`. The parameter list is [term_params()], the same before
 #' and after a build, `k` alone determining it.
 #'
-#' Note that a built structural term is never described as "built": the count
-#' of groups is the tell. [term_is_built()] tests for a design block, which
-#' this branch does not have.
+#' Note that a built term is described by its count of groups rather than by
+#' the word "built", the count being the more useful line.
 #'
 #' @param x A [RegimeTerm()], built or not.
 #' @param ... Unused, and accepted so that the signature matches [print()]'s.

@@ -12,8 +12,8 @@ name.}
 \item{...}{Unused.}
 }
 \value{
-The term with \code{blueprint} filled. \code{\link[=term_is_built]{term_is_built()}} stays \code{FALSE},
-that predicate testing for a design block.
+The term with \code{blueprint} filled. \code{\link[=term_is_built]{term_is_built()}} reads that
+property on this branch, so it is \code{TRUE} for the result.
 }
 \description{
 Resolves the grouping, the ordering and every subformula against the data,
