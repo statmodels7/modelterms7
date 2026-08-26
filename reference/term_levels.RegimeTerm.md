@@ -8,7 +8,7 @@ cumulative sums of the positive gaps.
 - term:
 
   A
-  [`RegimeTerm`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md).
+  [`RegimeTerm()`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md).
 
 - psi:
 

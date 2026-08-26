@@ -22,12 +22,14 @@ term_static_deriv(term, curv, X, psi, ...)
 
 - X:
 
-  The directions to propagate, one column each – ordinarily the
-  equation's design.
+  The directions to propagate, one column each. Ordinarily the
+  equation's design, so the result is one row per observation and one
+  column per coefficient.
 
 - psi:
 
-  The term's parameters, on the parameter scale.
+  The term's parameters, on the parameter scale, named as
+  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
 - ...:
 
@@ -35,7 +37,9 @@ term_static_deriv(term, curv, X, psi, ...)
 
 ## Value
 
-A matrix of `X`'s dimensions, or `NULL`.
+A matrix of `X`'s dimensions, holding \\\partial f_t/\partial \beta\\
+for each column of `X`, so the full derivative of the predictor is
+`X + result`. `NULL` for a term that carries no state.
 
 ## Details
 
@@ -49,7 +53,7 @@ and the second piece obeys the recursion the filter already runs,
 \ell''\_{t-i} \frac{\partial \eta\_{t-i}}{\partial \beta} + \sum_j
 \beta_j \frac{\partial f\_{t-j}}{\partial \beta}.\$\$ The curvature it
 needs is the one
-[`term_filter`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+[`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
 returns, so no callback is evaluated here and the pass is arithmetic
 alone.
 
@@ -57,14 +61,14 @@ Without it a standard error of the predictor counts the static part
 only. Measured on a score-driven mean with one covariate beside it, that
 understates the standard error by about a quarter.
 
-The base method returns `NULL`: a term that is not a filter carries no
+The base method returns `NULL`. A term that is not a filter carries no
 state, so the derivative is the design row itself and the caller needs
 nothing from the term.
 
 ## See also
 
-[`term_filter`](https://statmodels7.github.io/modelterms7/reference/term_filter.md),
-[`term_adjoint`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
+[`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md),
+[`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
 
 ## Examples
 

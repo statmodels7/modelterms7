@@ -2,9 +2,10 @@
 
 A covariate whose slope *and* level both change at \\K\\ break-points
 estimated with everything else, the union of
-[`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md) and
-[`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md) at
-the same points. Written in the equation of any parameter of any
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+and
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+at the same points. Written in the equation of any parameter of any
 distribution, the term contributes
 
 \$\$\beta x_i + \sum\_{k=1}^{K} \bigl\[\delta_k\\\mathbb{1}(x_i \geq
@@ -82,18 +83,18 @@ jseg(
 
   `NULL` (the default: the construction exactly as documented above) or
   a penalties7
-  [`abs_smoother`](https://statmodels7.github.io/penalties7/reference/abs_smoother.html),
+  [`penalties7::abs_smoother()`](https://statmodels7.github.io/penalties7/reference/abs_smoother.html),
   e.g.
   [`penalties7::smooth_probit()`](https://statmodels7.github.io/penalties7/reference/smooth_probit.html).
-  The smoother replaces the step and the hinge by their smooth versions
-  – \\(1 + s'(u))/2\\ and \\(u + s(u))/2\\ – so every break-point
-  becomes an ordinary parameter of a \\C^\infty\\ model: there is no
-  working parametrization, no auxiliary coefficient and no scaling
-  schedule (`c0` is ignored, with a message), the block is the true
-  Jacobian and the term is fitted by Gauss-Newton like
-  [`nl`](https://statmodels7.github.io/modelterms7/reference/nl.md). A
-  development of a break-point – `psi ~ random(~1 | id)`, a penalized
-  one included – is then legal for every kind, the read-off that
+  The smoother replaces the step and the hinge by their smooth versions,
+  \\(1 + s'(u))/2\\ and \\(u + s(u))/2\\, so every break-point becomes
+  an ordinary parameter of a \\C^\infty\\ model: there is no working
+  parametrization, no auxiliary coefficient and no scaling schedule
+  (`c0` is ignored, with a message), the block is the true Jacobian and
+  the term is fitted by Gauss-Newton like
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md). A
+  development of a break-point, `psi ~ random(~1 | id)` and penalized
+  ones included, is then legal for every kind, the read-off that
   constrained the discontinuous constructions having gone. The
   smoother's width is resolved at build from the covariate's spacing
   (the median gap between distinct values, within groups where a
@@ -102,7 +103,7 @@ jseg(
   bent-cable reading, and the smoothing bias it buys is confined to a
   window of that width (probit, quintic) or decays as \\c/(4\|u\|)\\
   (hyperbolic). The objective is still multimodal in the positions –
-  smoothing rounds the local optima, it does not remove them – so the
+  smoothing rounds the local optima and does not remove them, so the
   profile start and the `n_boot` restarts stay necessary; a smoothed fit
   from a bad start has been measured converging to an absurd local
   optimum while reporting success.
@@ -110,15 +111,15 @@ jseg(
 - marginal:
 
   Whether the break-point is a latent variable per group, integrated out
-  of the likelihood exactly, rather than an estimated position. `FALSE`,
-  the default, is the construction documented above. `TRUE` requires the
-  subformula `psi ~ random(~1 | g)` and returns a structural term of the
-  likelihood shape
-  ([`MarginalBreakTerm`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md));
+  of the likelihood exactly instead of being an estimated position.
+  `FALSE`, the default, is the construction documented above. `TRUE`
+  requires the subformula `psi ~ random(~1 | g)` and returns a
+  structural term of the likelihood shape
+  ([`MarginalBreakTerm()`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md));
   see the section of
-  [`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md),
-  whose step model is where the marginal buys the most – for a `seg`
-  term the native random-changepoint fit (`psi ~ random(~1 | g)` without
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md),
+  whose step model is where the marginal buys the most: for a `seg` term
+  the native random-changepoint fit (`psi ~ random(~1 | g)` without
   `marginal`) is measured equivalent and remains the recommended route,
   the marginal being the exact-likelihood alternative. One break-point
   here: the conditional is smooth in the position, so the integral runs
@@ -146,11 +147,11 @@ jseg(
 ## Value
 
 An object of class
-[`SegTerm`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md)
+[`SegTerm()`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md)
 (a specification; see
-[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)),
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)),
 or of class
-[`MarginalBreakTerm`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md)
+[`MarginalBreakTerm()`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md)
 with `marginal = TRUE`.
 
 ## Details
@@ -159,7 +160,7 @@ Both devices of the two constructions are used at once: the truncated
 line is differentiable in the break-point and the step is linearized by
 the identity of fasola2018, on the rescaled covariate its scaling
 schedule provides (see
-[`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md)).
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)).
 What is particular to the joint term is the read-off, since the
 truncated line depends on the break-point as well and reading only the
 step's pair would discard what the change of slope says about it.
@@ -178,10 +179,10 @@ increment solves
 
 the root of smaller modulus. At \\\gamma = 0\\ the quadratic degenerates
 to \\h = -(b + a\psi^{0})/a\\, that is \\\psi = -b/a\\, so the pure step
-is the case this contains rather than an exception to it.
+is a case this contains, never an exception to it.
 
 Everything
-[`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 documents about the scaling schedule, the confinement of a break-point
 and the choice of starting positions applies here unchanged.
 
@@ -191,7 +192,7 @@ and the choice of starting positions applies here unchanged.
 changes of slope, then `delta1` ... `deltaK`, the changes of level, then
 `g1` ... `gK`, the auxiliary coefficients from which the break-points
 are read. Ask
-[`seg_psi`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
+[`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
 for the break-points.
 
 ## Developing a coefficient with covariates
@@ -204,14 +205,14 @@ design has one column per group and each observation belongs to one, so
 a development of `delta` or `psi` on any other design is rejected. The
 componentwise reading that would remain diverges whenever a change of
 level passes near zero mid-iteration, which on a joint model it
-routinely does; it is rejected rather than shipped diverging.
+routinely does, so it is rejected instead of shipped diverging.
 
 ## The marginal construction
 
 `jseg(x, psi ~ random(~1 | g), marginal = TRUE)` integrates a latent
 break-point per group out of the likelihood exactly, on the
 Gauss-Kronrod panels of
-[`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md)'s
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)'s
 marginal with the change of level entering each interval's conditional
 as a constant. On gaussian data the mode-based routes are measured
 equivalent; on non-gaussian families the marginal is the robust one, the
@@ -229,11 +230,11 @@ iterative algorithm for change-point detection in abrupt change models.
 
 ## See also
 
-[`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md),
-[`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md),
-[`seg_psi`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md),
-[`seg_start`](https://statmodels7.github.io/modelterms7/reference/seg_start.md),
-[`seg_step`](https://statmodels7.github.io/modelterms7/reference/seg_step.md)
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md),
+[`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md),
+[`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md),
+[`seg_step()`](https://statmodels7.github.io/modelterms7/reference/seg_step.md)
 
 ## Examples
 

@@ -12,7 +12,7 @@ scale from its spread, with the changes at zero.
 - term:
 
   A built
-  [`MarginalBreakTerm`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md).
+  [`MarginalBreakTerm()`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md).
 
 - ...:
 

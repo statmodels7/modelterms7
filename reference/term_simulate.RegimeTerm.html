@@ -9,7 +9,7 @@ the level of the state it lands in."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,23 +68,23 @@ the level of the state it lands in.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with <code>eta</code>, <code>y</code> (<code>NULL</code>) and
-  <code>latent</code>, the state of each observation.</p>
+<code>latent</code>, the state of each observation.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The chain is started from its STATIONARY distribution rather than from
-the first state or from a uniform draw: the model's likelihood is written
-with that initial law, so any other start would simulate a different
-model from the one a fit reads back. The transition matrix and the
+    <p>The chain is started from its stationary distribution. The model's
+likelihood is written with that initial law, so starting from a fixed
+first state or from a uniform draw would simulate a different model from
+the one a fit reads back. The transition matrix and the
 stationary law come from the term's own
-<code><a href="https://statmodels7.github.io/parameters7/reference/transition_matrix.html" class="external-link">transition_matrix</a></code>, so nothing about the chart
+<code><a href="https://statmodels7.github.io/parameters7/reference/transition_matrix.html" class="external-link">parameters7::transition_matrix()</a></code>, so nothing about the chart
 is restated here.</p>
-<p>The response is not drawn – the levels do not read it – so the caller
-draws at the returned predictor, and <code>y</code> is <code>NULL</code>.</p>
+<p>The response is not drawn, the levels not reading it, so <code>y</code> comes back
+<code>NULL</code> and the caller draws at the returned predictor.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_simulate.html">term_simulate</a></code>, <code><a href="regime.html">regime</a></code></p></div>
+    <div class="dont-index"><p><code><a href="term_simulate.html">term_simulate()</a></code>, <code><a href="regime.html">regime()</a></code></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

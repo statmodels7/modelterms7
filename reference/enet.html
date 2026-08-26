@@ -11,7 +11,7 @@ of choosing arbitrarily among them."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,17 +65,21 @@ of choosing arbitrarily among them.</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A one-sided formula or a numeric matrix.</p></dd>
+<dd><p>A one-sided formula, such as <code>~ x1 + x2</code> or <code>~ 0 + g</code>, or a numeric
+matrix, ideally a matrix column of the model data frame. A two-sided
+formula throws.</p></dd>
 
 
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
-<dd><p>A single non-empty string prefixed to the coefficient
-names.</p></dd>
+<dd><p>A single non-empty character string prefixed to the
+coefficient names as <code>label.name</code>, <code>"enet"</code> by default, so a block
+over <code>x1</code> reads <code>enet.x1</code>. Two penalized terms in one formula stay
+apart by their labels.</p></dd>
 
 
 <dt id="arg-standardize">standardize<a class="anchor" aria-label="anchor" href="#arg-standardize"></a></dt>
-<dd><p>A single logical: whether to penalize each
-coefficient on the scale of its own column. See the section below.</p></dd>
+<dd><p>A single logical, <code>FALSE</code> by default: whether to penalize
+each coefficient on the scale of its own column. See the section above.</p></dd>
 
 
 <dt id="arg-lambda">lambda<a class="anchor" aria-label="anchor" href="#arg-lambda"></a></dt>
@@ -99,34 +103,35 @@ size of the kink over four decades and wants that many points, while
 <dt id="arg-min-ratio">min_ratio<a class="anchor" aria-label="anchor" href="#arg-min-ratio"></a></dt>
 <dd><p>How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
-stops sooner. Must lie in (0, 1). NULL, the default, leaves it to the
-criterion. Only the sweep by kink size uses it.</p></dd>
+stops sooner. A single number in \((0, 1)\), <code>1e-4</code> by default.
+Only the sweep by kink size reads it.</p></dd>
 
 
 <dt id="arg-search">search<a class="anchor" aria-label="anchor" href="#arg-search"></a></dt>
 <dd><p><code>"grid"</code> to visit every combination of \(\lambda\)
 and \(\alpha\), <code>"cyclic"</code> to sweep one at a time with the other
-held. See <code><a href="term_search.html">term_search</a></code>.</p></dd>
+held. See <code><a href="term_search.html">term_search()</a></code>.</p></dd>
 
 
 <dt id="arg-sparse">sparse<a class="anchor" aria-label="anchor" href="#arg-sparse"></a></dt>
-<dd><p>Governs the FORMULA route: whether the block is built as a
-<code>dgCMatrix</code> through <code><a href="https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html" class="external-link">sparse.model.matrix</a></code> rather
-than as a dense model matrix. <code>NULL</code>, the default, settles it at
-build from the size of the design; <code>TRUE</code> and <code>FALSE</code> override
-it. A MATRIX input needs no such argument, being kept in whatever storage
-it arrives in. See the section below.</p></dd>
+<dd><p>Governs the formula route: <code>TRUE</code> builds a <code>dgCMatrix</code> through
+<code><a href="https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html" class="external-link">Matrix::sparse.model.matrix()</a></code>, <code>FALSE</code> a dense model matrix, and <code>NULL</code>,
+the default, settles it at build from the size of the design. A matrix
+input needs no such argument. See the section above.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Not used, and reported: an argument named after another
-penalty's hyperparameter is the mistake this catches.</p></dd>
+<dd><p>Not used, and reported. An argument named after another penalty's
+hyperparameter is the mistake this catches: <code>scad(~ x, gamma = 1)</code> throws
+<code>"'scad' has no argument 'gamma'."</code> and lists the ones it does have.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code><a href="PenalizedTerm.html">PenalizedTerm</a></code> (a specification;
-  see <code><a href="term_build.html">term_build</a></code>).</p>
+    <p>An unbuilt <code><a href="PenalizedTerm.html">PenalizedTerm()</a></code>: a specification, with <code>X</code>,
+<code>coef_names</code>, <code>blueprint</code> and <code>penalty</code> empty until <code><a href="term_build.html">term_build()</a></code>
+fills them, and the penalty attached there over as many coefficients
+as the block turns out to have.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -135,9 +140,10 @@ penalty's hyperparameter is the mistake this catches.</p></dd>
   + p\log Z(\lambda, \alpha),$$
 the normalizing constant being that of the product of a Laplace and a
 Gaussian at zero
-(<code><a href="https://statmodels7.github.io/distributions7/reference/enet_distrib.html" class="external-link">enet_distrib</a></code>). It depends on BOTH
-hyperparameters, which is what makes them estimable rather than merely
-settable, and what a penalty written as a formula would not have.</p>
+(<code><a href="https://statmodels7.github.io/distributions7/reference/enet_distrib.html" class="external-link">distributions7::enet_distrib()</a></code>). It depends on both
+hyperparameters, so both are estimable, where a merely settable one would
+be all a dropped constant leaves. A penalty
+written as a formula, with the constant dropped, would not have that.</p>
 <p>\(\alpha\) is the mixing weight: at \(\alpha \to 1\) the penalty is
 the lasso and at \(\alpha \to 0\) the ridge, and the kink at zero has
 half-width \(\lambda\alpha\), so both hyperparameters scale it.</p>
@@ -156,24 +162,63 @@ the elastic net. <em>Journal of the Royal Statistical Society, Series B</em>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="penalized_terms.html">penalized_terms</a></code> for what the five share,
-  <code><a href="ridge.html">ridge</a></code>, <code><a href="lasso.html">lasso</a></code>, <code><a href="scad.html">scad</a></code>,
-  <code><a href="mcp.html">mcp</a></code>, <code><a href="https://statmodels7.github.io/penalties7/reference/ridge_penalty.html" class="external-link">elasticnet_penalty</a></code></p></div>
+    <div class="dont-index"><p><code><a href="penalized_terms.html">penalized_terms()</a></code> for what the five share,
+<code><a href="ridge.html">ridge()</a></code>, <code><a href="lasso.html">lasso()</a></code>, <code><a href="scad.html">scad()</a></code>,
+<code><a href="mcp.html">mcp()</a></code>, <code><a href="https://statmodels7.github.io/penalties7/reference/ridge_penalty.html" class="external-link">penalties7::elasticnet_penalty()</a></code></p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">dd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">8</span><span class="op">)</span>, x2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">8</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="term_penalty.html">term_penalty</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">enet</span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span><span class="op">@</span><span class="va">params</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span>, x2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">pe</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_penalty.html">term_penalty</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">enet</span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">pe</span><span class="op">@</span><span class="va">params</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "lambda" "alpha" </span>
+<span class="r-in"><span><span class="va">pe</span><span class="op">@</span><span class="va">params_bounds</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $lambda</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]   0 Inf</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $alpha</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># alpha held at the halfway mixture, lambda still estimated</span></span></span>
+<span class="r-in"><span><span class="co"># The two ends really are the other two penalties.</span></span></span>
+<span class="r-in"><span><span class="va">pl</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_penalty.html">term_penalty</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="lasso.html">lasso</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">pr</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_penalty.html">term_penalty</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="ridge.html">ridge</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">beta</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.4</span>, <span class="op">-</span><span class="fl">1.1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu">penalties7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/penalties7/reference/penalty_value.html" class="external-link">penalty_value</a></span><span class="op">(</span><span class="va">pe</span>, <span class="va">beta</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lambda <span class="op">=</span> <span class="fl">2</span>, alpha <span class="op">=</span> <span class="fl">1</span> <span class="op">-</span> <span class="fl">1e-9</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>          <span class="fu">penalties7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/penalties7/reference/penalty_value.html" class="external-link">penalty_value</a></span><span class="op">(</span><span class="va">pl</span>, <span class="va">beta</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lambda <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu">penalties7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/penalties7/reference/penalty_value.html" class="external-link">penalty_value</a></span><span class="op">(</span><span class="va">pe</span>, <span class="va">beta</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lambda <span class="op">=</span> <span class="fl">2</span>, alpha <span class="op">=</span> <span class="fl">1e-9</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>          <span class="fu">penalties7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/penalties7/reference/penalty_value.html" class="external-link">penalty_value</a></span><span class="op">(</span><span class="va">pr</span>, <span class="va">beta</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lambda <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># alpha held at the halfway mixture, lambda still estimated.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="term_hyper.html">term_hyper</a></span><span class="op">(</span><span class="fu">enet</span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span>, alpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]$alpha</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.5</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The grid is 25 by 5 by default; cyclic sweeps one axis at a time.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="term_grid.html">term_grid</a></span><span class="op">(</span><span class="fu">enet</span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]$lambda</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]$alpha</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span><span class="fu"><a href="term_search.html">term_search</a></span><span class="op">(</span><span class="fu">enet</span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span>, search <span class="op">=</span> <span class="st">"cyclic"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cyclic"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The open interval is enforced: an end is one of the other penalties.</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu">enet</span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span>, alpha <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Error : 'alpha' in 'enet' must lie strictly inside (0, 1); it is 1.</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

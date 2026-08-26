@@ -33,7 +33,7 @@ parameters, propagated alongside the state.
 - psi:
 
   The parameters, named as
-  [`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
+  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
 - ...:
 
@@ -52,7 +52,7 @@ parameters, propagated alongside the state.
 
 - threads:
 
-  How many threads the recursion may use, over GROUPS and only on the
+  How many threads the recursion may use, over groups and only on the
   fast route: a group's filter is independent of the others and its
   writes land on its own rows, so no reduction is split and the result
   does not depend on the count, bit for bit.

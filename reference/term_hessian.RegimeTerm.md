@@ -8,7 +8,7 @@ recursion, giving the exact Hessian of the mixed log-likelihood.
 - term:
 
   A built
-  [`RegimeTerm`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md).
+  [`RegimeTerm()`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md).
 
 - eta:
 

@@ -1,5 +1,95 @@
 # Changelog
 
+## modelterms7 0.63.0
+
+- `structural_term` declares `blueprint`, so the branch’s contract is a
+  declaration rather than a convention. Every consumer already treated
+  the property as belonging to the branch –
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+  fills one,
+  [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
+  and the three print methods test its length – while the abstract class
+  declared nothing and each of the three shipped classes declared it for
+  itself. A structural class written outside the package therefore had
+  no such property, and reading it raised S7’s `Can't find property`
+  from inside a predicate whose guard promises a logical.
+
+  The three subclasses stop restating it. S7 keeps a redeclared property
+  in the parent’s slot, so the declaration moves `blueprint` from last
+  to seventh in each of the three constructors’ argument order; every
+  call in the toolkit is by name and every fill is
+  `term@blueprint <- ...`, which the suite confirms. The default is an
+  empty list, which is what a specification carries and what
+  [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
+  reads as not built, so a bare subclass answers `FALSE` for the same
+  reason it used to answer `FALSE` through
+  [`S7::prop_names()`](https://rconsortium.github.io/S7/reference/prop_names.html)
+  – the workaround that guard carried is removed.
+
+## modelterms7 0.62.0
+
+- [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
+  rejects a structural term by name. Every one of its six checks is
+  about the design block and
+  [`term_matrix()`](https://statmodels7.github.io/modelterms7/reference/term_matrix.md)
+  is registered on `additive_term` alone, so
+  `check_term(gas(p = 1, q = 1), data)` built the term successfully and
+  then stopped with
+  `` Can't find method for `term_matrix(<modelterms7::GasTerm>)` ``,
+  naming an internal generic and producing no row, where an additive
+  term whose build fails gets a `FAILED` row naming the cause. The
+  message now names the class and says what a structural term supplies
+  instead, which is
+  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md),
+  [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md),
+  [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
+  and one of
+  [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+  or
+  [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md).
+
+## modelterms7 0.61.0
+
+- [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
+  answers for a structural term. It tested
+  `length(term@coef_names) > 0L` on the additive branch alone, so
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md),
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  and the marginal break-point terms answered `FALSE` whether or not
+  they were built: they contribute no design columns and so have no
+  coefficient names to count. Each branch is now asked about the
+  property it fills – coefficient names for an additive term, the
+  blueprint for a structural one – and the additive answer is unchanged.
+
+  Every caller was on the additive side except one,
+  [`print.model_term()`](https://statmodels7.github.io/modelterms7/reference/print.model_term.md),
+  which reads `ncol(x@X)` behind the predicate and is registered on the
+  base class. Every shipped structural term overrides it, so a
+  structural class written outside the package was the only thing that
+  could reach it; it now tests the branch before reading `X` and reports
+  a built structural term without a coefficient count.
+
+  `blueprint` is asked for with
+  [`S7::prop_names()`](https://rconsortium.github.io/S7/reference/prop_names.html)
+  rather than assumed. It is declared on `additive_term` and on each of
+  the three shipped structural classes, and not on the abstract
+  `structural_term`, so a structural class written elsewhere need not
+  carry one; where it does not, the answer is `FALSE` and not S7’s
+  “Can’t find property”.
+
+- [`term_build.structural_term()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+  is removed, leaving the `model_term` default. It threw “structural
+  terms are reserved for a later release; none is implemented yet”,
+  which
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md),
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  and `MarginalBreakTerm` have made false since 0.6.0, 0.9.0 and 0.56.0
+  and which none of them can reach, all three registering a method. The
+  only caller that could read it was a structural class written outside
+  the package, and it was told the branch does not exist. The
+  `model_term` default names the class instead, as it does for an
+  additive one: “the term class ‘X’ does not implement term_build().”
+
 ## modelterms7 0.60.0
 
 - [`term_simulate()`](https://statmodels7.github.io/modelterms7/reference/term_simulate.md)
@@ -315,7 +405,7 @@
   differentiates the interval sum twice and doubles as the control;
   every other configuration assembles the component blocks exactly and
   takes the prior’s rows from one central stencil on the analytic full
-  gradient, the licence the toolkit’s non-closed derivatives run on –
+  gradient, the license the toolkit’s non-closed derivatives run on –
   and
   [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
   reads a two-stage exact profile off the target: pooled positions and
@@ -829,7 +919,7 @@
 - A location HELD away from zero is no longer rejected. What is
   unidentified is a FREE location, which competes with the intercept of
   the equation the term sits in; a held one shrinks the effects towards
-  its value, which is a modelling statement. Nor could the value be
+  its value, which is a modeling statement. Nor could the value be
   policed in general: where the prior is a transformation of another
   family the parameter is the mean on the ORIGINAL scale, and holding a
   gamma’s mean at one is what centers its logarithm – at a value zero

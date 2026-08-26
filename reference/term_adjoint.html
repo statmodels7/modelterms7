@@ -11,7 +11,7 @@ it was given, both accounting for the recursion."><meta property="og:image" cont
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,7 +58,7 @@ it was given, both accounting for the recursion.</p>
 
 <dt id="arg-eta">eta<a class="anchor" aria-label="anchor" href="#arg-eta"></a></dt>
 <dd><p>The static part of the predictor, as
-<code><a href="term_filter.html">term_filter</a></code> takes it.</p></dd>
+<code><a href="term_filter.html">term_filter()</a></code> takes it.</p></dd>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
@@ -66,11 +66,11 @@ it was given, both accounting for the recursion.</p>
 
 
 <dt id="arg-score-curvature">score, curvature<a class="anchor" aria-label="anchor" href="#arg-score-curvature"></a></dt>
-<dd><p>The callbacks of <code><a href="term_filter.html">term_filter</a></code>.</p></dd>
+<dd><p>The callbacks of <code><a href="term_filter.html">term_filter()</a></code>.</p></dd>
 
 
 <dt id="arg-psi">psi<a class="anchor" aria-label="anchor" href="#arg-psi"></a></dt>
-<dd><p>The term's parameters, named as <code><a href="term_params.html">term_params</a></code>.</p></dd>
+<dd><p>The term's parameters, named as <code><a href="term_params.html">term_params()</a></code>.</p></dd>
 
 
 <dt id="arg-g">g<a class="anchor" aria-label="anchor" href="#arg-g"></a></dt>
@@ -84,21 +84,24 @@ produced, one value per observation.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list with <code>deta</code> and <code>dscore</code>, each one value per
-  observation.</p>
+    <p>A list of two numeric vectors, each of one value per observation:
+<code>deta</code>, the derivative of the objective in the static predictor the term
+was handed, and <code>dscore</code>, its derivative in the sequence of scores. A
+caller multiplies <code>dscore</code> by a mixed second derivative of its
+log-density to obtain the derivative in another equation's predictor.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><code><a href="term_filter.html">term_filter</a></code> returns the derivative of the predictor in the
-term's OWN parameters, which is what estimating those needs. It is not
-what estimating the coefficients of the same equation needs: the level at
+    <p><code><a href="term_filter.html">term_filter()</a></code> returns the derivative of the predictor in the
+term's own parameters, which is the piece estimating those needs.
+Estimating the coefficients of the same equation needs something else: the level at
 one time is driven by the scores at earlier ones, which are read at
 predictors those coefficients also enter, so the derivative of the
 predictor in a coefficient carries a term the block does not. Propagating
 that forward would cost one derivative array per coefficient; the reverse
 recursion here costs one pass whatever their number, and is exact.</p>
-<p>Two derivatives are returned rather than one because the score the caller
-supplies depends on more than the predictor it is read at. Writing
+<p>Two derivatives are returned because the score the caller supplies depends
+on more than the predictor it is read at. Writing
 \(s_t\) for that score and \(\bar{s}_t\) for
 <code>dscore</code>, the derivative of the objective in anything the score
 depends on is</p>
@@ -107,13 +110,15 @@ depends on is</p>
     + \sum_t \bar{s}_t \frac{\partial s_t}{\partial \theta},$$</p>
 <p>so a model layer whose score is the derivative of its log-likelihood in
 one distribution parameter obtains the derivative in the predictor of
-ANOTHER by multiplying <code>dscore</code> by the mixed second derivative of
+<strong>another</strong> by multiplying <code>dscore</code> by the mixed second derivative of
 that log-likelihood. <code>deta</code> is that formula applied to the term's own
 equation, where the second factor is the curvature.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_filter.html">term_filter</a></code></p></div>
+    <div class="dont-index"><p><code><a href="term_filter.html">term_filter()</a></code> for the forward pass and the callbacks,
+<code><a href="term_curvature.html">term_curvature()</a></code> for the second order, <code><a href="term_static_deriv.html">term_static_deriv()</a></code> for the
+forward derivative in the static predictor.</p></div>
     </div>
 
     <div class="section level2">

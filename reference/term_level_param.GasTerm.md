@@ -10,7 +10,7 @@ constant, each of which shifts the predictor the same way.
 - term:
 
   A
-  [`GasTerm`](https://statmodels7.github.io/modelterms7/reference/GasTerm.md).
+  [`GasTerm()`](https://statmodels7.github.io/modelterms7/reference/GasTerm.md).
 
 - ...:
 

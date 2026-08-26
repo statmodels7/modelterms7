@@ -9,7 +9,7 @@ parameters on the parameter scale.
 - term:
 
   A built
-  [`MarginalBreakTerm`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md).
+  [`MarginalBreakTerm()`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md).
 
 - eta:
 
@@ -26,7 +26,7 @@ parameters on the parameter scale.
 - psi:
 
   The parameters, named as
-  [`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
+  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
 - ...:
 
@@ -44,12 +44,12 @@ sum over it is taken by the forward recursion of the side chain: the
 monotone process of active break-points is a hidden Markov chain on the
 \\2^K\\ side patterns whose transition factors over the coordinates,
 each flip weighted by its interval's prior mass, so the cost is \\n K
-2^K\\ rather than the \\(n+1)^K\\ of the cells. The derivatives ride the
+2^K\\, against the \\(n+1)^K\\ of the cells. The derivatives ride the
 same recursion: the masses' in the prior's parameters, the emissions' in
 the changes of level. For the continuous kinds the conditional is smooth
 within an interval and the integral runs on a fixed Gauss-Kronrod panel
 per interval
-([`gauss_kronrod15`](https://statmodels7.github.io/numericals7/reference/gauss_kronrod15.html)),
+([`numericals7::gauss_kronrod15()`](https://statmodels7.github.io/numericals7/reference/gauss_kronrod15.html)),
 the interior nodes fixed points of the data so that the derivatives in
 the prior's parameters read the prior alone; the region below the data,
 where the hinge keeps moving, is covered by panels that follow the

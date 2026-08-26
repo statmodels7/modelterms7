@@ -25,15 +25,15 @@ A character vector of length one, or of length zero.
 
 ## Details
 
-One word per term rather than one per hyperparameter: it says how the
-hyperparameters are combined WITH EACH OTHER, which is not a property
-any one of them has. It belongs to the term because a penalty with a
-kink is fitted by a scheme of its own, and how that scheme sweeps its
-own hyperparameters is part of the scheme. A criterion applies to every
-hyperparameter of the model, the smooth ones included, and would be
-carrying an argument most of them cannot read.
+One word per term, one per hyperparameter being meaningless: it says how
+the hyperparameters are combined with each other, which is not a
+property any one of them has. It belongs to the term because a penalty
+with a kink is fitted by a scheme of its own, and how that scheme sweeps
+its own hyperparameters is part of the scheme. A criterion applies to
+every hyperparameter of the model, the smooth ones included, and would
+be carrying an argument most of them cannot read.
 
 ## See also
 
-[`term_search`](https://statmodels7.github.io/modelterms7/reference/term_search.md),
-[`check_min_ratio`](https://statmodels7.github.io/modelterms7/reference/check_min_ratio.md)
+[`term_search()`](https://statmodels7.github.io/modelterms7/reference/term_search.md),
+[`check_min_ratio()`](https://statmodels7.github.io/modelterms7/reference/check_min_ratio.md)

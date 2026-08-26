@@ -9,7 +9,7 @@ ones."><meta property="og:image" content="https://statmodels7.github.io/modelter
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,7 @@ ones.</p>
 
 
 <dt id="arg-psi">psi<a class="anchor" aria-label="anchor" href="#arg-psi"></a></dt>
-<dd><p>The term's parameters, named as <code><a href="term_params.html">term_params</a></code>.</p></dd>
+<dd><p>The term's parameters, named as <code><a href="term_params.html">term_params()</a></code>.</p></dd>
 
 
 <dt id="arg-f-past">f_past<a class="anchor" aria-label="anchor" href="#arg-f-past"></a></dt>
@@ -76,11 +76,11 @@ ones.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The recursion is the filter's own, started from the level and score the
-observed part ended at rather than from the term's own seed. What changes
+observed part ended at, never from the term's own seed. What changes
 past the data is the score: it has zero conditional mean by construction,
 the model's own defining property, so at a row whose response is not
 observed the driving term is its expectation and the continuation is the
-DETERMINISTIC recursion
+deterministic recursion
 $$f_{n+h} = \omega + \sum_i \alpha_i s_{n+h-i} +
   \sum_j \beta_j f_{n+h-j},$$
 the loadings contributing only while \(n+h-i\) is still an observed
@@ -88,13 +88,13 @@ time. No simulation and no integration is involved.</p>
 <p>A new row is placed by its own time within its own group, and must come
 after every observed time of that group: a row falling inside the series
 is not a continuation but a re-reading of it, where the response is known
-and the filter must be run rather than continued, so it is rejected with
+and the filter must be run instead of continued, so it is rejected with
 the rows named. A group the fit never saw is rejected for the same
-reason – there is no state to continue.</p>
+reason: there is no state to continue.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_continue.html">term_continue</a></code>, <code><a href="term_filter.html">term_filter</a></code></p></div>
+    <div class="dont-index"><p><code><a href="term_continue.html">term_continue()</a></code>, <code><a href="term_filter.html">term_filter()</a></code></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

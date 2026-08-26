@@ -26,9 +26,9 @@ A single string, or `character(0)`.
 
 ## Details
 
-It exists so that a fitting layer can resolve the confounding rather
-than refuse the model. A score-driven level \\\omega\\ and a regime's
-first level both add a constant to their equation's predictor: with an
+It exists so that a fitting layer can resolve the confounding instead of
+refusing the model. A score-driven level \\\omega\\ and a regime's first
+level both add a constant to their equation's predictor: with an
 intercept there too, adding \\c\\ to one and subtracting the matching
 amount from the other leaves every predictor unchanged, and the
 likelihood is flat along that direction. Which of the two is dropped is
@@ -40,7 +40,10 @@ by a constant and no such question arises.
 
 ## See also
 
-[`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
+[`term_level_design()`](https://statmodels7.github.io/modelterms7/reference/term_level_design.md)
+for the same question with the level developed,
+[`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
+for the names it answers among.
 
 ## Examples
 

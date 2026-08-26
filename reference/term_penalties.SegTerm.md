@@ -14,7 +14,7 @@ build, as it is for every penalized term here.
 - term:
 
   A built
-  [`SegTerm`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md).
+  [`SegTerm()`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md).
 
 - ...:
 
@@ -23,5 +23,5 @@ build, as it is for every penalized term here.
 ## Value
 
 A list of entries, as
-[`term_penalties`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 documents.

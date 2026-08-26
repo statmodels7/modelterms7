@@ -11,7 +11,7 @@ derivative contracted in two directions the caller supplies."><meta property="og
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,17 +71,17 @@ derivative contracted in two directions the caller supplies.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A numeric matrix, one row per observation and one column per
-  coefficient of the term.</p>
+coefficient of the term.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>It stands one order above <code><a href="term_block_deriv.html">term_block_deriv</a></code>, and it is
-contracted rather than returned as an array for the reason
-<code><a href="term_third.html">term_third</a></code> is contracted in the structural branch: the full
+    <p>It stands one order above <code><a href="term_block_deriv.html">term_block_deriv()</a></code>, and it is
+contracted, never returned as an array, for the reason <code><a href="term_third.html">term_third()</a></code> is
+contracted in the structural branch: the full
 object has \(m\) coefficient indices twice over beside the \(n\) rows
 and \(m\) columns of the block, and only its contraction in the two
 directions the penalized mode moves is ever read.</p>
-<p>The quantity enters the HESSIAN of a marginal criterion and nothing else.
+<p>The quantity enters the Hessian of a marginal criterion and nothing else.
 It is absent from the criterion's value, from its gradient and from the
 fit, so the coefficients, the log-likelihood, the effective degrees of
 freedom and the coefficients' own variance matrix do not depend on it; what
@@ -90,13 +90,13 @@ direction of an outer search.</p>
 <p>The result is symmetric in <code>v</code> and <code>u</code>, mixed partial derivatives
 being equal, and an implementation that pairs a direction with the wrong
 parameter loses that symmetry.</p>
-<p>The base method returns zeros. That is exact and not an approximation: a
-design that does not move with its coefficients has a second derivative
-that is identically zero, which covers <code><a href="linpar.html">linpar</a></code>,
-<code><a href="s.html">s</a></code>, <code><a href="te.html">te</a></code>, <code><a href="random.html">random</a></code> and the five
+<p>The base method returns zeros, and that is exact. A design that does not
+move with its coefficients has a second derivative that is identically
+zero, which covers <code><a href="linpar.html">linpar()</a></code>,
+<code><a href="s.html">s()</a></code>, <code><a href="te.html">te()</a></code>, <code><a href="random.html">random()</a></code> and the five
 penalized constructors without a method of their own.</p>
-<p>For <code><a href="nl.html">nl</a></code> the closed form is one order above the one
-<code><a href="term_block_deriv.html">term_block_deriv</a></code> carries. With \(\theta_p = h_p(z_p)\) and
+<p>For <code><a href="nl.html">nl()</a></code> the closed form is one order above the one
+<code><a href="term_block_deriv.html">term_block_deriv()</a></code> carries. With \(\theta_p = h_p(z_p)\) and
 \(z_p = Z_p\beta_{(p)}\), writing \(\tilde v_p = Z_p v_{(p)}\) and
 \(\tilde u_p = Z_p u_{(p)}\) for the directions carried onto each
 parameter's own scale,
@@ -116,41 +116,41 @@ delta carries, and the fifth from \(h''_{p_1}\). Exchanging \(p_2\) and
 \(p_3\) sends the second addend to the fourth and leaves the other three
 where they are, which is the symmetry in <code>v</code> and <code>u</code>.</p>
 <p>Nothing new is derived: \(f_{p_1p_2p_3}\) is the third order of
-<code><a href="nl_fderiv.html">nl_fderiv</a></code>, served by the same four-way machinery as the lower
-orders, and \(h'''\) is <code><a href="https://statmodels7.github.io/linkfunctions7/reference/d3linkinv.html" class="external-link">d3linkinv</a></code>, exact for
+<code><a href="nl_fderiv.html">nl_fderiv()</a></code>, served by the same four-way machinery as the lower
+orders, and \(h'''\) is <code><a href="https://statmodels7.github.io/linkfunctions7/reference/d3linkinv.html" class="external-link">linkfunctions7::d3linkinv()</a></code>, exact for
 every shipped link and numerical for a user-defined one. The cost is
-\(O(nP^3)\) in the term's OWN parameters, of which there are two to four
+\(O(nP^3)\) in the term's own parameters, of which there are two to four
 in practice, and the call is made once per pair of hyperparameters rather
 than once per observation.</p>
 <p>A break-point term answers according to its construction. With
-<code>smoothed</code> an <code><a href="https://statmodels7.github.io/penalties7/reference/abs_smoother.html" class="external-link">abs_smoother</a></code> the block is the
+<code>smoothed</code> an <code><a href="https://statmodels7.github.io/penalties7/reference/abs_smoother.html" class="external-link">penalties7::abs_smoother()</a></code> the block is the
 true Jacobian and the closed forms are the smoother's own one order further
-up than <code><a href="term_block_deriv.html">term_block_deriv</a></code> reads them: with \(u = x - \psi\),
+up than <code><a href="term_block_deriv.html">term_block_deriv()</a></code> reads them: with \(u = x - \psi\),
 \(P = s''/2\), \(T = s'''/2\) and \(Q = s''''/2\), the change columns
 contribute \(P\) and \(T\) twice in the break-point and the break-point
 column contributes the two mixed pieces and \(-(\gamma T + \delta Q)\).
-The sharp constructions answer zeros: for <code><a href="seg.html">seg</a></code> the second
+The sharp constructions answer zeros: for <code><a href="seg.html">seg()</a></code> the second
 derivative is genuinely zero away from the break-points, the truncated
 line's derivative in the position being an indicator and the position
-column being linear in the change, while for <code><a href="jump.html">jump</a></code> and
-<code><a href="jseg.html">jseg</a></code> the block is a working linearization with a frozen
-weight rather than a Jacobian, which is why the first-order generics
+column being linear in the change, while for <code><a href="jump.html">jump()</a></code> and
+<code><a href="jseg.html">jseg()</a></code> the block is a working linearization with a frozen
+weight, which is why the first-order generics
 already answer zeros there.</p>
 <p>Two properties of the smoothed branch are worth stating because they are
-exact rather than approximate. Where a break-point sits against its
+exact. Where a break-point sits against its
 confinement limit the whole contribution is zero, every addend carrying a
-direction in the break-point – which the FIRST derivative does not, the
+direction in the break-point, which the first derivative does not, the
 position column moving with the change whatever the position does. And
-under <code><a href="https://statmodels7.github.io/penalties7/reference/smooth_quintic.html" class="external-link">smooth_quintic</a></code>, which is exact outside
+under <code><a href="https://statmodels7.github.io/penalties7/reference/smooth_quintic.html" class="external-link">penalties7::smooth_quintic()</a></code>, which is exact outside
 \([-h, h]\), the answer is zero on every observation further than the
 width from a break-point; that smoother is \(C^3\), so its fourth
 derivative jumps at \(\pm h\) and the answer is exact away from those two
-points rather than everywhere.</p>
+points, leaving it exact everywhere else.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_block_deriv.html">term_block_deriv</a></code>, <code><a href="term_block_contract.html">term_block_contract</a></code>,
-  <code><a href="nl_fderiv.html">nl_fderiv</a></code></p></div>
+    <div class="dont-index"><p><code><a href="term_block_deriv.html">term_block_deriv()</a></code>, <code><a href="term_block_contract.html">term_block_contract()</a></code>,
+<code><a href="nl_fderiv.html">nl_fderiv()</a></code></p></div>
     </div>
 
     <div class="section level2">

@@ -9,7 +9,7 @@ with the equation's; `NULL` for a scalar level.
 - term:
 
   A built
-  [`GasTerm`](https://statmodels7.github.io/modelterms7/reference/GasTerm.md).
+  [`GasTerm()`](https://statmodels7.github.io/modelterms7/reference/GasTerm.md).
 
 - ...:
 

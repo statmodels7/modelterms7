@@ -11,7 +11,7 @@ answers TRUE, having no iteration of its own."><meta property="og:image" content
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,20 +67,21 @@ answers <code>TRUE</code>, having no iteration of its own.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>It exists because a score cannot always answer the question. Where the
-block is the Jacobian of the contribution – <code><a href="nl.html">nl</a></code>,
-<code><a href="seg.html">seg</a></code> – the gradient of the model's objective is the block
-times the derivative of the log-likelihood in the predictor, and its
-vanishing is the test. Where the block is a working LINEARIZATION with a
-frozen weight – <code><a href="jump.html">jump</a></code>, <code><a href="jseg.html">jseg</a></code> – it is not: the
-profile objective of a discontinuous term is a step function in the
-break-point, so it has no gradient to vanish, and the quantity the
-iteration actually drives to zero is the movement of the break-point.
-That movement is what <code><a href="seg_step.html">seg_converged</a></code> reads, and a fitting
+block is the Jacobian of the contribution, as it is for <code><a href="nl.html">nl()</a></code> and
+<code><a href="seg.html">seg()</a></code>, the gradient of the model's objective is the block times the
+derivative of the log-likelihood in the predictor, and its vanishing is
+the test.</p>
+<p>Where the block is a working linearization with a frozen weight, as it is
+for <code><a href="jump.html">jump()</a></code> and <code><a href="jseg.html">jseg()</a></code>, there is no such gradient: the profile
+objective of a discontinuous term is a step function in the break-point.
+What the iteration drives to zero there is the movement of the break-point
+itself.
+That movement is what <code><a href="seg_step.html">seg_converged()</a></code> reads, and a fitting
 layer asks for it here without knowing which construction it holds.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_refresh.html">term_refresh</a></code>, <code><a href="seg_step.html">seg_converged</a></code></p></div>
+    <div class="dont-index"><p><code><a href="term_refresh.html">term_refresh()</a></code>, <code><a href="seg_step.html">seg_converged()</a></code></p></div>
     </div>
 
     <div class="section level2">

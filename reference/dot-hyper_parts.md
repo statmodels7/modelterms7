@@ -26,7 +26,10 @@ Validates each against the penalty and files it as held or as a grid.
 
 ## Value
 
-A list of `hyper` and `values`.
+A list of two named lists: `hyper`, the hyperparameters given one value
+each, and `values`, those given several, sorted and deduplicated. Both
+are keyed by the penalty's own hyperparameter names, and either may be
+empty.
 
 ## Details
 

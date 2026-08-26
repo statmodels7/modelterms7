@@ -1,7 +1,7 @@
 # Lasso Penalty on a Block of Coefficients
 
 A block of coefficients under a Laplace prior at zero: the penalty has a
-kink there, so coefficients are set EXACTLY to zero and the term
+kink there, so coefficients are set exactly to zero and the term
 selects.
 
 ## Usage
@@ -23,16 +23,21 @@ lasso(
 
 - x:
 
-  A one-sided formula or a numeric matrix.
+  A one-sided formula, such as `~ x1 + x2` or `~ 0 + g`, or a numeric
+  matrix, ideally a matrix column of the model data frame. A two-sided
+  formula throws.
 
 - label:
 
-  A single non-empty string prefixed to the coefficient names.
+  A single non-empty character string prefixed to the coefficient names
+  as `label.name`, `"lasso"` by default, so a block over `x1` reads
+  `lasso.x1`. Two penalized terms in one formula stay apart by their
+  labels.
 
 - standardize:
 
-  A single logical: whether to penalize each coefficient on the scale of
-  its own column. See the section below.
+  A single logical, `FALSE` by default: whether to penalize each
+  coefficient on the scale of its own column. See the section above.
 
 - lambda:
 
@@ -42,35 +47,41 @@ lasso(
 
 - n_lambda:
 
-  How many values the path visits, at least 2.
+  How many values the path visits, a whole number of at least 2, `25` by
+  default. The axis descends four decades of kink size, and that many
+  points are what covers it.
 
 - min_ratio:
 
   How far down the path reaches, as a fraction of the kink that empties
-  the block: smaller reaches a denser fit, larger stops sooner. Must lie
-  in \\(0, 1)\\.
+  the block: smaller reaches a denser fit, larger stops sooner. A single
+  number in \\(0, 1)\\, `1e-4` by default. Only the sweep by kink size
+  reads it.
 
 - sparse:
 
-  Governs the FORMULA route: whether the block is built as a `dgCMatrix`
-  through
-  [`sparse.model.matrix`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html)
-  rather than as a dense model matrix. `NULL`, the default, settles it
-  at build from the size of the design; `TRUE` and `FALSE` override it.
-  A MATRIX input needs no such argument, being kept in whatever storage
-  it arrives in. See the section below.
+  Governs the formula route: `TRUE` builds a `dgCMatrix` through
+  [`Matrix::sparse.model.matrix()`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html),
+  `FALSE` a dense model matrix, and `NULL`, the default, settles it at
+  build from the size of the design. A matrix input needs no such
+  argument. See the section above.
 
 - ...:
 
-  Not used, and reported: an argument named after another penalty's
-  hyperparameter is the mistake this catches.
+  Not used, and reported. An argument named after another penalty's
+  hyperparameter is the mistake this catches: `scad(~ x, gamma = 1)`
+  throws `"'scad' has no argument 'gamma'."` and lists the ones it does
+  have.
 
 ## Value
 
-An object of class
-[`PenalizedTerm`](https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.md)
-(a specification; see
-[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
+An unbuilt
+[`PenalizedTerm()`](https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.md):
+a specification, with `X`, `coef_names`, `blueprint` and `penalty` empty
+until
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+fills them, and the penalty attached there over as many coefficients as
+the block turns out to have.
 
 ## Details
 
@@ -81,9 +92,10 @@ a larger \\\lambda\\ shrinks harder and keeps fewer coefficients.
 
 The kink is at zero, so the block is fitted by a proximal method or by a
 coordinate descent with the other terms held, and \\\lambda\\ is chosen
-by a PATH over its own values – `bic()` by default, or `aic()` or `cv()`
-– because a marginal criterion is a Laplace expansion at a mode that
-sits on the kink.
+by a path over its own values, scored by `statmodels7::bic()` by default
+or by `statmodels7::aic()` or `statmodels7::cv()`. A marginal criterion
+cannot be used: it is a Laplace expansion at a mode that sits on the
+kink.
 
 **Hyperparameter.** `lambda`, admissible on \\(0, \infty)\\, swept over
 `n_lambda` values from the one that empties the block down to
@@ -96,29 +108,50 @@ Tibshirani, R. (1996). Regression shrinkage and selection via the lasso.
 
 ## See also
 
-[`penalized_terms`](https://statmodels7.github.io/modelterms7/reference/penalized_terms.md)
+[`penalized_terms()`](https://statmodels7.github.io/modelterms7/reference/penalized_terms.md)
 for what the five share,
-[`ridge`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-[`enet`](https://statmodels7.github.io/modelterms7/reference/enet.md),
-[`scad`](https://statmodels7.github.io/modelterms7/reference/scad.md),
-[`mcp`](https://statmodels7.github.io/modelterms7/reference/mcp.md),
-[`lasso_penalty`](https://statmodels7.github.io/penalties7/reference/ridge_penalty.html)
+[`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+[`enet()`](https://statmodels7.github.io/modelterms7/reference/enet.md),
+[`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md),
+[`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md),
+[`penalties7::lasso_penalty()`](https://statmodels7.github.io/penalties7/reference/ridge_penalty.html)
 
 ## Examples
 
 ``` r
-dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
-built <- term_build(lasso(~ x1 + x2), dd)
-term_penalty(built)@params
-#> [1] "lambda"
-term_smooth(built)
-#> [1] FALSE
+set.seed(3)
+dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
+b <- term_build(lasso(~ x1 + x2), dd)
+p <- term_penalty(b)
 
-# a finer path for a wide block
+# The kink is at zero, so the block is not smooth and needs a path.
+c(smooth = term_smooth(b))
+#> smooth 
+#>  FALSE 
+penalties7::penalty_kinks(p, list(lambda = 1))
+#> [1] 0
+
+# The value is minus a Laplace log-density at rate lambda.
+beta <- c(0.4, -1.1)
+all.equal(penalties7::penalty_value(p, beta, list(lambda = 2)),
+          2 * sum(abs(beta)) - 2 * log(2 / 2))
+#> [1] TRUE
+
+# The path's length and depth, at the defaults and set.
+term_grid(lasso(~ x1 + x2))
+#> [[1]]
+#> [[1]]$lambda
+#> [1] 25
+#> 
+#> 
 term_grid(lasso(~ x1 + x2, n_lambda = 60))
 #> [[1]]
 #> [[1]]$lambda
 #> [1] 60
 #> 
+#> 
+term_path_min(lasso(~ x1 + x2, min_ratio = 1e-3))
+#> [[1]]
+#> [1] 0.001
 #> 
 ```

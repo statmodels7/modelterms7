@@ -1,7 +1,7 @@
 # The Progress of a Break-Point Iteration
 
 `seg_step` returns how far each break-point moved at the last call to
-[`term_refresh`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md),
+[`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md),
 and `seg_converged` compares the largest of those with the tolerance of
 fasola2018, a hundredth of the distance between consecutive distinct
 observations of the covariate. A term that has been built but not yet
@@ -21,7 +21,7 @@ seg_converged(term)
 - term:
 
   A built
-  [`SegTerm`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md).
+  [`SegTerm()`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md).
 
 ## Value
 
@@ -37,7 +37,7 @@ the run stops at
 \Delta = 0.01 \cdot \operatorname{median}\_{i}\\ (x\_{(i+1)} -
 x\_{(i)}).\$\$
 
-fasola2018 take the smallest of those gaps rather than their median,
+fasola2018 take the smallest of those gaps instead of their median,
 which agrees with this on the evenly spaced covariates of their examples
 and is of order \\m^{-2}\\ on a random one, hence unreachable.
 
@@ -48,17 +48,17 @@ point is reached at does not, so on a large sample the last iterations
 move the break-point by a little more than the rule allows and the run
 continues past the point where the estimate has settled. A caller that
 can evaluate the objective should stop on its relative change instead,
-which is what `segmented` does and what costs a continuous term nothing:
-its iteration can settle into a cycle of period two in the break-point,
-in which case this rule is never met while the objective has long since
+as `segmented` does, at a cost of a continuous term nothing: its
+iteration can settle into a cycle of period two in the break-point, in
+which case this rule is never met while the objective has long since
 stopped moving.
 
 ## See also
 
-[`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md),
-[`seg_psi`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md),
-[`seg_start`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
-[`seg_start`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+[`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md),
+[`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
+[`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
 
 ## Examples
 

@@ -37,7 +37,7 @@ mean of a gaussian1_distrib; nothing here is particular to it."><meta property="
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -119,7 +119,7 @@ see the section above. Cannot be combined with <code>by</code>.</p></dd>
 <dd><p>Optional starting positions; defaults to evenly spaced
 quantiles of the covariate. Where a break-point carries a development
 they seed it, each starting vector solving \(Wp_k \approx
-\psi_k^{0}\).</p></dd>
+  \psi_k^{0}\).</p></dd>
 
 
 <dt id="arg-by">by<a class="anchor" aria-label="anchor" href="#arg-by"></a></dt>
@@ -136,16 +136,16 @@ Defaults to <code>TRUE</code>.</p></dd>
 <dt id="arg-smoothed">smoothed<a class="anchor" aria-label="anchor" href="#arg-smoothed"></a></dt>
 <dd><p><code>NULL</code> (the default: the construction exactly as
 documented above) or a <span class="pkg">penalties7</span>
-<code><a href="https://statmodels7.github.io/penalties7/reference/abs_smoother.html" class="external-link">abs_smoother</a></code>, e.g.
+<code><a href="https://statmodels7.github.io/penalties7/reference/abs_smoother.html" class="external-link">penalties7::abs_smoother()</a></code>, e.g.
 <code><a href="https://statmodels7.github.io/penalties7/reference/smooth_probit.html" class="external-link">penalties7::smooth_probit()</a></code>. The smoother replaces the step and
-the hinge by their smooth versions – \((1 + s'(u))/2\) and
-\((u + s(u))/2\) – so every break-point becomes an ordinary
+the hinge by their smooth versions, \((1 + s'(u))/2\) and
+\((u + s(u))/2\), so every break-point becomes an ordinary
 parameter of a \(C^\infty\) model: there is no working
 parametrization, no auxiliary coefficient and no scaling schedule
 (<code>c0</code> is ignored, with a message), the block is the true Jacobian
-and the term is fitted by Gauss-Newton like <code><a href="nl.html">nl</a></code>. A
-development of a break-point – <code>psi ~ random(~1 | id)</code>, a
-penalized one included – is then legal for every kind, the read-off
+and the term is fitted by Gauss-Newton like <code><a href="nl.html">nl()</a></code>. A
+development of a break-point, <code>psi ~ random(~1 | id)</code> and penalized
+ones included, is then legal for every kind, the read-off
 that constrained the discontinuous constructions having gone. The
 smoother's width is resolved at build from the covariate's spacing
 (the median gap between distinct values, within groups where a
@@ -154,7 +154,7 @@ carries one, and is reported: it is the width of the transition, the
 bent-cable reading, and the smoothing bias it buys is confined to a
 window of that width (probit, quintic) or decays as \(c/(4|u|)\)
 (hyperbolic). The objective is still multimodal in the positions –
-smoothing rounds the local optima, it does not remove them – so the
+smoothing rounds the local optima and does not remove them, so the
 profile start and the <code>n_boot</code> restarts stay necessary; a
 smoothed fit from a bad start has been measured converging to an
 absurd local optimum while reporting success.</p></dd>
@@ -162,13 +162,13 @@ absurd local optimum while reporting success.</p></dd>
 
 <dt id="arg-marginal">marginal<a class="anchor" aria-label="anchor" href="#arg-marginal"></a></dt>
 <dd><p>Whether the break-point is a latent variable per group,
-integrated out of the likelihood exactly, rather than an estimated
+integrated out of the likelihood exactly instead of being an estimated
 position. <code>FALSE</code>, the default, is the construction documented
 above. <code>TRUE</code> requires the subformula <code>psi ~ random(~1 | g)</code>
 and returns a structural term of the likelihood shape
-(<code><a href="MarginalBreakTerm.html">MarginalBreakTerm</a></code>); see the section of
-<code><a href="jump.html">jump</a></code>, whose step model is where the marginal buys the
-most – for a <code>seg</code> term the native random-changepoint fit
+(<code><a href="MarginalBreakTerm.html">MarginalBreakTerm()</a></code>); see the section of
+<code><a href="jump.html">jump()</a></code>, whose step model is where the marginal buys the
+most: for a <code>seg</code> term the native random-changepoint fit
 (<code>psi ~ random(~1 | g)</code> without <code>marginal</code>) is measured
 equivalent and remains the recommended route, the marginal being the
 exact-likelihood alternative. One break-point here: the conditional is
@@ -198,8 +198,8 @@ names.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code><a href="SegTerm.html">SegTerm</a></code> (a specification; see
-  <code><a href="term_build.html">term_build</a></code>).</p>
+    <p>An object of class <code><a href="SegTerm.html">SegTerm()</a></code> (a specification; see
+<code><a href="term_build.html">term_build()</a></code>).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -214,19 +214,19 @@ coefficient, and the increment a Gauss-Newton step solves for is the
 update of <cite>muggeo2003</cite>: his working variables \(U\) and \(V\)
 are the block's columns and his \(\psi \leftarrow \psi +
 \gamma/\delta\) is that step. Refreshing the term at the current
-coefficients (<code><a href="term_refresh.html">term_refresh</a></code>) and fitting is one iteration
-of it, which is the same contract <code><a href="nl.html">nl</a></code> uses.</p>
+coefficients (<code><a href="term_refresh.html">term_refresh()</a></code>) and fitting is one iteration
+of it, which is the same contract <code><a href="nl.html">nl()</a></code> uses.</p>
 <p>The objective has local optima in the break-points and the iteration
 converges from within a basin around where it starts, so
-<code><a href="seg_start.html">seg_start</a></code> chooses the starting positions on a grid rather
+<code><a href="seg_start.html">seg_start()</a></code> chooses the starting positions on a grid rather
 than at a conventional point. A break-point is confined to the interval
 between the 5th and the 95th percentile of the covariate: outside it
 the indicator is constant, the truncated line and that constant are
-linearly dependent, and the block is singular rather than merely
+linearly dependent, and the block is exactly singular, not merely
 ill-conditioned. A run ending against the limit has not located a
-break-point, and <code><a href="seg_psi.html">seg_psi</a></code> then reports the limit itself.</p>
+break-point, and <code><a href="seg_psi.html">seg_psi()</a></code> then reports the limit itself.</p>
 <p>The iteration can settle into a cycle of period two in the break-point,
-in which case the rule of <code><a href="seg_step.html">seg_converged</a></code> is never met while
+in which case the rule of <code><a href="seg_step.html">seg_converged()</a></code> is never met while
 the objective has long since stopped moving; a caller that can evaluate
 the objective should stop on its relative change, as <code>segmented</code>
 does.</p>
@@ -240,7 +240,7 @@ does.</p>
 <p><code>beta</code> (present when <code>linear = TRUE</code>), <code>gamma1</code> ...
 <code>gammaK</code> and <code>psi1</code> ... <code>psiK</code>, in that order. The
 break-points are coefficients of the working block here, which they are
-not in the discontinuous constructions, so <code><a href="seg_psi.html">seg_psi</a></code> is the
+not in the discontinuous constructions, so <code><a href="seg_psi.html">seg_psi()</a></code> is the
 function that reports them either way.</p>
     </div>
     <div class="section level2">
@@ -255,10 +255,10 @@ seg(x, psi ~ random(~1 | id))      the random-changepoint model
 seg(x, gamma1 ~ z)                 a first slope change varying with z
 seg(x, by = ~0 + g)                every coefficient, per level of g</code></pre></div>
 
-<p>The right side goes through <code><a href="interpret_formula.html">interpret_formula</a></code>, so it takes
+<p>The right side goes through <code><a href="interpret_formula.html">interpret_formula()</a></code>, so it takes
 <em>any</em> term of this package, penalized ones included, and the
 hyperparameters a sub-term declares are reported by
-<code><a href="term_penalties.html">term_penalties</a></code> and estimated by the fitting layer. The
+<code><a href="term_penalties.html">term_penalties()</a></code> and estimated by the fitting layer. The
 left side names either one coefficient (<code>gamma2</code>) or a whole kind
 (<code>gamma</code>, meaning every \(\gamma_k\), each with coefficients of
 its own over the shared design). <code>by = ~f</code> is the shorthand giving
@@ -272,8 +272,8 @@ enter the block linearly, the truncated line becoming
 \(-\gamma_{k,i}\,\mathbb{1}(x_i&gt;\psi_{k,i})\,w_i'\), so the
 continuous construction accepts a development of any coefficient and any
 combination of them.</p>
-<p>A penalty on the changes themselves – the lasso that selects how many
-break-points are really there – is the development on an intercept
+<p>A penalty on the changes themselves, the lasso that selects how many
+break-points are really there, is the development on an intercept
 alone, <code>seg(x, npsi = 4, gamma ~ 0 + lasso(~1))</code>: the \(K\)
 changes are then one penalized block under one hyperparameter, the
 entries of a subformula shared by every coefficient of a kind being
@@ -290,7 +290,7 @@ twice.</p>
 <p>With <code>linear = TRUE</code>, the default, the term carries \(\beta x\)
 itself, so <code>y ~ seg(x)</code> is the whole relationship. Writing the
 covariate again in the same equation is then exactly collinear with that
-column, and <code><a href="interpret_formula.html">interpret_formula</a></code> removes it with a warning.
+column, and <code><a href="interpret_formula.html">interpret_formula()</a></code> removes it with a warning.
 <code>linear = FALSE</code> is the explicit way to keep the linear effect
 outside the term, and <code>y ~ x + seg(x, linear = FALSE)</code> is the same
 model written the other way round.</p>
@@ -309,8 +309,8 @@ spurious local minima by bootstrap restarting. <em>Biometrics</em>, 57(1),
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="jump.html">jump</a></code>, <code><a href="jseg.html">jseg</a></code>, <code><a href="seg_psi.html">seg_psi</a></code>,
-  <code><a href="seg_start.html">seg_start</a></code>, <code><a href="seg_step.html">seg_step</a></code>, <code><a href="nl.html">nl</a></code></p></div>
+    <div class="dont-index"><p><code><a href="jump.html">jump()</a></code>, <code><a href="jseg.html">jseg()</a></code>, <code><a href="seg_psi.html">seg_psi()</a></code>,
+<code><a href="seg_start.html">seg_start()</a></code>, <code><a href="seg_step.html">seg_step()</a></code>, <code><a href="nl.html">nl()</a></code></p></div>
     </div>
 
     <div class="section level2">

@@ -11,7 +11,7 @@ propagated through the recursion beside the state."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,12 +61,12 @@ propagated through the recursion beside the state.</p>
 
 
 <dt id="arg-score-curvature">score, curvature<a class="anchor" aria-label="anchor" href="#arg-score-curvature"></a></dt>
-<dd><p>The callbacks of <code><a href="term_filter.html">term_filter</a></code>.</p></dd>
+<dd><p>The callbacks of <code><a href="term_filter.html">term_filter()</a></code>.</p></dd>
 
 
 <dt id="arg-psi">psi<a class="anchor" aria-label="anchor" href="#arg-psi"></a></dt>
-<dd><p>The parameters on the PARAMETER scale, named as
-<code><a href="term_params.html">term_params</a></code>.</p></dd>
+<dd><p>The parameters on the parameter scale, named as
+<code><a href="term_params.html">term_params()</a></code>.</p></dd>
 
 
 <dt id="arg-g">g<a class="anchor" aria-label="anchor" href="#arg-g"></a></dt>
@@ -79,7 +79,7 @@ propagated through the recursion beside the state.</p>
 
 <dt id="arg-blocks">blocks<a class="anchor" aria-label="anchor" href="#arg-blocks"></a></dt>
 <dd><p>The model's own derivative pieces; see
-<code><a href="term_curvature.html">term_curvature</a></code>.</p></dd>
+<code><a href="term_curvature.html">term_curvature()</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -88,7 +88,7 @@ propagated through the recursion beside the state.</p>
 
 <dt id="arg-score-values-curvature-values">score_values, curvature_values<a class="anchor" aria-label="anchor" href="#arg-score-values-curvature-values"></a></dt>
 <dd><p>The score and curvature of the
-model's log-density evaluated at the CURRENT predictors, one value per
+model's log-density evaluated at the current predictors, one value per
 observation, on the parameter scale the callbacks read. Supplying both,
 together with <code>blocks_data</code>, routes the second-order recursion of
 the subformula route through the compiled kernel; either <code>NULL</code>
@@ -96,7 +96,7 @@ keeps the R route.</p></dd>
 
 
 <dt id="arg-blocks-data">blocks_data<a class="anchor" aria-label="anchor" href="#arg-blocks-data"></a></dt>
-<dd><p>The model's derivative pieces as data rather than as a
+<dd><p>The model's derivative pieces as data instead of as a
 callback: a list with <code>H</code> (the mixed second derivatives, one
 column per distribution parameter), <code>D3</code> (the third derivatives,
 one column per parameter pair, pair <code>(r, r2)</code> at column
@@ -117,14 +117,14 @@ index). Read only by the compiled route.</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>With subformulas the general per-observation route runs instead, and
-the second derivative is accumulated on each group's ACTIVE SET rather
+the second derivative is accumulated on each group's active set rather
 than as a square over all the unknowns: a development's coordinate
 reaches only the groups where its column is not identically zero, so
 with grouping indicators the active set has the same size whether the
 panel has ten groups or a thousand. Measured, the full square cost
 0.39 s at 124 unknowns over 1600 rows and would have reached about
 twelve minutes at five hundred groups.</p>
-<p><code>blocks</code> is called with the row of the jacobian RESTRICTED to the
+<p><code>blocks</code> is called with the row of the jacobian restricted to the
 active set and with that set, and returns its pieces in the same
 coordinates. A callback of the earlier three-argument shape is still
 accepted and given the full row, its result being subset here; it costs

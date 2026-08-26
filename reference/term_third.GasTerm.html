@@ -11,7 +11,7 @@ orders are."><meta property="og:image" content="https://statmodels7.github.io/mo
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,11 +61,11 @@ orders are.</p>
 
 
 <dt id="arg-score-curvature">score, curvature<a class="anchor" aria-label="anchor" href="#arg-score-curvature"></a></dt>
-<dd><p>The callbacks of <code><a href="term_filter.html">term_filter</a></code>.</p></dd>
+<dd><p>The callbacks of <code><a href="term_filter.html">term_filter()</a></code>.</p></dd>
 
 
 <dt id="arg-psi">psi<a class="anchor" aria-label="anchor" href="#arg-psi"></a></dt>
-<dd><p>The parameters on the PARAMETER scale.</p></dd>
+<dd><p>The parameters on the parameter scale.</p></dd>
 
 
 <dt id="arg-g">g<a class="anchor" aria-label="anchor" href="#arg-g"></a></dt>
@@ -77,7 +77,7 @@ orders are.</p>
 
 
 <dt id="arg-blocks">blocks<a class="anchor" aria-label="anchor" href="#arg-blocks"></a></dt>
-<dd><p>The model's derivative pieces; see <code><a href="term_third.html">term_third</a></code>.</p></dd>
+<dd><p>The model's derivative pieces; see <code><a href="term_third.html">term_third()</a></code>.</p></dd>
 
 
 <dt id="arg-direction">direction<a class="anchor" aria-label="anchor" href="#arg-direction"></a></dt>
@@ -96,14 +96,14 @@ orders are.</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The recursion gains one state, \(\Psi_t = \partial^3f_t/\partial u^3[v]\),
 seeded by the third derivative of the score in the same way \(\Phi\) is
-seeded by its second. Everything else it needs – the directional
-derivatives of \(F\), \(\Phi\), \(\dot S\) and \(\ddot S\) – is a
+seeded by its second. Everything else it needs, meaning the directional
+derivatives of \(F\), \(\Phi\), \(\dot S\) and \(\ddot S\), is a
 contraction of a quantity the second-order recursion already carries, so
 no second recursion is run and no three-index array is formed.</p>
 <p>The chart contributes its own third derivatives: the level and the
 loadings through their scalar links, the persistence through
-<code><a href="dot-gas_chart_derivs3.html">.gas_chart_derivs3</a></code>, which composes
-<code><a href="gas_levinson3.html">gas_levinson3</a></code> with them.</p>
+<code><a href="dot-gas_chart_derivs3.html">.gas_chart_derivs3()</a></code>, which composes
+<code><a href="gas_levinson3.html">gas_levinson3()</a></code> with them.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

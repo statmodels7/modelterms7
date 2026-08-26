@@ -1,7 +1,7 @@
 # Third Derivatives of a Structural Term's Predictor, in One Direction
 
 The second derivative of
-[`term_curvature`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
+[`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
 differentiated once more along a single direction, and the derivative of
 the term's Jacobian along that same direction. It is what the exact
 gradient of a marginal criterion needs when a penalty covers the term's
@@ -42,12 +42,12 @@ term_third(
 - score, curvature:
 
   The callbacks of
-  [`term_filter`](https://statmodels7.github.io/modelterms7/reference/term_filter.md).
+  [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md).
 
 - psi:
 
   The term's parameters, named as
-  [`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
+  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
 - g:
 
@@ -113,15 +113,20 @@ V_r^\top V\_{r'},\$\$
 is \\\texttt{dcurv}\cdot v\\, and the two terms differentiating \\M\\'s
 own \\V_p\\.
 
-The base method returns zeros, so an additive term – whose second
-derivative is already zero – is covered without writing anything, and a
-term written later that does not implement this reports no third
-derivative rather than a wrong one.
+The base method returns zeros. An additive term's second derivative is
+already zero, so it is covered without writing anything, and a term
+written later that does not implement this reports no third derivative
+instead of a wrong one. A structural term refuses: it has a second
+derivative, so zero there would be a false statement rather than a true
+one.
 
 ## See also
 
-[`term_curvature`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md),
-[`term_adjoint`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
+[`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
+for the second order this differentiates,
+[`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
+for the first, `statmodels7::reml()` for the criterion whose gradient
+asks for it.
 
 ## Examples
 

@@ -9,7 +9,7 @@ together, and one per within-group column when they are independent."><meta prop
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,15 +67,15 @@ together, and one per within-group column when they are independent.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list of entries, as <code><a href="term_penalties.html">term_penalties</a></code> documents.</p>
+    <p>A list of entries, as <code><a href="term_penalties.html">term_penalties()</a></code> documents.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The coefficients are ordered group by group, so column \(j\) is the
-stride \(j, d+j, 2d+j, \dots\) – a subset of the term's own parameters,
-NAMED rather than selected with a map, which is what keeps a kinked
-prior's proximal operator available: a separable penalty under a selection
-map is the generalized-lasso problem and has none.</p>
+stride \(j, d+j, 2d+j, \dots\). Those positions are named as a subset of
+the term's own parameters, never selected with a map, and that is what
+keeps a kinked prior's proximal operator available: a separable penalty
+under a selection map is the generalized-lasso problem, which has none.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

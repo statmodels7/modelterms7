@@ -26,7 +26,7 @@ A distributions7 object.
 
 ## Details
 
-The structure's role is DECLARED rather than left at "either": a
-structure that does not say which matrix of the prior it is cannot be
-read as either, the two differing in the sign of the log-determinant
-term.
+The structure's role is declared, `"covariance"` here. A structure left
+at `"either"` does not say which matrix of the prior it is, and the two
+cannot be read interchangeably: they differ in the sign of the
+log-determinant term.

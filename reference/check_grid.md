@@ -44,5 +44,5 @@ the cost is linear in the number asked for.
 
 ## See also
 
-[`check_hyper`](https://statmodels7.github.io/modelterms7/reference/check_hyper.md),
-[`term_grid`](https://statmodels7.github.io/modelterms7/reference/term_grid.md)
+[`check_hyper()`](https://statmodels7.github.io/modelterms7/reference/check_hyper.md),
+[`term_grid()`](https://statmodels7.github.io/modelterms7/reference/term_grid.md)

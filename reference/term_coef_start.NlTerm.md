@@ -1,33 +1,33 @@
 # Where a Nonlinear Term's Coefficients Begin
 
 The coefficients
-[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 built the block at: the starting value of each of the term's own
 parameters carried through its link, from `start` where the caller gave
 one. The block is the Jacobian at those values, so it is not the same
 block at any other point, and a fitting layer that started at zero would
 linearize where the term was never meant to be evaluated. Where `target`
-is given – the response on the scale of the predictor, which the fitting
-layer supplies – the parameters the caller did NOT pin with `start` are
-estimated from it by least squares, because zero is a degenerate point
-for a nonlinear term rather than a neutral one: it linearizes where the
-function was never meant to be evaluated, and every quantity read at
-those coefficients inherits it, the top of a kinked penalty's path among
-them.
+is given, meaning the response on the scale of the predictor, which the
+fitting layer supplies, the parameters the caller did NOT pin with
+`start` are estimated from it by least squares, because for a nonlinear
+term zero is a degenerate point, never a neutral one: it linearizes
+where the function was never meant to be evaluated, and every quantity
+read at those coefficients inherits it, the top of a kinked penalty's
+path among them.
 
 The search is a deterministic grid on each free parameter's own chart,
 polished by a derivative-free step. Two things make it work. The grid is
-DETERMINISTIC, so a start does not depend on the caller's random seed
+deterministic, so a start does not depend on the caller's random seed
 and the same data give the same fit; a Latin hypercube of the same size,
 tried first, put the logistic's scale anywhere between 4.9e-06 and 2.07
-across twenty seeds. And the parameters the function is jointly AFFINE
+across twenty seeds. And the parameters the function is jointly affine
 in are separated out and solved by least squares at each point of the
 grid rather than searched over, which is read off
-[`D`](https://rdrr.io/r/stats/deriv.html) as the fixed point of "the
-derivative in \\p\\ names no member of the set". On a four-parameter
-logistic that is the difference between recovering the truth on 13 of 15
-samples and on all 15, with the worst relative error falling from 6.36
-to 0.076.
+[`stats::D()`](https://rdrr.io/r/stats/deriv.html) as the fixed point of
+"the derivative in \\p\\ names no member of the set". On a
+four-parameter logistic that is the difference between recovering the
+truth on 13 of 15 samples and on all 15, with the worst relative error
+falling from 6.36 to 0.076.
 
 The box each grid spans comes from the data: the quantiles, the standard
 deviation and the range of the response and of every covariate the
@@ -37,7 +37,7 @@ the response or of a covariate and the box has to cover both.
 
 It is a starting value and is allowed to be approximate; anything that
 fails leaves the coefficients
-[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 computed.
 
 ## Arguments
@@ -45,13 +45,13 @@ computed.
 - term:
 
   A built
-  [`NlTerm`](https://statmodels7.github.io/modelterms7/reference/NlTerm.md).
+  [`NlTerm()`](https://statmodels7.github.io/modelterms7/reference/NlTerm.md).
 
 - target:
 
   Optional numeric vector, one per observation: the response on the
   scale of the predictor. Absent, the coefficients are those
-  [`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   computed.
 
 - ...:

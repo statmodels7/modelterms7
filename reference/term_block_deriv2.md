@@ -37,15 +37,15 @@ of the term.
 ## Details
 
 It stands one order above
-[`term_block_deriv`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md),
-and it is contracted rather than returned as an array for the reason
-[`term_third`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
+[`term_block_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md),
+and it is contracted, never returned as an array, for the reason
+[`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
 is contracted in the structural branch: the full object has \\m\\
 coefficient indices twice over beside the \\n\\ rows and \\m\\ columns
 of the block, and only its contraction in the two directions the
 penalized mode moves is ever read.
 
-The quantity enters the HESSIAN of a marginal criterion and nothing
+The quantity enters the Hessian of a marginal criterion and nothing
 else. It is absent from the criterion's value, from its gradient and
 from the fit, so the coefficients, the log-likelihood, the effective
 degrees of freedom and the coefficients' own variance matrix do not
@@ -56,18 +56,18 @@ The result is symmetric in `v` and `u`, mixed partial derivatives being
 equal, and an implementation that pairs a direction with the wrong
 parameter loses that symmetry.
 
-The base method returns zeros. That is exact and not an approximation: a
-design that does not move with its coefficients has a second derivative
-that is identically zero, which covers
-[`linpar`](https://statmodels7.github.io/modelterms7/reference/linpar.md),
-[`s`](https://statmodels7.github.io/modelterms7/reference/s.md),
-[`te`](https://statmodels7.github.io/modelterms7/reference/te.md),
-[`random`](https://statmodels7.github.io/modelterms7/reference/random.md)
+The base method returns zeros, and that is exact. A design that does not
+move with its coefficients has a second derivative that is identically
+zero, which covers
+[`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md),
+[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md),
+[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md),
+[`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
 and the five penalized constructors without a method of their own.
 
-For [`nl`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+For [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
 the closed form is one order above the one
-[`term_block_deriv`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md)
+[`term_block_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md)
 carries. With \\\theta_p = h_p(z_p)\\ and \\z_p = Z_p\beta\_{(p)}\\,
 writing \\\tilde v_p = Z_p v\_{(p)}\\ and \\\tilde u_p = Z_p u\_{(p)}\\
 for the directions carried onto each parameter's own scale,
@@ -87,53 +87,52 @@ Kronecker delta carries, and the fifth from \\h''\_{p_1}\\. Exchanging
 other three where they are, which is the symmetry in `v` and `u`.
 
 Nothing new is derived: \\f\_{p_1p_2p_3}\\ is the third order of
-[`nl_fderiv`](https://statmodels7.github.io/modelterms7/reference/nl_fderiv.md),
+[`nl_fderiv()`](https://statmodels7.github.io/modelterms7/reference/nl_fderiv.md),
 served by the same four-way machinery as the lower orders, and \\h'''\\
 is
-[`d3linkinv`](https://statmodels7.github.io/linkfunctions7/reference/d3linkinv.html),
+[`linkfunctions7::d3linkinv()`](https://statmodels7.github.io/linkfunctions7/reference/d3linkinv.html),
 exact for every shipped link and numerical for a user-defined one. The
-cost is \\O(nP^3)\\ in the term's OWN parameters, of which there are two
+cost is \\O(nP^3)\\ in the term's own parameters, of which there are two
 to four in practice, and the call is made once per pair of
 hyperparameters rather than once per observation.
 
 A break-point term answers according to its construction. With
 `smoothed` an
-[`abs_smoother`](https://statmodels7.github.io/penalties7/reference/abs_smoother.html)
+[`penalties7::abs_smoother()`](https://statmodels7.github.io/penalties7/reference/abs_smoother.html)
 the block is the true Jacobian and the closed forms are the smoother's
 own one order further up than
-[`term_block_deriv`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md)
+[`term_block_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md)
 reads them: with \\u = x - \psi\\, \\P = s''/2\\, \\T = s'''/2\\ and \\Q
 = s''''/2\\, the change columns contribute \\P\\ and \\T\\ twice in the
 break-point and the break-point column contributes the two mixed pieces
 and \\-(\gamma T + \delta Q)\\. The sharp constructions answer zeros:
-for [`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+for
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
 the second derivative is genuinely zero away from the break-points, the
 truncated line's derivative in the position being an indicator and the
 position column being linear in the change, while for
-[`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 and
-[`jseg`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
-the block is a working linearization with a frozen weight rather than a
-Jacobian, which is why the first-order generics already answer zeros
-there.
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+the block is a working linearization with a frozen weight, which is why
+the first-order generics already answer zeros there.
 
 Two properties of the smoothed branch are worth stating because they are
-exact rather than approximate. Where a break-point sits against its
-confinement limit the whole contribution is zero, every addend carrying
-a direction in the break-point – which the FIRST derivative does not,
-the position column moving with the change whatever the position does.
-And under
-[`smooth_quintic`](https://statmodels7.github.io/penalties7/reference/smooth_quintic.html),
+exact. Where a break-point sits against its confinement limit the whole
+contribution is zero, every addend carrying a direction in the
+break-point, which the first derivative does not, the position column
+moving with the change whatever the position does. And under
+[`penalties7::smooth_quintic()`](https://statmodels7.github.io/penalties7/reference/smooth_quintic.html),
 which is exact outside \\\[-h, h\]\\, the answer is zero on every
 observation further than the width from a break-point; that smoother is
 \\C^3\\, so its fourth derivative jumps at \\\pm h\\ and the answer is
-exact away from those two points rather than everywhere.
+exact away from those two points, leaving it exact everywhere else.
 
 ## See also
 
-[`term_block_deriv`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md),
-[`term_block_contract`](https://statmodels7.github.io/modelterms7/reference/term_block_contract.md),
-[`nl_fderiv`](https://statmodels7.github.io/modelterms7/reference/nl_fderiv.md)
+[`term_block_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md),
+[`term_block_contract()`](https://statmodels7.github.io/modelterms7/reference/term_block_contract.md),
+[`nl_fderiv()`](https://statmodels7.github.io/modelterms7/reference/nl_fderiv.md)
 
 ## Examples
 

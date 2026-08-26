@@ -16,7 +16,7 @@ seg_psi(term, coef = NULL)
 - term:
 
   A built
-  [`SegTerm`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md).
+  [`SegTerm()`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md).
 
 - coef:
 
@@ -31,9 +31,9 @@ column per break-point.
 
 ## See also
 
-[`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md),
-[`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md),
-[`jseg`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md),
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
 
 ## Examples
 

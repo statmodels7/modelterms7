@@ -11,7 +11,7 @@ can carry it across by the delta method."><meta property="og:image" content="htt
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,7 +58,7 @@ can carry it across by the delta method.</p>
 
 <dt id="arg-zeta">zeta<a class="anchor" aria-label="anchor" href="#arg-zeta"></a></dt>
 <dd><p>The term's parameters on the unconstrained scale, named as
-<code><a href="term_params.html">term_params</a></code>.</p></dd>
+<code><a href="term_params.html">term_params()</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -68,12 +68,12 @@ can carry it across by the delta method.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with <code>name</code>, <code>value</code>, <code>jacobian</code> (one row
-  per quantity and one column per parameter) and <code>scale</code>, the link
-  an interval for each quantity is built on.</p>
+per quantity and one column per parameter) and <code>scale</code>, the link
+an interval for each quantity is built on.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>A term's parameters are the coordinates it is ESTIMATED on, chosen so
+    <p>A term's parameters are the coordinates it is estimated on, chosen so
 that a search runs unconstrained, and they are not always the quantities
 the model is about. The clearest case is a score-driven persistence,
 which rides a partial autocorrelation because the stationary region is
@@ -86,13 +86,15 @@ coefficient's name would promise one quantity and print another.</p>
 \(\sqrt{J V J^\top}\) and an interval is built on whichever scale keeps
 the quantity in its own set, exactly as <span class="pkg">parameters7</span>'s
 <code>param_readable()</code> does for a matrix parameter.</p>
-<p>The base method reports the parameters themselves on the PARAMETER scale,
-with the diagonal Jacobian of their links, which is what every term whose
-coordinates are already its quantities wants.</p>
+<p>The base method reports the parameters themselves on the parameter scale,
+with the diagonal Jacobian of their links. That is the right answer for
+every term whose coordinates are already its quantities.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_params.html">term_params</a></code>, <code><a href="term_links.html">term_links</a></code></p></div>
+    <div class="dont-index"><p><code><a href="term_params.html">term_params()</a></code> for the coordinates, <code><a href="term_links.html">term_links()</a></code> for their
+charts, <code><a href="https://statmodels7.github.io/parameters7/reference/param_readable.html" class="external-link">parameters7::param_readable()</a></code> for the same shape applied to a
+matrix parameter.</p></div>
     </div>
 
     <div class="section level2">

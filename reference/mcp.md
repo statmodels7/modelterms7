@@ -1,7 +1,8 @@
 # MCP Penalty on a Block of Coefficients
 
 The minimax concave penalty: like SCAD it selects and then flattens, and
-it begins to flatten IMMEDIATELY rather than after a first threshold.
+it begins to flatten immediately, where SCAD waits for a first
+threshold.
 
 ## Usage
 
@@ -25,16 +26,21 @@ mcp(
 
 - x:
 
-  A one-sided formula or a numeric matrix.
+  A one-sided formula, such as `~ x1 + x2` or `~ 0 + g`, or a numeric
+  matrix, ideally a matrix column of the model data frame. A two-sided
+  formula throws.
 
 - label:
 
-  A single non-empty string prefixed to the coefficient names.
+  A single non-empty character string prefixed to the coefficient names
+  as `label.name`, `"mcp"` by default, so a block over `x1` reads
+  `mcp.x1`. Two penalized terms in one formula stay apart by their
+  labels.
 
 - standardize:
 
-  A single logical: whether to penalize each coefficient on the scale of
-  its own column. See the section below.
+  A single logical, `FALSE` by default: whether to penalize each
+  coefficient on the scale of its own column. See the section above.
 
 - lambda:
 
@@ -57,37 +63,40 @@ mcp(
 - min_ratio:
 
   How far down the path reaches, as a fraction of the kink that empties
-  the block: smaller reaches a denser fit, larger stops sooner. Must lie
-  in (0, 1). NULL, the default, leaves it to the criterion. Only the
-  sweep by kink size uses it.
+  the block: smaller reaches a denser fit, larger stops sooner. A single
+  number in \\(0, 1)\\, `1e-4` by default. Only the sweep by kink size
+  reads it.
 
 - search:
 
   `"grid"` to visit every combination of \\\lambda\\ and \\\gamma\\,
   `"cyclic"` to sweep one at a time with the other held. See
-  [`term_search`](https://statmodels7.github.io/modelterms7/reference/term_search.md).
+  [`term_search()`](https://statmodels7.github.io/modelterms7/reference/term_search.md).
 
 - sparse:
 
-  Governs the FORMULA route: whether the block is built as a `dgCMatrix`
-  through
-  [`sparse.model.matrix`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html)
-  rather than as a dense model matrix. `NULL`, the default, settles it
-  at build from the size of the design; `TRUE` and `FALSE` override it.
-  A MATRIX input needs no such argument, being kept in whatever storage
-  it arrives in. See the section below.
+  Governs the formula route: `TRUE` builds a `dgCMatrix` through
+  [`Matrix::sparse.model.matrix()`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html),
+  `FALSE` a dense model matrix, and `NULL`, the default, settles it at
+  build from the size of the design. A matrix input needs no such
+  argument. See the section above.
 
 - ...:
 
-  Not used, and reported: an argument named after another penalty's
-  hyperparameter is the mistake this catches.
+  Not used, and reported. An argument named after another penalty's
+  hyperparameter is the mistake this catches: `scad(~ x, gamma = 1)`
+  throws `"'scad' has no argument 'gamma'."` and lists the ones it does
+  have.
 
 ## Value
 
-An object of class
-[`PenalizedTerm`](https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.md)
-(a specification; see
-[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
+An unbuilt
+[`PenalizedTerm()`](https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.md):
+a specification, with `X`, `coef_names`, `blueprint` and `penalty` empty
+until
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+fills them, and the penalty attached there over as many coefficients as
+the block turns out to have.
 
 ## Details
 
@@ -98,9 +107,9 @@ flat past \\t = \gamma\lambda\\. Improper by construction, so it carries
 no normalizing constant and is not reachable by a marginal criterion.
 
 **Hyperparameters.** `lambda` on \\(0, \infty)\\, swept over `n_lambda`
-values by kink size; `gamma` on \\(1, \infty)\\ – at \\\gamma \le 1\\
-the penalized objective need not be convex even for an orthogonal design
-– swept over `n_gamma` values on a geometric grid above that bound. The
+values by kink size; `gamma` on \\(1, \infty)\\, at or below which the
+penalized objective need not be convex even for an orthogonal design,
+swept over `n_gamma` values on a geometric grid above that bound. The
 literature's value is \\\gamma = 3\\.
 
 ## References
@@ -110,24 +119,49 @@ concave penalty. *The Annals of Statistics* 38, 894–942.
 
 ## See also
 
-[`penalized_terms`](https://statmodels7.github.io/modelterms7/reference/penalized_terms.md)
+[`penalized_terms()`](https://statmodels7.github.io/modelterms7/reference/penalized_terms.md)
 for what the five share,
-[`ridge`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-[`lasso`](https://statmodels7.github.io/modelterms7/reference/lasso.md),
-[`enet`](https://statmodels7.github.io/modelterms7/reference/enet.md),
-[`scad`](https://statmodels7.github.io/modelterms7/reference/scad.md),
-[`mcp_penalty`](https://statmodels7.github.io/penalties7/reference/scad_penalty.html)
+[`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+[`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md),
+[`enet()`](https://statmodels7.github.io/modelterms7/reference/enet.md),
+[`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md),
+[`penalties7::mcp_penalty()`](https://statmodels7.github.io/penalties7/reference/scad_penalty.html)
 
 ## Examples
 
 ``` r
-dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
-term_penalty(term_build(mcp(~ x1 + x2), dd))@params
+set.seed(3)
+dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
+p <- term_penalty(term_build(mcp(~ x1 + x2), dd))
+p@params
 #> [1] "lambda" "gamma" 
+p@params_bounds
+#> $lambda
+#> [1]   0 Inf
+#> 
+#> $gamma
+#> [1]   1 Inf
+#> 
+
+# The derivative starts at lambda and falls linearly to zero at
+# gamma * lambda, where SCAD would still be on its first segment.
+rho1 <- function(t, lambda, gamma) pmax(lambda - t / gamma, 0)
+rho1(c(0, 1, 2, 3), lambda = 1, gamma = 2)
+#> [1] 1.0 0.5 0.0 0.0
+
+# The kink at zero, and the pair where the second derivative breaks.
+penalties7::penalty_kinks(p, list(lambda = 1, gamma = 2))
+#> [1]  0 -2  2
+
+# The literature's shape, held.
 term_hyper(mcp(~ x1 + x2, gamma = 3))
 #> [[1]]
 #> [[1]]$gamma
 #> [1] 3
 #> 
 #> 
+
+# At or below 1 the objective need not be convex, so it is refused.
+try(mcp(~ x1 + x2, gamma = 1))
+#> Error : 'gamma' in 'mcp' must lie strictly inside (1, Inf); it is 1.
 ```

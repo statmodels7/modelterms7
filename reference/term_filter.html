@@ -15,7 +15,7 @@ the others, so it cannot be written as a block of columns."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,7 +83,7 @@ derivative of the log-likelihood with respect to it.</p></dd>
 
 <dt id="arg-psi">psi<a class="anchor" aria-label="anchor" href="#arg-psi"></a></dt>
 <dd><p>The term's parameters, on the parameter scale, named as
-<code><a href="term_params.html">term_params</a></code>.</p></dd>
+<code><a href="term_params.html">term_params()</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -93,11 +93,12 @@ derivative of the log-likelihood with respect to it.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with <code>eta</code>, the predictor the term produces,
-  <code>jacobian</code>, an <code>n</code> by <code>length(psi)</code> matrix of its
-  derivatives with respect to <code>psi</code>, and <code>curv</code>, the value of
-  <code>curvature</code> at each predictor – returned because the recursion
-  evaluates it anyway, so a consumer running a second pass at the same
-  point (the adjoint) can read it rather than evaluate it again.</p>
+<code>jacobian</code>, an <code>n</code> by <code>length(psi)</code> matrix of its
+derivatives with respect to <code>psi</code>, and <code>curv</code>, the value of
+<code>curvature</code> at each predictor. That last one is returned because the
+recursion evaluates it anyway, so a consumer running a second pass at
+the same point, as <code><a href="term_adjoint.html">term_adjoint()</a></code> does, reads it instead of
+evaluating the callback again.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -107,20 +108,22 @@ and \(\psi\) for the term's parameters, the filter returns the pair</p>
   \qquad J_{tj} = \frac{\partial \eta_t}{\partial \psi_j},$$</p>
 <p>where \(f_t\) is the term's own recursion, driven by
 <code>score</code> and <code>curvature</code> evaluated at the predictor already
-produced. Both are read at \(\eta_t\), so <code>curvature</code> is the
-second derivative \(\partial^{2} \ell_t / \partial \eta^{2}\) and is
-negative at an ordinary observation; passing the information, its
-negative, gives a predictor and a Jacobian that are internally
-consistent and wrong.</p>
-<p>The derivative is returned because the recursion is the only place it
-can be computed. A model layer differencing the filter would pay one
-pass per parameter and inherit the error of the difference; propagating
-the derivative alongside the state costs one extra vector per parameter
-and is exact.</p>
+produced. Both are read at \(\eta_t\), so <code>curvature</code> is the second
+derivative \(\partial^{2} \ell_t / \partial \eta^{2}\) and is negative at
+an ordinary observation. <strong>Its sign is load-bearing</strong>: passing the
+information, which is its negative, returns a predictor and a Jacobian
+that are internally consistent and wrong, with no error to say so.</p>
+<p>The derivative is returned because the recursion is the only place it can
+be computed. Propagating it beside the state costs one extra vector per
+parameter and is exact; a model layer differencing the filter instead
+would pay one pass per parameter and inherit the error of the difference.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="gas.html">gas</a></code></p></div>
+    <div class="dont-index"><p><code><a href="gas.html">gas()</a></code> and <code><a href="regime.html">regime()</a></code> for the two structural shapes,
+<code><a href="term_static_deriv.html">term_static_deriv()</a></code> for the same recursion in the static predictor,
+<code><a href="term_adjoint.html">term_adjoint()</a></code> for the reverse pass, <code><a href="term_continue.html">term_continue()</a></code> for the
+recursion past the series.</p></div>
     </div>
 
     <div class="section level2">

@@ -1,8 +1,8 @@
 # The Exact Profile of a Break-Point Term at Its Positions
 
 The residual sum of squares of `y` on the term's own columns at its
-current positions – the number
-[`seg_polish`](https://statmodels7.github.io/modelterms7/reference/seg_polish.md)
+current positions, the number
+[`seg_polish()`](https://statmodels7.github.io/modelterms7/reference/seg_polish.md)
 descends on, read at one point. A restarting loop screens proposals with
 it: two configurations of positions are compared by their profiles at
 the cost of two linear fits, where refitting the model to compare them
@@ -19,7 +19,7 @@ seg_profile_rss(term, y, weights = NULL)
 - term:
 
   A built break-point term (see
-  [`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
 
 - y:
 
@@ -37,8 +37,8 @@ A single number; `Inf` where the fit fails.
 
 ## See also
 
-[`seg_polish`](https://statmodels7.github.io/modelterms7/reference/seg_polish.md),
-[`seg_relocate`](https://statmodels7.github.io/modelterms7/reference/seg_relocate.md)
+[`seg_polish()`](https://statmodels7.github.io/modelterms7/reference/seg_polish.md),
+[`seg_relocate()`](https://statmodels7.github.io/modelterms7/reference/seg_relocate.md)
 
 ## Examples
 

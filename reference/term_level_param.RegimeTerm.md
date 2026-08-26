@@ -1,7 +1,7 @@
 # The Level of a Regime Term
 
 `"level1"`. The levels are ordered by construction, each the previous
-plus a positive gap, so the first one shifts EVERY regime and is the
+plus a positive gap, so the first one shifts every regime and is the
 direction an intercept in the same equation also spans. The gaps are
 unaffected: what a constant cannot express is a difference between
 regimes.
@@ -11,7 +11,7 @@ regimes.
 - term:
 
   A
-  [`RegimeTerm`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md).
+  [`RegimeTerm()`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md).
 
 - ...:
 

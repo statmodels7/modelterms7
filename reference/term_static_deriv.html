@@ -11,7 +11,7 @@ direction the caller supplies."><meta property="og:image" content="https://statm
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,12 +62,14 @@ returns it.</p></dd>
 
 
 <dt id="arg-x">X<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>The directions to propagate, one column each – ordinarily the
-equation's design.</p></dd>
+<dd><p>The directions to propagate, one column each. Ordinarily the
+equation's design, so the result is one row per observation and one
+column per coefficient.</p></dd>
 
 
 <dt id="arg-psi">psi<a class="anchor" aria-label="anchor" href="#arg-psi"></a></dt>
-<dd><p>The term's parameters, on the parameter scale.</p></dd>
+<dd><p>The term's parameters, on the parameter scale, named as
+<code><a href="term_params.html">term_params()</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -76,7 +78,9 @@ equation's design.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A matrix of <code>X</code>'s dimensions, or <code>NULL</code>.</p>
+    <p>A matrix of <code>X</code>'s dimensions, holding \(\partial f_t/\partial
+  \beta\) for each column of <code>X</code>, so the full derivative of the predictor
+is <code>X + result</code>. <code>NULL</code> for a term that carries no state.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -91,18 +95,18 @@ $$\frac{\partial f_t}{\partial \beta} =
   \sum_i \alpha_i \, \ell''_{t-i}
     \frac{\partial \eta_{t-i}}{\partial \beta} +
   \sum_j \beta_j \frac{\partial f_{t-j}}{\partial \beta}.$$
-The curvature it needs is the one <code><a href="term_filter.html">term_filter</a></code> returns, so
+The curvature it needs is the one <code><a href="term_filter.html">term_filter()</a></code> returns, so
 no callback is evaluated here and the pass is arithmetic alone.</p>
 <p>Without it a standard error of the predictor counts the static part only.
 Measured on a score-driven mean with one covariate beside it, that
 understates the standard error by about a quarter.</p>
-<p>The base method returns <code>NULL</code>: a term that is not a filter carries
-no state, so the derivative is the design row itself and the caller needs
+<p>The base method returns <code>NULL</code>. A term that is not a filter carries no
+state, so the derivative is the design row itself and the caller needs
 nothing from the term.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_filter.html">term_filter</a></code>, <code><a href="term_adjoint.html">term_adjoint</a></code></p></div>
+    <div class="dont-index"><p><code><a href="term_filter.html">term_filter()</a></code>, <code><a href="term_adjoint.html">term_adjoint()</a></code></p></div>
     </div>
 
     <div class="section level2">

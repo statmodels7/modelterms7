@@ -29,7 +29,7 @@ term_hessian(
 - term:
 
   A built
-  [`RegimeTerm`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md).
+  [`RegimeTerm()`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md).
 
 - eta:
 
@@ -43,7 +43,7 @@ term_hessian(
 
   A function of a predictor value and a row index returning the
   log-density there, as
-  [`term_loglik`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
+  [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
   takes it.
 
 - grad:
@@ -60,7 +60,7 @@ term_hessian(
 - psi:
 
   The term's parameters, named as
-  [`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
+  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
 - seed:
 
@@ -73,7 +73,7 @@ term_hessian(
 
   The columns of the unknown vector the term's own parameters occupy, in
   the order of
-  [`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
+  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
 - level:
 
@@ -90,14 +90,18 @@ term_hessian(
 
 ## Value
 
-A list with `loglik`, the per-observation contributions, `gradient`,
-their weighted sum's derivative, and `hessian`, the observed Hessian.
+A list of three: `loglik`, the `n` per-observation contributions;
+`gradient`, the derivative of their weighted sum in the caller's whole
+unknown vector; and `hessian`, the observed Hessian of the mixture in
+that same vector, an `m` by `m` matrix with `m` its length. The Hessian
+is the mixture's own, smaller in the Loewner order than the
+complete-data information by the information the unobserved states cost.
 
 ## Details
 
-[`term_posterior`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)
+[`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)
 gives the gradient by Fisher's identity, and the matrix a caller can
-assemble from the same smoothed probabilities is the COMPLETE-DATA
+assemble from the same smoothed probabilities is the complete-data
 information, the ordinary one averaged over the states. That is the
 matrix an EM step inverts. It is not the observed information of the
 mixture, which is smaller by the information the unobserved states cost,
@@ -128,13 +132,13 @@ state, which is where the caller's derivatives are used. Groups are
 independent series and their contributions add.
 
 The cost is \\O(nK^2m^2)\\ in time and \\O(Km^2)\\ in storage, and the
-computation is meant to be run once, at a fitted point, rather than per
+computation is meant to be run once, at a fitted point, never per
 iteration.
 
 ## See also
 
-[`term_posterior`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md),
-[`term_loglik`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
+[`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md),
+[`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
 
 ## Examples
 

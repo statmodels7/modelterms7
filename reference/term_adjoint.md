@@ -19,7 +19,7 @@ term_adjoint(term, eta, y, score, curvature, psi, g, ...)
 - eta:
 
   The static part of the predictor, as
-  [`term_filter`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+  [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
   takes it.
 
 - y:
@@ -29,12 +29,12 @@ term_adjoint(term, eta, y, score, curvature, psi, g, ...)
 - score, curvature:
 
   The callbacks of
-  [`term_filter`](https://statmodels7.github.io/modelterms7/reference/term_filter.md).
+  [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md).
 
 - psi:
 
   The term's parameters, named as
-  [`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
+  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
 - g:
 
@@ -47,24 +47,28 @@ term_adjoint(term, eta, y, score, curvature, psi, g, ...)
 
 ## Value
 
-A list with `deta` and `dscore`, each one value per observation.
+A list of two numeric vectors, each of one value per observation:
+`deta`, the derivative of the objective in the static predictor the term
+was handed, and `dscore`, its derivative in the sequence of scores. A
+caller multiplies `dscore` by a mixed second derivative of its
+log-density to obtain the derivative in another equation's predictor.
 
 ## Details
 
-[`term_filter`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
-returns the derivative of the predictor in the term's OWN parameters,
-which is what estimating those needs. It is not what estimating the
-coefficients of the same equation needs: the level at one time is driven
-by the scores at earlier ones, which are read at predictors those
+[`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+returns the derivative of the predictor in the term's own parameters,
+which is the piece estimating those needs. Estimating the coefficients
+of the same equation needs something else: the level at one time is
+driven by the scores at earlier ones, which are read at predictors those
 coefficients also enter, so the derivative of the predictor in a
 coefficient carries a term the block does not. Propagating that forward
 would cost one derivative array per coefficient; the reverse recursion
 here costs one pass whatever their number, and is exact.
 
-Two derivatives are returned rather than one because the score the
-caller supplies depends on more than the predictor it is read at.
-Writing \\s_t\\ for that score and \\\bar{s}\_t\\ for `dscore`, the
-derivative of the objective in anything the score depends on is
+Two derivatives are returned because the score the caller supplies
+depends on more than the predictor it is read at. Writing \\s_t\\ for
+that score and \\\bar{s}\_t\\ for `dscore`, the derivative of the
+objective in anything the score depends on is
 
 \$\$\frac{\partial L}{\partial \theta} = \left.\frac{\partial
 L}{\partial \theta}\right\|\_{\mathrm{direct}} + \sum_t \bar{s}\_t
@@ -72,13 +76,18 @@ L}{\partial \theta}\right\|\_{\mathrm{direct}} + \sum_t \bar{s}\_t
 
 so a model layer whose score is the derivative of its log-likelihood in
 one distribution parameter obtains the derivative in the predictor of
-ANOTHER by multiplying `dscore` by the mixed second derivative of that
-log-likelihood. `deta` is that formula applied to the term's own
+**another** by multiplying `dscore` by the mixed second derivative of
+that log-likelihood. `deta` is that formula applied to the term's own
 equation, where the second factor is the curvature.
 
 ## See also
 
-[`term_filter`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+[`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+for the forward pass and the callbacks,
+[`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
+for the second order,
+[`term_static_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_static_deriv.md)
+for the forward derivative in the static predictor.
 
 ## Examples
 

@@ -8,7 +8,7 @@ together, and one per within-group column where they are independent.
 - term:
 
   A built
-  [`RandomTerm`](https://statmodels7.github.io/modelterms7/reference/RandomTerm.md).
+  [`RandomTerm()`](https://statmodels7.github.io/modelterms7/reference/RandomTerm.md).
 
 - ...:
 
@@ -17,5 +17,5 @@ together, and one per within-group column where they are independent.
 ## Value
 
 A list of entries, as
-[`term_penalties`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 documents.

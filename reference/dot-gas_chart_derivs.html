@@ -11,7 +11,7 @@ second derivatives in those."><meta property="og:image" content="https://statmod
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,7 @@ second derivatives in those.</p>
 
 
 <dt id="arg-links">links<a class="anchor" aria-label="anchor" href="#arg-links"></a></dt>
-<dd><p>The links, as <code><a href="term_links.html">term_links</a></code> gives them.</p></dd>
+<dd><p>The links, as <code><a href="term_links.html">term_links()</a></code> gives them.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -72,10 +72,10 @@ second derivatives in those.</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The level and the loadings each reach the recursion through their own
 link, so their first derivative is the link's and their second, on the
-diagonal, is <code><a href="https://statmodels7.github.io/linkfunctions7/reference/d2linkinv.html" class="external-link">d2linkinv</a></code>; on the identity
+diagonal, is <code><a href="https://statmodels7.github.io/linkfunctions7/reference/d2linkinv.html" class="external-link">linkfunctions7::d2linkinv()</a></code>; on the identity
 both collapse to one and zero. The persistence reaches the coefficients
-through two maps – the link onto the partial autocorrelations and
-Levinson-Durbin onto the coefficients – so its second derivative
+through two maps, the link onto the partial autocorrelations and
+Levinson-Durbin onto the coefficients, so its second derivative
 carries both a term in the map's own curvature and one in the link's.</p>
     </div>
 

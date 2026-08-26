@@ -19,7 +19,7 @@ term_readable(term, zeta, ...)
 - zeta:
 
   The term's parameters on the unconstrained scale, named as
-  [`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
+  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
 - ...:
 
@@ -33,7 +33,7 @@ quantity is built on.
 
 ## Details
 
-A term's parameters are the coordinates it is ESTIMATED on, chosen so
+A term's parameters are the coordinates it is estimated on, chosen so
 that a search runs unconstrained, and they are not always the quantities
 the model is about. The clearest case is a score-driven persistence,
 which rides a partial autocorrelation because the stationary region is
@@ -48,14 +48,18 @@ Each row gives a value and the row of \\\partial(\text{value}) /
 the quantity in its own set, exactly as parameters7's `param_readable()`
 does for a matrix parameter.
 
-The base method reports the parameters themselves on the PARAMETER
-scale, with the diagonal Jacobian of their links, which is what every
-term whose coordinates are already its quantities wants.
+The base method reports the parameters themselves on the parameter
+scale, with the diagonal Jacobian of their links. That is the right
+answer for every term whose coordinates are already its quantities.
 
 ## See also
 
-[`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md),
-[`term_links`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
+[`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
+for the coordinates,
+[`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
+for their charts,
+[`parameters7::param_readable()`](https://statmodels7.github.io/parameters7/reference/param_readable.html)
+for the same shape applied to a matrix parameter.
 
 ## Examples
 

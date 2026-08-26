@@ -1,10 +1,10 @@
 # The Design of a Term's Level Development
 
 Where the parameter
-[`term_level_param`](https://statmodels7.github.io/modelterms7/reference/term_level_param.md)
+[`term_level_param()`](https://statmodels7.github.io/modelterms7/reference/term_level_param.md)
 names is developed with covariates, the design of that development, with
 one column per coordinate named as
-[`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
+[`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
 names it. `NULL` for a scalar level and for every other term.
 
 ## Usage
@@ -39,7 +39,10 @@ designs, can ask it. This generic hands it the one half it cannot see.
 
 ## See also
 
-[`term_level_param`](https://statmodels7.github.io/modelterms7/reference/term_level_param.md)
+[`term_level_param()`](https://statmodels7.github.io/modelterms7/reference/term_level_param.md)
+for the scalar case,
+[`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
+for the names its columns carry.
 
 ## Examples
 

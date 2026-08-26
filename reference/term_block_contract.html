@@ -11,7 +11,7 @@ weight the caller supplies."><meta property="og:image" content="https://statmode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,15 +76,14 @@ coefficient of the term.</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>A term whose block is a fixed design does not move, and the base method
-returns zeros. A term registering <code><a href="term_refresh.html">term_refresh</a></code> does move, and
+returns zeros. A term registering <code><a href="term_refresh.html">term_refresh()</a></code> does move, and
 a consumer that differentiates anything built from \(X\) needs this: a
 marginal criterion reads \(\log|K|\) with
 \(K = -\sum_i w_i \ell_{ab,i} X_a X_b'\), so
 \(\partial K/\partial\beta\) gains everything coming from
 \(\partial X/\partial\beta\).</p>
-<p><strong>The contraction and not the derivative</strong>, because
-\(\partial X/\partial\beta\) is \(n \times m \times m\) and nothing
-needs it whole. For <code><a href="nl.html">nl</a></code> it is closed form at \(O(nm)\):
+<p><strong>Only the contraction is computed.</strong> \(\partial X/\partial\beta\) is
+\(n \times m \times m\) and nothing needs it whole. For <code><a href="nl.html">nl()</a></code> it is closed form at \(O(nm)\):
 writing \(X_{i,c} = w_{p}(i) Z_p[i,c]\) with
 \(w_p = (\partial f/\partial\theta_p)\,h_p'\),
 $$\frac{\partial X_{i,c_1}}{\partial\beta_{c_2}} =
@@ -92,30 +91,30 @@ $$\frac{\partial X_{i,c_1}}{\partial\beta_{c_2}} =
   + \delta_{p_1p_2} f_{p_1} h_{p_1}''\Big),$$
 so with \(s_{p}(i) = \sum_{c\in p} A_{ic}Z_{p}[i,c]\) the answer is
 \(Z_{p_2}'\sum_{p_1} q_{p_1p_2}s_{p_1}\), one crossprod per parameter.
-The chain rule onto the coefficients – each parameter's link and its
-subformula's design – stays here, which is the only place that knows them.</p>
-<p><code><a href="seg.html">seg</a></code> has its own, written from the closed forms, because
-theirs is not a difference a caller could take: a break-point column is a
-step function in its break-point, so the quotient diverges as the step
-shrinks – measured at h, h/4 and h/16, 3.6e4, 1.4e5 and 5.8e5, against
-<code><a href="nl.html">nl</a></code>'s 0.6038 throughout. What is bounded is written out
+The chain rule onto the coefficients, each parameter's link and its
+subformula's design, stays here, this being the only place that knows them.</p>
+<p><code><a href="seg.html">seg()</a></code> has its own, written from the closed forms. Theirs is not a
+difference a caller could take: a break-point column is a step function in
+its break-point, so the quotient diverges as the step shrinks. Measured at
+\(h\), \(h/4\) and \(h/16\) it reads 3.6e4, 1.4e5 and 5.8e5, where
+<code><a href="nl.html">nl()</a></code>'s stays at 0.6038 throughout. What is bounded is written out
 instead. The truncated line \((x-\psi)_+\) has derivative
 \(-\mathbf{1}(x&gt;\psi)\) in the break-point, and the break-point column
 \(-\gamma(x)\mathbf{1}(x&gt;\psi)\) has the same indicator as its derivative
-in the CHANGE and zero almost everywhere in the break-point, which is the
+in the change and zero almost everywhere in the break-point, which is the
 value taken.</p>
-<p>⚠️ <code><a href="jump.html">jump</a></code> and <code><a href="jseg.html">jseg</a></code> keep the base method's zeros.
-Their position is READ OFF a product of the unknowns, \(\psi = -g/\delta\),
-so a column's derivative runs through that read-off rather than through a
+<p><code><a href="jump.html">jump()</a></code> and <code><a href="jseg.html">jseg()</a></code> keep the base method's zeros.
+Their position is read off a product of the unknowns, \(\psi = -g/\delta\),
+so a column's derivative runs through that read-off instead of through a
 development's design, and the weight \(W = 1/(2\lvert\tilde x-\psi\rvert)\)
 they carry has an unbounded derivative in the break-point. Their block is a
-working LINEARIZATION with a frozen weight rather than a Jacobian, which is
-the same fact that makes <code><a href="term_converged.html">term_converged</a></code> answer differently for
+working linearization with a frozen weight, which is
+the same fact that makes <code><a href="term_converged.html">term_converged()</a></code> answer differently for
 them.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_refresh.html">term_refresh</a></code>, <code><a href="nl_fderiv.html">nl_fderiv</a></code></p></div>
+    <div class="dont-index"><p><code><a href="term_refresh.html">term_refresh()</a></code>, <code><a href="nl_fderiv.html">nl_fderiv()</a></code></p></div>
     </div>
 
     <div class="section level2">

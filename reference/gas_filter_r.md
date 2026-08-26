@@ -65,7 +65,7 @@ gas_filter_r(
 - score, curvature:
 
   The callbacks of
-  [`term_filter`](https://statmodels7.github.io/modelterms7/reference/term_filter.md).
+  [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md).
 
 ## Value
 

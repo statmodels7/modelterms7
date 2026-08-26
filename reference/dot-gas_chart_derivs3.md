@@ -1,6 +1,6 @@
 # The Chart's Third Derivatives, in One Direction
 
-[`.gas_chart_derivs`](https://statmodels7.github.io/modelterms7/reference/dot-gas_chart_derivs.md)
+[`.gas_chart_derivs()`](https://statmodels7.github.io/modelterms7/reference/dot-gas_chart_derivs.md)
 differentiated once more and contracted against a single direction in
 the term's own coordinates: one matrix for the level, one per score
 loading and one per autoregressive coefficient.
@@ -24,7 +24,7 @@ loading and one per autoregressive coefficient.
 - links:
 
   The links, as
-  [`term_links`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
+  [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
   gives them.
 
 - vz:
@@ -51,5 +51,5 @@ two.
 
 ## See also
 
-[`.gas_chart_derivs`](https://statmodels7.github.io/modelterms7/reference/dot-gas_chart_derivs.md),
-[`gas_levinson3`](https://statmodels7.github.io/modelterms7/reference/gas_levinson3.md)
+[`.gas_chart_derivs()`](https://statmodels7.github.io/modelterms7/reference/dot-gas_chart_derivs.md),
+[`gas_levinson3()`](https://statmodels7.github.io/modelterms7/reference/gas_levinson3.md)

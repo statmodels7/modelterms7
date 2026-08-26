@@ -33,7 +33,7 @@ gas(p = 1, q = 1, ..., by = NULL, time = NULL, links = NULL, label = "gas")
 - by:
 
   An optional grouping variable, evaluated in the data; each group is
-  filtered independently, from its own starting level. A FORMULA here is
+  filtered independently, from its own starting level. A formula here is
   the shorthand giving the same subformula to every parameter, and then
   no grouping is implied.
 
@@ -44,7 +44,7 @@ gas(p = 1, q = 1, ..., by = NULL, time = NULL, links = NULL, label = "gas")
 - links:
 
   An optional named list of linkfunctions7 links over the parameters of
-  [`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md),
+  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md),
   overriding the defaults described above. A deviation cannot be named:
   it is unconstrained by construction, acting on the scale its
   parameter's own link defines.
@@ -56,25 +56,25 @@ gas(p = 1, q = 1, ..., by = NULL, time = NULL, links = NULL, label = "gas")
 ## Value
 
 An object of class
-[`GasTerm`](https://statmodels7.github.io/modelterms7/reference/GasTerm.md)
+[`GasTerm()`](https://statmodels7.github.io/modelterms7/reference/GasTerm.md)
 (a specification; see
-[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
 
 ## Details
 
 The term adds no columns. The predictor at one time depends on the data
 at the previous ones, so the contribution cannot be written as a block,
 and
-[`term_filter`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
-runs the recursion instead. That is what makes it a
-[`structural_term`](https://statmodels7.github.io/modelterms7/reference/structural_term.md).
+[`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+runs the recursion instead. That is what puts it on the structural
+branch.
 
 What drives the recursion is the score of whatever distribution the
 model carries, so the same term is a GARCH-like volatility model when it
 enters the scale of a Gaussian, a dynamic count model when it enters the
 mean of a Poisson, and a robust location filter when it enters a Student
 t: a heavy-tailed score is bounded in the observation, so an outlier
-moves the level by a bounded amount rather than in proportion to its
+moves the level by a bounded amount instead of in proportion to its
 size.
 
 ### The parameters and their chart
@@ -87,9 +87,9 @@ defaults are the following.
 The level carries the identity, being unconstrained. The loadings carry
 the **log** link: a positive loading responds in the direction of the
 score, which is the case the score-driven literature writes, and
-positivity is then structural – a deviation or a submodel moves the
-loading on the log scale and no group or observation can take a negative
-one. A loading that must be free in sign is asked for with
+positivity is then structural. A deviation or a submodel moves the
+loading on the log scale, so no group and no observation can take a
+negative one. A loading that must be free in sign is asked for with
 `links = list(alpha1 = linkfunctions7::identity_link())`.
 
 The persistence is carried by **partial autocorrelations** rather than
@@ -120,7 +120,7 @@ no place to declare it. That belongs to the model layer. The persistence
 would also need a different chart: the partial-autocorrelation
 construction below is a scalar one, and the stationary region of a
 matrix autoregression is a bound on the spectral radius of its companion
-matrix rather than a box.
+matrix, which is not a box.
 
 The score driving the recursion is used unscaled. The general
 formulation carries a scaling matrix, usually an inverse information,
@@ -128,30 +128,30 @@ which the curvature this term already receives would supply.
 
 ### Groups and time
 
-`by` filters each group independently, which is what a panel of short
-series needs, and `time` gives the order within a group. Without `time`
-the rows are taken in the order they appear.
+`by` filters each group independently, as a panel of short series needs,
+and `time` gives the order within a group. Without `time` the rows are
+taken in the order they appear.
 
 ### A parameter developed with covariates
 
 A two-sided formula in `...` whose left side names a parameter develops
 it as \\\psi\_{j,t} = g_j^{-1}(z_t^\top\gamma_j)\\, the design \\Z\\
 built from the right-hand side through
-[`interpret_formula`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
+[`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
 so it takes any additive term of the package:
 
     gas(p = 1, q = 1, omega ~ ridge(~g), alpha1 ~ s(x),
         pacf1 ~ random(~1 | id), by = id)
 
 The development acts on the unconstrained scale of the parameter's own
-link, which is what keeps every per-observation value in the parameter's
-own set whatever the coefficients are: a loading on the log link is
-positive at every observation, a persistence on the rhobit chart is
-inside \\(-1, 1)\\ at every observation, and at \\q = 1\\ that bounds
+link. That is what keeps every per-observation value inside the
+parameter's own set whatever the coefficients are: a loading on the log
+link is positive at every observation, a persistence on the rhobit chart
+is inside \\(-1, 1)\\ at every observation, and at \\q = 1\\ that bounds
 the recursion's growth step by step. The coefficients \\\gamma_j\\ are
 the term's parameters, unconstrained and on the identity link; the
 penalties the sub-terms carry are reported through
-[`term_penalties`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 under the key `parameter::subterm`. A parameter that varies by
 observation changes the recursion itself, \$\$f_t = \omega_t + \sum_i
 a\_{i,t}\\ s\_{t-i} + \sum_j b\_{j,t}\\ f\_{t-j},\$\$ with \\b_t\\ from
@@ -199,11 +199,76 @@ Cambridge University Press.
 
 ## See also
 
-[`regime`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+[`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+for the other dynamic term,
+[`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+for the recursion,
+[`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
+and
+[`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
+for the parameters and their charts,
+[`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
+for what a fitted one reports.
 
 ## Examples
 
 ``` r
-term_params(gas(p = 1, q = 2))
-#> [1] "omega"  "alpha1" "pacf1"  "pacf2" 
+# A level, one loading and one persistence coordinate.
+term_params(gas(p = 1, q = 1))
+#> [1] "omega"  "alpha1" "pacf1" 
+term_params(gas(p = 2, q = 2))
+#> [1] "omega"  "alpha1" "alpha2" "pacf1"  "pacf2" 
+
+# The loading rides a log chart so that it stays positive, and the
+# persistence a rhobit so that the filter stays stationary.
+vapply(term_links(gas(p = 1, q = 2)), function(l) l@link_name,
+       character(1))
+#>      omega     alpha1      pacf1      pacf2 
+#> "identity"      "log"   "rhobit"   "rhobit" 
+
+# Running the filter: the term supplies the recursion and the caller
+# supplies the density's score and curvature. Here a Gaussian mean.
+set.seed(1)
+dd <- data.frame(t = 1:60, y = c(rnorm(30), rnorm(30, 3)))
+b <- term_build(gas(p = 1, q = 1, time = t), dd)
+out <- term_filter(b, eta = rep(0, 60), y = dd$y,
+                   score = function(e, i) dd$y[i] - e,
+                   curvature = function(e, i) -1,
+                   psi = list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.8))
+
+# The level tracks the change in the mean.
+round(out$eta[c(1, 15, 30, 32, 45, 60)], 3)
+#> [1]  0.500 -0.468 -0.181  1.475  2.268  2.079
+
+# And the Jacobian it propagates is exact, not differenced: a central
+# difference of the filter agrees with it to the step's own accuracy.
+f <- function(v) sum(term_filter(b, rep(0, 60), dd$y,
+                                 function(e, i) dd$y[i] - e,
+                                 function(e, i) -1,
+                                 list(omega = v[1], alpha1 = v[2],
+                                      pacf1 = v[3]))$eta)
+v0 <- c(0.1, 0.3, 0.8)
+h  <- 1e-5
+fd <- vapply(1:3, function(j) {
+  e <- numeric(3); e[j] <- h
+  (f(v0 + e) - f(v0 - e)) / (2 * h)
+}, numeric(1))
+max(abs(colSums(out$jacobian) - fd))
+#> [1] 6.187901e-08
+
+# A panel: each group filtered from its own starting level.
+dd$id <- rep(1:3, each = 20)
+term_build(gas(p = 1, q = 1, by = id, time = t), dd)
+#> <GasTerm> 'gas': score-driven, p = 1, q = 1; 3 group(s)
+#>   parameters: omega, alpha1, pacf1
+
+# A developed parameter expands in place, and brings its sub-term's
+# penalty with it.
+dd$g <- factor(rep(c("u", "v"), 30))
+gb <- term_build(gas(p = 1, q = 1, omega ~ ridge(~ g), time = t), dd)
+term_params(gb)
+#> [1] "omega.(Intercept)" "omega.ridge.gu"    "omega.ridge.gv"   
+#> [4] "alpha1"            "pacf1"            
+vapply(term_penalties(gb), function(e) e$name, character(1))
+#> [1] "omega::ridge(~g)"
 ```

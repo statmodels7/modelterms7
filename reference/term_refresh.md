@@ -2,8 +2,8 @@
 
 Recomputes whatever a term's design block depends on when the
 coefficients move. For every ordinary term this is the identity, the
-block being a function of the data alone; for a nonlinear term the block
-is the Jacobian of its contribution, which is a function of where the
+block being a function of the data alone. For a nonlinear term the block
+is the Jacobian of its contribution, which depends on where the
 parameters currently are.
 
 ## Usage
@@ -20,7 +20,9 @@ term_refresh(term, coef, ...)
 
 - coef:
 
-  The current coefficients of the term's block.
+  The coefficients to refresh at, as long as the term's block is wide.
+  For a nonlinear term these are the coefficients of its parameters'
+  submodels, not the parameters themselves.
 
 - ...:
 
@@ -28,7 +30,9 @@ term_refresh(term, coef, ...)
 
 ## Value
 
-A built term, refreshed.
+A term of the same class with its block, and whatever else moves with
+the coefficients, recomputed at `coef`. The base method returns `term`
+unchanged.
 
 ## Details
 
@@ -41,20 +45,37 @@ J(\theta)\_{ij} = \frac{\partial f(x_i; \theta)}{\partial \theta_j},\$\$
 so the design block at the current \\\theta\\ is \\J(\theta)\\ and the
 coefficient it multiplies is the increment \\h\\. Refreshing at the new
 \\\theta\\ and solving the linear problem again is the Gauss-Newton
-iteration;
-[`term_value`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
+iteration.
+[`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
 reports \\f(x; \theta)\\ itself, which is the other half a step needs.
-For a break-point term the same shape holds with a different block: the
+
+A break-point term has the same shape with a different block: the
 Jacobian for
-[`seg`](https://statmodels7.github.io/modelterms7/reference/seg.md), and
-the frozen-weight columns of
-[`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md),
-from which the break-point is read rather than incremented.
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+and for
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+the frozen-weight columns, from which the break-point is read off two
+coefficients instead of being incremented.
+[`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
+is what tells the two apart.
+
+The refresh is committed once per sweep, never per trial point. A
+discontinuous term's rescaling factor halves whenever the break-point
+reverses direction, which is a fact about the path: advancing it inside
+a line search would anneal on every trial, and refreshing from the
+specification each time would freeze the schedule at its starting value.
 
 ## See also
 
-[`nl`](https://statmodels7.github.io/modelterms7/reference/nl.md),
-[`term_value`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) and
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+for the terms that implement it,
+[`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
+for the contribution a step needs beside the block,
+[`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
+for which kind of block came back,
+[`term_converged()`](https://statmodels7.github.io/modelterms7/reference/term_converged.md)
+for the verdict on such a term.
 
 ## Examples
 

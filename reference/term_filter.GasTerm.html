@@ -13,7 +13,7 @@ parameters, propagated alongside the state."><meta property="og:image" content="
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,7 +75,7 @@ parameters, propagated alongside the state.</p>
 
 
 <dt id="arg-psi">psi<a class="anchor" aria-label="anchor" href="#arg-psi"></a></dt>
-<dd><p>The parameters, named as <code><a href="term_params.html">term_params</a></code>.</p></dd>
+<dd><p>The parameters, named as <code><a href="term_params.html">term_params()</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -95,7 +95,7 @@ and the callbacks run as before.</p></dd>
 
 
 <dt id="arg-threads">threads<a class="anchor" aria-label="anchor" href="#arg-threads"></a></dt>
-<dd><p>How many threads the recursion may use, over GROUPS and
+<dd><p>How many threads the recursion may use, over groups and
 only on the fast route: a group's filter is independent of the others
 and its writes land on its own rows, so no reduction is split and the
 result does not depend on the count, bit for bit.</p></dd>
@@ -104,7 +104,7 @@ result does not depend on the count, bit for bit.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with <code>eta</code>, <code>jacobian</code> and <code>curv</code>, the
-  curvature read at each predictor.</p>
+curvature read at each predictor.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

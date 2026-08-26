@@ -11,7 +11,7 @@ the term is built.
 - term:
 
   A built
-  [`GasTerm`](https://statmodels7.github.io/modelterms7/reference/GasTerm.md).
+  [`GasTerm()`](https://statmodels7.github.io/modelterms7/reference/GasTerm.md).
 
 - ...:
 
@@ -20,5 +20,5 @@ the term is built.
 ## Value
 
 A list of entries, as
-[`term_penalties`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 documents.

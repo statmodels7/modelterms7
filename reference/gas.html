@@ -21,7 +21,7 @@ evaluated at."><meta property="og:image" content="https://statmodels7.github.io/
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -84,7 +84,7 @@ per parameter to be developed with covariates, e.g.
 <dt id="arg-by">by<a class="anchor" aria-label="anchor" href="#arg-by"></a></dt>
 <dd><p>An optional grouping variable, evaluated in the data; each
 group is filtered independently, from its own starting level. A
-FORMULA here is the shorthand giving the same subformula to every
+formula here is the shorthand giving the same subformula to every
 parameter, and then no grouping is implied.</p></dd>
 
 
@@ -94,7 +94,7 @@ parameter, and then no grouping is implied.</p></dd>
 
 <dt id="arg-links">links<a class="anchor" aria-label="anchor" href="#arg-links"></a></dt>
 <dd><p>An optional named list of <span class="pkg">linkfunctions7</span> links over
-the parameters of <code><a href="term_params.html">term_params</a></code>, overriding the defaults
+the parameters of <code><a href="term_params.html">term_params()</a></code>, overriding the defaults
 described above. A deviation cannot be named: it is unconstrained by
 construction, acting on the scale its parameter's own link defines.</p></dd>
 
@@ -105,22 +105,22 @@ construction, acting on the scale its parameter's own link defines.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code><a href="GasTerm.html">GasTerm</a></code> (a specification; see
-  <code><a href="term_build.html">term_build</a></code>).</p>
+    <p>An object of class <code><a href="GasTerm.html">GasTerm()</a></code> (a specification; see
+<code><a href="term_build.html">term_build()</a></code>).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The term adds no columns. The predictor at one time depends on the
 data at the previous ones, so the contribution cannot be written as a
-block, and <code><a href="term_filter.html">term_filter</a></code> runs the recursion instead. That
-is what makes it a <code><a href="structural_term.html">structural_term</a></code>.</p>
+block, and <code><a href="term_filter.html">term_filter()</a></code> runs the recursion instead. That is what puts
+it on the structural branch.</p>
 <p>What drives the recursion is the score of whatever distribution the
 model carries, so the same term is a GARCH-like volatility model when
 it enters the scale of a Gaussian, a dynamic count model when it enters
 the mean of a Poisson, and a robust location filter when it enters a
 Student t: a heavy-tailed score is bounded in the observation, so an
-outlier moves the level by a bounded amount rather than in proportion
-to its size.</p>
+outlier moves the level by a bounded amount instead of in proportion to
+its size.</p>
 <div class="section">
 <h3 id="the-parameters-and-their-chart">The parameters and their chart<a class="anchor" aria-label="anchor" href="#the-parameters-and-their-chart"></a></h3>
 <p>The parameters are the level \(\omega\), the score loadings
@@ -128,11 +128,11 @@ to its size.</p>
 unconstrained scale of a link, and <code>links</code> overrides any of them;
 the defaults are the following.</p>
 <p>The level carries the identity, being unconstrained. The loadings carry
-the <strong>log</strong> link: a positive loading responds in the direction of
-the score, which is the case the score-driven literature writes, and
-positivity is then structural – a deviation or a submodel moves the
-loading on the log scale and no group or observation can take a
-negative one. A loading that must be free in sign is asked for with
+the <strong>log</strong> link: a positive loading responds in the direction of the
+score, which is the case the score-driven literature writes, and
+positivity is then structural. A deviation or a submodel moves the loading
+on the log scale, so no group and no observation can take a negative one.
+A loading that must be free in sign is asked for with
 <code>links = list(alpha1 = linkfunctions7::identity_link())</code>.</p>
 <p>The persistence is carried by <strong>partial autocorrelations</strong> rather
 than by the coefficients \(b_j\): the stationary region of an
@@ -162,7 +162,7 @@ one parameter has no place to declare it. That belongs to the model
 layer. The persistence would also need a different chart: the
 partial-autocorrelation construction below is a scalar one, and the
 stationary region of a matrix autoregression is a bound on the
-spectral radius of its companion matrix rather than a box.</p>
+spectral radius of its companion matrix, which is not a box.</p>
 <p>The score driving the recursion is used unscaled. The general
 formulation carries a scaling matrix, usually an inverse information,
 which the curvature this term already receives would supply.</p>
@@ -170,8 +170,8 @@ which the curvature this term already receives would supply.</p>
 
 <div class="section">
 <h3 id="groups-and-time">Groups and time<a class="anchor" aria-label="anchor" href="#groups-and-time"></a></h3>
-<p><code>by</code> filters each group independently, which is what a panel of
-short series needs, and <code>time</code> gives the order within a group.
+<p><code>by</code> filters each group independently, as a panel of short series needs,
+and <code>time</code> gives the order within a group.
 Without <code>time</code> the rows are taken in the order they appear.</p>
 </div>
 
@@ -180,17 +180,17 @@ Without <code>time</code> the rows are taken in the order they appear.</p>
 <p>A two-sided formula in <code>...</code> whose left side names a parameter
 develops it as \(\psi_{j,t} = g_j^{-1}(z_t^\top\gamma_j)\), the
 design \(Z\) built from the right-hand side through
-<code><a href="interpret_formula.html">interpret_formula</a></code>, so it takes any additive term of the
+<code><a href="interpret_formula.html">interpret_formula()</a></code>, so it takes any additive term of the
 package:</p><div class="sourceCode"><pre><code><span><span class="fu"><a href="../reference/gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span>, <span class="va">omega</span> <span class="op">~</span> <span class="fu"><a href="../reference/ridge.html">ridge</a></span><span class="op">(</span><span class="op">~</span><span class="va">g</span><span class="op">)</span>, <span class="va">alpha1</span> <span class="op">~</span> <span class="fu"><a href="../reference/s.html">s</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span>,</span>
 <span>    <span class="va">pacf1</span> <span class="op">~</span> <span class="fu"><a href="../reference/random.html">random</a></span><span class="op">(</span><span class="op">~</span><span class="fl">1</span> <span class="op">|</span> <span class="va">id</span><span class="op">)</span>, by <span class="op">=</span> <span class="va">id</span><span class="op">)</span></span></code></pre></div><p>The development acts on the unconstrained scale of the parameter's own
-link, which is what keeps every per-observation value in the
+link. That is what keeps every per-observation value inside the
 parameter's own set whatever the coefficients are: a loading on the
 log link is positive at every observation, a persistence on the rhobit
 chart is inside \((-1, 1)\) at every observation, and at \(q = 1\)
 that bounds the recursion's growth step by step. The coefficients
 \(\gamma_j\) are the term's parameters, unconstrained and on the
 identity link; the penalties the sub-terms carry are reported through
-<code><a href="term_penalties.html">term_penalties</a></code> under the key <code>parameter::subterm</code>.
+<code><a href="term_penalties.html">term_penalties()</a></code> under the key <code>parameter::subterm</code>.
 A parameter that varies by observation changes the recursion itself,
 $$f_t = \omega_t + \sum_i a_{i,t}\, s_{t-i}
   + \sum_j b_{j,t}\, f_{t-j},$$
@@ -239,13 +239,71 @@ Tails</em>. Cambridge University Press.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="regime.html">regime</a></code></p></div>
+    <div class="dont-index"><p><code><a href="regime.html">regime()</a></code> for the other dynamic term, <code><a href="term_filter.html">term_filter()</a></code> for the
+recursion, <code><a href="term_params.html">term_params()</a></code> and <code><a href="term_links.html">term_links()</a></code> for the parameters and
+their charts, <code><a href="term_readable.html">term_readable()</a></code> for what a fitted one reports.</p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="term_params.html">term_params</a></span><span class="op">(</span><span class="fu">gas</span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"  "alpha1" "pacf1"  "pacf2" </span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># A level, one loading and one persistence coordinate.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="term_params.html">term_params</a></span><span class="op">(</span><span class="fu">gas</span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"  "alpha1" "pacf1" </span>
+<span class="r-in"><span><span class="fu"><a href="term_params.html">term_params</a></span><span class="op">(</span><span class="fu">gas</span><span class="op">(</span>p <span class="op">=</span> <span class="fl">2</span>, q <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"  "alpha1" "alpha2" "pacf1"  "pacf2" </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The loading rides a log chart so that it stays positive, and the</span></span></span>
+<span class="r-in"><span><span class="co"># persistence a rhobit so that the filter stays stationary.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="term_links.html">term_links</a></span><span class="op">(</span><span class="fu">gas</span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">l</span><span class="op">)</span> <span class="va">l</span><span class="op">@</span><span class="va">link_name</span>,</span></span>
+<span class="r-in"><span>       <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      omega     alpha1      pacf1      pacf2 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> "identity"      "log"   "rhobit"   "rhobit" </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Running the filter: the term supplies the recursion and the caller</span></span></span>
+<span class="r-in"><span><span class="co"># supplies the density's score and curvature. Here a Gaussian mean.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>t <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">60</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">30</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">gas</span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span>, time <span class="op">=</span> <span class="va">t</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_filter.html">term_filter</a></span><span class="op">(</span><span class="va">b</span>, eta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">60</span><span class="op">)</span>, y <span class="op">=</span> <span class="va">dd</span><span class="op">$</span><span class="va">y</span>,</span></span>
+<span class="r-in"><span>                   score <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span>, <span class="va">i</span><span class="op">)</span> <span class="va">dd</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">-</span> <span class="va">e</span>,</span></span>
+<span class="r-in"><span>                   curvature <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span>, <span class="va">i</span><span class="op">)</span> <span class="op">-</span><span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                   psi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>omega <span class="op">=</span> <span class="fl">0.1</span>, alpha1 <span class="op">=</span> <span class="fl">0.3</span>, pacf1 <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The level tracks the change in the mean.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">eta</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">15</span>, <span class="fl">30</span>, <span class="fl">32</span>, <span class="fl">45</span>, <span class="fl">60</span><span class="op">)</span><span class="op">]</span>, <span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1]  0.500 -0.468 -0.181  1.475  2.268  2.079</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># And the Jacobian it propagates is exact, not differenced: a central</span></span></span>
+<span class="r-in"><span><span class="co"># difference of the filter agrees with it to the step's own accuracy.</span></span></span>
+<span class="r-in"><span><span class="va">f</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">v</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="fu"><a href="term_filter.html">term_filter</a></span><span class="op">(</span><span class="va">b</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">60</span><span class="op">)</span>, <span class="va">dd</span><span class="op">$</span><span class="va">y</span>,</span></span>
+<span class="r-in"><span>                                 <span class="kw">function</span><span class="op">(</span><span class="va">e</span>, <span class="va">i</span><span class="op">)</span> <span class="va">dd</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">-</span> <span class="va">e</span>,</span></span>
+<span class="r-in"><span>                                 <span class="kw">function</span><span class="op">(</span><span class="va">e</span>, <span class="va">i</span><span class="op">)</span> <span class="op">-</span><span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                                 <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>omega <span class="op">=</span> <span class="va">v</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, alpha1 <span class="op">=</span> <span class="va">v</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>                                      pacf1 <span class="op">=</span> <span class="va">v</span><span class="op">[</span><span class="fl">3</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">eta</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">v0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.1</span>, <span class="fl">0.3</span>, <span class="fl">0.8</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">h</span>  <span class="op">&lt;-</span> <span class="fl">1e-5</span></span></span>
+<span class="r-in"><span><span class="va">fd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="kw">function</span><span class="op">(</span><span class="va">j</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">e</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">3</span><span class="op">)</span>; <span class="va">e</span><span class="op">[</span><span class="va">j</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">h</span></span></span>
+<span class="r-in"><span>  <span class="op">(</span><span class="fu">f</span><span class="op">(</span><span class="va">v0</span> <span class="op">+</span> <span class="va">e</span><span class="op">)</span> <span class="op">-</span> <span class="fu">f</span><span class="op">(</span><span class="va">v0</span> <span class="op">-</span> <span class="va">e</span><span class="op">)</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">h</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span>, <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colSums.html" class="external-link">colSums</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">jacobian</span><span class="op">)</span> <span class="op">-</span> <span class="va">fd</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6.187901e-08</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A panel: each group filtered from its own starting level.</span></span></span>
+<span class="r-in"><span><span class="va">dd</span><span class="op">$</span><span class="va">id</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, each <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">gas</span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span>, by <span class="op">=</span> <span class="va">id</span>, time <span class="op">=</span> <span class="va">t</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;GasTerm&gt; 'gas': score-driven, p = 1, q = 1; 3 group(s)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   parameters: omega, alpha1, pacf1</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A developed parameter expands in place, and brings its sub-term's</span></span></span>
+<span class="r-in"><span><span class="co"># penalty with it.</span></span></span>
+<span class="r-in"><span><span class="va">dd</span><span class="op">$</span><span class="va">g</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"u"</span>, <span class="st">"v"</span><span class="op">)</span>, <span class="fl">30</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">gb</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">gas</span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span>, <span class="va">omega</span> <span class="op">~</span> <span class="fu"><a href="ridge.html">ridge</a></span><span class="op">(</span><span class="op">~</span> <span class="va">g</span><span class="op">)</span>, time <span class="op">=</span> <span class="va">t</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="term_params.html">term_params</a></span><span class="op">(</span><span class="va">gb</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega.(Intercept)" "omega.ridge.gu"    "omega.ridge.gv"   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [4] "alpha1"            "pacf1"            </span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="term_penalties.html">term_penalties</a></span><span class="op">(</span><span class="va">gb</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="va">e</span><span class="op">$</span><span class="va">name</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega::ridge(~g)"</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

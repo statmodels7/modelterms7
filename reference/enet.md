@@ -26,16 +26,21 @@ enet(
 
 - x:
 
-  A one-sided formula or a numeric matrix.
+  A one-sided formula, such as `~ x1 + x2` or `~ 0 + g`, or a numeric
+  matrix, ideally a matrix column of the model data frame. A two-sided
+  formula throws.
 
 - label:
 
-  A single non-empty string prefixed to the coefficient names.
+  A single non-empty character string prefixed to the coefficient names
+  as `label.name`, `"enet"` by default, so a block over `x1` reads
+  `enet.x1`. Two penalized terms in one formula stay apart by their
+  labels.
 
 - standardize:
 
-  A single logical: whether to penalize each coefficient on the scale of
-  its own column. See the section below.
+  A single logical, `FALSE` by default: whether to penalize each
+  coefficient on the scale of its own column. See the section above.
 
 - lambda:
 
@@ -58,37 +63,40 @@ enet(
 - min_ratio:
 
   How far down the path reaches, as a fraction of the kink that empties
-  the block: smaller reaches a denser fit, larger stops sooner. Must lie
-  in (0, 1). NULL, the default, leaves it to the criterion. Only the
-  sweep by kink size uses it.
+  the block: smaller reaches a denser fit, larger stops sooner. A single
+  number in \\(0, 1)\\, `1e-4` by default. Only the sweep by kink size
+  reads it.
 
 - search:
 
   `"grid"` to visit every combination of \\\lambda\\ and \\\alpha\\,
   `"cyclic"` to sweep one at a time with the other held. See
-  [`term_search`](https://statmodels7.github.io/modelterms7/reference/term_search.md).
+  [`term_search()`](https://statmodels7.github.io/modelterms7/reference/term_search.md).
 
 - sparse:
 
-  Governs the FORMULA route: whether the block is built as a `dgCMatrix`
-  through
-  [`sparse.model.matrix`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html)
-  rather than as a dense model matrix. `NULL`, the default, settles it
-  at build from the size of the design; `TRUE` and `FALSE` override it.
-  A MATRIX input needs no such argument, being kept in whatever storage
-  it arrives in. See the section below.
+  Governs the formula route: `TRUE` builds a `dgCMatrix` through
+  [`Matrix::sparse.model.matrix()`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html),
+  `FALSE` a dense model matrix, and `NULL`, the default, settles it at
+  build from the size of the design. A matrix input needs no such
+  argument. See the section above.
 
 - ...:
 
-  Not used, and reported: an argument named after another penalty's
-  hyperparameter is the mistake this catches.
+  Not used, and reported. An argument named after another penalty's
+  hyperparameter is the mistake this catches: `scad(~ x, gamma = 1)`
+  throws `"'scad' has no argument 'gamma'."` and lists the ones it does
+  have.
 
 ## Value
 
-An object of class
-[`PenalizedTerm`](https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.md)
-(a specification; see
-[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
+An unbuilt
+[`PenalizedTerm()`](https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.md):
+a specification, with `X`, `coef_names`, `blueprint` and `penalty` empty
+until
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+fills them, and the penalty attached there over as many coefficients as
+the block turns out to have.
 
 ## Details
 
@@ -96,10 +104,10 @@ An object of class
 \frac{1-\alpha}{2}\lVert\beta\rVert_2^2\right\\ + p\log Z(\lambda,
 \alpha),\$\$ the normalizing constant being that of the product of a
 Laplace and a Gaussian at zero
-([`enet_distrib`](https://statmodels7.github.io/distributions7/reference/enet_distrib.html)).
-It depends on BOTH hyperparameters, which is what makes them estimable
-rather than merely settable, and what a penalty written as a formula
-would not have.
+([`distributions7::enet_distrib()`](https://statmodels7.github.io/distributions7/reference/enet_distrib.html)).
+It depends on both hyperparameters, so both are estimable, where a
+merely settable one would be all a dropped constant leaves. A penalty
+written as a formula, with the constant dropped, would not have that.
 
 \\\alpha\\ is the mixing weight: at \\\alpha \to 1\\ the penalty is the
 lasso and at \\\alpha \to 0\\ the ridge, and the kink at zero has
@@ -120,26 +128,65 @@ the elastic net. *Journal of the Royal Statistical Society, Series B*
 
 ## See also
 
-[`penalized_terms`](https://statmodels7.github.io/modelterms7/reference/penalized_terms.md)
+[`penalized_terms()`](https://statmodels7.github.io/modelterms7/reference/penalized_terms.md)
 for what the five share,
-[`ridge`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-[`lasso`](https://statmodels7.github.io/modelterms7/reference/lasso.md),
-[`scad`](https://statmodels7.github.io/modelterms7/reference/scad.md),
-[`mcp`](https://statmodels7.github.io/modelterms7/reference/mcp.md),
-[`elasticnet_penalty`](https://statmodels7.github.io/penalties7/reference/ridge_penalty.html)
+[`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+[`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md),
+[`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md),
+[`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md),
+[`penalties7::elasticnet_penalty()`](https://statmodels7.github.io/penalties7/reference/ridge_penalty.html)
 
 ## Examples
 
 ``` r
-dd <- data.frame(x1 = rnorm(8), x2 = rnorm(8))
-term_penalty(term_build(enet(~ x1 + x2), dd))@params
+set.seed(3)
+dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
+pe <- term_penalty(term_build(enet(~ x1 + x2), dd))
+pe@params
 #> [1] "lambda" "alpha" 
+pe@params_bounds
+#> $lambda
+#> [1]   0 Inf
+#> 
+#> $alpha
+#> [1] 0 1
+#> 
 
-# alpha held at the halfway mixture, lambda still estimated
+# The two ends really are the other two penalties.
+pl <- term_penalty(term_build(lasso(~ x1 + x2), dd))
+pr <- term_penalty(term_build(ridge(~ x1 + x2), dd))
+beta <- c(0.4, -1.1)
+all.equal(penalties7::penalty_value(pe, beta, list(lambda = 2, alpha = 1 - 1e-9)),
+          penalties7::penalty_value(pl, beta, list(lambda = 2)))
+#> [1] TRUE
+all.equal(penalties7::penalty_value(pe, beta, list(lambda = 2, alpha = 1e-9)),
+          penalties7::penalty_value(pr, beta, list(lambda = 2)))
+#> [1] TRUE
+
+# alpha held at the halfway mixture, lambda still estimated.
 term_hyper(enet(~ x1 + x2, alpha = 0.5))
 #> [[1]]
 #> [[1]]$alpha
 #> [1] 0.5
 #> 
 #> 
+
+# The grid is 25 by 5 by default; cyclic sweeps one axis at a time.
+term_grid(enet(~ x1 + x2))
+#> [[1]]
+#> [[1]]$lambda
+#> [1] 25
+#> 
+#> [[1]]$alpha
+#> [1] 5
+#> 
+#> 
+term_search(enet(~ x1 + x2, search = "cyclic"))
+#> [[1]]
+#> [1] "cyclic"
+#> 
+
+# The open interval is enforced: an end is one of the other penalties.
+try(enet(~ x1 + x2, alpha = 1))
+#> Error : 'alpha' in 'enet' must lie strictly inside (0, 1); it is 1.
 ```

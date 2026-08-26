@@ -23,4 +23,4 @@ Nothing; the method always signals an error.
 
 ## See also
 
-[`term_simulate`](https://statmodels7.github.io/modelterms7/reference/term_simulate.md)
+[`term_simulate()`](https://statmodels7.github.io/modelterms7/reference/term_simulate.md)

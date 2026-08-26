@@ -30,11 +30,11 @@ structural term takes instead.
 - [`term_grid()`](https://statmodels7.github.io/modelterms7/reference/term_grid.md)
   : The Grid a Term Asks For
 - [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md)
-  : The Values a Term Wrote Out
+  : The Hyperparameter Values a Term Writes Out
 - [`term_path_min()`](https://statmodels7.github.io/modelterms7/reference/term_path_min.md)
-  : How Far Down a Term's Path Reaches
+  : How Far Down Its Path a Term Reaches
 - [`term_search()`](https://statmodels7.github.io/modelterms7/reference/term_search.md)
-  : How a Term Covers Its Own Hyperparameters
+  : How a Term Covers Its Own Kinked Hyperparameters
 - [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
   : Number of Parameters of a Built Term
 - [`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)
@@ -81,8 +81,9 @@ column of the data.
 
 ## The random-effect term
 
-Grouped intercepts and slopes, the effects’ distribution attached as the
-penalty, which is what a random effect is under penalized likelihood.
+Grouped intercepts and slopes, with the effects’ distribution attached
+as the penalty. That is what a random effect is under penalized
+likelihood.
 
 - [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
   : Grouped Random-Effect Term
@@ -159,7 +160,7 @@ grid rule that chooses where to start.
 
 ## Structural terms
 
-Terms that rewrite the likelihood rather than adding to the predictor:
+Terms that rewrite the likelihood instead of adding to the predictor:
 score-driven dynamics and a latent Markov chain, both propagating their
 exact derivative beside the state.
 
@@ -212,9 +213,9 @@ exact derivative beside the state.
 
 ## The formula layer
 
-Reading a model formula into terms, by what each call evaluates to
-rather than by its name, so a term class defined outside the package
-needs no registration.
+Reading a model formula into terms, by what each call evaluates to and
+never by its name, so a term class defined outside the package needs no
+registration.
 
 - [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
   : Interpret a Model Formula Into Terms
@@ -225,7 +226,7 @@ Marking a censored response on the left side of a formula, the status of
 each observation derived from the values given.
 
 - [`cens()`](https://statmodels7.github.io/modelterms7/reference/cens.md)
-  : Censored Response Constructor
+  : Mark a Response as Censored
 - [`censored_response()`](https://statmodels7.github.io/modelterms7/reference/censored_response.md)
   : S7 Class for a Censored Response
 
@@ -243,4 +244,4 @@ The structural checks a term must pass against a data frame, including
 the one a term that rebuilds instead of reapplying its blueprint fails.
 
 - [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
-  : Numerical Validation of a Model Term
+  : Structural Checks on a Model Term

@@ -23,4 +23,4 @@ observation reads that observation alone.
 
 ## See also
 
-[`term_static_deriv`](https://statmodels7.github.io/modelterms7/reference/term_static_deriv.md)
+[`term_static_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_static_deriv.md)

@@ -1,9 +1,9 @@
 # The Score-Driven Recursion's Second and Third Derivatives
 
 The body
-[`term_curvature`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
+[`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
 and
-[`term_third`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
+[`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
 share. With `direction` `NULL` it propagates the first two derivatives
 of the predictor; with a direction it propagates the third as well,
 contracted against it.
@@ -46,7 +46,7 @@ contracted against it.
 - score, curvature:
 
   The callbacks of
-  [`term_filter`](https://statmodels7.github.io/modelterms7/reference/term_filter.md).
+  [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md).
 
 - psi:
 
@@ -75,7 +75,7 @@ given.
 
 ## Details
 
-The two orders are written here once rather than in a method each. The
+The two orders are written here once, in place of a method each. The
 third order's recursion reads \\F\\, \\\Phi\\, \\\dot S\\ and \\\ddot
 S\\ at every lag, so a separate implementation would carry a second copy
 of the first two orders, and the two would drift.

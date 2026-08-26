@@ -65,7 +65,7 @@ nl(
 - gradient, hessian, deriv3, deriv4:
 
   Optional functions `function(theta, data)` returning the derivatives
-  of `fn` in its own parameters, each a NAMED LIST of numeric vectors.
+  of `fn` in its own parameters, each a named list of numeric vectors.
   Supply as many as are worth writing out and leave the rest; see the
   section below.
 
@@ -76,36 +76,36 @@ nl(
 ## Value
 
 An object of class
-[`NlTerm`](https://statmodels7.github.io/modelterms7/reference/NlTerm.md)
+[`NlTerm()`](https://statmodels7.github.io/modelterms7/reference/NlTerm.md)
 (a specification; see
-[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
 
 ## Details
 
 While \\f\\ is differentiable the term is an ordinary additive one at
-every point: the contribution is linearized as \$\$f(x;\theta(\beta))
+every point. The contribution is linearized as \$\$f(x;\theta(\beta))
 \approx f(x;\theta(\beta_0)) + J(\beta_0)\\(\beta - \beta_0), \qquad J =
 \frac{\partial f}{\partial \beta},\$\$ so the design block is the
-Jacobian, and the only thing that distinguishes the term from a linear
-one is that the block is refreshed as the parameters move.
-[`term_refresh`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
+Jacobian. What separates the term from a linear one is that the block is
+recomputed as the parameters move:
+[`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
 does that, and
-[`term_value`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
-reports the contribution itself, which a Gauss-Newton step needs beside
-the Jacobian.
+[`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
+reports the contribution itself, which is the second thing a
+Gauss-Newton step needs.
 
 ### Two ways to give the function, with different reach
 
 A **formula** such as `~ theta1 * exp(theta2 * x)` is read symbolically:
 the names it uses that are not columns of the data are the parameters,
 and the derivatives come from
-[`deriv`](https://rdrr.io/r/stats/deriv.html) where that succeeds and
-from a central difference where it does not. A **function**
+[`stats::deriv()`](https://rdrr.io/r/stats/deriv.html) where that
+succeeds and from a central difference where it does not. A **function**
 `f(x, theta)`, vectorized in both, is treated as opaque: its derivatives
 are always differenced, and its parameters must be named in `params`.
 
-The difference is not only in the derivatives. Modeling a parameter with
-covariates means replacing \\\theta_j\\ by \\g_j^{-1}(Z\gamma_j)\\
+The two routes differ in more than the derivatives. Modeling a parameter
+with covariates means replacing \\\theta_j\\ by \\g_j^{-1}(Z\gamma_j)\\
 inside \\f\\, which requires knowing where \\\theta_j\\ enters; a
 formula says so and an opaque function does not. `subformulas` is
 therefore available on the formula route only, and is rejected on the
@@ -129,14 +129,14 @@ A subformula is written in `...` as a two-sided formula whose left side
 names the parameter, `theta1 ~ z`, or programmatically as
 `subformulas = list(theta1 = ~z)`; the two spellings are the same and a
 parameter may carry only one. The right-hand side goes through
-[`interpret_formula`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
+[`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
 so it takes any term of this package: `theta1 ~ ridge(g)` is a
 population value (the intercept) plus shrunken departures,
 `theta1 ~ s(z)` lets the parameter move smoothly with a covariate, and
 `theta1 ~ random(~1 | g)` is a random intercept on the parameter's
 unconstrained scale. The penalties the sub-terms carry are reported
 through
-[`term_penalties`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 under the key `parameter::subterm`, so a fitting layer estimates their
 hyperparameters as it does any other term's. A structural term, and a
 term whose block moves with its coefficients, are rejected: a
@@ -160,51 +160,59 @@ matter with the hyperparameters in the right place.
 The derivatives of \\f\\ in its own parameters drive everything: the
 first is the design block, and a fitting layer reads the second and
 third where the block moves with the coefficients. They come from
-whichever of four routes is available, and the choice is made ONE ORDER
-AT A TIME: a function given here, then symbolic differentiation of the
+whichever of four routes is available, and the choice is made one order
+at a time: a function given here, then symbolic differentiation of the
 expression, then one stencil applied to the highest order that IS
 analytic.
 
 `gradient`, `hessian`, `deriv3` and `deriv4` are independent, so the
 orders worth writing out by hand can be written and the rest left alone.
 **Writing the Hessian pays twice**: the third and fourth orders are then
-one difference away from an exact second rather than from the function.
-Measured on \\f = a e^{-rx}\\ given as an opaque function, so that
-nothing is symbolic, against the closed forms:
+one difference away from an exact second instead of from the function.
 
-|                      |         |         |         |          |
-|----------------------|---------|---------|---------|----------|
-|                      | order 1 | 2       | 3       | 4        |
-| nothing supplied     | 5.2e-13 | 8.4e-03 | 4.62    | 1.96e+03 |
-| gradient and hessian | 0       | 0       | 2.2e-12 | 8.9e-11  |
+Measured on \\f = a e^{-rx}\\ at \\a = 2\\, \\r = 0.7\\ over forty
+points of \\x\\ in \\\[0, 5\]\\, worst absolute error against the closed
+forms:
 
-Each function takes `(theta, data)` – a named list of the parameters,
-each of length `n` or 1, and the variables the formula names – and
-returns a named list of numeric vectors of length `n`. The names are the
+|                                             |         |         |         |         |
+|---------------------------------------------|---------|---------|---------|---------|
+| route                                       | order 1 | 2       | 3       | 4       |
+| opaque function, nothing supplied           | 1.8e-12 | 2.1e-10 | 2.1e-07 | 3.3e-05 |
+| opaque function, gradient and hessian given | 0       | 0       | 4.5e-11 | 9.2e-09 |
+| formula, differentiated symbolically        | 0       | 4.4e-16 | 1.8e-15 | 7.1e-15 |
+
+Writing the two low orders buys about four thousand times the accuracy
+at the two high ones. Giving the term as a formula, where it can be,
+buys another six orders of magnitude and costs nothing to write.
+
+Each function takes `(theta, data)`: a named list of the parameters,
+each of length `n` or 1, and the variables the formula names. It returns
+a named list of numeric vectors of length `n`. The names are the
 components of that order, keyed as distributions7 keys its own
 derivative surfaces: the parameter names joined by `"_"`. Order two of
-`c("a", "r")` is therefore `a_a`, `a_r`, `r_r`.
+`c("a", "r")` is therefore `a_a`, `a_r`, `r_r`, and order three `a_a_a`,
+`a_a_r`, `a_r_r`, `r_r_r`.
 
 The names are normalized here, so `r_a` and `a_r` are the same component
 and the order in which they are returned does not matter; what is
-checked is the SET. A name that is not a component of this term, a
+checked is the set. A name that is not a component of this term, a
 missing component or a repeated one is an error at
-[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-rather than a silent fall-through to the numerical route, an exact
-derivative that is quietly not used being worse than none.
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md).
+It is not a silent fall-through to the numerical route: an exact
+derivative quietly not used is worse than none.
 
 The derivatives are in the parameters \\\theta\\, not in the
-coefficients: the chain rule onto the coefficients – each parameter's
-link, and a subformula's design – is the term's, which is the only thing
-that knows them.
-[`nl_fderiv`](https://statmodels7.github.io/modelterms7/reference/nl_fderiv.md)
+coefficients. The chain rule onto the coefficients, meaning each
+parameter's link and a subformula's design, belongs to the term, which
+is the only thing that knows them.
+[`nl_fderiv()`](https://statmodels7.github.io/modelterms7/reference/nl_fderiv.md)
 reads any order back.
 
 ## See also
 
-[`s`](https://statmodels7.github.io/modelterms7/reference/s.md),
-[`te`](https://statmodels7.github.io/modelterms7/reference/te.md),
-[`random`](https://statmodels7.github.io/modelterms7/reference/random.md)
+[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md),
+[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md),
+[`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
 
 ## Examples
 

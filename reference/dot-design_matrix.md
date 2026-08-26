@@ -1,8 +1,11 @@
 # The Model Matrix of a Formula, in Either Storage
 
-[`model.matrix`](https://rdrr.io/r/stats/model.matrix.html) or
-[`sparse.model.matrix`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html)
-on the same terms object, with the bookkeeping stripped either way.
+Runs
+[`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html) or
+[`Matrix::sparse.model.matrix()`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html)
+on the same terms object and model frame, strips the `assign` and
+`contrasts` attributes, and returns the block beside the contrasts that
+were used.
 
 ## Usage
 
@@ -14,40 +17,43 @@ on the same terms object, with the bookkeeping stripped either way.
 
 - tt:
 
-  A terms object.
+  A terms object, from
+  [`stats::model.frame()`](https://rdrr.io/r/stats/model.frame.html) or
+  [`stats::delete.response()`](https://rdrr.io/r/stats/delete.response.html).
 
 - mf:
 
-  The model frame.
+  The model frame `tt` was built from, or one built against the same
+  levels.
 
 - contrasts:
 
-  The contrasts, or `NULL` for the session's.
+  A named list of contrasts, or `NULL` for the session's.
 
 - sparse:
 
-  Whether to build a `dgCMatrix`.
+  `TRUE` for a `dgCMatrix`, `FALSE` for a base matrix.
 
 ## Value
 
-A numeric matrix or a `dgCMatrix`.
+A list of two: `X`, the block, and `contrasts`, the named list
+[`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)
+recorded, which is `NULL` when no factor was coded.
 
 ## Details
 
-The sparse route BUILDS the matrix sparse; it does not build a dense one
-and compress it, which would cost the memory the choice exists to avoid.
-Measured at 20000 rows and a factor of 1000 levels, 0.002 s and 1.8 MB
-against
-[`stats::model.matrix`](https://rdrr.io/r/stats/model.matrix.html)'s
-0.100 s and 161.5 MB, the numbers identical; and a design that would be
-32 GB dense builds in 0.02 s and 19 MB, which is what says there is no
-dense intermediate.
+The two routes give identical numbers; what differs is the storage and
+the cost of producing it. The sparse route builds the matrix sparse and
+never forms a dense intermediate: at 20000 rows and a factor of 1000
+levels, 0.007 s and 1.8 MB against 0.164 s and 161.3 MB.
 
-It is worth it where the formula carries a factor of MANY LEVELS, whose
-indicator columns are one non-zero per row. On a formula of numeric
-covariates the block is dense whatever is asked for, and the sparse
-storage then costs more than it saves.
+The contrasts come back beside the block instead of staying on it: the
+block is what a consumer reads, and the contrasts are what the blueprint
+records.
 
 ## See also
 
-[`linpar`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
+[`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md),
+whose build and prediction both call this;
+[`.resolve_sparse()`](https://statmodels7.github.io/modelterms7/reference/dot-resolve_sparse.md)
+for the choice of storage.

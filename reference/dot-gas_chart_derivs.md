@@ -23,7 +23,7 @@ second derivatives in those.
 - links:
 
   The links, as
-  [`term_links`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
+  [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
   gives them.
 
 ## Value
@@ -35,9 +35,9 @@ A list with the values and the derivative arrays.
 The level and the loadings each reach the recursion through their own
 link, so their first derivative is the link's and their second, on the
 diagonal, is
-[`d2linkinv`](https://statmodels7.github.io/linkfunctions7/reference/d2linkinv.html);
+[`linkfunctions7::d2linkinv()`](https://statmodels7.github.io/linkfunctions7/reference/d2linkinv.html);
 on the identity both collapse to one and zero. The persistence reaches
-the coefficients through two maps – the link onto the partial
-autocorrelations and Levinson-Durbin onto the coefficients – so its
+the coefficients through two maps, the link onto the partial
+autocorrelations and Levinson-Durbin onto the coefficients, so its
 second derivative carries both a term in the map's own curvature and one
 in the link's.

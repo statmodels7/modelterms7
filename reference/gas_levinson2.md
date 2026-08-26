@@ -1,6 +1,6 @@
 # The Second Derivative of the Levinson-Durbin Map
 
-[`gas_levinson`](https://statmodels7.github.io/modelterms7/reference/gas_levinson.md)
+[`gas_levinson()`](https://statmodels7.github.io/modelterms7/reference/gas_levinson.md)
 with the second derivatives of the coefficients in the partial
 autocorrelations propagated as well.
 
@@ -39,4 +39,4 @@ parameters, and the persistence reaches the predictor through this map.
 
 ## See also
 
-[`gas_levinson`](https://statmodels7.github.io/modelterms7/reference/gas_levinson.md)
+[`gas_levinson()`](https://statmodels7.github.io/modelterms7/reference/gas_levinson.md)

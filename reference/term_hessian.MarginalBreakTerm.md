@@ -9,7 +9,7 @@ term's own parameters on the unconstrained scale.
 - term:
 
   A built
-  [`MarginalBreakTerm`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md).
+  [`MarginalBreakTerm()`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md).
 
 - eta:
 

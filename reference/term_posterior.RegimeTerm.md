@@ -1,7 +1,7 @@
 # Smoothed State Probabilities of a Regime Term
 
 The forward pass of
-[`term_loglik`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
+[`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
 with a backward pass beside it, both normalized, giving the probability
 of each regime at each observation given the whole series.
 
@@ -10,7 +10,7 @@ of each regime at each observation given the whole series.
 - term:
 
   A built
-  [`RegimeTerm`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md).
+  [`RegimeTerm()`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md).
 
 - eta:
 

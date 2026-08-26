@@ -15,7 +15,7 @@ covariates."><meta property="og:image" content="https://statmodels7.github.io/mo
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -113,7 +113,7 @@ zero.</p></dd>
 <dt id="arg-gradient-hessian-deriv-deriv-">gradient, hessian, deriv3, deriv4<a class="anchor" aria-label="anchor" href="#arg-gradient-hessian-deriv-deriv-"></a></dt>
 <dd><p>Optional functions
 <code>function(theta, data)</code> returning the derivatives of <code>fn</code> in
-its own parameters, each a NAMED LIST of numeric vectors. Supply as many
+its own parameters, each a named list of numeric vectors. Supply as many
 as are worth writing out and leave the rest; see the section below.</p></dd>
 
 
@@ -124,31 +124,30 @@ names.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code><a href="NlTerm.html">NlTerm</a></code> (a specification; see
-  <code><a href="term_build.html">term_build</a></code>).</p>
+    <p>An object of class <code><a href="NlTerm.html">NlTerm()</a></code> (a specification; see
+<code><a href="term_build.html">term_build()</a></code>).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>While \(f\) is differentiable the term is an ordinary additive one at
-every point: the contribution is linearized as
+every point. The contribution is linearized as
 $$f(x;\theta(\beta)) \approx f(x;\theta(\beta_0))
   + J(\beta_0)\,(\beta - \beta_0), \qquad
   J = \frac{\partial f}{\partial \beta},$$
-so the design block is the Jacobian, and the only thing that
-distinguishes the term from a linear one is that the block is refreshed
-as the parameters move. <code><a href="term_refresh.html">term_refresh</a></code> does that, and
-<code><a href="term_value.html">term_value</a></code> reports the contribution itself, which a
-Gauss-Newton step needs beside the Jacobian.</p>
+so the design block is the Jacobian. What separates the term from a linear
+one is that the block is recomputed as the parameters move:
+<code><a href="term_refresh.html">term_refresh()</a></code> does that, and <code><a href="term_value.html">term_value()</a></code> reports the contribution
+itself, which is the second thing a Gauss-Newton step needs.</p>
 <div class="section">
 <h3 id="two-ways-to-give-the-function-with-different-reach">Two ways to give the function, with different reach<a class="anchor" aria-label="anchor" href="#two-ways-to-give-the-function-with-different-reach"></a></h3>
 <p>A <strong>formula</strong> such as <code>~ theta1 * exp(theta2 * x)</code> is read
 symbolically: the names it uses that are not columns of the data are
 the parameters, and the derivatives come from
-<code><a href="https://rdrr.io/r/stats/deriv.html" class="external-link">deriv</a></code> where that succeeds and from a central
+<code><a href="https://rdrr.io/r/stats/deriv.html" class="external-link">stats::deriv()</a></code> where that succeeds and from a central
 difference where it does not. A <strong>function</strong> <code>f(x, theta)</code>,
 vectorized in both, is treated as opaque: its derivatives are always
 differenced, and its parameters must be named in <code>params</code>.</p>
-<p>The difference is not only in the derivatives. Modeling a parameter
+<p>The two routes differ in more than the derivatives. Modeling a parameter
 with covariates means replacing \(\theta_j\) by
 \(g_j^{-1}(Z\gamma_j)\) inside \(f\), which requires knowing where
 \(\theta_j\) enters; a formula says so and an opaque function does
@@ -173,13 +172,13 @@ rate on the log link is positive for every row of \(Z\).</p>
 left side names the parameter, <code>theta1 ~ z</code>, or programmatically
 as <code>subformulas = list(theta1 = ~z)</code>; the two spellings are the
 same and a parameter may carry only one. The right-hand side goes
-through <code><a href="interpret_formula.html">interpret_formula</a></code>, so it takes any term of this
+through <code><a href="interpret_formula.html">interpret_formula()</a></code>, so it takes any term of this
 package: <code>theta1 ~ ridge(g)</code> is a population value (the
 intercept) plus shrunken departures, <code>theta1 ~ s(z)</code> lets the
 parameter move smoothly with a covariate, and
 <code>theta1 ~ random(~1 | g)</code> is a random intercept on the
 parameter's unconstrained scale. The penalties the sub-terms carry are
-reported through <code><a href="term_penalties.html">term_penalties</a></code> under the key
+reported through <code><a href="term_penalties.html">term_penalties()</a></code> under the key
 <code>parameter::subterm</code>, so a fitting layer estimates their
 hyperparameters as it does any other term's. A structural term, and a
 term whose block moves with its coefficients, are rejected: a
@@ -206,37 +205,41 @@ the right place.</p>
 <p>The derivatives of \(f\) in its own parameters drive everything: the
 first is the design block, and a fitting layer reads the second and third
 where the block moves with the coefficients. They come from whichever of
-four routes is available, and the choice is made ONE ORDER AT A TIME:
+four routes is available, and the choice is made one order at a time:
 a function given here, then symbolic differentiation of the expression,
 then one stencil applied to the highest order that IS analytic.</p>
-<p><code>gradient</code>, <code>hessian</code>, <code>deriv3</code> and <code>deriv4</code> are
-independent, so the orders worth writing out by hand can be written and the
-rest left alone. <strong>Writing the Hessian pays twice</strong>: the third and
-fourth orders are then one difference away from an exact second rather than
-from the function. Measured on \(f = a e^{-rx}\) given as an opaque
-function, so that nothing is symbolic, against the closed forms:</p>
-<table class="table table"><tr><td></td><td>order 1</td><td>2</td><td>3</td><td>4</td></tr><tr><td>nothing supplied</td><td>5.2e-13</td><td>8.4e-03</td><td>4.62</td><td>1.96e+03</td></tr><tr><td>gradient and hessian</td><td>0</td><td>0</td><td>2.2e-12</td><td>8.9e-11</td></tr></table><p>Each function takes <code>(theta, data)</code> – a named list of the parameters,
-each of length <code>n</code> or 1, and the variables the formula names – and
-returns a named list of numeric vectors of length <code>n</code>. The names are
+<p><code>gradient</code>, <code>hessian</code>, <code>deriv3</code> and <code>deriv4</code> are independent, so the orders
+worth writing out by hand can be written and the rest left alone.
+<strong>Writing the Hessian pays twice</strong>: the third and fourth orders are then
+one difference away from an exact second instead of from the function.</p>
+<p>Measured on \(f = a e^{-rx}\) at \(a = 2\), \(r = 0.7\) over forty
+points of \(x\) in \([0, 5]\), worst absolute error against the closed
+forms:</p><table class="table table"><tr><td>route</td><td>order 1</td><td>2</td><td>3</td><td>4</td></tr><tr><td>opaque function, nothing supplied</td><td>1.8e-12</td><td>2.1e-10</td><td>2.1e-07</td><td>3.3e-05</td></tr><tr><td>opaque function, gradient and hessian given</td><td>0</td><td>0</td><td>4.5e-11</td><td>9.2e-09</td></tr><tr><td>formula, differentiated symbolically</td><td>0</td><td>4.4e-16</td><td>1.8e-15</td><td>7.1e-15</td></tr></table><p>Writing the two low orders buys about four thousand times the accuracy at
+the two high ones. Giving the term as a formula, where it can be, buys
+another six orders of magnitude and costs nothing to write.</p>
+<p>Each function takes <code>(theta, data)</code>: a named list of the parameters, each
+of length <code>n</code> or 1, and the variables the formula names. It returns a
+named list of numeric vectors of length <code>n</code>. The names are
 the components of that order, keyed as <span class="pkg">distributions7</span> keys its own
 derivative surfaces: the parameter names joined by <code>"_"</code>. Order two of
-<code>c("a", "r")</code> is therefore <code>a_a</code>, <code>a_r</code>, <code>r_r</code>.</p>
+<code>c("a", "r")</code> is therefore <code>a_a</code>, <code>a_r</code>, <code>r_r</code>, and order three
+<code>a_a_a</code>, <code>a_a_r</code>, <code>a_r_r</code>, <code>r_r_r</code>.</p>
 <p>The names are normalized here, so <code>r_a</code> and <code>a_r</code> are the same
 component and the order in which they are returned does not matter; what is
-checked is the SET. A name that is not a component of this term, a missing
-component or a repeated one is an error at <code><a href="term_build.html">term_build</a></code> rather
-than a silent fall-through to the numerical route, an exact derivative that
-is quietly not used being worse than none.</p>
+checked is the set. A name that is not a component of this term, a missing
+component or a repeated one is an error at <code><a href="term_build.html">term_build()</a></code>. It is not a
+silent fall-through to the numerical route: an exact derivative quietly not
+used is worse than none.</p>
 <p>The derivatives are in the parameters \(\theta\), not in the
-coefficients: the chain rule onto the coefficients – each parameter's link,
-and a subformula's design – is the term's, which is the only thing that
-knows them. <code><a href="nl_fderiv.html">nl_fderiv</a></code> reads any order back.</p>
+coefficients. The chain rule onto the coefficients, meaning each
+parameter's link and a subformula's design, belongs to the term, which is
+the only thing that knows them. <code><a href="nl_fderiv.html">nl_fderiv()</a></code> reads any order back.</p>
 </div>
 
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="s.html">s</a></code>, <code><a href="te.html">te</a></code>, <code><a href="random.html">random</a></code></p></div>
+    <div class="dont-index"><p><code><a href="s.html">s()</a></code>, <code><a href="te.html">te()</a></code>, <code><a href="random.html">random()</a></code></p></div>
     </div>
 
     <div class="section level2">

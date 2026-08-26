@@ -1,7 +1,7 @@
 # Move a Break-Point Term to Given Positions
 
 The term with its break-points placed at `psi`, the changes kept, the
-scaling schedule fresh and the block rebuilt – ready to iterate from
+scaling schedule fresh and the block rebuilt, ready to iterate from
 there. A restart proposal needs it: a bootstrap resample perturbs the
 objective by \\1/\sqrt{n}\\ and stops escaping a deep basin as the
 sample grows, so the restarting loop also proposes fresh positions
@@ -18,7 +18,7 @@ seg_relocate(term, psi)
 - term:
 
   A built break-point term (see
-  [`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
 
 - psi:
 
@@ -40,8 +40,8 @@ them.
 
 ## See also
 
-[`seg_reheat`](https://statmodels7.github.io/modelterms7/reference/seg_reheat.md),
-[`seg_start`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
+[`seg_reheat()`](https://statmodels7.github.io/modelterms7/reference/seg_reheat.md),
+[`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
 
 ## Examples
 

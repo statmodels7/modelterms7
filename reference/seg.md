@@ -73,18 +73,18 @@ seg(
 
   `NULL` (the default: the construction exactly as documented above) or
   a penalties7
-  [`abs_smoother`](https://statmodels7.github.io/penalties7/reference/abs_smoother.html),
+  [`penalties7::abs_smoother()`](https://statmodels7.github.io/penalties7/reference/abs_smoother.html),
   e.g.
   [`penalties7::smooth_probit()`](https://statmodels7.github.io/penalties7/reference/smooth_probit.html).
-  The smoother replaces the step and the hinge by their smooth versions
-  – \\(1 + s'(u))/2\\ and \\(u + s(u))/2\\ – so every break-point
-  becomes an ordinary parameter of a \\C^\infty\\ model: there is no
-  working parametrization, no auxiliary coefficient and no scaling
-  schedule (`c0` is ignored, with a message), the block is the true
-  Jacobian and the term is fitted by Gauss-Newton like
-  [`nl`](https://statmodels7.github.io/modelterms7/reference/nl.md). A
-  development of a break-point – `psi ~ random(~1 | id)`, a penalized
-  one included – is then legal for every kind, the read-off that
+  The smoother replaces the step and the hinge by their smooth versions,
+  \\(1 + s'(u))/2\\ and \\(u + s(u))/2\\, so every break-point becomes
+  an ordinary parameter of a \\C^\infty\\ model: there is no working
+  parametrization, no auxiliary coefficient and no scaling schedule
+  (`c0` is ignored, with a message), the block is the true Jacobian and
+  the term is fitted by Gauss-Newton like
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md). A
+  development of a break-point, `psi ~ random(~1 | id)` and penalized
+  ones included, is then legal for every kind, the read-off that
   constrained the discontinuous constructions having gone. The
   smoother's width is resolved at build from the covariate's spacing
   (the median gap between distinct values, within groups where a
@@ -93,7 +93,7 @@ seg(
   bent-cable reading, and the smoothing bias it buys is confined to a
   window of that width (probit, quintic) or decays as \\c/(4\|u\|)\\
   (hyperbolic). The objective is still multimodal in the positions –
-  smoothing rounds the local optima, it does not remove them – so the
+  smoothing rounds the local optima and does not remove them, so the
   profile start and the `n_boot` restarts stay necessary; a smoothed fit
   from a bad start has been measured converging to an absurd local
   optimum while reporting success.
@@ -101,15 +101,15 @@ seg(
 - marginal:
 
   Whether the break-point is a latent variable per group, integrated out
-  of the likelihood exactly, rather than an estimated position. `FALSE`,
-  the default, is the construction documented above. `TRUE` requires the
-  subformula `psi ~ random(~1 | g)` and returns a structural term of the
-  likelihood shape
-  ([`MarginalBreakTerm`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md));
+  of the likelihood exactly instead of being an estimated position.
+  `FALSE`, the default, is the construction documented above. `TRUE`
+  requires the subformula `psi ~ random(~1 | g)` and returns a
+  structural term of the likelihood shape
+  ([`MarginalBreakTerm()`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md));
   see the section of
-  [`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md),
-  whose step model is where the marginal buys the most – for a `seg`
-  term the native random-changepoint fit (`psi ~ random(~1 | g)` without
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md),
+  whose step model is where the marginal buys the most: for a `seg` term
+  the native random-changepoint fit (`psi ~ random(~1 | g)` without
   `marginal`) is measured equivalent and remains the recommended route,
   the marginal being the exact-likelihood alternative. One break-point
   here: the conditional is smooth in the position, so the integral runs
@@ -137,9 +137,9 @@ seg(
 ## Value
 
 An object of class
-[`SegTerm`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md)
+[`SegTerm()`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md)
 (a specification; see
-[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
 
 ## Details
 
@@ -153,25 +153,26 @@ a Gauss-Newton step solves for is the update of muggeo2003: his working
 variables \\U\\ and \\V\\ are the block's columns and his \\\psi
 \leftarrow \psi + \gamma/\delta\\ is that step. Refreshing the term at
 the current coefficients
-([`term_refresh`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md))
+([`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md))
 and fitting is one iteration of it, which is the same contract
-[`nl`](https://statmodels7.github.io/modelterms7/reference/nl.md) uses.
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+uses.
 
 The objective has local optima in the break-points and the iteration
 converges from within a basin around where it starts, so
-[`seg_start`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
+[`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
 chooses the starting positions on a grid rather than at a conventional
 point. A break-point is confined to the interval between the 5th and the
 95th percentile of the covariate: outside it the indicator is constant,
 the truncated line and that constant are linearly dependent, and the
-block is singular rather than merely ill-conditioned. A run ending
+block is exactly singular, not merely ill-conditioned. A run ending
 against the limit has not located a break-point, and
-[`seg_psi`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
+[`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
 then reports the limit itself.
 
 The iteration can settle into a cycle of period two in the break-point,
 in which case the rule of
-[`seg_converged`](https://statmodels7.github.io/modelterms7/reference/seg_step.md)
+[`seg_converged()`](https://statmodels7.github.io/modelterms7/reference/seg_step.md)
 is never met while the objective has long since stopped moving; a caller
 that can evaluate the objective should stop on its relative change, as
 `segmented` does.
@@ -182,7 +183,7 @@ that can evaluate the objective should stop on its relative change, as
 ... `psiK`, in that order. The break-points are coefficients of the
 working block here, which they are not in the discontinuous
 constructions, so
-[`seg_psi`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
+[`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
 is the function that reports them either way.
 
 ## Developing a coefficient with covariates
@@ -197,10 +198,10 @@ side names it:
     seg(x, by = ~0 + g)                every coefficient, per level of g
 
 The right side goes through
-[`interpret_formula`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
+[`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
 so it takes *any* term of this package, penalized ones included, and the
 hyperparameters a sub-term declares are reported by
-[`term_penalties`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 and estimated by the fitting layer. The left side names either one
 coefficient (`gamma2`) or a whole kind (`gamma`, meaning every
 \\\gamma_k\\, each with coefficients of its own over the shared design).
@@ -215,10 +216,10 @@ line becoming \\(x_i-\psi\_{k,i})\_{+}w_i'\\ and the Jacobian column
 continuous construction accepts a development of any coefficient and any
 combination of them.
 
-A penalty on the changes themselves – the lasso that selects how many
-break-points are really there – is the development on an intercept
-alone, `seg(x, npsi = 4, gamma ~ 0 + lasso(~1))`: the \\K\\ changes are
-then one penalized block under one hyperparameter, the entries of a
+A penalty on the changes themselves, the lasso that selects how many
+break-points are really there, is the development on an intercept alone,
+`seg(x, npsi = 4, gamma ~ 0 + lasso(~1))`: the \\K\\ changes are then
+one penalized block under one hyperparameter, the entries of a
 subformula shared by every coefficient of a kind being pooled into one.
 The `0 +` is not decoration. A subformula follows the intercept
 convention of a formula, so `gamma ~ lasso(~1)` carries the subformula's
@@ -230,7 +231,7 @@ intercept-only development is the same column twice.
 With `linear = TRUE`, the default, the term carries \\\beta x\\ itself,
 so `y ~ seg(x)` is the whole relationship. Writing the covariate again
 in the same equation is then exactly collinear with that column, and
-[`interpret_formula`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
+[`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
 removes it with a warning. `linear = FALSE` is the explicit way to keep
 the linear effect outside the term, and `y ~ x + seg(x, linear = FALSE)`
 is the same model written the other way round.
@@ -251,12 +252,12 @@ spurious local minima by bootstrap restarting. *Biometrics*, 57(1),
 
 ## See also
 
-[`jump`](https://statmodels7.github.io/modelterms7/reference/jump.md),
-[`jseg`](https://statmodels7.github.io/modelterms7/reference/jseg.md),
-[`seg_psi`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md),
-[`seg_start`](https://statmodels7.github.io/modelterms7/reference/seg_start.md),
-[`seg_step`](https://statmodels7.github.io/modelterms7/reference/seg_step.md),
-[`nl`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md),
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md),
+[`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md),
+[`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md),
+[`seg_step()`](https://statmodels7.github.io/modelterms7/reference/seg_step.md),
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
 
 ## Examples
 

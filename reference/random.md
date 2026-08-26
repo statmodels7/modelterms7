@@ -3,7 +3,7 @@
 Random intercepts and slopes for a grouping factor: `random(~ 1 | g)`
 builds one coefficient per level of `g`, and `random(~ x | g)` one
 intercept and one slope per level, with the distribution of the effects
-attached as the penalty on those coefficients – which is what a random
+attached as the penalty on those coefficients. That is what a random
 effect is under penalized likelihood.
 
 ## Usage
@@ -44,7 +44,7 @@ random(
 
 - hyper:
 
-  The hyperparameters of the effects' distribution to HOLD, as a named
+  The hyperparameters of the effects' distribution to hold, as a named
   vector or list; those not named are estimated. The names are the
   distribution's own parameters, with the within-group column appended
   where there is one copy per column. A name the penalty does not carry
@@ -53,14 +53,15 @@ random(
 
 - ...:
 
-  Unused; a named argument here is reported rather than ignored.
+  Unused. A named argument here is reported by name, so a removed one
+  such as `precision` or `kinks` gets a message saying what replaced it.
 
 ## Value
 
 An object of class
-[`RandomTerm`](https://statmodels7.github.io/modelterms7/reference/RandomTerm.md)
+[`RandomTerm()`](https://statmodels7.github.io/modelterms7/reference/RandomTerm.md)
 (a specification; see
-[`term_build`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
 
 ## Details
 
@@ -70,30 +71,29 @@ carries an intercept and a slope per group and `~ 0 + x | g` the slope
 alone. The block interacts that design with the group indicators,
 ordered group by group, so the coefficients of one group are adjacent.
 
-Two things are said and nothing else is: the formula, and the
-distribution of the effects. Which chart the hyperparameters ride, what
-they are called, how many there are and where the log-density has a kink
-are properties of that distribution, read off it rather than restated
-here.
+The constructor asks for two things: the formula and the distribution of
+the effects. Which chart the hyperparameters ride, what they are called,
+how many there are and where the log-density has a kink are all
+properties of that distribution, read off it at build time.
 
 ## The distribution of the effects
 
 `distrib` is `NULL`, a distributions7 object, or a list of them with one
 per within-group column.
 
-A MULTIVARIATE distribution of the within-group dimension lets the
+A multivariate distribution of the within-group dimension lets the
 effects of one group depend on each other, its matrix parameter carrying
 the dependence: `mvgaussian_distrib(2, omega = ar1(2))` is a prior whose
 precision is autoregressive, `mvstudent_t_distrib(2)` a heavy-tailed
 one. Correlation is available exactly for the families that carry a
-matrix parameter – a location block as long as the dimension, and a
-covariance, precision or scale matrix – which is a property the term
-reads rather than a list of admitted names, so a family added later is
-covered.
+matrix parameter: a location block as long as the dimension, together
+with a covariance, precision or scale matrix. The term reads that
+property off the family, so a family added later is covered without an
+edit here.
 
-A UNIVARIATE distribution makes the effects independent, the penalty
+A univariate distribution makes the effects independent, the penalty
 being the product of the densities. With more than one within-group
-column it is a TEMPLATE: one copy per column, each with its own
+column it is a template: one copy per column, each with its own
 hyperparameters, since an intercept and a slope are quantities of
 different units and a shared scale would price them against each other.
 A list of distributions gives one per column explicitly, when the
@@ -105,15 +105,15 @@ multivariate Gaussian on an unstructured covariance when there are
 several and `correlated = TRUE`; the template of the first when
 `correlated = FALSE`, one standard deviation per column.
 
-Whatever it is, the distribution is CENTERED, its location parameters
+Whatever it is, the distribution is centered, its location parameters
 held with
-[`fixed`](https://statmodels7.github.io/distributions7/reference/fixed.html).
+[`distributions7::fixed()`](https://statmodels7.github.io/distributions7/reference/fixed.html).
 A free mean in the effects is confounded with the intercept of the
-equation the term sits in, so it is rejected rather than fitted along a
-flat direction. The value it is held at is usually zero and is not
-policed: it is identified whatever it is, and where the prior is a
-transformation of another family the parameter is the mean on the
-ORIGINAL scale –
+equation the term sits in, so a free location is rejected at build time
+with a message naming it. The value it is held at is usually zero and is
+not policed: the model is identified whatever it is. Where the prior is
+a transformation of another family the parameter is the mean on the
+original scale, so
 `fixed(transformation(gamma2_distrib(), log_transform()), mu = 1)` is a
 log-gamma prior whose own mean is \\\psi(a) - \log a\\, within
 \\\sigma^2/2\\ of zero and exactly zero in the limit.
@@ -128,61 +128,73 @@ computed here.
 ## The hyperparameters
 
 They are the distribution's own free parameters, and every one of them
-is estimated unless it is held. There are two ways to hold one, and they
-differ in what is reported rather than in the fit. Holding it inside the
-distribution, `fixed(pseudohuber_distrib(), mu = 0, nu = 2)`, removes
-it: it becomes a constant of the prior and appears nowhere among the
-model's hyperparameters. Naming it in `hyper` keeps it, reported as held
-at the value given, which is what a penalized term's own hyperparameter
-argument does.
+is estimated unless it is held. There are two ways to hold one, and the
+fit is the same either way; what differs is what gets reported. Holding
+it inside the distribution,
+`fixed(pseudohuber_distrib(), mu = 0, nu = 2)`, removes it: it becomes a
+constant of the prior and appears nowhere among the model's
+hyperparameters. Naming it in `hyper` keeps it, reported as held at the
+value given, as a penalized term's own hyperparameter argument does.
 
 A smooth prior's hyperparameters are estimated by a marginal criterion.
-A prior whose log-density has a kink – a Laplace, an elastic net – has
+A prior whose log-density has a kink, a Laplace or an elastic net, has
 none a marginal criterion can reach, and its hyperparameter is chosen by
 a path on a prediction criterion instead.
 
 Every estimated hyperparameter is reported with a standard error and an
 interval, shape parameters included. Where one is absent the cause is
-the POINT and not a missing derivative: a run that ended where the
-criterion has no maximum – a shape escaping towards a limit is the
-common case – leaves a curvature of the wrong sign, and no interval
-follows from it.
+the point the run ended at: a criterion with no maximum there leaves a
+curvature of the wrong sign, and no interval follows from it. A shape
+escaping toward a limit is the common case.
 
-Which PARAMETRIZATION of a family is used matters here in a way it does
-not elsewhere. The centred skew normal
-([`skewnormal2_distrib`](https://statmodels7.github.io/distributions7/reference/skewnormal2_distrib.html))
+Which parametrization of a family is used matters here in a way it does
+not elsewhere. The centered skew normal
+([`distributions7::skewnormal2_distrib()`](https://statmodels7.github.io/distributions7/reference/skewnormal2_distrib.html))
 carries the skewness itself, and its map to the direct parametrization
 is not twice differentiable at zero skewness: the first derivatives have
 a finite limit there and the second ones grow like \\\gamma_1^{-2/3}\\.
 A marginal criterion reads the second, and the symmetric bounds put the
 starting value at exactly that point, so the direct parametrization
-([`skewnormal1_distrib`](https://statmodels7.github.io/distributions7/reference/skewnormal1_distrib.html))
+([`distributions7::skewnormal1_distrib()`](https://statmodels7.github.io/distributions7/reference/skewnormal1_distrib.html))
 is the one to use as a prior; its derivatives at \\\alpha = 0\\ are
 ordinary numbers.
 
 How well a shape parameter is estimated depends on how many groups there
-are, since it is read off that many latent values, and the prior shrinks
-them. Measured on effects drawn from a Student t with four degrees of
-freedom, twelve observations per group, the prior being a Student t with
-\\\nu\\ free: \\\hat\nu\\ is 17.1 at 20 groups, 3.95 at 100 and 4.06 at
-500. At 100 the profile has an interior maximum, the criterion falling
-from -1618.7 at \\\nu = 4\\ to -1619.3 either side and -1622.0 in the
-Gaussian limit. So a shape is worth estimating from a hundred groups or
-so and worth holding below that, where it escapes towards the Gaussian
-limit and only the scale is really being fitted. A pseudo-Huber's
-\\\nu\\ is the weaker case: it is where the loss stops being quadratic
-rather than a tail index, and at 40 groups it escapes.
+are, since it is read off that many latent values and the prior shrinks
+them. Measured on effects drawn from a standard Student t with four
+degrees of freedom, twelve observations per group and unit residual
+standard deviation, the prior being a Student t with \\\nu\\ free and
+the criterion `statmodels7::reml()`:
+
+|        |             |                |
+|--------|-------------|----------------|
+| groups | \\\hat\nu\\ | \\\hat\sigma\\ |
+| 20     | 5.97e+04    | 0.769          |
+| 100    | 1.98        | 0.817          |
+| 500    | 2.65        | 0.923          |
+
+At twenty groups the shape escapes to the Gaussian limit and only the
+scale is really being fitted. From a hundred it stays finite, and the
+profile is decisive about that much: with \\\nu\\ held, the criterion is
+-1922.4 at 3, -1923.7 at 4, -1924.9 at 5 and -1936.1 in the Gaussian
+limit. What it is not decisive about is the value, the profile being
+flat enough over the small integers that a single sample locates \\\nu\\
+to little better than its order of magnitude. Estimate a shape from a
+hundred groups or so, hold it below that, and read the estimate as a
+statement about the tail rather than a measurement of it.
+
+A pseudo-Huber's \\\nu\\ is the weaker case, being the point at which
+the loss stops being quadratic; at 40 groups it escapes.
 
 Prediction maps new data onto the levels seen at build time; a level the
 term has not seen is rejected.
 
 A random effect is not standardized, and there is no `standardize`
 argument to ask for it with; passing one is an error. Its columns are
-grouping indicators rather than measured covariates, and its
-hyperparameter is a variance component with a meaning of its own.
-Dividing each coefficient by the spread of its indicator would weight
-the effects by the sizes of the groups, which changes the model rather
-than the scale its hyperparameter is read on.
+grouping indicators and its hyperparameter is a variance component with
+a meaning of its own. Dividing each coefficient by the spread of its
+indicator would weight the effects by the sizes of the groups, which
+changes the model itself.
 
 ## The block and its penalty
 
@@ -217,9 +229,9 @@ longitudinal data. *Biometrics* 38, 963-974.
 
 ## See also
 
-[`s`](https://statmodels7.github.io/modelterms7/reference/s.md),
-[`te`](https://statmodels7.github.io/modelterms7/reference/te.md),
-[`nl`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md),
+[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md),
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
 
 ## Examples
 

@@ -9,7 +9,7 @@ which a path visits as they stand."><meta property="og:image" content="https://s
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,23 +66,23 @@ used only to read the names and the bounds.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A named list of numeric vectors, one entry per hyperparameter the
-  caller wrote out.</p>
+caller wrote out.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Several values are neither a held hyperparameter nor a request to build a
 grid: they are the grid. Each is checked against the penalty's bounds as a
-held value would be, and nothing else is applied to them – the value that
+held value would be. Nothing else is applied to them: the value that
 empties the block does not cap them and the depth of the path does not
 reach them, the caller having said which values to visit.</p>
 <p>They are sorted, because a path is walked from the emptiest fit towards the
 fullest and its warm starts follow that order, and duplicates are dropped.
 Which end of the order is the sparse one depends on the penalty, so the
-direction is settled where the path is built and not here.</p>
+direction is settled where the path is built.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="check_hyper.html">check_hyper</a></code>, <code><a href="term_values.html">term_values</a></code></p></div>
+    <div class="dont-index"><p><code><a href="check_hyper.html">check_hyper()</a></code>, <code><a href="term_values.html">term_values()</a></code></p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -11,7 +11,7 @@ repeated down the group's rows and zero-padded to the widest group.
 - term:
 
   A built
-  [`MarginalBreakTerm`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md).
+  [`MarginalBreakTerm()`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md).
 
 - eta:
 

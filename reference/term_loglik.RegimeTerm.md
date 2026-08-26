@@ -25,7 +25,7 @@ exact derivatives.
 - psi:
 
   The parameters, named as
-  [`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
+  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
 - ...:
 

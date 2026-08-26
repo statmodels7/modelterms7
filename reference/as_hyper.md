@@ -21,21 +21,22 @@ as_hyper(x, what = "this term")
 
 ## Value
 
-A named list, possibly empty.
+A named list, one entry per hyperparameter named, each a numeric vector
+of length one or more. Empty for `NULL` or a zero-length input.
 
 ## Details
 
-[`random`](https://statmodels7.github.io/modelterms7/reference/random.md)
-builds one of three penalties depending on what it was given – a ridge,
-a structured prior over a parameters7 matrix, or a distributions7 family
-used coordinatewise – so which names there are is not known until the
-term is built. The shape is checked here and the names against the
+[`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
+builds one of three penalties depending on what it was given: a ridge, a
+structured prior over a parameters7 matrix, or a distributions7 family
+used coordinatewise. Which names there are is therefore not known until
+the term is built. The shape is checked here and the names against the
 penalty by
-[`check_hyper`](https://statmodels7.github.io/modelterms7/reference/check_hyper.md)
+[`check_hyper()`](https://statmodels7.github.io/modelterms7/reference/check_hyper.md)
 at that point.
 
-A vector entry is a written-out grid rather than a held value, exactly
-as it is in the constructors that name their hyperparameters, so the
-length is not checked here either;
-[`.hyper_parts`](https://statmodels7.github.io/modelterms7/reference/dot-hyper_parts.md)
+A vector entry is a written-out grid, exactly as it is in the
+constructors that name their hyperparameters, so the length is not
+checked here either;
+[`.hyper_parts()`](https://statmodels7.github.io/modelterms7/reference/dot-hyper_parts.md)
 splits the two once the penalty exists.

@@ -1,7 +1,7 @@
 # What a Fitted Score-Driven Term Reports
 
-The level, the score loadings and the AUTOREGRESSIVE COEFFICIENTS of the
-literature – `omega`, `alpha1`, `beta1` – with the Jacobian from the
+The level, the score loadings and the autoregressive coefficients of the
+literature, `omega`, `alpha1` and `beta1`, with the Jacobian from the
 term's own parameters.
 
 ## Arguments
@@ -9,7 +9,7 @@ term's own parameters.
 - term:
 
   A
-  [`GasTerm`](https://statmodels7.github.io/modelterms7/reference/GasTerm.md).
+  [`GasTerm()`](https://statmodels7.github.io/modelterms7/reference/GasTerm.md).
 
 - zeta:
 
@@ -22,7 +22,7 @@ term's own parameters.
 ## Value
 
 A list, as
-[`term_readable`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
+[`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
 documents.
 
 ## Details

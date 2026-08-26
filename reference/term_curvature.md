@@ -4,7 +4,7 @@ The Jacobian of the predictor the term produces with respect to a
 caller's unknowns, and the second derivative of that predictor
 contracted against a caller's weights. It is what an observed
 information needs and
-[`term_adjoint`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
+[`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
 does not give.
 
 ## Usage
@@ -30,12 +30,12 @@ term_curvature(term, eta, y, score, curvature, psi, g, seed, blocks, ...)
 - score, curvature:
 
   The callbacks of
-  [`term_filter`](https://statmodels7.github.io/modelterms7/reference/term_filter.md).
+  [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md).
 
 - psi:
 
   The term's parameters, named as
-  [`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
+  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
 - g:
 
@@ -58,8 +58,10 @@ term_curvature(term, eta, y, score, curvature, psi, g, seed, blocks, ...)
 
 ## Value
 
-A list with `jacobian`, the derivative of the predictor in the caller's
-unknowns, and `curvature`, the contracted second derivative.
+A list of two: `jacobian`, an `n` by `ncol(seed)` matrix holding the
+derivative of the predictor in the caller's unknowns, and `curvature`,
+the `ncol(seed)` by `ncol(seed)` second derivative contracted against
+`g`. Both are exact.
 
 ## Details
 
@@ -80,10 +82,10 @@ being supplied.
 caller says how its unknowns reach the static predictor and the term
 knows nothing else about them. `blocks` is where the model's own
 derivatives enter, since the score the recursion is driven by depends on
-every equation and not only on the predictor it is read at. It is called
-once per observation with the predictor there and the Jacobian the
-recursion has reached, and returns the two quantities that seed the
-first and second derivatives of that score,
+every equation, beyond the predictor it is read at. It is called once
+per observation with the predictor there and the Jacobian the recursion
+has reached, and returns the two quantities that seed the first and
+second derivatives of that score,
 
 \$\$\dot S_t = \ell\_{pp,t}D_t + \texttt{cross}, \qquad \ddot S_t =
 \ell\_{pp,t}E_t + \texttt{M},\$\$
@@ -95,8 +97,12 @@ equation has `cross` zero and `M` equal to \\\ell\_{ppp}D^\top D\\.
 
 ## See also
 
-[`term_adjoint`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md),
-[`term_filter`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+[`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
+for the first order,
+[`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
+for the third,
+[`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+for the callbacks.
 
 ## Examples
 

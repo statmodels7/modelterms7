@@ -19,7 +19,7 @@ term_continue(term, psi, f_past, s_past, newdata, ...)
 - psi:
 
   The term's parameters, named as
-  [`term_params`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
+  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
 - f_past:
 
@@ -47,16 +47,16 @@ A structural term's contribution at one observation is not a function of
 that observation: it is the state a recursion has reached, so predicting
 past the series means carrying the state forward. What makes it possible
 without simulation is that the quantity driving the recursion has zero
-conditional mean – for a score-driven term the score itself – so beyond
+conditional mean, the score itself for a score-driven term, so beyond
 the data the recursion is deterministic.
 
-The base method signals an error rather than returning zero: a term with
-state that cannot say what its state does next has nothing to offer a
-prediction, and a zero would read as a term with no effect.
+The base method signals an error. A term with state that cannot say what
+its state does next has nothing to offer a prediction, and returning
+zero there would read as a term with no effect at all.
 
 ## See also
 
-[`term_filter`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+[`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
 
 ## Examples
 

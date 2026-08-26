@@ -22,4 +22,4 @@ Nothing; the method always signals an error.
 
 ## See also
 
-[`term_continue`](https://statmodels7.github.io/modelterms7/reference/term_continue.md)
+[`term_continue()`](https://statmodels7.github.io/modelterms7/reference/term_continue.md)

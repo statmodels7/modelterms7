@@ -11,7 +11,7 @@ the caller supplies."><meta property="og:image" content="https://statmodels7.git
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,27 +71,27 @@ the caller supplies.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A numeric matrix, one row per observation and one column per
-  coefficient of the term.</p>
+coefficient of the term.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>It is the ADJOINT of <code><a href="term_block_contract.html">term_block_contract</a></code> and neither computes
+    <p>It is the adjoint of <code><a href="term_block_contract.html">term_block_contract()</a></code> and neither computes
 the other. That one contracts over the observations and the columns and
-answers per coefficient, which is what the gradient of a marginal criterion
-needs; this one contracts over the coefficients and answers per entry of the
-block, which is what its HESSIAN needs – there \(\partial K/\partial\beta\)
-is required in the direction the mode moves rather than traced.</p>
+answers per coefficient, as the gradient of a marginal criterion
+needs; this one contracts over the coefficients and answers per entry of
+the block, as its Hessian needs, \(\partial K/\partial\beta\) being
+required there in the direction the mode moves instead of traced.</p>
 <p>Both are \(O(nm)\) and read the same closed form, so this needs no
-derivative the other did not: for <code><a href="nl.html">nl</a></code>, writing
+derivative the other did not: for <code><a href="nl.html">nl()</a></code>, writing
 \(q_{p_1p_2} = f_{p_1p_2}h_{p_1}'h_{p_2}' + \delta_{p_1p_2}f_{p_1}h_{p_1}''\),
 $$\Big(\frac{\partial X}{\partial\beta}v\Big)[i, c_1] =
   Z_{p_1}[i,c_1]\sum_{p_2} q_{p_1p_2}(i)\,(Z_{p_2}v_{p_2})[i],$$
-which is the second derivative of \(f\) and not the third.</p>
+the second derivative of \(f\), one order below what an array would need.</p>
 <p>The base method returns zeros, right for a block that does not move.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_block_contract.html">term_block_contract</a></code>, <code><a href="term_refresh.html">term_refresh</a></code></p></div>
+    <div class="dont-index"><p><code><a href="term_block_contract.html">term_block_contract()</a></code>, <code><a href="term_refresh.html">term_refresh()</a></code></p></div>
     </div>
 
     <div class="section level2">

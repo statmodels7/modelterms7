@@ -9,7 +9,7 @@ it was built on, continuing its recursion rather than restarting it."><meta prop
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.60.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@ it was built on, continuing its recursion rather than restarting it.</p>
 
 
 <dt id="arg-psi">psi<a class="anchor" aria-label="anchor" href="#arg-psi"></a></dt>
-<dd><p>The term's parameters, named as <code><a href="term_params.html">term_params</a></code>.</p></dd>
+<dd><p>The term's parameters, named as <code><a href="term_params.html">term_params()</a></code>.</p></dd>
 
 
 <dt id="arg-f-past">f_past<a class="anchor" aria-label="anchor" href="#arg-f-past"></a></dt>
@@ -83,15 +83,15 @@ it was built on, continuing its recursion rather than restarting it.</p>
 that observation: it is the state a recursion has reached, so predicting
 past the series means carrying the state forward. What makes it possible
 without simulation is that the quantity driving the recursion has zero
-conditional mean – for a score-driven term the score itself – so beyond
-the data the recursion is deterministic.</p>
-<p>The base method signals an error rather than returning zero: a term with
-state that cannot say what its state does next has nothing to offer a
-prediction, and a zero would read as a term with no effect.</p>
+conditional mean, the score itself for a score-driven term, so beyond the
+data the recursion is deterministic.</p>
+<p>The base method signals an error. A term with state that cannot say what
+its state does next has nothing to offer a prediction, and returning zero
+there would read as a term with no effect at all.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_filter.html">term_filter</a></code></p></div>
+    <div class="dont-index"><p><code><a href="term_filter.html">term_filter()</a></code></p></div>
     </div>
 
     <div class="section level2">
