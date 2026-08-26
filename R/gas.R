@@ -86,8 +86,7 @@ GasTerm <- S7::new_class(
     by = S7::class_any,
     time = S7::class_any,
     links = S7::class_list,
-    submodels = S7::class_list,
-    blueprint = S7::class_list
+    submodels = S7::class_list
   )
 )
 

@@ -11,11 +11,11 @@ RegimeTerm(
   values = list(),
   min_ratio = numeric(0),
   search = character(0),
+  blueprint = list(),
   k = integer(0),
   by = NULL,
   time = NULL,
-  chain = NULL,
-  blueprint = list()
+  chain = NULL
 )
 }
 \arguments{
@@ -44,6 +44,9 @@ more than one carrying a kink: \code{"grid"} for every combination of them,
 \code{"cyclic"} for one at a time, or \code{character(0)} for the default. See
 \code{\link[=term_search]{term_search()}}.}
 
+\item{blueprint}{A named list of the resolved ordering and grouping, empty
+until \code{\link[=term_build]{term_build()}} fills it.}
+
 \item{k}{The number of regimes, an integer of at least 2.}
 
 \item{by}{An optional grouping expression; each group runs its own
@@ -52,9 +55,6 @@ recursion. \code{NULL} for one group.}
 \item{time}{An optional ordering expression. \code{NULL} for row order.}
 
 \item{chain}{A \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}} of side \code{k}.}
-
-\item{blueprint}{A named list of the resolved ordering and grouping, empty
-until \code{\link[=term_build]{term_build()}} fills it.}
 }
 \value{
 An S7 object of class \code{RegimeTerm}, inheriting from

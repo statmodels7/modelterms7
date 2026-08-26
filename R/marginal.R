@@ -263,8 +263,7 @@ MarginalBreakTerm <- S7::new_class(
     linear = S7::class_logical,
     group = S7::class_any,
     prior = S7::class_any,
-    spec = S7::class_list,
-    blueprint = S7::class_list
+    spec = S7::class_list
   )
 )
 

@@ -10,7 +10,8 @@ structural_term(
   grid = list(),
   values = list(),
   min_ratio = numeric(0),
-  search = character(0)
+  search = character(0),
+  blueprint = list()
 )
 }
 \arguments{
@@ -42,8 +43,9 @@ more than one carrying a kink: \code{"grid"} for every combination of them,
 \value{
 Nothing: the class is abstract and cannot be instantiated.
 \code{structural_term()} throws. As a type it is the parent of \code{\link[=gas]{gas()}},
-\code{\link[=regime]{regime()}} and the marginal break-point terms, and carries exactly
-\code{\link[=model_term]{model_term()}}'s six properties.
+\code{\link[=regime]{regime()}} and the marginal break-point terms, and carries
+\code{\link[=model_term]{model_term()}}'s six properties together with \code{blueprint}, the branch's
+record of having been built, empty in a specification.
 }
 \description{
 The branch of \code{\link[=model_term]{model_term()}} whose terms rewrite the likelihood instead of

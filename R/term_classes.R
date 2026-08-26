@@ -296,8 +296,9 @@ additive_term <- S7::new_class(
 #'
 #' @return Nothing: the class is abstract and cannot be instantiated.
 #'   `structural_term()` throws. As a type it is the parent of [gas()],
-#'   [regime()] and the marginal break-point terms, and carries exactly
-#'   [model_term()]'s six properties.
+#'   [regime()] and the marginal break-point terms, and carries
+#'   [model_term()]'s six properties together with `blueprint`, the branch's
+#'   record of having been built, empty in a specification.
 #'
 #' @seealso [additive_term()] for the other branch, [gas()] and [regime()] for
 #'   the two shapes, [term_params()] and [term_links()] for what such a term
@@ -323,7 +324,16 @@ additive_term <- S7::new_class(
 structural_term <- S7::new_class(
   name = "structural_term",
   parent = model_term,
-  abstract = TRUE
+  abstract = TRUE,
+  properties = list(
+    # The branch's own record of having been built, and the reason it is
+    # declared here rather than on each subclass: every consumer reads it --
+    # term_build() fills one, term_is_built() and the three print methods
+    # test its length -- so a structural class written outside the package
+    # inherits the contract instead of having to know about it. The default
+    # is an empty list, which is what a specification carries.
+    blueprint = S7::class_list
+  )
 )
 
 #' @title S7 Class for the Unpenalized Parametric Term

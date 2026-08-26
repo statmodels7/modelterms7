@@ -11,13 +11,13 @@ GasTerm(
   values = list(),
   min_ratio = numeric(0),
   search = character(0),
+  blueprint = list(),
   p = integer(0),
   q = integer(0),
   by = NULL,
   time = NULL,
   links = list(),
-  submodels = list(),
-  blueprint = list()
+  submodels = list()
 )
 }
 \arguments{
@@ -46,6 +46,9 @@ more than one carrying a kink: \code{"grid"} for every combination of them,
 \code{"cyclic"} for one at a time, or \code{character(0)} for the default. See
 \code{\link[=term_search]{term_search()}}.}
 
+\item{blueprint}{A named list of the resolved ordering, grouping and
+sub-term designs, empty until \code{\link[=term_build]{term_build()}} fills it.}
+
 \item{p}{The number of score lags, an integer of at least 0.}
 
 \item{q}{The number of autoregressive lags, an integer of at least 0.}
@@ -60,9 +63,6 @@ defaults, empty where none was given.}
 
 \item{submodels}{A named list of one-sided formulas, one per parameter
 developed over covariates. Empty where none is.}
-
-\item{blueprint}{A named list of the resolved ordering, grouping and
-sub-term designs, empty until \code{\link[=term_build]{term_build()}} fills it.}
 }
 \value{
 An S7 object of class \code{GasTerm}, inheriting from

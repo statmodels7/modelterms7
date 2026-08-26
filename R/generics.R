@@ -165,15 +165,13 @@ term_is_built <- function(term) {
   # in its coefficient names, a structural one in its blueprint, having no
   # design block to name coefficients of.
   #
-  # The property is ASKED FOR rather than assumed. `blueprint` is declared on
-  # additive_term and on each of the three shipped structural classes, and
-  # not on the abstract structural_term, so a structural class written
-  # outside the package need not carry one; reading it there would raise
-  # S7's "Can't find property" from inside a predicate whose own guard
-  # promises a logical for any model_term.
+  # `blueprint` is declared on additive_term and on the abstract
+  # structural_term, so every model_term has one and it can be read rather
+  # than asked for. A class written outside the package inherits an empty
+  # list, which reads as not built, rather than raising S7's "Can't find
+  # property" from inside a predicate whose guard promises a logical.
   if (S7::S7_inherits(term, structural_term)) {
-    return("blueprint" %in% S7::prop_names(term) &&
-             length(term@blueprint) > 0L)
+    return(length(term@blueprint) > 0L)
   }
   S7::S7_inherits(term, additive_term) && length(term@coef_names) > 0L
 }

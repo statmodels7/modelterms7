@@ -30,7 +30,6 @@ test_that("the base print reports a structural class it does not know", {
   # this line is reached only from outside the package -- and it must not
   # read `X`, which that branch has no property for.
   Mine <- S7::new_class("MineTerm", parent = structural_term,
-                        properties = list(blueprint = S7::class_list),
                         package = NULL)
   spec <- Mine(label = "mine", blueprint = list())
   expect_match(paste(capture.output(print(spec)), collapse = " "),
@@ -43,15 +42,34 @@ test_that("the base print reports a structural class it does not know", {
 })
 
 
-test_that("a structural class carrying no blueprint answers rather than raises", {
-  # `blueprint` is declared on additive_term and on each of the three shipped
-  # structural classes, and NOT on the abstract structural_term, so the
-  # branch's contract is a convention rather than a declaration. Reading the
-  # property unconditionally raised S7's "Can't find property" from inside a
-  # predicate whose own guard promises a logical for any model_term.
+test_that("a structural class declaring nothing inherits the blueprint", {
+  # The branch's contract is a declaration and not a convention: blueprint is
+  # on the abstract structural_term, so a class written outside the package
+  # carries one without knowing about it, and an unfilled one is an empty
+  # list rather than a missing property.
   Bare <- S7::new_class("BareStructural", parent = structural_term,
                         package = NULL)
   b <- Bare(label = "bare")
+  expect_true("blueprint" %in% S7::prop_names(b))
+  expect_identical(b@blueprint, list())
   expect_false(term_is_built(b))
   expect_match(paste(capture.output(print(b)), collapse = " "), "specification")
+
+  # and filling it is what being built means, on any such class
+  filled <- Bare(label = "bare", blueprint = list(order = 1:3))
+  expect_true(term_is_built(filled))
+})
+
+test_that("the three shipped structural classes inherit rather than restate", {
+  # Removing the redeclaration must not move the property: S7 keeps a
+  # redeclared property in the parent's slot, so the constructors' argument
+  # order is the same either way, and every call in the package is by name.
+  for (cl in list(GasTerm, RegimeTerm, MarginalBreakTerm)) {
+    o <- cl(label = "x")
+    expect_identical(o@blueprint, list())
+    expect_false(term_is_built(o))
+    # blueprint sits in the parent's slot, right after model_term's six,
+    # rather than last where each subclass used to put it
+    expect_identical(S7::prop_names(o)[7L], "blueprint")
+  }
 })

@@ -11,14 +11,14 @@ MarginalBreakTerm(
   values = list(),
   min_ratio = numeric(0),
   search = character(0),
+  blueprint = list(),
   kind = character(0),
   var = NULL,
   npsi = integer(0),
   linear = logical(0),
   group = NULL,
   prior = NULL,
-  spec = list(),
-  blueprint = list()
+  spec = list()
 )
 }
 \arguments{
@@ -47,6 +47,9 @@ more than one carrying a kink: \code{"grid"} for every combination of them,
 \code{"cyclic"} for one at a time, or \code{character(0)} for the default. See
 \code{\link[=term_search]{term_search()}}.}
 
+\item{blueprint}{A named list of the resolved grouping and interval
+structure, empty until \code{\link[=term_build]{term_build()}} fills it.}
+
 \item{kind}{One of \code{"jump"}, \code{"seg"} or \code{"jseg"}.}
 
 \item{var}{The covariate expression, unevaluated.}
@@ -64,9 +67,6 @@ subformula.}
 \pkg{distributions7} object with its location held at zero.}
 
 \item{spec}{A named list of the resolved construction settings.}
-
-\item{blueprint}{A named list of the resolved grouping and interval
-structure, empty until \code{\link[=term_build]{term_build()}} fills it.}
 }
 \value{
 An S7 object of class \code{MarginalBreakTerm}, inheriting from

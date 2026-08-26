@@ -182,8 +182,7 @@ RegimeTerm <- S7::new_class(
     k = S7::class_integer,
     by = S7::class_any,
     time = S7::class_any,
-    chain = S7::class_any,
-    blueprint = S7::class_list
+    chain = S7::class_any
   )
 )
 

@@ -1,3 +1,25 @@
+# modelterms7 0.63.0
+
+* `structural_term` declares `blueprint`, so the branch's contract is a
+  declaration rather than a convention. Every consumer already treated the
+  property as belonging to the branch -- `term_build()` fills one,
+  `term_is_built()` and the three print methods test its length -- while the
+  abstract class declared nothing and each of the three shipped classes
+  declared it for itself. A structural class written outside the package
+  therefore had no such property, and reading it raised S7's
+  `Can't find property` from inside a predicate whose guard promises a
+  logical.
+
+  The three subclasses stop restating it. S7 keeps a redeclared property in
+  the parent's slot, so the declaration moves `blueprint` from last to
+  seventh in each of the three constructors' argument order; every call in
+  the toolkit is by name and every fill is `term@blueprint <- ...`, which
+  the suite confirms. The default is an empty list, which is what a
+  specification carries and what `term_is_built()` reads as not built, so a
+  bare subclass answers `FALSE` for the same reason it used to answer
+  `FALSE` through `S7::prop_names()` -- the workaround that guard carried is
+  removed.
+
 # modelterms7 0.62.0
 
 * `check_term()` rejects a structural term by name. Every one of its six
