@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.63.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.64.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,15 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.64.0" id="modelterms7-0640">modelterms7 0.64.0<a class="anchor" aria-label="anchor" href="#modelterms7-0640"></a></h2>
+<ul><li>
+<p><code><a href="../reference/scad.html">scad()</a></code> holds its shape at <code>a = 3.7</code> and <code><a href="../reference/mcp.html">mcp()</a></code> at <code>gamma = 3</code>, the values of Fan and Li and of Zhang, rather than estimating them over a grid. <code>a = NULL</code> and <code>gamma = NULL</code> estimate them as before, and <code>n_a</code> and <code>n_gamma</code> size that grid.</p>
+<p>Estimating the shape was reporting the grid’s own edge as though it were the criterion’s choice. The grid is the floor plus a geometric sequence from 0.25 to 25, so its endpoints are constants and only its interior moves with <code>n_a</code> or <code>n_gamma</code>: measured over eight data configurations, the criterion chose the LOWER ENDPOINT in sixteen of sixteen, and the value did not move at <code>n_gamma</code> of 5, 10, 30 or 60. Below that endpoint the criterion was still improving, BIC reading 203.5878 at the endpoint 1.25 against 203.5189 at 1.02, so the reported value was where the grid stopped rather than where the criterion did.</p>
+<p>It changed no model. The columns kept were identical at every shape from 1.02 to 26 on the reported problem, and across the eight configurations the error against the truth agreed with the literature’s value to four decimals. What the default buys is a search over one axis instead of two: 0.69 s against 2.57 s on eight columns, and the two examples that fit these terms go from 2.30 s and 2.29 s to 1.30 s and 0.71 s.</p>
+<p>The shape is not scale free, which is why the literature’s value belongs to standardized data. Rescaling the response by k sends beta to k beta, and the fit is reproduced at (lambda/k, shape k^2) – verified to 1.7e-13 at k of 2, 5 and 10 – so the shape carries the units of a proximal step and the floor it is swept above grows with them. A held shape below that floor still fits and converges, at the cost of the compiled coordinate descent: measured, 7.4 s against 0.4 s at a hundredfold response.</p>
+</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.63.0" id="modelterms7-0630">modelterms7 0.63.0<a class="anchor" aria-label="anchor" href="#modelterms7-0630"></a></h2>
 <ul><li>

@@ -1,5 +1,42 @@
 # Changelog
 
+## modelterms7 0.64.0
+
+- [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md)
+  holds its shape at `a = 3.7` and
+  [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
+  at `gamma = 3`, the values of Fan and Li and of Zhang, rather than
+  estimating them over a grid. `a = NULL` and `gamma = NULL` estimate
+  them as before, and `n_a` and `n_gamma` size that grid.
+
+  Estimating the shape was reporting the grid’s own edge as though it
+  were the criterion’s choice. The grid is the floor plus a geometric
+  sequence from 0.25 to 25, so its endpoints are constants and only its
+  interior moves with `n_a` or `n_gamma`: measured over eight data
+  configurations, the criterion chose the LOWER ENDPOINT in sixteen of
+  sixteen, and the value did not move at `n_gamma` of 5, 10, 30 or 60.
+  Below that endpoint the criterion was still improving, BIC reading
+  203.5878 at the endpoint 1.25 against 203.5189 at 1.02, so the
+  reported value was where the grid stopped rather than where the
+  criterion did.
+
+  It changed no model. The columns kept were identical at every shape
+  from 1.02 to 26 on the reported problem, and across the eight
+  configurations the error against the truth agreed with the
+  literature’s value to four decimals. What the default buys is a search
+  over one axis instead of two: 0.69 s against 2.57 s on eight columns,
+  and the two examples that fit these terms go from 2.30 s and 2.29 s to
+  1.30 s and 0.71 s.
+
+  The shape is not scale free, which is why the literature’s value
+  belongs to standardized data. Rescaling the response by k sends beta
+  to k beta, and the fit is reproduced at (lambda/k, shape k^2) –
+  verified to 1.7e-13 at k of 2, 5 and 10 – so the shape carries the
+  units of a proximal step and the floor it is swept above grows with
+  them. A held shape below that floor still fits and converges, at the
+  cost of the compiled coordinate descent: measured, 7.4 s against 0.4 s
+  at a hundredfold response.
+
 ## modelterms7 0.63.0
 
 - `structural_term` declares `blueprint`, so the branch’s contract is a

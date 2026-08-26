@@ -166,7 +166,7 @@ names(out$terms)
 #> [1] "linpar"
 out$terms$linpar@formula
 #> ~x1 + log(x2)
-#> <environment: 0x55e62ddfa018>
+#> <environment: 0x55d8f1736d70>
 
 # A constructor call becomes a term, keyed by its label in the formula.
 out2 <- interpret_formula(y ~ x1 + s(x2, k = 5) + ridge(~ g), dd)
@@ -192,19 +192,19 @@ names(interpret_formula(y ~ ridge(~ g) - 1, dd)$terms)
 # An interaction is a covariate: `:` is never evaluated.
 interpret_formula(y ~ x1:x2 + g, dd)$terms$linpar@formula
 #> ~g + x1:x2
-#> <environment: 0x55e62ddfa018>
+#> <environment: 0x55d8f1736d70>
 
 # seg() carries the linear effect, so the bare covariate is removed.
 w <- interpret_formula(y ~ x1 + seg(x1), dd)
 #> Warning: the covariate 'x1' is exactly collinear with the linear effect that 'seg' carries, and has been removed from the parametric part. Write seg(x1, linear = FALSE) to keep the linear effect outside the term instead.
 w$terms$linpar@formula          # x1 is gone; the term carries it
 #> ~1
-#> <environment: 0x55e62ddfa018>
+#> <environment: 0x55d8f1736d70>
 
 # Unless the term is told not to own it.
 interpret_formula(y ~ x1 + seg(x1, linear = FALSE), dd)$terms$linpar@formula
 #> ~x1
-#> <environment: 0x55e62ddfa018>
+#> <environment: 0x55d8f1736d70>
 
 # Arguments for the implicit block go through `linpar`.
 sp <- interpret_formula(y ~ g, dd, linpar = list(sparse = TRUE))
