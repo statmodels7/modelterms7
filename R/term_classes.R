@@ -293,6 +293,13 @@ additive_term <- S7::new_class(
 #' at most one structural term is allowed per model formula.
 #'
 #' @inheritParams model_term
+#' @param blueprint A named list of everything needed to reproduce the term
+#'   on new rows: the design's state, the levels a factor had, whatever the
+#'   subclass's own filter or recursion needs. Its contents are that
+#'   subclass's business and nothing outside the term reads them. Empty in a
+#'   specification and filled by [term_build()], which is what
+#'   [term_is_built()] reads on this branch, a structural term having no
+#'   coefficient names to record being built in.
 #'
 #' @return Nothing: the class is abstract and cannot be instantiated.
 #'   `structural_term()` throws. As a type it is the parent of [gas()],

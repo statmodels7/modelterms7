@@ -39,6 +39,14 @@ or \code{numeric(0)} for the fitting layer's own. See \code{\link[=term_path_min
 more than one carrying a kink: \code{"grid"} for every combination of them,
 \code{"cyclic"} for one at a time, or \code{character(0)} for the default. See
 \code{\link[=term_search]{term_search()}}.}
+
+\item{blueprint}{A named list of everything needed to reproduce the term
+on new rows: the design's state, the levels a factor had, whatever the
+subclass's own filter or recursion needs. Its contents are that
+subclass's business and nothing outside the term reads them. Empty in a
+specification and filled by \code{\link[=term_build]{term_build()}}, which is what
+\code{\link[=term_is_built]{term_is_built()}} reads on this branch, a structural term having no
+coefficient names to record being built in.}
 }
 \value{
 Nothing: the class is abstract and cannot be instantiated.
