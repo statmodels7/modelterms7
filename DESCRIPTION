@@ -35,7 +35,9 @@ Suggests:
     numDeriv,
     pkgdown,
     rmarkdown,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    knitr
+VignetteBuilder: knitr
 Remotes:
     statmodels7/penalties7,
     statmodels7/basis7,
