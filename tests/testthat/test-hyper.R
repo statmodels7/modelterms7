@@ -176,7 +176,12 @@ test_that("several values are a grid the path visits, not a held value", {
   dd <- data.frame(x = stats::rnorm(20), z = stats::rnorm(20))
   b <- term_build(scad(~ x + z, lambda = c(0.5, 2)), dd)
   expect_equal(term_penalties(b)[[1L]]$values, list(lambda = c(0.5, 2)))
-  expect_identical(term_penalties(b)[[1L]]$fixed, list())
+  # the shape is held at the literature's value by default, so the entry
+  # carries it: one hyperparameter written out as a grid, the other fixed
+  expect_identical(term_penalties(b)[[1L]]$fixed, list(a = 3.7))
+  expect_identical(term_penalties(b2 <- term_build(
+    scad(~ x + z, lambda = c(0.5, 2), a = NULL), dd))[[1L]]$fixed, list())
+  expect_equal(term_penalties(b2)[[1L]]$values, list(lambda = c(0.5, 2)))
 })
 
 test_that("a term says how its own hyperparameters are combined", {

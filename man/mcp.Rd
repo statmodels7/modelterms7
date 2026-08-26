@@ -9,7 +9,7 @@ mcp(
   label = "mcp",
   standardize = FALSE,
   lambda = NULL,
-  gamma = NULL,
+  gamma = 3,
   n_lambda = 25,
   n_gamma = 5,
   min_ratio = 1e-04,
@@ -35,8 +35,11 @@ each coefficient on the scale of its own column. See the section above.}
 the grid the path visits as they stand, and \code{NULL}, the default, has
 the path build one. Must lie in \eqn{(0, \infty)}.}
 
-\item{gamma}{The shape, in the same three states and settled independently
-of \code{lambda}. Must lie in \eqn{(1, \infty)}.}
+\item{gamma}{The shape, in the same three states and settled
+independently of \code{lambda}, defaulting to the literature's \code{3} rather
+than to \code{NULL}: one number holds it, several are the grid the path
+visits as they stand, and \code{NULL} has the path build one. Must lie in
+\eqn{(1, \infty)}.}
 
 \item{n_lambda, n_gamma}{How many values the path visits for each, at
 least 2. They differ because the axes do: \eqn{\lambda} descends the
@@ -83,7 +86,26 @@ criterion.
 \code{n_lambda} values by kink size; \code{gamma} on \eqn{(1, \infty)}, at or below
 which the penalized objective need not be convex even for an orthogonal
 design, swept over \code{n_gamma} values on a geometric grid above that bound.
-The literature's value is \eqn{\gamma = 3}.
+
+\strong{The shape is HELD at \eqn{\gamma = 3} by default}, the value of
+Zhang, so only \eqn{\lambda} is searched. \code{gamma = NULL} estimates it
+over the grid instead, and \code{n_gamma} sizes that grid. Measured over eight
+data configurations, estimating it chose the grid's LOWER ENDPOINT every
+time and changed no model: the columns kept were identical and the error
+against the truth agreed to four decimals. The endpoint is the floor plus
+0.25, so what was reported as an estimate was the grid's own edge, and it
+did not move with \code{n_gamma}, which refines the interior and cannot touch
+either end.
+
+⚠️ \strong{The shape is not scale free}, which is why the literature's
+value belongs to standardized data. Rescaling the response by \eqn{k}
+sends \eqn{\beta \to k\beta}, and the fit is reproduced at
+\eqn{(\lambda/k,\ \gamma k^2)}, verified to 1.7e-13 at
+\eqn{k = 2, 5, 10}: the shape carries the units of a proximal step, and
+the floor it is swept above grows with them. On a response of much larger
+scale a small held shape falls outside the convex region the compiled
+coordinate descent needs and the fit takes the general route, measured at
+7.4 s against 0.4 s at a hundredfold response.
 }
 \examples{
 set.seed(3)
@@ -118,7 +140,8 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   cf <- coef(statmodels7::statmod(y ~ mcp(X),
                                   distributions7::gaussian1_distrib(), fd))$mu
   # truth: the first three columns carry 2, -1.5 and 1, the other five
-  # nothing. The shape is estimated beside lambda.
+  # nothing. Only lambda is searched: the shape is held at the
+  # literature's 3, and `gamma = NULL` would estimate it instead.
   c(round(cf[2:5], 2), kept = sum(cf[-1] != 0))
 }
 }

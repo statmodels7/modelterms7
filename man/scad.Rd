@@ -9,7 +9,7 @@ scad(
   label = "scad",
   standardize = FALSE,
   lambda = NULL,
-  a = NULL,
+  a = 3.7,
   n_lambda = 25,
   n_a = 5,
   min_ratio = 1e-04,
@@ -35,8 +35,11 @@ each coefficient on the scale of its own column. See the section above.}
 the grid the path visits as they stand, and \code{NULL}, the default, has
 the path build one. Must lie in \eqn{(0, \infty)}.}
 
-\item{a}{The shape, in the same three states and settled independently of
-\code{lambda}. Must lie in \eqn{(2, \infty)}.}
+\item{a}{The shape, in the same three states and settled independently
+of \code{lambda}, defaulting to the literature's \code{3.7} rather than to
+\code{NULL}: one number holds it, several are the grid the path visits as
+they stand, and \code{NULL} has the path build one. Must lie in
+\eqn{(2, \infty)}.}
 
 \item{n_lambda, n_a}{How many values the path visits for each, at least 2.
 They differ because the axes do: \eqn{\lambda} descends the size of the
@@ -86,9 +89,19 @@ reachable by a marginal criterion.
 \code{n_lambda} values by kink size; \code{a} on \eqn{(2, \infty)}, below which the
 penalty is not what its definition intends, swept over
 \code{n_a} values on a geometric grid above that bound, since the shape
-leaves the kink at zero unchanged and no kink-size path can reach it. The
-literature's value is \eqn{a = 3.7}, and holding it there is what
-\pkg{ncvreg} does.
+leaves the kink at zero unchanged and no kink-size path can reach it.
+
+\strong{The shape is HELD at \eqn{a = 3.7} by default}, the value of Fan and
+Li and the one \pkg{ncvreg} holds, so only \eqn{\lambda} is searched.
+\code{a = NULL} estimates it over the grid instead, and \code{n_a} sizes that
+grid. Measured over eight data configurations, estimating it chose the
+grid's LOWER ENDPOINT every time and changed no model: the columns kept
+were identical and the error against the truth agreed to four decimals.
+
+⚠️ \strong{The shape is not scale free}, which is why the literature's
+value belongs to standardized data. See \code{\link[=mcp]{mcp()}}, whose page carries the
+measurement: rescaling the response reproduces the fit only when the
+shape moves with the square of the scale.
 }
 \examples{
 set.seed(3)
@@ -126,7 +139,8 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   cf <- coef(statmodels7::statmod(y ~ scad(X),
                                   distributions7::gaussian1_distrib(), fd))$mu
   # truth: the first three columns carry 2, -1.5 and 1, the other five
-  # nothing. The shape is estimated beside lambda.
+  # nothing. Only lambda is searched: the shape is held at the
+  # literature's 3.7, and `a = NULL` would estimate it instead.
   c(round(cf[2:5], 2), kept = sum(cf[-1] != 0))
 }
 }

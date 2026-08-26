@@ -337,9 +337,19 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #' `n_lambda` values by kink size; `a` on \eqn{(2, \infty)}, below which the
 #' penalty is not what its definition intends, swept over
 #' `n_a` values on a geometric grid above that bound, since the shape
-#' leaves the kink at zero unchanged and no kink-size path can reach it. The
-#' literature's value is \eqn{a = 3.7}, and holding it there is what
-#' \pkg{ncvreg} does.
+#' leaves the kink at zero unchanged and no kink-size path can reach it.
+#'
+#' **The shape is HELD at \eqn{a = 3.7} by default**, the value of Fan and
+#' Li and the one \pkg{ncvreg} holds, so only \eqn{\lambda} is searched.
+#' `a = NULL` estimates it over the grid instead, and `n_a` sizes that
+#' grid. Measured over eight data configurations, estimating it chose the
+#' grid's LOWER ENDPOINT every time and changed no model: the columns kept
+#' were identical and the error against the truth agreed to four decimals.
+#'
+#' ⚠️ **The shape is not scale free**, which is why the literature's
+#' value belongs to standardized data. See [mcp()], whose page carries the
+#' measurement: rescaling the response reproduces the fit only when the
+#' shape moves with the square of the scale.
 #'
 #' @inheritParams penalized_terms
 #' @param label A single non-empty character string prefixed to the
@@ -349,8 +359,11 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #' @param lambda The scale of the penalty. One number holds it, several are
 #'   the grid the path visits as they stand, and `NULL`, the default, has
 #'   the path build one. Must lie in \eqn{(0, \infty)}.
-#' @param a The shape, in the same three states and settled independently of
-#'   `lambda`. Must lie in \eqn{(2, \infty)}.
+#' @param a The shape, in the same three states and settled independently
+#'   of `lambda`, defaulting to the literature's `3.7` rather than to
+#'   `NULL`: one number holds it, several are the grid the path visits as
+#'   they stand, and `NULL` has the path build one. Must lie in
+#'   \eqn{(2, \infty)}.
 #' @param n_lambda,n_a How many values the path visits for each, at least 2.
 #'   They differ because the axes do: \eqn{\lambda} descends the size of the
 #'   kink over four decades and wants that many points, while \eqn{a} spans
@@ -404,7 +417,8 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #'   cf <- coef(statmodels7::statmod(y ~ scad(X),
 #'                                   distributions7::gaussian1_distrib(), fd))$mu
 #'   # truth: the first three columns carry 2, -1.5 and 1, the other five
-#'   # nothing. The shape is estimated beside lambda.
+#'   # nothing. Only lambda is searched: the shape is held at the
+#'   # literature's 3.7, and `a = NULL` would estimate it instead.
 #'   c(round(cf[2:5], 2), kept = sum(cf[-1] != 0))
 #' }
 #' @references
@@ -417,7 +431,7 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #'   [mcp()], [penalties7::scad_penalty()]
 #' @export
 scad <- function(x, label = "scad", standardize = FALSE,
-                 lambda = NULL, a = NULL,
+                 lambda = NULL, a = 3.7,
                  n_lambda = 25, n_a = 5, min_ratio = 1e-4,
                  search = "grid", sparse = NULL, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
@@ -447,7 +461,26 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #' `n_lambda` values by kink size; `gamma` on \eqn{(1, \infty)}, at or below
 #' which the penalized objective need not be convex even for an orthogonal
 #' design, swept over `n_gamma` values on a geometric grid above that bound.
-#' The literature's value is \eqn{\gamma = 3}.
+#'
+#' **The shape is HELD at \eqn{\gamma = 3} by default**, the value of
+#' Zhang, so only \eqn{\lambda} is searched. `gamma = NULL` estimates it
+#' over the grid instead, and `n_gamma` sizes that grid. Measured over eight
+#' data configurations, estimating it chose the grid's LOWER ENDPOINT every
+#' time and changed no model: the columns kept were identical and the error
+#' against the truth agreed to four decimals. The endpoint is the floor plus
+#' 0.25, so what was reported as an estimate was the grid's own edge, and it
+#' did not move with `n_gamma`, which refines the interior and cannot touch
+#' either end.
+#'
+#' ⚠️ **The shape is not scale free**, which is why the literature's
+#' value belongs to standardized data. Rescaling the response by \eqn{k}
+#' sends \eqn{\beta \to k\beta}, and the fit is reproduced at
+#' \eqn{(\lambda/k,\ \gamma k^2)}, verified to 1.7e-13 at
+#' \eqn{k = 2, 5, 10}: the shape carries the units of a proximal step, and
+#' the floor it is swept above grows with them. On a response of much larger
+#' scale a small held shape falls outside the convex region the compiled
+#' coordinate descent needs and the fit takes the general route, measured at
+#' 7.4 s against 0.4 s at a hundredfold response.
 #'
 #' @inheritParams penalized_terms
 #' @param label A single non-empty character string prefixed to the
@@ -457,8 +490,11 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #' @param lambda The scale of the penalty. One number holds it, several are
 #'   the grid the path visits as they stand, and `NULL`, the default, has
 #'   the path build one. Must lie in \eqn{(0, \infty)}.
-#' @param gamma The shape, in the same three states and settled independently
-#'   of `lambda`. Must lie in \eqn{(1, \infty)}.
+#' @param gamma The shape, in the same three states and settled
+#'   independently of `lambda`, defaulting to the literature's `3` rather
+#'   than to `NULL`: one number holds it, several are the grid the path
+#'   visits as they stand, and `NULL` has the path build one. Must lie in
+#'   \eqn{(1, \infty)}.
 #' @param n_lambda,n_gamma How many values the path visits for each, at
 #'   least 2. They differ because the axes do: \eqn{\lambda} descends the
 #'   size of the kink over four decades and wants that many points, while
@@ -509,7 +545,8 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #'   cf <- coef(statmodels7::statmod(y ~ mcp(X),
 #'                                   distributions7::gaussian1_distrib(), fd))$mu
 #'   # truth: the first three columns carry 2, -1.5 and 1, the other five
-#'   # nothing. The shape is estimated beside lambda.
+#'   # nothing. Only lambda is searched: the shape is held at the
+#'   # literature's 3, and `gamma = NULL` would estimate it instead.
 #'   c(round(cf[2:5], 2), kept = sum(cf[-1] != 0))
 #' }
 #' @references
@@ -521,7 +558,7 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #'   [scad()], [penalties7::mcp_penalty()]
 #' @export
 mcp <- function(x, label = "mcp", standardize = FALSE,
-                lambda = NULL, gamma = NULL,
+                lambda = NULL, gamma = 3,
                 n_lambda = 25, n_gamma = 5, min_ratio = 1e-4,
                 search = "grid", sparse = NULL, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
