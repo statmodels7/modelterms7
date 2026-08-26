@@ -7,10 +7,11 @@
 check_term(term, data, verbose = TRUE)
 }
 \arguments{
-\item{term}{A term specification: any object inheriting from \code{\link[=model_term]{model_term()}},
-built or unbuilt. Anything else throws
-\code{"'term' must inherit from 'model_term'."}. An already-built term is
-accepted and is rebuilt against \code{data}.}
+\item{term}{A term specification: any object inheriting from
+\code{\link[=additive_term]{additive_term()}}, built or unbuilt. Anything that is not a
+\code{\link[=model_term]{model_term()}} throws \code{"'term' must inherit from 'model_term'."}, and a
+\code{\link[=structural_term]{structural_term()}} is rejected by name. An already-built term is accepted
+and is rebuilt against \code{data}.}
 
 \item{data}{A data frame carrying every variable the term names. Anything
 else throws \code{"'data' must be a data frame."}. Any number of rows is
@@ -84,10 +85,13 @@ The battery covers the design block. It reads neither the penalty a
 penalized term attaches nor the hyperparameters it declares, so
 \code{\link[=term_penalties]{term_penalties()}} and \code{\link[=term_hyper]{term_hyper()}} are never called.
 
-\code{check_term()} applies to an additive term. A structural term (\code{\link[=gas]{gas()}},
-\code{\link[=regime]{regime()}}) contributes no design columns and registers no \code{\link[=term_matrix]{term_matrix()}}
-method, so the call stops with S7's method-not-found error at the first
-check.
+\code{check_term()} applies to an additive term and rejects a structural one by
+name. A structural term (\code{\link[=gas]{gas()}}, \code{\link[=regime]{regime()}}, and the marginal break-point
+terms) contributes no design columns and registers no \code{\link[=term_matrix]{term_matrix()}}
+method, so there is nothing for the six checks to read; the message says so
+and names what such a term supplies instead, which is \code{\link[=term_params]{term_params()}},
+\code{\link[=term_links]{term_links()}}, \code{\link[=term_npar]{term_npar()}} and one of \code{\link[=term_filter]{term_filter()}} or
+\code{\link[=term_loglik]{term_loglik()}}. No validator covers those.
 }
 
 \examples{

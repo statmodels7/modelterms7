@@ -77,3 +77,30 @@ test_that("a term that does not build reports the build failure and stops", {
 test_that("verbose printing shows one line per check", {
   expect_output(check_term(linpar(~x), data.frame(x = 1:4)), "\\[OK\\] build")
 })
+test_that("a structural term is rejected by name", {
+  # The second statement of the body reads term_matrix(built), which is
+  # registered on additive_term alone, so a structural term built successfully
+  # and then died inside an internal generic with no row at all.
+  dd <- data.frame(y = rnorm(20), x = rnorm(20))
+
+  expect_error(check_term(gas(p = 1, q = 1), dd), "is structural")
+  expect_error(check_term(gas(p = 1, q = 1), dd), "GasTerm")
+  expect_error(check_term(regime(k = 2), dd), "is structural")
+
+  # the message names what such a term supplies instead
+  expect_error(check_term(gas(p = 1, q = 1), dd), "term_filter")
+
+  # and it is not S7's method-not-found error, which is what it was
+  msg <- tryCatch(check_term(gas(p = 1, q = 1), dd),
+                  error = function(e) conditionMessage(e))
+  expect_false(grepl("Can't find method", msg, fixed = TRUE))
+
+  # the additive branch is untouched: every kind still runs its six checks
+  dd2 <- data.frame(y = rnorm(20), x = rnorm(20), g = factor(rep(1:2, 10)))
+  for (tm in list(linpar(~ x + g), s(x, k = 5), ridge(~x))) {
+    res <- check_term(tm, dd2, verbose = FALSE)
+    expect_identical(nrow(res), 6L)
+    expect_true(all(res$status == "OK"),
+                info = paste(res$check[res$status != "OK"], collapse = ", "))
+  }
+})

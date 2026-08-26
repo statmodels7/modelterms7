@@ -1,3 +1,16 @@
+# modelterms7 0.62.0
+
+* `check_term()` rejects a structural term by name. Every one of its six
+  checks is about the design block and `term_matrix()` is registered on
+  `additive_term` alone, so `check_term(gas(p = 1, q = 1), data)` built the
+  term successfully and then stopped with
+  ``Can't find method for `term_matrix(<modelterms7::GasTerm>)` ``, naming an
+  internal generic and producing no row, where an additive term whose build
+  fails gets a `FAILED` row naming the cause. The message now names the
+  class and says what a structural term supplies instead, which is
+  `term_params()`, `term_links()`, `term_npar()` and one of `term_filter()`
+  or `term_loglik()`.
+
 # modelterms7 0.61.0
 
 * `term_is_built()` answers for a structural term. It tested

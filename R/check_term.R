@@ -83,15 +83,19 @@ NULL
 #' penalized term attaches nor the hyperparameters it declares, so
 #' [term_penalties()] and [term_hyper()] are never called.
 #'
-#' `check_term()` applies to an additive term. A structural term ([gas()],
-#' [regime()]) contributes no design columns and registers no [term_matrix()]
-#' method, so the call stops with S7's method-not-found error at the first
-#' check.
+#' `check_term()` applies to an additive term and rejects a structural one by
+#' name. A structural term ([gas()], [regime()], and the marginal break-point
+#' terms) contributes no design columns and registers no [term_matrix()]
+#' method, so there is nothing for the six checks to read; the message says so
+#' and names what such a term supplies instead, which is [term_params()],
+#' [term_links()], [term_npar()] and one of [term_filter()] or
+#' [term_loglik()]. No validator covers those.
 #'
-#' @param term A term specification: any object inheriting from [model_term()],
-#'   built or unbuilt. Anything else throws
-#'   `"'term' must inherit from 'model_term'."`. An already-built term is
-#'   accepted and is rebuilt against `data`.
+#' @param term A term specification: any object inheriting from
+#'   [additive_term()], built or unbuilt. Anything that is not a
+#'   [model_term()] throws `"'term' must inherit from 'model_term'."`, and a
+#'   [structural_term()] is rejected by name. An already-built term is accepted
+#'   and is rebuilt against `data`.
 #' @param data A data frame carrying every variable the term names. Anything
 #'   else throws `"'data' must be a data frame."`. Any number of rows is
 #'   accepted; with one row the subset check compares the block against itself
@@ -154,6 +158,18 @@ NULL
 check_term <- function(term, data, verbose = TRUE) {
   if (!S7::S7_inherits(term, model_term)) {
     stop("'term' must inherit from 'model_term'.", call. = FALSE)
+  }
+  # Every one of the six checks is about the design block, and term_matrix() is
+  # registered on additive_term alone. Refused here, where the message can name
+  # the class and the contract, rather than at the second statement of the body,
+  # where it was S7's method-not-found error on an internal generic.
+  if (S7::S7_inherits(term, structural_term)) {
+    stop(sprintf(paste0(
+      "check_term() covers an additive term, and '%s' is structural: it ",
+      "contributes no design block for the checks to read.\n",
+      "A structural term supplies term_params(), term_links(), term_npar() ",
+      "and one of term_filter() or term_loglik()."),
+      class(term)[1L]), call. = FALSE)
   }
   if (!is.data.frame(data)) {
     stop("'data' must be a data frame.", call. = FALSE)
