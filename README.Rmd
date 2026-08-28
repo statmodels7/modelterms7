@@ -67,6 +67,81 @@ both returning their exact derivative alongside the state because the
 recursion is the only place it can be computed. `cens()` marks a censored
 response on the left side of the formula.
 
+A structural term has parameters of its own rather than coefficients, and
+declares them: they are estimated on the unconstrained scale of each one's
+own chart, so a persistence stays stationary and a loading stays positive
+whatever value the optimizer proposes.
+
+```{r}
+g <- gas(p = 1, q = 1)
+term_params(g)
+vapply(term_links(g), function(l) l@link_name, character(1))
+```
+
+## A term's own parameters take formulas
+
+Anything a term carries can be developed over covariates by writing a
+two-sided formula whose left side names the parameter. The development acts
+on the unconstrained scale of that parameter's chart, so the constraint
+holds at every observation and not merely on average: a break-point given a
+random effect per group, a loading given a covariate.
+
+```{r}
+pan <- data.frame(x = runif(60), id = factor(rep(1:6, each = 10)))
+pan$y <- rnorm(60)
+
+sg <- term_build(seg(x, psi ~ random(~ 1 | id)), pan)
+term_coef_names(sg)[1:4]
+```
+
+That is the random-changepoint model, and it is one line rather than a
+separate term. The same route carries a penalty: `nl(~ a * exp(-r * x), a ~
+0 + ridge(~ g))` puts a ridge on the amplitudes across the levels of `g`,
+and `term_penalties()` reports every entry a term declares with the subset
+of its parameters each one covers.
+
+## Break-points three ways
+
+The break-point terms come in three constructions, and which to use is a
+statement about the model rather than about the numerics. The default
+estimates the positions by the working fits of Muggeo and of Fasola, with
+the position read off the fitted coefficients.
+
+`smoothed =` replaces the absolute value inside the term with a
+[penalties7](https://statmodels7.github.io/penalties7/) `abs_smoother`, and
+then a break-point is an ordinary parameter of a differentiable model.
+`term_jacobian_block()` is where the difference shows. `seg()` is continuous
+and its block is already a Jacobian; the two discontinuous constructions
+read their position off a product of the fitted coefficients, so their block
+is a working linearization with a frozen weight until the term is smoothed.
+
+```{r}
+jb <- function(...) term_jacobian_block(term_build(jump(x, ...), pan))
+c(sharp    = jb(npsi = 1),
+  smoothed = jb(npsi = 1, smoothed = penalties7::smooth_probit()))
+```
+
+That is also what makes the developments above available on a discontinuous
+term: the read-off cannot carry them and a Jacobian can.
+
+`marginal = TRUE` integrates a latent break-point per group out of the
+likelihood instead of estimating one, which is the exact treatment rather
+than a mode-based one. For a jump the integral is exact: the process of
+active break-points is a hidden Markov chain over the side patterns, so the
+forward recursion costs $nK2^K$ where the cell sum costs $(n+1)^K$.
+
+## Simulating from a term
+
+`term_simulate()` is how `statmodels7::rstatmod()` draws a response from a
+term that carries state. A score-driven filter needs no second recursion for
+it: the filter evaluates its score once per observation, in time order, at
+the predictor it has just produced, so a callback that draws the response
+there and returns the score of what it drew turns the filter into a
+generator. A latent chain draws its path from the stationary law the
+likelihood is written with, since any other start would simulate a different
+model. A term without state has nothing of its own to draw, and the base
+method signals an error.
+
 ## A formula, interpreted
 
 The interpreter recognizes a term by what its call evaluates to, not by its
