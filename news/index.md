@@ -1,5 +1,20 @@
 # Changelog
 
+## modelterms7 0.65.0
+
+- [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
+  follows distributions7 0.42.0, which splits `mvgaussian_distrib()`
+  into `mvgaussian1_distrib()` (covariance) and `mvgaussian2_distrib()`
+  (precision). The correlated default builds the covariance form, as it
+  did, and the message that reports the retired `precision` argument now
+  names `mvgaussian2_distrib()`, which is the spelling that replaces it:
+  a structured precision is written as the matrix parameter of the
+  family that says so.
+
+  Nothing about what the term builds changes. The side has always been
+  read from the distribution’s `params_interpretation`, never from
+  `parameters7`’s `role`, which that package removes at 0.19.0.
+
 ## modelterms7 0.64.0
 
 - [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md)

@@ -26,7 +26,9 @@ A distributions7 object.
 
 ## Details
 
-The structure's role is declared, `"covariance"` here. A structure left
-at `"either"` does not say which matrix of the prior it is, and the two
-cannot be read interchangeably: they differ in the sign of the
-log-determinant term.
+The side is the family's, and the family built here is
+`mvgaussian1_distrib()`, so the structure is the effects' **covariance**
+and its hyperparameters are read as standard deviations and
+correlations. The precision reading is a different prior – the two
+differ in the sign of the log-determinant term – and is written by
+passing `mvgaussian2_distrib()` to `distrib` instead.

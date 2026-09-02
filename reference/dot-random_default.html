@@ -11,7 +11,7 @@ an unstructured covariance for several correlated ones."><meta property="og:imag
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.64.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.65.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,10 +66,12 @@ an unstructured covariance for several correlated ones.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The structure's role is declared, <code>"covariance"</code> here. A structure left at
-<code>"either"</code> does not say which matrix of the prior it is, and the two cannot
-be read interchangeably: they differ in the sign of the log-determinant
-term.</p>
+    <p>The side is the family's, and the family built here is
+<code>mvgaussian1_distrib()</code>, so the structure is the effects' <strong>covariance</strong>
+and its hyperparameters are read as standard deviations and correlations.
+The precision reading is a different prior – the two differ in the sign of
+the log-determinant term – and is written by passing
+<code>mvgaussian2_distrib()</code> to <code>distrib</code> instead.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

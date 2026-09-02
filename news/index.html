@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.64.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.65.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,13 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.65.0" id="modelterms7-0650">modelterms7 0.65.0<a class="anchor" aria-label="anchor" href="#modelterms7-0650"></a></h2>
+<ul><li>
+<p><code><a href="../reference/random.html">random()</a></code> follows distributions7 0.42.0, which splits <code>mvgaussian_distrib()</code> into <code>mvgaussian1_distrib()</code> (covariance) and <code>mvgaussian2_distrib()</code> (precision). The correlated default builds the covariance form, as it did, and the message that reports the retired <code>precision</code> argument now names <code>mvgaussian2_distrib()</code>, which is the spelling that replaces it: a structured precision is written as the matrix parameter of the family that says so.</p>
+<p>Nothing about what the term builds changes. The side has always been read from the distribution’s <code>params_interpretation</code>, never from <code>parameters7</code>’s <code>role</code>, which that package removes at 0.19.0.</p>
+</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.64.0" id="modelterms7-0640">modelterms7 0.64.0<a class="anchor" aria-label="anchor" href="#modelterms7-0640"></a></h2>
 <ul><li>

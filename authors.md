@@ -10,13 +10,13 @@ Source:
 [`DESCRIPTION`](https://github.com/statmodels7/modelterms7/blob/master/DESCRIPTION)
 
 Tinervia G (2026). *modelterms7: Model Terms as Objects for
-Formula-Based Modeling*. R package version 0.64.0,
+Formula-Based Modeling*. R package version 0.65.0,
 <https://github.com/statmodels7/modelterms7>.
 
     @Manual{,
       title = {modelterms7: Model Terms as Objects for Formula-Based Modeling},
       author = {Giovanni Tinervia},
       year = {2026},
-      note = {R package version 0.64.0},
+      note = {R package version 0.65.0},
       url = {https://github.com/statmodels7/modelterms7},
     }
