@@ -69,7 +69,7 @@ them with one per within-group column.
 
 A multivariate distribution of the within-group dimension lets the effects
 of one group depend on each other, its matrix parameter carrying the
-dependence: \code{mvgaussian_distrib(2, omega = ar1(2))} is a prior whose
+dependence: \code{mvgaussian2_distrib(2, ar1(2))} is a prior whose
 precision is autoregressive, \code{mvstudent_t_distrib(2)} a heavy-tailed
 one. Correlation is available exactly for the families that carry a matrix
 parameter: a location block as long as the dimension, together with a

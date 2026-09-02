@@ -20,9 +20,11 @@ IS the standard deviation of the effects, and the multivariate Gaussian on
 an unstructured covariance for several correlated ones.
 }
 \details{
-The structure's role is declared, \code{"covariance"} here. A structure left at
-\code{"either"} does not say which matrix of the prior it is, and the two cannot
-be read interchangeably: they differ in the sign of the log-determinant
-term.
+The side is the family's, and the family built here is
+\code{mvgaussian1_distrib()}, so the structure is the effects' \strong{covariance}
+and its hyperparameters are read as standard deviations and correlations.
+The precision reading is a different prior -- the two differ in the sign of
+the log-determinant term -- and is written by passing
+\code{mvgaussian2_distrib()} to \code{distrib} instead.
 }
 \keyword{internal}

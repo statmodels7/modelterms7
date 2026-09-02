@@ -102,8 +102,8 @@ RandomTerm <- S7::new_class(
 #'
 #' A multivariate distribution of the within-group dimension lets the effects
 #' of one group depend on each other, its matrix parameter carrying the
-#' dependence: `mvgaussian_distrib(2, omega = ar1(2))` is a prior whose
-#' precision is autoregressive, `mvstudent_t_distrib(2)` a heavy-tailed
+#' dependence: `mvgaussian2_distrib(2, ar1(2))` is a prior whose
+#' precision is autoregressive, `mvstudent_t1_distrib(2)` a heavy-tailed
 #' one. Correlation is available exactly for the families that carry a matrix
 #' parameter: a location block as long as the dimension, together with a
 #' covariance, precision or scale matrix. The term reads that property off the
@@ -360,7 +360,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
     stop(paste0(
       "'precision' has been removed: a structured precision is the matrix\n",
       "  parameter of a multivariate Gaussian, so it is written as one --\n",
-      "  distrib = fixed(mvgaussian_distrib(d, omega = <structure>),\n",
+      "  distrib = fixed(mvgaussian2_distrib(d, <structure>),\n",
       "                  mu1 = 0, ..., mud = 0)\n",
       "  which also says which of the two matrices the structure is."),
       call. = FALSE)
@@ -538,8 +538,8 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
         "%s ('%s') carries no matrix parameter over R^%d, so it cannot say\n",
         "  how the effects of one group depend on each other. Correlated\n",
         "  effects need a family with a location block and a covariance,\n",
-        "  precision or scale matrix, such as mvgaussian_distrib() or\n",
-        "  mvstudent_t_distrib()."),
+        "  precision or scale matrix, such as mvgaussian1_distrib() or\n",
+        "  mvstudent_t1_distrib()."),
         what, base@distrib_name, base@n_dim), call. = FALSE)
     }
     if (d@n_dim != dim_needed) {
@@ -580,10 +580,12 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' an unstructured covariance for several correlated ones.
 #'
 #' @details
-#' The structure's role is declared, `"covariance"` here. A structure left at
-#' `"either"` does not say which matrix of the prior it is, and the two cannot
-#' be read interchangeably: they differ in the sign of the log-determinant
-#' term.
+#' The side is the family's, and the family built here is
+#' `mvgaussian1_distrib()`, so the structure is the effects' **covariance**
+#' and its hyperparameters are read as standard deviations and correlations.
+#' The precision reading is a different prior -- the two differ in the sign of
+#' the log-determinant term -- and is written by passing
+#' `mvgaussian2_distrib()` to `distrib` instead.
 #'
 #' @param d The number of within-group columns.
 #' @param correlated Whether the effects may correlate.
@@ -595,8 +597,8 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
   if (d == 1L || !correlated) {
     return(distributions7::fixed(distributions7::gaussian1_distrib(), mu = 0))
   }
-  mv <- distributions7::mvgaussian_distrib(
-    d, sigma = parameters7::log_cholesky(d, role = "covariance"))
+  mv <- distributions7::mvgaussian1_distrib(
+    d, sigma = parameters7::log_cholesky(d))
   do.call(distributions7::fixed,
           c(list(mv), stats::setNames(as.list(rep(0, d)),
                                       paste0("mu", seq_len(d)))))

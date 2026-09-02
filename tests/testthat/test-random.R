@@ -6,9 +6,14 @@ dd <- data.frame(y = rnorm(12), x = rnorm(12),
 
 .centered <- function(d, ...) distributions7::fixed(d, ...)
 
-.mv_centered <- function(p, ...) {
+.mv_centered <- function(p, ..., inverted = FALSE) {
+  ctor <- if (inverted) {
+    distributions7::mvgaussian2_distrib
+  } else {
+    distributions7::mvgaussian1_distrib
+  }
   do.call(distributions7::fixed,
-          c(list(distributions7::mvgaussian_distrib(p, ...)),
+          c(list(ctor(p, ...)),
             stats::setNames(as.list(rep(0, p)), paste0("mu", seq_len(p)))))
 }
 
@@ -102,7 +107,7 @@ test_that("the correlated default is one blockwise multivariate gaussian", {
   # and it IS the penalty penalties7 builds from the same centered family
   ref <- penalties7::distrib_penalty(
     .mv_centered(2, sigma = parameters7::log_cholesky(
-      2, role = "covariance")), n_coef = 6)
+      2)), n_coef = 6)
   beta <- stats::rnorm(6)
   th <- stats::setNames(as.list(c(0.1, -0.2, 0.3)), ref@params)
   expect_equal(penalties7::penalty_value(term_penalty(bc), beta, th),
@@ -134,7 +139,7 @@ test_that("correlated = FALSE is one penalty PER within-group column", {
 })
 
 test_that("a multivariate prior carries the dependence, and says which matrix", {
-  st <- .mv_centered(2, omega = parameters7::ar1(2))
+  st <- .mv_centered(2, parameters7::ar1(2), inverted = TRUE)
   built <- term_build(random(~ x | g, distrib = st), dd)
   # the free name says how the matrix is built AND which matrix it is
   expect_identical(term_penalty(built)@params,
@@ -287,7 +292,7 @@ test_that("the removed arguments are reported by name", {
   # a removed argument lands in the dots, where it would be swallowed; it is
   # named instead, with the spelling that replaces it
   expect_error(random(~ x | g, precision = parameters7::ar1(2)),
-               "mvgaussian_distrib")
+               "mvgaussian2_distrib")
   expect_error(random(~ 1 | g, kinks = 0), "distrib_kinks")
   expect_error(random(~ 1 | g, standardize = TRUE), "no argument")
   # and two ways of saying the same thing is an error, not a silent winner
@@ -307,7 +312,7 @@ test_that("a multivariate Student t prior is admitted", {
   # it carries a location block and a scale matrix, and it answers its mixed
   # response-parameter block, which is what the admissibility rule asks
   mvt <- do.call(distributions7::fixed,
-                 list(distributions7::mvstudent_t_distrib(2),
+                 list(distributions7::mvstudent_t1_distrib(2),
                       mu1 = 0, mu2 = 0))
   built <- term_build(random(~ x | g, distrib = mvt), dd)
   expect_identical(term_penalty(built)@block, 2L)
