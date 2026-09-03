@@ -12,6 +12,7 @@ lasso(
   label = "lasso",
   standardize = FALSE,
   lambda = NULL,
+  id = NULL,
   n_lambda = 25,
   min_ratio = 1e-04,
   sparse = NULL,
@@ -44,6 +45,15 @@ lasso(
   The rate of the prior. One number holds it, several are the grid the
   path visits as they stand, and `NULL`, the default, has the path build
   one. Must lie in \\(0, \infty)\\.
+
+- id:
+
+  A label sharing this term's hyperparameter with those of other terms
+  carrying the same one: they are then estimated at a single value,
+  wherever in the formula they sit. `NULL`, the default, shares nothing.
+  See
+  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md),
+  whose page says what the labels mean and what care they want.
 
 - n_lambda:
 

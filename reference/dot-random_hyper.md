@@ -6,7 +6,7 @@ against the penalty that carries it.
 ## Usage
 
 ``` r
-.random_hyper(entries, hyper, label)
+.random_hyper(entries, hyper, ids, label)
 ```
 
 ## Arguments

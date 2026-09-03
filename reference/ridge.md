@@ -11,6 +11,7 @@ ridge(
   label = "ridge",
   standardize = FALSE,
   lambda = NULL,
+  id = NULL,
   sparse = NULL,
   ...
 )
@@ -41,6 +42,15 @@ ridge(
   The precision of the prior. One number holds it and `NULL`, the
   default, has it estimated. A ridge has no kink and no path, so several
   numbers are not a grid it could visit. Must lie in \\(0, \infty)\\.
+
+- id:
+
+  A label sharing this term's hyperparameter with those of other terms
+  carrying the same one: they are then estimated at a single value,
+  wherever in the formula they sit. `NULL`, the default, shares nothing.
+  See
+  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md),
+  whose page says what the labels mean and what care they want.
 
 - sparse:
 

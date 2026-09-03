@@ -27,6 +27,7 @@ additive_term(
   values = list(),
   min_ratio = numeric(0),
   search = character(0),
+  ids = character(0),
   X = NULL,
   coef_names = character(0),
   blueprint = list(),
@@ -78,6 +79,14 @@ additive_term(
   one carrying a kink: `"grid"` for every combination of them,
   `"cyclic"` for one at a time, or `character(0)` for the default. See
   [`term_search()`](https://statmodels7.github.io/modelterms7/reference/term_search.md).
+
+- ids:
+
+  Which of the term's hyperparameters are shared with those of other
+  terms, and under what label: a character vector named by the term's
+  own hyperparameters, or `character(0)` for none. The terms carrying
+  the same label for the same hyperparameter estimate one value. See
+  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
 
 - X:
 

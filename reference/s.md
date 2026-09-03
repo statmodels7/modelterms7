@@ -22,6 +22,7 @@ s(
   linear = TRUE,
   label = NULL,
   lambda = NULL,
+  id = NULL,
   sparse = NULL
 )
 ```
@@ -68,6 +69,15 @@ s(
 
   The smoothing parameter, held at the value given and **estimated**
   when left `NULL`, which is the default.
+
+- id:
+
+  A label sharing this smooth's smoothing parameter with those of other
+  terms carrying the same one: they are then estimated at a single
+  value, so several curves are smoothed together. It is what `id` does
+  in mgcv, and what it means best between smooths of the same basis and
+  dimension. `NULL`, the default, shares nothing. See
+  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
 
 - sparse:
 

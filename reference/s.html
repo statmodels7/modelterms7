@@ -19,7 +19,7 @@ edf() falls to exactly one."><meta property="og:image" content="https://statmode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.66.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.67.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,6 +66,7 @@ the deviation.</p>
 <span>  linear <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  label <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lambda <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  id <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sparse <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -112,6 +113,15 @@ unpenalized there, <code>TRUE</code> by default.</p></dd>
 <dt id="arg-lambda">lambda<a class="anchor" aria-label="anchor" href="#arg-lambda"></a></dt>
 <dd><p>The smoothing parameter, held at the value given and
 <strong>estimated</strong> when left <code>NULL</code>, which is the default.</p></dd>
+
+
+<dt id="arg-id">id<a class="anchor" aria-label="anchor" href="#arg-id"></a></dt>
+<dd><p>A label sharing this smooth's smoothing parameter with those
+of other terms carrying the same one: they are then estimated at a
+single value, so several curves are smoothed together. It is what
+<code>id</code> does in <span class="pkg">mgcv</span>, and what it means best between smooths of
+the same basis and dimension. <code>NULL</code>, the default, shares nothing.
+See <code><a href="term_ids.html">term_ids()</a></code>.</p></dd>
 
 
 <dt id="arg-sparse">sparse<a class="anchor" aria-label="anchor" href="#arg-sparse"></a></dt>

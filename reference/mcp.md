@@ -13,6 +13,7 @@ mcp(
   standardize = FALSE,
   lambda = NULL,
   gamma = 3,
+  id = NULL,
   n_lambda = 25,
   n_gamma = 5,
   min_ratio = 1e-04,
@@ -54,6 +55,16 @@ mcp(
   `lambda`, defaulting to the literature's `3` rather than to `NULL`:
   one number holds it, several are the grid the path visits as they
   stand, and `NULL` has the path build one. Must lie in \\(1, \infty)\\.
+
+- id:
+
+  Labels sharing this term's hyperparameters with those of other terms
+  carrying the same ones: each is then estimated at a single value,
+  wherever in the formula they sit. A named vector, `c(gamma = "A")`,
+  since the penalty carries several and which was meant is not a guess;
+  `NULL`, the default, shares nothing. See
+  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md),
+  whose page says what the labels mean and what care they want.
 
 - n_lambda, n_gamma:
 

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.66.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.67.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,15 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.67.0" id="modelterms7-0670">modelterms7 0.67.0<a class="anchor" aria-label="anchor" href="#modelterms7-0670"></a></h2>
+<ul><li>
+<p>Every term that carries a penalty takes <code>id</code>, a label sharing one of its hyperparameters with those of the terms carrying the same label: they are then estimated at a single value, wherever in the formula they sit. It is what <code>id</code> does in mgcv, generalized past smooths. <code><a href="../reference/ridge.html">ridge()</a></code>, <code><a href="../reference/lasso.html">lasso()</a></code>, <code><a href="../reference/enet.html">enet()</a></code>, <code><a href="../reference/scad.html">scad()</a></code>, <code><a href="../reference/mcp.html">mcp()</a></code>, <code><a href="../reference/s.html">s()</a></code>, <code><a href="../reference/te.html">te()</a></code> and <code><a href="../reference/random.html">random()</a></code> take it, and so does a term written inside a subformula, so a <code><a href="../reference/seg.html">seg()</a></code> whose slope change and level change are each developed over a ridge may give the two one shrinkage.</p>
+<p>A single unnamed string shares <strong>the</strong> hyperparameter and is legal only where the penalty carries one; a penalty carrying several wants a named vector, <code>c(alpha = "A")</code>, since sharing the mixing of an elastic net while leaving its strength free is a model and which was meant is not a guess.</p>
+<p>Sharing does not merge the penalties: they stay two objects estimated at one value, each keeping its own block, its own coefficients and its own effective degrees of freedom. Nothing checks whether the two are comparable, deliberately, since a shared value multiplies each penalty as it is; the documentation says what care that wants, and what it means best between penalties of the same shape over covariates of comparable scale.</p>
+</li>
+<li><p><code><a href="../reference/term_ids.html">term_ids()</a></code> reports the labels, in the shape <code><a href="../reference/term_hyper.html">term_hyper()</a></code> reports the held values: one entry per penalty entry, so a structural term answers for its subformulas’ terms without a method of its own. <code><a href="../reference/term_penalties.html">term_penalties()</a></code> entries carry <code>ids</code>, so a label travels the way a held value does.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.66.0" id="modelterms7-0660">modelterms7 0.66.0<a class="anchor" aria-label="anchor" href="#modelterms7-0660"></a></h2>
 <ul><li>

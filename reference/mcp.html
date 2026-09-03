@@ -9,7 +9,7 @@ it begins to flatten immediately, where SCAD waits for a first threshold."><meta
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.66.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.67.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -48,6 +48,7 @@ it begins to flatten immediately, where SCAD waits for a first threshold.</p>
 <span>  standardize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  lambda <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  gamma <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  id <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_lambda <span class="op">=</span> <span class="fl">25</span>,</span>
 <span>  n_gamma <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  min_ratio <span class="op">=</span> <span class="fl">1e-04</span>,</span>
@@ -91,6 +92,16 @@ independently of <code>lambda</code>, defaulting to the literature's <code>3</co
 than to <code>NULL</code>: one number holds it, several are the grid the path
 visits as they stand, and <code>NULL</code> has the path build one. Must lie in
 \((1, \infty)\).</p></dd>
+
+
+<dt id="arg-id">id<a class="anchor" aria-label="anchor" href="#arg-id"></a></dt>
+<dd><p>Labels sharing this term's hyperparameters with those of
+other terms carrying the same ones: each is then estimated at a
+single value, wherever in the formula they sit. A named vector,
+<code>c(gamma = "A")</code>, since the penalty carries several and which was
+meant is not a guess; <code>NULL</code>, the default, shares nothing. See
+<code><a href="term_ids.html">term_ids()</a></code>, whose page says what the labels mean and what care
+they want.</p></dd>
 
 
 <dt id="arg-n-lambda-n-gamma">n_lambda, n_gamma<a class="anchor" aria-label="anchor" href="#arg-n-lambda-n-gamma"></a></dt>

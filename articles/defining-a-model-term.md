@@ -216,7 +216,7 @@ length(term_penalties(tm))
 #> [1] 1
 names(term_penalties(tm)[[1]])
 #> [1] "name"      "index"     "penalty"   "fixed"     "n_values"  "values"   
-#> [7] "min_ratio" "search"
+#> [7] "min_ratio" "search"    "ids"
 ```
 
 A term with several may declare several:

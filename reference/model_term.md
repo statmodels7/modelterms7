@@ -23,7 +23,8 @@ model_term(
   grid = list(),
   values = list(),
   min_ratio = numeric(0),
-  search = character(0)
+  search = character(0),
+  ids = character(0)
 )
 ```
 
@@ -72,10 +73,18 @@ model_term(
   `"cyclic"` for one at a time, or `character(0)` for the default. See
   [`term_search()`](https://statmodels7.github.io/modelterms7/reference/term_search.md).
 
+- ids:
+
+  Which of the term's hyperparameters are shared with those of other
+  terms, and under what label: a character vector named by the term's
+  own hyperparameters, or `character(0)` for none. The terms carrying
+  the same label for the same hyperparameter estimate one value. See
+  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
+
 ## Value
 
 Nothing: the class is abstract and cannot be instantiated. As a type it
-is the parent of every term, with the six properties above.
+is the parent of every term, with the seven properties above.
 
 ## The two branches
 

@@ -18,6 +18,7 @@ te(
   anisotropic = TRUE,
   label = NULL,
   lambda = NULL,
+  id = NULL,
   sparse = NULL
 )
 ```
@@ -68,6 +69,15 @@ te(
   when left `NULL`, which is the default. An anisotropic product carries
   one per margin, so a vector of that length, or a named one holding
   some of them.
+
+- id:
+
+  Labels sharing this term's smoothing parameters with those of other
+  terms carrying the same ones. An anisotropic product carries one per
+  margin, so the labels are named after them, `c(lambda1 = "A")`; an
+  isotropic one carries `lambda` alone and a single unnamed string will
+  do. `NULL`, the default, shares nothing. See
+  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
 
 - sparse:
 

@@ -15,6 +15,7 @@ random(
   correlated = TRUE,
   label = "random",
   hyper = NULL,
+  id = NULL,
   ...
 )
 ```
@@ -53,6 +54,16 @@ random(
   where there is one copy per column. A name the penalty does not carry
   is reported when the term is built, which is where the penalty first
   exists.
+
+- id:
+
+  Labels sharing the effects' hyperparameters with those of other terms
+  carrying the same ones, so that two random effects may be given one
+  variance component. The names are `hyper`'s, checked at the same point
+  and for the same reason; a single unnamed string will do where the
+  effects' distribution carries one hyperparameter. `NULL`, the default,
+  shares nothing. See
+  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
 
 - ...:
 

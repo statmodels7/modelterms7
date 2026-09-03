@@ -22,6 +22,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/censored_response.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/check_grid.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/check_hyper.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/check_ids.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/check_min_ratio.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/check_search.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/check_term.html</loc></url>
@@ -30,6 +31,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-block_sd.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-check_design_opts.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-design_matrix.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/dot-factory_params.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_chart_derivs.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_chart_derivs3.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_curvature_core.html</loc></url>
@@ -134,6 +136,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_hessian.RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_hessian.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_hyper.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_ids.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_is_built.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.SegTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.html</loc></url>

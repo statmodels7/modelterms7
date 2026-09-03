@@ -1,5 +1,47 @@
 # Changelog
 
+## modelterms7 0.67.0
+
+- Every term that carries a penalty takes `id`, a label sharing one of
+  its hyperparameters with those of the terms carrying the same label:
+  they are then estimated at a single value, wherever in the formula
+  they sit. It is what `id` does in mgcv, generalized past smooths.
+  [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md),
+  [`enet()`](https://statmodels7.github.io/modelterms7/reference/enet.md),
+  [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md),
+  [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md),
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md),
+  [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
+  and
+  [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
+  take it, and so does a term written inside a subformula, so a
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  whose slope change and level change are each developed over a ridge
+  may give the two one shrinkage.
+
+  A single unnamed string shares **the** hyperparameter and is legal
+  only where the penalty carries one; a penalty carrying several wants a
+  named vector, `c(alpha = "A")`, since sharing the mixing of an elastic
+  net while leaving its strength free is a model and which was meant is
+  not a guess.
+
+  Sharing does not merge the penalties: they stay two objects estimated
+  at one value, each keeping its own block, its own coefficients and its
+  own effective degrees of freedom. Nothing checks whether the two are
+  comparable, deliberately, since a shared value multiplies each penalty
+  as it is; the documentation says what care that wants, and what it
+  means best between penalties of the same shape over covariates of
+  comparable scale.
+
+- [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md)
+  reports the labels, in the shape
+  [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md)
+  reports the held values: one entry per penalty entry, so a structural
+  term answers for its subformulas’ terms without a method of its own.
+  [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+  entries carry `ids`, so a label travels the way a held value does.
+
 ## modelterms7 0.66.0
 
 - [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)

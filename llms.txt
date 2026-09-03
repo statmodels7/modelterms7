@@ -304,6 +304,8 @@ structural term takes instead.
   : How Far Down Its Path a Term Reaches
 - [`term_search()`](https://statmodels7.github.io/modelterms7/reference/term_search.md)
   : How a Term Covers Its Own Kinked Hyperparameters
+- [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md)
+  : Which of a Term's Hyperparameters Are Shared
 - [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
   : Number of Parameters of a Built Term
 - [`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)

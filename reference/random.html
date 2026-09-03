@@ -15,7 +15,7 @@ coefficients. That is what a random effect is under penalized likelihood."><meta
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.66.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.67.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,6 +57,7 @@ coefficients. That is what a random effect is under penalized likelihood.</p>
 <span>  correlated <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  label <span class="op">=</span> <span class="st">"random"</span>,</span>
 <span>  hyper <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  id <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -96,6 +97,15 @@ a named vector or list; those not named are estimated. The names are the
 distribution's own parameters, with the within-group column appended
 where there is one copy per column. A name the penalty does not carry is
 reported when the term is built, which is where the penalty first exists.</p></dd>
+
+
+<dt id="arg-id">id<a class="anchor" aria-label="anchor" href="#arg-id"></a></dt>
+<dd><p>Labels sharing the effects' hyperparameters with those of
+other terms carrying the same ones, so that two random effects may
+be given one variance component. The names are <code>hyper</code>'s, checked at
+the same point and for the same reason; a single unnamed string will
+do where the effects' distribution carries one hyperparameter.
+<code>NULL</code>, the default, shares nothing. See <code><a href="term_ids.html">term_ids()</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
