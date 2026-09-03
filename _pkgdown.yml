@@ -40,6 +40,8 @@ reference:
   - term_npar
   - term_coef_start
   - term_jacobian_block
+  - term_tag
+  - term_group
   - term_coef_names
   - term_smooth
   - term_predict

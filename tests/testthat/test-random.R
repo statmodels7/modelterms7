@@ -325,3 +325,132 @@ test_that("a multivariate Student t prior is admitted", {
   h <- term_build(random(~ x | g, distrib = mvt, hyper = c(nu = 5)), dd)
   expect_equal(term_hyper(h)[[1L]]$nu, 5)
 })
+
+
+# The covariance label, and the grouping variable's type -------------------
+
+test_that("the second bar is read as a covariance label", {
+  # R nests bars to the left, so the last position is the grouping variable
+  # and the middle one the label: brms's convention, out of the parser.
+  expect_identical(term_tag(random(~ 1 | u | g)), "u")
+  expect_identical(term_tag(random(~ 1 + x | u | g)), "u")
+  # and a term without one says so, as does any other kind of term
+  expect_identical(term_tag(random(~ 1 | g)), NA_character_)
+  expect_identical(term_tag(linpar(~ x)), NA_character_)
+  expect_identical(term_tag(s(x)), NA_character_)
+})
+
+test_that("the label is a name and is never evaluated", {
+  # This is what the two-bar form did before it had a meaning: with no such
+  # column it stopped with "object 'u' not found"; with a factor column it
+  # built twice the columns with a warning about '|' applied to factors; with
+  # a NUMERIC column it built twice the columns and said nothing at all. All
+  # three now build the block the one-bar formula builds.
+  ref <- term_build(random(~ 1 + x | g), dd)
+  for (u in list(NULL, factor(rep(c("p", "q"), 6)), as.numeric(1:12))) {
+    d <- dd
+    if (!is.null(u)) d$u <- u
+    b <- expect_silent(term_build(random(~ 1 + x | u | g), d))
+    expect_identical(term_coef_names(b), term_coef_names(ref))
+    expect_identical(as.matrix(term_matrix(b)), as.matrix(term_matrix(ref)))
+    # the block is the one-bar formula's; the PENALTY is not, and that is the
+    # label's whole effect -- it belongs to the class and not to this term
+    expect_null(term_penalty(b))
+  }
+})
+
+test_that("the label must be a symbol, and three bars are refused", {
+  expect_error(random(~ 1 | "u" | g), "must be a name")
+  expect_error(random(~ 1 | u + v | g), "must be a name")
+  expect_error(random(~ 1 | f(u) | g), "must be a name")
+  expect_error(random(~ 1 | u | v | g), "three bars")
+})
+
+test_that("a continuous grouping variable is refused", {
+  # Without the check, factor() turns a continuous covariate into one level
+  # per distinct value: measured, random(~ 1 | x) at 60 observations built 60
+  # columns and reported nothing.
+  d <- data.frame(x = rnorm(60), cont = rnorm(60),
+                  num = rep(1:10, each = 6),
+                  dbl = as.numeric(rep(1:10, each = 6)),
+                  chr = rep(letters[1:10], each = 6),
+                  fac = factor(rep(1:10, each = 6)))
+  expect_error(term_build(random(~ 1 | cont), d), "is continuous")
+  # what stays legal is every ordinary way of writing a grouping variable,
+  # integer codes included
+  for (g in c("fac", "chr", "num", "dbl")) {
+    b <- term_build(random(stats::as.formula(paste("~ 1 |", g))), d)
+    expect_identical(term_npar(b), 10L)
+  }
+  # and the explicit spelling says the values really are labels
+  expect_identical(term_npar(term_build(random(~ 1 | factor(cont)), d)), 60L)
+})
+
+test_that("a labelled term declares no penalty, and is otherwise unchanged", {
+  # The coefficients of a labelled term share a covariance block with those of
+  # the other terms carrying the label, and that block may span another
+  # equation. The prior over it is the class's, so declaring one here would be
+  # a second answer to the same question. An empty list is the right answer.
+  d <- dd
+  d$u <- as.numeric(1:12)
+  a <- term_build(random(~ 1 + x | g), d)
+  b <- term_build(random(~ 1 + x | u | g), d)
+  expect_identical(term_npar(a), term_npar(b))
+  expect_length(term_penalties(a), 1L)
+  expect_length(term_penalties(b), 0L)
+  expect_null(term_penalty(b))
+  expect_identical(term_predict(b, d), term_matrix(b))
+  res <- check_term(random(~ 1 + x | u | g), d, verbose = FALSE)
+  expect_true(all(res$status == "OK"),
+              info = paste(res$check[res$status != "OK"], collapse = ", "))
+})
+
+
+test_that("a labelled term reports its grouping, and reads it back", {
+  # a fitting layer needs three things to stack two labelled blocks into one
+  # covariance: the grouping expression, its levels and how many columns one
+  # level carries. The levels are what tell two groupings apart -- the
+  # expression alone cannot, since `id` under two subsets writes the same.
+  b <- term_build(random(~ 1 + x | u | g), dd)
+  gr <- term_group(b)
+  expect_identical(gr$dim, 2L)
+  expect_identical(gr$levels, levels(dd$g))
+  expect_identical(deparse1(gr$expr), "g")
+  # an unlabelled random effect answers too: the grouping is not the label's
+  expect_identical(term_group(term_build(random(~ 1 | g), dd))$dim, 1L)
+  # and no other kind of term has one
+  expect_null(term_group(term_build(linpar(~ x), dd)))
+  expect_null(term_group(term_build(s(x), dd)))
+})
+
+test_that("what a labelled term refuses, it refuses by name", {
+  # `hyper` names a hyperparameter of the term's own penalty, and it has none
+  expect_error(term_build(random(~ 1 | u | g, hyper = c(sigma = 1)), dd),
+               "belong to the class")
+  # the two scopes ask for opposite things at once
+  expect_error(term_build(random(~ 1 + x | u | g, correlated = FALSE), dd),
+               "two things at once")
+  # a univariate prior has no correlations to carry, and margins of different
+  # families are a copula rather than an elliptical law
+  expect_error(
+    term_build(random(~ 1 | u | g,
+                      distrib = distributions7::fixed(
+                        distributions7::student_t1_distrib(), mu = 0)), dd),
+    "copula")
+  # a list gives one prior per column, which makes the columns independent
+  expect_error(
+    term_build(random(~ 1 + x | u | g,
+                      distrib = list(.centered(distributions7::gaussian1_distrib(),
+                                               mu = 0),
+                                     .centered(distributions7::gaussian1_distrib(),
+                                               mu = 0))), dd),
+    "list")
+  # a multivariate one names the class's joint prior and is admitted; its
+  # dimension is the CLASS's total and is checked where the class is known
+  expect_s7_class(term_build(random(~ 1 + x | u | g,
+                                    distrib = .mv_centered(4)), dd),
+                  RandomTerm)
+  # and none of this reaches an unlabelled term
+  expect_no_error(term_build(random(~ 1 | g, hyper = c(sigma = 1)), dd))
+  expect_no_error(term_build(random(~ 1 + x | g, correlated = FALSE), dd))
+})

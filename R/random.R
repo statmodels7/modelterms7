@@ -19,6 +19,12 @@ NULL
 #' within-group effects depend on each other; it is read only where `distrib`
 #' is `NULL`, the two saying the same thing.
 #'
+#' `tag` is the covariance label written between two bars, `~ 1 | u | g`, or
+#' `NA_character_` where the formula carries one bar. It is reported by
+#' [term_tag()]. The two say different things and the difference is the scope:
+#' `correlated` is about the columns of this term, `tag` about the columns of
+#' other terms.
+#'
 #' `distrib` is the effects' distribution as supplied, or `NULL` for the
 #' default. What the build turns it into is a \pkg{penalties7} penalty, read
 #' through [term_penalty()] or [term_penalties()], so the hyperparameter names
@@ -38,9 +44,11 @@ NULL
 #' @param distrib The effects' distribution, a \pkg{distributions7} object or
 #'   a list of them with one per within-group column, or `NULL` for the
 #'   default Gaussian.
+#' @param tag The covariance label from the middle of two bars, or
+#'   `NA_character_`.
 #'
 #' @return An S7 object of class `RandomTerm`, inheriting from
-#'   [additive_term()] and [model_term()], with the three properties above
+#'   [additive_term()] and [model_term()], with the four properties above
 #'   beside the ten they supply.
 #'
 #' @seealso [random()], the constructor; [term_penalties()] for the entries a
@@ -70,7 +78,8 @@ RandomTerm <- S7::new_class(
   properties = list(
     formula = S7::class_any,
     correlated = S7::class_logical,
-    distrib = S7::class_any
+    distrib = S7::class_any,
+    tag = S7::class_character
   )
 )
 
@@ -95,6 +104,33 @@ RandomTerm <- S7::new_class(
 #' the effects. Which chart the hyperparameters ride, what they are called,
 #' how many there are and where the log-density has a kink are all properties
 #' of that distribution, read off it at build time.
+#'
+#' @section The covariance label, and the second bar:
+#' A formula may carry two bars, `~ 1 + x | u | g`, following \pkg{brms}. The
+#' last position is the grouping variable and the middle one is a label: terms
+#' carrying the same label and the same grouping describe effects that are
+#' correlated with each other, so an intercept in one equation and a slope in
+#' another can share one covariance block. R nests bars to the left, so that
+#' reading comes out of the parser rather than being imposed.
+#'
+#' The label is a **name and not data**. It is read as a symbol and never
+#' evaluated, and a column of the data carrying the same name is not looked at,
+#' so `~ 1 | u | g` builds exactly the block `~ 1 | g` builds whatever `u`
+#' happens to be.
+#'
+#' **A labelled term declares no penalty of its own**, and that is the answer
+#' rather than a gap: the covariance block spans columns the term cannot see,
+#' possibly in another equation, so the prior over it belongs to the class and
+#' is built by the fitting layer. [term_penalties()] returns an empty list and
+#' [term_penalty()] is `NULL`. What follows from it is that `hyper` is refused
+#' here, the hyperparameters being the class's, and that a `distrib` given on a
+#' labelled term names the **class's** joint prior: it must be multivariate,
+#' and its dimension is checked where the class is known.
+#'
+#' The two scopes are different and stay two arguments. `correlated` says
+#' whether the columns of **this** term may depend on each other; the label
+#' says that its columns depend on those of **other** terms. Asking for
+#' `correlated = FALSE` beside a label asks for both at once and is refused.
 #'
 #' @section The distribution of the effects:
 #' `distrib` is `NULL`, a \pkg{distributions7} object, or a list of
@@ -233,7 +269,10 @@ RandomTerm <- S7::new_class(
 #' \eqn{\sigma_b} estimable.
 #'
 #' @param formula A bar formula, `~ lhs | g`, with `g`
-#'   evaluating to the grouping variable in the data.
+#'   evaluating to the grouping variable in the data, or `~ lhs | tag | g`
+#'   with a covariance label in the middle. `g` must not be continuous: a
+#'   double carrying a value that is not a whole number is rejected, since its
+#'   levels would be its formatted values.
 #' @param distrib The distribution of the effects: `NULL` (the default
 #'   Gaussian), a \pkg{distributions7} object, or a list of them with one per
 #'   within-group column.
@@ -275,6 +314,16 @@ RandomTerm <- S7::new_class(
 #'                             mu = 0, nu = 4)
 #' term_penalty(term_build(random(~ 1 | g, distrib = t4), dd))@params
 #'
+#' # A covariance label, read from the middle of two bars and reported by
+#' # term_tag(). It is a name: the block is the one bar formula's.
+#' term_tag(random(~ 1 | u | g))
+#' identical(term_coef_names(term_build(random(~ 1 | u | g), dd)),
+#'           term_coef_names(term_build(random(~ 1 | g), dd)))
+#'
+#' # A continuous grouping variable is rejected rather than turned into one
+#' # level per row.
+#' try(term_build(random(~ 1 | x), dd))
+#'
 #'
 #' # Fitted. The data are simulated from a known truth, so the
 #' # estimates below can be read against it.
@@ -297,15 +346,7 @@ RandomTerm <- S7::new_class(
 #' @export
 random <- function(formula, distrib = NULL, correlated = TRUE,
                    label = "random", hyper = NULL, ...) {
-  if (!inherits(formula, "formula") || length(formula) != 2L) {
-    stop("'formula' must be a one-sided bar formula, e.g. ~ 1 | g.",
-         call. = FALSE)
-  }
-  e <- formula[[2L]]
-  if (!is.call(e) || !identical(e[[1L]], as.name("|"))) {
-    stop("'formula' must contain a grouping bar, e.g. ~ 1 | g.",
-         call. = FALSE)
-  }
+  parts <- .random_parts(formula)
   if (!is.logical(correlated) || length(correlated) != 1L ||
       is.na(correlated)) {
     stop("'correlated' must be TRUE or FALSE.", call. = FALSE)
@@ -323,10 +364,81 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
          call. = FALSE)
   }
   RandomTerm(label = label, formula = formula, correlated = correlated,
-             distrib = distrib,
+             distrib = distrib, tag = parts$tag,
              hyper = as_hyper(hyper, label),
              X = NULL, coef_names = character(0),
              blueprint = list(), penalty = NULL)
+}
+
+#' The Three Pieces of a Bar Formula
+#'
+#' @description
+#' Splits `~ lhs | g` or `~ lhs | tag | g` into the within-group design, the
+#' grouping expression and the covariance label, and rejects the shapes that
+#' are not one of the two.
+#'
+#' @details
+#' R nests the bars to the left, so in `~ 1 + x | u | id` the outer bar has
+#' `id` on its right and `1 + x | u` on its left. The last position is
+#' therefore the grouping variable and the middle one the label, which is
+#' \pkg{brms}'s convention and comes out of the parser rather than being
+#' imposed.
+#'
+#' The label is taken with `as.character()` on the symbol and **never
+#' evaluated**, so a column of the data carrying that name is not read. It is
+#' the one thing in a formula that does not refer to the data, and reading it
+#' as data is what the two-bar form did before: with no such column it stopped
+#' with `object 'u' not found`, with a factor column it built twice the columns
+#' and a warning about `'|'` applied to factors, and with a numeric column it
+#' built twice the columns and said nothing at all.
+#'
+#' Two bars are the most that carry a meaning, so a third is rejected rather
+#' than read.
+#'
+#' Written once because the constructor and [term_build()] both need the split
+#' and two copies of it would agree only by accident.
+#'
+#' @param formula The bar formula as given.
+#'
+#' @return A list with `within` and `group`, both language objects, and `tag`,
+#'   a single string or `NA_character_`.
+#'
+#' @seealso [random()] and [term_build.RandomTerm()], its two callers;
+#'   [term_tag()] for what reports the label afterwards.
+#'
+#' @keywords internal
+.random_parts <- function(formula) {
+  if (!inherits(formula, "formula") || length(formula) != 2L) {
+    stop("'formula' must be a one-sided bar formula, e.g. ~ 1 | g.",
+         call. = FALSE)
+  }
+  e <- formula[[2L]]
+  if (!is.call(e) || !identical(e[[1L]], as.name("|"))) {
+    stop("'formula' must contain a grouping bar, e.g. ~ 1 | g.",
+         call. = FALSE)
+  }
+  within <- e[[2L]]
+  tag <- NA_character_
+  if (is.call(within) && identical(within[[1L]], as.name("|"))) {
+    tg <- within[[3L]]
+    within <- within[[2L]]
+    if (is.call(within) && identical(within[[1L]], as.name("|"))) {
+      stop(paste0(
+        "'formula' has three bars. Two of them are read as ~ lhs | tag | g,\n",
+        "  the within-group design, the label of the covariance block and the\n",
+        "  grouping variable, and there is nothing a third could name."),
+        call. = FALSE)
+    }
+    if (!is.name(tg)) {
+      stop(sprintf(paste0(
+        "the covariance label between the two bars must be a name, and '%s'\n",
+        "  is not. In ~ lhs | tag | g the middle position labels the effects\n",
+        "  that share a covariance block; it is not evaluated and does not\n",
+        "  refer to the data."), deparse1(tg)), call. = FALSE)
+    }
+    tag <- as.character(tg)
+  }
+  list(within = within, group = e[[3L]], tag = tag)
 }
 
 #' The Arguments random() No Longer Takes
@@ -375,9 +487,56 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
        call. = FALSE)
 }
 
+#' What a Grouping Variable Has to Be
+#'
+#' @description
+#' Rejects a grouping expression whose value is continuous, naming it and the
+#' spelling that says the values really are labels.
+#'
+#' @details
+#' A grouping variable's values are labels, and `factor()` turns any vector
+#' into one by formatting its values, so a continuous covariate in that
+#' position gives one level per distinct value and a random effect with as many
+#' coefficients as there are rows. Measured before the check existed,
+#' `random(~ 1 | x)` with a standard normal `x` at 60 observations built 60
+#' columns and reported nothing.
+#'
+#' What is rejected is a **double carrying a value that is not a whole
+#' number**, which is narrow on purpose. Integer codes are the ordinary way to
+#' write a grouping variable and stay legal, and a caller who means the levels
+#' of a non-integer vector writes `factor()` around it, which arrives here as a
+#' factor and passes.
+#'
+#' The check also does the work the two-bar form needs: `~ 1 | u | id` and
+#' `~ 1 | id | u` are syntactically the same shape and differ only in which
+#' position holds what, so the defence is that the last position must be usable
+#' as a grouping variable.
+#'
+#' @param v The value of the grouping expression.
+#' @param expr The expression, for the message.
+#'
+#' @return `v`, unchanged; called for its error.
+#'
+#' @seealso [random()], whose `formula` argument documents the rule;
+#'   [term_build.RandomTerm()], which reaches it through the grouping
+#'   variable's evaluation.
+#'
+#' @keywords internal
+.random_check_group <- function(v, expr) {
+  if (is.double(v) && any(is.finite(v) & v != floor(v))) {
+    stop(sprintf(paste0(
+      "the grouping variable '%s' is continuous, and a grouping variable's\n",
+      "  values are labels rather than measurements: its levels would be the\n",
+      "  formatted numbers, one group per distinct value. Write factor(%s) if\n",
+      "  they really are labels."), deparse1(expr), deparse1(expr)),
+      call. = FALSE)
+  }
+  v
+}
+
 .random_group <- function(expr, data, levels = NULL) {
   v <- eval(expr, data, baseenv())
-  if (is.null(levels)) return(factor(v))
+  if (is.null(levels)) return(factor(.random_check_group(v, expr)))
   f <- factor(v, levels = levels)
   if (any(is.na(f) & !is.na(v))) {
     bad <- unique(as.character(v)[is.na(f) & !is.na(v)])
@@ -756,15 +915,15 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #'
 #' @keywords internal
 S7::method(term_build, RandomTerm) <- function(term, data, ...) {
-  e <- term@formula[[2L]]
-  g <- .random_group(e[[3L]], data)
+  parts <- .random_parts(term@formula)
+  g <- .random_group(parts$group, data)
   m <- nlevels(g)
   if (m < 2L) {
     stop("the grouping variable must have at least two levels.",
          call. = FALSE)
   }
 
-  wf <- stats::as.formula(call("~", e[[2L]]),
+  wf <- stats::as.formula(call("~", parts$within),
                           env = environment(term@formula))
   mf <- stats::model.frame(wf, data, na.action = stats::na.pass,
                            drop.unused.levels = FALSE)
@@ -779,6 +938,16 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
   Z <- .random_block(g, W)
   cn <- .random_names(term@label, levels(g), colnames(W))
   colnames(Z) <- cn
+
+  # A LABELLED term does not own its penalty. Its coefficients share a
+  # covariance block with those of the other terms carrying the label, and
+  # that block spans columns this term cannot see -- it may not even be in
+  # this equation -- so the prior belongs to the class and is built by the
+  # fitting layer. Declaring one here would be a second answer to the same
+  # question, and the fit would have to know which to ignore.
+  if (!is.na(.random_tag(term))) {
+    return(.random_labelled(term, Z, cn, parts, g, tt, mf, contr, d))
+  }
 
   prior <- term@distrib
   if (is.null(prior)) {
@@ -813,11 +982,11 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
   term@X <- Z
   term@coef_names <- cn
   term@blueprint <- list(
-    gexpr = e[[3L]], glevels = levels(g),
+    gexpr = parts$group, glevels = levels(g),
     terms = stats::delete.response(tt),
     xlev = stats::.getXlevels(tt, mf),
     contrasts = contr,
-    entries = entries
+    entries = entries, dim = d
   )
   term@hyper <- do.call(c, c(list(list()), lapply(entries, function(en) {
     if (!length(en$fixed) || !nzchar(en$name)) return(en$fixed)
@@ -846,6 +1015,157 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
 S7::method(term_penalties, RandomTerm) <- function(term, ...) {
   ent <- term@blueprint$entries
   if (is.null(ent)) list() else ent
+}
+
+#' @title The Covariance Label of a Random-Effect Term
+#' @name term_tag.RandomTerm
+#' @description
+#' The label written between two bars, or `NA_character_` where the formula
+#' carries one bar.
+#' @details
+#' It is recorded by the constructor, from the middle position of
+#' `~ lhs | tag | g`, and is a name that is never evaluated.
+#' @param term A [RandomTerm()], built or not.
+#' @param ... Unused.
+#' @return A single string, or `NA_character_`.
+#' @seealso [term_tag()] for the generic, [random()] for the formula it is
+#'   read from.
+#' @keywords internal
+S7::method(term_tag, RandomTerm) <- function(term, ...) .random_tag(term)
+
+#' @title The Grouping of a Random-Effect Term
+#' @name term_group.RandomTerm
+#' @description
+#' The grouping expression, its levels and the number of within-group columns,
+#' or `NULL` on an unbuilt term.
+#' @details
+#' The three come from the blueprint, where the build recorded them. `dim` is
+#' the within-group column count, so the block's level \eqn{i} occupies
+#' positions \eqn{(i-1)d + 1} to \eqn{id}, which is the group-major order the
+#' blockwise penalty reads.
+#' @param term A built [RandomTerm()].
+#' @param ... Unused.
+#' @return A list with `expr`, `levels` and `dim`, or `NULL`.
+#' @seealso [term_group()] for the generic.
+#' @keywords internal
+S7::method(term_group, RandomTerm) <- function(term, ...) {
+  bp <- term@blueprint
+  if (!length(bp) || is.null(bp$glevels)) return(NULL)
+  d <- bp$dim
+  if (is.null(d)) d <- as.integer(term_npar(term) / length(bp$glevels))
+  list(expr = bp$gexpr, levels = as.character(bp$glevels), dim = as.integer(d))
+}
+
+#' The Label of a Random-Effect Term, Normalized
+#'
+#' @description
+#' The term's `tag` as a single string, `NA_character_` where it carries none.
+#'
+#' @details
+#' The property is a character vector and is empty on a term built before the
+#' label existed, so the two spellings of "no label" are read in one place
+#' rather than at each caller.
+#'
+#' @param term A [RandomTerm()].
+#'
+#' @return A single string, possibly `NA_character_`.
+#'
+#' @seealso [term_tag()], which returns it.
+#'
+#' @keywords internal
+.random_tag <- function(term) {
+  if (!length(term@tag)) NA_character_ else as.character(term@tag)[1L]
+}
+
+#' A Labelled Random-Effect Term, Built Without a Penalty
+#'
+#' @description
+#' Finishes [term_build.RandomTerm()] for a term carrying a covariance label:
+#' the block and its names as usual, and no penalty entry at all.
+#'
+#' @details
+#' The coefficients of a labelled term share a covariance block with those of
+#' every other term carrying the same label and the same grouping, and that
+#' block may span another equation entirely. The prior over it is therefore a
+#' property of the class and not of any of its members, and building one here
+#' would leave two answers to the same question with nothing to say which the
+#' fit should read. [term_penalties()] returns an empty list, which is the
+#' right answer rather than a gap, and the fitting layer collects the labelled
+#' terms and declares one entry over their stacked columns.
+#'
+#' What the blueprint records is what the layer needs to do that: the
+#' within-group dimension and the grouping's levels, beside the pieces
+#' [term_predict.RandomTerm()] already reads.
+#'
+#' A `distrib` given here names the **class's** joint prior. Its dimension is
+#' the total over the class and cannot be checked from one term, so that one
+#' check is left to the layer; the rest -- that it is a continuous
+#' distributions7 object with its location held -- is asked here, where the
+#' message can name the argument.
+#'
+#' @param term The term being built.
+#' @param Z The block.
+#' @param cn Its column names.
+#' @param parts The formula's three pieces.
+#' @param g The grouping factor.
+#' @param tt,mf,contr The within-group terms, model frame and contrasts.
+#' @param d The number of within-group columns.
+#'
+#' @return The built term, with no penalty.
+#'
+#' @seealso [term_build.RandomTerm()], its caller; [term_tag()].
+#'
+#' @keywords internal
+.random_labelled <- function(term, Z, cn, parts, g, tt, mf, contr, d) {
+  if (length(term@hyper)) {
+    stop(sprintf(paste0(
+      "'hyper' names a hyperparameter of this term's own penalty, and a term\n",
+      "  carrying the label '%s' has none: its coefficients share a covariance\n",
+      "  block with the other terms carrying that label, and the block's\n",
+      "  hyperparameters belong to the class."), .random_tag(term)),
+      call. = FALSE)
+  }
+  if (!isTRUE(term@correlated)) {
+    stop(sprintf(paste0(
+      "'correlated = FALSE' and the label '%s' ask for two things at once:\n",
+      "  the columns of this term independent of each other, and correlated\n",
+      "  with the columns of another term. The label puts every column of the\n",
+      "  term into the shared block."), .random_tag(term)), call. = FALSE)
+  }
+  if (!is.null(term@distrib)) {
+    if (is.list(term@distrib)) {
+      stop(paste0(
+        "'distrib' is a list, which gives one distribution per within-group\n",
+        "  column and makes the columns independent. A labelled term's prior\n",
+        "  is the class's joint one, so it is a single multivariate\n",
+        "  distribution over the whole shared block."), call. = FALSE)
+    }
+    if (!identical(term@distrib@dimension, "multivariate")) {
+      stop(paste0(
+        "'distrib' is univariate, and the prior of a labelled term is the\n",
+        "  joint one of its class: it describes the effects of one group over\n",
+        "  every column the label collects, so it is multivariate.\n",
+        "  A joint law whose coordinates are of DIFFERENT families -- a\n",
+        "  gaussian intercept correlated with a Student t slope -- is a\n",
+        "  copula, which this toolkit does not have; no elliptical family\n",
+        "  gives it, a multivariate gaussian having gaussian margins and a\n",
+        "  multivariate t having t margins with one shared nu."), call. = FALSE)
+    }
+    # the dimension is the CLASS's total and is checked by the fitting layer;
+    # everything else about the prior is asked here
+    .random_check_prior(term@distrib, term@distrib@n_dim, "'distrib'")
+  }
+  term@X <- Z
+  term@coef_names <- cn
+  term@blueprint <- list(
+    gexpr = parts$group, glevels = levels(g),
+    terms = stats::delete.response(tt),
+    xlev = stats::.getXlevels(tt, mf),
+    contrasts = contr,
+    entries = list(), dim = d
+  )
+  term@penalty <- NULL
+  term
 }
 
 #' @title A Random-Effect Block at New Rows

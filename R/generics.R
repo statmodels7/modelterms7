@@ -762,6 +762,101 @@ term_jacobian_block <- S7::new_generic("term_jacobian_block", "term",
 
 S7::method(term_jacobian_block, model_term) <- function(term, ...) TRUE
 
+#' @title The Covariance Label of a Term
+#'
+#' @description
+#' The label a term carries to say that its coefficients share a covariance
+#' block with those of other terms, or `NA_character_` where it carries none.
+#'
+#' @details
+#' The label is written in the middle position of a bar formula,
+#' `random(~ 1 + x | u | id)`, following \pkg{brms}: the last position is the
+#' grouping variable and the middle one the label. Terms carrying the same
+#' label and the same grouping describe effects that are correlated with each
+#' other, and a fitting layer collects them into one block.
+#'
+#' The label is a **name and not data**. It is read as a symbol and never
+#' evaluated, so a column of the data with the same name is not looked at.
+#'
+#' The base method returns `NA_character_`, which is the answer for every term
+#' but [random()], so a term written outside this package needs no method here.
+#'
+#' @param term A term, built or not.
+#' @param ... Passed to methods. No shipped method reads anything here.
+#'
+#' @return A single string, or `NA_character_` where the term carries no label.
+#'
+#' @seealso [random()], the one constructor that reads a label;
+#'   [term_penalties()] for the penalties a term declares on its own.
+#'
+#' @examples
+#' # No label: the effects of this term correlate with nothing outside it.
+#' term_tag(random(~ 1 | g))
+#' term_tag(linpar(~ x))
+#'
+#' # A label, read from the middle of the two bars.
+#' term_tag(random(~ 1 + x | u | g))
+#'
+#' # It is a name, not data: a column called `u` is not read.
+#' d <- data.frame(x = rnorm(6), u = 1:6, g = factor(rep(c("a", "b"), 3)))
+#' identical(term_coef_names(term_build(random(~ 1 | u | g), d)),
+#'           term_coef_names(term_build(random(~ 1 | g), d)))
+#'
+#' @export
+#' @aliases term_tag.model_term
+term_tag <- S7::new_generic("term_tag", "term",
+  function(term, ...) S7::S7_dispatch())
+
+S7::method(term_tag, model_term) <- function(term, ...) NA_character_
+
+#' @title The Grouping a Term's Coefficients Are Indexed By
+#'
+#' @description
+#' For a term whose coefficients are one set per level of a grouping variable,
+#' the expression that variable came from, the levels it took, and how many
+#' columns each level carries. `NULL` for every other term.
+#'
+#' @details
+#' Two labelled terms belong to the same covariance block only if they share a
+#' grouping, and deciding that needs both halves: the expression alone is not
+#' enough, since `droplevels(id)` and `id` are different expressions for the
+#' same grouping and `id` under two subsets is the same expression for two
+#' different ones. The levels settle it, and the expression makes a message
+#' readable.
+#'
+#' `dim` is the number of columns one level carries, which with the levels
+#' says how the block is laid out: the coefficients are group-major, so level
+#' \eqn{i} occupies positions \eqn{(i-1)d + 1} to \eqn{id}. A consumer stacking
+#' two such blocks into one covariance needs exactly that.
+#'
+#' The base method returns `NULL`, which is the answer for every term but
+#' [random()].
+#'
+#' @param term A built term. An unbuilt one returns `NULL`.
+#' @param ... Passed to methods. No shipped method reads anything here.
+#'
+#' @return A list with `expr` (a language object), `levels` (a character
+#'   vector) and `dim` (a single integer), or `NULL`.
+#'
+#' @seealso [term_tag()] for the label that, with this, identifies a
+#'   covariance block; [random()] for the formula both are read from.
+#'
+#' @examples
+#' d <- data.frame(x = rnorm(6), g = factor(rep(c("a", "b", "c"), 2)))
+#' b <- term_build(random(~ 1 + x | g), d)
+#' g <- term_group(b)
+#' c(dim = g$dim, levels = length(g$levels))
+#'
+#' # every other kind of term has none
+#' term_group(term_build(linpar(~ x), d))
+#'
+#' @export
+#' @aliases term_group.model_term
+term_group <- S7::new_generic("term_group", "term",
+  function(term, ...) S7::S7_dispatch())
+
+S7::method(term_group, model_term) <- function(term, ...) NULL
+
 #' @title Coefficient Names of a Built Term
 #'
 #' @description

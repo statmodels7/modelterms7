@@ -17,7 +17,8 @@ RandomTerm(
   penalty = NULL,
   formula = NULL,
   correlated = logical(0),
-  distrib = NULL
+  distrib = NULL,
+  tag = character(0)
 )
 }
 \arguments{
@@ -68,10 +69,13 @@ within-group effects correlate. Read only when \code{distrib} is \code{NULL}.}
 \item{distrib}{The effects' distribution, a \pkg{distributions7} object or
 a list of them with one per within-group column, or \code{NULL} for the
 default Gaussian.}
+
+\item{tag}{The covariance label from the middle of two bars, or
+\code{NA_character_}.}
 }
 \value{
 An S7 object of class \code{RandomTerm}, inheriting from
-\code{\link[=additive_term]{additive_term()}} and \code{\link[=model_term]{model_term()}}, with the three properties above
+\code{\link[=additive_term]{additive_term()}} and \code{\link[=model_term]{model_term()}}, with the four properties above
 beside the ten they supply.
 }
 \description{
@@ -86,6 +90,12 @@ constructs it.
 environment. \code{correlated} says whether the \strong{default} Gaussian lets the
 within-group effects depend on each other; it is read only where \code{distrib}
 is \code{NULL}, the two saying the same thing.
+
+\code{tag} is the covariance label written between two bars, \code{~ 1 | u | g}, or
+\code{NA_character_} where the formula carries one bar. It is reported by
+\code{\link[=term_tag]{term_tag()}}. The two say different things and the difference is the scope:
+\code{correlated} is about the columns of this term, \code{tag} about the columns of
+other terms.
 
 \code{distrib} is the effects' distribution as supplied, or \code{NULL} for the
 default. What the build turns it into is a \pkg{penalties7} penalty, read

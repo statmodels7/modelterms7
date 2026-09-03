@@ -50,9 +50,12 @@ $-\ell(\beta) + \sum_t \rho_t(\beta_t; \theta_t)$:
   corresponding [penalties7](https://statmodels7.github.io/penalties7/)
   object to their block;
 * `random()` builds grouped intercepts and slopes with the effect
-  distribution as the penalty, correlated or not through a
-  [parameters7](https://statmodels7.github.io/parameters7/) structure
-  replicated across groups;
+  distribution as the penalty: a multivariate one lets the effects of a
+  group depend on each other, its matrix parameter carrying the
+  dependence on whichever
+  [parameters7](https://statmodels7.github.io/parameters7/) chart is
+  given it, and a second bar labels effects that share a covariance
+  block with those of other terms;
 * `s()` and `te()` are the penalized smooths of one and of several
   covariates, built on [basis7](https://statmodels7.github.io/basis7/);
 * `nl()` carries a contribution nonlinear in its own parameters, its block
@@ -99,6 +102,29 @@ separate term. The same route carries a penalty: `nl(~ a * exp(-r * x), a ~
 0 + ridge(~ g))` puts a ridge on the amplitudes across the levels of `g`,
 and `term_penalties()` reports every entry a term declares with the subset
 of its parameters each one covers.
+
+## Effects that share a covariance block
+
+A second bar labels a random effect, following **brms**: in
+`~ 1 + x | u | id` the last position is the grouping variable and the
+middle one says which effects are correlated with each other. R nests
+bars to the left, so that reading comes out of the parser. The label is a
+name and is never evaluated, so a column of the data carrying it is not
+looked at.
+
+```{r}
+tm <- random(~ 1 + x | u | id)
+term_tag(tm)
+term_penalties(term_build(tm, pan))
+```
+
+The empty list is the answer rather than a gap: the coefficients of a
+labelled term share a block with those of every other term carrying the
+label, and that block may span another equation entirely, so the prior
+over it belongs to the class and is built where the model is fitted.
+`statmodels7` collects them, so
+`y ~ random(~ 1 | u | id) | sigma ~ random(~ 1 | u | id)` is a random
+intercept in the mean correlated with a random intercept in the scale.
 
 ## Break-points three ways
 

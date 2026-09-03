@@ -15,7 +15,10 @@ random(
 }
 \arguments{
 \item{formula}{A bar formula, \code{~ lhs | g}, with \code{g}
-evaluating to the grouping variable in the data.}
+evaluating to the grouping variable in the data, or \code{~ lhs | tag | g}
+with a covariance label in the middle. \code{g} must not be continuous: a
+double carrying a value that is not a whole number is rejected, since its
+levels would be its formatted values.}
 
 \item{distrib}{The distribution of the effects: \code{NULL} (the default
 Gaussian), a \pkg{distributions7} object, or a list of them with one per
@@ -62,6 +65,35 @@ the effects. Which chart the hyperparameters ride, what they are called,
 how many there are and where the log-density has a kink are all properties
 of that distribution, read off it at build time.
 }
+\section{The covariance label, and the second bar}{
+
+A formula may carry two bars, \code{~ 1 + x | u | g}, following \pkg{brms}. The
+last position is the grouping variable and the middle one is a label: terms
+carrying the same label and the same grouping describe effects that are
+correlated with each other, so an intercept in one equation and a slope in
+another can share one covariance block. R nests bars to the left, so that
+reading comes out of the parser rather than being imposed.
+
+The label is a \strong{name and not data}. It is read as a symbol and never
+evaluated, and a column of the data carrying the same name is not looked at,
+so \code{~ 1 | u | g} builds exactly the block \code{~ 1 | g} builds whatever \code{u}
+happens to be.
+
+\strong{A labelled term declares no penalty of its own}, and that is the answer
+rather than a gap: the covariance block spans columns the term cannot see,
+possibly in another equation, so the prior over it belongs to the class and
+is built by the fitting layer. \code{\link[=term_penalties]{term_penalties()}} returns an empty list and
+\code{\link[=term_penalty]{term_penalty()}} is \code{NULL}. What follows from it is that \code{hyper} is refused
+here, the hyperparameters being the class's, and that a \code{distrib} given on a
+labelled term names the \strong{class's} joint prior: it must be multivariate,
+and its dimension is checked where the class is known.
+
+The two scopes are different and stay two arguments. \code{correlated} says
+whether the columns of \strong{this} term may depend on each other; the label
+says that its columns depend on those of \strong{other} terms. Asking for
+\code{correlated = FALSE} beside a label asks for both at once and is refused.
+}
+
 \section{The distribution of the effects}{
 
 \code{distrib} is \code{NULL}, a \pkg{distributions7} object, or a list of
@@ -70,7 +102,7 @@ them with one per within-group column.
 A multivariate distribution of the within-group dimension lets the effects
 of one group depend on each other, its matrix parameter carrying the
 dependence: \code{mvgaussian2_distrib(2, ar1(2))} is a prior whose
-precision is autoregressive, \code{mvstudent_t_distrib(2)} a heavy-tailed
+precision is autoregressive, \code{mvstudent_t1_distrib(2)} a heavy-tailed
 one. Correlation is available exactly for the families that carry a matrix
 parameter: a location block as long as the dimension, together with a
 covariance, precision or scale matrix. The term reads that property off the
@@ -224,6 +256,16 @@ vapply(term_penalties(term_build(random(~ x | g, correlated = FALSE), dd)),
 t4 <- distributions7::fixed(distributions7::student_t1_distrib(),
                             mu = 0, nu = 4)
 term_penalty(term_build(random(~ 1 | g, distrib = t4), dd))@params
+
+# A covariance label, read from the middle of two bars and reported by
+# term_tag(). It is a name: the block is the one bar formula's.
+term_tag(random(~ 1 | u | g))
+identical(term_coef_names(term_build(random(~ 1 | u | g), dd)),
+          term_coef_names(term_build(random(~ 1 | g), dd)))
+
+# A continuous grouping variable is rejected rather than turned into one
+# level per row.
+try(term_build(random(~ 1 | x), dd))
 
 
 # Fitted. The data are simulated from a known truth, so the
