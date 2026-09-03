@@ -9,6 +9,7 @@ lasso(
   label = "lasso",
   standardize = FALSE,
   lambda = NULL,
+  id = NULL,
   n_lambda = 25,
   min_ratio = 1e-04,
   sparse = NULL,
@@ -31,6 +32,12 @@ each coefficient on the scale of its own column. See the section above.}
 \item{lambda}{The rate of the prior. One number holds it, several are the
 grid the path visits as they stand, and \code{NULL}, the default, has the
 path build one. Must lie in \eqn{(0, \infty)}.}
+
+\item{id}{A label sharing this term's hyperparameter with those of
+other terms carrying the same one: they are then estimated at a
+single value, wherever in the formula they sit. \code{NULL}, the
+default, shares nothing. See \code{\link[=term_ids]{term_ids()}}, whose page says what
+the labels mean and what care they want.}
 
 \item{n_lambda}{How many values the path visits, a whole number of at
 least 2, \code{25} by default. The axis descends four decades of kink

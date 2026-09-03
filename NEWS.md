@@ -1,3 +1,31 @@
+# modelterms7 0.67.0
+
+* Every term that carries a penalty takes `id`, a label sharing one of its
+  hyperparameters with those of the terms carrying the same label: they are
+  then estimated at a single value, wherever in the formula they sit. It is
+  what `id` does in mgcv, generalized past smooths. `ridge()`,
+  `lasso()`, `enet()`, `scad()`, `mcp()`, `s()`, `te()` and `random()` take
+  it, and so does a term written inside a subformula, so a `seg()` whose
+  slope change and level change are each developed over a ridge may give the
+  two one shrinkage.
+
+  A single unnamed string shares **the** hyperparameter and is legal only
+  where the penalty carries one; a penalty carrying several wants a named
+  vector, `c(alpha = "A")`, since sharing the mixing of an elastic net while
+  leaving its strength free is a model and which was meant is not a guess.
+
+  Sharing does not merge the penalties: they stay two objects estimated at
+  one value, each keeping its own block, its own coefficients and its own
+  effective degrees of freedom. Nothing checks whether the two are
+  comparable, deliberately, since a shared value multiplies each penalty as
+  it is; the documentation says what care that wants, and what it means best
+  between penalties of the same shape over covariates of comparable scale.
+
+* `term_ids()` reports the labels, in the shape `term_hyper()` reports the
+  held values: one entry per penalty entry, so a structural term answers for
+  its subformulas' terms without a method of its own. `term_penalties()`
+  entries carry `ids`, so a label travels the way a held value does.
+
 # modelterms7 0.66.0
 
 * `random()` reads a second bar as a covariance label, following brms: in

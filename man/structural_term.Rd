@@ -11,6 +11,7 @@ structural_term(
   values = list(),
   min_ratio = numeric(0),
   search = character(0),
+  ids = character(0),
   blueprint = list()
 )
 }
@@ -39,6 +40,12 @@ or \code{numeric(0)} for the fitting layer's own. See \code{\link[=term_path_min
 more than one carrying a kink: \code{"grid"} for every combination of them,
 \code{"cyclic"} for one at a time, or \code{character(0)} for the default. See
 \code{\link[=term_search]{term_search()}}.}
+
+\item{ids}{Which of the term's hyperparameters are shared with those of
+other terms, and under what label: a character vector named by the
+term's own hyperparameters, or \code{character(0)} for none. The terms
+carrying the same label for the same hyperparameter estimate one value.
+See \code{\link[=term_ids]{term_ids()}}.}
 
 \item{blueprint}{A named list of everything needed to reproduce the term
 on new rows: the design's state, the levels a factor had, whatever the

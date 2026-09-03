@@ -38,6 +38,11 @@ NULL
 #'   `NULL`, the default, has it estimated. A ridge has no kink and no
 #'   path, so several numbers are not a grid it could visit. Must lie in
 #'   \eqn{(0, \infty)}.
+#' @param id A label sharing this term's hyperparameter with those of
+#'   other terms carrying the same one: they are then estimated at a
+#'   single value, wherever in the formula they sit. `NULL`, the
+#'   default, shares nothing. See [term_ids()], whose page says what
+#'   the labels mean and what care they want.
 #' @return An unbuilt [PenalizedTerm()]: a specification, with `X`,
 #'   `coef_names`, `blueprint` and `penalty` empty until [term_build()]
 #'   fills them, and the penalty attached there over as many coefficients
@@ -90,11 +95,12 @@ NULL
 #'   [mcp()], [penalties7::ridge_penalty()]
 #' @export
 ridge <- function(x, label = "ridge", standardize = FALSE,
-                  lambda = NULL, sparse = NULL, ...) {
+                  lambda = NULL, id = NULL, sparse = NULL, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
                   function(k, map = NULL) penalties7::ridge_penalty(map = map,
                                                                     n_coef = k),
-                  list(lambda = lambda), list(...), sparse = sparse)
+                  list(lambda = lambda), list(...), sparse = sparse,
+                  ids = id)
 }
 
 
@@ -129,6 +135,11 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #' @param lambda The rate of the prior. One number holds it, several are the
 #'   grid the path visits as they stand, and `NULL`, the default, has the
 #'   path build one. Must lie in \eqn{(0, \infty)}.
+#' @param id A label sharing this term's hyperparameter with those of
+#'   other terms carrying the same one: they are then estimated at a
+#'   single value, wherever in the formula they sit. `NULL`, the
+#'   default, shares nothing. See [term_ids()], whose page says what
+#'   the labels mean and what care they want.
 #' @param n_lambda How many values the path visits, a whole number of at
 #'   least 2, `25` by default. The axis descends four decades of kink
 #'   size, and that many points are what covers it.
@@ -185,14 +196,14 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #'   [mcp()], [penalties7::lasso_penalty()]
 #' @export
 lasso <- function(x, label = "lasso", standardize = FALSE,
-                  lambda = NULL, n_lambda = 25, min_ratio = 1e-4,
-                  sparse = NULL, ...) {
+                  lambda = NULL, id = NULL, n_lambda = 25,
+                  min_ratio = 1e-4, sparse = NULL, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
                   function(k, map = NULL) penalties7::lasso_penalty(map = map,
                                                                     n_coef = k),
                   list(lambda = lambda),
                   list(...), list(lambda = n_lambda), min_ratio,
-                  sparse = sparse)
+                  sparse = sparse, ids = id)
 }
 
 
@@ -235,6 +246,13 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #'   build one. Must lie in \eqn{(0, \infty)}.
 #' @param alpha The mixing weight, in the same three states and settled
 #'   independently of `lambda`. Must lie in \eqn{(0, 1)}.
+#' @param id Labels sharing this term's hyperparameters with those of
+#'   other terms carrying the same ones: each is then estimated at a
+#'   single value, wherever in the formula they sit. A named vector,
+#'   `c(alpha = "A")`, since the penalty carries several and which was
+#'   meant is not a guess; `NULL`, the default, shares nothing. See
+#'   [term_ids()], whose page says what the labels mean and what care
+#'   they want.
 #' @param n_lambda,n_alpha How many values the path visits for each, at
 #'   least 2. They differ because the axes do: \eqn{\lambda} descends the
 #'   size of the kink over four decades and wants that many points, while
@@ -304,7 +322,7 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #'   [mcp()], [penalties7::elasticnet_penalty()]
 #' @export
 enet <- function(x, label = "enet", standardize = FALSE,
-                 lambda = NULL, alpha = NULL,
+                 lambda = NULL, alpha = NULL, id = NULL,
                  n_lambda = 25, n_alpha = 5, min_ratio = 1e-4,
                  search = "grid", sparse = NULL, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
@@ -312,7 +330,7 @@ enet <- function(x, label = "enet", standardize = FALSE,
                     penalties7::elasticnet_penalty(map = map, n_coef = k),
                   list(lambda = lambda, alpha = alpha),
                   list(...), list(lambda = n_lambda, alpha = n_alpha),
-                  min_ratio, search, sparse)
+                  min_ratio, search, sparse, id)
 }
 
 
@@ -364,6 +382,13 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #'   `NULL`: one number holds it, several are the grid the path visits as
 #'   they stand, and `NULL` has the path build one. Must lie in
 #'   \eqn{(2, \infty)}.
+#' @param id Labels sharing this term's hyperparameters with those of
+#'   other terms carrying the same ones: each is then estimated at a
+#'   single value, wherever in the formula they sit. A named vector,
+#'   `c(a = "A")`, since the penalty carries several and which was
+#'   meant is not a guess; `NULL`, the default, shares nothing. See
+#'   [term_ids()], whose page says what the labels mean and what care
+#'   they want.
 #' @param n_lambda,n_a How many values the path visits for each, at least 2.
 #'   They differ because the axes do: \eqn{\lambda} descends the size of the
 #'   kink over four decades and wants that many points, while \eqn{a} spans
@@ -431,7 +456,7 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #'   [mcp()], [penalties7::scad_penalty()]
 #' @export
 scad <- function(x, label = "scad", standardize = FALSE,
-                 lambda = NULL, a = 3.7,
+                 lambda = NULL, a = 3.7, id = NULL,
                  n_lambda = 25, n_a = 5, min_ratio = 1e-4,
                  search = "grid", sparse = NULL, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
@@ -439,7 +464,7 @@ scad <- function(x, label = "scad", standardize = FALSE,
                                                                    n_coef = k),
                   list(lambda = lambda, a = a),
                   list(...), list(lambda = n_lambda, a = n_a), min_ratio,
-                  search, sparse)
+                  search, sparse, id)
 }
 
 
@@ -495,6 +520,13 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #'   than to `NULL`: one number holds it, several are the grid the path
 #'   visits as they stand, and `NULL` has the path build one. Must lie in
 #'   \eqn{(1, \infty)}.
+#' @param id Labels sharing this term's hyperparameters with those of
+#'   other terms carrying the same ones: each is then estimated at a
+#'   single value, wherever in the formula they sit. A named vector,
+#'   `c(gamma = "A")`, since the penalty carries several and which was
+#'   meant is not a guess; `NULL`, the default, shares nothing. See
+#'   [term_ids()], whose page says what the labels mean and what care
+#'   they want.
 #' @param n_lambda,n_gamma How many values the path visits for each, at
 #'   least 2. They differ because the axes do: \eqn{\lambda} descends the
 #'   size of the kink over four decades and wants that many points, while
@@ -558,7 +590,7 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #'   [scad()], [penalties7::mcp_penalty()]
 #' @export
 mcp <- function(x, label = "mcp", standardize = FALSE,
-                lambda = NULL, gamma = 3,
+                lambda = NULL, gamma = 3, id = NULL,
                 n_lambda = 25, n_gamma = 5, min_ratio = 1e-4,
                 search = "grid", sparse = NULL, ...) {
   .penalized_spec(x, substitute(x), label, standardize,
@@ -566,5 +598,5 @@ mcp <- function(x, label = "mcp", standardize = FALSE,
                                                                   n_coef = k),
                   list(lambda = lambda, gamma = gamma),
                   list(...), list(lambda = n_lambda, gamma = n_gamma),
-                  min_ratio, search, sparse)
+                  min_ratio, search, sparse, id)
 }

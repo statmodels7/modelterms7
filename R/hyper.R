@@ -765,3 +765,118 @@ S7::method(term_search, model_term) <- function(term, ...) {
   if (!length(s)) return(list())
   stats::setNames(list(as.character(s)), "")
 }
+
+
+#' The Hyperparameter Names a Penalty Factory Produces
+#'
+#' @description
+#' Builds the penalty at a probe size and reads its `params`, returning an
+#' empty vector where it cannot be built.
+#'
+#' @details
+#' A factory is a function of the coefficient count, and the names it produces
+#' do not depend on that count, so one coefficient is enough to read them. The
+#' probe is wrapped because a factory may reject a size of one, and the two
+#' outcomes are kept apart: `NULL` says nothing is known here, an empty vector
+#' says the penalty carries no hyperparameter. Every shipped factory answers,
+#' so `NULL` is reachable only from one a caller wrote.
+#'
+#' @param factory A function of the coefficient count returning a penalty, or
+#'   a penalty.
+#'
+#' @return A character vector, empty where the penalty carries no
+#'   hyperparameter, or `NULL` where it could not be built.
+#'
+#' @keywords internal
+.factory_params <- function(factory) {
+  pen <- if (is.function(factory)) {
+    tryCatch(factory(1L), error = function(e) NULL)
+  } else {
+    factory
+  }
+  if (is.null(pen)) NULL else pen@params
+}
+
+
+#' Check the Sharing Labels a Constructor Was Given
+#'
+#' @description
+#' Validates `id` and returns it as a named character vector, one entry per
+#' hyperparameter to share, empty where the constructor was given none.
+#'
+#' @details
+#' Two forms are accepted and they say the same thing. An unnamed single string
+#' shares **the** hyperparameter, and is legal only where the penalty carries
+#' one: it is the short form for the frequent case, a smooth or a ridge. A
+#' named vector names which, `c(alpha = "A")`, and is what a penalty carrying
+#' several needs, since sharing the mixing of an elastic net while leaving its
+#' strength free is a model and guessing which was meant is not.
+#'
+#' The short form on a penalty carrying several is an error listing them,
+#' rather than a rule about position. The names are checked against the
+#' penalty's own, so a misspelling is reported where it was written.
+#'
+#' Sharing does not merge the penalties. They stay two objects estimated at one
+#' value, so nothing here asks whether they are comparable: the two may weigh
+#' quite different matrices, and whether that is the model wanted is the
+#' caller's to know. What the documentation says instead is that `id` is worth
+#' care, and that it means what one expects between penalties of the same shape
+#' over covariates of comparable scale.
+#'
+#' @param x The `id` argument as given: `NULL`, a single string, or a named
+#'   character vector.
+#' @param names The hyperparameter names the term's penalty carries, which
+#'   the labels' names are checked against, or `NULL` where the penalty does
+#'   not exist yet: the shape is then checked and the labels carried as
+#'   written, to be resolved by a second call where the names are known.
+#' @param what How to name the term in a message.
+#'
+#' @return A named character vector, possibly empty.
+#'
+#' @seealso [term_ids()], which reports it; [check_hyper()] for the argument
+#'   that holds a hyperparameter instead of sharing it.
+#'
+#' @keywords internal
+check_ids <- function(x, names, what = "this term") {
+  if (is.null(x) || !length(x)) return(character(0))
+  if (!is.character(x) || any(is.na(x)) || !all(nzchar(x))) {
+    stop(sprintf(paste0("'id' in '%s' must be a non-empty string, or a named\n",
+                        "  vector of them with one entry per hyperparameter",
+                        " to share."), what), call. = FALSE)
+  }
+  avail <- names
+  nm <- base::names(x)
+  # `NULL` names are the deferred case: the term's penalty is not built yet,
+  # as in a random effect, whose hyperparameters are the effects'
+  # distribution's and are known only once the group is read. The shape is
+  # checked here and the labels are carried as written, for the same call to
+  # resolve them where the names exist.
+  if (is.null(avail)) {
+    if (is.null(nm)) return(as.character(x))
+    return(stats::setNames(as.character(x), nm))
+  }
+  # A term whose penalty carries no hyperparameter has nothing to share, and
+  # says so rather than storing a label nothing will ever read.
+  if (!length(avail)) {
+    stop(sprintf(paste0("'%s' has no hyperparameter to share, so 'id' means",
+                        " nothing here."), what), call. = FALSE)
+  }
+  if (is.null(nm) || !all(nzchar(nm))) {
+    if (length(x) != 1L || length(avail) != 1L) {
+      stop(sprintf(paste0(
+        "'id' in '%s' has no names, which shares THE hyperparameter and is\n",
+        "  only meaningful where the penalty carries one. It carries %d: %s.\n",
+        "  Name which to share, as id = c(%s = \"...\")."),
+        what, length(avail), paste(avail, collapse = ", "), avail[1L]),
+        call. = FALSE)
+    }
+    return(stats::setNames(as.character(x), avail))
+  }
+  bad <- setdiff(nm, avail)
+  if (length(bad)) {
+    stop(sprintf(paste0("'id$%s' in '%s' is not a hyperparameter of its",
+                        " penalty.\n  It carries: %s."),
+                 bad[1L], what, paste(avail, collapse = ", ")), call. = FALSE)
+  }
+  stats::setNames(as.character(x), nm)
+}

@@ -37,6 +37,7 @@ reference:
   - term_values
   - term_path_min
   - term_search
+  - term_ids
   - term_npar
   - term_coef_start
   - term_jacobian_block

@@ -4,7 +4,7 @@
 \alias{.random_hyper}
 \title{Where a Held Hyperparameter Belongs}
 \usage{
-.random_hyper(entries, hyper, label)
+.random_hyper(entries, hyper, ids, label)
 }
 \arguments{
 \item{entries}{The entries from \code{\link[=.random_entries]{.random_entries()}}.}

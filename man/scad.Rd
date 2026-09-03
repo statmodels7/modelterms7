@@ -10,6 +10,7 @@ scad(
   standardize = FALSE,
   lambda = NULL,
   a = 3.7,
+  id = NULL,
   n_lambda = 25,
   n_a = 5,
   min_ratio = 1e-04,
@@ -40,6 +41,14 @@ of \code{lambda}, defaulting to the literature's \code{3.7} rather than to
 \code{NULL}: one number holds it, several are the grid the path visits as
 they stand, and \code{NULL} has the path build one. Must lie in
 \eqn{(2, \infty)}.}
+
+\item{id}{Labels sharing this term's hyperparameters with those of
+other terms carrying the same ones: each is then estimated at a
+single value, wherever in the formula they sit. A named vector,
+\code{c(a = "A")}, since the penalty carries several and which was
+meant is not a guess; \code{NULL}, the default, shares nothing. See
+\code{\link[=term_ids]{term_ids()}}, whose page says what the labels mean and what care
+they want.}
 
 \item{n_lambda, n_a}{How many values the path visits for each, at least 2.
 They differ because the axes do: \eqn{\lambda} descends the size of the

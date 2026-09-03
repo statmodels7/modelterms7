@@ -13,6 +13,7 @@ te(
   anisotropic = TRUE,
   label = NULL,
   lambda = NULL,
+  id = NULL,
   sparse = NULL
 )
 }
@@ -42,6 +43,13 @@ logical throws.}
 \strong{estimated} when left \code{NULL}, which is the default. An anisotropic
 product carries one per margin, so a vector of that length, or a named one
 holding some of them.}
+
+\item{id}{Labels sharing this term's smoothing parameters with those of
+other terms carrying the same ones. An anisotropic product carries
+one per margin, so the labels are named after them,
+\code{c(lambda1 = "A")}; an isotropic one carries \code{lambda} alone and a
+single unnamed string will do. \code{NULL}, the default, shares nothing.
+See \code{\link[=term_ids]{term_ids()}}.}
 
 \item{sparse}{\code{TRUE}, \code{FALSE}, or \code{NULL} to settle it at build. Only a
 factor \code{by} admits \code{TRUE}. See \code{\link[=s]{s()}}.}

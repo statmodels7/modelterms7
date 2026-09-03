@@ -10,7 +10,8 @@ model_term(
   grid = list(),
   values = list(),
   min_ratio = numeric(0),
-  search = character(0)
+  search = character(0),
+  ids = character(0)
 )
 }
 \arguments{
@@ -38,10 +39,16 @@ or \code{numeric(0)} for the fitting layer's own. See \code{\link[=term_path_min
 more than one carrying a kink: \code{"grid"} for every combination of them,
 \code{"cyclic"} for one at a time, or \code{character(0)} for the default. See
 \code{\link[=term_search]{term_search()}}.}
+
+\item{ids}{Which of the term's hyperparameters are shared with those of
+other terms, and under what label: a character vector named by the
+term's own hyperparameters, or \code{character(0)} for none. The terms
+carrying the same label for the same hyperparameter estimate one value.
+See \code{\link[=term_ids]{term_ids()}}.}
 }
 \value{
 Nothing: the class is abstract and cannot be instantiated. As a type
-it is the parent of every term, with the six properties above.
+it is the parent of every term, with the seven properties above.
 }
 \description{
 The abstract root of the term hierarchy. A term records what a formula

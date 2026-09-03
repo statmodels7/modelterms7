@@ -13,6 +13,7 @@ s(
   linear = TRUE,
   label = NULL,
   lambda = NULL,
+  id = NULL,
   sparse = NULL
 )
 }
@@ -40,6 +41,13 @@ unpenalized there, \code{TRUE} by default.}
 
 \item{lambda}{The smoothing parameter, held at the value given and
 \strong{estimated} when left \code{NULL}, which is the default.}
+
+\item{id}{A label sharing this smooth's smoothing parameter with those
+of other terms carrying the same one: they are then estimated at a
+single value, so several curves are smoothed together. It is what
+\code{id} does in \pkg{mgcv}, and what it means best between smooths of
+the same basis and dimension. \code{NULL}, the default, shares nothing.
+See \code{\link[=term_ids]{term_ids()}}.}
 
 \item{sparse}{\code{TRUE}, \code{FALSE}, or \code{NULL} to settle it at build. Only a
 factor \code{by} admits \code{TRUE}; without one it is refused rather than ignored.

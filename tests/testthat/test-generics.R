@@ -68,8 +68,13 @@ test_that("the three shipped structural classes inherit rather than restate", {
     o <- cl(label = "x")
     expect_identical(o@blueprint, list())
     expect_false(term_is_built(o))
-    # blueprint sits in the parent's slot, right after model_term's six,
-    # rather than last where each subclass used to put it
-    expect_identical(S7::prop_names(o)[7L], "blueprint")
+    # blueprint sits in the PARENT's slot rather than last, where each
+    # subclass used to put it. The position is read from the parent rather
+    # than written out, so adding a property to model_term moves both and
+    # the assertion goes on saying the same thing.
+    par <- which(names(structural_term@properties) == "blueprint")
+    expect_length(par, 1L)
+    expect_identical(S7::prop_names(o)[par], "blueprint")
+    expect_true(par < length(S7::prop_names(o)))
   }
 })

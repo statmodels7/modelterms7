@@ -30,6 +30,7 @@ NULL
 #' rotation making it so, and a numeric `by` merely multiplies it.
 #'
 #' @inheritParams additive_term
+#' @inheritParams model_term
 #' @param vars A list of the covariate expressions being smoothed.
 #' @param by The expression the smooth varies with, or `NULL`.
 #' @param spec A named list of construction settings: the basis, its dimension
@@ -166,6 +167,12 @@ SmoothTerm <- S7::new_class(
 #'   `NULL`, the default, builds one from the covariate: `s(x)`.
 #' @param lambda The smoothing parameter, held at the value given and
 #'   **estimated** when left `NULL`, which is the default.
+#' @param id A label sharing this smooth's smoothing parameter with those
+#'   of other terms carrying the same one: they are then estimated at a
+#'   single value, so several curves are smoothed together. It is what
+#'   `id` does in \pkg{mgcv}, and what it means best between smooths of
+#'   the same basis and dimension. `NULL`, the default, shares nothing.
+#'   See [term_ids()].
 #' @param sparse `TRUE`, `FALSE`, or `NULL` to settle it at build. Only a
 #'   factor `by` admits `TRUE`; without one it is refused rather than ignored.
 #'   See the section above.
@@ -235,12 +242,13 @@ SmoothTerm <- S7::new_class(
 #' }
 #' @export
 s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
-              linear = TRUE, label = NULL, lambda = NULL,
+              linear = TRUE, label = NULL, lambda = NULL, id = NULL,
               sparse = NULL) {
   xe <- substitute(x)
   .smooth_spec(list(xe), substitute(by), k, degree,
                if (is.null(basis)) NULL else list(basis), linear, label,
-               sprintf("s(%s)", deparse(xe)), lambda, sparse = sparse)
+               sprintf("s(%s)", deparse(xe)), lambda, sparse = sparse,
+               ids = id)
 }
 
 #' Penalized Smooth of Several Covariates
@@ -311,6 +319,12 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #'   **estimated** when left `NULL`, which is the default. An anisotropic
 #'   product carries one per margin, so a vector of that length, or a named one
 #'   holding some of them.
+#' @param id Labels sharing this term's smoothing parameters with those of
+#'   other terms carrying the same ones. An anisotropic product carries
+#'   one per margin, so the labels are named after them,
+#'   `c(lambda1 = "A")`; an isotropic one carries `lambda` alone and a
+#'   single unnamed string will do. `NULL`, the default, shares nothing.
+#'   See [term_ids()].
 #' @param sparse `TRUE`, `FALSE`, or `NULL` to settle it at build. Only a
 #'   factor `by` admits `TRUE`. See [s()].
 #'
@@ -367,7 +381,7 @@ s <- function(x, by = NULL, k = 10, degree = 3, basis = NULL,
 #' }
 #' @export
 te <- function(..., by = NULL, k = 5, degree = 3, bases = NULL,
-               anisotropic = TRUE, label = NULL, lambda = NULL,
+               anisotropic = TRUE, label = NULL, lambda = NULL, id = NULL,
                sparse = NULL) {
   vars <- as.list(substitute(list(...)))[-1L]
   if (length(vars) < 2L) {
@@ -387,14 +401,14 @@ te <- function(..., by = NULL, k = 5, degree = 3, bases = NULL,
                      sprintf("te(%s)",
                              paste(vapply(vars, deparse, character(1)),
                                    collapse = ",")),
-                     lambda, nms, sparse = sparse)
+                     lambda, nms, sparse = sparse, ids = id)
   sp@spec$anisotropic <- anisotropic
   sp
 }
 
 .smooth_spec <- function(vars, by, k, degree, bases, linear, label,
                          default_label, lambda = NULL, names = "lambda",
-                         sparse = NULL) {
+                         sparse = NULL, ids = NULL) {
   nv <- length(vars)
   chk <- function(v, nm, lo) {
     if (!is.numeric(v) || anyNA(v) || any(v < lo) || any(v != round(v))) {
@@ -445,6 +459,7 @@ te <- function(..., by = NULL, k = 5, degree = 3, bases = NULL,
              spec = list(k = k, degree = degree, bases = bases,
                          linear = isTRUE(linear)),
              hyper = smooth_hyper(lambda, names, label),
+             ids = check_ids(ids, names, label),
              X = NULL, coef_names = character(0),
              blueprint = list(), penalty = NULL)
 }

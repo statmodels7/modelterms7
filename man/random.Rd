@@ -10,6 +10,7 @@ random(
   correlated = TRUE,
   label = "random",
   hyper = NULL,
+  id = NULL,
   ...
 )
 }
@@ -36,6 +37,13 @@ a named vector or list; those not named are estimated. The names are the
 distribution's own parameters, with the within-group column appended
 where there is one copy per column. A name the penalty does not carry is
 reported when the term is built, which is where the penalty first exists.}
+
+\item{id}{Labels sharing the effects' hyperparameters with those of
+other terms carrying the same ones, so that two random effects may
+be given one variance component. The names are \code{hyper}'s, checked at
+the same point and for the same reason; a single unnamed string will
+do where the effects' distribution carries one hyperparameter.
+\code{NULL}, the default, shares nothing. See \code{\link[=term_ids]{term_ids()}}.}
 
 \item{...}{Unused. A named argument here is reported by name, so a removed
 one such as \code{precision} or \code{kinks} gets a message saying what replaced

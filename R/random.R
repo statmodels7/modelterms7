@@ -37,6 +37,7 @@ NULL
 #' and passing one is an error.
 #'
 #' @inheritParams additive_term
+#' @inheritParams model_term
 #' @param formula The bar formula, `~ 1 | g` or `~ x | g`, with the
 #'   within-group design on the left and the grouping variable on the right.
 #' @param correlated A single logical: whether the default Gaussian lets the
@@ -286,6 +287,12 @@ RandomTerm <- S7::new_class(
 #'   distribution's own parameters, with the within-group column appended
 #'   where there is one copy per column. A name the penalty does not carry is
 #'   reported when the term is built, which is where the penalty first exists.
+#' @param id Labels sharing the effects' hyperparameters with those of
+#'   other terms carrying the same ones, so that two random effects may
+#'   be given one variance component. The names are `hyper`'s, checked at
+#'   the same point and for the same reason; a single unnamed string will
+#'   do where the effects' distribution carries one hyperparameter.
+#'   `NULL`, the default, shares nothing. See [term_ids()].
 #' @param ... Unused. A named argument here is reported by name, so a removed
 #'   one such as `precision` or `kinks` gets a message saying what replaced
 #'   it.
@@ -345,7 +352,7 @@ RandomTerm <- S7::new_class(
 #' @seealso [s()], [te()], [nl()]
 #' @export
 random <- function(formula, distrib = NULL, correlated = TRUE,
-                   label = "random", hyper = NULL, ...) {
+                   label = "random", hyper = NULL, id = NULL, ...) {
   parts <- .random_parts(formula)
   if (!is.logical(correlated) || length(correlated) != 1L ||
       is.na(correlated)) {
@@ -366,6 +373,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
   RandomTerm(label = label, formula = formula, correlated = correlated,
              distrib = distrib, tag = parts$tag,
              hyper = as_hyper(hyper, label),
+             ids = check_ids(id, NULL, label),
              X = NULL, coef_names = character(0),
              blueprint = list(), penalty = NULL)
 }
@@ -790,7 +798,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
       pen <- penalties7::distrib_penalty(prior, n_coef = m * d)
       return(list(list(name = "", index = seq_len(m * d), penalty = pen,
                        fixed = list(), n_values = list(), values = list(),
-                       min_ratio = numeric(0))))
+                       min_ratio = numeric(0), ids = character(0))))
     }
     prior <- rep(list(prior), d)
   }
@@ -798,7 +806,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
     list(name = wnames[j], index = seq(j, by = d, length.out = m),
          penalty = penalties7::distrib_penalty(prior[[j]], n_coef = m),
          fixed = list(), n_values = list(), values = list(),
-         min_ratio = numeric(0))
+         min_ratio = numeric(0), ids = character(0))
   })
 }
 
@@ -823,7 +831,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' @return The entries, with `fixed` filled in and checked.
 #'
 #' @keywords internal
-.random_hyper <- function(entries, hyper, label) {
+.random_hyper <- function(entries, hyper, ids, label) {
   qual <- function(en) {
     if (nzchar(en$name)) paste0(en$penalty@params, ".", en$name)
     else en$penalty@params
@@ -836,10 +844,20 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
       "  '%s'. It carries: %s."),
       unknown[1L], label, paste(avail, collapse = ", ")), call. = FALSE)
   }
+  # The labels are resolved HERE and not at the constructor for the reason
+  # the values are: a random effect's hyperparameters are the effects'
+  # distribution's, qualified by the entry they belong to, and neither is
+  # known before the group is read.
+  ids <- check_ids(ids, avail, label)
   lapply(entries, function(en) {
     keep <- hyper[intersect(names(hyper), qual(en))]
+    keep_id <- ids[intersect(names(ids), qual(en))]
     if (nzchar(en$name) && length(keep)) {
       names(keep) <- sub(sprintf("\\.\\Q%s\\E$", en$name), "", names(keep))
+    }
+    if (nzchar(en$name) && length(keep_id)) {
+      names(keep_id) <- sub(sprintf("\\.\\Q%s\\E$", en$name), "",
+                            names(keep_id))
     }
     # several values are a grid for a PATH to visit, and only a penalty with a
     # kink is swept along one -- the same three checks a penalized constructor
@@ -848,6 +866,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
     reject_pathless_values(vals, en$penalty, label)
     en$fixed <- check_hyper(keep, en$penalty, label)
     en$values <- vals
+    en$ids <- keep_id
     en
   })
 }
@@ -977,7 +996,7 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
   # penalties this term builds exist: which there are depends on the
   # distribution of the effects and on how many within-group columns there are
   entries <- .random_hyper(.random_entries(prior, d, m, colnames(W)),
-                           term@hyper, term@label)
+                           term@hyper, term@ids, term@label)
 
   term@X <- Z
   term@coef_names <- cn
@@ -1124,6 +1143,16 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
       "  block with the other terms carrying that label, and the block's\n",
       "  hyperparameters belong to the class."), .random_tag(term)),
       call. = FALSE)
+  }
+  # and 'id' for the same reason, said the same way: it shares a
+  # hyperparameter of this term's own penalty, which a labelled term has not
+  # got. The two bars are already the sharing here, of the whole block.
+  if (length(term@ids)) {
+    stop(sprintf(paste0(
+      "'id' shares a hyperparameter of this term's own penalty, and a term\n",
+      "  carrying the label '%s' has none: the covariance block it shares is\n",
+      "  the class's, and so are the hyperparameters over it."),
+      .random_tag(term)), call. = FALSE)
   }
   if (!isTRUE(term@correlated)) {
     stop(sprintf(paste0(

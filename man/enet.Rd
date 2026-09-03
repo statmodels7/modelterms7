@@ -10,6 +10,7 @@ enet(
   standardize = FALSE,
   lambda = NULL,
   alpha = NULL,
+  id = NULL,
   n_lambda = 25,
   n_alpha = 5,
   min_ratio = 1e-04,
@@ -37,6 +38,14 @@ build one. Must lie in \eqn{(0, \infty)}.}
 
 \item{alpha}{The mixing weight, in the same three states and settled
 independently of \code{lambda}. Must lie in \eqn{(0, 1)}.}
+
+\item{id}{Labels sharing this term's hyperparameters with those of
+other terms carrying the same ones: each is then estimated at a
+single value, wherever in the formula they sit. A named vector,
+\code{c(alpha = "A")}, since the penalty carries several and which was
+meant is not a guess; \code{NULL}, the default, shares nothing. See
+\code{\link[=term_ids]{term_ids()}}, whose page says what the labels mean and what care
+they want.}
 
 \item{n_lambda, n_alpha}{How many values the path visits for each, at
 least 2. They differ because the axes do: \eqn{\lambda} descends the

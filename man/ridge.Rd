@@ -9,6 +9,7 @@ ridge(
   label = "ridge",
   standardize = FALSE,
   lambda = NULL,
+  id = NULL,
   sparse = NULL,
   ...
 )
@@ -30,6 +31,12 @@ each coefficient on the scale of its own column. See the section above.}
 \code{NULL}, the default, has it estimated. A ridge has no kink and no
 path, so several numbers are not a grid it could visit. Must lie in
 \eqn{(0, \infty)}.}
+
+\item{id}{A label sharing this term's hyperparameter with those of
+other terms carrying the same one: they are then estimated at a
+single value, wherever in the formula they sit. \code{NULL}, the
+default, shares nothing. See \code{\link[=term_ids]{term_ids()}}, whose page says what
+the labels mean and what care they want.}
 
 \item{sparse}{Governs the formula route: \code{TRUE} builds a \code{dgCMatrix} through
 \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}}, \code{FALSE} a dense model matrix, and \code{NULL},

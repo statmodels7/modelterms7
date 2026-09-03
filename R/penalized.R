@@ -98,7 +98,8 @@ PenalizedTerm <- S7::new_class(
 
 .penalized_spec <- function(x, expr, label, standardize, factory,
                             hyper = list(), extra = list(), grid = list(),
-                            min_ratio = NULL, search = NULL, sparse = NULL) {
+                            min_ratio = NULL, search = NULL, sparse = NULL,
+                            ids = NULL) {
   # An argument named after ANOTHER penalty's hyperparameter is the mistake
   # this catches: `mcp(x, a = 3)` writes SCAD's shape on an MCP, whose own
   # is gamma, and reaches nothing. R would report it as an unused argument,
@@ -164,6 +165,7 @@ PenalizedTerm <- S7::new_class(
                 grid = check_grid(grid, factory, label),
                 min_ratio = check_min_ratio(min_ratio, label),
                 search = check_search(search, label),
+                ids = check_ids(ids, .factory_params(factory), label),
                 X = NULL, coef_names = character(0),
                 blueprint = list(), penalty = NULL)
 }

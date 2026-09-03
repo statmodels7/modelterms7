@@ -72,9 +72,14 @@
 #'   more than one carrying a kink: `"grid"` for every combination of them,
 #'   `"cyclic"` for one at a time, or `character(0)` for the default. See
 #'   [term_search()].
+#' @param ids Which of the term's hyperparameters are shared with those of
+#'   other terms, and under what label: a character vector named by the
+#'   term's own hyperparameters, or `character(0)` for none. The terms
+#'   carrying the same label for the same hyperparameter estimate one value.
+#'   See [term_ids()].
 #'
 #' @return Nothing: the class is abstract and cannot be instantiated. As a type
-#'   it is the parent of every term, with the six properties above.
+#'   it is the parent of every term, with the seven properties above.
 #'
 #' @seealso [additive_term()] and [structural_term()] for the two branches,
 #'   [term_build()] for turning a specification into a built term,
@@ -143,7 +148,20 @@ model_term <- S7::new_class(
     # term. A criterion is asked of every hyperparameter of the model,
     # smooth ones included, and has no business carrying it.
     search = S7::new_property(S7::class_character,
-                              default = quote(character(0)))
+                              default = quote(character(0))),
+    # WHICH of its hyperparameters are shared with those of other terms, and
+    # under what name: a character vector whose names are the term's own
+    # hyperparameters and whose values are the labels. The terms carrying the
+    # same label for the same hyperparameter estimate ONE value.
+    #
+    # It belongs here beside the other four for the same reason they do: what
+    # a term's hyperparameters are and how they are estimated is the term's
+    # own answer. Sharing does not merge the penalties -- they stay two
+    # objects with the same number in them -- so this is a constraint on the
+    # search and nothing else, which is what keeps every reader of a
+    # hyperparameter working unchanged.
+    ids = S7::new_property(S7::class_character,
+                           default = quote(character(0)))
   )
 )
 

@@ -1470,7 +1470,7 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
         # the shared sub-term holds -- they are the same declaration read
         # once per coefficient of the kind
         fixed = ent[[i]]$fixed, n_values = ent[[i]]$n_values,
-        min_ratio = ent[[i]]$min_ratio)
+        min_ratio = ent[[i]]$min_ratio, ids = ent[[i]]$ids)
     }
     pooled <- c(pooled, ps)
   }
@@ -1481,7 +1481,7 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
                                       penalty = e$penalty, fixed = e$fixed,
                                       n_values = e$n_values,
                                       min_ratio = e$min_ratio,
-                                      search = e$search)
+                                      search = e$search, ids = e$ids)
     }
   }
   out
