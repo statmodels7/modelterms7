@@ -41,6 +41,10 @@ structural term takes instead.
   : Where a Term's Own Coefficients Begin
 - [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
   : Is a Term's Block the Jacobian of Its Contribution?
+- [`term_tag()`](https://statmodels7.github.io/modelterms7/reference/term_tag.md)
+  : The Covariance Label of a Term
+- [`term_group()`](https://statmodels7.github.io/modelterms7/reference/term_group.md)
+  : The Grouping a Term's Coefficients Are Indexed By
 - [`term_coef_names()`](https://statmodels7.github.io/modelterms7/reference/term_coef_names.md)
   : Coefficient Names of a Built Term
 - [`term_smooth()`](https://statmodels7.github.io/modelterms7/reference/term_smooth.md)

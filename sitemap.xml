@@ -36,14 +36,18 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_sub_new.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-hyper_parts.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-indicator_cols.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_check_group.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_check_prior.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_default.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_entries.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_family.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_has_cross.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_hyper.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_labelled.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_mv_ok.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_parts.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_retired.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_tag.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-resolve_sparse.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/edf.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/enet.html</loc></url>
@@ -124,6 +128,8 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_filter.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_filter.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_grid.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_group.RandomTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_group.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_hessian.MarginalBreakTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_hessian.RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_hessian.html</loc></url>
@@ -189,6 +195,8 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_static_deriv.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_static_deriv.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_static_deriv.model_term.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_tag.RandomTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_tag.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_third.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_third.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_value.SegTerm.html</loc></url>

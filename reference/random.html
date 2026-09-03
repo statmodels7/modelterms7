@@ -15,7 +15,7 @@ coefficients. That is what a random effect is under penalized likelihood."><meta
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.65.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.66.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,7 +67,10 @@ coefficients. That is what a random effect is under penalized likelihood.</p>
 
 <dl><dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
 <dd><p>A bar formula, <code>~ lhs | g</code>, with <code>g</code>
-evaluating to the grouping variable in the data.</p></dd>
+evaluating to the grouping variable in the data, or <code>~ lhs | tag | g</code>
+with a covariance label in the middle. <code>g</code> must not be continuous: a
+double carrying a value that is not a whole number is rejected, since its
+levels would be its formatted values.</p></dd>
 
 
 <dt id="arg-distrib">distrib<a class="anchor" aria-label="anchor" href="#arg-distrib"></a></dt>
@@ -120,6 +123,33 @@ how many there are and where the log-density has a kink are all properties
 of that distribution, read off it at build time.</p>
     </div>
     <div class="section level2">
+    <h2 id="the-covariance-label-and-the-second-bar">The covariance label, and the second bar<a class="anchor" aria-label="anchor" href="#the-covariance-label-and-the-second-bar"></a></h2>
+
+
+<p>A formula may carry two bars, <code>~ 1 + x | u | g</code>, following <span class="pkg">brms</span>. The
+last position is the grouping variable and the middle one is a label: terms
+carrying the same label and the same grouping describe effects that are
+correlated with each other, so an intercept in one equation and a slope in
+another can share one covariance block. R nests bars to the left, so that
+reading comes out of the parser rather than being imposed.</p>
+<p>The label is a <strong>name and not data</strong>. It is read as a symbol and never
+evaluated, and a column of the data carrying the same name is not looked at,
+so <code>~ 1 | u | g</code> builds exactly the block <code>~ 1 | g</code> builds whatever <code>u</code>
+happens to be.</p>
+<p><strong>A labelled term declares no penalty of its own</strong>, and that is the answer
+rather than a gap: the covariance block spans columns the term cannot see,
+possibly in another equation, so the prior over it belongs to the class and
+is built by the fitting layer. <code><a href="term_penalties.html">term_penalties()</a></code> returns an empty list and
+<code><a href="term_penalty.html">term_penalty()</a></code> is <code>NULL</code>. What follows from it is that <code>hyper</code> is refused
+here, the hyperparameters being the class's, and that a <code>distrib</code> given on a
+labelled term names the <strong>class's</strong> joint prior: it must be multivariate,
+and its dimension is checked where the class is known.</p>
+<p>The two scopes are different and stay two arguments. <code>correlated</code> says
+whether the columns of <strong>this</strong> term may depend on each other; the label
+says that its columns depend on those of <strong>other</strong> terms. Asking for
+<code>correlated = FALSE</code> beside a label asks for both at once and is refused.</p>
+    </div>
+    <div class="section level2">
     <h2 id="the-distribution-of-the-effects">The distribution of the effects<a class="anchor" aria-label="anchor" href="#the-distribution-of-the-effects"></a></h2>
 
 
@@ -128,7 +158,7 @@ them with one per within-group column.</p>
 <p>A multivariate distribution of the within-group dimension lets the effects
 of one group depend on each other, its matrix parameter carrying the
 dependence: <code>mvgaussian2_distrib(2, ar1(2))</code> is a prior whose
-precision is autoregressive, <code>mvstudent_t_distrib(2)</code> a heavy-tailed
+precision is autoregressive, <code>mvstudent_t1_distrib(2)</code> a heavy-tailed
 one. Correlation is available exactly for the families that carry a matrix
 parameter: a location block as long as the dimension, together with a
 covariance, precision or scale matrix. The term reads that property off the
@@ -275,6 +305,22 @@ longitudinal data. <em>Biometrics</em> 38, 963-974.</p>
 <span class="r-in"><span>                            mu <span class="op">=</span> <span class="fl">0</span>, nu <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="term_penalty.html">term_penalty</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">random</span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span> <span class="op">|</span> <span class="va">g</span>, distrib <span class="op">=</span> <span class="va">t4</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span><span class="op">@</span><span class="va">params</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "sigma"</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A covariance label, read from the middle of two bars and reported by</span></span></span>
+<span class="r-in"><span><span class="co"># term_tag(). It is a name: the block is the one bar formula's.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="term_tag.html">term_tag</a></span><span class="op">(</span><span class="fu">random</span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span> <span class="op">|</span> <span class="va">u</span> <span class="op">|</span> <span class="va">g</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "u"</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="fu"><a href="term_coef_names.html">term_coef_names</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">random</span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span> <span class="op">|</span> <span class="va">u</span> <span class="op">|</span> <span class="va">g</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>          <span class="fu"><a href="term_coef_names.html">term_coef_names</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">random</span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span> <span class="op">|</span> <span class="va">g</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A continuous grouping variable is rejected rather than turned into one</span></span></span>
+<span class="r-in"><span><span class="co"># level per row.</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">random</span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span> <span class="op">|</span> <span class="va">x</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Error : the grouping variable 'x' is continuous, and a grouping variable's</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   values are labels rather than measurements: its levels would be the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   formatted numbers, one group per distinct value. Write factor(x) if</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   they really are labels.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Fitted. The data are simulated from a known truth, so the</span></span></span>

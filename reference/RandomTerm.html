@@ -15,7 +15,7 @@ constructs it."><meta property="og:image" content="https://statmodels7.github.io
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.65.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.66.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,7 +64,8 @@ constructs it.</p>
 <span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  formula <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  correlated <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
-<span>  distrib <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  distrib <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  tag <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -145,11 +146,16 @@ within-group effects correlate. Read only when <code>distrib</code> is <code>NUL
 a list of them with one per within-group column, or <code>NULL</code> for the
 default Gaussian.</p></dd>
 
+
+<dt id="arg-tag">tag<a class="anchor" aria-label="anchor" href="#arg-tag"></a></dt>
+<dd><p>The covariance label from the middle of two bars, or
+<code>NA_character_</code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An S7 object of class <code>RandomTerm</code>, inheriting from
-<code><a href="additive_term.html">additive_term()</a></code> and <code><a href="model_term.html">model_term()</a></code>, with the three properties above
+<code><a href="additive_term.html">additive_term()</a></code> and <code><a href="model_term.html">model_term()</a></code>, with the four properties above
 beside the ten they supply.</p>
     </div>
     <div class="section level2">
@@ -158,6 +164,11 @@ beside the ten they supply.</p>
 environment. <code>correlated</code> says whether the <strong>default</strong> Gaussian lets the
 within-group effects depend on each other; it is read only where <code>distrib</code>
 is <code>NULL</code>, the two saying the same thing.</p>
+<p><code>tag</code> is the covariance label written between two bars, <code>~ 1 | u | g</code>, or
+<code>NA_character_</code> where the formula carries one bar. It is reported by
+<code><a href="term_tag.html">term_tag()</a></code>. The two say different things and the difference is the scope:
+<code>correlated</code> is about the columns of this term, <code>tag</code> about the columns of
+other terms.</p>
 <p><code>distrib</code> is the effects' distribution as supplied, or <code>NULL</code> for the
 default. What the build turns it into is a <span class="pkg">penalties7</span> penalty, read
 through <code><a href="term_penalty.html">term_penalty()</a></code> or <code><a href="term_penalties.html">term_penalties()</a></code>, so the hyperparameter names
@@ -185,7 +196,7 @@ built one declares; <code><a href="edf.html">edf()</a></code> for what a fitted 
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span><span class="va">tm</span><span class="op">@</span><span class="va">formula</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x | g</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5646ce4d1168&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55948bf4be50&gt;</span>
 <span class="r-in"><span><span class="va">tm</span><span class="op">@</span><span class="va">correlated</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span></span></span>

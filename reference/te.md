@@ -185,7 +185,7 @@ term_hyper(te(x, z, k = 4, lambda = c(1, 5)))
 
 # The centering transform is reapplied, not recomputed.
 max(abs(term_predict(b, dd[1:10, ]) - term_matrix(b)[1:10, ]))
-#> [1] 6.938894e-18
+#> [1] 4.163336e-17
 
 # One covariate is s(), not te().
 try(te(x, k = 4))

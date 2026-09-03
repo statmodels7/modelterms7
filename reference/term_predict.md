@@ -119,5 +119,5 @@ max(abs(term_predict(bs, d2[sub, , drop = FALSE]) - X[sub, ]))
 #> [1] 0
 max(abs(term_matrix(term_build(s(x, k = 6), d2[sub, , drop = FALSE])) -
         X[sub, ]))
-#> [1] 2.331092
+#> [1] 3.487998
 ```

@@ -71,7 +71,7 @@ X <- term_matrix(b)
 max(abs(term_predict(b, dd[1:10, ]) - X[1:10, ]))
 #> [1] 0
 max(abs(term_matrix(term_build(s(x, k = 8), dd[1:10, ])) - X[1:10, ]))
-#> [1] 2.849289
+#> [1] 3.628495
 
 # A factor `by` keeps every level's columns at a subset that has two.
 bf <- term_build(s(x, k = 5, by = g), dd)

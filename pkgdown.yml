@@ -3,7 +3,7 @@ pkgdown: 2.2.1
 pkgdown_sha: ~
 articles:
   defining-a-model-term: defining-a-model-term.html
-last_built: 2026-09-02T20:31Z
+last_built: 2026-09-03T10:22Z
 urls:
   reference: https://statmodels7.github.io/modelterms7/reference
   article: https://statmodels7.github.io/modelterms7/articles

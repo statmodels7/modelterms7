@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.65.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.66.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,16 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.66.0" id="modelterms7-0660">modelterms7 0.66.0<a class="anchor" aria-label="anchor" href="#modelterms7-0660"></a></h2>
+<ul><li>
+<p><code><a href="../reference/random.html">random()</a></code> reads a second bar as a covariance label, following brms: in <code>~ 1 + x | u | g</code> the last position is the grouping variable and the middle one labels the effects that share a covariance block. R nests bars to the left, so that reading comes out of the parser rather than being imposed. <code><a href="../reference/term_tag.html">term_tag()</a></code> reports it, with a base method answering <code>NA_character_</code> for every other kind of term.</p>
+<p>A labelled term declares <strong>no penalty of its own</strong>: its coefficients share a block with those of the other terms carrying the label, and that block may span another equation, so the prior over it belongs to the class and is built by the fitting layer. <code><a href="../reference/term_penalties.html">term_penalties()</a></code> returns an empty list and <code><a href="../reference/term_penalty.html">term_penalty()</a></code> is <code>NULL</code>, which is the right answer rather than a gap. It follows that <code>hyper</code> is refused there, the hyperparameters being the class’s; that <code>correlated = FALSE</code> beside a label asks for two opposite things and is refused; and that a <code>distrib</code> names the class’s joint prior, so it must be multivariate, its dimension checked where the class is known. A univariate one is refused naming the copula: a joint law whose coordinates are of different families – a gaussian intercept correlated with a Student t slope – is not an elliptical family, a multivariate gaussian having gaussian margins and a multivariate t having t margins with one shared nu.</p>
+<p>What the change also closes is a defect. That spelling was not refused before, it was read as data: with no column of that name it stopped with <code>object 'u' not found</code>; with a factor column it built twice the columns, with names like <code>random.a.1 | uTRUE</code> and a warning about <code>'|'</code> applied to factors; and with a numeric column it built twice the columns and reported nothing at all. The label is now taken as a symbol and never evaluated, so a column carrying its name is not looked at, and all three cases build the block the one-bar formula builds.</p>
+</li>
+<li><p><code><a href="../reference/term_group.html">term_group()</a></code> reports the grouping a term’s coefficients are indexed by: the expression, its levels and the number of columns one level carries. Two labelled terms belong to one covariance block only if they share a grouping, and both halves are needed to decide it – <code>droplevels(id)</code> and <code>id</code> are different expressions for one grouping, and <code>id</code> under two subsets is one expression for two groupings. The base method returns <code>NULL</code>.</p></li>
+<li><p>A continuous grouping variable is refused. <code><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor()</a></code> turns any vector into a grouping by formatting its values, so <code>random(~ 1 | x)</code> with a standard normal <code>x</code> at 60 observations built 60 columns – one level per row – and said nothing. What is rejected is a double carrying a value that is not a whole number, which leaves every ordinary way of writing a grouping variable legal, integer codes included; a caller who means the levels of a non-integer vector writes <code><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor()</a></code> around it. The check is also what tells <code>~ 1 | u | g</code> from <code>~ 1 | g | u</code>, which are the same shape and differ only in which position holds what.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.65.0" id="modelterms7-0650">modelterms7 0.65.0<a class="anchor" aria-label="anchor" href="#modelterms7-0650"></a></h2>
 <ul><li>

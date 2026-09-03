@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.65.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.66.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,7 +78,7 @@
 <li>
 <code><a href="reference/ridge.html">ridge()</a></code>, <code><a href="reference/lasso.html">lasso()</a></code>, <code><a href="reference/scad.html">scad()</a></code>, <code><a href="reference/mcp.html">mcp()</a></code> and <code><a href="reference/enet.html">enet()</a></code> attach the corresponding <a href="https://statmodels7.github.io/penalties7/" class="external-link">penalties7</a> object to their block;</li>
 <li>
-<code><a href="reference/random.html">random()</a></code> builds grouped intercepts and slopes with the effect distribution as the penalty, correlated or not through a <a href="https://statmodels7.github.io/parameters7/" class="external-link">parameters7</a> structure replicated across groups;</li>
+<code><a href="reference/random.html">random()</a></code> builds grouped intercepts and slopes with the effect distribution as the penalty: a multivariate one lets the effects of a group depend on each other, its matrix parameter carrying the dependence on whichever <a href="https://statmodels7.github.io/parameters7/" class="external-link">parameters7</a> chart is given it, and a second bar labels effects that share a covariance block with those of other terms;</li>
 <li>
 <code><a href="reference/s.html">s()</a></code> and <code><a href="reference/te.html">te()</a></code> are the penalized smooths of one and of several covariates, built on <a href="https://statmodels7.github.io/basis7/" class="external-link">basis7</a>;</li>
 <li>
@@ -111,11 +111,23 @@
 <p>That is the random-changepoint model, and it is one line rather than a separate term. The same route carries a penalty: <code>nl(~ a * exp(-r * x), a ~ 0 + ridge(~ g))</code> puts a ridge on the amplitudes across the levels of <code>g</code>, and <code><a href="reference/term_penalties.html">term_penalties()</a></code> reports every entry a term declares with the subset of its parameters each one covers.</p>
 </div>
 <div class="section level2">
+<h2 id="effects-that-share-a-covariance-block">Effects that share a covariance block<a class="anchor" aria-label="anchor" href="#effects-that-share-a-covariance-block"></a>
+</h2>
+<p>A second bar labels a random effect, following <strong>brms</strong>: in <code>~ 1 + x | u | id</code> the last position is the grouping variable and the middle one says which effects are correlated with each other. R nests bars to the left, so that reading comes out of the parser. The label is a name and is never evaluated, so a column of the data carrying it is not looked at.</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tm</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/random.html">random</a></span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span> <span class="op">+</span> <span class="va">x</span> <span class="op">|</span> <span class="va">u</span> <span class="op">|</span> <span class="va">id</span><span class="op">)</span></span>
+<span><span class="fu"><a href="reference/term_tag.html">term_tag</a></span><span class="op">(</span><span class="va">tm</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "u"</span></span>
+<span><span class="fu"><a href="reference/term_penalties.html">term_penalties</a></span><span class="op">(</span><span class="fu"><a href="reference/term_build.html">term_build</a></span><span class="op">(</span><span class="va">tm</span>, <span class="va">pan</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; list()</span></span></code></pre></div>
+<p>The empty list is the answer rather than a gap: the coefficients of a labelled term share a block with those of every other term carrying the label, and that block may span another equation entirely, so the prior over it belongs to the class and is built where the model is fitted. <code>statmodels7</code> collects them, so <code>y ~ random(~ 1 | u | id) | sigma ~ random(~ 1 | u | id)</code> is a random intercept in the mean correlated with a random intercept in the scale.</p>
+</div>
+<div class="section level2">
 <h2 id="break-points-three-ways">Break-points three ways<a class="anchor" aria-label="anchor" href="#break-points-three-ways"></a>
 </h2>
 <p>The break-point terms come in three constructions, and which to use is a statement about the model rather than about the numerics. The default estimates the positions by the working fits of Muggeo and of Fasola, with the position read off the fitted coefficients.</p>
 <p><code>smoothed =</code> replaces the absolute value inside the term with a <a href="https://statmodels7.github.io/penalties7/" class="external-link">penalties7</a> <code>abs_smoother</code>, and then a break-point is an ordinary parameter of a differentiable model. <code><a href="reference/term_jacobian_block.html">term_jacobian_block()</a></code> is where the difference shows. <code><a href="reference/seg.html">seg()</a></code> is continuous and its block is already a Jacobian; the two discontinuous constructions read their position off a product of the fitted coefficients, so their block is a working linearization with a frozen weight until the term is smoothed.</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">jb</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">...</span><span class="op">)</span> <span class="fu"><a href="reference/term_jacobian_block.html">term_jacobian_block</a></span><span class="op">(</span><span class="fu"><a href="reference/term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="reference/jump.html">jump</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span><span class="op">)</span>, <span class="va">pan</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sharp    <span class="op">=</span> <span class="fu">jb</span><span class="op">(</span>npsi <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  smoothed <span class="op">=</span> <span class="fu">jb</span><span class="op">(</span>npsi <span class="op">=</span> <span class="fl">1</span>, smoothed <span class="op">=</span> <span class="fu">penalties7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/penalties7/reference/smooth_probit.html" class="external-link">smooth_probit</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
@@ -133,7 +145,7 @@
 <h2 id="a-formula-interpreted">A formula, interpreted<a class="anchor" aria-label="anchor" href="#a-formula-interpreted"></a>
 </h2>
 <p>The interpreter recognizes a term by what its call evaluates to, not by its name, so a term class defined outside the package works in a formula without registration.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">50</span><span class="op">)</span>, x1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">50</span><span class="op">)</span>, x2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">50</span><span class="op">)</span>,</span>
 <span>                 g <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sample.html" class="external-link">sample</a></span><span class="op">(</span><span class="va">letters</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span>, <span class="fl">50</span>, <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">dd</span><span class="op">$</span><span class="va">L</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">50</span> <span class="op">*</span> <span class="fl">3</span><span class="op">)</span>, <span class="fl">50</span>, <span class="fl">3</span><span class="op">)</span></span>
@@ -143,7 +155,7 @@
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">terms</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "linpar"         "lasso(L)"       "random(~1 | g)"</span></span></code></pre></div>
 <p><code>x1</code> and <code>log(abs(x2))</code> collapse into one <code>linpar</code>: a bare covariate is a covariate, and so is a call whose value is not a term.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">built</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">out</span><span class="op">$</span><span class="va">terms</span>, <span class="va">term_build</span>, data <span class="op">=</span> <span class="va">dd</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">built</span>, <span class="va">term_npar</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;         linpar       lasso(L) random(~1 | g) </span></span>
@@ -156,7 +168,7 @@
 <div class="section level2">
 <h2 id="what-a-built-term-carries">What a built term carries<a class="anchor" aria-label="anchor" href="#what-a-built-term-carries"></a>
 </h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sm</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="reference/s.html">s</a></span><span class="op">(</span><span class="va">x1</span>, k <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="fu"><a href="reference/term_matrix.html">term_matrix</a></span><span class="op">(</span><span class="va">sm</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 50  7</span></span>
@@ -166,12 +178,12 @@
 <span><span class="fu"><a href="reference/term_penalty.html">term_penalty</a></span><span class="op">(</span><span class="va">sm</span><span class="op">)</span><span class="op">@</span><span class="va">params</span></span>
 <span><span class="co">#&gt; [1] "lambda"</span></span></code></pre></div>
 <p>Every built term also carries a blueprint that reproduces the mapping on new data, reapplying the factor levels, contrasts and knot placement recorded at build time rather than deriving them again.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">newdd</span> <span class="op">&lt;-</span> <span class="va">dd</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="fu"><a href="reference/term_predict.html">term_predict</a></span><span class="op">(</span><span class="va">sm</span>, <span class="va">newdd</span><span class="op">)</span>, <span class="fu"><a href="reference/term_matrix.html">term_matrix</a></span><span class="op">(</span><span class="va">sm</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
 <p><code><a href="reference/check_term.html">check_term()</a></code> validates a term against a data frame – the block’s shape and names, that prediction on the same data reproduces the block, and that prediction on a subset equals the corresponding rows, which is the check a term that rebuilds instead of reapplying fails.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/check_term.html">check_term</a></span><span class="op">(</span><span class="fu"><a href="reference/linpar.html">linpar</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">g</span><span class="op">)</span>, <span class="va">dd</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">status</span> <span class="op">==</span> <span class="st">"OK"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>

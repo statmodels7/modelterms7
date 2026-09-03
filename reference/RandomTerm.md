@@ -25,7 +25,8 @@ RandomTerm(
   penalty = NULL,
   formula = NULL,
   correlated = logical(0),
-  distrib = NULL
+  distrib = NULL,
+  tag = character(0)
 )
 ```
 
@@ -115,13 +116,17 @@ RandomTerm(
   The effects' distribution, a distributions7 object or a list of them
   with one per within-group column, or `NULL` for the default Gaussian.
 
+- tag:
+
+  The covariance label from the middle of two bars, or `NA_character_`.
+
 ## Value
 
 An S7 object of class `RandomTerm`, inheriting from
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 and
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
-with the three properties above beside the ten they supply.
+with the four properties above beside the ten they supply.
 
 ## The three properties of its own
 
@@ -129,6 +134,13 @@ with the three properties above beside the ten they supply.
 its environment. `correlated` says whether the **default** Gaussian lets
 the within-group effects depend on each other; it is read only where
 `distrib` is `NULL`, the two saying the same thing.
+
+`tag` is the covariance label written between two bars, `~ 1 | u | g`,
+or `NA_character_` where the formula carries one bar. It is reported by
+[`term_tag()`](https://statmodels7.github.io/modelterms7/reference/term_tag.md).
+The two say different things and the difference is the scope:
+`correlated` is about the columns of this term, `tag` about the columns
+of other terms.
 
 `distrib` is the effects' distribution as supplied, or `NULL` for the
 default. What the build turns it into is a penalties7 penalty, read
@@ -166,7 +178,7 @@ S7::S7_inherits(tm, RandomTerm)
 #> [1] TRUE
 tm@formula
 #> ~x | g
-#> <environment: 0x5646ce4d1168>
+#> <environment: 0x55948bf4be50>
 tm@correlated
 #> [1] TRUE
 

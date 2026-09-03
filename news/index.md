@@ -1,5 +1,66 @@
 # Changelog
 
+## modelterms7 0.66.0
+
+- [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
+  reads a second bar as a covariance label, following brms: in
+  `~ 1 + x | u | g` the last position is the grouping variable and the
+  middle one labels the effects that share a covariance block. R nests
+  bars to the left, so that reading comes out of the parser rather than
+  being imposed.
+  [`term_tag()`](https://statmodels7.github.io/modelterms7/reference/term_tag.md)
+  reports it, with a base method answering `NA_character_` for every
+  other kind of term.
+
+  A labelled term declares **no penalty of its own**: its coefficients
+  share a block with those of the other terms carrying the label, and
+  that block may span another equation, so the prior over it belongs to
+  the class and is built by the fitting layer.
+  [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+  returns an empty list and
+  [`term_penalty()`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md)
+  is `NULL`, which is the right answer rather than a gap. It follows
+  that `hyper` is refused there, the hyperparameters being the class’s;
+  that `correlated = FALSE` beside a label asks for two opposite things
+  and is refused; and that a `distrib` names the class’s joint prior, so
+  it must be multivariate, its dimension checked where the class is
+  known. A univariate one is refused naming the copula: a joint law
+  whose coordinates are of different families – a gaussian intercept
+  correlated with a Student t slope – is not an elliptical family, a
+  multivariate gaussian having gaussian margins and a multivariate t
+  having t margins with one shared nu.
+
+  What the change also closes is a defect. That spelling was not refused
+  before, it was read as data: with no column of that name it stopped
+  with `object 'u' not found`; with a factor column it built twice the
+  columns, with names like `random.a.1 | uTRUE` and a warning about
+  `'|'` applied to factors; and with a numeric column it built twice the
+  columns and reported nothing at all. The label is now taken as a
+  symbol and never evaluated, so a column carrying its name is not
+  looked at, and all three cases build the block the one-bar formula
+  builds.
+
+- [`term_group()`](https://statmodels7.github.io/modelterms7/reference/term_group.md)
+  reports the grouping a term’s coefficients are indexed by: the
+  expression, its levels and the number of columns one level carries.
+  Two labelled terms belong to one covariance block only if they share a
+  grouping, and both halves are needed to decide it – `droplevels(id)`
+  and `id` are different expressions for one grouping, and `id` under
+  two subsets is one expression for two groupings. The base method
+  returns `NULL`.
+
+- A continuous grouping variable is refused.
+  [`factor()`](https://rdrr.io/r/base/factor.html) turns any vector into
+  a grouping by formatting its values, so `random(~ 1 | x)` with a
+  standard normal `x` at 60 observations built 60 columns – one level
+  per row – and said nothing. What is rejected is a double carrying a
+  value that is not a whole number, which leaves every ordinary way of
+  writing a grouping variable legal, integer codes included; a caller
+  who means the levels of a non-integer vector writes
+  [`factor()`](https://rdrr.io/r/base/factor.html) around it. The check
+  is also what tells `~ 1 | u | g` from `~ 1 | g | u`, which are the
+  same shape and differ only in which position holds what.
+
 ## modelterms7 0.65.0
 
 - [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)

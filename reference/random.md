@@ -24,7 +24,10 @@ random(
 - formula:
 
   A bar formula, `~ lhs | g`, with `g` evaluating to the grouping
-  variable in the data.
+  variable in the data, or `~ lhs | tag | g` with a covariance label in
+  the middle. `g` must not be continuous: a double carrying a value that
+  is not a whole number is rejected, since its levels would be its
+  formatted values.
 
 - distrib:
 
@@ -76,6 +79,38 @@ the effects. Which chart the hyperparameters ride, what they are called,
 how many there are and where the log-density has a kink are all
 properties of that distribution, read off it at build time.
 
+## The covariance label, and the second bar
+
+A formula may carry two bars, `~ 1 + x | u | g`, following brms. The
+last position is the grouping variable and the middle one is a label:
+terms carrying the same label and the same grouping describe effects
+that are correlated with each other, so an intercept in one equation and
+a slope in another can share one covariance block. R nests bars to the
+left, so that reading comes out of the parser rather than being imposed.
+
+The label is a **name and not data**. It is read as a symbol and never
+evaluated, and a column of the data carrying the same name is not looked
+at, so `~ 1 | u | g` builds exactly the block `~ 1 | g` builds whatever
+`u` happens to be.
+
+**A labelled term declares no penalty of its own**, and that is the
+answer rather than a gap: the covariance block spans columns the term
+cannot see, possibly in another equation, so the prior over it belongs
+to the class and is built by the fitting layer.
+[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+returns an empty list and
+[`term_penalty()`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md)
+is `NULL`. What follows from it is that `hyper` is refused here, the
+hyperparameters being the class's, and that a `distrib` given on a
+labelled term names the **class's** joint prior: it must be
+multivariate, and its dimension is checked where the class is known.
+
+The two scopes are different and stay two arguments. `correlated` says
+whether the columns of **this** term may depend on each other; the label
+says that its columns depend on those of **other** terms. Asking for
+`correlated = FALSE` beside a label asks for both at once and is
+refused.
+
 ## The distribution of the effects
 
 `distrib` is `NULL`, a distributions7 object, or a list of them with one
@@ -84,7 +119,7 @@ per within-group column.
 A multivariate distribution of the within-group dimension lets the
 effects of one group depend on each other, its matrix parameter carrying
 the dependence: `mvgaussian2_distrib(2, ar1(2))` is a prior whose
-precision is autoregressive, `mvstudent_t_distrib(2)` a heavy-tailed
+precision is autoregressive, `mvstudent_t1_distrib(2)` a heavy-tailed
 one. Correlation is available exactly for the families that carry a
 matrix parameter: a location block as long as the dimension, together
 with a covariance, precision or scale matrix. The term reads that
@@ -262,6 +297,22 @@ t4 <- distributions7::fixed(distributions7::student_t1_distrib(),
                             mu = 0, nu = 4)
 term_penalty(term_build(random(~ 1 | g, distrib = t4), dd))@params
 #> [1] "sigma"
+
+# A covariance label, read from the middle of two bars and reported by
+# term_tag(). It is a name: the block is the one bar formula's.
+term_tag(random(~ 1 | u | g))
+#> [1] "u"
+identical(term_coef_names(term_build(random(~ 1 | u | g), dd)),
+          term_coef_names(term_build(random(~ 1 | g), dd)))
+#> [1] TRUE
+
+# A continuous grouping variable is rejected rather than turned into one
+# level per row.
+try(term_build(random(~ 1 | x), dd))
+#> Error : the grouping variable 'x' is continuous, and a grouping variable's
+#>   values are labels rather than measurements: its levels would be the
+#>   formatted numbers, one group per distinct value. Write factor(x) if
+#>   they really are labels.
 
 
 # Fitted. The data are simulated from a known truth, so the
