@@ -14,7 +14,8 @@ term_group(term, ...)
 }
 \value{
 A list with \code{expr} (a language object), \code{levels} (a character
-vector) and \code{dim} (a single integer), or \code{NULL}.
+vector), \code{dim} (a single integer) and \code{names} (\code{dim} column names), or
+\code{NULL}.
 }
 \description{
 For a term whose coefficients are one set per level of a grouping variable,
@@ -32,7 +33,10 @@ readable.
 \code{dim} is the number of columns one level carries, which with the levels
 says how the block is laid out: the coefficients are group-major, so level
 \eqn{i} occupies positions \eqn{(i-1)d + 1} to \eqn{id}. A consumer stacking
-two such blocks into one covariance needs exactly that.
+two such blocks into one covariance needs exactly that, and \code{names} carries
+the within-group design's own column names in the same order, so that the
+coordinates of the covariance it builds can be said to belong to \code{x} or to
+the intercept rather than numbered.
 
 The base method returns \code{NULL}, which is the answer for every term but
 \code{\link[=random]{random()}}.
@@ -42,6 +46,7 @@ d <- data.frame(x = rnorm(6), g = factor(rep(c("a", "b", "c"), 2)))
 b <- term_build(random(~ 1 + x | g), d)
 g <- term_group(b)
 c(dim = g$dim, levels = length(g$levels))
+g$names
 
 # every other kind of term has none
 term_group(term_build(linpar(~ x), d))

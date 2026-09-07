@@ -827,7 +827,10 @@ S7::method(term_tag, model_term) <- function(term, ...) NA_character_
 #' `dim` is the number of columns one level carries, which with the levels
 #' says how the block is laid out: the coefficients are group-major, so level
 #' \eqn{i} occupies positions \eqn{(i-1)d + 1} to \eqn{id}. A consumer stacking
-#' two such blocks into one covariance needs exactly that.
+#' two such blocks into one covariance needs exactly that, and `names` carries
+#' the within-group design's own column names in the same order, so that the
+#' coordinates of the covariance it builds can be said to belong to `x` or to
+#' the intercept rather than numbered.
 #'
 #' The base method returns `NULL`, which is the answer for every term but
 #' [random()].
@@ -836,7 +839,8 @@ S7::method(term_tag, model_term) <- function(term, ...) NA_character_
 #' @param ... Passed to methods. No shipped method reads anything here.
 #'
 #' @return A list with `expr` (a language object), `levels` (a character
-#'   vector) and `dim` (a single integer), or `NULL`.
+#'   vector), `dim` (a single integer) and `names` (`dim` column names), or
+#'   `NULL`.
 #'
 #' @seealso [term_tag()] for the label that, with this, identifies a
 #'   covariance block; [random()] for the formula both are read from.
@@ -846,6 +850,7 @@ S7::method(term_tag, model_term) <- function(term, ...) NA_character_
 #' b <- term_build(random(~ 1 + x | g), d)
 #' g <- term_group(b)
 #' c(dim = g$dim, levels = length(g$levels))
+#' g$names
 #'
 #' # every other kind of term has none
 #' term_group(term_build(linpar(~ x), d))

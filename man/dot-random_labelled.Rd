@@ -4,7 +4,7 @@
 \alias{.random_labelled}
 \title{A Labelled Random-Effect Term, Built Without a Penalty}
 \usage{
-.random_labelled(term, Z, cn, parts, g, tt, mf, contr, d)
+.random_labelled(term, Z, cn, parts, g, tt, mf, contr, d, wn)
 }
 \arguments{
 \item{term}{The term being built.}
@@ -20,6 +20,8 @@
 \item{tt, mf, contr}{The within-group terms, model frame and contrasts.}
 
 \item{d}{The number of within-group columns.}
+
+\item{wn}{Their names.}
 }
 \value{
 The built term, with no penalty.

@@ -965,7 +965,8 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
   # fitting layer. Declaring one here would be a second answer to the same
   # question, and the fit would have to know which to ignore.
   if (!is.na(.random_tag(term))) {
-    return(.random_labelled(term, Z, cn, parts, g, tt, mf, contr, d))
+    return(.random_labelled(term, Z, cn, parts, g, tt, mf, contr, d,
+                            colnames(W)))
   }
 
   prior <- term@distrib
@@ -1005,7 +1006,7 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
     terms = stats::delete.response(tt),
     xlev = stats::.getXlevels(tt, mf),
     contrasts = contr,
-    entries = entries, dim = d
+    entries = entries, dim = d, wnames = colnames(W)
   )
   term@hyper <- do.call(c, c(list(list()), lapply(entries, function(en) {
     if (!length(en$fixed) || !nzchar(en$name)) return(en$fixed)
@@ -1064,7 +1065,7 @@ S7::method(term_tag, RandomTerm) <- function(term, ...) .random_tag(term)
 #' blockwise penalty reads.
 #' @param term A built [RandomTerm()].
 #' @param ... Unused.
-#' @return A list with `expr`, `levels` and `dim`, or `NULL`.
+#' @return A list with `expr`, `levels`, `dim` and `names`, or `NULL`.
 #' @seealso [term_group()] for the generic.
 #' @keywords internal
 S7::method(term_group, RandomTerm) <- function(term, ...) {
@@ -1072,7 +1073,14 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
   if (!length(bp) || is.null(bp$glevels)) return(NULL)
   d <- bp$dim
   if (is.null(d)) d <- as.integer(term_npar(term) / length(bp$glevels))
-  list(expr = bp$gexpr, levels = as.character(bp$glevels), dim = as.integer(d))
+  wn <- bp$wnames
+  # the within-group design's own column names, in the block's order. A
+  # consumer stacking two such blocks into one covariance needs them to say
+  # what each coordinate of that covariance is about; a term built before
+  # the field existed has none, and a positional name is what is left.
+  if (length(wn) != d) wn <- paste0("column", seq_len(d))
+  list(expr = bp$gexpr, levels = as.character(bp$glevels),
+       dim = as.integer(d), names = as.character(wn))
 }
 
 #' The Label of a Random-Effect Term, Normalized
@@ -1129,13 +1137,14 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
 #' @param g The grouping factor.
 #' @param tt,mf,contr The within-group terms, model frame and contrasts.
 #' @param d The number of within-group columns.
+#' @param wn Their names.
 #'
 #' @return The built term, with no penalty.
 #'
 #' @seealso [term_build.RandomTerm()], its caller; [term_tag()].
 #'
 #' @keywords internal
-.random_labelled <- function(term, Z, cn, parts, g, tt, mf, contr, d) {
+.random_labelled <- function(term, Z, cn, parts, g, tt, mf, contr, d, wn) {
   if (length(term@hyper)) {
     stop(sprintf(paste0(
       "'hyper' names a hyperparameter of this term's own penalty, and a term\n",
@@ -1191,7 +1200,7 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
     terms = stats::delete.response(tt),
     xlev = stats::.getXlevels(tt, mf),
     contrasts = contr,
-    entries = list(), dim = d
+    entries = list(), dim = d, wnames = wn
   )
   term@penalty <- NULL
   term

@@ -1,3 +1,31 @@
+# modelterms7 0.68.0
+
+* `term_group()` returns the within-group design's own column names beside
+  their count. `dim` said how many columns one level of the grouping carries
+  and the consumer stacking two such blocks into one covariance had no way of
+  saying what any of them was, so the coordinates of that covariance came out
+  numbered.
+
+* A COVARIANCE LABEL ON THE LATENT OF A MARGINAL BREAK-POINT IS REFUSED WITH
+  THE REASON, and the reason is the model's rather than the layer's: under
+  `marginal = TRUE` the break-point is a latent the likelihood integrates
+  out, with a prior of its own, and a covariance block is a prior over
+  coefficients. The message says so and names the remedy -- drop the middle
+  bar, or fit the break-point at its mode, where the label IS carried.
+
+  It was refused before, by accident and with the wrong reason. The check
+  that the latent's formula is intercept-only read the left operand of the
+  outermost bar, which under `~ 1 | u | g` is `1 | u` rather than `1`, so a
+  caller writing an intercept-only formula was told it was not one. That
+  side is read through `.random_parts()` now, which knows the grammar, and
+  `~ 1 + x | u | g` is still refused for being what it is.
+
+  The refusal sits here rather than in the fitting layer because a marginal
+  term reports no components: every other structural term declares its
+  developments through `term_components()` and a layer walks them, so a
+  label written on this one would have been read by nobody and dropped in
+  silence.
+
 # modelterms7 0.67.0
 
 * Every term that carries a penalty takes `id`, a label sharing one of its

@@ -581,3 +581,40 @@ test_that("three latent break-points match the bare-loop cell sum", {
   expect_identical(nrow(lat), 6L)
   expect_true(all(is.finite(lat$mean)))
 })
+
+
+# A covariance label on the latent ------------------------------------------
+
+test_that("a label on a marginal break-point is refused, and says why", {
+  set.seed(4242)
+  m <- 6L
+  ni <- 12L
+  dd <- data.frame(id = factor(rep(seq_len(m), each = ni)),
+                   x = rep(seq(-3, 3, length.out = ni), m))
+  dd$y <- stats::rnorm(m * ni)
+
+  # WHAT A MARGINAL TERM REPORTS is a latent the likelihood integrates out,
+  # not a coefficient of the design, so a covariance block -- which is a
+  # prior over coefficients -- cannot reach it. The refusal is HERE and not
+  # in the fitting layer because a marginal term reports no components: a
+  # label written on it would be walked by nobody and dropped in silence.
+  err <- tryCatch(term_build(jump(x, psi ~ random(~ 1 | u | id),
+                                  marginal = TRUE), dd),
+                  error = conditionMessage)
+  expect_match(err, "covariance label 'u'", fixed = TRUE)
+  expect_match(err, "marginal = FALSE", fixed = TRUE)
+
+  # and the same label at the mode IS carried, which is what the message says
+  expect_no_error(term_build(jump(x, psi ~ random(~ 1 | u | id)), dd))
+
+  # THE WITHIN-GROUP SIDE IS STILL READ CORRECTLY under both spellings: the
+  # check used to take the left operand of the outermost bar, which with a
+  # label is `1 | u` and not `1`, so an intercept-only formula was reported
+  # as not being one
+  expect_match(tryCatch(term_build(jump(x, psi ~ random(~ 1 + x | id),
+                                        marginal = TRUE), dd),
+                        error = conditionMessage),
+               "intercept-only formula", fixed = TRUE)
+  expect_no_error(term_build(jump(x, psi ~ random(~ 1 | id),
+                                  marginal = TRUE), dd))
+})

@@ -9,7 +9,7 @@
 \item{...}{Unused.}
 }
 \value{
-A list with \code{expr}, \code{levels} and \code{dim}, or \code{NULL}.
+A list with \code{expr}, \code{levels}, \code{dim} and \code{names}, or \code{NULL}.
 }
 \description{
 The grouping expression, its levels and the number of within-group columns,

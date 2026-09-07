@@ -369,8 +369,35 @@ MarginalBreakTerm <- S7::new_class(
                "and its distribution is the prior the likelihood integrates",
                "against."), call. = FALSE)
   }
-  e <- rt@formula[[2L]]
-  if (!(is.numeric(e[[2L]]) && length(e[[2L]]) == 1L && e[[2L]] == 1)) {
+  # THE WITHIN-GROUP SIDE IS READ BY THE FUNCTION THAT KNOWS THE GRAMMAR,
+  # and not off the outermost bar. With the second bar of `~ 1 | u | g` the
+  # left operand is `1 | u` rather than `1`, so the test failed and the
+  # message told a caller their intercept-only formula was not one: the
+  # label is refused by the fitting layer, which says why, and this check
+  # has no business standing in for it.
+  # THE WITHIN-GROUP SIDE IS READ BY THE FUNCTION THAT KNOWS THE GRAMMAR,
+  # and not off the outermost bar: with a covariance label the left operand
+  # of that bar is `1 | u` rather than `1`, so the test below failed and told
+  # a caller their intercept-only formula was not one.
+  rp <- tryCatch(.random_parts(rt@formula), error = function(e) NULL)
+  # A LABEL IS REFUSED HERE, WHERE THE MESSAGE CAN SAY WHY. Every other
+  # structural term reports its developments through term_components(), so a
+  # fitting layer walks them and refuses a label with the reason; a marginal
+  # term reports none -- its latent is not a coefficient of a design block --
+  # so a label written on it would be read by nobody and silently dropped,
+  # which is worse than either a refusal or a fit.
+  if (!is.na(.random_tag(rt))) {
+    stop(sprintf(paste(
+      "the latent break-point carries the covariance label '%s', and under",
+      "marginal = TRUE it is not a coefficient of the design: it is a latent",
+      "the likelihood integrates out, with its own prior. A shared",
+      "covariance block is a prior over coefficients and cannot reach it.",
+      "Drop the middle bar, or fit the break-point at its mode --",
+      "marginal = FALSE -- where the label is carried."),
+      .random_tag(rt)), call. = FALSE)
+  }
+  wi <- rp$within
+  if (!(is.numeric(wi) && length(wi) == 1L && wi == 1)) {
     stop(paste("the latent break-point is one value per group: the random()",
                "of a marginal term takes an intercept-only formula,",
                "~ 1 | g."), call. = FALSE)
@@ -404,7 +431,7 @@ MarginalBreakTerm <- S7::new_class(
   }
 
   MarginalBreakTerm(label = label, kind = kind, var = var, npsi = npsi,
-                    linear = linear, group = e[[3L]], prior = prior,
+                    linear = linear, group = rp$group, prior = prior,
                     spec = list(psi = psi), blueprint = list())
 }
 
