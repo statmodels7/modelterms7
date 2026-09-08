@@ -16,7 +16,7 @@ columns, or `NULL` on an unbuilt term.
 
 ## Value
 
-A list with `expr`, `levels` and `dim`, or `NULL`.
+A list with `expr`, `levels`, `dim` and `names`, or `NULL`.
 
 ## Details
 

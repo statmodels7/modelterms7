@@ -11,7 +11,7 @@ columns each level carries. NULL for every other term."><meta property="og:image
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.67.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.69.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,8 @@ columns each level carries. <code>NULL</code> for every other term.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with <code>expr</code> (a language object), <code>levels</code> (a character
-vector) and <code>dim</code> (a single integer), or <code>NULL</code>.</p>
+vector), <code>dim</code> (a single integer) and <code>names</code> (<code>dim</code> column names), or
+<code>NULL</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -76,7 +77,10 @@ readable.</p>
 <p><code>dim</code> is the number of columns one level carries, which with the levels
 says how the block is laid out: the coefficients are group-major, so level
 \(i\) occupies positions \((i-1)d + 1\) to \(id\). A consumer stacking
-two such blocks into one covariance needs exactly that.</p>
+two such blocks into one covariance needs exactly that, and <code>names</code> carries
+the within-group design's own column names in the same order, so that the
+coordinates of the covariance it builds can be said to belong to <code>x</code> or to
+the intercept rather than numbered.</p>
 <p>The base method returns <code>NULL</code>, which is the answer for every term but
 <code><a href="random.html">random()</a></code>.</p>
     </div>
@@ -94,6 +98,8 @@ covariance block; <code><a href="random.html">random()</a></code> for the formul
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>dim <span class="op">=</span> <span class="va">g</span><span class="op">$</span><span class="va">dim</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">g</span><span class="op">$</span><span class="va">levels</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    dim levels </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      2      3 </span>
+<span class="r-in"><span><span class="va">g</span><span class="op">$</span><span class="va">names</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "(Intercept)" "x"          </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># every other kind of term has none</span></span></span>
 <span class="r-in"><span><span class="fu">term_group</span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="linpar.html">linpar</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span><span class="op">)</span></span></span>

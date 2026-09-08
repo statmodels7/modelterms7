@@ -8,7 +8,7 @@ usual, and no penalty entry at all.
 ## Usage
 
 ``` r
-.random_labelled(term, Z, cn, parts, g, tt, mf, contr, d)
+.random_labelled(term, Z, cn, parts, g, tt, mf, contr, d, wn)
 ```
 
 ## Arguments
@@ -40,6 +40,10 @@ usual, and no penalty entry at all.
 - d:
 
   The number of within-group columns.
+
+- wn:
+
+  Their names.
 
 ## Value
 

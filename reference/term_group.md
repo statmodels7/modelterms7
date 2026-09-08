@@ -22,8 +22,8 @@ term_group(term, ...)
 
 ## Value
 
-A list with `expr` (a language object), `levels` (a character vector)
-and `dim` (a single integer), or `NULL`.
+A list with `expr` (a language object), `levels` (a character vector),
+`dim` (a single integer) and `names` (`dim` column names), or `NULL`.
 
 ## Details
 
@@ -37,7 +37,10 @@ expression makes a message readable.
 `dim` is the number of columns one level carries, which with the levels
 says how the block is laid out: the coefficients are group-major, so
 level \\i\\ occupies positions \\(i-1)d + 1\\ to \\id\\. A consumer
-stacking two such blocks into one covariance needs exactly that.
+stacking two such blocks into one covariance needs exactly that, and
+`names` carries the within-group design's own column names in the same
+order, so that the coordinates of the covariance it builds can be said
+to belong to `x` or to the intercept rather than numbered.
 
 The base method returns `NULL`, which is the answer for every term but
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md).
@@ -58,6 +61,8 @@ g <- term_group(b)
 c(dim = g$dim, levels = length(g$levels))
 #>    dim levels 
 #>      2      3 
+g$names
+#> [1] "(Intercept)" "x"          
 
 # every other kind of term has none
 term_group(term_build(linpar(~ x), d))

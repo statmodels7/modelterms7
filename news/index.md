@@ -1,5 +1,67 @@
 # Changelog
 
+## modelterms7 0.69.0
+
+- [`term_draw()`](https://statmodels7.github.io/modelterms7/reference/term_draw.md)
+  draws a structural term’s own parameters: the values
+  [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
+  gives, displaced by normal noise on the unconstrained scale
+  [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
+  defines. It is what a simulation of a model that carries state needs,
+  those parameters not being coefficients of any equation and, in
+  quantity, not choosable by hand – a filter whose level is developed
+  over a hundred groups carries a hundred and one of them.
+
+- The start rather than zero, because the term already knows where the
+  sensible region of its own charts is: zero on a log chart is a loading
+  of one and a filter strong enough to destabilize its own recursion. A
+  constraint a chart carries is then respected for free,
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)’s
+  levels being a first level and positive gaps and a persistence being
+  stationary at any coordinate.
+
+- The width is half of `sd`, measured. Sixty draws per family of a
+  `gas(1, 1)` over sixty times at widths 0.3, 0.5 and 1: at 1 two
+  Poisson series of sixty are not finite and the level of another spans
+  859, where at 0.5 none of a hundred and eighty fails and the widest
+  spans 2.04. On a partial-autocorrelation chart the same number is a
+  persistence between -0.27 and 0.88 at the fifth and ninety-fifth
+  percentiles, against -0.80 to 0.98 at a width of 1, which is the whole
+  stationary region.
+
+## modelterms7 0.68.0
+
+- [`term_group()`](https://statmodels7.github.io/modelterms7/reference/term_group.md)
+  returns the within-group design’s own column names beside their count.
+  `dim` said how many columns one level of the grouping carries and the
+  consumer stacking two such blocks into one covariance had no way of
+  saying what any of them was, so the coordinates of that covariance
+  came out numbered.
+
+- A COVARIANCE LABEL ON THE LATENT OF A MARGINAL BREAK-POINT IS REFUSED
+  WITH THE REASON, and the reason is the model’s rather than the
+  layer’s: under `marginal = TRUE` the break-point is a latent the
+  likelihood integrates out, with a prior of its own, and a covariance
+  block is a prior over coefficients. The message says so and names the
+  remedy – drop the middle bar, or fit the break-point at its mode,
+  where the label IS carried.
+
+  It was refused before, by accident and with the wrong reason. The
+  check that the latent’s formula is intercept-only read the left
+  operand of the outermost bar, which under `~ 1 | u | g` is `1 | u`
+  rather than `1`, so a caller writing an intercept-only formula was
+  told it was not one. That side is read through
+  [`.random_parts()`](https://statmodels7.github.io/modelterms7/reference/dot-random_parts.md)
+  now, which knows the grammar, and `~ 1 + x | u | g` is still refused
+  for being what it is.
+
+  The refusal sits here rather than in the fitting layer because a
+  marginal term reports no components: every other structural term
+  declares its developments through
+  [`term_components()`](https://statmodels7.github.io/modelterms7/reference/term_components.md)
+  and a layer walks them, so a label written on this one would have been
+  read by nobody and dropped in silence.
+
 ## modelterms7 0.67.0
 
 - Every term that carries a penalty takes `id`, a label sharing one of
