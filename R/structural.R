@@ -172,6 +172,97 @@ S7::method(term_start, structural_term) <- function(term, ...) {
   stats::setNames(numeric(length(term_params(term))), term_params(term))
 }
 
+#' @title Drawing a Term's Own Parameters
+#'
+#' @description
+#' A point drawn from the region a structural term's parameters plausibly
+#' occupy: the values [term_start()] gives, displaced by normal noise on the
+#' unconstrained scale [term_links()] defines.
+#'
+#' @details
+#' Simulating from a model that carries state means choosing values for the
+#' term's own parameters, and in quantity they cannot be chosen by hand: a
+#' score-driven filter whose level is developed over a hundred groups carries
+#' a hundred and one of them, and a caller made to name each one names none
+#' and simulates a model with no dynamics and no heterogeneity at all.
+#'
+#' The rule is the start plus noise, and the start rather than zero because
+#' the term already knows where the sensible region of its own charts is. A
+#' score loading rides a log chart, so zero there is a loading of one and a
+#' filter strong enough to destabilize its own recursion; [term_start()]
+#' places it at 0.1 and the draw spreads from that. A constraint a chart
+#' carries is then respected for free: [regime()] writes its levels as a
+#' first level and positive gaps, so any draw on the unconstrained scale is
+#' ordered by construction, and a persistence on a partial-autocorrelation
+#' chart is stationary at any coordinate whatever.
+#'
+#' # The width
+#'
+#' Half of `sd`, and the half is measured rather than chosen. Sixty draws per
+#' family of a `gas(1, 1)` over sixty times, at widths 0.3, 0.5 and 1: at a
+#' width of 1 two Poisson series of sixty are not finite and the level of
+#' another spans 859, where at 0.5 none of a hundred and eighty fails and the
+#' widest level spans 2.04. Read on the charts the same number is a
+#' persistence between -0.27 and 0.88 at the fifth and ninety-fifth
+#' percentiles, against -0.80 to 0.98 at a width of 1, which is the whole
+#' stationary region and describes noise rather than a random effect.
+#'
+#' # Coordinates a penalty covers
+#'
+#' They are drawn here too, and a caller that can see the penalty is expected
+#' to overwrite them. What a development's deviation is drawn from is the
+#' prior its sub-term declares -- a Gaussian random effect, a Laplace one --
+#' and this method cannot see it: the prior's own scale is a hyperparameter
+#' and choosing one is the caller's business. [term_penalties()] says which
+#' coordinates those are, and \pkg{penalties7}'s `penalty_draw()` draws them.
+#'
+#' @param term A built structural term.
+#' @param sd The width of the draw, `1` by default, halved before it is
+#'   applied for the reason measured above.
+#' @param ... Passed to methods. No shipped method reads anything here.
+#'
+#' @return A named numeric vector on the unconstrained scale, of length
+#'   [term_npar()] and named as [term_params()], exactly as [term_start()]
+#'   returns.
+#'
+#' @seealso [term_start()] for the point it spreads from, [term_links()] for
+#'   the scale it is on, [term_simulate()] for the response drawn once these
+#'   are chosen.
+#'
+#' @examples
+#' set.seed(1)
+#' g <- gas(p = 1, q = 1)
+#'
+#' # The same names and the same scale as term_start(), drawn.
+#' identical(names(term_draw(g)), term_params(g))
+#'
+#' # Read on the parameters' own charts, a loading stays positive and a
+#' # persistence stays stationary, whatever comes out.
+#' lk <- term_links(g)
+#' z <- term_draw(g)
+#' c(alpha1 = linkfunctions7::linkinv(lk$alpha1, z[["alpha1"]]),
+#'   pacf1 = linkfunctions7::linkinv(lk$pacf1, z[["pacf1"]]))
+#'
+#' # A wider draw is a wider model.
+#' stats::sd(replicate(200, term_draw(g, sd = 2)[["omega"]]))
+#'
+#' @export
+#' @aliases term_draw.structural_term
+term_draw <- S7::new_generic("term_draw", "term",
+  function(term, sd = 1, ...) S7::S7_dispatch())
+
+S7::method(term_draw, structural_term) <- function(term, sd = 1, ...) {
+  if (!is.numeric(sd) || length(sd) != 1L || !is.finite(sd) || sd < 0) {
+    stop("'sd' must be one finite non-negative number.", call. = FALSE)
+  }
+  z <- term_start(term)
+  # HALF the width, measured: at the full one a Poisson filter leaves the
+  # doubles and a persistence drawn on a rhobit chart covers the whole
+  # stationary region, which is noise rather than a random effect.
+  z + stats::rnorm(length(z), 0, sd / 2)
+}
+
+
 #' @title Apply a Structural Term to a Linear Predictor
 #'
 #' @description

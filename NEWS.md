@@ -1,3 +1,27 @@
+# modelterms7 0.69.0
+
+* `term_draw()` draws a structural term's own parameters: the values
+  `term_start()` gives, displaced by normal noise on the unconstrained scale
+  `term_links()` defines. It is what a simulation of a model that carries
+  state needs, those parameters not being coefficients of any equation and,
+  in quantity, not choosable by hand -- a filter whose level is developed
+  over a hundred groups carries a hundred and one of them.
+
+* The start rather than zero, because the term already knows where the
+  sensible region of its own charts is: zero on a log chart is a loading of
+  one and a filter strong enough to destabilize its own recursion.
+  A constraint a chart carries is then respected for free, `regime()`'s
+  levels being a first level and positive gaps and a persistence being
+  stationary at any coordinate.
+
+* The width is half of `sd`, measured. Sixty draws per family of a
+  `gas(1, 1)` over sixty times at widths 0.3, 0.5 and 1: at 1 two Poisson
+  series of sixty are not finite and the level of another spans 859, where
+  at 0.5 none of a hundred and eighty fails and the widest spans 2.04. On a
+  partial-autocorrelation chart the same number is a persistence between
+  -0.27 and 0.88 at the fifth and ninety-fifth percentiles, against -0.80 to
+  0.98 at a width of 1, which is the whole stationary region.
+
 # modelterms7 0.68.0
 
 * `term_group()` returns the within-group design's own column names beside

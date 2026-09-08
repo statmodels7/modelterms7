@@ -130,6 +130,7 @@ reference:
   - term_params
   - term_links
   - term_start
+  - term_draw
   - term_level_design
   - term_filter
   - term_static_deriv
