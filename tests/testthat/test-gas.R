@@ -769,3 +769,296 @@ test_that("a term without state says so rather than returning zero", {
                "continues past the series")
   expect_null(term_static_deriv(tm, numeric(20), matrix(1, 20, 1), list()))
 })
+
+test_that("the fourth derivative of Levinson-Durbin is exact", {
+  # The exact HESSIAN of a marginal criterion over a penalty on this term's
+  # own parameters needs one more order than the gradient, contracted
+  # against the two directions the penalized mode moves in.
+  #
+  # The loop runs to q = 5 and NOT to q = 3, which would assert nothing: the
+  # map is multilinear of degree k in the first k partial autocorrelations,
+  # so the first coefficient carrying a monomial of degree four needs q = 4.
+  # A check stopping at q = 3 compares zero with zero -- one order past the
+  # trap the third order's own test records.
+  set.seed(4)
+  for (pc in list(c(0.2, -0.4, 0.7, 0.1), c(0.3, 0.5, -0.2, 0.4, -0.6))) {
+    q <- length(pc)
+    v <- stats::rnorm(q)
+    w <- stats::rnorm(q)
+    got <- gas_levinson4(pc, v, w)
+    for (i in seq_len(q)) {
+      # ONE central difference of the ANALYTIC third order along w, which is
+      # the rule this toolkit grants itself: never a difference of a
+      # difference
+      h <- 1e-5
+      ref <- (gas_levinson3(pc + h * w, v)[[i]] -
+                gas_levinson3(pc - h * w, v)[[i]]) / (2 * h)
+      expect_equal(got[[i]], ref, tolerance = 1e-6,
+                   info = sprintf("q = %d, coefficient %d", q, i))
+      # each matrix is symmetric in its two remaining slots
+      expect_identical(got[[i]], t(got[[i]]))
+    }
+    # and the whole thing is symmetric in the two directions
+    expect_equal(gas_levinson4(pc, w, v), got, tolerance = 1e-13)
+    # the last coefficient IS the last partial autocorrelation
+    expect_true(all(got[[q]] == 0))
+  }
+  # identically zero below degree four, which is why the loop starts at q = 4
+  expect_true(all(gas_levinson4(c(0.5, -0.3, 0.2), c(1, 1, 1),
+                                c(1, 1, 1))[[1L]] == 0))
+  expect_length(gas_levinson4(numeric(0), numeric(0), numeric(0)), 0L)
+})
+
+test_that("the chart's fourth derivative is exact under a non-identity link", {
+  # .gas_chart_derivs4() against one central difference of the analytic
+  # third order. The links are deliberately NOT the identity: on it every
+  # h'', h''' and h'''' is zero and the expression collapses to the map's
+  # own fourth derivative, which asserts nothing about the composition.
+  set.seed(6)
+  lk_rho <- linkfunctions7::rhobit_link()
+  lk_a <- linkfunctions7::log_link()
+  for (q in c(4L, 5L)) {
+    p <- 2L
+    nm <- .gas_base_params(p, q)
+    links <- stats::setNames(lapply(nm, function(j) {
+      if (startsWith(j, "pacf")) lk_rho
+      else if (startsWith(j, "alpha")) lk_a
+      else linkfunctions7::identity_link()
+    }), nm)
+    zeta <- stats::setNames(stats::rnorm(length(nm), 0, 0.4), nm)
+    vz <- stats::rnorm(length(nm))
+    wz <- stats::rnorm(length(nm))
+    got <- .gas_chart_derivs4(zeta, p, q, links, vz, wz)
+    h <- 1e-5
+    dp <- .gas_chart_derivs3(zeta + h * wz, p, q, links, vz)
+    dm <- .gas_chart_derivs3(zeta - h * wz, p, q, links, vz)
+    lab <- sprintf("q = %d", q)
+    expect_equal(got$q_omega, (dp$t_omega - dm$t_omega) / (2 * h),
+                 tolerance = 1e-6, info = lab)
+    for (i in seq_along(got$q_a)) {
+      expect_equal(got$q_a[[i]], (dp$t_a[[i]] - dm$t_a[[i]]) / (2 * h),
+                   tolerance = 1e-6, info = lab)
+    }
+    for (j in seq_along(got$q_b)) {
+      expect_equal(got$q_b[[j]], (dp$t_b[[j]] - dm$t_b[[j]]) / (2 * h),
+                   tolerance = 1e-6, info = lab)
+    }
+    # symmetric in the two directions, which the expression satisfies term
+    # by term
+    expect_equal(.gas_chart_derivs4(zeta, p, q, links, wz, vz), got,
+                 tolerance = 1e-12)
+  }
+})
+
+test_that("the product rule of the fourth order is symmetric in its factors", {
+  # .gas_prod4() writes sixteen terms, one per way of dealing four
+  # differentiations to two factors. Swapping the factors maps each term
+  # onto another, so the sum is symmetric -- a property a transcription
+  # error in any one term breaks.
+  set.seed(15)
+  mk <- 4L
+  vks <- list(stats::rnorm(mk), stats::rnorm(mk))
+  sym <- function() { z <- matrix(stats::rnorm(mk * mk), mk); (z + t(z)) / 2 }
+  A <- .gas_jet(stats::rnorm(1), stats::rnorm(mk), sym(), sym(), sym(), sym(),
+                vks)
+  B <- .gas_jet(stats::rnorm(1), stats::rnorm(mk), sym(), sym(), sym(), sym(),
+                vks)
+  expect_equal(.gas_prod4(A, B), .gas_prod4(B, A))
+  # and it reproduces the product rule on a case that can be written out:
+  # with the second factor constant every term but the last is zero
+  B0 <- .gas_jet(2.5, numeric(mk), matrix(0, mk, mk), matrix(0, mk, mk),
+                 matrix(0, mk, mk), matrix(0, mk, mk), vks)
+  expect_equal(.gas_prod4(A, B0), 2.5 * A$d4)
+})
+
+test_that("the fourth-order recursion gives the exact directional derivative", {
+  # Step one of the exact HESSIAN over a structural penalty: the third
+  # derivative of the predictor differentiated once more, along a second
+  # direction.
+  #
+  # The layer is stubbed by l = -log cosh(e - y), whose FIVE derivatives are
+  # all non-zero and all bounded -- the same reason the third order's own
+  # test gives, one order up. The fifth is where the family's own fifth
+  # derivative enters, through `P`.
+  set.seed(8)
+  nn <- 50L
+  d2 <- data.frame(t = seq_len(nn), y = stats::rnorm(nn))
+  X <- cbind(1, as.numeric(scale(seq_len(nn))) * 0.3)
+  mb <- ncol(X)
+  tt <- function(e, i) tanh(e - d2$y[i])
+  sc <- function(e, i) -tt(e, i)
+  cu <- function(e, i) -(1 - tt(e, i)^2)
+  l3 <- function(e, i) { t <- tt(e, i); 2 * t * (1 - t^2) }
+  l4 <- function(e, i) { t <- tt(e, i); (1 - t^2) * (2 - 6 * t^2) }
+  l5 <- function(e, i) { t <- tt(e, i); (1 - t^2) * (24 * t^3 - 16 * t) }
+
+  # q reaches 4, where the Levinson-Durbin map's own fourth derivative is
+  # first non-zero; at q = 3 that piece is identically zero
+  for (cfg in list(c(1, 1), c(2, 2), c(1, 4))) {
+    term <- term_build(gas(p = cfg[1], q = cfg[2], time = t), d2)
+    nm <- term_params(term)
+    np <- length(nm)
+    lk <- term_links(term)
+    m <- mb + np
+    seed <- cbind(X, matrix(0, nn, np))
+    psi_of <- function(z) as.list(stats::setNames(vapply(seq_along(nm),
+      function(j) linkfunctions7::linkinv(lk[[nm[j]]], z[j]), numeric(1)), nm))
+    set.seed(9)
+    u0 <- c(0.3, -0.2, stats::runif(np, -0.4, 0.2))
+    gw <- stats::rnorm(nn)
+    v <- stats::rnorm(m)
+    w <- stats::rnorm(m)
+    eta0 <- function(u) as.numeric(X %*% u[seq_len(mb)])
+    blk3 <- function(dir) function(e, i, D, act) list(
+      cross = numeric(length(D)), M = l3(e, i) * outer(D, D),
+      dcurv = l3(e, i) * D,
+      N = l4(e, i) * sum(D * dir[act]) * outer(D, D))
+    blk4 <- function(d1, d2v) function(e, i, D, act) {
+      DD <- outer(D, D)
+      dv <- sum(D * d1[act])
+      dw <- sum(D * d2v[act])
+      list(cross = numeric(length(D)), M = l3(e, i) * DD,
+           dcurv = l3(e, i) * D, cppp = l3(e, i), Q = l4(e, i) * DD,
+           N = list(l4(e, i) * dv * DD, l4(e, i) * dw * DD),
+           P = l5(e, i) * dv * dw * DD)
+    }
+    got <- term_fourth(term, eta0(u0), d2$y, sc, cu,
+                       psi_of(u0[mb + seq_len(np)]), gw, seed,
+                       blk4(v, w), list(v, w))
+    at <- function(u) term_third(term, eta0(u), d2$y, sc, cu,
+      psi_of(u[mb + seq_len(np)]), gw, seed, blk3(v), v)
+    dir_of <- function(h, what) {
+      (at(u0 + h * w)[[what]] - at(u0 - h * w)[[what]]) / (2 * h)
+    }
+    lab <- sprintf("p = %d, q = %d", cfg[1], cfg[2])
+    # Richardson on the central difference, for the reason the third order's
+    # own test gives: the plain difference carries an O(h^2) truncation
+    # larger than the gap being measured
+    rich <- (4 * dir_of(1e-3, "curvature") - dir_of(2e-3, "curvature")) / 3
+    expect_equal(got$curvature, rich, tolerance = 1e-6, info = lab)
+    expect_equal(got$dpsi, dir_of(1e-3, "dphi"), tolerance = 1e-4, info = lab)
+    # the two lower orders come back untouched, to the bit
+    expect_identical(got$jacobian, at(u0)$jacobian)
+    expect_identical(got$dphi[[1L]], at(u0)$dphi)
+    # symmetry in the two directions, and of the matrix itself. At p = q = 1
+    # the two orderings of an index pair COINCIDE, so the matrix symmetry is
+    # free there and only the larger configurations assert it
+    sw <- term_fourth(term, eta0(u0), d2$y, sc, cu,
+                      psi_of(u0[mb + seq_len(np)]), gw, seed,
+                      blk4(w, v), list(w, v))
+    expect_equal(sw$curvature, got$curvature, tolerance = 1e-12, info = lab)
+    expect_identical(got$curvature, t(got$curvature))
+  }
+})
+
+test_that("term_fourth is zero for an additive term and refused where absent", {
+  td <- data.frame(x = stats::rnorm(20), y = stats::rnorm(20))
+  lp <- term_build(linpar(~x), td)
+  out <- term_fourth(lp, rep(0, 20), td$y, function(e, i) 0,
+                     function(e, i) -1, list(), rep(1, 20),
+                     matrix(0, 20, 2), function(e, i, D, act) NULL,
+                     list(c(1, 0), c(0, 1)))
+  expect_true(all(out$curvature == 0))
+  expect_true(all(out$dpsi == 0))
+  expect_length(out$dphi, 2L)
+
+  # a term that BENDS the predictor and has not written its fourth
+  # derivative must refuse rather than inherit that zero
+  rg <- term_build(regime(k = 2), td)
+  expect_error(term_fourth(rg, rep(0, 20), td$y, function(e, i) 0,
+                           function(e, i) -1, list(), rep(1, 20),
+                           matrix(0, 20, 2), function(e, i, D, act) NULL,
+                           list(c(1, 0), c(0, 1))),
+               "does not implement term_fourth")
+
+  # and a caller giving one direction where two are wanted is told so
+  gt <- term_build(gas(p = 1, q = 1), td)
+  expect_error(term_fourth(gt, rep(0, 20), td$y, function(e, i) 0,
+                           function(e, i) -1,
+                           list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.3),
+                           rep(1, 20), matrix(0, 20, 3),
+                           function(e, i, D, act) NULL, c(1, 0, 0)),
+               "list of two")
+})
+
+test_that("the fourth order reaches a term whose parameters are developed", {
+  # the submodel route, where every chart is read per observation: a
+  # developed coordinate's fourth derivative rides h'''' along its design
+  # row, where the scalar route's rides a single coordinate
+  set.seed(5)
+  nn <- 60L
+  ng <- 3L
+  d3 <- data.frame(t = rep(seq_len(nn %/% ng), ng), y = stats::rnorm(nn),
+                   z = stats::runif(nn, -1, 1),
+                   id = factor(rep(seq_len(ng), each = nn %/% ng)))
+  tt <- function(e, i) tanh(e - d3$y[i])
+  sc <- function(e, i) -tt(e, i)
+  cu <- function(e, i) -(1 - tt(e, i)^2)
+  l3 <- function(e, i) { t <- tt(e, i); 2 * t * (1 - t^2) }
+  l4 <- function(e, i) { t <- tt(e, i); (1 - t^2) * (2 - 6 * t^2) }
+  l5 <- function(e, i) { t <- tt(e, i); (1 - t^2) * (24 * t^3 - 16 * t) }
+
+  specs <- list(
+    quote(gas(p = 1, q = 1, by = id, time = t, omega ~ 1 + z)),
+    quote(gas(p = 1, q = 1, by = id, time = t, alpha1 ~ 1 + z)),
+    # a developed PERSISTENCE makes the autoregressive coefficients vary by
+    # observation, which is the branch that rebuilds the map at every row
+    quote(gas(p = 1, q = 2, by = id, time = t, pacf1 ~ 1 + z)))
+  for (sp in specs) {
+    term <- term_build(eval(sp), d3)
+    nm <- term_params(term)
+    np <- length(nm)
+    lk <- term_links(term)
+    m <- 2L + np
+    set.seed(9)
+    seed <- matrix(stats::rnorm(nn * m, 0, 0.2), nn, m)
+    eta <- stats::rnorm(nn, 0, 0.1)
+    dev <- grepl(".", nm, fixed = TRUE)
+    u0 <- stats::setNames(rep(0.2, np), nm)
+    u0[startsWith(nm, "pacf")] <- 0.35
+    u0[startsWith(nm, "alpha")] <- 0.25
+    u0[dev] <- 0.15
+    # the caller hands the parameter scale for a scalar coordinate and the
+    # coefficients for a developed one, which is what term_filter() takes
+    zeta <- u0
+    for (j in seq_along(nm)) {
+      if (!dev[j]) zeta[j] <- linkfunctions7::linkfun(lk[[nm[j]]], u0[[j]])
+    }
+    psi_of <- function(z) {
+      uu <- z
+      for (j in seq_along(nm)) {
+        if (!dev[j]) uu[j] <- linkfunctions7::linkinv(lk[[nm[j]]], z[[j]])
+      }
+      as.list(uu)
+    }
+    set.seed(21)
+    v <- stats::rnorm(m, 0, 0.4)
+    w <- stats::rnorm(m, 0, 0.4)
+    gw <- stats::rnorm(nn, 0, 0.6)
+    zcol <- m - np + seq_len(np)
+    blk3 <- function(e, i, D, act) list(
+      cross = numeric(length(D)), M = l3(e, i) * outer(D, D),
+      dcurv = l3(e, i) * D,
+      N = l4(e, i) * sum(D * v[act]) * outer(D, D))
+    blk4 <- function(e, i, D, act) {
+      DD <- outer(D, D)
+      dv <- sum(D * v[act])
+      dw <- sum(D * w[act])
+      list(cross = numeric(length(D)), M = l3(e, i) * DD,
+           dcurv = l3(e, i) * D, cppp = l3(e, i), Q = l4(e, i) * DD,
+           N = list(l4(e, i) * dv * DD, l4(e, i) * dw * DD),
+           P = l5(e, i) * dv * dw * DD)
+    }
+    got <- term_fourth(term, eta, d3$y, sc, cu, psi_of(zeta), gw, seed,
+                       blk4, list(v, w))
+    at <- function(h) {
+      term_third(term, eta + h * as.numeric(seed %*% w), d3$y, sc, cu,
+                 psi_of(zeta + h * w[zcol]), gw, seed, blk3, v)
+    }
+    dir_of <- function(h) (at(h)$curvature - at(-h)$curvature) / (2 * h)
+    rich <- (4 * dir_of(1e-3) - dir_of(2e-3)) / 3
+    expect_equal(got$curvature, rich, tolerance = 1e-5,
+                 info = deparse(sp)[[1L]])
+    expect_identical(got$curvature, t(got$curvature))
+  }
+})

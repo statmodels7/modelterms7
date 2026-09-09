@@ -117,7 +117,8 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 # d value / d coordinate row by row over the parameter's own coordinates,
 # and k2 the diagonal chart curvature the second order needs.
 .gas_sub_values <- function(term, u, scale = c("parameter", "zeta"),
-                            second = FALSE, third = FALSE) {
+                            second = FALSE, third = FALSE,
+                            fourth = FALSE) {
   scale <- match.arg(scale)
   base <- .gas_base_params(term@p, term@q)
   sub <- term@blueprint$sub
@@ -135,12 +136,14 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
         v = linkfunctions7::linkinv(lk, eta),
         W = linkfunctions7::dlinkinv(lk, eta) * Z,
         k2 = if (second) linkfunctions7::d2linkinv(lk, eta) else NULL,
-        k3 = if (third) linkfunctions7::d3linkinv(lk, eta) else NULL)
+        k3 = if (third) linkfunctions7::d3linkinv(lk, eta) else NULL,
+        k4 = if (fourth) linkfunctions7::d4linkinv(lk, eta) else NULL)
     } else if (identical(scale, "parameter")) {
       out[[j]] <- list(idx = idx, developed = FALSE, Z = NULL,
                        v = rep(u[[idx]], n), W = matrix(1, n, 1L),
                        k2 = if (second) rep(0, n) else NULL,
-                       k3 = if (third) rep(0, n) else NULL)
+                       k3 = if (third) rep(0, n) else NULL,
+                       k4 = if (fourth) rep(0, n) else NULL)
     } else {
       lk <- .gas_param_link(term, j)
       out[[j]] <- list(
@@ -150,6 +153,8 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
         k2 = if (second) rep(linkfunctions7::d2linkinv(lk, u[[idx]]), n)
           else NULL,
         k3 = if (third) rep(linkfunctions7::d3linkinv(lk, u[[idx]]), n)
+          else NULL,
+        k4 = if (fourth) rep(linkfunctions7::d4linkinv(lk, u[[idx]]), n)
           else NULL)
     }
   }
@@ -577,7 +582,13 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
   bp <- term@blueprint
   p <- term@p
   q <- term@q
-  third <- !is.null(direction)
+  # one direction propagates the third order, two the fourth as well, and
+  # then the third is carried for both -- the product rule of the fourth
+  # order pairing each direction's third derivative with the other
+  dirs <- .gas_dirs(direction)
+  nd <- length(dirs)
+  third <- nd >= 1L
+  fourth <- nd >= 2L
   nm <- term_params(term)
   np <- length(nm)
   lay <- .gas_sub_layout(term)
@@ -592,7 +603,8 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
                                                  psiv[[lay$idx[[j]]]])
     }
   }
-  vals <- .gas_sub_values(term, u, "zeta", second = TRUE, third = third)
+  vals <- .gas_sub_values(term, u, "zeta", second = TRUE, third = third,
+                          fourth = fourth)
   bd <- .gas_sub_b(term, vals)
   acts <- .gas_sub_active(term, vals)
   aj <- if (p > 0L) paste0("alpha", seq_len(p)) else character(0)
@@ -615,11 +627,14 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
   }
   zcol <- m - np + seq_len(np)
   if (third) {
-    direction <- as.numeric(direction)
-    if (length(direction) != m) {
-      stop(sprintf("'direction' must have one value per unknown (%d).", m),
-           call. = FALSE)
-    }
+    dirs <- lapply(dirs, function(d) {
+      d <- as.numeric(d)
+      if (length(d) != m) {
+        stop(sprintf("'direction' must have one value per unknown (%d).", m),
+             call. = FALSE)
+      }
+      d
+    })
   }
   varying_b <- q > 0L &&
     any(vapply(pj, function(j) vals[[j]]$developed, logical(1)))
@@ -657,7 +672,8 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 
   D <- matrix(0, bp$n, m)
   W <- matrix(0, m, m)
-  dP <- if (third) matrix(0, bp$n, m) else NULL
+  dP <- if (third) lapply(seq_len(nd), function(d) matrix(0, bp$n, m)) else NULL
+  dPS <- if (fourth) matrix(0, bp$n, m) else NULL
   for (l in seq_along(bp$order)) {
     rows <- bp$order[[l]]
     # this group's columns among the caller's unknowns: everything that is
@@ -731,8 +747,26 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
     # the third derivative of one value at one observation, contracted
     # against the direction: a developed coordinate reads its chart's own
     # h''' at z'gamma along the design row, a scalar one is diagonal
-    vk <- if (third) direction[act] else NULL
-    t_of <- function(j, r) {
+    vks <- if (third) lapply(dirs, function(d) d[act]) else NULL
+    vk <- if (third) vks[[1L]] else NULL
+    t_of <- function(j, r, d = 1L) {
+      h <- matrix(0, mk, mk)
+      vj <- vals[[j]]
+      at <- pos[[j]]
+      ok <- !is.na(at)
+      if (!any(ok)) return(h)
+      vd <- vks[[d]]
+      if (vj$developed) {
+        z <- vj$Z[r, ok]
+        h[at[ok], at[ok]] <- vj$k3[r] * sum(z * vd[at[ok]]) * outer(z, z)
+      } else {
+        h[at[ok], at[ok]] <- vj$k3[r] * vd[at[ok]]
+      }
+      h
+    }
+    # and the fourth, contracted against both: the same shape one order up,
+    # a developed coordinate reading h'''' along the design row twice
+    q_of <- function(j, r) {
       h <- matrix(0, mk, mk)
       vj <- vals[[j]]
       at <- pos[[j]]
@@ -740,9 +774,10 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
       if (!any(ok)) return(h)
       if (vj$developed) {
         z <- vj$Z[r, ok]
-        h[at[ok], at[ok]] <- vj$k3[r] * sum(z * vk[at[ok]]) * outer(z, z)
+        h[at[ok], at[ok]] <- vj$k4[r] * sum(z * vks[[1L]][at[ok]]) *
+          sum(z * vks[[2L]][at[ok]]) * outer(z, z)
       } else {
-        h[at[ok], at[ok]] <- vj$k3[r] * vk[at[ok]]
+        h[at[ok], at[ok]] <- vj$k4[r] * vks[[1L]][at[ok]] * vks[[2L]][at[ok]]
       }
       h
     }
@@ -750,16 +785,17 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
     # third derivative over the chained first derivatives, plus the two
     # places the product rule puts a chart's curvature and the one it puts
     # its third derivative
-    tb_of <- function(r) {
+    tb_of <- function(r, d = 1L) {
       if (q == 0L) return(NULL)
       ld2 <- if (!varying_b) ld2_const else {
         gas_levinson2(vapply(pj, function(j) vals[[j]]$v[r], numeric(1)))
       }
+      vd <- vks[[d]]
       wrows <- lapply(pj, function(j) row_of(j, r))
       hrows <- lapply(pj, function(j) h_of(j, r))
-      trows <- lapply(pj, function(j) t_of(j, r))
-      hv <- lapply(hrows, function(H) as.numeric(H %*% vk))
-      wdot <- vapply(wrows, function(W) sum(W * vk), numeric(1))
+      trows <- lapply(pj, function(j) t_of(j, r, d))
+      hv <- lapply(hrows, function(H) as.numeric(H %*% vd))
+      wdot <- vapply(wrows, function(W) sum(W * vd), numeric(1))
       ld3 <- gas_levinson3(vapply(pj, function(j) vals[[j]]$v[r], numeric(1)),
                            wdot)
       lapply(seq_len(q), function(j) {
@@ -783,7 +819,75 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
         h
       })
     }
-    tb_const_l <- if (third && q > 0L && !varying_b) tb_of(rows[1L]) else NULL
+    tb_const_l <- if (third && q > 0L && !varying_b) {
+      lapply(seq_len(nd), function(d) tb_of(rows[1L], d))
+    } else NULL
+
+    # the autoregressive coefficients' FOURTH derivative at one observation,
+    # contracted against both directions. The composition is
+    # B_j = phi_j(rho(gamma)) with the inner map diagonal in the values, so
+    # the sixteen terms of .gas_prod4() do not apply here: what applies is
+    # the same expansion .gas_chart_derivs4() writes, read with each value's
+    # own derivative rows in place of the scalar chart's.
+    qb_of <- function(r) {
+      if (q == 0L) return(NULL)
+      rho <- vapply(pj, function(j) vals[[j]]$v[r], numeric(1))
+      ld2 <- if (!varying_b) ld2_const else gas_levinson2(rho)
+      wrows <- lapply(pj, function(j) row_of(j, r))
+      hrows <- lapply(pj, function(j) h_of(j, r))
+      tv <- lapply(pj, function(j) t_of(j, r, 1L))
+      tw <- lapply(pj, function(j) t_of(j, r, 2L))
+      qq <- lapply(pj, function(j) q_of(j, r))
+      dv <- vapply(wrows, function(W) sum(W * vks[[1L]]), numeric(1))
+      dw <- vapply(wrows, function(W) sum(W * vks[[2L]]), numeric(1))
+      hvv <- lapply(hrows, function(H) as.numeric(H %*% vks[[1L]]))
+      hww <- lapply(hrows, function(H) as.numeric(H %*% vks[[2L]]))
+      # the value's own second derivative contracted against both, which is
+      # the inner map's h'' v w in the scalar chart's expansion
+      hvw <- vapply(seq_len(q), function(k) sum(vks[[1L]] * hww[[k]]),
+                    numeric(1))
+      tvw <- lapply(tv, function(T3) as.numeric(T3 %*% vks[[2L]]))
+      ld3v <- gas_levinson3(rho, dv)
+      ld3w <- gas_levinson3(rho, dw)
+      ld3m <- gas_levinson3(rho, hvw)
+      ld4 <- gas_levinson4(rho, dv, dw)
+      lapply(seq_len(q), function(j) {
+        h <- matrix(0, mk, mk)
+        Hj <- ld2$hessian[[j]]
+        hv4 <- as.numeric(Hj %*% dv)
+        hw4 <- as.numeric(Hj %*% dw)
+        hm <- as.numeric(Hj %*% hvw)
+        t3vw <- as.numeric(ld3v[[j]] %*% dw)
+        for (k in seq_len(q)) {
+          for (ll in seq_len(q)) {
+            co <- ld4[[j]][k, ll] + ld3m[[j]][k, ll]
+            if (co != 0) h <- h + co * outer(wrows[[k]], wrows[[ll]])
+            if (ld3v[[j]][k, ll] != 0) {
+              h <- h + ld3v[[j]][k, ll] *
+                (outer(hww[[k]], wrows[[ll]]) + outer(wrows[[k]], hww[[ll]]))
+            }
+            if (ld3w[[j]][k, ll] != 0) {
+              h <- h + ld3w[[j]][k, ll] *
+                (outer(hvv[[k]], wrows[[ll]]) + outer(wrows[[k]], hvv[[ll]]))
+            }
+            if (Hj[k, ll] != 0) {
+              h <- h + Hj[k, ll] *
+                (outer(tvw[[k]], wrows[[ll]]) + outer(wrows[[k]], tvw[[ll]]) +
+                 outer(hvv[[k]], hww[[ll]]) + outer(hww[[k]], hvv[[ll]]))
+            }
+          }
+          if (t3vw[[k]] != 0) h <- h + t3vw[[k]] * hrows[[k]]
+          if (hm[[k]] != 0) h <- h + hm[[k]] * hrows[[k]]
+          if (hw4[[k]] != 0) h <- h + hw4[[k]] * tv[[k]]
+          if (hv4[[k]] != 0) h <- h + hv4[[k]] * tw[[k]]
+          if (ld2$jacobian[j, k] != 0) {
+            h <- h + ld2$jacobian[j, k] * qq[[k]]
+          }
+        }
+        h
+      })
+    }
+    qb_const_l <- if (fourth && q > 0L && !varying_b) qb_of(rows[1L]) else NULL
 
     r1 <- rows[1L]
     sbv <- if (q > 0L) sum(bd$B[r1, ]) else 0
@@ -809,24 +913,46 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
     if (third) {
       # f0 = omega/(1 - S): the same expansion the scalar route carries,
       # with every quantity read at this group's first observation
-      tb1 <- if (q > 0L) (if (varying_b) tb_of(r1) else tb_const_l) else NULL
       cst <- 1 / (1 - sbv)
       S_uu <- if (q > 0L) Reduce(`+`, hb1) else matrix(0, mk, mk)
-      S_3 <- if (q > 0L) Reduce(`+`, tb1) else matrix(0, mk, mk)
-      dS <- sum(dbsum * vk)
-      dS2 <- as.numeric(S_uu %*% vk)
-      dom <- sum(om1_u * vk)
-      dom2 <- as.numeric(om1_uu %*% vk)
-      om1_3 <- t_of("omega", r1)
-      f0_3 <- om1_3 * cst + om1_uu * (cst^2 * dS) +
-        2 * cst^3 * dS * (outer(om1_u, dbsum) + outer(dbsum, om1_u)) +
-        cst^2 * (outer(dom2, dbsum) + outer(om1_u, dS2) +
-                 outer(dS2, om1_u) + outer(dbsum, dom2)) +
-        (2 * dom * cst^3 + 6 * om1 * cst^4 * dS) * outer(dbsum, dbsum) +
-        2 * om1 * cst^3 * (outer(dS2, dbsum) + outer(dbsum, dS2)) +
-        dom * cst^2 * S_uu + 2 * om1 * cst^3 * dS * S_uu + om1 * cst^2 * S_3
-      df0 <- sum(f0_u * vk)
-      dphi0 <- as.numeric(f0_uu %*% vk)
+      f0_3 <- df0 <- dphi0 <- vector("list", nd)
+      S_3l <- om3l <- vector("list", nd)
+      for (d in seq_len(nd)) {
+        vd <- vks[[d]]
+        tb1 <- if (q > 0L) {
+          if (varying_b) tb_of(r1, d) else tb_const_l[[d]]
+        } else NULL
+        S_3 <- if (q > 0L) Reduce(`+`, tb1) else matrix(0, mk, mk)
+        S_3l[[d]] <- S_3
+        dS <- sum(dbsum * vd)
+        dS2 <- as.numeric(S_uu %*% vd)
+        dom <- sum(om1_u * vd)
+        dom2 <- as.numeric(om1_uu %*% vd)
+        om1_3 <- t_of("omega", r1, d)
+        om3l[[d]] <- om1_3
+        f0_3[[d]] <- om1_3 * cst + om1_uu * (cst^2 * dS) +
+          2 * cst^3 * dS * (outer(om1_u, dbsum) + outer(dbsum, om1_u)) +
+          cst^2 * (outer(dom2, dbsum) + outer(om1_u, dS2) +
+                   outer(dS2, om1_u) + outer(dbsum, dom2)) +
+          (2 * dom * cst^3 + 6 * om1 * cst^4 * dS) * outer(dbsum, dbsum) +
+          2 * om1 * cst^3 * (outer(dS2, dbsum) + outer(dbsum, dS2)) +
+          dom * cst^2 * S_uu + 2 * om1 * cst^3 * dS * S_uu + om1 * cst^2 * S_3
+        df0[[d]] <- sum(f0_u * vd)
+        dphi0[[d]] <- as.numeric(f0_uu %*% vd)
+      }
+    }
+    if (fourth) {
+      # the starting level's fourth derivative, off the fixed point
+      # f0 = omega + S f0 rather than by differentiating omega/(1 - S) four
+      # times: the product rule supplies every term but the one carrying all
+      # four derivatives on f0, and dividing by (1 - S) removes that one
+      qb1 <- if (q > 0L) (if (varying_b) qb_of(r1) else qb_const_l) else NULL
+      S_4 <- if (q > 0L) Reduce(`+`, qb1) else matrix(0, mk, mk)
+      om1_4 <- q_of("omega", r1)
+      Sj <- .gas_jet(sbv, dbsum, S_uu, S_3l[[1L]], S_3l[[2L]], S_4, vks)
+      fj <- .gas_jet(f0, f0_u, f0_uu, f0_3[[1L]], f0_3[[2L]],
+                     matrix(0, mk, mk), vks)
+      f0_4 <- cst * (om1_4 + .gas_prod4(Sj, fj))
     }
 
     Wl <- matrix(0, mk, mk)
@@ -837,20 +963,26 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
     Phi <- vector("list", k)
     Sd <- vector("list", k)
     Sdd <- vector("list", k)
-    Psi <- if (third) vector("list", k) else NULL
-    Sddd <- if (third) vector("list", k) else NULL
+    Psi <- if (third) lapply(seq_len(nd), function(d) vector("list", k)) else NULL
+    Sddd <- if (third) lapply(seq_len(nd), function(d) vector("list", k)) else NULL
+    Om <- if (fourth) vector("list", k) else NULL
+    S4 <- if (fourth) vector("list", k) else NULL
+    zmat <- matrix(0, mk, mk)
+    zvec <- numeric(mk)
     for (t in seq_len(k)) {
       r <- rows[t]
       ft <- vals$omega$v[r]
       Ft <- row_of("omega", r)
       Pt <- h_of("omega", r)
-      Tt <- if (third) t_of("omega", r) else NULL
+      Tt <- if (third) lapply(seq_len(nd), function(d) t_of("omega", r, d))
+            else NULL
+      Qt <- if (fourth) q_of("omega", r) else NULL
       if (p > 0L) {
         for (i in seq_len(p)) {
           lag <- t - i
           s_l <- if (lag >= 1L) s[lag] else 0
-          Sd_l <- if (lag >= 1L) Sd[[lag]] else numeric(mk)
-          Sdd_l <- if (lag >= 1L) Sdd[[lag]] else matrix(0, mk, mk)
+          Sd_l <- if (lag >= 1L) Sd[[lag]] else zvec
+          Sdd_l <- if (lag >= 1L) Sdd[[lag]] else zmat
           va <- vals[[aj[i]]]
           a_u <- row_of(aj[i], r)
           a_uu <- h_of(aj[i], r)
@@ -859,22 +991,42 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
           Pt <- Pt + va$v[r] * Sdd_l +
             outer(a_u, Sd_l) + outer(Sd_l, a_u) +
             s_l * a_uu
+          a_3 <- if (third) lapply(seq_len(nd), function(d) t_of(aj[i], r, d))
+                 else NULL
           if (third) {
-            Sddd_l <- if (lag >= 1L) Sddd[[lag]] else matrix(0, mk, mk)
-            dSd_l <- if (lag >= 1L) sum(Sd_l * vk) else 0
-            dSdd_l <- if (lag >= 1L) as.numeric(Sdd_l %*% vk) else numeric(mk)
-            da <- sum(a_u * vk)
-            da2 <- as.numeric(a_uu %*% vk)
-            Tt <- Tt + da * Sdd_l + va$v[r] * Sddd_l +
-              outer(da2, Sd_l) + outer(Sd_l, da2) +
-              outer(a_u, dSdd_l) + outer(dSdd_l, a_u) +
-              dSd_l * a_uu + s_l * t_of(aj[i], r)
+            for (d in seq_len(nd)) {
+              vd <- vks[[d]]
+              Sddd_l <- if (lag >= 1L) Sddd[[d]][[lag]] else zmat
+              dSd_l <- if (lag >= 1L) sum(Sd_l * vd) else 0
+              dSdd_l <- if (lag >= 1L) as.numeric(Sdd_l %*% vd) else zvec
+              da <- sum(a_u * vd)
+              da2 <- as.numeric(a_uu %*% vd)
+              Tt[[d]] <- Tt[[d]] + da * Sdd_l + va$v[r] * Sddd_l +
+                outer(da2, Sd_l) + outer(Sd_l, da2) +
+                outer(a_u, dSdd_l) + outer(dSdd_l, a_u) +
+                dSd_l * a_uu + s_l * a_3[[d]]
+            }
+          }
+          if (fourth) {
+            Aj <- .gas_jet(va$v[r], a_u, a_uu, a_3[[1L]], a_3[[2L]],
+                           q_of(aj[i], r), vks)
+            Bj <- if (lag >= 1L) {
+              .gas_jet(s_l, Sd_l, Sdd_l, Sddd[[1L]][[lag]],
+                       Sddd[[2L]][[lag]], S4[[lag]], vks)
+            } else .gas_jet(0, zvec, zmat, zmat, zmat, zmat, vks)
+            Qt <- Qt + .gas_prod4(Aj, Bj)
           }
         }
       }
       if (q > 0L) {
         hb <- if (varying_b) hb_of(r) else hb_const_l
-        tb <- if (third) (if (varying_b) tb_of(r) else tb_const_l) else NULL
+        tb <- if (third) {
+          lapply(seq_len(nd), function(d)
+            if (varying_b) tb_of(r, d) else tb_const_l[[d]])
+        } else NULL
+        qb <- if (fourth) {
+          if (varying_b) qb_of(r) else qb_const_l
+        } else NULL
         for (j in seq_len(q)) {
           lag <- t - j
           f_l <- if (lag >= 1L) f[lag] else f0
@@ -886,27 +1038,42 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
           Pt <- Pt + bd$B[r, j] * Phi_l +
             outer(b_u, F_l) + outer(F_l, b_u) + f_l * hb[[j]]
           if (third) {
-            Psi_l <- if (lag >= 1L) Psi[[lag]] else f0_3
-            dF_l <- if (lag >= 1L) sum(F_l * vk) else df0
-            dPhi_l <- if (lag >= 1L) as.numeric(Phi_l %*% vk) else dphi0
-            db <- sum(b_u * vk)
-            db2 <- as.numeric(hb[[j]] %*% vk)
-            Tt <- Tt + db * Phi_l + bd$B[r, j] * Psi_l +
-              outer(db2, F_l) + outer(F_l, db2) +
-              outer(b_u, dPhi_l) + outer(dPhi_l, b_u) +
-              dF_l * hb[[j]] + f_l * tb[[j]]
+            for (d in seq_len(nd)) {
+              vd <- vks[[d]]
+              Psi_l <- if (lag >= 1L) Psi[[d]][[lag]] else f0_3[[d]]
+              dF_l <- if (lag >= 1L) sum(F_l * vd) else df0[[d]]
+              dPhi_l <- if (lag >= 1L) as.numeric(Phi_l %*% vd) else dphi0[[d]]
+              db <- sum(b_u * vd)
+              db2 <- as.numeric(hb[[j]] %*% vd)
+              Tt[[d]] <- Tt[[d]] + db * Phi_l + bd$B[r, j] * Psi_l +
+                outer(db2, F_l) + outer(F_l, db2) +
+                outer(b_u, dPhi_l) + outer(dPhi_l, b_u) +
+                dF_l * hb[[j]] + f_l * tb[[d]][[j]]
+            }
+          }
+          if (fourth) {
+            Bj <- .gas_jet(bd$B[r, j], b_u, hb[[j]], tb[[1L]][[j]],
+                           tb[[2L]][[j]], qb[[j]], vks)
+            Fj <- if (lag >= 1L) {
+              .gas_jet(f_l, F_l, Phi_l, Psi[[1L]][[lag]], Psi[[2L]][[lag]],
+                       Om[[lag]], vks)
+            } else {
+              .gas_jet(f0, f0_u, f0_uu, f0_3[[1L]], f0_3[[2L]], f0_4, vks)
+            }
+            Qt <- Qt + .gas_prod4(Bj, Fj)
           }
         }
       }
       f[t] <- ft
       F_[[t]] <- Ft
       Phi[[t]] <- Pt
-      if (third) Psi[[t]] <- Tt
+      if (third) for (d in seq_len(nd)) Psi[[d]][[t]] <- Tt[[d]]
+      if (fourth) Om[[t]] <- Qt
 
       e_t <- eta[r] + ft
       Dt <- seed[r, act] + Ft
       D[r, act] <- Dt
-      Wl <- Wl + g[r] * (if (third) Tt else Pt)
+      Wl <- Wl + g[r] * (if (fourth) Qt else if (third) Tt[[1L]] else Pt)
 
       s[t] <- score(e_t, r)
       cv <- curvature(e_t, r)
@@ -914,23 +1081,53 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
         full <- numeric(m)
         full[act] <- Dt
         b3 <- blocks(e_t, r, full)
+        sub <- function(x) if (is.null(x)) NULL else x[act, act, drop = FALSE]
         list(cross = b3$cross[act], M = b3$M[act, act, drop = FALSE],
              dcurv = b3$dcurv[act],
-             N = if (third) b3$N[act, act, drop = FALSE] else NULL)
+             N = if (!third) NULL else if (fourth) lapply(b3$N, sub)
+                 else sub(b3$N),
+             Q = sub(b3$Q), P = sub(b3$P), cppp = b3$cppp)
       }
       Sd[[t]] <- cv * Dt + bl$cross
       Sdd[[t]] <- cv * Pt + bl$M
       if (third) {
-        dPhi_t <- as.numeric(Pt %*% vk)
-        dP[r, act] <- dPhi_t
-        Sddd[[t]] <- sum(bl$dcurv * vk) * Pt + cv * Tt + bl$N +
-          outer(dPhi_t, bl$dcurv) + outer(bl$dcurv, dPhi_t)
+        for (d in seq_len(nd)) {
+          vd <- vks[[d]]
+          Nd <- if (fourth) bl$N[[d]] else bl$N
+          dPhi_t <- as.numeric(Pt %*% vd)
+          dP[[d]][r, act] <- dPhi_t
+          Sddd[[d]][[t]] <- sum(bl$dcurv * vd) * Pt + cv * Tt[[d]] + Nd +
+            outer(dPhi_t, bl$dcurv) + outer(bl$dcurv, dPhi_t)
+        }
+      }
+      if (fourth) {
+        # the score's own fourth derivative; the scalar route's expression,
+        # read at this group's active set
+        dPhi_v <- as.numeric(Pt %*% vks[[1L]])
+        dPhi_w <- as.numeric(Pt %*% vks[[2L]])
+        phi_vw <- sum(vks[[1L]] * dPhi_w)
+        psi_vw <- as.numeric(Tt[[1L]] %*% vks[[2L]])
+        dPS[r, act] <- psi_vw
+        dcv <- as.numeric(bl$Q %*% vks[[1L]])
+        dcw <- as.numeric(bl$Q %*% vks[[2L]])
+        dc_v <- sum(bl$dcurv * vks[[1L]])
+        dc_w <- sum(bl$dcurv * vks[[2L]])
+        d2c <- sum(vks[[1L]] * dcw) + bl$cppp * phi_vw
+        rw <- dcw + bl$cppp * dPhi_w
+        S4[[t]] <- d2c * Pt + dc_v * Tt[[2L]] + dc_w * Tt[[1L]] + cv * Qt +
+          bl$P + phi_vw * bl$Q +
+          outer(dPhi_w, dcv) + outer(dcv, dPhi_w) +
+          outer(psi_vw, bl$dcurv) + outer(bl$dcurv, psi_vw) +
+          outer(dPhi_v, rw) + outer(rw, dPhi_v)
       }
     }
     W[act, act] <- W[act, act] + Wl
   }
   W <- (W + t(W)) / 2
-  if (third) return(list(jacobian = D, dphi = dP, curvature = W))
+  if (fourth) {
+    return(list(jacobian = D, dphi = dP, dpsi = dPS, curvature = W))
+  }
+  if (third) return(list(jacobian = D, dphi = dP[[1L]], curvature = W))
   list(jacobian = D, curvature = W)
 }
 

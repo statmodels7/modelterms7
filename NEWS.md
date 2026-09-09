@@ -1,3 +1,65 @@
+# modelterms7 0.71.0
+
+* `term_fourth()` is the fourth derivative of a structural term's predictor
+  in the caller's unknowns, contracted against the caller's weights and
+  against TWO directions. It is what the exact Hessian of a marginal
+  criterion needs, by the rule `term_third()`'s own page states one order
+  down: each order of differentiating the predictor through the recursion
+  pulls in one more order of the family, the score the recursion is driven by
+  being read at the predictor it produces.
+
+* The recursion carries FIVE states rather than three -- \eqn{F_t},
+  \eqn{\Phi_t}, both third derivatives \eqn{\Psi^{(v)}_t} and
+  \eqn{\Psi^{(w)}_t}, and \eqn{\Omega_t} -- and both third derivatives are
+  needed and not one: the product rule at this order pairs each direction's
+  third derivative with the other direction, so a recursion holding a single
+  contraction cannot reach it.
+
+* `gas_levinson4()` is the Levinson-Durbin map's fourth derivative in two
+  directions, and `.gas_chart_derivs4()` the chart's. Both were validated
+  against ONE central difference of the analytic third order before anything
+  above them was written: 9.8e-12 to 1.6e-10 for the map at \eqn{q} of 4, 5
+  and 6, and 5.7e-10 to 2.0e-09 for the chart under a rhobit persistence and
+  a log loading, where the identity link would collapse the composition onto
+  the map's own derivative and assert nothing about it.
+
+* ⚠️ The map is multilinear of degree \eqn{k} in the first \eqn{k} partial
+  autocorrelations, so its fourth derivative is IDENTICALLY ZERO for
+  \eqn{q \le 3}: the first coefficient carrying a monomial of degree four
+  needs \eqn{q = 4}. A check stopping at \eqn{q = 3} compares zero with zero,
+  which is the third order's own trap read one order up, and the tests run to
+  \eqn{q = 5}.
+
+* `.gas_prod4()` writes the fourth derivative of a product once, sixteen
+  terms, one per way of dealing four differentiations to two factors. The
+  recursion multiplies a chart quantity by a lagged score or level three
+  times over -- \eqn{a_i s_{t-i}}, \eqn{b_j f_{t-j}} and the starting level's
+  own fixed point \eqn{f_0 = \omega + Sf_0} -- so the rule is written in one
+  place and used three times. Reading \eqn{f_0} off its fixed point rather
+  than differentiating \eqn{\omega/(1-S)} four times is what keeps that
+  expansion out of the package altogether.
+
+* Measured against one central difference of the analytic third order, over
+  \eqn{p} to 2 and \eqn{q} to 5, one group and three: 2.5e-10 to 1.0e-09
+  relative on the scalar route and 8.5e-11 to 3.2e-09 on the submodel route,
+  which is exercised on a developed level, a developed loading and a
+  developed persistence -- the last being the branch that rebuilds the map at
+  every observation. The result is symmetric in the two directions to
+  1e-16 and the matrix is exactly symmetric.
+
+* ⚠️ The second and third orders are UNCHANGED BIT FOR BIT. Their
+  expressions were not rewritten, only run inside a loop over a list of one
+  direction, and `term_curvature()` and `term_third()` come back
+  `identical()` to what 0.70.0 returns on both routes over eight
+  configurations. The `blocks` callback's `N` is still a matrix at the third
+  order and is a list of two only at the fourth, so a caller written for
+  `term_third()` is untouched.
+
+* `term_fourth()` refuses on a structural term that has not written it,
+  exactly as `term_third()` does and for the same reason: a term that bends
+  the predictor and reports zero cannot be told from one that genuinely has
+  none. An additive term inherits the zeros.
+
 # modelterms7 0.70.0
 
 * `term_coef_draw()` draws the block coefficients whose meaning only the term

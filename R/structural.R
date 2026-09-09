@@ -943,6 +943,117 @@ S7::method(term_third, structural_term) <- function(term, eta, y, score,
                attr(S7::S7_class(term), "name")), call. = FALSE)
 }
 
+#' @title Fourth Derivatives of a Structural Term's Predictor, in Two Directions
+#'
+#' @description
+#' [term_third()] differentiated once more along a second direction. It
+#' is what the exact HESSIAN of a marginal criterion needs when the model
+#' carries a term that bends the predictor.
+#'
+#' @details
+#' A marginal criterion carries \eqn{-\frac{1}{2}\log|K|} at the penalized
+#' mode, so its gradient in one hyperparameter reads \eqn{\partial K/\partial
+#' u} along the direction the mode moves in, which is [term_third()], and
+#' its second derivative in a PAIR reads the same object along two
+#' directions. Where the predictor is \eqn{X\beta} that is the family's
+#' derivatives against the design and nothing else; where a filter produces
+#' it, \eqn{K} carries \eqn{\sum_t w_t \ell_{p,t}E_t} as well, and
+#' differentiating that twice asks for \eqn{\partial^4 e_t/\partial u^4}.
+#'
+#' **Only contracted, and only twice.** The full fourth derivative is an
+#' \eqn{m^4} array per observation and is never formed: what is propagated is
+#' a matrix per observation, the same size as the curvature and therefore the
+#' same \eqn{O(nm^2)}. A caller wanting a Hessian over \eqn{n_h}
+#' hyperparameters calls this once per pair.
+#'
+#' **Five states, not three.** The recursion carries \eqn{F_t}, \eqn{\Phi_t},
+#' \eqn{\Psi^{(v)}_t}, \eqn{\Psi^{(w)}_t} and \eqn{\Omega_t}: BOTH third
+#' derivatives, because the product rule at the fourth order pairs each
+#' direction's third derivative with the other direction, so a recursion
+#' holding one contraction cannot reach this order.
+#'
+#' **What the model supplies.** Each order of differentiation pulls in one
+#' more order of the family, so beyond the third order's `dcurv` and
+#' `N` the `blocks` callback returns, at an observation,
+#'
+#' \deqn{\texttt{Q} = \sum_{r,r'}\ell_{pprr'}V_r^\top V_{r'}, \qquad
+#'   \texttt{P} = \sum_{r,r'}\Big(\sum_{s,s'}\ell_{prr'ss'}
+#'     (V_s\cdot v)(V_{s'}\cdot w)\Big)V_r^\top V_{r'},}
+#'
+#' with `cppp` \eqn{= \ell_{ppp}} beside them, and `N` a list of
+#' two, one per direction. `P` is the only place the family's FIFTH
+#' derivative enters; `cppp` is a scalar no contraction recovers, the
+#' level's own curvature moving by it.
+#'
+#' The base method returns zeros, so an additive term is covered without
+#' writing anything. A structural term refuses, for the reason
+#' [term_third()] gives: zero there would be a false statement rather
+#' than a true one.
+#'
+#' @param term A built term.
+#' @param eta The static part of the predictor.
+#' @param y The response.
+#' @param score,curvature The callbacks of [term_filter()].
+#' @param psi The term's parameters, named as [term_params()].
+#' @param g The weights the fourth derivative is contracted against, one per
+#'   observation.
+#' @param seed The derivative of the static predictor in the caller's
+#'   unknowns.
+#' @param blocks A function of the predictor, the index, the current Jacobian
+#'   row and the active set, returning `cross`, `M`,
+#'   `dcurv`, `N`, `Q`, `P` and `cppp`.
+#' @param directions A list of two numeric vectors, the directions \eqn{v}
+#'   and \eqn{w} in the caller's unknowns. The result is symmetric in the
+#'   two.
+#' @param ... Passed to methods.
+#'
+#' @return A list with `jacobian`, the derivative of the predictor in
+#'   the caller's unknowns; `dphi`, a list of two, the second derivative
+#'   contracted against each direction, one row per observation;
+#'   `dpsi`, the third derivative contracted against both, one row per
+#'   observation; and `curvature`, the fourth derivative contracted
+#'   against `g` and both directions.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(t = 1:20, y = rnorm(20))
+#' term <- term_build(linpar(~t), dd)
+#' # an additive term bends no predictor, so every order above the first is
+#' # zero and the base method says so
+#' out <- term_fourth(term, rep(0, 20), dd$y,
+#'                    score = function(e, i) dd$y[i] - e,
+#'                    curvature = function(e, i) -1, psi = list(),
+#'                    g = rep(1, 20), seed = matrix(0, 20, 2),
+#'                    blocks = function(e, i, D, act) NULL,
+#'                    directions = list(c(1, 0), c(0, 1)))
+#' all(out$curvature == 0)
+#'
+#' @seealso [term_third()] for the third order this differentiates,
+#'   [term_curvature()] for the second, [statmodels7::reml()] for the
+#'   criterion whose Hessian asks for it.
+#' @export
+#' @aliases term_fourth.model_term term_fourth.structural_term
+term_fourth <- S7::new_generic("term_fourth", "term",
+  function(term, eta, y, score, curvature, psi, g, seed, blocks, directions,
+           ...) S7::S7_dispatch())
+
+S7::method(term_fourth, model_term) <- function(term, eta, y, score,
+                                                curvature, psi, g, seed,
+                                                blocks, directions, ...) {
+  seed <- as.matrix(seed)
+  m <- ncol(seed)
+  z <- matrix(0, nrow(seed), m)
+  list(jacobian = seed, dphi = list(z, z), dpsi = z,
+       curvature = matrix(0, m, m))
+}
+
+S7::method(term_fourth, structural_term) <- function(term, eta, y, score,
+                                                     curvature, psi, g, seed,
+                                                     blocks, directions, ...) {
+  stop(sprintf("the term class '%s' does not implement term_fourth().",
+               attr(S7::S7_class(term), "name")), call. = FALSE)
+}
+
 S7::method(term_params, structural_term) <- function(term, ...) {
   stop(sprintf("the term class '%s' does not implement term_params().",
                attr(S7::S7_class(term), "name")), call. = FALSE)

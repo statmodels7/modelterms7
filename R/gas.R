@@ -900,6 +900,107 @@ gas_levinson3 <- function(pacf, w) {
   thi
 }
 
+#' The Fourth Derivative of the Levinson-Durbin Map, in Two Directions
+#'
+#' @description
+#' [gas_levinson3()]'s third derivatives differentiated once more and
+#' contracted against a second direction, one matrix per coefficient.
+#'
+#' @details
+#' The second derivative of a marginal criterion in a pair of hyperparameters
+#' reads the fourth derivative of the predictor along the two directions the
+#' mode moves in, and the persistence reaches the predictor through this map.
+#' As at the third order it is needed only contracted, so what is propagated
+#' is a matrix per coefficient and never a four-index array.
+#'
+#' Differentiating the third-order recursion of [gas_levinson3()] once
+#' more adds no new kind of term, the map being bilinear at every step. The
+#' full fourth derivative obeys
+#' \deqn{Q^{(k)}_i = Q^{(k-1)}_i - \rho_k Q^{(k-1)}_{k-i}
+#'   - \sum_{\text{4 slots}} \delta_{\cdot k}T^{(k-1)}_{k-i}[\text{the rest}],}
+#' and contracting two of those slots against \eqn{v} and \eqn{w} leaves
+#' \deqn{Q^{(k)}_i[v,w] = Q^{(k-1)}_i[v,w] - \rho_k Q^{(k-1)}_{k-i}[v,w]
+#'   - v_k T^{(k-1)}_{k-i}[w] - w_k T^{(k-1)}_{k-i}[v]
+#'   - e_k\big(T^{(k-1)}_{k-i}[v]w\big)^{\!\top}
+#'   - \big(T^{(k-1)}_{k-i}[v]w\big)e_k^{\top}.}
+#'
+#' Both third derivatives are carried, not one: the last two terms couple
+#' \eqn{T[v]} with \eqn{w} and \eqn{T[w]} with \eqn{v}, so a recursion holding
+#' a single contraction cannot reach this order.
+#'
+#' The map is multilinear of degree \eqn{k} in the first \eqn{k} partial
+#' autocorrelations, so the result is identically zero for \eqn{q \le 3}: the
+#' first coefficient carrying a monomial of degree four is
+#' \eqn{\phi^{(4)}_1}, which needs \eqn{q = 4}. A check of this function that
+#' stops at \eqn{q = 3} compares zero with zero and asserts nothing.
+#'
+#' @param pacf A numeric vector of partial autocorrelations in
+#'   \eqn{(-1, 1)}.
+#' @param v,w The two directions to contract against, each as long as
+#'   `pacf`. The result is symmetric in the two.
+#'
+#' @return A list of one `q` by `q` matrix per coefficient.
+#'
+#' @seealso [gas_levinson3()], [gas_levinson2()]
+#'
+#' @keywords internal
+gas_levinson4 <- function(pacf, v, w) {
+  q <- length(pacf)
+  if (q == 0L) return(list())
+  phi <- numeric(0)
+  jac <- matrix(0, 0, q)
+  hes <- list()
+  tv <- list()
+  tw <- list()
+  qd <- list()
+  for (k in seq_len(q)) {
+    new <- numeric(k)
+    njac <- matrix(0, k, q)
+    nhes <- replicate(k, matrix(0, q, q), simplify = FALSE)
+    ntv <- replicate(k, matrix(0, q, q), simplify = FALSE)
+    ntw <- replicate(k, matrix(0, q, q), simplify = FALSE)
+    nqd <- replicate(k, matrix(0, q, q), simplify = FALSE)
+    new[k] <- pacf[k]
+    njac[k, k] <- 1
+    if (k > 1L) {
+      rev_idx <- rev(seq_len(k - 1L))
+      new[seq_len(k - 1L)] <- phi - pacf[k] * phi[rev_idx]
+      njac[seq_len(k - 1L), ] <- jac - pacf[k] * jac[rev_idx, , drop = FALSE]
+      njac[seq_len(k - 1L), k] <- njac[seq_len(k - 1L), k] - phi[rev_idx]
+      for (i in seq_len(k - 1L)) {
+        r <- rev_idx[i]
+        h <- hes[[i]] - pacf[k] * hes[[r]]
+        h[k, ] <- h[k, ] - jac[r, ]
+        h[, k] <- h[, k] - jac[r, ]
+        nhes[[i]] <- h
+        hv <- as.numeric(hes[[r]] %*% v)
+        hw <- as.numeric(hes[[r]] %*% w)
+        t1 <- tv[[i]] - pacf[k] * tv[[r]] - v[[k]] * hes[[r]]
+        t1[k, ] <- t1[k, ] - hv
+        t1[, k] <- t1[, k] - hv
+        ntv[[i]] <- t1
+        t2 <- tw[[i]] - pacf[k] * tw[[r]] - w[[k]] * hes[[r]]
+        t2[k, ] <- t2[k, ] - hw
+        t2[, k] <- t2[, k] - hw
+        ntw[[i]] <- t2
+        tvw <- as.numeric(tv[[r]] %*% w)
+        qq <- qd[[i]] - pacf[k] * qd[[r]] -
+          v[[k]] * tw[[r]] - w[[k]] * tv[[r]]
+        qq[k, ] <- qq[k, ] - tvw
+        qq[, k] <- qq[, k] - tvw
+        nqd[[i]] <- qq
+      }
+    }
+    phi <- new
+    jac <- njac
+    hes <- nhes
+    tv <- ntv
+    tw <- ntw
+    qd <- nqd
+  }
+  qd
+}
+
 #' @title Build a Score-Driven Term
 #' @name term_build.GasTerm
 #'
@@ -1338,6 +1439,110 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
   list(t_omega = t_omega, t_a = t_a, t_b = t_b)
 }
 
+#' The Chart's Fourth Derivatives, in Two Directions
+#'
+#' @description
+#' [.gas_chart_derivs3()] differentiated once more and contracted
+#' against a second direction: one matrix for the level, one per score
+#' loading and one per autoregressive coefficient.
+#'
+#' @details
+#' The level and the loadings ride scalar links, so each of their fourth
+#' derivatives is a single diagonal entry, the link's own \eqn{h''''} times
+#' the two directions' components there. The persistence is a composition,
+#' the Levinson-Durbin map read at \eqn{\rho = h^{-1}(z)}, whose inner map is
+#' DIAGONAL: differentiating \eqn{B(z) = \phi(\rho(z))} four times and
+#' contracting two slots leaves, with \eqn{p_v = h'v} and \eqn{p_w = h'w} the
+#' directions pushed onto the partial autocorrelations,
+#' \deqn{Q[p_v,p_w]h'h'^{\top}
+#'   + T[p_v]\big(h''w\,h'^{\top} + h'\,h''w^{\top}\big)
+#'   + T[p_w]\big(h''v\,h'^{\top} + h'\,h''v^{\top}\big)
+#'   + T[h''vw]h'h'^{\top}}
+#' \deqn{{}+ H\big(h'''vw\,h'^{\top} + h'\,h'''vw^{\top}
+#'   + h''v\,h''w^{\top} + h''w\,h''v^{\top}\big)
+#'   + \mathrm{diag}\big(h''T[p_v]p_w + h''H(h''vw)
+#'   + h'''w\,Hp_v + h'''v\,Hp_w + h''''vw\,P\big),}
+#' with \eqn{Q}, \eqn{T}, \eqn{H} and \eqn{P} the map's fourth, third, second
+#' and first derivatives. The expression is symmetric in \eqn{v} and \eqn{w},
+#' which a caller can read off it and a test asserts.
+#'
+#' @param zeta The term's base parameters on the unconstrained scale.
+#' @param p,q The score and autoregressive orders.
+#' @param links The links, as [term_links()] gives them.
+#' @param vz,wz The two directions, in the same coordinates as `zeta`.
+#'
+#' @return A list with `q_omega`, `q_a` and `q_b`, each a
+#'   matrix or a list of matrices over the term's base coordinates.
+#'
+#' @seealso [.gas_chart_derivs3()], [gas_levinson4()]
+#'
+#' @keywords internal
+.gas_chart_derivs4 <- function(zeta, p, q, links, vz, wz) {
+  np <- length(zeta)
+  nm <- names(zeta)
+  i_om <- 1L
+  i_a <- if (p > 0L) 1L + seq_len(p) else integer(0)
+  i_pa <- if (q > 0L) 1L + p + seq_len(q) else integer(0)
+
+  q_omega <- matrix(0, np, np)
+  q_omega[i_om, i_om] <- linkfunctions7::d4linkinv(links[[nm[i_om]]],
+                                                   zeta[[i_om]]) *
+    vz[[i_om]] * wz[[i_om]]
+  q_a <- lapply(seq_len(max(p, 1L)), function(i) {
+    h <- matrix(0, np, np)
+    if (p > 0L) {
+      h[i_a[i], i_a[i]] <- linkfunctions7::d4linkinv(links[[nm[i_a[i]]]],
+                                                     zeta[[i_a[i]]]) *
+        vz[[i_a[i]]] * wz[[i_a[i]]]
+    }
+    h
+  })
+
+  q_b <- list()
+  if (q > 0L) {
+    lk <- links[[nm[i_pa[1L]]]]
+    z <- zeta[i_pa]
+    v <- vz[i_pa]
+    w <- wz[i_pa]
+    rho <- linkfunctions7::linkinv(lk, z)
+    k1 <- linkfunctions7::dlinkinv(lk, z)
+    k2 <- linkfunctions7::d2linkinv(lk, z)
+    k3 <- linkfunctions7::d3linkinv(lk, z)
+    k4 <- linkfunctions7::d4linkinv(lk, z)
+    pv <- k1 * v
+    pw <- k1 * w
+    ld <- gas_levinson2(rho)
+    t_v <- gas_levinson3(rho, pv)
+    t_w <- gas_levinson3(rho, pw)
+    # the third derivative contracted against the SECOND-order push of the
+    # two directions, which is where the inner map's own curvature enters
+    t_m <- gas_levinson3(rho, k2 * v * w)
+    q4 <- gas_levinson4(rho, pv, pw)
+    for (j in seq_len(q)) {
+      Hj <- ld$hessian[[j]]
+      Jj <- ld$jacobian[j, ]
+      # the sub-block is built whole and then placed: at q = 1 an index pair
+      # of length one collapses to a scalar, which is the trap the second
+      # order already records
+      sub <- q4[[j]] * outer(k1, k1) +
+        t_v[[j]] * (outer(k2 * w, k1) + outer(k1, k2 * w)) +
+        t_w[[j]] * (outer(k2 * v, k1) + outer(k1, k2 * v)) +
+        t_m[[j]] * outer(k1, k1) +
+        Hj * (outer(k3 * v * w, k1) + outer(k1, k3 * v * w) +
+              outer(k2 * v, k2 * w) + outer(k2 * w, k2 * v)) +
+        diag(k2 * as.numeric(t_v[[j]] %*% pw) +
+             k2 * as.numeric(Hj %*% (k2 * v * w)) +
+             k3 * w * as.numeric(Hj %*% pv) +
+             k3 * v * as.numeric(Hj %*% pw) +
+             k4 * v * w * Jj, nrow = q)
+      h <- matrix(0, np, np)
+      h[i_pa, i_pa] <- sub
+      q_b[[j]] <- h
+    }
+  }
+  list(q_omega = q_omega, q_a = q_a, q_b = q_b)
+}
+
 #' @title Second Derivatives of a Score-Driven Predictor
 #' @name term_curvature.GasTerm
 #' @description
@@ -1437,6 +1642,50 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
                       direction = direction)
 }
 
+#' @title The Score-Driven Recursion's Fourth Derivative
+#' @name term_fourth.GasTerm
+#'
+#' @description
+#' The fourth derivative of the filtered predictor in the caller's unknowns,
+#' contracted against the caller's weights and against two directions, and
+#' the lower orders' contractions beside it.
+#'
+#' @details
+#' The recursion carries five states -- \eqn{F_t}, \eqn{\Phi_t}, the two
+#' third derivatives \eqn{\Psi^{(v)}_t} and \eqn{\Psi^{(w)}_t}, and
+#' \eqn{\Omega_t} -- and each of the recursion's products is differentiated
+#' by [.gas_prod4()], the sixteen-term rule written once. The
+#' persistence's own fourth derivative comes from [gas_levinson4()]
+#' through [.gas_chart_derivs4()], and the starting level's is read off
+#' the fixed point \eqn{f_0 = \omega + Sf_0}.
+#'
+#' Both third derivatives are needed and not one: the product rule at this
+#' order pairs each direction's third derivative with the other direction.
+#'
+#' @param term A built `GasTerm`.
+#' @param eta The static part of the predictor.
+#' @param y The response, unused directly.
+#' @param score,curvature The callbacks of [term_filter()].
+#' @param psi The parameters on the parameter scale.
+#' @param g The weights the fourth derivative is contracted against.
+#' @param seed The derivative of the static predictor in the unknowns.
+#' @param blocks The model's derivative pieces; see [term_fourth()].
+#' @param directions A list of two directions to contract against.
+#' @param ... Unused.
+#' @return A list with `jacobian`, `dphi`, `dpsi` and
+#'   `curvature`.
+#' @keywords internal
+S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
+                                             psi, g, seed, blocks, directions,
+                                             ...) {
+  if (!is.list(directions) || length(directions) != 2L) {
+    stop("'directions' must be a list of two vectors, one per direction.",
+         call. = FALSE)
+  }
+  .gas_curvature_core(term, eta, y, score, curvature, psi, g, seed, blocks,
+                      direction = directions)
+}
+
 #' The Score-Driven Recursion's Second and Third Derivatives
 #'
 #' @description
@@ -1478,7 +1727,13 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
   nm <- term_params(term)
   links <- term_links(term)
   psiv <- unlist(psi[nm])
-  third <- !is.null(direction)
+  # one direction propagates the third order, two the fourth as well. The
+  # third order is then carried for BOTH, the fourth order's product rule
+  # coupling each direction's third derivative with the other direction.
+  dirs <- .gas_dirs(direction)
+  nd <- length(dirs)
+  third <- nd >= 1L
+  fourth <- nd >= 2L
   if (!is.null(bp$sub)) {
     return(.gas_curvature_sub(term, eta, y, score, curvature, psiv, g,
                               seed, blocks, direction,
@@ -1517,11 +1772,14 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
   p <- term@p
   q <- term@q
   if (third) {
-    direction <- as.numeric(direction)
-    if (length(direction) != m) {
-      stop(sprintf("'direction' must have one value per unknown (%d).", m),
-           call. = FALSE)
-    }
+    dirs <- lapply(dirs, function(d) {
+      d <- as.numeric(d)
+      if (length(d) != m) {
+        stop(sprintf("'direction' must have one value per unknown (%d).", m),
+             call. = FALSE)
+      }
+      d
+    })
   }
 
   # every group shares the scalar parameters, so the chart, the lifted
@@ -1569,41 +1827,77 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
 
     # the third order, contracted against the direction. Every quantity here
     # is either a contraction of one the second order already carries or the
-    # chart's own third derivative; nothing of three indices is formed
-    vk <- direction[act]
-    v_base <- direction[zcol[seq_len(nb)]]
-    ch3 <- .gas_chart_derivs3(zeta, p, q, links, v_base)
-    out$t_om <- lift2(ch3$t_omega)
-    out$t_a <- lapply(ch3$t_a, lift2)
-    out$t_b <- lapply(ch3$t_b, lift2)
-    out$dom <- sum(om_u * vk)
-    out$dom2 <- as.numeric(om_uu %*% vk)
-    out$da <- lapply(a_u, function(x) sum(x * vk))
-    out$da2 <- lapply(a_uu, function(x) as.numeric(x %*% vk))
-    out$db <- lapply(b_u, function(x) sum(x * vk))
-    out$db2 <- lapply(b_uu, function(x) as.numeric(x %*% vk))
-    out$vk <- vk
-
-    # the starting level's third derivative. f0 = omega/(1 - S) with
-    # S the sum of the autoregressive coefficients, so writing c = 1/(1-S)
-    # the second order is c*om_uu + c^2(om_u S_u + S_u om_u)
-    # + 2 omega c^3 S_u S_u + omega c^2 S_uu, and this differentiates it
+    # chart's own third derivative; nothing of three indices is formed. With
+    # two directions the whole block runs twice, once per direction, and the
+    # expressions are the ones a single direction has always used.
+    vks <- lapply(dirs, function(d) d[act])
+    out$vks <- vks
+    out$vk <- vks[[1L]]
     cst <- 1 / (1 - sb)
     S_u <- db_sum
     S_uu <- if (q > 0L) Reduce(`+`, b_uu) else matrix(0, mk, mk)
-    S_3 <- if (q > 0L) Reduce(`+`, out$t_b) else matrix(0, mk, mk)
-    dS <- sum(S_u * vk)
-    dS2 <- as.numeric(S_uu %*% vk)
     om <- ch$omega
-    out$f0_3 <- out$t_om * cst + om_uu * (cst^2 * dS) +
-      2 * cst^3 * dS * (outer(om_u, S_u) + outer(S_u, om_u)) +
-      cst^2 * (outer(out$dom2, S_u) + outer(om_u, dS2) +
-               outer(dS2, om_u) + outer(S_u, out$dom2)) +
-      (2 * out$dom * cst^3 + 6 * om * cst^4 * dS) * outer(S_u, S_u) +
-      2 * om * cst^3 * (outer(dS2, S_u) + outer(S_u, dS2)) +
-      out$dom * cst^2 * S_uu + 2 * om * cst^3 * dS * S_uu + om * cst^2 * S_3
-    out$df0 <- sum(f0_u * vk)
-    out$dphi0 <- as.numeric(f0_uu %*% vk)
+    out$t_om <- out$t_a <- out$t_b <- vector("list", nd)
+    out$dom <- out$dom2 <- vector("list", nd)
+    out$da <- out$da2 <- out$db <- out$db2 <- vector("list", nd)
+    out$f0_3 <- out$df0 <- out$dphi0 <- vector("list", nd)
+    out$S_3 <- vector("list", nd)
+    for (d in seq_len(nd)) {
+      vk <- vks[[d]]
+      v_base <- dirs[[d]][zcol[seq_len(nb)]]
+      ch3 <- .gas_chart_derivs3(zeta, p, q, links, v_base)
+      out$t_om[[d]] <- lift2(ch3$t_omega)
+      out$t_a[[d]] <- lapply(ch3$t_a, lift2)
+      out$t_b[[d]] <- lapply(ch3$t_b, lift2)
+      out$dom[[d]] <- sum(om_u * vk)
+      out$dom2[[d]] <- as.numeric(om_uu %*% vk)
+      out$da[[d]] <- lapply(a_u, function(x) sum(x * vk))
+      out$da2[[d]] <- lapply(a_uu, function(x) as.numeric(x %*% vk))
+      out$db[[d]] <- lapply(b_u, function(x) sum(x * vk))
+      out$db2[[d]] <- lapply(b_uu, function(x) as.numeric(x %*% vk))
+
+      # the starting level's third derivative. f0 = omega/(1 - S) with
+      # S the sum of the autoregressive coefficients, so writing c = 1/(1-S)
+      # the second order is c*om_uu + c^2(om_u S_u + S_u om_u)
+      # + 2 omega c^3 S_u S_u + omega c^2 S_uu, and this differentiates it
+      S_3 <- if (q > 0L) Reduce(`+`, out$t_b[[d]]) else matrix(0, mk, mk)
+      out$S_3[[d]] <- S_3
+      dS <- sum(S_u * vk)
+      dS2 <- as.numeric(S_uu %*% vk)
+      out$f0_3[[d]] <- out$t_om[[d]] * cst + om_uu * (cst^2 * dS) +
+        2 * cst^3 * dS * (outer(om_u, S_u) + outer(S_u, om_u)) +
+        cst^2 * (outer(out$dom2[[d]], S_u) + outer(om_u, dS2) +
+                 outer(dS2, om_u) + outer(S_u, out$dom2[[d]])) +
+        (2 * out$dom[[d]] * cst^3 + 6 * om * cst^4 * dS) * outer(S_u, S_u) +
+        2 * om * cst^3 * (outer(dS2, S_u) + outer(S_u, dS2)) +
+        out$dom[[d]] * cst^2 * S_uu + 2 * om * cst^3 * dS * S_uu +
+        om * cst^2 * S_3
+      out$df0[[d]] <- sum(f0_u * vk)
+      out$dphi0[[d]] <- as.numeric(f0_uu %*% vk)
+    }
+    if (!fourth) return(out)
+
+    # the fourth order, contracted against both directions. The chart's own
+    # fourth derivatives, and the starting level's, which is read off the
+    # fixed point f0 = omega + S f0 rather than by differentiating
+    # omega/(1 - S) four times: the product rule of .gas_prod4() then
+    # supplies every term but the one carrying all four derivatives on f0,
+    # and that one is what dividing by (1 - S) removes.
+    v_base <- dirs[[1L]][zcol[seq_len(nb)]]
+    w_base <- dirs[[2L]][zcol[seq_len(nb)]]
+    ch4 <- .gas_chart_derivs4(zeta, p, q, links, v_base, w_base)
+    out$q_om <- lift2(ch4$q_omega)
+    out$q_a <- lapply(ch4$q_a, lift2)
+    out$q_b <- lapply(ch4$q_b, lift2)
+    S_4 <- if (q > 0L) Reduce(`+`, out$q_b) else matrix(0, mk, mk)
+    Sj <- .gas_jet(sb, S_u, S_uu, out$S_3[[1L]], out$S_3[[2L]], S_4, vks)
+    fj <- .gas_jet(f0, f0_u, f0_uu, out$f0_3[[1L]], out$f0_3[[2L]],
+                   matrix(0, mk, mk), vks)
+    oj <- .gas_jet(om, om_u, om_uu, out$t_om[[1L]], out$t_om[[2L]], out$q_om,
+                   vks)
+    out$f0_4 <- cst * (oj$d4 + .gas_prod4(Sj, fj))
+    out$f0j <- fj
+    out$Sj <- Sj
     out
   }
   shared <- prep(1L, seq_len(m))
@@ -1614,7 +1908,8 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
 
   D <- matrix(0, bp$n, m)
   W <- matrix(0, m, m)
-  dP <- if (third) matrix(0, bp$n, m) else NULL
+  dP <- if (third) lapply(seq_len(nd), function(d) matrix(0, bp$n, m)) else NULL
+  dPS <- if (fourth) matrix(0, bp$n, m) else NULL
   for (l in seq_len(ng)) {
     rows <- bp$order[[l]]
     act <- active_of(l)
@@ -1632,7 +1927,7 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
     f0 <- gp$f0
     f0_u <- gp$f0_u
     f0_uu <- gp$f0_uu
-    vk <- gp$vk
+    vks <- gp$vks
     k <- length(rows)
     f <- numeric(k)
     s <- numeric(k)
@@ -1640,8 +1935,14 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
     Phi <- vector("list", k)
     Sd <- vector("list", k)
     Sdd <- vector("list", k)
-    Psi <- if (third) vector("list", k) else NULL
-    Sddd <- if (third) vector("list", k) else NULL
+    # one third-order state per direction, and one fourth-order state for
+    # the pair of them
+    Psi <- if (third) lapply(seq_len(nd), function(d) vector("list", k)) else NULL
+    Sddd <- if (third) lapply(seq_len(nd), function(d) vector("list", k)) else NULL
+    Om <- if (fourth) vector("list", k) else NULL
+    S4 <- if (fourth) vector("list", k) else NULL
+    zmat <- matrix(0, mk, mk)
+    zvec <- numeric(mk)
     for (t in seq_len(k)) {
       row <- rows[t]
       ft <- gp$omega
@@ -1649,25 +1950,39 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
       # the level's own chart curvature, zero on the identity
       Pt <- om_uu
       Tt <- if (third) gp$t_om else NULL
+      Qt <- if (fourth) gp$q_om else NULL
       if (p > 0L) {
         for (i in seq_len(p)) {
           lag <- t - i
           s_l <- if (lag >= 1L) s[lag] else 0
-          Sd_l <- if (lag >= 1L) Sd[[lag]] else numeric(mk)
-          Sdd_l <- if (lag >= 1L) Sdd[[lag]] else matrix(0, mk, mk)
+          Sd_l <- if (lag >= 1L) Sd[[lag]] else zvec
+          Sdd_l <- if (lag >= 1L) Sdd[[lag]] else zmat
           ft <- ft + a[[i]] * s_l
           Ft <- Ft + a[[i]] * Sd_l + s_l * a_u[[i]]
           Pt <- Pt + a[[i]] * Sdd_l +
             outer(a_u[[i]], Sd_l) + outer(Sd_l, a_u[[i]]) +
             s_l * a_uu[[i]]
           if (third) {
-            Sddd_l <- if (lag >= 1L) Sddd[[lag]] else matrix(0, mk, mk)
-            dSd_l <- if (lag >= 1L) sum(Sd_l * vk) else 0
-            dSdd_l <- if (lag >= 1L) as.numeric(Sdd_l %*% vk) else numeric(mk)
-            Tt <- Tt + gp$da[[i]] * Sdd_l + a[[i]] * Sddd_l +
-              outer(gp$da2[[i]], Sd_l) + outer(Sd_l, gp$da2[[i]]) +
-              outer(a_u[[i]], dSdd_l) + outer(dSdd_l, a_u[[i]]) +
-              dSd_l * a_uu[[i]] + s_l * gp$t_a[[i]]
+            for (d in seq_len(nd)) {
+              vk <- vks[[d]]
+              Sddd_l <- if (lag >= 1L) Sddd[[d]][[lag]] else zmat
+              dSd_l <- if (lag >= 1L) sum(Sd_l * vk) else 0
+              dSdd_l <- if (lag >= 1L) as.numeric(Sdd_l %*% vk) else zvec
+              Tt[[d]] <- Tt[[d]] + gp$da[[d]][[i]] * Sdd_l + a[[i]] * Sddd_l +
+                outer(gp$da2[[d]][[i]], Sd_l) + outer(Sd_l, gp$da2[[d]][[i]]) +
+                outer(a_u[[i]], dSdd_l) + outer(dSdd_l, a_u[[i]]) +
+                dSd_l * a_uu[[i]] + s_l * gp$t_a[[d]][[i]]
+            }
+          }
+          if (fourth) {
+            S4_l <- if (lag >= 1L) S4[[lag]] else zmat
+            Aj <- .gas_jet(a[[i]], a_u[[i]], a_uu[[i]], gp$t_a[[1L]][[i]],
+                           gp$t_a[[2L]][[i]], gp$q_a[[i]], vks)
+            Bj <- if (lag >= 1L) {
+              .gas_jet(s_l, Sd_l, Sdd_l, Sddd[[1L]][[lag]], Sddd[[2L]][[lag]],
+                       S4_l, vks)
+            } else .gas_jet(0, zvec, zmat, zmat, zmat, zmat, vks)
+            Qt <- Qt + .gas_prod4(Aj, Bj)
           }
         }
       }
@@ -1682,27 +1997,44 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
           Pt <- Pt + b[[j]] * Phi_l +
             outer(b_u[[j]], F_l) + outer(F_l, b_u[[j]]) + f_l * b_uu[[j]]
           if (third) {
-            Psi_l <- if (lag >= 1L) Psi[[lag]] else gp$f0_3
-            dF_l <- if (lag >= 1L) sum(F_l * vk) else gp$df0
-            dPhi_l <- if (lag >= 1L) as.numeric(Phi_l %*% vk) else gp$dphi0
-            Tt <- Tt + gp$db[[j]] * Phi_l + b[[j]] * Psi_l +
-              outer(gp$db2[[j]], F_l) + outer(F_l, gp$db2[[j]]) +
-              outer(b_u[[j]], dPhi_l) + outer(dPhi_l, b_u[[j]]) +
-              dF_l * b_uu[[j]] + f_l * gp$t_b[[j]]
+            for (d in seq_len(nd)) {
+              vk <- vks[[d]]
+              Psi_l <- if (lag >= 1L) Psi[[d]][[lag]] else gp$f0_3[[d]]
+              dF_l <- if (lag >= 1L) sum(F_l * vk) else gp$df0[[d]]
+              dPhi_l <- if (lag >= 1L) as.numeric(Phi_l %*% vk) else
+                gp$dphi0[[d]]
+              Tt[[d]] <- Tt[[d]] + gp$db[[d]][[j]] * Phi_l + b[[j]] * Psi_l +
+                outer(gp$db2[[d]][[j]], F_l) + outer(F_l, gp$db2[[d]][[j]]) +
+                outer(b_u[[j]], dPhi_l) + outer(dPhi_l, b_u[[j]]) +
+                dF_l * b_uu[[j]] + f_l * gp$t_b[[d]][[j]]
+            }
+          }
+          if (fourth) {
+            Bj <- .gas_jet(b[[j]], b_u[[j]], b_uu[[j]], gp$t_b[[1L]][[j]],
+                           gp$t_b[[2L]][[j]], gp$q_b[[j]], vks)
+            Fj <- if (lag >= 1L) {
+              .gas_jet(f_l, F_l, Phi_l, Psi[[1L]][[lag]], Psi[[2L]][[lag]],
+                       Om[[lag]], vks)
+            } else {
+              .gas_jet(f0, f0_u, f0_uu, gp$f0_3[[1L]], gp$f0_3[[2L]],
+                       gp$f0_4, vks)
+            }
+            Qt <- Qt + .gas_prod4(Bj, Fj)
           }
         }
       }
       f[t] <- ft
       F_[[t]] <- Ft
       Phi[[t]] <- Pt
-      if (third) Psi[[t]] <- Tt
+      if (third) for (d in seq_len(nd)) Psi[[d]][[t]] <- Tt[[d]]
+      if (fourth) Om[[t]] <- Qt
 
       e_t <- eta[row] + ft
       # the row of the jacobian on the active set; every other column of it
       # is zero, the seed carrying no other group's parameters
       Dt <- seed[row, act] + Ft
       D[row, act] <- Dt
-      Wl <- Wl + g[row] * (if (third) Tt else Pt)
+      Wl <- Wl + g[row] * (if (fourth) Qt else if (third) Tt[[1L]] else Pt)
 
       s[t] <- score(e_t, row)
       cv <- curvature(e_t, row)
@@ -1710,9 +2042,15 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
         full <- numeric(m)
         full[act] <- Dt
         b3 <- blocks(e_t, row, full)
+        sub <- function(x) if (is.null(x)) NULL else x[act, act, drop = FALSE]
+        # `N` is a matrix at the third order and a list of two at the
+        # fourth, the contract a single direction has always had being left
+        # as it was
         list(cross = b3$cross[act], M = b3$M[act, act, drop = FALSE],
              dcurv = b3$dcurv[act],
-             N = if (third) b3$N[act, act, drop = FALSE] else NULL)
+             N = if (!third) NULL else if (fourth) lapply(b3$N, sub)
+                 else sub(b3$N),
+             Q = sub(b3$Q), P = sub(b3$P), cppp = b3$cppp)
       }
       Sd[[t]] <- cv * Dt + bl$cross
       Sdd[[t]] <- cv * Pt + bl$M
@@ -1721,10 +2059,37 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
         # direction is the derivative of the jacobian ROW, which is what
         # differentiating M's own V_p asks for; the derivative of the
         # PREDICTOR along it is the scalar Dt . v, which the caller forms
-        dPhi_t <- as.numeric(Pt %*% vk)
-        dP[row, act] <- dPhi_t
-        Sddd[[t]] <- sum(bl$dcurv * vk) * Pt + cv * Tt + bl$N +
-          outer(dPhi_t, bl$dcurv) + outer(bl$dcurv, dPhi_t)
+        for (d in seq_len(nd)) {
+          vk <- vks[[d]]
+          Nd <- if (fourth) bl$N[[d]] else bl$N
+          dPhi_t <- as.numeric(Pt %*% vk)
+          dP[[d]][row, act] <- dPhi_t
+          Sddd[[d]][[t]] <- sum(bl$dcurv * vk) * Pt + cv * Tt[[d]] +
+            Nd + outer(dPhi_t, bl$dcurv) + outer(bl$dcurv, dPhi_t)
+        }
+      }
+      if (fourth) {
+        # the score's own fourth derivative: differentiating the third order
+        # above along the second direction. `Q` is the family's fourth
+        # derivative with two of its indices on the filter's own equation,
+        # `P` its fifth, and `cppp` the scalar the level's own curvature
+        # moves by, which no contraction recovers.
+        dPhi_v <- as.numeric(Pt %*% vks[[1L]])
+        dPhi_w <- as.numeric(Pt %*% vks[[2L]])
+        phi_vw <- sum(vks[[1L]] * dPhi_w)
+        psi_vw <- as.numeric(Tt[[1L]] %*% vks[[2L]])
+        dPS[row, act] <- psi_vw
+        dcv <- as.numeric(bl$Q %*% vks[[1L]])
+        dcw <- as.numeric(bl$Q %*% vks[[2L]])
+        dc_v <- sum(bl$dcurv * vks[[1L]])
+        dc_w <- sum(bl$dcurv * vks[[2L]])
+        d2c <- sum(vks[[1L]] * dcw) + bl$cppp * phi_vw
+        rw <- dcw + bl$cppp * dPhi_w
+        S4[[t]] <- d2c * Pt + dc_v * Tt[[2L]] + dc_w * Tt[[1L]] + cv * Qt +
+          bl$P + phi_vw * bl$Q +
+          outer(dPhi_w, dcv) + outer(dcv, dPhi_w) +
+          outer(psi_vw, bl$dcurv) + outer(bl$dcurv, psi_vw) +
+          outer(dPhi_v, rw) + outer(rw, dPhi_v)
       }
     }
     W[act, act] <- W[act, act] + Wl
@@ -1735,8 +2100,112 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
   # rounding, and a caller about to factor this wants an exactly symmetric
   # matrix rather than one that is nearly so.
   W <- (W + t(W)) / 2
-  if (third) return(list(jacobian = D, dphi = dP, curvature = W))
+  if (fourth) {
+    return(list(jacobian = D, dphi = dP, dpsi = dPS, curvature = W))
+  }
+  if (third) return(list(jacobian = D, dphi = dP[[1L]], curvature = W))
   list(jacobian = D, curvature = W)
+}
+
+#' One, Two or No Directions
+#'
+#' @description
+#' Reads the `direction` argument of [term_curvature()],
+#' [term_third()] and [term_fourth()] into a list: empty for the
+#' second order, one element for the third, two for the fourth.
+#'
+#' @details
+#' A single numeric vector is one direction, a list is as many as it holds,
+#' and `NULL` is none. The three orders then share one recursion, and a
+#' caller writes `direction = v` at the third order and
+#' `direction = list(v, w)` at the fourth.
+#'
+#' @param direction `NULL`, a numeric vector, or a list of one or two
+#'   numeric vectors.
+#'
+#' @return A list of zero, one or two numeric vectors.
+#'
+#' @keywords internal
+.gas_dirs <- function(direction) {
+  if (is.null(direction)) return(list())
+  if (!is.list(direction)) return(list(direction))
+  if (length(direction) > 2L) {
+    stop("at most two directions are propagated; the fourth derivative is contracted against two.",
+         call. = FALSE)
+  }
+  direction
+}
+
+#' A Quantity's Derivatives and Their Contractions
+#'
+#' @description
+#' Collects a scalar quantity's derivatives through the fourth order,
+#' together with the contractions of the lower ones against the two
+#' directions, in the shape [.gas_prod4()] reads.
+#'
+#' @details
+#' The fourth derivative of a product needs, of each factor, its value, its
+#' first three derivatives and its fourth contracted against both directions,
+#' and also the contractions the product rule pairs against the other
+#' factor's. Computing them once per factor rather than at each of the
+#' sixteen terms is what keeps the recursion's cost the same shape as the
+#' third order's.
+#'
+#' @param v0 The value.
+#' @param d1,d2 The first and second derivatives.
+#' @param d3v,d3w The third derivative contracted against each direction.
+#' @param d4 The fourth derivative contracted against both.
+#' @param vks The two directions, on the active set.
+#'
+#' @return A list with `v`, `d1`, `d2`, `d3v`, `d3w`,
+#'   `d4` and the contractions `a`, `b`, `d2v`,
+#'   `d2w`, `d2vw` and `d3vw`.
+#'
+#' @seealso [.gas_prod4()]
+#'
+#' @keywords internal
+.gas_jet <- function(v0, d1, d2, d3v, d3w, d4, vks) {
+  d2w <- as.numeric(d2 %*% vks[[2L]])
+  list(v = v0, d1 = d1, d2 = d2, d3v = d3v, d3w = d3w, d4 = d4,
+       a = sum(d1 * vks[[1L]]), b = sum(d1 * vks[[2L]]),
+       d2v = as.numeric(d2 %*% vks[[1L]]), d2w = d2w,
+       d2vw = sum(vks[[1L]] * d2w),
+       d3vw = as.numeric(d3v %*% vks[[2L]]))
+}
+
+#' The Fourth Derivative of a Product, in Two Directions
+#'
+#' @description
+#' Sixteen terms, one per way of dealing four differentiations between two
+#' factors, with two of the four slots contracted against the directions.
+#'
+#' @details
+#' The recursion multiplies a chart quantity by a lagged score or level three
+#' times over -- \eqn{a_i s_{t-i}}, \eqn{b_j f_{t-j}}, and the starting
+#' level's own fixed point \eqn{f_0 = \omega + Sf_0} -- so the rule is written
+#' once here. Writing \eqn{S} for the set of slots that go to the first
+#' factor, the sixteen subsets of \eqn{\{m,n,b,c\}} give, after contracting
+#' \eqn{m} against \eqn{v} and \eqn{n} against \eqn{w}, the terms this
+#' returns. The sum is symmetric in the two factors, each term mapping onto
+#' another under the swap, which is what a test asserts of it.
+#'
+#' @param A,B The two factors' jets, as [.gas_jet()] builds them.
+#'
+#' @return A matrix, the contracted fourth derivative of the product.
+#'
+#' @seealso [.gas_jet()]
+#'
+#' @keywords internal
+.gas_prod4 <- function(A, B) {
+  A$v * B$d4 + A$a * B$d3w + A$b * B$d3v +
+    outer(A$d1, B$d3vw) + outer(B$d3vw, A$d1) +
+    A$d2vw * B$d2 +
+    outer(A$d2v, B$d2w) + outer(B$d2w, A$d2v) +
+    outer(A$d2w, B$d2v) + outer(B$d2v, A$d2w) +
+    A$d2 * B$d2vw +
+    outer(A$d3vw, B$d1) + outer(B$d1, A$d3vw) +
+    A$d3v * B$b + A$d3w * B$a +
+    A$d4 * B$v
 }
 
 #' @title Print a Score-Driven Term
