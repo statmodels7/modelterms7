@@ -1193,10 +1193,13 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 # tryCatch is the shape the toolkit distrusts, and it is admissible here
 # for the reason distrib_start() records: a starting value is allowed to be
 # approximate, where a contract quantity is not.
+# The development coefficients whose fitted values are the target: one
+# number, which every row is to take, or one per row. rep_len() and not
+# rep(), so that a vector target is used as it stands rather than tiled.
 .seg_proj_start <- function(Z, v) {
   q <- ncol(Z)
   zz <- Matrix::crossprod(Z)
-  zy <- Matrix::crossprod(Z, rep(v, nrow(Z)))
+  zy <- Matrix::crossprod(Z, rep_len(v, nrow(Z)))
   out <- tryCatch(as.numeric(Matrix::solve(zz, zy)),
                   error = function(e) NULL, warning = function(w) NULL)
   if (is.null(out) || !all(is.finite(out))) {
@@ -2895,6 +2898,138 @@ S7::method(print, SegTerm) <- function(x, ...) {
 S7::method(term_coef_start, SegTerm) <- function(term, target = NULL, ...) {
   .assert_built(term)
   term@blueprint$coef
+}
+
+#' @title A Break-Point Term's Own Coefficients, Drawn
+#' @name term_coef_draw.SegTerm
+#'
+#' @description
+#' The break-points drawn on the covariate's own axis and written back
+#' through whichever route the construction reads them by, with every other
+#' coefficient left as it arrived.
+#'
+#' @details
+#' A break-point is a position on the covariate and nothing else in the model
+#' is measured in those units, so it is the one coefficient here a caller
+#' cannot draw. The positions are the covariate's own interior quantiles plus
+#' a normal of the width [term_coef_draw()] derives, confined to the interval
+#' between the 5th and the 95th percentile.
+#'
+#' Those quantiles and not the positions the term is carrying: they are where
+#' [term_build()] places a break-point nobody named, and they depend on the
+#' covariate alone. A term handed over by a caller may sit somewhere else --
+#' a simulation builds its specification against a placeholder response, and
+#' a break-point chosen on a least-squares profile of noise lands against a
+#' confinement limit as readily as anywhere -- and a draw spreading from
+#' there would inherit that.
+#'
+#' A continuous or smoothed construction holds the position, so it is written
+#' where it stands. A discontinuous one reads it off \eqn{-g_k/\delta_k}, so
+#' what is written is \eqn{-\delta_k \psi_k} at the change of level the rest
+#' of the draw carries, which is [seg_relocate()]'s rule and is exact for a
+#' pure step, its read-off being memoryless. The joint construction reads a
+#' quadratic that also carries the change of slope and the increment left by
+#' the previous position, so there the placement is the linear reading of it
+#' and the realized position is near the drawn one rather than equal to it.
+#'
+#' Where the break-point carries a development, the drawn positions are
+#' projected onto that development's design, and the draw is made on its
+#' coefficients scaled by the median row norm so that the spread arriving at
+#' an observation is the derived width whatever the design looks like.
+#'
+#' @param term A built [SegTerm()]. An unbuilt one throws
+#'   `"the term has not been built; call term_build(term, data) first."`.
+#' @param coef The coefficients drawn so far, one per column of the block.
+#' @param sd The width of the draw, `1` by default.
+#' @param ... Unused.
+#'
+#' @return A list with `coef`, `index` and `scale`, as [term_coef_draw()]
+#'   documents. `index` is every coordinate of every break-point and `scale`
+#'   the width each was drawn at, carrying the change of level as a factor
+#'   where the construction reads its position off one.
+#'
+#' @seealso [term_coef_draw()] for the generic and the derivation of the
+#'   width, [seg_relocate()] for placing the positions at named values.
+#'
+#' @examples
+#' set.seed(1)
+#' d <- data.frame(x = sort(runif(300, 0, 10)))
+#' b <- term_build(seg(x, npsi = 1), d)
+#'
+#' # Drawn on the covariate's scale, inside the confinement.
+#' p <- replicate(50, {
+#'   cf <- term_coef_draw(b, stats::rnorm(term_npar(b)))$coef
+#'   seg_psi(term_refresh(b, cf))
+#' })
+#' range(p)
+#' stats::quantile(d$x, c(0.05, 0.95), names = FALSE)
+#'
+#' @keywords internal
+S7::method(term_coef_draw, SegTerm) <- function(term, coef, sd = 1, ...) {
+  .assert_built(term)
+  if (!is.numeric(sd) || length(sd) != 1L || !is.finite(sd) || sd < 0) {
+    stop("'sd' must be one finite non-negative number.", call. = FALSE)
+  }
+  bp <- term@blueprint
+  coef <- as.numeric(coef)
+  if (length(coef) != length(bp$coef)) {
+    stop(sprintf("'coef' must give %d values, one per column of the block.",
+                 length(bp$coef)), call. = FALSE)
+  }
+  K <- bp$npsi
+  lo <- bp$lim[1L]
+  hi <- bp$lim[2L]
+  # THE POINT THE DRAW SPREADS FROM IS THE COVARIATE'S OWN INTERIOR
+  # QUANTILES, which is where term_build() places a break-point that was not
+  # named, and NOT wherever the term currently sits. A caller may hand over a
+  # term whose positions were chosen on a least-squares profile of some other
+  # response -- a simulation builds its specification against a placeholder
+  # one -- and a profile of noise is flat, so its minimum lands anywhere,
+  # against a confinement limit as often as not.
+  q0 <- as.numeric(stats::quantile(bp$xv, seq_len(K) / (K + 1), names = FALSE))
+  # THE WIDTH IS DERIVED AND NOT CHOSEN: the starts are w/(K+1) apart, and
+  # three standard deviations inside half of that spacing is what keeps two
+  # neighbours from crossing at an ordinary draw.
+  wid <- sd * (hi - lo) / (6 * (K + 1))
+  n <- length(bp$xv)
+  # a smoothed term holds the position directly whatever its kind, exactly
+  # as .seg_pk() reads it
+  direct <- bp$kind == "seg" || !is.null(bp$smooth)
+  own <- integer(0)
+  sc <- numeric(0)
+  for (k in seq_len(K)) {
+    pk <- paste0("psi", k)
+    idx <- bp$index[[pk]]
+    Z <- bp$Z[[pk]]
+    v0 <- q0[k]
+    if (is.null(Z)) {
+      tau <- wid
+      psi <- v0 + stats::rnorm(1L, 0, tau)
+    } else {
+      # Z^2 and not Z * Z: a product of two sparse matrices intersects
+      # their index sets, which is the same numbers at thirty times the cost
+      rn <- sqrt(Matrix::rowSums(Z^2))
+      rn <- rn[rn > 0]
+      tau <- if (length(rn)) wid / stats::median(rn) else wid
+      psi <- v0 + as.numeric(Z %*% stats::rnorm(ncol(Z), 0, tau))
+    }
+    psi <- pmin(pmax(psi, lo), hi)
+    tgt <- psi
+    # the coefficient a prior over these coordinates is a prior ON: the
+    # position itself where the construction holds it, and -delta_k psi_k
+    # where it reads it off, whose spread carries that factor too
+    cs <- tau
+    if (!direct) {
+      dk <- .seg_pval(bp, coef, paste0("delta", k), n)
+      dk[abs(dk) < 1e-8] <- 1e-8
+      tgt <- -dk * psi
+      cs <- tau * stats::median(abs(dk))
+    }
+    coef[idx] <- if (is.null(Z)) mean(tgt) else .seg_proj_start(Z, tgt)
+    own <- c(own, as.integer(idx))
+    sc <- c(sc, rep(cs, length(idx)))
+  }
+  list(coef = coef, index = own, scale = sc)
 }
 
 #' @title What a Fitted Break-Point Term Is About
