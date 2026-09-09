@@ -477,6 +477,9 @@ exact derivative beside the state.
   : Second Derivatives of a Structural Term's Predictor
 - [`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
   : Third Derivatives of a Structural Term's Predictor, in One Direction
+- [`term_fourth()`](https://statmodels7.github.io/modelterms7/reference/term_fourth.md)
+  : Fourth Derivatives of a Structural Term's Predictor, in Two
+  Directions
 - [`term_hessian()`](https://statmodels7.github.io/modelterms7/reference/term_hessian.md)
   : The Observed Hessian of a Likelihood Mixed Over States
 - [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)

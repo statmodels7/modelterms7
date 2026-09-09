@@ -34,7 +34,11 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-factory_params.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_chart_derivs.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_chart_derivs3.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_chart_derivs4.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_curvature_core.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_dirs.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_jet.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_prod4.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_sub_new.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-hyper_parts.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-indicator_cols.html</loc></url>
@@ -58,6 +62,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/gas_levinson.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/gas_levinson2.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/gas_levinson3.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/gas_levinson4.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/index.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/interpret_formula.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/jseg.html</loc></url>
@@ -132,6 +137,8 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_draw.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_filter.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_filter.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_fourth.GasTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_fourth.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_grid.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_group.RandomTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_group.html</loc></url>
