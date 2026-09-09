@@ -41,6 +41,8 @@ structural term takes instead.
   : Number of Parameters of a Built Term
 - [`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)
   : Where a Term's Own Coefficients Begin
+- [`term_coef_draw()`](https://statmodels7.github.io/modelterms7/reference/term_coef_draw.md)
+  : Coefficients a Term Draws for Itself
 - [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
   : Is a Term's Block the Jacobian of Its Contribution?
 - [`term_tag()`](https://statmodels7.github.io/modelterms7/reference/term_tag.md)

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.69.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.70.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,15 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.70.0" id="modelterms7-0700">modelterms7 0.70.0<a class="anchor" aria-label="anchor" href="#modelterms7-0700"></a></h2>
+<ul><li><p><code><a href="../reference/term_coef_draw.html">term_coef_draw()</a></code> draws the block coefficients whose meaning only the term knows and hands every other one back untouched. A break-point is the case it exists for: it is a position on the covariate’s own axis, and nothing else in a model is measured in those units, so a caller drawing a truth from a normal of its own width places it outside the data as often as not.</p></li>
+<li><p>Measured on a panel of fifty groups with the covariate uniform on : drawn from a standard normal the break-points run from -2.02 to 1.65 and <strong>thirty-eight of the fifty end pinned against a confinement limit</strong>, twelve strictly interior. Drawn by the term, none of the fifty is pinned and the positions run 0.378 to 0.593 about a median of 0.462.</p></li>
+<li><p>The width is derived and not chosen. The starting positions sit at the  quantiles of the confinement, so consecutive ones are  apart, and requiring three standard deviations inside half of that spacing gives . Measured over 300 draws on eight shapes – the three constructions, one to three break-points, a random-effect development and a partition – not one cell is pinned, and the reported width tracks the spread the positions get (0.0737 against 0.0733).</p></li>
+<li><p>Where the construction holds the position it is written exactly, and where it reads it off  the coefficient written is  at the change of level the rest of the draw carries, which is [seg_relocate()]’s rule. Measured, <code>seg</code> and <code>jump</code> realize the drawn position to 0.000e+00; <code>jseg</code> reads a quadratic that also carries the change of slope and the increment left by the previous position, so its gap is 2.2e-03 median and 1.1e-01 at worst.</p></li>
+<li><p>⚠️ THE DRAW SPREADS FROM THE COVARIATE’S OWN QUANTILES AND NOT FROM WHERE THE TERM SITS, which is not the same thing and cost a measurement to see. A simulation builds its specification against a placeholder response, and a break-point that was not named chooses its start on a least-squares profile of it – a profile of noise, which is flat, so its minimum lands against a confinement limit as readily as anywhere. Spreading from there put the fifty groups at a median of 0.048, the limit itself, with a spread of 0.017 against the 0.053 asked for.</p></li>
+<li><p>A prior over the coordinates the term drew is no longer that prior’s, so <code>scale</code> reports the width used and a caller reporting the truth reads it there. The values are drawn Gaussian at that width, so a heavy-tailed prior over a break-point keeps its family for the fitting and not for the simulation.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.69.0" id="modelterms7-0690">modelterms7 0.69.0<a class="anchor" aria-label="anchor" href="#modelterms7-0690"></a></h2>
 <ul><li><p><code><a href="../reference/term_draw.html">term_draw()</a></code> draws a structural term’s own parameters: the values <code><a href="../reference/term_start.html">term_start()</a></code> gives, displaced by normal noise on the unconstrained scale <code><a href="../reference/term_links.html">term_links()</a></code> defines. It is what a simulation of a model that carries state needs, those parameters not being coefficients of any equation and, in quantity, not choosable by hand – a filter whose level is developed over a hundred groups carries a hundred and one of them.</p></li>

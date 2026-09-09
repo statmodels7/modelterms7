@@ -1,5 +1,54 @@
 # Changelog
 
+## modelterms7 0.70.0
+
+- [`term_coef_draw()`](https://statmodels7.github.io/modelterms7/reference/term_coef_draw.md)
+  draws the block coefficients whose meaning only the term knows and
+  hands every other one back untouched. A break-point is the case it
+  exists for: it is a position on the covariate’s own axis, and nothing
+  else in a model is measured in those units, so a caller drawing a
+  truth from a normal of its own width places it outside the data as
+  often as not.
+
+- Measured on a panel of fifty groups with the covariate uniform on :
+  drawn from a standard normal the break-points run from -2.02 to 1.65
+  and **thirty-eight of the fifty end pinned against a confinement
+  limit**, twelve strictly interior. Drawn by the term, none of the
+  fifty is pinned and the positions run 0.378 to 0.593 about a median of
+  0.462.
+
+- The width is derived and not chosen. The starting positions sit at the
+  quantiles of the confinement, so consecutive ones are apart, and
+  requiring three standard deviations inside half of that spacing gives
+  . Measured over 300 draws on eight shapes – the three constructions,
+  one to three break-points, a random-effect development and a partition
+  – not one cell is pinned, and the reported width tracks the spread the
+  positions get (0.0737 against 0.0733).
+
+- Where the construction holds the position it is written exactly, and
+  where it reads it off the coefficient written is at the change of
+  level the rest of the draw carries, which is \[seg_relocate()\]’s
+  rule. Measured, `seg` and `jump` realize the drawn position to
+  0.000e+00; `jseg` reads a quadratic that also carries the change of
+  slope and the increment left by the previous position, so its gap is
+  2.2e-03 median and 1.1e-01 at worst.
+
+- ⚠️ THE DRAW SPREADS FROM THE COVARIATE’S OWN QUANTILES AND NOT FROM
+  WHERE THE TERM SITS, which is not the same thing and cost a
+  measurement to see. A simulation builds its specification against a
+  placeholder response, and a break-point that was not named chooses its
+  start on a least-squares profile of it – a profile of noise, which is
+  flat, so its minimum lands against a confinement limit as readily as
+  anywhere. Spreading from there put the fifty groups at a median of
+  0.048, the limit itself, with a spread of 0.017 against the 0.053
+  asked for.
+
+- A prior over the coordinates the term drew is no longer that prior’s,
+  so `scale` reports the width used and a caller reporting the truth
+  reads it there. The values are drawn Gaussian at that width, so a
+  heavy-tailed prior over a break-point keeps its family for the fitting
+  and not for the simulation.
+
 ## modelterms7 0.69.0
 
 - [`term_draw()`](https://statmodels7.github.io/modelterms7/reference/term_draw.md)
