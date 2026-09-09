@@ -45,7 +45,7 @@ linpar(~ x)
 term_build(linpar(~ x), d)
 
 # The label is shown when there is one.
-s(x, k = 5)
+s(x, basis7::bspline_smooth(k = 5))
 linpar(~ x, label = "lin")
 
 }

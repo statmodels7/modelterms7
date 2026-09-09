@@ -141,11 +141,11 @@ NULL
 #' # The same failure for a basis: rebuilding places the knots on the
 #' # narrower range, so the columns are different functions of x.
 #' d2  <- data.frame(x = seq(0, 1, length.out = 40))
-#' bs  <- term_build(s(x, k = 6), d2)
+#' bs  <- term_build(s(x, basis7::bspline_smooth(k = 6)), d2)
 #' X   <- term_matrix(bs)
 #' sub <- 1:20
 #' max(abs(term_predict(bs, d2[sub, , drop = FALSE]) - X[sub, ]))
-#' max(abs(term_matrix(term_build(s(x, k = 6), d2[sub, , drop = FALSE])) -
+#' max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 6)), d2[sub, , drop = FALSE])) -
 #'         X[sub, ]))
 #'
 #' # A sparse block is accepted, and the info column says it is sparse.

@@ -50,7 +50,7 @@ test_that("a term sharing nothing answers with an empty list", {
 test_that("sharing and holding are independent", {
   # the two arguments say different things about the same hyperparameter and
   # neither reads the other
-  tm <- s(x, lambda = 2, id = "L")
+  tm <- s(x, bspline_smooth(), id = "L", hyper = c(lambda = 2))
   expect_identical(term_hyper(tm),
                    stats::setNames(list(list(lambda = 2)), ""))
   expect_identical(term_ids(tm),
@@ -104,8 +104,8 @@ test_that("a term is unaffected by an id it was not given", {
   n <- 150
   d <- data.frame(y = rnorm(n), x = rnorm(n),
                   g = factor(sample(letters[1:5], n, TRUE)))
-  a <- term_build(s(x, k = 6), d)
-  b <- term_build(s(x, k = 6, id = "L"), d)
+  a <- term_build(s(x, bspline_smooth(k = 6)), d)
+  b <- term_build(s(x, bspline_smooth(k = 6), id = "L"), d)
   expect_identical(term_matrix(a), term_matrix(b))
   expect_identical(term_npar(a), term_npar(b))
   expect_identical(term_hyper(a), term_hyper(b))

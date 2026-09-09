@@ -65,10 +65,10 @@ test_that("a fixed design gets exactly zero, and a curved nl does not", {
   # with its coefficients has a second derivative that is identically zero.
   fixed <- list(
     linpar = term_build(linpar(~ x + z), db2),
-    smooth = term_build(s(x, k = 8), db2),
+    smooth = term_build(s(x, bspline_smooth(k = 8)), db2),
     random = term_build(random(~ 1 | id), db2),
     ridge = term_build(ridge(~ x + z), db2),
-    tensor = term_build(te(x, z, k = 4), db2))
+    tensor = term_build(te(x, z, smooths = bspline_smooth(k = 4)), db2))
   for (nm in names(fixed)) {
     tm <- fixed[[nm]]
     k <- term_npar(tm)

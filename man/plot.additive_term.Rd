@@ -51,7 +51,7 @@ plot(b, coef = c(0.8, 0, -0.35))
 
 # A smooth's block runs from least to most wiggly.
 d2 <- data.frame(x = seq(0, 1, length.out = 60))
-bs <- term_build(s(x, k = 8), d2)
+bs <- term_build(s(x, basis7::bspline_smooth(k = 8)), d2)
 plot(bs, coef = c(1.2, 0.9, -0.4, 0.2, -0.1, 0.05, -0.02))
 
 # Coefficients are required, and must fit the block.

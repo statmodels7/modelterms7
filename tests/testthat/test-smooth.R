@@ -9,7 +9,7 @@ dd <- data.frame(x = sort(runif(n)), z = runif(n),
 dd$y <- sin(2 * pi * dd$x) + rnorm(n, sd = 0.2)
 
 test_that("s() separates the linear effect and penalizes only the deviation", {
-  built <- term_build(s(x, k = 10), dd)
+  built <- term_build(s(x, bspline_smooth(k = 10)), dd)
   Z <- term_matrix(built)
   cn <- term_coef_names(built)
 
@@ -34,7 +34,7 @@ test_that("s() separates the linear effect and penalizes only the deviation", {
 })
 
 test_that("the edf runs from the basis dimension down to the straight line", {
-  built <- term_build(s(x, k = 10), dd)
+  built <- term_build(s(x, bspline_smooth(k = 10)), dd)
   H <- crossprod(term_matrix(built))
   b <- rep(0, term_npar(built))
   e <- vapply(c(1e-8, 1, 1e8), function(lam)
@@ -45,8 +45,8 @@ test_that("the edf runs from the basis dimension down to the straight line", {
 })
 
 test_that("prediction reapplies the stored transform", {
-  built <- term_build(s(x, k = 8), dd)
-  res <- check_term(s(x, k = 8), dd, verbose = FALSE)
+  built <- term_build(s(x, bspline_smooth(k = 8)), dd)
+  res <- check_term(s(x, bspline_smooth(k = 8)), dd, verbose = FALSE)
   expect_true(all(res$status == "OK"),
               info = paste(res$check[res$status != "OK"], collapse = ", "))
 
@@ -65,15 +65,15 @@ test_that("prediction reapplies the stored transform", {
 })
 
 test_that("linear = FALSE leaves the deviation alone", {
-  built <- term_build(s(x, k = 8, linear = FALSE), dd)
+  built <- term_build(s(x, bspline_smooth(k = 8, null_space = "drop")), dd)
   expect_false(any(grepl("lin$", term_coef_names(built))))
   P <- penalties7::penalty_matrix(term_penalty(built), list(lambda = 1))
   expect_equal(unname(diag(P)), rep(1, term_npar(built)))
 })
 
 test_that("by a factor gives one smooth per level with a shared parameter", {
-  built <- term_build(s(x, by = g, k = 6), dd)
-  one <- term_build(s(x, k = 6), dd)
+  built <- term_build(s(x, bspline_smooth(k = 6), by = g), dd)
+  one <- term_build(s(x, bspline_smooth(k = 6)), dd)
   expect_identical(term_npar(built), 3L * term_npar(one))
   expect_true(all(grepl("^s\\(x\\)\\.(a|b|c)\\.", term_coef_names(built))))
 
@@ -86,23 +86,23 @@ test_that("by a factor gives one smooth per level with a shared parameter", {
   }
   # the penalty repeats blockwise, so one lambda governs every level
   expect_identical(term_penalty(built)@params, "lambda")
-  res <- check_term(s(x, by = g, k = 6), dd, verbose = FALSE)
+  res <- check_term(s(x, bspline_smooth(k = 6), by = g), dd, verbose = FALSE)
   expect_true(all(res$status == "OK"),
               info = paste(res$check[res$status != "OK"], collapse = ", "))
 })
 
 test_that("by a numeric is a varying-coefficient term", {
-  built <- term_build(s(x, by = w, k = 6), dd)
-  plain <- term_build(s(x, k = 6), dd)
+  built <- term_build(s(x, bspline_smooth(k = 6), by = w), dd)
+  plain <- term_build(s(x, bspline_smooth(k = 6)), dd)
   expect_identical(term_npar(built), term_npar(plain))
   expect_equal(term_matrix(built), dd$w * term_matrix(plain),
                ignore_attr = TRUE)
-  res <- check_term(s(x, by = w, k = 6), dd, verbose = FALSE)
+  res <- check_term(s(x, bspline_smooth(k = 6), by = w), dd, verbose = FALSE)
   expect_true(all(res$status == "OK"))
 })
 
 test_that("te() smooths each margin with a parameter of its own", {
-  built <- term_build(te(x, z, k = 4), dd)
+  built <- term_build(te(x, z, smooths = bspline_smooth(k = 4)), dd)
   # the product of the marginal dimensions less the centering constraint
   expect_identical(term_npar(built), 15L)
 
@@ -124,16 +124,16 @@ test_that("te() smooths each margin with a parameter of its own", {
   v2 <- penalties7::penalty_value(pen, b, list(lambda1 = 1e-3, lambda2 = 1e3))
   expect_false(isTRUE(all.equal(v1, v2)))
 
-  res <- check_term(te(x, z, k = 4), dd, verbose = FALSE)
+  res <- check_term(te(x, z, smooths = bspline_smooth(k = 4)), dd, verbose = FALSE)
   expect_true(all(res$status == "OK"),
               info = paste(res$check[res$status != "OK"], collapse = ", "))
 })
 
 test_that("anisotropic = FALSE sums the margins under one parameter", {
-  iso <- term_build(te(x, z, k = 4, anisotropic = FALSE), dd)
+  iso <- term_build(te(x, z, smooths = bspline_smooth(k = 4), anisotropic = FALSE), dd)
   expect_identical(term_penalty(iso)@params, "lambda")
   # the isotropic matrix is the anisotropic one at equal parameters
-  ani <- term_build(te(x, z, k = 4), dd)
+  ani <- term_build(te(x, z, smooths = bspline_smooth(k = 4)), dd)
   expect_equal(penalties7::penalty_matrix(term_penalty(iso), list(lambda = 1)),
                penalties7::penalty_matrix(term_penalty(ani),
                                           list(lambda1 = 1, lambda2 = 1)),
@@ -148,7 +148,7 @@ test_that("a tensor smooth recovers an interaction surface", {
   truth <- function(x, z) sin(pi * x) * (z - 0.5)
   d2$y <- truth(d2$x, d2$z) + rnorm(m, sd = 0.05)
 
-  built <- term_build(te(x, z, k = 5), d2)
+  built <- term_build(te(x, z, smooths = bspline_smooth(k = 5)), d2)
   Z <- term_matrix(built)
   P <- penalties7::penalty_matrix(term_penalty(built),
                                   list(lambda1 = 1, lambda2 = 1))
@@ -158,9 +158,9 @@ test_that("a tensor smooth recovers an interaction surface", {
 })
 
 test_that("te() with by keeps one surface per level", {
-  built <- term_build(te(x, z, k = 4, by = g), dd)
+  built <- term_build(te(x, z, smooths = bspline_smooth(k = 4), by = g), dd)
   expect_identical(term_npar(built), 45L)
-  res <- check_term(te(x, z, k = 4, by = g), dd, verbose = FALSE)
+  res <- check_term(te(x, z, smooths = bspline_smooth(k = 4), by = g), dd, verbose = FALSE)
   expect_true(all(res$status == "OK"))
 })
 
@@ -168,7 +168,7 @@ test_that("te() is centered, so a design carrying an intercept has full rank", {
   # the tensor product contains the constant and the penalty's null space
   # contains it too, so without the constraint the design beside an intercept
   # is rank deficient by exactly one and nothing covers the deficiency
-  built <- term_build(te(x, z, k = 5), dd)
+  built <- term_build(te(x, z, smooths = bspline_smooth(k = 5)), dd)
   Z <- term_matrix(built)
   expect_identical(ncol(Z), 24L)
   expect_lt(max(abs(colSums(Z))), 1e-10)
@@ -202,7 +202,7 @@ test_that("the penalized information of a centered tensor is definite", {
   # failed by the luck of rounding while the smallest eigenvalue sat at the
   # rounding floor, so vcov(), confint() and the outer criterion were computed
   # on a singular matrix. The eigenvalue is what has to be asserted.
-  built <- term_build(te(x, z, k = 5), dd)
+  built <- term_build(te(x, z, smooths = bspline_smooth(k = 5)), dd)
   Z <- term_matrix(built)
   X <- cbind(1, Z)
   pen <- term_penalty(built)
@@ -216,15 +216,22 @@ test_that("the penalized information of a centered tensor is definite", {
 })
 
 test_that("the smooths are routed by the interpreter and validated", {
-  out <- interpret_formula(y ~ w + s(x) + te(x, z, k = 4), dd)
-  expect_named(out$terms, c("linpar", "s(x)", "te(x, z, k = 4)"))
+  out <- interpret_formula(y ~ w + s(x) + te(x, z, smooths = bspline_smooth(k = 4)), dd)
+  expect_named(out$terms, c("linpar", "s(x)", "te(x, z, smooths = bspline_smooth(k = 4))"))
   expect_true(S7::S7_inherits(out$terms[["s(x)"]], SmoothTerm))
 
   expect_error(te(x), "at least two covariates")
-  expect_error(s(x, k = 2), "at least 3")
-  expect_error(s(x, k = 3, degree = 3), "must exceed")
   expect_error(s(x, label = ""), "non-empty")
   expect_error(term_build(s(nope), dd), "not found")
+
+  # THE BASIS AND THE PENALTY ARE VALIDATED BY THE SMOOTHER, where the
+  # caller wrote them, rather than by s() several frames later.
+  expect_error(bspline_smooth(k = 2), "too small for 'degree'")
+  expect_error(bspline_smooth(k = 3, degree = 3), "too small for 'degree'")
+  expect_error(bspline_smooth(k = 10, order = 4), "exceeds 'degree'")
+  # and s() rejects anything that is not one
+  expect_error(s(x, 10), "must be a basis7 smoother")
+  expect_error(te(x, z, smooths = 10), "must be one basis7 smoother")
 })
 
 test_that("a factor by is where a smooth's block can be sparse", {
@@ -240,10 +247,10 @@ test_that("a factor by is where a smooth's block can be sparse", {
   # the dense side is asked for EXPLICITLY: left NULL the storage is settled
   # from the size of the block, and 600 rows by 40 levels by a basis of eight
   # is 192000 cells, well past the threshold, so the default settles sparse
-  a <- term_build(s(x, k = 8, by = g, sparse = FALSE), d)
-  b <- term_build(s(x, k = 8, by = g, sparse = TRUE), d)
+  a <- term_build(s(x, bspline_smooth(k = 8), by = g, sparse = FALSE), d)
+  b <- term_build(s(x, bspline_smooth(k = 8), by = g, sparse = TRUE), d)
   expect_true(is.matrix(term_matrix(a)))
-  expect_true(methods::is(term_matrix(term_build(s(x, k = 8, by = g), d)),
+  expect_true(methods::is(term_matrix(term_build(s(x, bspline_smooth(k = 8), by = g), d)),
                           "sparseMatrix"))
   expect_true(methods::is(term_matrix(b), "sparseMatrix"))
   # the same block, only stored differently
@@ -259,7 +266,7 @@ test_that("a factor by is where a smooth's block can be sparse", {
                unname(term_predict(a, nd)))
 
   # and a tensor product takes it on the same terms
-  tb <- term_build(te(x, z, k = 4, by = g, sparse = TRUE), d)
+  tb <- term_build(te(x, z, smooths = bspline_smooth(k = 4), by = g, sparse = TRUE), d)
   expect_true(methods::is(term_matrix(tb), "sparseMatrix"))
 })
 
@@ -269,18 +276,18 @@ test_that("a smooth refuses sparse where there is nothing to build on", {
                   g = factor(rep(1:5, 10)))
   # no `by` at all: the basis is dense by construction, the Demmler-Reinsch
   # rotation making it so
-  expect_error(s(x, k = 6, sparse = TRUE), "nothing to build on")
-  expect_error(te(x, z, k = 5, sparse = TRUE), "nothing to build on")
+  expect_error(s(x, bspline_smooth(k = 6), sparse = TRUE), "nothing to build on")
+  expect_error(te(x, z, smooths = bspline_smooth(k = 5), sparse = TRUE), "nothing to build on")
   # a NUMERIC by multiplies the basis, so the block is as dense as it is.
   # Known only at the build, which is where it is said.
-  expect_error(term_build(s(x, k = 6, by = z, sparse = TRUE), d),
+  expect_error(term_build(s(x, bspline_smooth(k = 6), by = z, sparse = TRUE), d),
                "nothing to build on")
   expect_error(s(x, sparse = "yes"), "TRUE, FALSE, or NULL")
   # a NULL is not an explicit TRUE and so is not refused: it settles, and
   # where there is nothing to build on it settles dense
-  expect_true(is.matrix(term_matrix(term_build(s(x, k = 6), d))))
-  expect_true(is.matrix(term_matrix(term_build(s(x, k = 6, by = z), d))))
+  expect_true(is.matrix(term_matrix(term_build(s(x, bspline_smooth(k = 6)), d))))
+  expect_true(is.matrix(term_matrix(term_build(s(x, bspline_smooth(k = 6), by = z), d))))
   # 50 rows by 5 levels by a basis of six is 1500 cells, below the threshold,
   # so the default settles dense even where a factor `by` admits the storage
-  expect_true(is.matrix(term_matrix(term_build(s(x, k = 6, by = g), d))))
+  expect_true(is.matrix(term_matrix(term_build(s(x, bspline_smooth(k = 6), by = g), d))))
 })

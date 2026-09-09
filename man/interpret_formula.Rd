@@ -31,7 +31,7 @@ A list of four elements:
 collected parametric block comes first under the name \code{"linpar"} and
 is absent when the formula has no bare covariates and no intercept.
 Every other name is the term's label as it appears in the formula,
-deparsed, such as \code{"s(x2, k = 5)"}.}
+deparsed, such as \code{"s(x2, bspline_smooth(k = 5))"}.}
 \item{\code{intercept}}{\code{TRUE} unless the formula removes the intercept.}
 \item{\code{formula}}{The input, unchanged.}
 }
@@ -49,7 +49,7 @@ caller decides which data each is built against.
 A term constructor is identified by what its call returns, so a term class
 defined outside the package works in a formula the day it is written, with
 no list of special names to amend. \code{log(x)} evaluates to a numeric vector
-and stays a covariate; \code{s(x, k = 5)} evaluates to a \code{SmoothTerm} and is
+and stays a covariate; \code{s(x, bspline_smooth(k = 5))} evaluates to a \code{SmoothTerm} and is
 routed as a term.
 
 Some labels are never evaluated: \code{:}, \code{*}, \code{^}, \code{\%in\%}, \code{+}, \code{-}, \code{(} and
@@ -113,7 +113,7 @@ names(out$terms)
 out$terms$linpar@formula
 
 # A constructor call becomes a term, keyed by its label in the formula.
-out2 <- interpret_formula(y ~ x1 + s(x2, k = 5) + ridge(~ g), dd)
+out2 <- interpret_formula(y ~ x1 + s(x2, basis7::bspline_smooth(k = 5)) + ridge(~ g), dd)
 names(out2$terms)
 vapply(out2$terms, function(t) class(t)[1], character(1))
 

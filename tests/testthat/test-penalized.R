@@ -144,7 +144,7 @@ test_that("a term reports every penalty it carries", {
   # needs a method of its own and nothing downstream sees a change.
   d <- data.frame(x = stats::rnorm(30), z = stats::rnorm(30),
                   g = factor(rep(1:3, 10)))
-  for (tm in list(ridge(~x), lasso(~ x + z), s(x, k = 5), random(~ 1 | g))) {
+  for (tm in list(ridge(~x), lasso(~ x + z), s(x, bspline_smooth(k = 5)), random(~ 1 | g))) {
     b <- term_build(tm, d)
     ps <- term_penalties(b)
     expect_length(ps, 1L)

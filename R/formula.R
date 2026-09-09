@@ -24,7 +24,7 @@ NULL
 #' A term constructor is identified by what its call returns, so a term class
 #' defined outside the package works in a formula the day it is written, with
 #' no list of special names to amend. `log(x)` evaluates to a numeric vector
-#' and stays a covariate; `s(x, k = 5)` evaluates to a `SmoothTerm` and is
+#' and stays a covariate; `s(x, bspline_smooth(k = 5))` evaluates to a `SmoothTerm` and is
 #' routed as a term.
 #'
 #' Some labels are never evaluated: `:`, `*`, `^`, `%in%`, `+`, `-`, `(` and
@@ -98,7 +98,7 @@ NULL
 #'       collected parametric block comes first under the name `"linpar"` and
 #'       is absent when the formula has no bare covariates and no intercept.
 #'       Every other name is the term's label as it appears in the formula,
-#'       deparsed, such as `"s(x2, k = 5)"`.}
+#'       deparsed, such as `"s(x2, bspline_smooth(k = 5))"`.}
 #'     \item{`intercept`}{`TRUE` unless the formula removes the intercept.}
 #'     \item{`formula`}{The input, unchanged.}
 #'   }
@@ -117,7 +117,7 @@ NULL
 #' out$terms$linpar@formula
 #'
 #' # A constructor call becomes a term, keyed by its label in the formula.
-#' out2 <- interpret_formula(y ~ x1 + s(x2, k = 5) + ridge(~ g), dd)
+#' out2 <- interpret_formula(y ~ x1 + s(x2, basis7::bspline_smooth(k = 5)) + ridge(~ g), dd)
 #' names(out2$terms)
 #' vapply(out2$terms, function(t) class(t)[1], character(1))
 #'

@@ -6,41 +6,32 @@
 \usage{
 s(
   x,
+  smoother = basis7::bspline_smooth(),
   by = NULL,
-  k = 10,
-  degree = 3,
-  basis = NULL,
-  linear = TRUE,
-  label = NULL,
-  lambda = NULL,
+  hyper = NULL,
   id = NULL,
-  sparse = NULL
+  label = NULL,
+  sparse = NULL,
+  ...
 )
 }
 \arguments{
 \item{x}{The covariate, an expression evaluated in the data.}
 
+\item{smoother}{How the smooth is built: a \pkg{basis7} smoother, which
+carries the basis, the roughness penalty, the null space and the
+reparametrization together. \code{\link[basis7:bspline_smooth]{basis7::bspline_smooth()}} is the default
+and is the construction this term has always used;
+\code{\link[basis7:fourier_smooth]{basis7::fourier_smooth()}} is the periodic one and
+\code{\link[basis7:legendre_smooth]{basis7::legendre_smooth()}} the global polynomial one.}
+
 \item{by}{An optional factor or numeric variable, given as a bare
 expression; \code{NULL} by default. See the section above.}
 
-\item{k}{The basis dimension before reparametrization, \code{10} by default. It
-must exceed \code{degree}: a cubic spline needs at least four basis functions,
-and anything smaller throws. The block has \code{k - 1} columns with \code{linear = TRUE} and \code{k - 2} without it.}
-
-\item{degree}{The spline degree, \code{3} by default, a cubic spline.}
-
-\item{basis}{An optional \pkg{basis7} basis used in place of the default
-B-spline. Its range is taken as given, so a basis built on one interval is
-not re-placed on the data's.}
-
-\item{linear}{Whether the linear effect is carried in the block and left
-unpenalized there, \code{TRUE} by default.}
-
-\item{label}{A single non-empty string prefixed to the coefficient names.
-\code{NULL}, the default, builds one from the covariate: \code{s(x)}.}
-
-\item{lambda}{The smoothing parameter, held at the value given and
-\strong{estimated} when left \code{NULL}, which is the default.}
+\item{hyper}{The hyperparameters of the smoother's penalty to hold, as a
+named numeric vector such as \code{c(lambda = 2)}. What names there are
+depends on the penalty; anything left out is \strong{estimated}, which is
+the default.}
 
 \item{id}{A label sharing this smooth's smoothing parameter with those
 of other terms carrying the same one: they are then estimated at a
@@ -49,9 +40,16 @@ single value, so several curves are smoothed together. It is what
 the same basis and dimension. \code{NULL}, the default, shares nothing.
 See \code{\link[=term_ids]{term_ids()}}.}
 
+\item{label}{A single non-empty string prefixed to the coefficient names.
+\code{NULL}, the default, builds one from the covariate: \code{s(x)}.}
+
 \item{sparse}{\code{TRUE}, \code{FALSE}, or \code{NULL} to settle it at build. Only a
 factor \code{by} admits \code{TRUE}; without one it is refused rather than ignored.
 See the section above.}
+
+\item{...}{Not used, and accepted only so that an argument \code{s()} no
+longer takes is reported with its replacement rather than as R's own
+"unused argument", which names the argument and not what to write.}
 }
 \value{
 An unbuilt \code{\link[=SmoothTerm]{SmoothTerm()}}: a specification, with \code{X}, \code{coef_names},
@@ -69,7 +67,7 @@ As the smoothing parameter grows the fit approaches a straight line, and
 }
 \section{The block and its penalty}{
 The block has one column for the linear effect, centered and scaled,
-followed by the reparametrized basis, so \code{s(x, k = 8)} gives seven columns
+followed by the reparametrized basis, so \code{s(x, bspline_smooth(k = 8))} gives seven columns
 named \verb{s(x).lin}, \verb{s(x).z1} ... \verb{s(x).z6}. That ordering is what the penalty
 reads: it is the quadratic penalty of \eqn{\mathrm{diag}(0, 1, \dots, 1)},
 rank deficient by exactly one, so the linear effect is unpenalized and the
@@ -104,7 +102,7 @@ differs by 2.85.
 A \strong{factor} \code{by} gives one smooth per level: the block is the smooth
 multiplied by each level's indicator, and the penalty is the same matrix
 repeated blockwise, so one smoothing parameter governs every level.
-\code{s(x, k = 5, by = g)} over a four-level factor has 16 columns.
+\code{s(x, bspline_smooth(k = 5), by = g)} over a four-level factor has 16 columns.
 
 A \strong{numeric} \code{by} gives a varying-coefficient term: the smooth multiplies
 that variable, and the fitted function is the coefficient of \code{by} as it
@@ -138,7 +136,7 @@ dd <- data.frame(x = sort(runif(80)), g = factor(rep(letters[1:4], 20)))
 dd$y <- sin(2 * pi * dd$x) + rnorm(80, sd = 0.2)
 
 # k = 8 gives seven columns: the linear effect and six deviations.
-b <- term_build(s(x, k = 8), dd)
+b <- term_build(s(x, basis7::bspline_smooth(k = 8)), dd)
 term_coef_names(b)
 
 # The penalty is diag(0, 1, ..., 1): the linear column is free.
@@ -158,15 +156,15 @@ vapply(c(1e-8, 1, 1e12),
        numeric(1))
 
 # A factor `by` is one smooth per level under one smoothing parameter.
-bf <- term_build(s(x, k = 5, by = g), dd)
+bf <- term_build(s(x, basis7::bspline_smooth(k = 5), by = g), dd)
 c(npar = term_npar(bf), levels = nlevels(dd$g))
 
 # The transform is computed on the data and reapplied, never rebuilt.
 max(abs(term_predict(b, dd[1:10, ]) - X[1:10, ]))
-max(abs(term_matrix(term_build(s(x, k = 8), dd[1:10, ])) - X[1:10, ]))
+max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 8)), dd[1:10, ])) - X[1:10, ]))
 
 # Sparsity needs a factor `by`, and says so when there is none.
-try(term_build(s(x, k = 5, sparse = TRUE), dd))
+try(term_build(s(x, basis7::bspline_smooth(k = 5), sparse = TRUE), dd))
 
 
 # Fitted. The data are simulated from a known truth, so the

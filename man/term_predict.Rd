@@ -74,11 +74,11 @@ dim(model.matrix(~ x + g, nd))
 # A basis is not replaced on the narrower range: reapplying agrees with
 # the original rows exactly, rebuilding does not.
 d2  <- data.frame(x = seq(0, 1, length.out = 60))
-bs  <- term_build(s(x, k = 6), d2)
+bs  <- term_build(s(x, basis7::bspline_smooth(k = 6)), d2)
 X   <- term_matrix(bs)
 sub <- 1:20
 max(abs(term_predict(bs, d2[sub, , drop = FALSE]) - X[sub, ]))
-max(abs(term_matrix(term_build(s(x, k = 6), d2[sub, , drop = FALSE])) -
+max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 6)), d2[sub, , drop = FALSE])) -
         X[sub, ]))
 
 }

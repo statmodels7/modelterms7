@@ -97,7 +97,7 @@ test_that("a structural term is rejected by name", {
 
   # the additive branch is untouched: every kind still runs its six checks
   dd2 <- data.frame(y = rnorm(20), x = rnorm(20), g = factor(rep(1:2, 10)))
-  for (tm in list(linpar(~ x + g), s(x, k = 5), ridge(~x))) {
+  for (tm in list(linpar(~ x + g), s(x, bspline_smooth(k = 5)), ridge(~x))) {
     res <- check_term(tm, dd2, verbose = FALSE)
     expect_identical(nrow(res), 6L)
     expect_true(all(res$status == "OK"),

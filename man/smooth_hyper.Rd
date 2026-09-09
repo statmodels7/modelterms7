@@ -4,10 +4,10 @@
 \alias{smooth_hyper}
 \title{The Held Smoothing Parameters of a Smooth}
 \usage{
-smooth_hyper(lambda, names, what = "this smooth")
+smooth_hyper(hyper, names, what = "this smooth")
 }
 \arguments{
-\item{lambda}{What the constructor was given, or \code{NULL}.}
+\item{hyper}{What the constructor was given, or \code{NULL}.}
 
 \item{names}{The penalty's own hyperparameter names.}
 

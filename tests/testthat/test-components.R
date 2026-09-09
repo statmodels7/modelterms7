@@ -2,7 +2,7 @@ test_that("a term whose columns do not divide answers with nothing", {
   dd <- data.frame(x = seq(0.2, 3, length.out = 40),
                    g = factor(rep(c("a", "b"), 20)))
   dd$y <- 1 + 0.5 * dd$x
-  for (tm in list(linpar(~ x), s(x, k = 6), random(~ 1 | g), ridge(~ x + g),
+  for (tm in list(linpar(~ x), s(x, bspline_smooth(k = 6)), random(~ 1 | g), ridge(~ x + g),
                   lasso(~ x + g))) {
     expect_identical(term_components(term_build(tm, dd)), list())
   }

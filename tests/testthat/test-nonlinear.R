@@ -220,11 +220,11 @@ test_that("a subformula takes a term, whose penalty the term reports", {
 test_that("a smooth in a subformula predicts through its own blueprint", {
   d2 <- dd
   d2$z <- runif(n)
-  spec <- nl(~ a * exp(-r * x), a ~ s(z, k = 6), start = list(a = 2, r = 1.3))
+  spec <- nl(~ a * exp(-r * x), a ~ s(z, bspline_smooth(k = 6)), start = list(a = 2, r = 1.3))
   built <- term_build(spec, d2)
   ent <- term_penalties(built)
   expect_length(ent, 1L)
-  expect_identical(ent[[1L]]$name, "a::s(z, k = 6)")
+  expect_identical(ent[[1L]]$name, "a::s(z, bspline_smooth(k = 6))")
   expect_true(term_smooth(built))
 
   # reapplied on a subset of the rows, the contribution is the fitted one

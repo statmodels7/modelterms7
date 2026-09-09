@@ -54,7 +54,7 @@ set.seed(1)
 d <- data.frame(x = rnorm(30), g = factor(rep(c("a", "b"), 15)))
 
 # Unpenalized and quadratically penalized terms are smooth.
-vapply(list(linpar(~ x), ridge(~ x), s(x, k = 5), random(~ 1 | g)),
+vapply(list(linpar(~ x), ridge(~ x), s(x, basis7::bspline_smooth(k = 5)), random(~ 1 | g)),
        function(t) term_smooth(term_build(t, d)), logical(1))
 
 # The four kinked penalties are not.

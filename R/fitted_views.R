@@ -113,7 +113,7 @@ NULL
 #' # A smooth falls from k toward the dimension of its null space, which
 #' # for s() is the one straight line the penalty leaves free.
 #' d2 <- data.frame(x = seq(0, 1, length.out = 60))
-#' bs <- term_build(s(x, k = 8), d2)
+#' bs <- term_build(s(x, basis7::bspline_smooth(k = 8)), d2)
 #' Hs <- crossprod(term_matrix(bs))
 #' cf <- rnorm(term_npar(bs))
 #' c(k = term_npar(bs),
@@ -323,7 +323,7 @@ S7::method(print, PenalizedTerm) <- function(x, ...) {
 #'
 #' # A smooth's block runs from least to most wiggly.
 #' d2 <- data.frame(x = seq(0, 1, length.out = 60))
-#' bs <- term_build(s(x, k = 8), d2)
+#' bs <- term_build(s(x, basis7::bspline_smooth(k = 8)), d2)
 #' plot(bs, coef = c(1.2, 0.9, -0.4, 0.2, -0.1, 0.05, -0.02))
 #'
 #' # Coefficients are required, and must fit the block.

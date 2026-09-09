@@ -77,7 +77,7 @@ test_that("a developed term draws every coordinate, not only the scalars", {
 
 test_that("an ordinary term has no parameters of its own to draw", {
   expect_error(term_draw(linpar(~1)), "term_draw")
-  expect_error(term_draw(s(x, k = 5)), "term_draw")
+  expect_error(term_draw(s(x, bspline_smooth(k = 5))), "term_draw")
 })
 
 test_that("the draw reads the caller's stream and sets no seed", {

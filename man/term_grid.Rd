@@ -48,7 +48,7 @@ term_grid(enet(~ x))
 
 # A penalty with no kink has no path, so nothing to count.
 term_grid(ridge(~ x))
-term_grid(s(x, k = 5))
+term_grid(s(x, basis7::bspline_smooth(k = 5)))
 
 }
 \seealso{

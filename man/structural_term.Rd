@@ -102,7 +102,7 @@ at most one structural term is allowed per model formula.
 
 \examples{
 # gas() and regime() are on this branch; every additive term is not.
-vapply(list(gas(p = 1, q = 1), regime(k = 2), s(x, k = 5), ridge(~ x)),
+vapply(list(gas(p = 1, q = 1), regime(k = 2), s(x, basis7::bspline_smooth(k = 5)), ridge(~ x)),
        function(t) S7::S7_inherits(t, structural_term), logical(1))
 
 # A structural term names its own parameters instead of coefficients.

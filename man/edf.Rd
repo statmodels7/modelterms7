@@ -114,7 +114,7 @@ edf(bl, coef = c(1, 0, -2), theta = list(lambda = 1))
 # A smooth falls from k toward the dimension of its null space, which
 # for s() is the one straight line the penalty leaves free.
 d2 <- data.frame(x = seq(0, 1, length.out = 60))
-bs <- term_build(s(x, k = 8), d2)
+bs <- term_build(s(x, basis7::bspline_smooth(k = 8)), d2)
 Hs <- crossprod(term_matrix(bs))
 cf <- rnorm(term_npar(bs))
 c(k = term_npar(bs),

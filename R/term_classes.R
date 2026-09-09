@@ -88,12 +88,12 @@
 #'
 #' @examples
 #' # Every term inherits from this class, whichever branch it is on.
-#' vapply(list(linpar(~ 1), ridge(~ x), s(x, k = 5), gas(p = 1, q = 1)),
+#' vapply(list(linpar(~ 1), ridge(~ x), s(x, basis7::bspline_smooth(k = 5)), gas(p = 1, q = 1)),
 #'        function(t) S7::S7_inherits(t, model_term), logical(1))
 #'
 #' # The branch is what a consumer routes on.
-#' c(additive = S7::S7_inherits(s(x, k = 5), additive_term),
-#'   structural = S7::S7_inherits(s(x, k = 5), structural_term))
+#' c(additive = S7::S7_inherits(s(x, basis7::bspline_smooth(k = 5)), additive_term),
+#'   structural = S7::S7_inherits(s(x, basis7::bspline_smooth(k = 5)), structural_term))
 #' c(additive = S7::S7_inherits(gas(p = 1, q = 1), additive_term),
 #'   structural = S7::S7_inherits(gas(p = 1, q = 1), structural_term))
 #'
@@ -331,7 +331,7 @@ additive_term <- S7::new_class(
 #'
 #' @examples
 #' # gas() and regime() are on this branch; every additive term is not.
-#' vapply(list(gas(p = 1, q = 1), regime(k = 2), s(x, k = 5), ridge(~ x)),
+#' vapply(list(gas(p = 1, q = 1), regime(k = 2), s(x, basis7::bspline_smooth(k = 5)), ridge(~ x)),
 #'        function(t) S7::S7_inherits(t, structural_term), logical(1))
 #'
 #' # A structural term names its own parameters instead of coefficients.

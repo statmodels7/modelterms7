@@ -245,7 +245,7 @@ S7::method(term_hyper, model_term) <- function(term, ...) {
 #' vector is read in that order and must be as long as there are margins; a
 #' named one may hold some and leave the others to be estimated.
 #'
-#' @param lambda What the constructor was given, or `NULL`.
+#' @param hyper What the constructor was given, or `NULL`.
 #' @param names The penalty's own hyperparameter names.
 #' @param what The term's label, for the message.
 #'
@@ -254,43 +254,43 @@ S7::method(term_hyper, model_term) <- function(term, ...) {
 #' @seealso [check_hyper()], [s()], [te()]
 #'
 #' @keywords internal
-smooth_hyper <- function(lambda, names, what = "this smooth") {
-  if (is.null(lambda)) return(list())
-  if (!is.numeric(lambda) || !length(lambda) || anyNA(lambda)) {
-    stop(sprintf("'lambda' in '%s' must be a number, or NULL.", what),
+smooth_hyper <- function(hyper, names, what = "this smooth") {
+  if (is.null(hyper)) return(list())
+  if (!is.numeric(hyper) || !length(hyper) || anyNA(hyper)) {
+    stop(sprintf("'hyper' in '%s' must be a number, or NULL.", what),
          call. = FALSE)
   }
-  nm <- base::names(lambda)
+  nm <- base::names(hyper)
   if (is.null(nm)) {
-    if (length(lambda) == 1L && length(names) > 1L) {
+    if (length(hyper) == 1L && length(names) > 1L) {
       # one number for a term with a smoothing parameter per margin is the
       # isotropic reading of an anisotropic penalty, which is a different
       # model rather than a shorthand for this one
       stop(sprintf(paste0("'%s' has %d smoothing parameters (%s), and",
-                          " 'lambda' has one.\n  Give one per margin, or",
+                          " 'hyper' has one.\n  Give one per margin, or",
                           " name the ones to hold, or use anisotropic =",
                           " FALSE."),
                    what, length(names), paste(names, collapse = ", ")),
            call. = FALSE)
     }
-    if (length(lambda) != length(names)) {
-      stop(sprintf("'lambda' in '%s' must have %d value%s.", what,
+    if (length(hyper) != length(names)) {
+      stop(sprintf("'hyper' in '%s' must have %d value%s.", what,
                    length(names), if (length(names) == 1L) "" else "s"),
            call. = FALSE)
     }
-    lambda <- stats::setNames(lambda, names)
+    hyper <- stats::setNames(hyper, names)
   }
-  bad <- setdiff(base::names(lambda), names)
+  bad <- setdiff(base::names(hyper), names)
   if (length(bad)) {
     stop(sprintf(paste0("'%s' has no smoothing parameter '%s'. It carries:",
                         " %s."), what, bad[1L], paste(names, collapse = ", ")),
          call. = FALSE)
   }
-  if (any(lambda <= 0)) {
-    stop(sprintf("every 'lambda' in '%s' must be strictly positive.", what),
+  if (any(hyper <= 0)) {
+    stop(sprintf("every 'hyper' in '%s' must be strictly positive.", what),
          call. = FALSE)
   }
-  as.list(lambda)
+  as.list(hyper)
 }
 
 
@@ -440,7 +440,7 @@ check_grid <- function(values, penalty, what = "this term") {
 #'
 #' # A penalty with no kink has no path, so nothing to count.
 #' term_grid(ridge(~ x))
-#' term_grid(s(x, k = 5))
+#' term_grid(s(x, basis7::bspline_smooth(k = 5)))
 #'
 #' @export
 #' @aliases term_grid.model_term

@@ -1147,7 +1147,7 @@ S7::method(term_coef_names, additive_term) <- function(term, ...) {
 #' d <- data.frame(x = rnorm(30), g = factor(rep(c("a", "b"), 15)))
 #'
 #' # Unpenalized and quadratically penalized terms are smooth.
-#' vapply(list(linpar(~ x), ridge(~ x), s(x, k = 5), random(~ 1 | g)),
+#' vapply(list(linpar(~ x), ridge(~ x), s(x, basis7::bspline_smooth(k = 5)), random(~ 1 | g)),
 #'        function(t) term_smooth(term_build(t, d)), logical(1))
 #'
 #' # The four kinked penalties are not.
@@ -1335,11 +1335,11 @@ S7::method(term_smooth, model_term) <- function(term, ...) {
 #' # A basis is not replaced on the narrower range: reapplying agrees with
 #' # the original rows exactly, rebuilding does not.
 #' d2  <- data.frame(x = seq(0, 1, length.out = 60))
-#' bs  <- term_build(s(x, k = 6), d2)
+#' bs  <- term_build(s(x, basis7::bspline_smooth(k = 6)), d2)
 #' X   <- term_matrix(bs)
 #' sub <- 1:20
 #' max(abs(term_predict(bs, d2[sub, , drop = FALSE]) - X[sub, ]))
-#' max(abs(term_matrix(term_build(s(x, k = 6), d2[sub, , drop = FALSE])) -
+#' max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 6)), d2[sub, , drop = FALSE])) -
 #'         X[sub, ]))
 #'
 #' @export
@@ -1399,7 +1399,7 @@ term_predict <- S7::new_generic("term_predict", "term",
 #' term_build(linpar(~ x), d)
 #'
 #' # The label is shown when there is one.
-#' s(x, k = 5)
+#' s(x, basis7::bspline_smooth(k = 5))
 #' linpar(~ x, label = "lin")
 #'
 #' @keywords internal

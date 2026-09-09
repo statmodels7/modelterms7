@@ -63,12 +63,12 @@ set.seed(1)
 dd <- data.frame(x = sort(runif(80)), z = runif(80))
 
 # What the build records for a one-covariate smooth.
-b <- term_build(s(x, k = 8), dd)
+b <- term_build(s(x, basis7::bspline_smooth(k = 8)), dd)
 names(b@blueprint)
 b@blueprint$core$kind
 
 # And for a tensor product: one column fewer than 4 x 4.
-bt <- term_build(te(x, z, k = 4), dd)
+bt <- term_build(te(x, z, smooths = basis7::bspline_smooth(k = 4)), dd)
 term_npar(bt)
 
 }

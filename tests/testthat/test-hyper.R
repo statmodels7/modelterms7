@@ -39,20 +39,20 @@ test_that("a held value must lie strictly inside the penalty's bounds", {
 
 test_that("a smooth holds its smoothing parameter, one per margin", {
   expect_identical(term_hyper(s(x)), list())
-  expect_equal(term_hyper(s(x, lambda = 2))[[1L]], list(lambda = 2))
-  expect_equal(term_hyper(te(x, z, lambda = c(1, 5)))[[1L]],
+  expect_equal(term_hyper(s(x, bspline_smooth(), hyper = c(lambda = 2)))[[1L]], list(lambda = 2))
+  expect_equal(term_hyper(te(x, z, smooths = bspline_smooth(), hyper = c(1, 5)))[[1L]],
                list(lambda1 = 1, lambda2 = 5))
   # named, so one margin is held and the other estimated
-  expect_equal(term_hyper(te(x, z, lambda = c(lambda2 = 5)))[[1L]],
+  expect_equal(term_hyper(te(x, z, smooths = bspline_smooth(), hyper = c(lambda2 = 5)))[[1L]],
                list(lambda2 = 5))
   # an isotropic tensor product has ONE, so one number is right there
-  expect_equal(term_hyper(te(x, z, anisotropic = FALSE, lambda = 3))[[1L]],
+  expect_equal(term_hyper(te(x, z, smooths = bspline_smooth(), anisotropic = FALSE, hyper = 3))[[1L]],
                list(lambda = 3))
   # and one number for an anisotropic one is a different model, not a
   # shorthand for this one
-  expect_error(te(x, z, lambda = 2), "one per margin")
-  expect_error(s(x, lambda = 0), "strictly positive")
-  expect_error(te(x, z, lambda = c(lambda3 = 1)), "no smoothing parameter")
+  expect_error(te(x, z, smooths = bspline_smooth(), hyper = 2), "one per margin")
+  expect_error(s(x, bspline_smooth(), hyper = c(lambda = 0)), "strictly positive")
+  expect_error(te(x, z, smooths = bspline_smooth(), hyper = c(lambda3 = 1)), "no smoothing parameter")
 })
 
 test_that("a random effect is checked against the penalty it builds", {
