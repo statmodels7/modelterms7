@@ -28,7 +28,7 @@
 
     <a class="navbar-brand me-2" href="index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.71.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.72.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -169,7 +169,7 @@
 <h2 id="what-a-built-term-carries">What a built term carries<a class="anchor" aria-label="anchor" href="#what-a-built-term-carries"></a>
 </h2>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sm</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="reference/s.html">s</a></span><span class="op">(</span><span class="va">x1</span>, k <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">sm</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="reference/s.html">s</a></span><span class="op">(</span><span class="va">x1</span>, <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">8</span><span class="op">)</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="fu"><a href="reference/term_matrix.html">term_matrix</a></span><span class="op">(</span><span class="va">sm</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 50  7</span></span>
 <span><span class="fu"><a href="reference/term_coef_names.html">term_coef_names</a></span><span class="op">(</span><span class="va">sm</span><span class="op">)</span></span>

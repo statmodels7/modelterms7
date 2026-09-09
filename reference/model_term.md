@@ -151,13 +151,13 @@ for validating one.
 
 ``` r
 # Every term inherits from this class, whichever branch it is on.
-vapply(list(linpar(~ 1), ridge(~ x), s(x, k = 5), gas(p = 1, q = 1)),
+vapply(list(linpar(~ 1), ridge(~ x), s(x, basis7::bspline_smooth(k = 5)), gas(p = 1, q = 1)),
        function(t) S7::S7_inherits(t, model_term), logical(1))
 #> [1] TRUE TRUE TRUE TRUE
 
 # The branch is what a consumer routes on.
-c(additive = S7::S7_inherits(s(x, k = 5), additive_term),
-  structural = S7::S7_inherits(s(x, k = 5), structural_term))
+c(additive = S7::S7_inherits(s(x, basis7::bspline_smooth(k = 5)), additive_term),
+  structural = S7::S7_inherits(s(x, basis7::bspline_smooth(k = 5)), structural_term))
 #>   additive structural 
 #>       TRUE      FALSE 
 c(additive = S7::S7_inherits(gas(p = 1, q = 1), additive_term),

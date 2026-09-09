@@ -19,7 +19,7 @@ edf() falls to exactly one."><meta property="og:image" content="https://statmode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.71.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.72.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,15 +59,13 @@ the deviation.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">s</span><span class="op">(</span></span>
 <span>  <span class="va">x</span>,</span>
+<span>  smoother <span class="op">=</span> <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  k <span class="op">=</span> <span class="fl">10</span>,</span>
-<span>  degree <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  basis <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  linear <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  label <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  lambda <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  hyper <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  id <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  sparse <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  label <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  sparse <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -79,40 +77,25 @@ the deviation.</p>
 <dd><p>The covariate, an expression evaluated in the data.</p></dd>
 
 
+<dt id="arg-smoother">smoother<a class="anchor" aria-label="anchor" href="#arg-smoother"></a></dt>
+<dd><p>How the smooth is built: a <span class="pkg">basis7</span> smoother, which
+carries the basis, the roughness penalty, the null space and the
+reparametrization together. <code><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">basis7::bspline_smooth()</a></code> is the default
+and is the construction this term has always used;
+<code><a href="https://statmodels7.github.io/basis7/reference/fourier_smooth.html" class="external-link">basis7::fourier_smooth()</a></code> is the periodic one and
+<code><a href="https://statmodels7.github.io/basis7/reference/legendre_smooth.html" class="external-link">basis7::legendre_smooth()</a></code> the global polynomial one.</p></dd>
+
+
 <dt id="arg-by">by<a class="anchor" aria-label="anchor" href="#arg-by"></a></dt>
 <dd><p>An optional factor or numeric variable, given as a bare
 expression; <code>NULL</code> by default. See the section above.</p></dd>
 
 
-<dt id="arg-k">k<a class="anchor" aria-label="anchor" href="#arg-k"></a></dt>
-<dd><p>The basis dimension before reparametrization, <code>10</code> by default. It
-must exceed <code>degree</code>: a cubic spline needs at least four basis functions,
-and anything smaller throws. The block has <code>k - 1</code> columns with <code>linear = TRUE</code> and <code>k - 2</code> without it.</p></dd>
-
-
-<dt id="arg-degree">degree<a class="anchor" aria-label="anchor" href="#arg-degree"></a></dt>
-<dd><p>The spline degree, <code>3</code> by default, a cubic spline.</p></dd>
-
-
-<dt id="arg-basis">basis<a class="anchor" aria-label="anchor" href="#arg-basis"></a></dt>
-<dd><p>An optional <span class="pkg">basis7</span> basis used in place of the default
-B-spline. Its range is taken as given, so a basis built on one interval is
-not re-placed on the data's.</p></dd>
-
-
-<dt id="arg-linear">linear<a class="anchor" aria-label="anchor" href="#arg-linear"></a></dt>
-<dd><p>Whether the linear effect is carried in the block and left
-unpenalized there, <code>TRUE</code> by default.</p></dd>
-
-
-<dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
-<dd><p>A single non-empty string prefixed to the coefficient names.
-<code>NULL</code>, the default, builds one from the covariate: <code>s(x)</code>.</p></dd>
-
-
-<dt id="arg-lambda">lambda<a class="anchor" aria-label="anchor" href="#arg-lambda"></a></dt>
-<dd><p>The smoothing parameter, held at the value given and
-<strong>estimated</strong> when left <code>NULL</code>, which is the default.</p></dd>
+<dt id="arg-hyper">hyper<a class="anchor" aria-label="anchor" href="#arg-hyper"></a></dt>
+<dd><p>The hyperparameters of the smoother's penalty to hold, as a
+named numeric vector such as <code>c(lambda = 2)</code>. What names there are
+depends on the penalty; anything left out is <strong>estimated</strong>, which is
+the default.</p></dd>
 
 
 <dt id="arg-id">id<a class="anchor" aria-label="anchor" href="#arg-id"></a></dt>
@@ -124,10 +107,21 @@ the same basis and dimension. <code>NULL</code>, the default, shares nothing.
 See <code><a href="term_ids.html">term_ids()</a></code>.</p></dd>
 
 
+<dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
+<dd><p>A single non-empty string prefixed to the coefficient names.
+<code>NULL</code>, the default, builds one from the covariate: <code>s(x)</code>.</p></dd>
+
+
 <dt id="arg-sparse">sparse<a class="anchor" aria-label="anchor" href="#arg-sparse"></a></dt>
 <dd><p><code>TRUE</code>, <code>FALSE</code>, or <code>NULL</code> to settle it at build. Only a
 factor <code>by</code> admits <code>TRUE</code>; without one it is refused rather than ignored.
 See the section above.</p></dd>
+
+
+<dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
+<dd><p>Not used, and accepted only so that an argument <code>s()</code> no
+longer takes is reported with its replacement rather than as R's own
+"unused argument", which names the argument and not what to write.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -138,7 +132,7 @@ See the section above.</p></dd>
     <div class="section level2">
     <h2 id="the-block-and-its-penalty">The block and its penalty<a class="anchor" aria-label="anchor" href="#the-block-and-its-penalty"></a></h2>
     <p>The block has one column for the linear effect, centered and scaled,
-followed by the reparametrized basis, so <code>s(x, k = 8)</code> gives seven columns
+followed by the reparametrized basis, so <code>s(x, bspline_smooth(k = 8))</code> gives seven columns
 named <code>s(x).lin</code>, <code>s(x).z1</code> ... <code>s(x).z6</code>. That ordering is what the penalty
 reads: it is the quadratic penalty of \(\mathrm{diag}(0, 1, \dots, 1)\),
 rank deficient by exactly one, so the linear effect is unpenalized and the
@@ -171,7 +165,7 @@ differs by 2.85.</p>
 <p>A <strong>factor</strong> <code>by</code> gives one smooth per level: the block is the smooth
 multiplied by each level's indicator, and the penalty is the same matrix
 repeated blockwise, so one smoothing parameter governs every level.
-<code>s(x, k = 5, by = g)</code> over a four-level factor has 16 columns.</p>
+<code>s(x, bspline_smooth(k = 5), by = g)</code> over a four-level factor has 16 columns.</p>
 <p>A <strong>numeric</strong> <code>by</code> gives a varying-coefficient term: the smooth multiplies
 that variable, and the fitted function is the coefficient of <code>by</code> as it
 changes with the covariate.</p>
@@ -216,7 +210,7 @@ spends.</p></div>
 <span class="r-in"><span><span class="va">dd</span><span class="op">$</span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">*</span> <span class="va">dd</span><span class="op">$</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">80</span>, sd <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># k = 8 gives seven columns: the linear effect and six deviations.</span></span></span>
-<span class="r-in"><span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">s</span><span class="op">(</span><span class="va">x</span>, k <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">s</span><span class="op">(</span><span class="va">x</span>, <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">8</span><span class="op">)</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="term_coef_names.html">term_coef_names</a></span><span class="op">(</span><span class="va">b</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "s(x).lin" "s(x).z1"  "s(x).z2"  "s(x).z3"  "s(x).z4"  "s(x).z5"  "s(x).z6" </span>
 <span class="r-in"><span></span></span>
@@ -248,7 +242,7 @@ spends.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 7.000000 4.191177 1.000000</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A factor `by` is one smooth per level under one smoothing parameter.</span></span></span>
-<span class="r-in"><span><span class="va">bf</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">s</span><span class="op">(</span><span class="va">x</span>, k <span class="op">=</span> <span class="fl">5</span>, by <span class="op">=</span> <span class="va">g</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">bf</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">s</span><span class="op">(</span><span class="va">x</span>, <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>, by <span class="op">=</span> <span class="va">g</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>npar <span class="op">=</span> <span class="fu"><a href="term_npar.html">term_npar</a></span><span class="op">(</span><span class="va">bf</span><span class="op">)</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nlevels.html" class="external-link">nlevels</a></span><span class="op">(</span><span class="va">dd</span><span class="op">$</span><span class="va">g</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   npar levels </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     16      4 </span>
@@ -256,11 +250,11 @@ spends.</p></div>
 <span class="r-in"><span><span class="co"># The transform is computed on the data and reapplied, never rebuilt.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="term_predict.html">term_predict</a></span><span class="op">(</span><span class="va">b</span>, <span class="va">dd</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="op">]</span><span class="op">)</span> <span class="op">-</span> <span class="va">X</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="term_matrix.html">term_matrix</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">s</span><span class="op">(</span><span class="va">x</span>, k <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>, <span class="va">dd</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">-</span> <span class="va">X</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="term_matrix.html">term_matrix</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">s</span><span class="op">(</span><span class="va">x</span>, <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">8</span><span class="op">)</span><span class="op">)</span>, <span class="va">dd</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="op">]</span><span class="op">)</span><span class="op">)</span> <span class="op">-</span> <span class="va">X</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.849289</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Sparsity needs a factor `by`, and says so when there is none.</span></span></span>
-<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">s</span><span class="op">(</span><span class="va">x</span>, k <span class="op">=</span> <span class="fl">5</span>, sparse <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">s</span><span class="op">(</span><span class="va">x</span>, <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>, sparse <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Error : 'sparse' has nothing to build on here: a smooth's basis is dense by</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   construction. Sparsity comes from a FACTOR 'by', whose indicators put each</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   row in the block of its own level.</span>

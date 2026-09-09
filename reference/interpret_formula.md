@@ -62,7 +62,7 @@ A list of four elements:
   block comes first under the name `"linpar"` and is absent when the
   formula has no bare covariates and no intercept. Every other name is
   the term's label as it appears in the formula, deparsed, such as
-  `"s(x2, k = 5)"`.
+  `"s(x2, bspline_smooth(k = 5))"`.
 
 - `intercept`:
 
@@ -77,8 +77,8 @@ A list of four elements:
 A term constructor is identified by what its call returns, so a term
 class defined outside the package works in a formula the day it is
 written, with no list of special names to amend. `log(x)` evaluates to a
-numeric vector and stays a covariate; `s(x, k = 5)` evaluates to a
-`SmoothTerm` and is routed as a term.
+numeric vector and stays a covariate; `s(x, bspline_smooth(k = 5))`
+evaluates to a `SmoothTerm` and is routed as a term.
 
 Some labels are never evaluated: `:`, `*`, `^`, `%in%`, `+`, `-`, `(`
 and `I`. A bare interaction `x1:x2` parses as a call to `:`, which on
@@ -166,22 +166,26 @@ names(out$terms)
 #> [1] "linpar"
 out$terms$linpar@formula
 #> ~x1 + log(x2)
-#> <environment: 0x55c2e593ba30>
+#> <environment: 0x56140d239558>
 
 # A constructor call becomes a term, keyed by its label in the formula.
-out2 <- interpret_formula(y ~ x1 + s(x2, k = 5) + ridge(~ g), dd)
+out2 <- interpret_formula(y ~ x1 + s(x2, basis7::bspline_smooth(k = 5)) + ridge(~ g), dd)
 names(out2$terms)
-#> [1] "linpar"       "s(x2, k = 5)" "ridge(~g)"   
+#> [1] "linpar"                              
+#> [2] "s(x2, basis7::bspline_smooth(k = 5))"
+#> [3] "ridge(~g)"                           
 vapply(out2$terms, function(t) class(t)[1], character(1))
-#>                       linpar                 s(x2, k = 5) 
-#>    "modelterms7::LinparTerm"    "modelterms7::SmoothTerm" 
-#>                    ridge(~g) 
-#> "modelterms7::PenalizedTerm" 
+#>                               linpar s(x2, basis7::bspline_smooth(k = 5)) 
+#>            "modelterms7::LinparTerm"            "modelterms7::SmoothTerm" 
+#>                            ridge(~g) 
+#>         "modelterms7::PenalizedTerm" 
 
 # Nothing is built yet.
 vapply(out2$terms, term_is_built, logical(1))
-#>       linpar s(x2, k = 5)    ridge(~g) 
-#>        FALSE        FALSE        FALSE 
+#>                               linpar s(x2, basis7::bspline_smooth(k = 5)) 
+#>                                FALSE                                FALSE 
+#>                            ridge(~g) 
+#>                                FALSE 
 
 # The intercept convention is the formula's own.
 names(interpret_formula(y ~ ridge(~ g), dd)$terms)
@@ -192,19 +196,19 @@ names(interpret_formula(y ~ ridge(~ g) - 1, dd)$terms)
 # An interaction is a covariate: `:` is never evaluated.
 interpret_formula(y ~ x1:x2 + g, dd)$terms$linpar@formula
 #> ~g + x1:x2
-#> <environment: 0x55c2e593ba30>
+#> <environment: 0x56140d239558>
 
 # seg() carries the linear effect, so the bare covariate is removed.
 w <- interpret_formula(y ~ x1 + seg(x1), dd)
 #> Warning: the covariate 'x1' is exactly collinear with the linear effect that 'seg' carries, and has been removed from the parametric part. Write seg(x1, linear = FALSE) to keep the linear effect outside the term instead.
 w$terms$linpar@formula          # x1 is gone; the term carries it
 #> ~1
-#> <environment: 0x55c2e593ba30>
+#> <environment: 0x56140d239558>
 
 # Unless the term is told not to own it.
 interpret_formula(y ~ x1 + seg(x1, linear = FALSE), dd)$terms$linpar@formula
 #> ~x1
-#> <environment: 0x55c2e593ba30>
+#> <environment: 0x56140d239558>
 
 # Arguments for the implicit block go through `linpar`.
 sp <- interpret_formula(y ~ g, dd, linpar = list(sparse = TRUE))

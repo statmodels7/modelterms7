@@ -11,14 +11,12 @@ rough in one direction and smooth in another.
 ``` r
 te(
   ...,
+  smooths = basis7::bspline_smooth(k = 5),
   by = NULL,
-  k = 5,
-  degree = 3,
-  bases = NULL,
   anisotropic = TRUE,
-  label = NULL,
-  lambda = NULL,
+  hyper = NULL,
   id = NULL,
+  label = NULL,
   sparse = NULL
 )
 ```
@@ -31,44 +29,36 @@ te(
   of them. One throws
   `"'te' needs at least two covariates; use s() for one."`.
 
+- smooths:
+
+  How each margin is built: one basis7 smoother used for every
+  covariate, or a list of one per covariate. `bspline_smooth(k = 5)` is
+  the default.
+
+  What the product reads from a margin is its **basis** and its
+  **roughness matrix**, so `k`, `degree`, `order`, `measure`, `lower`
+  and `upper` all act. The constraint, the null space and the
+  reparametrization are the product's own and not a margin's: the tensor
+  contains the constant whatever its margins do, and it is the product
+  that is centered. A margin asking for one of those is rejected rather
+  than ignored.
+
 - by:
 
   An optional factor or numeric variable, as in
   [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md),
   with the same two readings and the same sparsity rule.
 
-- k:
-
-  The basis dimension per margin, `5` by default, recycled to the number
-  of covariates. As in
-  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) it
-  must exceed `degree`.
-
-- degree:
-
-  The spline degree per margin, `3` by default, recycled.
-
-- bases:
-
-  An optional list of basis7 bases, one per covariate, used in place of
-  the default B-splines.
-
 - anisotropic:
 
   `TRUE`, the default, for one smoothing parameter per margin; `FALSE`
   for one over their sum. Anything that is not a single logical throws.
 
-- label:
+- hyper:
 
-  A single non-empty string prefixed to the coefficient names. `NULL`,
-  the default, builds one from the covariates: `te(x,z)`.
-
-- lambda:
-
-  The smoothing parameters, held at the values given and **estimated**
-  when left `NULL`, which is the default. An anisotropic product carries
-  one per margin, so a vector of that length, or a named one holding
-  some of them.
+  The hyperparameters to hold, as a named numeric vector, with anything
+  left out **estimated**. An anisotropic product carries one per margin,
+  so a vector of that length, or a named one holding some of them.
 
 - id:
 
@@ -78,6 +68,11 @@ te(
   isotropic one carries `lambda` alone and a single unnamed string will
   do. `NULL`, the default, shares nothing. See
   [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
+
+- label:
+
+  A single non-empty string prefixed to the coefficient names. `NULL`,
+  the default, builds one from the covariates: `te(x,z)`.
 
 - sparse:
 
@@ -126,10 +121,10 @@ The block therefore carries the sum-to-zero constraint over the observed
 covariates
 ([`basis7::constrain_basis()`](https://statmodels7.github.io/basis7/reference/constrain_basis.html)).
 The term has **one column fewer** than the product of its marginal
-dimensions, so `te(x, z, k = 4)` gives 15 and not 16; every column sums
-to zero over the data it was built on, to machine precision; and the
-penalty follows by congruence with its rank unchanged, the direction
-removed having been one of its null directions.
+dimensions, so `te(x, z, smooths = bspline_smooth(k = 4))` gives 15 and
+not 16; every column sums to zero over the data it was built on, to
+machine precision; and the penalty follows by congruence with its rank
+unchanged, the direction removed having been one of its null directions.
 
 The transform is stored in the blueprint and reapplied by
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md),
@@ -165,7 +160,7 @@ dd <- data.frame(x = runif(120), z = runif(120))
 dd$y <- dd$x * dd$z + rnorm(120, sd = 0.1)
 
 # Four by four margins give fifteen columns: the centering removes one.
-b <- term_build(te(x, z, k = 4), dd)
+b <- term_build(te(x, z, smooths = basis7::bspline_smooth(k = 4)), dd)
 c(npar = term_npar(b), product = 4 * 4)
 #>    npar product 
 #>      15      16 
@@ -179,11 +174,13 @@ term_penalty(b)@penalty_name
 #> [1] "additive [2 components]"
 term_penalty(b)@params
 #> [1] "lambda1" "lambda2"
-term_penalty(term_build(te(x, z, k = 4, anisotropic = FALSE), dd))@params
+ti <- te(x, z, smooths = basis7::bspline_smooth(k = 4),
+          anisotropic = FALSE)
+term_penalty(term_build(ti, dd))@params
 #> [1] "lambda"
 
 # Holding both of them.
-term_hyper(te(x, z, k = 4, lambda = c(1, 5)))
+term_hyper(te(x, z, smooths = basis7::bspline_smooth(k = 4), hyper = c(1, 5)))
 #> [[1]]
 #> [[1]]$lambda1
 #> [1] 1
@@ -198,7 +195,7 @@ max(abs(term_predict(b, dd[1:10, ]) - term_matrix(b)[1:10, ]))
 #> [1] 6.938894e-18
 
 # One covariate is s(), not te().
-try(te(x, k = 4))
+try(te(x, smooths = basis7::bspline_smooth(k = 4)))
 #> Error : 'te' needs at least two covariates; use s() for one.
 
 
@@ -208,7 +205,7 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(5)
   fd <- data.frame(a = runif(300, -2, 2), b = runif(300, -2, 2))
   fd$y <- sin(fd$a) * cos(fd$b) + rnorm(300, sd = 0.3)
-  ft <- statmodels7::statmod(y ~ te(a, b, k = 5),
+  ft <- statmodels7::statmod(y ~ te(a, b, smooths = basis7::bspline_smooth(k = 5)),
                              distributions7::gaussian1_distrib(), fd)
   # one smoothing parameter per margin, against a truth of sin(a) cos(b)
   round(sqrt(mean((fitted(ft) - sin(fd$a) * cos(fd$b))^2)), 3)

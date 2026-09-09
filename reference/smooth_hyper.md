@@ -7,12 +7,12 @@ parameter obeys.
 ## Usage
 
 ``` r
-smooth_hyper(lambda, names, what = "this smooth")
+smooth_hyper(hyper, names, what = "this smooth")
 ```
 
 ## Arguments
 
-- lambda:
+- hyper:
 
   What the constructor was given, or `NULL`.
 

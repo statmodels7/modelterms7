@@ -64,17 +64,17 @@ for what recorded the transform.
 ``` r
 set.seed(1)
 dd <- data.frame(x = sort(runif(80)), g = factor(rep(letters[1:4], 20)))
-b <- term_build(s(x, k = 8), dd)
+b <- term_build(s(x, basis7::bspline_smooth(k = 8)), dd)
 X <- term_matrix(b)
 
 # Reapplying is exact; rebuilding on the same rows is a different basis.
 max(abs(term_predict(b, dd[1:10, ]) - X[1:10, ]))
 #> [1] 0
-max(abs(term_matrix(term_build(s(x, k = 8), dd[1:10, ])) - X[1:10, ]))
+max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 8)), dd[1:10, ])) - X[1:10, ]))
 #> [1] 2.849289
 
 # A factor `by` keeps every level's columns at a subset that has two.
-bf <- term_build(s(x, k = 5, by = g), dd)
+bf <- term_build(s(x, basis7::bspline_smooth(k = 5), by = g), dd)
 nd <- droplevels(dd[dd$g %in% c("a", "b"), ])
 c(levels_here = nlevels(nd$g), cols = ncol(term_predict(bf, nd)))
 #> levels_here        cols 

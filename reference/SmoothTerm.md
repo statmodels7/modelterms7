@@ -186,9 +186,9 @@ c(s = S7::S7_inherits(s(x), SmoothTerm),
 #> TRUE TRUE 
 
 # The settings are on `spec`; what the data decide is in the blueprint.
-tm <- s(x, k = 8)
+tm <- s(x, basis7::bspline_smooth(k = 8))
 names(tm@spec)
-#> [1] "k"      "degree" "bases"  "linear"
+#> [1] "smoothers"
 names(term_build(tm, dd)@blueprint)
 #> [1] "core"      "marg"      "spec"      "vars"      "by"        "by_levels"
 #> [7] "sparse"    "nblock"   

@@ -227,7 +227,7 @@ a non-smooth method.
 
 ``` r
 
-sm <- term_build(s(x1, k = 8), dd)
+sm <- term_build(s(x1, basis7::bspline_smooth(k = 8)), dd)
 dim(term_matrix(sm))
 #> [1] 50  7
 term_coef_names(sm)

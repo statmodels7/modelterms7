@@ -67,7 +67,7 @@ term_build(linpar(~ x), d)
 #> <LinparTerm> built: 2 coefficients
 
 # The label is shown when there is one.
-s(x, k = 5)
+s(x, basis7::bspline_smooth(k = 5))
 #> <SmoothTerm> 's(x)' (specification; call term_build() with data)
 linpar(~ x, label = "lin")
 #> <LinparTerm> 'lin' (specification; call term_build() with data)

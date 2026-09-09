@@ -1,5 +1,76 @@
 # Changelog
 
+## modelterms7 0.72.0
+
+- **[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md)
+  and
+  [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
+  take a smoother.** How a smooth is built – the basis, the roughness
+  penalty, the null space and the coordinates – is one object now, and
+  what stays on the term is how the term enters the model:
+
+      s(x, smoother = bspline_smooth(), by = NULL, hyper = NULL,
+        id = NULL, label = NULL, sparse = NULL)
+      te(..., smooths = bspline_smooth(k = 5), by = NULL, anisotropic = TRUE,
+         hyper = NULL, id = NULL, label = NULL, sparse = NULL)
+
+  `k`, `degree`, `basis`, `bases`, `linear` and `lambda` are
+  **retired**. `k` and `degree` were a B-spline’s arguments wearing the
+  shape of general ones, `linear` named the null space “linear”, which
+  it is only when the penalty is of order 2, and `basis` was an escape
+  hatch that silently overrode the first two and then imposed a
+  construction written for a B-spline on whatever basis it was handed.
+
+- **What that opens, and it needed no branch in
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md):**
+  `s(doy, fourier_smooth(k = 9, lower = 0, upper = 365))` is a periodic
+  smooth, `s(x, legendre_smooth(k = 8))` a global polynomial one, and
+  `s(x, bspline_smooth(k = 20, order = 3))` contracts to a parabola with
+  two free columns rather than to a line with one. A family added to
+  arrives complete without this package being touched, which is what the
+  separation was for.
+
+- ⚠️ **Every existing fit is unchanged, and what says so is an
+  identity.** Against a battery captured from the previous release
+  before any of this was written – fifteen term shapes and twelve fitted
+  models, with and without `by`, factor and numeric, sparse and dense,
+  tensor products isotropic and not, a distributional model, a held
+  hyperparameter, a shared one and a Poisson – the block, the
+  coefficient names, the penalty, the block at new rows, the
+  log-likelihood, the coefficients, the effective degrees of freedom,
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html), the fitted values and
+  the convergence flag are
+  [`identical()`](https://rdrr.io/r/base/identical.html): **192
+  comparisons and no difference**.
+
+- ⚠️ **One thing does move, by design: the key a term is filed under.**
+  It is the deparsed call, so it now carries the construction –
+  `s(x, bspline_smooth(k = 6))` rather than `s(x, k = 6)`. That is the
+  point: two smooths of one covariate built differently were previously
+  indistinguishable by their key. The **label**, which prefixes the
+  coefficient names, is unchanged, so a coefficient table still reads
+  `s(x).lin`.
+
+- ⚠️ **A retired argument is reported with its replacement**, not left
+  to R’s own “unused argument”, which names the argument and not what to
+  write.
+  [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
+  checks the **named** entries of its `...`, where a retired argument
+  would otherwise be taken for a covariate called `k` – silently, that
+  constructor having no dots left to catch it in.
+
+- ⚠️ **A tensor product reads a margin’s basis and its roughness matrix
+  and nothing else.** The constraint, the null space and the coordinates
+  belong to the **product**: the tensor contains the constant whatever
+  its margins do, so the block is centered over the observed covariates
+  rather than each margin being constrained. A margin asking for one of
+  those three at a non-default value is rejected with the reason.
+
+- Per-margin dimensions are a **list** of smoothers,
+  `te(x, z, smooths = list(bspline_smooth(k = 4), bspline_smooth(k = 5)))`,
+  where a vector `k` used to be recycled. One smoother is used for every
+  margin.
+
 ## modelterms7 0.71.0
 
 - [`term_fourth()`](https://statmodels7.github.io/modelterms7/reference/term_fourth.md)

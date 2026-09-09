@@ -15,15 +15,13 @@ falls to exactly one.
 ``` r
 s(
   x,
+  smoother = basis7::bspline_smooth(),
   by = NULL,
-  k = 10,
-  degree = 3,
-  basis = NULL,
-  linear = TRUE,
-  label = NULL,
-  lambda = NULL,
+  hyper = NULL,
   id = NULL,
-  sparse = NULL
+  label = NULL,
+  sparse = NULL,
+  ...
 )
 ```
 
@@ -33,42 +31,29 @@ s(
 
   The covariate, an expression evaluated in the data.
 
+- smoother:
+
+  How the smooth is built: a basis7 smoother, which carries the basis,
+  the roughness penalty, the null space and the reparametrization
+  together.
+  [`basis7::bspline_smooth()`](https://statmodels7.github.io/basis7/reference/bspline_smooth.html)
+  is the default and is the construction this term has always used;
+  [`basis7::fourier_smooth()`](https://statmodels7.github.io/basis7/reference/fourier_smooth.html)
+  is the periodic one and
+  [`basis7::legendre_smooth()`](https://statmodels7.github.io/basis7/reference/legendre_smooth.html)
+  the global polynomial one.
+
 - by:
 
   An optional factor or numeric variable, given as a bare expression;
   `NULL` by default. See the section above.
 
-- k:
+- hyper:
 
-  The basis dimension before reparametrization, `10` by default. It must
-  exceed `degree`: a cubic spline needs at least four basis functions,
-  and anything smaller throws. The block has `k - 1` columns with
-  `linear = TRUE` and `k - 2` without it.
-
-- degree:
-
-  The spline degree, `3` by default, a cubic spline.
-
-- basis:
-
-  An optional basis7 basis used in place of the default B-spline. Its
-  range is taken as given, so a basis built on one interval is not
-  re-placed on the data's.
-
-- linear:
-
-  Whether the linear effect is carried in the block and left unpenalized
-  there, `TRUE` by default.
-
-- label:
-
-  A single non-empty string prefixed to the coefficient names. `NULL`,
-  the default, builds one from the covariate: `s(x)`.
-
-- lambda:
-
-  The smoothing parameter, held at the value given and **estimated**
-  when left `NULL`, which is the default.
+  The hyperparameters of the smoother's penalty to hold, as a named
+  numeric vector such as `c(lambda = 2)`. What names there are depends
+  on the penalty; anything left out is **estimated**, which is the
+  default.
 
 - id:
 
@@ -79,11 +64,22 @@ s(
   dimension. `NULL`, the default, shares nothing. See
   [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
 
+- label:
+
+  A single non-empty string prefixed to the coefficient names. `NULL`,
+  the default, builds one from the covariate: `s(x)`.
+
 - sparse:
 
   `TRUE`, `FALSE`, or `NULL` to settle it at build. Only a factor `by`
   admits `TRUE`; without one it is refused rather than ignored. See the
   section above.
+
+- ...:
+
+  Not used, and accepted only so that an argument `s()` no longer takes
+  is reported with its replacement rather than as R's own "unused
+  argument", which names the argument and not what to write.
 
 ## Value
 
@@ -97,11 +93,11 @@ fills them.
 ## The block and its penalty
 
 The block has one column for the linear effect, centered and scaled,
-followed by the reparametrized basis, so `s(x, k = 8)` gives seven
-columns named `s(x).lin`, `s(x).z1` ... `s(x).z6`. That ordering is what
-the penalty reads: it is the quadratic penalty of \\\mathrm{diag}(0, 1,
-\dots, 1)\\, rank deficient by exactly one, so the linear effect is
-unpenalized and the deviation is shrunk toward zero.
+followed by the reparametrized basis, so `s(x, bspline_smooth(k = 8))`
+gives seven columns named `s(x).lin`, `s(x).z1` ... `s(x).z6`. That
+ordering is what the penalty reads: it is the quadratic penalty of
+\\\mathrm{diag}(0, 1, \dots, 1)\\, rank deficient by exactly one, so the
+linear effect is unpenalized and the deviation is shrunk toward zero.
 
 Two consequences a reader of a fit needs. At a large smoothing parameter
 the fit tends to a straight line, so
@@ -133,7 +129,8 @@ rebuilding differs by 2.85.
 A **factor** `by` gives one smooth per level: the block is the smooth
 multiplied by each level's indicator, and the penalty is the same matrix
 repeated blockwise, so one smoothing parameter governs every level.
-`s(x, k = 5, by = g)` over a four-level factor has 16 columns.
+`s(x, bspline_smooth(k = 5), by = g)` over a four-level factor has 16
+columns.
 
 A **numeric** `by` gives a varying-coefficient term: the smooth
 multiplies that variable, and the fitted function is the coefficient of
@@ -187,7 +184,7 @@ dd <- data.frame(x = sort(runif(80)), g = factor(rep(letters[1:4], 20)))
 dd$y <- sin(2 * pi * dd$x) + rnorm(80, sd = 0.2)
 
 # k = 8 gives seven columns: the linear effect and six deviations.
-b <- term_build(s(x, k = 8), dd)
+b <- term_build(s(x, basis7::bspline_smooth(k = 8)), dd)
 term_coef_names(b)
 #> [1] "s(x).lin" "s(x).z1"  "s(x).z2"  "s(x).z3"  "s(x).z4"  "s(x).z5"  "s(x).z6" 
 
@@ -219,7 +216,7 @@ vapply(c(1e-8, 1, 1e12),
 #> [1] 7.000000 4.191177 1.000000
 
 # A factor `by` is one smooth per level under one smoothing parameter.
-bf <- term_build(s(x, k = 5, by = g), dd)
+bf <- term_build(s(x, basis7::bspline_smooth(k = 5), by = g), dd)
 c(npar = term_npar(bf), levels = nlevels(dd$g))
 #>   npar levels 
 #>     16      4 
@@ -227,11 +224,11 @@ c(npar = term_npar(bf), levels = nlevels(dd$g))
 # The transform is computed on the data and reapplied, never rebuilt.
 max(abs(term_predict(b, dd[1:10, ]) - X[1:10, ]))
 #> [1] 0
-max(abs(term_matrix(term_build(s(x, k = 8), dd[1:10, ])) - X[1:10, ]))
+max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 8)), dd[1:10, ])) - X[1:10, ]))
 #> [1] 2.849289
 
 # Sparsity needs a factor `by`, and says so when there is none.
-try(term_build(s(x, k = 5, sparse = TRUE), dd))
+try(term_build(s(x, basis7::bspline_smooth(k = 5), sparse = TRUE), dd))
 #> Error : 'sparse' has nothing to build on here: a smooth's basis is dense by
 #>   construction. Sparsity comes from a FACTOR 'by', whose indicators put each
 #>   row in the block of its own level.
