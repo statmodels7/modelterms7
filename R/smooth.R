@@ -18,11 +18,13 @@ NULL
 #' [te()], kept unevaluated so that a build reads them in whatever data it is
 #' given. `by` is the expression the smooth varies with, or `NULL`.
 #'
-#' `spec` carries the construction settings the build reads: the basis or
-#' bases, the dimension `k`, the degree, whether the linear part is separated
-#' out, and for [te()] whether the penalty is anisotropic. What a build then
+#' `spec` carries what the build reads: the \pkg{basis7} smoothers, one per
+#' covariate, which hold the whole construction; `by_hyper`, saying whether
+#' the levels of a factor `by` share a smoothing parameter or carry one each;
+#' and for [te()] whether the penalty is anisotropic. What a build then
 #' computes from the data goes into the blueprint instead: the
-#' Demmler-Reinsch transform, the centering constraint, the `by` levels.
+#' Demmler-Reinsch transform, the centering constraint, the `by` levels and
+#' the penalties the term declares.
 #'
 #' `sparse` is `NULL` until the build settles it. A smooth's block is sparse
 #' only under a **factor** `by`, where each row sits in the block of its own
@@ -33,9 +35,9 @@ NULL
 #' @inheritParams model_term
 #' @param vars A list of the covariate expressions being smoothed.
 #' @param by The expression the smooth varies with, or `NULL`.
-#' @param spec A named list of construction settings: the basis, its dimension
-#'   and degree, whether the linear part is carried separately, and for [te()]
-#'   the `anisotropic` flag.
+#' @param spec A named list of what the build reads: `smoothers`, one
+#'   \pkg{basis7} smoother per covariate; `by_hyper`; and for [te()] the
+#'   `anisotropic` flag.
 #' @param sparse `TRUE`, `FALSE` or `NULL` for the block's storage; only a
 #'   factor `by` admits `TRUE`. See [s()].
 #'
@@ -121,8 +123,10 @@ SmoothTerm <- S7::new_class(
 #' to exactly zero and chooses the smooth's effective dimension. Measured at
 #' \eqn{n = 300} with \eqn{k = 20}, the coordinates surviving as the
 #' smoothing parameter grows are 15, 10, 4, 2, 1 and 0 of 18, and the fit at
-#' two of them is as close to the truth as the fit at all eighteen. A
-#' heavy-tailed penalty is the robust reading of the same block, and a
+#' FOUR of them is the closest to the truth: the root mean square errors at
+#' those six counts are 0.2453, 0.2427, 0.2412, 0.2425, 0.2709 and 0.4967. So
+#' the \eqn{\ell_1} buys a smaller smooth and a slightly better one at once.
+#' A heavy-tailed penalty is the robust reading of the same block, and a
 #' structured one estimates the correlation of the coefficients rather than
 #' fixing it.
 #'

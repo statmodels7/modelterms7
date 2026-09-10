@@ -71,9 +71,9 @@ term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{by}{The expression the smooth varies with, or \code{NULL}.}
 
-\item{spec}{A named list of construction settings: the basis, its dimension
-and degree, whether the linear part is carried separately, and for \code{\link[=te]{te()}}
-the \code{anisotropic} flag.}
+\item{spec}{A named list of what the build reads: \code{smoothers}, one
+\pkg{basis7} smoother per covariate; \code{by_hyper}; and for \code{\link[=te]{te()}} the
+\code{anisotropic} flag.}
 
 \item{sparse}{\code{TRUE}, \code{FALSE} or \code{NULL} for the block's storage; only a
 factor \code{by} admits \code{TRUE}. See \code{\link[=s]{s()}}.}
@@ -95,11 +95,13 @@ in the class.
 \code{\link[=te]{te()}}, kept unevaluated so that a build reads them in whatever data it is
 given. \code{by} is the expression the smooth varies with, or \code{NULL}.
 
-\code{spec} carries the construction settings the build reads: the basis or
-bases, the dimension \code{k}, the degree, whether the linear part is separated
-out, and for \code{\link[=te]{te()}} whether the penalty is anisotropic. What a build then
+\code{spec} carries what the build reads: the \pkg{basis7} smoothers, one per
+covariate, which hold the whole construction; \code{by_hyper}, saying whether
+the levels of a factor \code{by} share a smoothing parameter or carry one each;
+and for \code{\link[=te]{te()}} whether the penalty is anisotropic. What a build then
 computes from the data goes into the blueprint instead: the
-Demmler-Reinsch transform, the centering constraint, the \code{by} levels.
+Demmler-Reinsch transform, the centering constraint, the \code{by} levels and
+the penalties the term declares.
 
 \code{sparse} is \code{NULL} until the build settles it. A smooth's block is sparse
 only under a \strong{factor} \code{by}, where each row sits in the block of its own

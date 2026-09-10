@@ -17,8 +17,11 @@
   identity, so an l1 penalty takes whole directions of wiggliness to exactly
   zero and chooses the smooth's effective dimension. Measured at `n = 300`
   with `k = 20`, the surviving coordinates as the smoothing parameter grows
-  are 15, 10, 4, 2, 1 and 0 of 18, and the fit at two of them is as close to
-  the truth as the fit at all eighteen (rmse 0.2412 against 0.2453).
+  are 15, 10, 4, 2, 1 and 0 of 18, and the fit at FOUR of them is the
+  closest to the truth: the root mean square errors at those six counts are
+  0.2453, 0.2427, 0.2412, 0.2425, 0.2709 and 0.4967. The lightest penalty
+  tried keeps fifteen and is already the worse of the two, so what the l1
+  buys here is a smaller smooth as well as a better one.
 
 * ⚠️ **A factory covers the PENALIZED coordinates and not the free ones.** A
   roughness matrix carries a zero row for the linear column and leaves it

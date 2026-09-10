@@ -102,8 +102,10 @@ identity, so an \eqn{\ell_1} penalty takes whole directions of wiggliness
 to exactly zero and chooses the smooth's effective dimension. Measured at
 \eqn{n = 300} with \eqn{k = 20}, the coordinates surviving as the
 smoothing parameter grows are 15, 10, 4, 2, 1 and 0 of 18, and the fit at
-two of them is as close to the truth as the fit at all eighteen. A
-heavy-tailed penalty is the robust reading of the same block, and a
+FOUR of them is the closest to the truth: the root mean square errors at
+those six counts are 0.2453, 0.2427, 0.2412, 0.2425, 0.2709 and 0.4967. So
+the \eqn{\ell_1} buys a smaller smooth and a slightly better one at once.
+A heavy-tailed penalty is the robust reading of the same block, and a
 structured one estimates the correlation of the coefficients rather than
 fixing it.
 
