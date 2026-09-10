@@ -188,8 +188,8 @@ c(s = S7::S7_inherits(s(x), SmoothTerm),
 # The settings are on `spec`; what the data decide is in the blueprint.
 tm <- s(x, basis7::bspline_smooth(k = 8))
 names(tm@spec)
-#> [1] "smoothers"
+#> [1] "smoothers" "by_hyper" 
 names(term_build(tm, dd)@blueprint)
 #> [1] "core"      "marg"      "spec"      "vars"      "by"        "by_levels"
-#> [7] "sparse"    "nblock"   
+#> [7] "sparse"    "penalties" "nblock"   
 ```

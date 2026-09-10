@@ -19,7 +19,7 @@ edf() falls to exactly one."><meta property="og:image" content="https://statmode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.72.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.73.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,6 +61,7 @@ the deviation.</p>
 <span>  <span class="va">x</span>,</span>
 <span>  smoother <span class="op">=</span> <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  by_hyper <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"shared"</span>, <span class="st">"level"</span><span class="op">)</span>,</span>
 <span>  hyper <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  id <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  label <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -91,11 +92,19 @@ and is the construction this term has always used;
 expression; <code>NULL</code> by default. See the section above.</p></dd>
 
 
+<dt id="arg-by-hyper">by_hyper<a class="anchor" aria-label="anchor" href="#arg-by-hyper"></a></dt>
+<dd><p>With a factor <code>by</code>, whether the levels share one smoothing
+parameter (<code>"shared"</code>, the default) or carry one each (<code>"level"</code>). See
+the section above. Rejected without a factor <code>by</code>, which has no levels
+to give one each.</p></dd>
+
+
 <dt id="arg-hyper">hyper<a class="anchor" aria-label="anchor" href="#arg-hyper"></a></dt>
 <dd><p>The hyperparameters of the smoother's penalty to hold, as a
 named numeric vector such as <code>c(lambda = 2)</code>. What names there are
 depends on the penalty; anything left out is <strong>estimated</strong>, which is
-the default.</p></dd>
+the default. Under <code>by_hyper = "level"</code> a name is qualified by the
+level, <code>c(lambda.a = 2)</code>.</p></dd>
 
 
 <dt id="arg-id">id<a class="anchor" aria-label="anchor" href="#arg-id"></a></dt>
@@ -142,8 +151,34 @@ fit tends to a straight line, so <code><a href="edf.html">edf()</a></code> runs 
 never to 0. And the linear column is orthogonal to the rest over the
 observed covariate, so the linear and the nonlinear parts of a fitted smooth
 are separately readable.</p>
-<p><code>linear = FALSE</code> drops that first column, and the penalty is then the
-identity over the whole block, of full rank.</p>
+<p><code>bspline_smooth(null_space = "drop")</code> drops that first column, and the
+penalty is then the identity over the whole block, of full rank.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="a-penalty-of-your-own">A penalty of your own<a class="anchor" aria-label="anchor" href="#a-penalty-of-your-own"></a></h2>
+    <p>The smoother's <code>penalty</code> argument replaces the roughness matrix with a
+<span class="pkg">penalties7</span> penalty of its own, built at the coefficient count only
+the data settle: <code>s(x, bspline_smooth(k = 20, penalty = penalties7::lasso_penalty))</code>. A <span class="pkg">penalties7</span> constructor passes bare,
+and anything else is a function of the count.</p>
+<p>What it buys is that the Demmler-Reinsch coordinates are ordered from the
+smoothest to the most wiggly and the roughness penalty on them is the
+identity, so an \(\ell_1\) penalty takes whole directions of wiggliness
+to exactly zero and chooses the smooth's effective dimension. Measured at
+\(n = 300\) with \(k = 20\), the coordinates surviving as the
+smoothing parameter grows are 15, 10, 4, 2, 1 and 0 of 18, and the fit at
+two of them is as close to the truth as the fit at all eighteen. A
+heavy-tailed penalty is the robust reading of the same block, and a
+structured one estimates the correlation of the coefficients rather than
+fixing it.</p>
+<p>Two things follow, and neither is a detail. The penalty covers <strong>the
+penalized coordinates alone</strong>: a roughness matrix carries a zero row for
+the linear column and leaves it free by its own arithmetic, where a
+separable penalty has no such row and would shrink it, so the free columns
+are outside the entry it declares. And a penalty <strong>with a kink</strong> has no
+second derivative at zero, which a marginal criterion needs, so its
+smoothing parameter is chosen by a path over <code>sparse_criterion</code> – BIC by
+default – and not by REML, whatever <code>outer_criterion</code> says. That is a
+change in what the number means and not only in how it is computed.</p>
     </div>
     <div class="section level2">
     <h2 id="the-construction-is-empirical">The construction is empirical<a class="anchor" aria-label="anchor" href="#the-construction-is-empirical"></a></h2>
@@ -164,11 +199,26 @@ differs by 2.85.</p>
 
 <p>A <strong>factor</strong> <code>by</code> gives one smooth per level: the block is the smooth
 multiplied by each level's indicator, and the penalty is the same matrix
-repeated blockwise, so one smoothing parameter governs every level.
+repeated blockwise.
 <code>s(x, bspline_smooth(k = 5), by = g)</code> over a four-level factor has 16 columns.</p>
+<p><code>by_hyper</code> says whether the levels are smoothed <strong>together or apart</strong>.
+<code>"shared"</code>, the default, estimates one smoothing parameter for all of them,
+which is what this package has always done. <code>"level"</code> declares one penalty
+per level through <code><a href="term_penalties.html">term_penalties()</a></code>, so each is estimated on its own; it
+is what <span class="pkg">mgcv</span> does by default, and what <code>id</code> there undoes. Which to
+want is a question about the data rather than about the code: levels that
+differ in how wiggly they are, or in how much of them there is, ask for
+different amounts of smoothing. Measured on three levels of one curve at
+amplitudes 1, 0.15 and 2.5, the separately estimated smoothing parameters
+are 2.03, 111.9 and 0.468 – a factor of 239 apart – and the effective
+degrees of freedom fall from 25.5 to 21.7 as the flattest level is smoothed
+away.</p>
+<p>Under <code>"level"</code> a held hyperparameter is qualified by the level it belongs
+to, <code>hyper = c(lambda.a = 2)</code>, and so is an <code>id</code>.</p>
 <p>A <strong>numeric</strong> <code>by</code> gives a varying-coefficient term: the smooth multiplies
 that variable, and the fitted function is the coefficient of <code>by</code> as it
-changes with the covariate.</p>
+changes with the covariate. It has no levels, so <code>by_hyper = "level"</code> is
+rejected rather than read as <code>"shared"</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="sparse-storage">Sparse storage<a class="anchor" aria-label="anchor" href="#sparse-storage"></a></h2>
@@ -246,6 +296,29 @@ spends.</p></div>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>npar <span class="op">=</span> <span class="fu"><a href="term_npar.html">term_npar</a></span><span class="op">(</span><span class="va">bf</span><span class="op">)</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nlevels.html" class="external-link">nlevels</a></span><span class="op">(</span><span class="va">dd</span><span class="op">$</span><span class="va">g</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   npar levels </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     16      4 </span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="term_penalties.html">term_penalties</a></span><span class="op">(</span><span class="va">bf</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># by_hyper = "level" gives them one each: one entry per level, over that</span></span></span>
+<span class="r-in"><span><span class="co"># level's own columns.</span></span></span>
+<span class="r-in"><span><span class="va">bl</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">s</span><span class="op">(</span><span class="va">x</span>, <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>, by <span class="op">=</span> <span class="va">g</span>,</span></span>
+<span class="r-in"><span>                   by_hyper <span class="op">=</span> <span class="st">"level"</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="term_penalties.html">term_penalties</a></span><span class="op">(</span><span class="va">bl</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="va">e</span><span class="op">$</span><span class="va">name</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "a" "b" "c" "d"</span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="term_penalties.html">term_penalties</a></span><span class="op">(</span><span class="va">bl</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/range.html" class="external-link">range</a></span><span class="op">(</span><span class="va">e</span><span class="op">$</span><span class="va">index</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      [,1] [,2] [,3] [,4]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1,]    1    5    9   13</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [2,]    4    8   12   16</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A penalty factory covers the PENALIZED coordinates: the free linear</span></span></span>
+<span class="r-in"><span><span class="co"># column is left out, a separable penalty having no zero row with which</span></span></span>
+<span class="r-in"><span><span class="co"># to leave it alone.</span></span></span>
+<span class="r-in"><span><span class="va">bp</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">s</span><span class="op">(</span><span class="va">x</span>, <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  k <span class="op">=</span> <span class="fl">5</span>, penalty <span class="op">=</span> <span class="fu">penalties7</span><span class="fu">::</span><span class="va"><a href="https://statmodels7.github.io/penalties7/reference/ridge_penalty.html" class="external-link">lasso_penalty</a></span><span class="op">)</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="term_penalties.html">term_penalties</a></span><span class="op">(</span><span class="va">bp</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">index</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2 3 4</span>
+<span class="r-in"><span><span class="fu"><a href="term_penalties.html">term_penalties</a></span><span class="op">(</span><span class="va">bp</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">penalty</span><span class="op">@</span><span class="va">params</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "lambda"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The transform is computed on the data and reapplied, never rebuilt.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="term_predict.html">term_predict</a></span><span class="op">(</span><span class="va">b</span>, <span class="va">dd</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="op">]</span><span class="op">)</span> <span class="op">-</span> <span class="va">X</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>

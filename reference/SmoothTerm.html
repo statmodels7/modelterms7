@@ -15,7 +15,7 @@ in the class."><meta property="og:image" content="https://statmodels7.github.io/
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.72.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.73.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -200,10 +200,10 @@ roughness penalty; <code><a href="edf.html">edf()</a></code> for what a fitted s
 <span class="r-in"><span><span class="co"># The settings are on `spec`; what the data decide is in the blueprint.</span></span></span>
 <span class="r-in"><span><span class="va">tm</span> <span class="op">&lt;-</span> <span class="fu"><a href="s.html">s</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">8</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">tm</span><span class="op">@</span><span class="va">spec</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "smoothers"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "smoothers" "by_hyper" </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="va">tm</span>, <span class="va">dd</span><span class="op">)</span><span class="op">@</span><span class="va">blueprint</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "core"      "marg"      "spec"      "vars"      "by"        "by_levels"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [7] "sparse"    "nblock"   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [7] "sparse"    "penalties" "nblock"   </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

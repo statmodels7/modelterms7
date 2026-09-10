@@ -13,6 +13,7 @@ te(
   ...,
   smooths = basis7::bspline_smooth(k = 5),
   by = NULL,
+  by_hyper = c("shared", "level"),
   anisotropic = TRUE,
   hyper = NULL,
   id = NULL,
@@ -33,7 +34,9 @@ te(
 
   How each margin is built: one basis7 smoother used for every
   covariate, or a list of one per covariate. `bspline_smooth(k = 5)` is
-  the default.
+  the default. A margin carrying a `penalty` factory is rejected: a
+  tensor product's penalty is the sum of the marginal roughnesses, and a
+  factory does not say how it composes with that sum.
 
   What the product reads from a margin is its **basis** and its
   **roughness matrix**, so `k`, `degree`, `order`, `measure`, `lower`
@@ -48,6 +51,15 @@ te(
   An optional factor or numeric variable, as in
   [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md),
   with the same two readings and the same sparsity rule.
+
+- by_hyper:
+
+  With a factor `by`, whether the levels share the term's smoothing
+  parameters (`"shared"`, the default) or carry a set each (`"level"`),
+  as in
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md).
+  Under `anisotropic = TRUE` a set is one per margin, so `"level"` gives
+  one per margin per level.
 
 - anisotropic:
 

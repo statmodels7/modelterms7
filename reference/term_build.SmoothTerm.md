@@ -92,7 +92,7 @@ dd <- data.frame(x = sort(runif(80)), z = runif(80))
 b <- term_build(s(x, basis7::bspline_smooth(k = 8)), dd)
 names(b@blueprint)
 #> [1] "core"      "marg"      "spec"      "vars"      "by"        "by_levels"
-#> [7] "sparse"    "nblock"   
+#> [7] "sparse"    "penalties" "nblock"   
 b@blueprint$core$kind
 #> [1] "smoother"
 

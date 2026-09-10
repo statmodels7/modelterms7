@@ -13,7 +13,7 @@ so the surface may be rough in one direction and smooth in another."><meta prope
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.72.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.73.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,6 +52,7 @@ so the surface may be rough in one direction and smooth in another.</p>
 <span>  <span class="va">...</span>,</span>
 <span>  smooths <span class="op">=</span> <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>,</span>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  by_hyper <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"shared"</span>, <span class="st">"level"</span><span class="op">)</span>,</span>
 <span>  anisotropic <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  hyper <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  id <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -72,7 +73,10 @@ two of them. One throws <code>"'te' needs at least two covariates; use s() for o
 <dt id="arg-smooths">smooths<a class="anchor" aria-label="anchor" href="#arg-smooths"></a></dt>
 <dd><p>How each margin is built: one <span class="pkg">basis7</span> smoother used
 for every covariate, or a list of one per covariate.
-<code>bspline_smooth(k = 5)</code> is the default.</p>
+<code>bspline_smooth(k = 5)</code> is the default. A margin carrying a <code>penalty</code>
+factory is rejected: a tensor product's penalty is the sum of the
+marginal roughnesses, and a factory does not say how it composes with
+that sum.</p>
 <p>What the product reads from a margin is its <strong>basis</strong> and its
 <strong>roughness matrix</strong>, so <code>k</code>, <code>degree</code>, <code>order</code>, <code>measure</code>, <code>lower</code> and
 <code>upper</code> all act. The constraint, the null space and the
@@ -85,6 +89,13 @@ than ignored.</p></dd>
 <dt id="arg-by">by<a class="anchor" aria-label="anchor" href="#arg-by"></a></dt>
 <dd><p>An optional factor or numeric variable, as in <code><a href="s.html">s()</a></code>, with the same
 two readings and the same sparsity rule.</p></dd>
+
+
+<dt id="arg-by-hyper">by_hyper<a class="anchor" aria-label="anchor" href="#arg-by-hyper"></a></dt>
+<dd><p>With a factor <code>by</code>, whether the levels share the term's
+smoothing parameters (<code>"shared"</code>, the default) or carry a set each
+(<code>"level"</code>), as in <code><a href="s.html">s()</a></code>. Under <code>anisotropic = TRUE</code> a set is one per
+margin, so <code>"level"</code> gives one per margin per level.</p></dd>
 
 
 <dt id="arg-anisotropic">anisotropic<a class="anchor" aria-label="anchor" href="#arg-anisotropic"></a></dt>

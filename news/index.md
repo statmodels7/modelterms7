@@ -1,5 +1,125 @@
 # Changelog
 
+## modelterms7 0.73.0
+
+- **A smooth may be penalized by something other than its roughness
+  matrix, and the levels of a factor `by` may be smoothed apart.** Both
+  are answered through
+  [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
+  which is the general question a term is asked about its penalties, and
+  both leave the default alone.
+
+- `s(x, bspline_smooth(penalty = penalties7::lasso_penalty))` penalizes
+  the smooth’s own coordinates with any penalty. The factory is the
+  smoother’s and modelterms7 calls it, at the coefficient count only the
+  data settle, through the `.penalty_factory()` this package has used
+  for
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md),
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+  and the break-point trio since 0.22.0: a constructor passes bare and
+  anything else is a function of the count.
+
+  What it buys is that the Demmler-Reinsch coordinates are ordered from
+  the smoothest to the most wiggly and the roughness penalty on them is
+  the identity, so an l1 penalty takes whole directions of wiggliness to
+  exactly zero and chooses the smooth’s effective dimension. Measured at
+  `n = 300` with `k = 20`, the surviving coordinates as the smoothing
+  parameter grows are 15, 10, 4, 2, 1 and 0 of 18, and the fit at two of
+  them is as close to the truth as the fit at all eighteen (rmse 0.2412
+  against 0.2453).
+
+- ⚠️ **A factory covers the PENALIZED coordinates and not the free
+  ones.** A roughness matrix carries a zero row for the linear column
+  and leaves it free by its own arithmetic; a separable penalty has no
+  such row and would shrink it. So the entry a factory declares names a
+  subset, which is the idiom 0.16.0 established: naming coordinates
+  rather than selecting them with a map is what keeps `has_prox()` TRUE,
+  a separable penalty under a selection map being the generalized lasso.
+
+  The licence for that reading is an identity rather than an argument: a
+  ridge over the penalized coordinates beside the free column reproduces
+  the fit
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) has
+  always produced, to the printed digit – log-likelihood 1.041, edf
+  11.486, lambda 3.77088, rmse 0.0351 on both sides.
+
+- `s(x, by = g, by_hyper = "level")` estimates one smoothing parameter
+  per level, where `"shared"`, the default, estimates one for all of
+  them. Which to want is a question about the data: levels that differ
+  in how wiggly they are ask for different amounts of smoothing.
+  Measured on three levels of one curve at amplitudes 1, 0.15 and 2.5,
+  the separately estimated smoothing parameters are 2.03, 111.9 and
+  0.468 – a factor of 239 apart – the effective degrees of freedom fall
+  from 25.5 to 21.7 as the flattest level is smoothed away, and the root
+  mean square error against the truth from 0.0551 to 0.0526. It is what
+  does by default and what `id` there undoes; this package’s default is
+  the other way round, and stays there because every fit written before
+  this must not move.
+
+  The per-level fit reproduces three separately written smooths EXACTLY
+  – the same three smoothing parameters, the same 21.706 effective
+  degrees of freedom, the same 0.0526 – which is a check rather than a
+  coincidence, the two routes sharing no code path.
+
+  Splitting and sharing compose, and neither needed writing for the
+  other: `id = c(lambda.a = "sp")` shares ONE level’s smoothing
+  parameter with another term while the rest stay their own, because the
+  entries carry qualified names and
+  [`check_ids()`](https://statmodels7.github.io/modelterms7/reference/check_ids.md)
+  sees exactly the names `hyper` does.
+
+- ⚠️ **Every existing fit is unchanged, and what says so is an
+  identity.** Against the battery captured before the smoother
+  migration: 192 comparisons, no difference. Against the fit itself: the
+  log-likelihood, the coefficients, the effective degrees of freedom,
+  [`vcov()`](https://rdrr.io/r/stats/vcov.html), the fitted values and
+  the hyperparameter are
+  [`identical()`](https://rdrr.io/r/base/identical.html) between
+  `s(x, bspline_smooth(k = 20))` and the same call with `penalty = NULL`
+  and `by_hyper = "shared"` written out.
+
+- ⚠️ **A penalty with a kink has no REML reading, and that is a change
+  in what the number means rather than in how it is computed.** A
+  marginal criterion wants the second derivative the kink has not, so
+  the smoothing parameter of a lasso, an elastic net, SCAD or MCP is
+  chosen by a path over `statmod()`’s `sparse_criterion` – BIC by
+  default – whatever `outer_criterion` says. That substitution is what
+  this layer has always done for
+  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md)
+  and its siblings; the page of
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) now
+  says so, since a smooth is where a reader expects REML.
+
+- `.random_hyper()` is
+  [`.entry_hyper()`](https://statmodels7.github.io/modelterms7/reference/dot-entry_hyper.md)
+  and has moved to `generics.R`. It implements the
+  [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+  entry contract and has nothing to do with random effects: it splits a
+  term’s `hyper` and `id` over the entries and checks every name against
+  the penalty that carries it, at the build, which is the first point at
+  which those penalties exist. A smooth needs exactly that, for the same
+  reason a random effect does – which hyperparameters there are depends
+  on the penalty. Its `ids` argument was undocumented and now is not.
+
+- The hyperparameter names of a smooth are still checked AT THE
+  CONSTRUCTOR wherever they can be, which is every call that does not
+  ask for a factory or for one parameter per level. The strict check is
+  what reports `hyper = c(lamda = 2)` where it is written, and giving it
+  up for one code path would have moved that report to the build for the
+  common call.
+
+- ⚠️ [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
+  rejects a margin carrying a `penalty` factory. A tensor product’s
+  penalty is the sum of the marginal roughnesses, and a factory does not
+  say whether it replaces one of them, all of them, or the sum. The
+  question has an answer only once somebody asks it of a model.
+
+- The page of
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) said
+  `linear = FALSE` drops the linear column. That argument was retired in
+  0.72.0 and the sentence names `bspline_smooth(null_space = "drop")`
+  now.
+
 ## modelterms7 0.72.0
 
 - **[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md)
