@@ -121,8 +121,8 @@ SmoothTerm(
 
 - spec:
 
-  A named list of construction settings: the basis, its dimension and
-  degree, whether the linear part is carried separately, and for
+  A named list of what the build reads: `smoothers`, one basis7 smoother
+  per covariate; `by_hyper`; and for
   [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
   the `anisotropic` flag.
 
@@ -149,13 +149,15 @@ two or more for
 kept unevaluated so that a build reads them in whatever data it is
 given. `by` is the expression the smooth varies with, or `NULL`.
 
-`spec` carries the construction settings the build reads: the basis or
-bases, the dimension `k`, the degree, whether the linear part is
-separated out, and for
+`spec` carries what the build reads: the basis7 smoothers, one per
+covariate, which hold the whole construction; `by_hyper`, saying whether
+the levels of a factor `by` share a smoothing parameter or carry one
+each; and for
 [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
 whether the penalty is anisotropic. What a build then computes from the
 data goes into the blueprint instead: the Demmler-Reinsch transform, the
-centering constraint, the `by` levels.
+centering constraint, the `by` levels and the penalties the term
+declares.
 
 `sparse` is `NULL` until the build settles it. A smooth's block is
 sparse only under a **factor** `by`, where each row sits in the block of

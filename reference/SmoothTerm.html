@@ -149,9 +149,9 @@ term reads them. Empty until <code><a href="term_build.html">term_build()</a></c
 
 
 <dt id="arg-spec">spec<a class="anchor" aria-label="anchor" href="#arg-spec"></a></dt>
-<dd><p>A named list of construction settings: the basis, its dimension
-and degree, whether the linear part is carried separately, and for <code><a href="te.html">te()</a></code>
-the <code>anisotropic</code> flag.</p></dd>
+<dd><p>A named list of what the build reads: <code>smoothers</code>, one
+<span class="pkg">basis7</span> smoother per covariate; <code>by_hyper</code>; and for <code><a href="te.html">te()</a></code> the
+<code>anisotropic</code> flag.</p></dd>
 
 
 <dt id="arg-sparse">sparse<a class="anchor" aria-label="anchor" href="#arg-sparse"></a></dt>
@@ -170,11 +170,13 @@ beside the ten they supply.</p>
     <p><code>vars</code> holds the covariate expressions, one for <code><a href="s.html">s()</a></code> and two or more for
 <code><a href="te.html">te()</a></code>, kept unevaluated so that a build reads them in whatever data it is
 given. <code>by</code> is the expression the smooth varies with, or <code>NULL</code>.</p>
-<p><code>spec</code> carries the construction settings the build reads: the basis or
-bases, the dimension <code>k</code>, the degree, whether the linear part is separated
-out, and for <code><a href="te.html">te()</a></code> whether the penalty is anisotropic. What a build then
+<p><code>spec</code> carries what the build reads: the <span class="pkg">basis7</span> smoothers, one per
+covariate, which hold the whole construction; <code>by_hyper</code>, saying whether
+the levels of a factor <code>by</code> share a smoothing parameter or carry one each;
+and for <code><a href="te.html">te()</a></code> whether the penalty is anisotropic. What a build then
 computes from the data goes into the blueprint instead: the
-Demmler-Reinsch transform, the centering constraint, the <code>by</code> levels.</p>
+Demmler-Reinsch transform, the centering constraint, the <code>by</code> levels and
+the penalties the term declares.</p>
 <p><code>sparse</code> is <code>NULL</code> until the build settles it. A smooth's block is sparse
 only under a <strong>factor</strong> <code>by</code>, where each row sits in the block of its own
 level: the basis itself is dense by construction, the Demmler-Reinsch
