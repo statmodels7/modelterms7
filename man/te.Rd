@@ -8,6 +8,7 @@ te(
   ...,
   smooths = basis7::bspline_smooth(k = 5),
   by = NULL,
+  by_hyper = c("shared", "level"),
   anisotropic = TRUE,
   hyper = NULL,
   id = NULL,
@@ -21,7 +22,10 @@ two of them. One throws \code{"'te' needs at least two covariates; use s() for o
 
 \item{smooths}{How each margin is built: one \pkg{basis7} smoother used
 for every covariate, or a list of one per covariate.
-\code{bspline_smooth(k = 5)} is the default.
+\code{bspline_smooth(k = 5)} is the default. A margin carrying a \code{penalty}
+factory is rejected: a tensor product's penalty is the sum of the
+marginal roughnesses, and a factory does not say how it composes with
+that sum.
 
 What the product reads from a margin is its \strong{basis} and its
 \strong{roughness matrix}, so \code{k}, \code{degree}, \code{order}, \code{measure}, \code{lower} and
@@ -33,6 +37,11 @@ than ignored.}
 
 \item{by}{An optional factor or numeric variable, as in \code{\link[=s]{s()}}, with the same
 two readings and the same sparsity rule.}
+
+\item{by_hyper}{With a factor \code{by}, whether the levels share the term's
+smoothing parameters (\code{"shared"}, the default) or carry a set each
+(\code{"level"}), as in \code{\link[=s]{s()}}. Under \code{anisotropic = TRUE} a set is one per
+margin, so \code{"level"} gives one per margin per level.}
 
 \item{anisotropic}{\code{TRUE}, the default, for one smoothing parameter per
 margin; \code{FALSE} for one over their sum. Anything that is not a single

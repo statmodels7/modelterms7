@@ -8,6 +8,7 @@ s(
   x,
   smoother = basis7::bspline_smooth(),
   by = NULL,
+  by_hyper = c("shared", "level"),
   hyper = NULL,
   id = NULL,
   label = NULL,
@@ -28,10 +29,16 @@ and is the construction this term has always used;
 \item{by}{An optional factor or numeric variable, given as a bare
 expression; \code{NULL} by default. See the section above.}
 
+\item{by_hyper}{With a factor \code{by}, whether the levels share one smoothing
+parameter (\code{"shared"}, the default) or carry one each (\code{"level"}). See
+the section above. Rejected without a factor \code{by}, which has no levels
+to give one each.}
+
 \item{hyper}{The hyperparameters of the smoother's penalty to hold, as a
 named numeric vector such as \code{c(lambda = 2)}. What names there are
 depends on the penalty; anything left out is \strong{estimated}, which is
-the default.}
+the default. Under \code{by_hyper = "level"} a name is qualified by the
+level, \code{c(lambda.a = 2)}.}
 
 \item{id}{A label sharing this smooth's smoothing parameter with those
 of other terms carrying the same one: they are then estimated at a
@@ -79,8 +86,36 @@ never to 0. And the linear column is orthogonal to the rest over the
 observed covariate, so the linear and the nonlinear parts of a fitted smooth
 are separately readable.
 
-\code{linear = FALSE} drops that first column, and the penalty is then the
-identity over the whole block, of full rank.
+\code{bspline_smooth(null_space = "drop")} drops that first column, and the
+penalty is then the identity over the whole block, of full rank.
+}
+
+\section{A penalty of your own}{
+The smoother's \code{penalty} argument replaces the roughness matrix with a
+\pkg{penalties7} penalty of its own, built at the coefficient count only
+the data settle: \code{s(x, bspline_smooth(k = 20, penalty = penalties7::lasso_penalty))}. A \pkg{penalties7} constructor passes bare,
+and anything else is a function of the count.
+
+What it buys is that the Demmler-Reinsch coordinates are ordered from the
+smoothest to the most wiggly and the roughness penalty on them is the
+identity, so an \eqn{\ell_1} penalty takes whole directions of wiggliness
+to exactly zero and chooses the smooth's effective dimension. Measured at
+\eqn{n = 300} with \eqn{k = 20}, the coordinates surviving as the
+smoothing parameter grows are 15, 10, 4, 2, 1 and 0 of 18, and the fit at
+two of them is as close to the truth as the fit at all eighteen. A
+heavy-tailed penalty is the robust reading of the same block, and a
+structured one estimates the correlation of the coefficients rather than
+fixing it.
+
+Two things follow, and neither is a detail. The penalty covers \strong{the
+penalized coordinates alone}: a roughness matrix carries a zero row for
+the linear column and leaves it free by its own arithmetic, where a
+separable penalty has no such row and would shrink it, so the free columns
+are outside the entry it declares. And a penalty \strong{with a kink} has no
+second derivative at zero, which a marginal criterion needs, so its
+smoothing parameter is chosen by a path over \code{sparse_criterion} -- BIC by
+default -- and not by REML, whatever \code{outer_criterion} says. That is a
+change in what the number means and not only in how it is computed.
 }
 
 \section{The construction is empirical}{
@@ -101,12 +136,29 @@ differs by 2.85.
 
 A \strong{factor} \code{by} gives one smooth per level: the block is the smooth
 multiplied by each level's indicator, and the penalty is the same matrix
-repeated blockwise, so one smoothing parameter governs every level.
+repeated blockwise.
 \code{s(x, bspline_smooth(k = 5), by = g)} over a four-level factor has 16 columns.
+
+\code{by_hyper} says whether the levels are smoothed \strong{together or apart}.
+\code{"shared"}, the default, estimates one smoothing parameter for all of them,
+which is what this package has always done. \code{"level"} declares one penalty
+per level through \code{\link[=term_penalties]{term_penalties()}}, so each is estimated on its own; it
+is what \pkg{mgcv} does by default, and what \code{id} there undoes. Which to
+want is a question about the data rather than about the code: levels that
+differ in how wiggly they are, or in how much of them there is, ask for
+different amounts of smoothing. Measured on three levels of one curve at
+amplitudes 1, 0.15 and 2.5, the separately estimated smoothing parameters
+are 2.03, 111.9 and 0.468 -- a factor of 239 apart -- and the effective
+degrees of freedom fall from 25.5 to 21.7 as the flattest level is smoothed
+away.
+
+Under \code{"level"} a held hyperparameter is qualified by the level it belongs
+to, \code{hyper = c(lambda.a = 2)}, and so is an \code{id}.
 
 A \strong{numeric} \code{by} gives a varying-coefficient term: the smooth multiplies
 that variable, and the fitted function is the coefficient of \code{by} as it
-changes with the covariate.
+changes with the covariate. It has no levels, so \code{by_hyper = "level"} is
+rejected rather than read as \code{"shared"}.
 }
 
 \section{Sparse storage}{
@@ -158,6 +210,22 @@ vapply(c(1e-8, 1, 1e12),
 # A factor `by` is one smooth per level under one smoothing parameter.
 bf <- term_build(s(x, basis7::bspline_smooth(k = 5), by = g), dd)
 c(npar = term_npar(bf), levels = nlevels(dd$g))
+length(term_penalties(bf))
+
+# by_hyper = "level" gives them one each: one entry per level, over that
+# level's own columns.
+bl <- term_build(s(x, basis7::bspline_smooth(k = 5), by = g,
+                   by_hyper = "level"), dd)
+vapply(term_penalties(bl), function(e) e$name, character(1))
+vapply(term_penalties(bl), function(e) range(e$index), integer(2))
+
+# A penalty factory covers the PENALIZED coordinates: the free linear
+# column is left out, a separable penalty having no zero row with which
+# to leave it alone.
+bp <- term_build(s(x, basis7::bspline_smooth(
+  k = 5, penalty = penalties7::lasso_penalty)), dd)
+term_penalties(bp)[[1]]$index
+term_penalties(bp)[[1]]$penalty@params
 
 # The transform is computed on the data and reapplied, never rebuilt.
 max(abs(term_predict(b, dd[1:10, ]) - X[1:10, ]))

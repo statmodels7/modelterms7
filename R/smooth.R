@@ -104,8 +104,37 @@ SmoothTerm <- S7::new_class(
 #' observed covariate, so the linear and the nonlinear parts of a fitted smooth
 #' are separately readable.
 #'
-#' `linear = FALSE` drops that first column, and the penalty is then the
-#' identity over the whole block, of full rank.
+#' `bspline_smooth(null_space = "drop")` drops that first column, and the
+#' penalty is then the identity over the whole block, of full rank.
+#'
+#' # A penalty of your own
+#'
+#' The smoother's `penalty` argument replaces the roughness matrix with a
+#' \pkg{penalties7} penalty of its own, built at the coefficient count only
+#' the data settle: `s(x, bspline_smooth(k = 20, penalty =
+#' penalties7::lasso_penalty))`. A \pkg{penalties7} constructor passes bare,
+#' and anything else is a function of the count.
+#'
+#' What it buys is that the Demmler-Reinsch coordinates are ordered from the
+#' smoothest to the most wiggly and the roughness penalty on them is the
+#' identity, so an \eqn{\ell_1} penalty takes whole directions of wiggliness
+#' to exactly zero and chooses the smooth's effective dimension. Measured at
+#' \eqn{n = 300} with \eqn{k = 20}, the coordinates surviving as the
+#' smoothing parameter grows are 15, 10, 4, 2, 1 and 0 of 18, and the fit at
+#' two of them is as close to the truth as the fit at all eighteen. A
+#' heavy-tailed penalty is the robust reading of the same block, and a
+#' structured one estimates the correlation of the coefficients rather than
+#' fixing it.
+#'
+#' Two things follow, and neither is a detail. The penalty covers **the
+#' penalized coordinates alone**: a roughness matrix carries a zero row for
+#' the linear column and leaves it free by its own arithmetic, where a
+#' separable penalty has no such row and would shrink it, so the free columns
+#' are outside the entry it declares. And a penalty **with a kink** has no
+#' second derivative at zero, which a marginal criterion needs, so its
+#' smoothing parameter is chosen by a path over `sparse_criterion` -- BIC by
+#' default -- and not by REML, whatever `outer_criterion` says. That is a
+#' change in what the number means and not only in how it is computed.
 #'
 #' # The construction is empirical
 #'
@@ -124,12 +153,29 @@ SmoothTerm <- S7::new_class(
 #' @section Varying the smooth by another variable:
 #' A **factor** `by` gives one smooth per level: the block is the smooth
 #' multiplied by each level's indicator, and the penalty is the same matrix
-#' repeated blockwise, so one smoothing parameter governs every level.
+#' repeated blockwise.
 #' `s(x, bspline_smooth(k = 5), by = g)` over a four-level factor has 16 columns.
+#'
+#' `by_hyper` says whether the levels are smoothed **together or apart**.
+#' `"shared"`, the default, estimates one smoothing parameter for all of them,
+#' which is what this package has always done. `"level"` declares one penalty
+#' per level through [term_penalties()], so each is estimated on its own; it
+#' is what \pkg{mgcv} does by default, and what `id` there undoes. Which to
+#' want is a question about the data rather than about the code: levels that
+#' differ in how wiggly they are, or in how much of them there is, ask for
+#' different amounts of smoothing. Measured on three levels of one curve at
+#' amplitudes 1, 0.15 and 2.5, the separately estimated smoothing parameters
+#' are 2.03, 111.9 and 0.468 -- a factor of 239 apart -- and the effective
+#' degrees of freedom fall from 25.5 to 21.7 as the flattest level is smoothed
+#' away.
+#'
+#' Under `"level"` a held hyperparameter is qualified by the level it belongs
+#' to, `hyper = c(lambda.a = 2)`, and so is an `id`.
 #'
 #' A **numeric** `by` gives a varying-coefficient term: the smooth multiplies
 #' that variable, and the fitted function is the coefficient of `by` as it
-#' changes with the covariate.
+#' changes with the covariate. It has no levels, so `by_hyper = "level"` is
+#' rejected rather than read as `"shared"`.
 #'
 #' @section Sparse storage:
 #' A factor `by` is the one place a smooth's block can be sparse, each row
@@ -159,10 +205,15 @@ SmoothTerm <- S7::new_class(
 #'   [basis7::legendre_smooth()] the global polynomial one.
 #' @param by An optional factor or numeric variable, given as a bare
 #'   expression; `NULL` by default. See the section above.
+#' @param by_hyper With a factor `by`, whether the levels share one smoothing
+#'   parameter (`"shared"`, the default) or carry one each (`"level"`). See
+#'   the section above. Rejected without a factor `by`, which has no levels
+#'   to give one each.
 #' @param hyper The hyperparameters of the smoother's penalty to hold, as a
 #'   named numeric vector such as `c(lambda = 2)`. What names there are
 #'   depends on the penalty; anything left out is **estimated**, which is
-#'   the default.
+#'   the default. Under `by_hyper = "level"` a name is qualified by the
+#'   level, `c(lambda.a = 2)`.
 #' @param label A single non-empty string prefixed to the coefficient names.
 #'   `NULL`, the default, builds one from the covariate: `s(x)`.
 #' @param id A label sharing this smooth's smoothing parameter with those
@@ -220,6 +271,22 @@ SmoothTerm <- S7::new_class(
 #' # A factor `by` is one smooth per level under one smoothing parameter.
 #' bf <- term_build(s(x, basis7::bspline_smooth(k = 5), by = g), dd)
 #' c(npar = term_npar(bf), levels = nlevels(dd$g))
+#' length(term_penalties(bf))
+#'
+#' # by_hyper = "level" gives them one each: one entry per level, over that
+#' # level's own columns.
+#' bl <- term_build(s(x, basis7::bspline_smooth(k = 5), by = g,
+#'                    by_hyper = "level"), dd)
+#' vapply(term_penalties(bl), function(e) e$name, character(1))
+#' vapply(term_penalties(bl), function(e) range(e$index), integer(2))
+#'
+#' # A penalty factory covers the PENALIZED coordinates: the free linear
+#' # column is left out, a separable penalty having no zero row with which
+#' # to leave it alone.
+#' bp <- term_build(s(x, basis7::bspline_smooth(
+#'   k = 5, penalty = penalties7::lasso_penalty)), dd)
+#' term_penalties(bp)[[1]]$index
+#' term_penalties(bp)[[1]]$penalty@params
 #'
 #' # The transform is computed on the data and reapplied, never rebuilt.
 #' max(abs(term_predict(b, dd[1:10, ]) - X[1:10, ]))
@@ -243,12 +310,13 @@ SmoothTerm <- S7::new_class(
 #' }
 #' @export
 s <- function(x, smoother = basis7::bspline_smooth(), by = NULL,
-              hyper = NULL, id = NULL, label = NULL, sparse = NULL, ...) {
+              by_hyper = c("shared", "level"), hyper = NULL, id = NULL,
+              label = NULL, sparse = NULL, ...) {
   xe <- substitute(x)
   retired_smooth_args(list(...), "s")
   .smooth_spec(list(xe), substitute(by), list(smoother), label,
                sprintf("s(%s)", deparse(xe)), hyper, sparse = sparse,
-               ids = id)
+               ids = id, by_hyper = by_hyper)
 }
 
 
@@ -360,9 +428,16 @@ retired_smooth_args <- function(dots, fn) {
 #'   one."`.
 #' @param by An optional factor or numeric variable, as in [s()], with the same
 #'   two readings and the same sparsity rule.
+#' @param by_hyper With a factor `by`, whether the levels share the term's
+#'   smoothing parameters (`"shared"`, the default) or carry a set each
+#'   (`"level"`), as in [s()]. Under `anisotropic = TRUE` a set is one per
+#'   margin, so `"level"` gives one per margin per level.
 #' @param smooths How each margin is built: one \pkg{basis7} smoother used
 #'   for every covariate, or a list of one per covariate.
-#'   `bspline_smooth(k = 5)` is the default.
+#'   `bspline_smooth(k = 5)` is the default. A margin carrying a `penalty`
+#'   factory is rejected: a tensor product's penalty is the sum of the
+#'   marginal roughnesses, and a factory does not say how it composes with
+#'   that sum.
 #'
 #'   What the product reads from a margin is its **basis** and its
 #'   **roughness matrix**, so `k`, `degree`, `order`, `measure`, `lower` and
@@ -444,8 +519,8 @@ retired_smooth_args <- function(dots, fn) {
 #' }
 #' @export
 te <- function(..., smooths = basis7::bspline_smooth(k = 5), by = NULL,
-               anisotropic = TRUE, hyper = NULL, id = NULL, label = NULL,
-               sparse = NULL) {
+               by_hyper = c("shared", "level"), anisotropic = TRUE,
+               hyper = NULL, id = NULL, label = NULL, sparse = NULL) {
   vars <- as.list(substitute(list(...)))[-1L]
   # THE COVARIATES ARE THE UNNAMED ARGUMENTS, so a retired one such as
   # `k = 4` would otherwise be taken for a covariate called "k" -- silently,
@@ -463,6 +538,18 @@ te <- function(..., smooths = basis7::bspline_smooth(k = 5), by = NULL,
     stop("'anisotropic' must be TRUE or FALSE.", call. = FALSE)
   }
   smooths <- te_smoothers(smooths, length(vars))
+  # A TENSOR PRODUCT'S PENALTY IS A SUM OVER THE MARGINS, and a factory
+  # would have to say how the penalty it builds composes with that sum --
+  # whether it replaces one margin's roughness, all of them, or the sum. The
+  # question has an answer only once somebody asks it of a model, so the
+  # argument is rejected here rather than answered by a default.
+  if (any(vapply(smooths, function(sm) !is.null(sm@penalty), logical(1)))) {
+    stop(paste0(
+      "a margin's 'penalty' factory is not read by te(): a tensor",
+      " product's penalty\n  is the sum of the marginal roughnesses, and a",
+      " factory does not say how it\n  composes with that sum. Use s() for",
+      " a penalty of your own over one covariate."), call. = FALSE)
+  }
   # ANISOTROPIC is one smoothing parameter per margin, so that is how many
   # names there are to hold; isotropic is the single one of a quadratic
   # penalty. Either way the names are the penalty's own, which is what the
@@ -472,7 +559,8 @@ te <- function(..., smooths = basis7::bspline_smooth(k = 5), by = NULL,
                      sprintf("te(%s)",
                              paste(vapply(vars, deparse, character(1)),
                                    collapse = ",")),
-                     hyper, nms, sparse = sparse, ids = id)
+                     hyper, nms, sparse = sparse, ids = id,
+                     by_hyper = by_hyper)
   sp@spec$anisotropic <- anisotropic
   sp
 }
@@ -537,8 +625,10 @@ te_smoothers <- function(smooths, nv) {
 
 .smooth_spec <- function(vars, by, smoothers, label,
                          default_label, hyper = NULL, names = "lambda",
-                         sparse = NULL, ids = NULL) {
+                         sparse = NULL, ids = NULL,
+                         by_hyper = c("shared", "level")) {
   nv <- length(vars)
+  by_hyper <- match.arg(by_hyper)
   if (!is.list(smoothers) || length(smoothers) != nv ||
       !all(vapply(smoothers, function(s) S7::S7_inherits(s, basis7::smoother),
                   logical(1)))) {
@@ -568,10 +658,21 @@ te_smoothers <- function(smooths, nv) {
                 " 'by', whose indicators put each\n  row in the block of its",
                 " own level."), call. = FALSE)
   }
+  # WHICH HYPERPARAMETERS THERE ARE is not always known here. With the
+  # roughness matrix and one smoothing parameter shared across the levels the
+  # names are `names`, and a wrong one is reported where it is written. A
+  # penalty factory names its own, at a coefficient count only the data
+  # settle, and one smoothing parameter per level needs the levels; both are
+  # checked at the build by .entry_hyper(), the first point at which the
+  # penalties exist. The strict check is kept where it can be made, so the
+  # common call is unaffected.
+  deferred <- identical(by_hyper, "level") ||
+    any(vapply(smoothers, function(sm) !is.null(sm@penalty), logical(1)))
   SmoothTerm(label = label, vars = vars, by = by, sparse = sparse,
-             spec = list(smoothers = smoothers),
-             hyper = smooth_hyper(hyper, names, label),
-             ids = check_ids(ids, names, label),
+             spec = list(smoothers = smoothers, by_hyper = by_hyper),
+             hyper = if (deferred) as_hyper(hyper, label)
+                     else smooth_hyper(hyper, names, label),
+             ids = check_ids(ids, if (deferred) NULL else names, label),
              X = NULL, coef_names = character(0),
              blueprint = list(), penalty = NULL)
 }
@@ -726,6 +827,11 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
     Z <- out$X
     nm <- out$names
     P <- out$S
+    # HOW MANY LEADING COLUMNS THE ROUGHNESS LEAVES ALONE, read off the
+    # construction rather than derived from the arguments: it is one at
+    # order 2, two at order 3, and none for a periodic basis, whose null
+    # space is the constant the model's intercept already carries.
+    unpen <- out$unpenalized
     core <- list(kind = "smoother", smoother = sms[[1L]],
                  blueprint = out$blueprint)
   } else {
@@ -761,8 +867,17 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
     Z <- basis7::basis_eval(tb, xm)
     nm <- paste0("z", seq_len(ncol(Z)))
     P <- if (isTRUE(sp$anisotropic)) comps else Reduce(`+`, comps)
+    # the tensor block is centered over the observed covariates, so nothing
+    # of it is left free: the constant, which is what the marginal null
+    # spaces have in common, is the direction the constraint removed
+    unpen <- 0L
     core <- list(kind = "tensor", basis = tb)
   }
+
+  # THE PENALTY OF ONE LEVEL, kept before the `by` expansion widens it. A
+  # per-level reading needs it as it stands here, one copy rather than m.
+  P_block <- P
+  kcol <- ncol(Z)
 
   by_blocks <- 1L
   # settled here and carried to the blueprint: without a factor `by` there is
@@ -814,16 +929,129 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
   rownames(Z) <- NULL
   term@X <- Z
   term@coef_names <- cn
+
+  lev <- if (!is.null(by) && identical(by$kind, "factor")) by$levels else NULL
+  # THE FACTORY IS THE SMOOTHER'S, and only a one-covariate smooth has one
+  # smoother to read it from. A tensor product's penalty is a sum over the
+  # margins, and a factory would have to say how it composes with that sum,
+  # so te() rejects the argument at construction rather than choosing.
+  fac <- if (nv == 1L) sms[[1L]]@penalty else NULL
+  parts <- .smooth_parts(P_block, kcol, unpen,
+                         length(term@spec$smoothers) == 1L, lev, fac,
+                         identical(term@spec$by_hyper, "level"), term@label)
+  if (!is.null(parts)) {
+    # the names are checked HERE, the first point at which these penalties
+    # exist: a factory names its own hyperparameters at a coefficient count
+    # the data settle, and one per level needs the levels
+    parts <- .entry_hyper(parts, term@hyper, term@ids, term@label,
+                          "this smooth's penalty")
+    term@hyper <- do.call(c, c(list(list()), lapply(parts, function(en) {
+      if (!length(en$fixed) || !nzchar(en$name)) return(en$fixed)
+      stats::setNames(en$fixed, paste0(names(en$fixed), ".", en$name))
+    })))
+  }
+
   term@blueprint <- list(core = core, marg = marg, spec = sp,
                          vars = term@vars, by = term@by,
                          by_levels = if (!is.null(by) &&
                                          identical(by$kind, "factor"))
                            by$levels else NULL,
                          sparse = sp,
+                         penalties = parts,
                          nblock = ncol(Z))
-  term@penalty <- if (is.list(P)) penalties7::additive_penalty(P)
+  # ONE PENALTY OVER THE WHOLE BLOCK is the reading every default fit runs,
+  # and it is left exactly as it shipped. Where the term declares entries of
+  # its own there is no such penalty, and the property says so rather than
+  # carrying one of them: term_penalties() is the general question, and two
+  # answers that could disagree are worse than one.
+  term@penalty <- if (!is.null(parts)) NULL
+                  else if (is.list(P)) penalties7::additive_penalty(P)
                   else penalties7::quadratic_penalty(P, blocks = by_blocks)
   term
+}
+
+
+# THE PENALTIES A BUILT SMOOTH DECLARES.
+#
+# NULL means the one the term carries over its whole block, which is the base
+# reading of term_penalties() and what every fit written before this ran; a
+# list is one entry per level, or one entry over a subset of the columns.
+#
+# The subset is what a factory needs and a matrix does not. A roughness matrix
+# carries a zero row for a direction it does not see, so it may be handed the
+# whole block and leaves the free columns alone by its own arithmetic. A
+# penalty from a factory has no such row -- a lasso shrinks every coordinate
+# it is given -- so it is told which coordinates are its own, and the
+# unpenalized directions are not among them.
+.smooth_parts <- function(P_block, kcol, unpen, one_var, lev, factory,
+                          per_level, label) {
+  m <- if (is.null(lev)) 1L else length(lev)
+  if (per_level && is.null(lev)) {
+    stop(sprintf(paste0(
+      "'%s' asks for by_hyper = \"level\" and has no factor 'by'. One",
+      " smoothing\n  parameter per level needs levels to have one each;",
+      " give a factor 'by', or\n  leave by_hyper at \"shared\"."), label),
+      call. = FALSE)
+  }
+  if (is.null(factory) && !per_level) return(NULL)
+
+  whole <- seq_len(kcol)
+  pen <- if (unpen > 0L) unpen + seq_len(kcol - unpen) else whole
+  at <- function(j, within) (j - 1L) * kcol + within
+  quad <- function(Pk) {
+    if (is.list(Pk)) penalties7::additive_penalty(Pk)
+    else penalties7::quadratic_penalty(Pk)
+  }
+  if (!is.null(factory) && !one_var) {
+    stop("a penalty factory is not available on a tensor product.",
+         call. = FALSE)
+  }
+
+  # the fields an entry carries beyond its own three, filled in by
+  # .entry_hyper() from what the caller held
+  entry <- function(name, index, penalty) {
+    list(name = name, index = index, penalty = penalty,
+         fixed = list(), n_values = list(), values = list(),
+         min_ratio = numeric(0), ids = character(0))
+  }
+
+  if (!per_level) {
+    # ONE penalty over every level's penalized coordinates. Repeating a
+    # separable penalty blockwise is the identity operation, so for the
+    # families a factory is reached for -- the lasso, the elastic net, SCAD,
+    # MCP, a heavy-tailed prior -- this is the same penalty a per-level
+    # reading would build, under one smoothing parameter instead of m.
+    idx <- unlist(lapply(seq_len(m), function(j) at(j, pen)))
+    return(list(entry("", idx, .penalty_factory(factory)(length(idx)))))
+  }
+  lapply(seq_len(m), function(j) {
+    if (is.null(factory)) {
+      entry(lev[j], at(j, whole), quad(P_block))
+    } else {
+      entry(lev[j], at(j, pen), .penalty_factory(factory)(length(pen)))
+    }
+  })
+}
+
+
+#' @title The Penalties of a Smooth Term
+#' @name term_penalties.SmoothTerm
+#' @description
+#' One entry over the whole block where a single roughness matrix covers it,
+#' which is the default; one per level of a factor `by` under
+#' `by_hyper = "level"`; and one over the penalized coordinates alone where
+#' the smoother carries a penalty factory.
+#' @details
+#' The default answer is the base reading of [term_penalties()], returned by
+#' calling that method rather than by repeating it, so the two cannot drift.
+#' @param term A built [SmoothTerm].
+#' @param ... Unused.
+#' @return A list of entries, as [term_penalties()] documents.
+#' @keywords internal
+S7::method(term_penalties, SmoothTerm) <- function(term, ...) {
+  ent <- term@blueprint$penalties
+  if (is.null(ent)) return(S7::method(term_penalties, model_term)(term, ...))
+  ent
 }
 
 #' @title A Smooth Term's Block at New Rows

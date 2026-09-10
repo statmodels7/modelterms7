@@ -810,67 +810,6 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
   })
 }
 
-#' Where a Held Hyperparameter Belongs
-#'
-#' @description
-#' Splits the term's `hyper` over its penalty entries and checks every
-#' name against the penalty that carries it.
-#'
-#' @details
-#' A name is qualified by the within-group column where there is one penalty
-#' per column. An unqualified one is an error that lists what there is, not a
-#' value recycled over every column: a caller who wants the same value
-#' everywhere writes it into the distribution, where it stops being a
-#' hyperparameter at all, and silent recycling is the trap this file's
-#' history records for `ifelse`.
-#'
-#' @param entries The entries from [.random_entries()].
-#' @param hyper The term's `hyper`, already normalized.
-#' @param label The term's label, for the message.
-#'
-#' @return The entries, with `fixed` filled in and checked.
-#'
-#' @keywords internal
-.random_hyper <- function(entries, hyper, ids, label) {
-  qual <- function(en) {
-    if (nzchar(en$name)) paste0(en$penalty@params, ".", en$name)
-    else en$penalty@params
-  }
-  avail <- unlist(lapply(entries, qual), use.names = FALSE)
-  unknown <- setdiff(names(hyper), avail)
-  if (length(unknown)) {
-    stop(sprintf(paste0(
-      "'hyper$%s' is not a hyperparameter of the effects' distribution in\n",
-      "  '%s'. It carries: %s."),
-      unknown[1L], label, paste(avail, collapse = ", ")), call. = FALSE)
-  }
-  # The labels are resolved HERE and not at the constructor for the reason
-  # the values are: a random effect's hyperparameters are the effects'
-  # distribution's, qualified by the entry they belong to, and neither is
-  # known before the group is read.
-  ids <- check_ids(ids, avail, label)
-  lapply(entries, function(en) {
-    keep <- hyper[intersect(names(hyper), qual(en))]
-    keep_id <- ids[intersect(names(ids), qual(en))]
-    if (nzchar(en$name) && length(keep)) {
-      names(keep) <- sub(sprintf("\\.\\Q%s\\E$", en$name), "", names(keep))
-    }
-    if (nzchar(en$name) && length(keep_id)) {
-      names(keep_id) <- sub(sprintf("\\.\\Q%s\\E$", en$name), "",
-                            names(keep_id))
-    }
-    # several values are a grid for a PATH to visit, and only a penalty with a
-    # kink is swept along one -- the same three checks a penalized constructor
-    # runs, in the same order
-    vals <- check_values(keep, en$penalty, label)
-    reject_pathless_values(vals, en$penalty, label)
-    en$fixed <- check_hyper(keep, en$penalty, label)
-    en$values <- vals
-    en$ids <- keep_id
-    en
-  })
-}
-
 #' @title Build a Random-Effect Term
 #' @name term_build.RandomTerm
 #'
@@ -996,7 +935,7 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
   # the hyperparameter names are checked HERE, the first point at which the
   # penalties this term builds exist: which there are depends on the
   # distribution of the effects and on how many within-group columns there are
-  entries <- .random_hyper(.random_entries(prior, d, m, colnames(W)),
+  entries <- .entry_hyper(.random_entries(prior, d, m, colnames(W)),
                            term@hyper, term@ids, term@label)
 
   term@X <- Z

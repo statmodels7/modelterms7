@@ -429,6 +429,81 @@ S7::method(term_penalties, model_term) <- function(term, ...) {
             search = term@search, ids = term@ids))
 }
 
+#' Where a Held Hyperparameter Belongs
+#'
+#' @description
+#' Splits a term's `hyper` over the entries it declares through
+#' [term_penalties()] and checks every name against the penalty that carries
+#' it. The same applies to `id`.
+#'
+#' @details
+#' Which hyperparameters a term has is not always known when the term is
+#' written. A random effect's are the effects' distribution's, and a smooth's
+#' are its penalty's, which may come from a factory called at a coefficient
+#' count the data settle. The check is therefore made here, at the build,
+#' which is the first point at which the penalties exist.
+#'
+#' A name is qualified by the entry it belongs to where there is more than
+#' one: the within-group column for a random effect, the level of the factor
+#' for a smooth with one smoothing parameter per level. An unqualified name
+#' is an error that lists what there is, not a value recycled over every
+#' entry, since silent recycling is the trap this package's history records
+#' for `ifelse`.
+#'
+#' @param entries The entries a term declares, each a list with at least
+#'   `name` and `penalty`.
+#' @param hyper The term's `hyper`, already normalized.
+#' @param ids The term's `ids`, which are checked against the same names.
+#' @param label The term's label, for the message.
+#' @param what What the hyperparameters belong to, named in the message.
+#'
+#' @return The entries, with `fixed`, `values` and `ids` filled in and
+#'   checked.
+#'
+#' @keywords internal
+.entry_hyper <- function(entries, hyper, ids, label,
+                         what = "the effects' distribution") {
+  qual <- function(en) {
+    if (nzchar(en$name)) paste0(en$penalty@params, ".", en$name)
+    else en$penalty@params
+  }
+  avail <- unlist(lapply(entries, qual), use.names = FALSE)
+  unknown <- setdiff(names(hyper), avail)
+  if (length(unknown)) {
+    stop(sprintf(paste0(
+      "'hyper$%s' is not a hyperparameter of %s in\n",
+      "  '%s'. It carries: %s."),
+      unknown[1L], what, label, paste(avail, collapse = ", ")),
+      call. = FALSE)
+  }
+  # The labels are resolved HERE and not at the constructor for the reason
+  # the values are: a random effect's hyperparameters are the effects'
+  # distribution's, qualified by the entry they belong to, and neither is
+  # known before the group is read.
+  ids <- check_ids(ids, avail, label)
+  lapply(entries, function(en) {
+    keep <- hyper[intersect(names(hyper), qual(en))]
+    keep_id <- ids[intersect(names(ids), qual(en))]
+    if (nzchar(en$name) && length(keep)) {
+      names(keep) <- sub(sprintf("\\.\\Q%s\\E$", en$name), "", names(keep))
+    }
+    if (nzchar(en$name) && length(keep_id)) {
+      names(keep_id) <- sub(sprintf("\\.\\Q%s\\E$", en$name), "",
+                            names(keep_id))
+    }
+    # several values are a grid for a PATH to visit, and only a penalty with a
+    # kink is swept along one -- the same three checks a penalized constructor
+    # runs, in the same order
+    vals <- check_values(keep, en$penalty, label)
+    reject_pathless_values(vals, en$penalty, label)
+    en$fixed <- check_hyper(keep, en$penalty, label)
+    en$values <- vals
+    en$ids <- keep_id
+    en
+  })
+}
+
+
 #' @title How a Term's Columns Divide Among Its Own Parameters
 #'
 #' @description
