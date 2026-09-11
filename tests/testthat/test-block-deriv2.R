@@ -197,8 +197,8 @@ dsm$y <- 1 + 0.3 * dsm$x + 1.5 * pmax(dsm$x - 5, 0) +
   2 * (dsm$x > 5) + stats::rnorm(nsm, sd = 0.4)
 
 sm_cases <- function() {
-  sp <- penalties7::smooth_probit()
-  sh <- penalties7::smooth_hyperbolic()
+  sp <- numericals7::smooth_probit()
+  sh <- numericals7::smooth_hyperbolic()
   list(
     "seg probit" = term_build(seg(x, smoothed = sp), dsm),
     "jump probit" = term_build(jump(x, smoothed = sp), dsm),
@@ -273,7 +273,7 @@ test_that("a confined break-point contributes exactly zero, unlike order one", {
   # position column is -gamma S(u), whose derivative in the CHANGE carries no
   # break-point direction at all. That asymmetry is what makes this a control
   # on the second derivative rather than on the gate the two share.
-  sp <- penalties7::smooth_probit()
+  sp <- numericals7::smooth_probit()
   for (tm in list(term_build(seg(x, smoothed = sp), dsm),
                   term_build(jump(x, smoothed = sp), dsm),
                   term_build(jseg(x, smoothed = sp), dsm))) {
@@ -294,7 +294,7 @@ test_that("under the quintic the answer is exactly zero outside the width", {
   # derivative of the block -- exactly, not nearly. It is the control that
   # says the method reads the smoother's own higher orders and not something
   # standing in for them.
-  tm <- term_build(seg(x, smoothed = penalties7::smooth_quintic()), dsm)
+  tm <- term_build(seg(x, smoothed = numericals7::smooth_quintic()), dsm)
   bp <- tm@blueprint
   k <- length(bp$coef)
   set.seed(3)
@@ -308,7 +308,7 @@ test_that("under the quintic the answer is exactly zero outside the width", {
 })
 
 test_that("the smoothed directions are checked against the term's width", {
-  tm <- term_build(seg(x, smoothed = penalties7::smooth_probit()), dsm)
+  tm <- term_build(seg(x, smoothed = numericals7::smooth_probit()), dsm)
   k <- length(term_coef_names(tm))
   expect_error(term_block_deriv2(tm, v = 1, u = rep(1, k)), "'v' must have")
   expect_error(term_block_deriv2(tm, v = rep(1, k), u = 1), "'u' must have")

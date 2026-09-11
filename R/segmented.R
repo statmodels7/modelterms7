@@ -215,9 +215,9 @@ SegTerm <- S7::new_class(
 #' @param linear Whether the block carries the linear effect \eqn{\beta x}.
 #'   Defaults to `TRUE`.
 #' @param smoothed `NULL` (the default: the construction exactly as
-#'   documented above) or a \pkg{penalties7}
-#'   [penalties7::abs_smoother()], e.g.
-#'   `penalties7::smooth_probit()`. The smoother replaces the step and
+#'   documented above) or a \pkg{numericals7}
+#'   [numericals7::abs_smoother()], e.g.
+#'   `numericals7::smooth_probit()`. The smoother replaces the step and
 #'   the hinge by their smooth versions, \eqn{(1 + s'(u))/2} and
 #'   \eqn{(u + s(u))/2}, so every break-point becomes an ordinary
 #'   parameter of a \eqn{C^\infty} model: there is no working
@@ -792,9 +792,9 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 .seg_spec <- function(kind, var, npsi, psi, linear, c0, n_boot, label, dots,
                       by, smoothed = NULL) {
   if (!is.null(smoothed) &&
-      !S7::S7_inherits(smoothed, penalties7::abs_smoother)) {
-    stop(paste("'smoothed' must be NULL or a penalties7 abs_smoother, e.g.",
-               "penalties7::smooth_probit()."), call. = FALSE)
+      !S7::S7_inherits(smoothed, numericals7::abs_smoother)) {
+    stop(paste("'smoothed' must be NULL or a numericals7 abs_smoother, e.g.",
+               "numericals7::smooth_probit()."), call. = FALSE)
   }
   if (!is.numeric(c0) || length(c0) != 1L || is.na(c0) ||
       c0 <= 0 || c0 >= 1) {
@@ -1241,7 +1241,7 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 #' # The smoothed form
 #'
 #' With `smoothed` the step and the hinge are replaced by a
-#' [penalties7::abs_smoother()]'s versions, and the transition width is
+#' [numericals7::abs_smoother()]'s versions, and the transition width is
 #' resolved here from the covariate's spacing, within groups where a
 #' development of the break-point supplies a partition. The width is checked
 #' against the derived floor \eqn{\sqrt{\epsilon}D} and reported by [print()],
@@ -1292,7 +1292,7 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
   # groups where a break-point development supplies a partition -- the
   # validity window of a Laplace approximation being per-subject -- and
   # globally otherwise. The floor is derived, not chosen: see
-  # penalties7::smoother_width_floor().
+  # numericals7::smoother_width_floor().
   smooth <- NULL
   if (!is.null(smoothed)) {
     gaps_of <- function(v) {
@@ -1322,7 +1322,7 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
         if (length(g)) stats::median(g) else global_sp
       }, numeric(1))
     }
-    floorw <- penalties7::smoother_width_floor(smoothed, diff(rr))
+    floorw <- numericals7::smoother_width_floor(smoothed, diff(rr))
     if (isTRUE(smoothed@per_group)) {
       if (is.null(per)) {
         stop(paste("a per-group width needs a break-point development whose",
@@ -1331,7 +1331,7 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
                    "gives."), call. = FALSE)
       }
       wg <- if (is.null(smoothed@width)) {
-        penalties7::smoother_width(smoothed, per)
+        numericals7::smoother_width(smoothed, per)
       } else {
         rep(smoothed@width, length(per))
       }
@@ -1346,7 +1346,7 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
                      group_cols = gcols, width = stats::median(wg))
     } else {
       sp <- if (!is.null(per)) stats::median(per) else global_sp
-      wd <- penalties7::smoother_width(smoothed, sp)
+      wd <- numericals7::smoother_width(smoothed, sp)
       if (wd < floorw) {
         stop(sprintf(paste("the smoother's width (%.3g) is below the floor",
                            "%.3g = the width at which the Jacobian column,",
@@ -1547,7 +1547,7 @@ S7::method(term_penalties, SegTerm) <- function(term, ...) {
 #' scaling factor, and forcing a sufficient decrease stalls it.
 #'
 #' `smoothed` changes the answer for all three. Replacing the step and the
-#' hinge by an [penalties7::abs_smoother()]'s smooth versions makes every
+#' hinge by an [numericals7::abs_smoother()]'s smooth versions makes every
 #' break-point an ordinary parameter with a true derivative, so a smoothed
 #' `jump` answers `TRUE` and is routed like an [nl()] term.
 #'
@@ -1568,9 +1568,9 @@ S7::method(term_penalties, SegTerm) <- function(term, ...) {
 #'        term_jacobian_block, logical(1))
 #'
 #' # Smoothing the step makes every break-point an ordinary parameter.
-#' vapply(list(seg = seg(x, smoothed = penalties7::smooth_probit()),
-#'             jump = jump(x, smoothed = penalties7::smooth_probit()),
-#'             jseg = jseg(x, smoothed = penalties7::smooth_probit())),
+#' vapply(list(seg = seg(x, smoothed = numericals7::smooth_probit()),
+#'             jump = jump(x, smoothed = numericals7::smooth_probit()),
+#'             jseg = jseg(x, smoothed = numericals7::smooth_probit())),
 #'        term_jacobian_block, logical(1))
 #'
 #' @keywords internal
@@ -2833,7 +2833,7 @@ seg_profile_rss <- function(term, y, weights = NULL) {
 #' term_build(seg(x, npsi = 2), d)
 #'
 #' # A smoothed term names its smoother and its width.
-#' term_build(jump(x, smoothed = penalties7::smooth_probit()), d)
+#' term_build(jump(x, smoothed = numericals7::smooth_probit()), d)
 #'
 #' # A developed break-point has a range instead of a number.
 #' term_build(seg(x, psi ~ id), d)

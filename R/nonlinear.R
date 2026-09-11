@@ -1512,7 +1512,7 @@ S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
 #' than once per observation.
 #'
 #' A break-point term answers according to its construction. With
-#' `smoothed` an [penalties7::abs_smoother()] the block is the
+#' `smoothed` an [numericals7::abs_smoother()] the block is the
 #' true Jacobian and the closed forms are the smoother's own one order further
 #' up than [term_block_deriv()] reads them: with \eqn{u = x - \psi},
 #' \eqn{P = s''/2}, \eqn{T = s'''/2} and \eqn{Q = s''''/2}, the change columns
@@ -1531,7 +1531,7 @@ S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
 #' confinement limit the whole contribution is zero, every addend carrying a
 #' direction in the break-point, which the first derivative does not, the
 #' position column moving with the change whatever the position does. And
-#' under [penalties7::smooth_quintic()], which is exact outside
+#' under [numericals7::smooth_quintic()], which is exact outside
 #' \eqn{[-h, h]}, the answer is zero on every observation further than the
 #' width from a break-point; that smoother is \eqn{C^3}, so its fourth
 #' derivative jumps at \eqn{\pm h} and the answer is exact away from those two

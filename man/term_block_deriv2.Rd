@@ -82,7 +82,7 @@ in practice, and the call is made once per pair of hyperparameters rather
 than once per observation.
 
 A break-point term answers according to its construction. With
-\code{smoothed} an \code{\link[penalties7:abs_smoother]{penalties7::abs_smoother()}} the block is the
+\code{smoothed} an \code{\link[numericals7:abs_smoother]{numericals7::abs_smoother()}} the block is the
 true Jacobian and the closed forms are the smoother's own one order further
 up than \code{\link[=term_block_deriv]{term_block_deriv()}} reads them: with \eqn{u = x - \psi},
 \eqn{P = s''/2}, \eqn{T = s'''/2} and \eqn{Q = s''''/2}, the change columns
@@ -101,7 +101,7 @@ exact. Where a break-point sits against its
 confinement limit the whole contribution is zero, every addend carrying a
 direction in the break-point, which the first derivative does not, the
 position column moving with the change whatever the position does. And
-under \code{\link[penalties7:smooth_quintic]{penalties7::smooth_quintic()}}, which is exact outside
+under \code{\link[numericals7:smooth_quintic]{numericals7::smooth_quintic()}}, which is exact outside
 \eqn{[-h, h]}, the answer is zero on every observation further than the
 width from a break-point; that smoother is \eqn{C^3}, so its fourth
 derivative jumps at \eqn{\pm h} and the answer is exact away from those two

@@ -43,7 +43,7 @@ seg(x, npsi = 2)
 term_build(seg(x, npsi = 2), d)
 
 # A smoothed term names its smoother and its width.
-term_build(jump(x, smoothed = penalties7::smooth_probit()), d)
+term_build(jump(x, smoothed = numericals7::smooth_probit()), d)
 
 # A developed break-point has a range instead of a number.
 term_build(seg(x, psi ~ id), d)

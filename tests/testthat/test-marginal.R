@@ -52,7 +52,7 @@ test_that("the constructor takes the psi ~ random subformula and nothing else", 
   expect_error(jseg(x, marginal = TRUE), "requires the break-point")
 
   expect_message(jump(x, psi ~ random(~1 | id), marginal = TRUE,
-                      smoothed = penalties7::smooth_probit()),
+                      smoothed = numericals7::smooth_probit()),
                  "ignored")
   expect_message(jump(x, psi ~ random(~1 | id), marginal = TRUE, c0 = 0.1),
                  "ignored")

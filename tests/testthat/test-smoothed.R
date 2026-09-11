@@ -22,7 +22,7 @@ test_that("the default is NULL and the working construction is untouched", {
 
 test_that("a smoothed term is a Jacobian block of any kind", {
   dd <- sm_data()
-  sm <- penalties7::smooth_probit(h = 0.3)
+  sm <- numericals7::smooth_probit(h = 0.3)
   for (ctor in list(seg, jump, jseg)) {
     spec <- ctor(x, psi = 4, smoothed = sm)
     expect_true(term_jacobian_block(spec))
@@ -51,7 +51,7 @@ test_that("smoothed developments of a break-point are legal, penalized ones
           included", {
   dd <- sm_data()
   dd$g <- factor(rep(letters[1:4], each = 50))
-  sm <- penalties7::smooth_probit(h = 0.3)
+  sm <- numericals7::smooth_probit(h = 0.3)
   # unsmoothed: the documented refusal stands
   expect_error(term_build(jump(x, psi ~ random(~1 | g)), dd), "penalty")
   # smoothed: it builds, and the sub-term's penalty is declared
@@ -63,7 +63,7 @@ test_that("smoothed developments of a break-point are legal, penalized ones
 })
 
 test_that("c0 is ignored with a message on a smoothed discontinuous term", {
-  sm <- penalties7::smooth_probit(h = 0.3)
+  sm <- numericals7::smooth_probit(h = 0.3)
   expect_message(jump(x, c0 = 0.1, smoothed = sm), "ignored")
   expect_message(jseg(x, c0 = 0.1, smoothed = sm), "ignored")
   expect_silent(jump(x, smoothed = sm))
@@ -73,17 +73,17 @@ test_that("c0 is ignored with a message on a smoothed discontinuous term", {
 test_that("the width is resolved at build from the covariate's spacing", {
   dd <- sm_data()
   gap <- stats::median(diff(sort(unique(dd$x))))
-  b <- term_build(jump(x, smoothed = penalties7::smooth_probit()), dd)
+  b <- term_build(jump(x, smoothed = numericals7::smooth_probit()), dd)
   expect_equal(b@blueprint$smooth$width, gap)
   # the hyperbolic's parameter is a squared length
-  b2 <- term_build(jump(x, smoothed = penalties7::smooth_hyperbolic()), dd)
+  b2 <- term_build(jump(x, smoothed = numericals7::smooth_hyperbolic()), dd)
   expect_equal(b2@blueprint$smooth$width, gap^2)
   # a width the smoother holds wins
-  b3 <- term_build(jump(x, smoothed = penalties7::smooth_probit(h = 0.5)), dd)
+  b3 <- term_build(jump(x, smoothed = numericals7::smooth_probit(h = 0.5)), dd)
   expect_equal(b3@blueprint$smooth$width, 0.5)
   # and one below the derived floor is rejected, naming the bound
   expect_error(
-    term_build(jump(x, smoothed = penalties7::smooth_probit(h = 1e-12)), dd),
+    term_build(jump(x, smoothed = numericals7::smooth_probit(h = 1e-12)), dd),
     "floor")
 })
 
@@ -91,7 +91,7 @@ test_that("a per-group width needs a partition development and gives one
           width per group", {
   dd <- sm_data()
   dd$g <- factor(rep(letters[1:4], each = 50))
-  sm <- penalties7::smooth_probit(per_group = TRUE)
+  sm <- numericals7::smooth_probit(per_group = TRUE)
   expect_error(term_build(jump(x, smoothed = sm), dd), "per-group")
   b <- term_build(jump(x, psi ~ 0 + g, smoothed = sm), dd)
   expect_equal(length(b@blueprint$smooth$w_group), 4L)
@@ -100,7 +100,7 @@ test_that("a per-group width needs a partition development and gives one
 
 test_that("the closed second derivatives agree with a brute-force dX/dbeta", {
   dd <- sm_data(120)
-  sm <- penalties7::smooth_probit(h = 0.4)
+  sm <- numericals7::smooth_probit(h = 0.4)
   for (ctor in list(seg, jump, jseg)) {
     b <- term_build(ctor(x, psi = 5, smoothed = sm), dd)
     cf <- b@blueprint$coef
@@ -132,7 +132,7 @@ test_that("the closed second derivatives agree with a brute-force dX/dbeta", {
 test_that("a smoothed term predicts and values on new data through its own
           blueprint", {
   dd <- sm_data()
-  sm <- penalties7::smooth_probit(h = 0.3)
+  sm <- numericals7::smooth_probit(h = 0.3)
   b <- term_build(jseg(x, psi = 6, smoothed = sm), dd)
   cf <- b@blueprint$coef
   nd <- dd[seq(1, 200, by = 7), , drop = FALSE]
@@ -145,7 +145,7 @@ test_that("a smoothed term predicts and values on new data through its own
 
 test_that("relocate and the profile carry over to a smoothed term", {
   dd <- sm_data()
-  sm <- penalties7::smooth_probit(h = 0.3)
+  sm <- numericals7::smooth_probit(h = 0.3)
   b <- term_build(jump(x, psi = 3, smoothed = sm), dd)
   b2 <- seg_relocate(b, 6)
   expect_equal(as.numeric(seg_psi(b2)), 6)
@@ -175,6 +175,6 @@ test_that("a smoothed seg converges to the sharp answer on a smooth truth", {
   }
   sharp <- fit_gn(seg(x, psi = 5))
   smoothd <- fit_gn(seg(x, psi = 5,
-                        smoothed = penalties7::smooth_probit(h = 0.05)))
+                        smoothed = numericals7::smooth_probit(h = 0.05)))
   expect_lt(abs(as.numeric(sharp) - as.numeric(smoothd)), 0.05)
 })

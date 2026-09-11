@@ -927,7 +927,7 @@ S7::method(term_coef_draw, model_term) <- function(term, coef, sd = 1, ...) {
 #' term_jacobian_block(nl(~ a * x, start = list(a = 1)))
 #'
 #' # Smoothing the step makes the break-point an ordinary parameter.
-#' term_jacobian_block(jump(x, smoothed = penalties7::smooth_probit()))
+#' term_jacobian_block(jump(x, smoothed = numericals7::smooth_probit()))
 #'
 #' @export
 #' @aliases term_jacobian_block.model_term

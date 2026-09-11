@@ -42,7 +42,7 @@ product of two unknowns.
 
 \section{The smoothed form}{
 With \code{smoothed} the step and the hinge are replaced by a
-\code{\link[penalties7:abs_smoother]{penalties7::abs_smoother()}}'s versions, and the transition width is
+\code{\link[numericals7:abs_smoother]{numericals7::abs_smoother()}}'s versions, and the transition width is
 resolved here from the covariate's spacing, within groups where a
 development of the break-point supplies a partition. The width is checked
 against the derived floor \eqn{\sqrt{\epsilon}D} and reported by \code{\link[=print]{print()}},

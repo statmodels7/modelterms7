@@ -28,7 +28,7 @@ the model's objective, its early steps going uphill on purpose under a large
 scaling factor, and forcing a sufficient decrease stalls it.
 
 \code{smoothed} changes the answer for all three. Replacing the step and the
-hinge by an \code{\link[penalties7:abs_smoother]{penalties7::abs_smoother()}}'s smooth versions makes every
+hinge by an \code{\link[numericals7:abs_smoother]{numericals7::abs_smoother()}}'s smooth versions makes every
 break-point an ordinary parameter with a true derivative, so a smoothed
 \code{jump} answers \code{TRUE} and is routed like an \code{\link[=nl]{nl()}} term.
 }
@@ -39,9 +39,9 @@ vapply(list(seg = seg(x), jump = jump(x), jseg = jseg(x)),
        term_jacobian_block, logical(1))
 
 # Smoothing the step makes every break-point an ordinary parameter.
-vapply(list(seg = seg(x, smoothed = penalties7::smooth_probit()),
-            jump = jump(x, smoothed = penalties7::smooth_probit()),
-            jseg = jseg(x, smoothed = penalties7::smooth_probit())),
+vapply(list(seg = seg(x, smoothed = numericals7::smooth_probit()),
+            jump = jump(x, smoothed = numericals7::smooth_probit()),
+            jseg = jseg(x, smoothed = numericals7::smooth_probit())),
        term_jacobian_block, logical(1))
 
 }

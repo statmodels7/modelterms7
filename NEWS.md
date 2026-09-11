@@ -1,3 +1,24 @@
+# modelterms7 0.74.0
+
+* `seg()`, `jump()` and `jseg()` take their `smoothed` argument from
+  `numericals7`, where the smoothers of the absolute value moved in 0.13.0.
+  A smoother is written `numericals7::smooth_probit()`, the check on the
+  argument asks for a `numericals7::abs_smoother`, and the error raised for
+  anything else names that package. The width is resolved by
+  `numericals7::smoother_width()` and `numericals7::smoother_width_floor()`,
+  the same functions under their new home. `DESCRIPTION` requires
+  `numericals7 (>= 0.13.0)`.
+
+* The suite passes against the installed `numericals7` 0.13.0 and
+  `penalties7` 0.23.0: 2406 expectations in 331 blocks, none failing or
+  skipped.
+
+* The three constructions build and fit exactly as before. Their blocks, term
+  values, contractions, first and second block derivatives and prints under
+  each of the three smoothers, a per-group width, and nine fits plus a random
+  change-point are among the 529 quantities that compare `identical()` before
+  and after the move; `numericals7` 0.13.0's news describes that net.
+
 # modelterms7 0.73.0
 
 * **A smooth may be penalized by something other than its roughness

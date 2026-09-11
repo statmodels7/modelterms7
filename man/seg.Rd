@@ -38,9 +38,9 @@ level of a factor. A bare variable is rejected; write the formula.}
 Defaults to \code{TRUE}.}
 
 \item{smoothed}{\code{NULL} (the default: the construction exactly as
-documented above) or a \pkg{penalties7}
-\code{\link[penalties7:abs_smoother]{penalties7::abs_smoother()}}, e.g.
-\code{penalties7::smooth_probit()}. The smoother replaces the step and
+documented above) or a \pkg{numericals7}
+\code{\link[numericals7:abs_smoother]{numericals7::abs_smoother()}}, e.g.
+\code{numericals7::smooth_probit()}. The smoother replaces the step and
 the hinge by their smooth versions, \eqn{(1 + s'(u))/2} and
 \eqn{(u + s(u))/2}, so every break-point becomes an ordinary
 parameter of a \eqn{C^\infty} model: there is no working
