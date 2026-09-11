@@ -43,7 +43,7 @@ decrease stalls it.
 
 `smoothed` changes the answer for all three. Replacing the step and the
 hinge by an
-[`penalties7::abs_smoother()`](https://statmodels7.github.io/penalties7/reference/abs_smoother.html)'s
+[`numericals7::abs_smoother()`](https://statmodels7.github.io/numericals7/reference/abs_smoother.html)'s
 smooth versions makes every break-point an ordinary parameter with a
 true derivative, so a smoothed `jump` answers `TRUE` and is routed like
 an [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
@@ -67,9 +67,9 @@ vapply(list(seg = seg(x), jump = jump(x), jseg = jseg(x)),
 #>  TRUE FALSE FALSE 
 
 # Smoothing the step makes every break-point an ordinary parameter.
-vapply(list(seg = seg(x, smoothed = penalties7::smooth_probit()),
-            jump = jump(x, smoothed = penalties7::smooth_probit()),
-            jseg = jseg(x, smoothed = penalties7::smooth_probit())),
+vapply(list(seg = seg(x, smoothed = numericals7::smooth_probit()),
+            jump = jump(x, smoothed = numericals7::smooth_probit()),
+            jseg = jseg(x, smoothed = numericals7::smooth_probit())),
        term_jacobian_block, logical(1))
 #>  seg jump jseg 
 #> TRUE TRUE TRUE 

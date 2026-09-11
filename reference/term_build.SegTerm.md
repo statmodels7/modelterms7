@@ -53,7 +53,7 @@ their read-off being a product of two unknowns.
 ## The smoothed form
 
 With `smoothed` the step and the hinge are replaced by a
-[`penalties7::abs_smoother()`](https://statmodels7.github.io/penalties7/reference/abs_smoother.html)'s
+[`numericals7::abs_smoother()`](https://statmodels7.github.io/numericals7/reference/abs_smoother.html)'s
 versions, and the transition width is resolved here from the covariate's
 spacing, within groups where a development of the break-point supplies a
 partition. The width is checked against the derived floor

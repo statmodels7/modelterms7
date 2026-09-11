@@ -1,5 +1,35 @@
 # Changelog
 
+## modelterms7 0.74.0
+
+- [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  take their `smoothed` argument from `numericals7`, where the smoothers
+  of the absolute value moved in 0.13.0. A smoother is written
+  [`numericals7::smooth_probit()`](https://statmodels7.github.io/numericals7/reference/smooth_probit.html),
+  the check on the argument asks for a
+  [`numericals7::abs_smoother`](https://statmodels7.github.io/numericals7/reference/abs_smoother.html),
+  and the error raised for anything else names that package. The width
+  is resolved by
+  [`numericals7::smoother_width()`](https://statmodels7.github.io/numericals7/reference/smoother_width.html)
+  and
+  [`numericals7::smoother_width_floor()`](https://statmodels7.github.io/numericals7/reference/smoother_width_floor.html),
+  the same functions under their new home. `DESCRIPTION` requires
+  `numericals7 (>= 0.13.0)`.
+
+- The suite passes against the installed `numericals7` 0.13.0 and
+  `penalties7` 0.23.0: 2406 expectations in 331 blocks, none failing or
+  skipped.
+
+- The three constructions build and fit exactly as before. Their blocks,
+  term values, contractions, first and second block derivatives and
+  prints under each of the three smoothers, a per-group width, and nine
+  fits plus a random change-point are among the 529 quantities that
+  compare [`identical()`](https://rdrr.io/r/base/identical.html) before
+  and after the move; `numericals7` 0.13.0’s news describes that net.
+
 ## modelterms7 0.73.0
 
 - **A smooth may be penalized by something other than its roughness

@@ -11,7 +11,7 @@ derivative contracted in two directions the caller supplies."><meta property="og
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.73.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.74.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -123,7 +123,7 @@ every shipped link and numerical for a user-defined one. The cost is
 in practice, and the call is made once per pair of hyperparameters rather
 than once per observation.</p>
 <p>A break-point term answers according to its construction. With
-<code>smoothed</code> an <code><a href="https://statmodels7.github.io/penalties7/reference/abs_smoother.html" class="external-link">penalties7::abs_smoother()</a></code> the block is the
+<code>smoothed</code> an <code><a href="https://statmodels7.github.io/numericals7/reference/abs_smoother.html" class="external-link">numericals7::abs_smoother()</a></code> the block is the
 true Jacobian and the closed forms are the smoother's own one order further
 up than <code><a href="term_block_deriv.html">term_block_deriv()</a></code> reads them: with \(u = x - \psi\),
 \(P = s''/2\), \(T = s'''/2\) and \(Q = s''''/2\), the change columns
@@ -141,7 +141,7 @@ exact. Where a break-point sits against its
 confinement limit the whole contribution is zero, every addend carrying a
 direction in the break-point, which the first derivative does not, the
 position column moving with the change whatever the position does. And
-under <code><a href="https://statmodels7.github.io/penalties7/reference/smooth_quintic.html" class="external-link">penalties7::smooth_quintic()</a></code>, which is exact outside
+under <code><a href="https://statmodels7.github.io/numericals7/reference/smooth_quintic.html" class="external-link">numericals7::smooth_quintic()</a></code>, which is exact outside
 \([-h, h]\), the answer is zero on every observation further than the
 width from a break-point; that smoother is \(C^3\), so its fourth
 derivative jumps at \(\pm h\) and the answer is exact away from those two

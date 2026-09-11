@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.73.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.74.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,12 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.74.0" id="modelterms7-0740">modelterms7 0.74.0<a class="anchor" aria-label="anchor" href="#modelterms7-0740"></a></h2>
+<ul><li><p><code><a href="../reference/seg.html">seg()</a></code>, <code><a href="../reference/jump.html">jump()</a></code> and <code><a href="../reference/jseg.html">jseg()</a></code> take their <code>smoothed</code> argument from <code>numericals7</code>, where the smoothers of the absolute value moved in 0.13.0. A smoother is written <code><a href="https://statmodels7.github.io/numericals7/reference/smooth_probit.html" class="external-link">numericals7::smooth_probit()</a></code>, the check on the argument asks for a <code><a href="https://statmodels7.github.io/numericals7/reference/abs_smoother.html" class="external-link">numericals7::abs_smoother</a></code>, and the error raised for anything else names that package. The width is resolved by <code><a href="https://statmodels7.github.io/numericals7/reference/smoother_width.html" class="external-link">numericals7::smoother_width()</a></code> and <code><a href="https://statmodels7.github.io/numericals7/reference/smoother_width_floor.html" class="external-link">numericals7::smoother_width_floor()</a></code>, the same functions under their new home. <code>DESCRIPTION</code> requires <code>numericals7 (&gt;= 0.13.0)</code>.</p></li>
+<li><p>The suite passes against the installed <code>numericals7</code> 0.13.0 and <code>penalties7</code> 0.23.0: 2406 expectations in 331 blocks, none failing or skipped.</p></li>
+<li><p>The three constructions build and fit exactly as before. Their blocks, term values, contractions, first and second block derivatives and prints under each of the three smoothers, a per-group width, and nine fits plus a random change-point are among the 529 quantities that compare <code><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical()</a></code> before and after the move; <code>numericals7</code> 0.13.0’s news describes that net.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.73.0" id="modelterms7-0730">modelterms7 0.73.0<a class="anchor" aria-label="anchor" href="#modelterms7-0730"></a></h2>
 <ul><li><p><strong>A smooth may be penalized by something other than its roughness matrix, and the levels of a factor <code>by</code> may be smoothed apart.</strong> Both are answered through <code><a href="../reference/term_penalties.html">term_penalties()</a></code>, which is the general question a term is asked about its penalties, and both leave the default alone.</p></li>

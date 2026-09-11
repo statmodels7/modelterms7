@@ -65,7 +65,7 @@ term_build(seg(x, npsi = 2), d)
 #>   at: 3.774, 6.642
 
 # A smoothed term names its smoother and its width.
-term_build(jump(x, smoothed = penalties7::smooth_probit()), d)
+term_build(jump(x, smoothed = numericals7::smooth_probit()), d)
 #> <SegTerm> 'jump': jump, 1 break-point
 #>   smoothed (probit, h = 0.0607)
 #>   at: 4.803

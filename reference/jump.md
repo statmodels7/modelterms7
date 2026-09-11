@@ -75,10 +75,10 @@ jump(
 - smoothed:
 
   `NULL` (the default: the construction exactly as documented above) or
-  a penalties7
-  [`penalties7::abs_smoother()`](https://statmodels7.github.io/penalties7/reference/abs_smoother.html),
+  a numericals7
+  [`numericals7::abs_smoother()`](https://statmodels7.github.io/numericals7/reference/abs_smoother.html),
   e.g.
-  [`penalties7::smooth_probit()`](https://statmodels7.github.io/penalties7/reference/smooth_probit.html).
+  [`numericals7::smooth_probit()`](https://statmodels7.github.io/numericals7/reference/smooth_probit.html).
   The smoother replaces the step and the hinge by their smooth versions,
   \\(1 + s'(u))/2\\ and \\(u + s(u))/2\\, so every break-point becomes
   an ordinary parameter of a \\C^\infty\\ model: there is no working

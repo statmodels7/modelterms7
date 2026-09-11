@@ -142,9 +142,9 @@ estimates the positions by the working fits of Muggeo and of Fasola,
 with the position read off the fitted coefficients.
 
 `smoothed =` replaces the absolute value inside the term with a
-[penalties7](https://statmodels7.github.io/penalties7/) `abs_smoother`,
-and then a break-point is an ordinary parameter of a differentiable
-model.
+[numericals7](https://statmodels7.github.io/numericals7/)
+`abs_smoother`, and then a break-point is an ordinary parameter of a
+differentiable model.
 [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
 is where the difference shows.
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md) is
@@ -157,7 +157,7 @@ weight until the term is smoothed.
 
 jb <- function(...) term_jacobian_block(term_build(jump(x, ...), pan))
 c(sharp    = jb(npsi = 1),
-  smoothed = jb(npsi = 1, smoothed = penalties7::smooth_probit()))
+  smoothed = jb(npsi = 1, smoothed = numericals7::smooth_probit()))
 #>    sharp smoothed 
 #>    FALSE     TRUE
 ```

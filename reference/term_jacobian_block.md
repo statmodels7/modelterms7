@@ -96,6 +96,6 @@ term_jacobian_block(nl(~ a * x, start = list(a = 1)))
 #> [1] TRUE
 
 # Smoothing the step makes the break-point an ordinary parameter.
-term_jacobian_block(jump(x, smoothed = penalties7::smooth_probit()))
+term_jacobian_block(jump(x, smoothed = numericals7::smooth_probit()))
 #> [1] TRUE
 ```

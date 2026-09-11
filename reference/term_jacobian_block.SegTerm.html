@@ -13,7 +13,7 @@ objective, and a working linearization does not."><meta property="og:image" cont
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.73.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.74.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,7 +74,7 @@ linearization: the fixed-point iteration on it is not a descent method on
 the model's objective, its early steps going uphill on purpose under a large
 scaling factor, and forcing a sufficient decrease stalls it.</p>
 <p><code>smoothed</code> changes the answer for all three. Replacing the step and the
-hinge by an <code><a href="https://statmodels7.github.io/penalties7/reference/abs_smoother.html" class="external-link">penalties7::abs_smoother()</a></code>'s smooth versions makes every
+hinge by an <code><a href="https://statmodels7.github.io/numericals7/reference/abs_smoother.html" class="external-link">numericals7::abs_smoother()</a></code>'s smooth versions makes every
 break-point an ordinary parameter with a true derivative, so a smoothed
 <code>jump</code> answers <code>TRUE</code> and is routed like an <code><a href="nl.html">nl()</a></code> term.</p>
     </div>
@@ -95,9 +95,9 @@ instead of a score.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  TRUE FALSE FALSE </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Smoothing the step makes every break-point an ordinary parameter.</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>seg <span class="op">=</span> <span class="fu"><a href="seg.html">seg</a></span><span class="op">(</span><span class="va">x</span>, smoothed <span class="op">=</span> <span class="fu">penalties7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/penalties7/reference/smooth_probit.html" class="external-link">smooth_probit</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>            jump <span class="op">=</span> <span class="fu"><a href="jump.html">jump</a></span><span class="op">(</span><span class="va">x</span>, smoothed <span class="op">=</span> <span class="fu">penalties7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/penalties7/reference/smooth_probit.html" class="external-link">smooth_probit</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>            jseg <span class="op">=</span> <span class="fu"><a href="jseg.html">jseg</a></span><span class="op">(</span><span class="va">x</span>, smoothed <span class="op">=</span> <span class="fu">penalties7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/penalties7/reference/smooth_probit.html" class="external-link">smooth_probit</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>seg <span class="op">=</span> <span class="fu"><a href="seg.html">seg</a></span><span class="op">(</span><span class="va">x</span>, smoothed <span class="op">=</span> <span class="fu">numericals7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/numericals7/reference/smooth_probit.html" class="external-link">smooth_probit</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>            jump <span class="op">=</span> <span class="fu"><a href="jump.html">jump</a></span><span class="op">(</span><span class="va">x</span>, smoothed <span class="op">=</span> <span class="fu">numericals7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/numericals7/reference/smooth_probit.html" class="external-link">smooth_probit</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>            jseg <span class="op">=</span> <span class="fu"><a href="jseg.html">jseg</a></span><span class="op">(</span><span class="va">x</span>, smoothed <span class="op">=</span> <span class="fu">numericals7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/numericals7/reference/smooth_probit.html" class="external-link">smooth_probit</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>       <span class="va">term_jacobian_block</span>, <span class="fu"><a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  seg jump jseg </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> TRUE TRUE TRUE </span>

@@ -98,7 +98,7 @@ hyperparameters rather than once per observation.
 
 A break-point term answers according to its construction. With
 `smoothed` an
-[`penalties7::abs_smoother()`](https://statmodels7.github.io/penalties7/reference/abs_smoother.html)
+[`numericals7::abs_smoother()`](https://statmodels7.github.io/numericals7/reference/abs_smoother.html)
 the block is the true Jacobian and the closed forms are the smoother's
 own one order further up than
 [`term_block_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md)
@@ -122,7 +122,7 @@ exact. Where a break-point sits against its confinement limit the whole
 contribution is zero, every addend carrying a direction in the
 break-point, which the first derivative does not, the position column
 moving with the change whatever the position does. And under
-[`penalties7::smooth_quintic()`](https://statmodels7.github.io/penalties7/reference/smooth_quintic.html),
+[`numericals7::smooth_quintic()`](https://statmodels7.github.io/numericals7/reference/smooth_quintic.html),
 which is exact outside \\\[-h, h\]\\, the answer is zero on every
 observation further than the width from a break-point; that smoother is
 \\C^3\\, so its fourth derivative jumps at \\\pm h\\ and the answer is
