@@ -1,3 +1,26 @@
+# modelterms7 0.75.0
+
+* The page of `gas()` states the identity between the level and an intercept
+  in the same equation. The level adds a constant to the recursion, so the
+  two are exactly confounded: shifting the intercept by \eqn{k} and
+  \eqn{\omega} by \eqn{-k(1 - \sum_j b_j)} leaves every predictor
+  unchanged, and a fitting layer estimates at most one of them. Where the
+  level is held, the intercept estimates the stationary level
+  \eqn{\omega / (1 - \sum_j b_j)}, which is what makes the two spellings
+  one model rather than two. Measured on the page's own example at 600
+  observations: the log-likelihoods are -867.599 on both sides with a gap of
+  0.000e+00, and the intercept 0.8376033 against
+  \eqn{\omega / (1 - \beta_1)} = 0.8376033, a gap of 1.4e-11.
+
+* The example prints the two readings it compares. They sat inside the
+  `if (requireNamespace(...))` block, which is one top-level expression, so
+  only its last value was shown and the coefficients the comment above them
+  describes reached no output. It also reads \eqn{\beta_1} off `coef()`
+  rather than the `pacf1` coordinate: the two coincide at \eqn{q = 1} and
+  are different quantities, which is what the comment three lines above says.
+
+* Documentation only. Nothing computed moves.
+
 # modelterms7 0.74.0
 
 * `seg()`, `jump()` and `jseg()` take their `smoothed` argument from

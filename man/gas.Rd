@@ -106,6 +106,34 @@ formulation carries a scaling matrix, usually an inverse information,
 which the curvature this term already receives would supply.
 }
 
+\subsection{The level beside an intercept}{
+The level \eqn{\omega} adds a constant to the recursion, so an intercept
+\eqn{c} in the same equation spans the same direction. The two are exactly
+confounded: shifting \eqn{c} by \eqn{k} and \eqn{\omega} by
+\eqn{-k(1 - \sum_j b_j)} leaves every predictor unchanged. A fitting layer
+therefore estimates at most one of them. In \pkg{statmodels7} the intercept
+is kept and \eqn{\omega} is held at zero, which a summary reports as
+\code{omega (held)}; written without the intercept, as \code{0 + gas(...)}, the
+level is estimated instead. The same holds for any set of columns whose
+span contains the constant, such as a factor coded without an intercept.
+
+The two spellings are one model with the same log-likelihood, loadings
+and persistence, and their constants measure different quantities. The
+score has zero conditional mean, so the level fluctuates around the fixed
+point of the recursion,
+\deqn{\mathrm{E}[f_t] = \frac{\omega}{1 - \sum_{j=1}^{q} b_j},}
+and this is what the intercept estimates when \eqn{\omega} is held:
+\deqn{\eta_t = c + f_t \;\text{with}\; \omega = 0
+  \qquad\text{and}\qquad
+  \eta_t = f_t \;\text{with}\; c = \frac{\omega}{1 - \sum_j b_j}}
+describe the same predictor. With a persistence close to one the factor
+\eqn{1/(1 - \sum_j b_j)} is large, so \eqn{\omega} is small, and its
+standard error is not comparable with the intercept's: a change in
+\eqn{\omega} moves the level by that factor. The identity is for a scalar
+level; a level developed by a subformula is confounded with the part of
+its span the equation's design shares.
+}
+
 \subsection{Groups and time}{
 \code{by} filters each group independently, as a panel of short series needs,
 and \code{time} gives the order within a group.
@@ -235,7 +263,16 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
                              distributions7::gaussian1_distrib(), fd)
   # truth: omega 0.05, alpha 0.3, beta 0.9. beta is reported as the
   # autoregressive coefficient, which its coordinate is not.
-  round(coef(ft)$mu, 3)
+  print(round(coef(ft)$mu, 3))
+
+  # With an intercept the level is held at zero and the intercept
+  # estimates omega / (1 - beta) instead: the same model, reparametrized.
+  fi <- statmodels7::statmod(y ~ 1 + gas(p = 1, q = 1, time = t),
+                             distributions7::gaussian1_distrib(), fd)
+  print(c(logLik(ft), logLik(fi)))
+  cf <- coef(ft)$mu
+  c(intercept  = coef(fi)$mu[["(Intercept)"]],
+    from_omega = cf[["gas.omega"]] / (1 - cf[["gas.beta1"]]))
 }
 }
 \references{
