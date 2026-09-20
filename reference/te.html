@@ -13,7 +13,7 @@ so the surface may be rough in one direction and smooth in another."><meta prope
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.75.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.76.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -147,6 +147,21 @@ named <code>lambda1</code>, <code>lambda2</code>, and so on. That is the usual r
 a tensor smooth. With <code>anisotropic = FALSE</code> they are summed first and one
 <code>lambda</code> governs the total, which costs one hyperparameter instead of one
 per margin.</p>
+<p>Each component is normalized to a largest entry of one before either of
+those happens, since a roughness matrix carries the units of its own
+covariate: measured at <code>k = 4</code> over 300 observations, the
+second-derivative Gram of a covariate on \([0, 365]\) has a largest
+entry of 7.455e-07 against 3.652e+01 for one on \([0, 1]\), a factor of
+4.9e+07. The size also falls with the number of knots, a coarser basis
+being flatter, so the quantity that decides is the matrix and not the
+range. Under
+<code>anisotropic = TRUE</code> that is a reparametrization and nothing about the fit
+moves: the component's own <code>lambda</code> absorbs the factor, so what the
+normalization buys there is that the reported parameters of two margins are
+comparable with each other. Under <code>anisotropic = FALSE</code> it is part of the
+model, one <code>lambda</code> weighting a sum whose terms it fixes, and margins on
+very different ranges then contribute comparably where otherwise the widest
+would contribute almost nothing.</p>
 <p>The marginal bases are <strong>not</strong> reparametrized, so the marginal linear
 effects are not separated out as <code><a href="s.html">s()</a></code> separates its one. They lie in the
 null space of the tensor penalty, and a strongly penalized fit is shrunk
@@ -226,7 +241,7 @@ generalized additive mixed models. <em>Biometrics</em> 62, 1025–1036.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The centering transform is reapplied, not recomputed.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="fu"><a href="term_predict.html">term_predict</a></span><span class="op">(</span><span class="va">b</span>, <span class="va">dd</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="op">]</span><span class="op">)</span> <span class="op">-</span> <span class="fu"><a href="term_matrix.html">term_matrix</a></span><span class="op">(</span><span class="va">b</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, <span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 6.938894e-18</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4.163336e-17</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># One covariate is s(), not te().</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu">te</span><span class="op">(</span><span class="va">x</span>, smooths <span class="op">=</span> <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>

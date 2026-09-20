@@ -263,7 +263,7 @@ X <- term_matrix(b)
 cor(X[, 1], dd$x)
 #> [1] 1
 max(abs(crossprod(X[, 1], X[, -1])))
-#> [1] 8.992806e-14
+#> [1] 4.418688e-14
 
 # So edf runs from k - 1 down to one, not to zero.
 H <- crossprod(X)
@@ -306,7 +306,7 @@ term_penalties(bp)[[1]]$penalty@params
 max(abs(term_predict(b, dd[1:10, ]) - X[1:10, ]))
 #> [1] 0
 max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 8)), dd[1:10, ])) - X[1:10, ]))
-#> [1] 2.849289
+#> [1] 3.628495
 
 # Sparsity needs a factor `by`, and says so when there is none.
 try(term_build(s(x, basis7::bspline_smooth(k = 5), sparse = TRUE), dd))
