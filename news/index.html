@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.74.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.75.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,12 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.75.0" id="modelterms7-0750">modelterms7 0.75.0<a class="anchor" aria-label="anchor" href="#modelterms7-0750"></a></h2>
+<ul><li><p>The page of <code><a href="../reference/gas.html">gas()</a></code> states the identity between the level and an intercept in the same equation. The level adds a constant to the recursion, so the two are exactly confounded: shifting the intercept by  and  by  leaves every predictor unchanged, and a fitting layer estimates at most one of them. Where the level is held, the intercept estimates the stationary level , which is what makes the two spellings one model rather than two. Measured on the page’s own example at 600 observations: the log-likelihoods are -867.599 on both sides with a gap of 0.000e+00, and the intercept 0.8376033 against  = 0.8376033, a gap of 1.4e-11.</p></li>
+<li><p>The example prints the two readings it compares. They sat inside the <code>if (requireNamespace(...))</code> block, which is one top-level expression, so only its last value was shown and the coefficients the comment above them describes reached no output. It also reads  off <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> rather than the <code>pacf1</code> coordinate: the two coincide at  and are different quantities, which is what the comment three lines above says.</p></li>
+<li><p>Documentation only. Nothing computed moves.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.74.0" id="modelterms7-0740">modelterms7 0.74.0<a class="anchor" aria-label="anchor" href="#modelterms7-0740"></a></h2>
 <ul><li><p><code><a href="../reference/seg.html">seg()</a></code>, <code><a href="../reference/jump.html">jump()</a></code> and <code><a href="../reference/jseg.html">jseg()</a></code> take their <code>smoothed</code> argument from <code>numericals7</code>, where the smoothers of the absolute value moved in 0.13.0. A smoother is written <code><a href="https://statmodels7.github.io/numericals7/reference/smooth_probit.html" class="external-link">numericals7::smooth_probit()</a></code>, the check on the argument asks for a <code><a href="https://statmodels7.github.io/numericals7/reference/abs_smoother.html" class="external-link">numericals7::abs_smoother</a></code>, and the error raised for anything else names that package. The width is resolved by <code><a href="https://statmodels7.github.io/numericals7/reference/smoother_width.html" class="external-link">numericals7::smoother_width()</a></code> and <code><a href="https://statmodels7.github.io/numericals7/reference/smoother_width_floor.html" class="external-link">numericals7::smoother_width_floor()</a></code>, the same functions under their new home. <code>DESCRIPTION</code> requires <code>numericals7 (&gt;= 0.13.0)</code>.</p></li>

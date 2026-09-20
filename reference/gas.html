@@ -21,7 +21,7 @@ evaluated at."><meta property="og:image" content="https://statmodels7.github.io/
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.74.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.75.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -166,6 +166,34 @@ spectral radius of its companion matrix, which is not a box.</p>
 <p>The score driving the recursion is used unscaled. The general
 formulation carries a scaling matrix, usually an inverse information,
 which the curvature this term already receives would supply.</p>
+</div>
+
+<div class="section">
+<h3 id="the-level-beside-an-intercept">The level beside an intercept<a class="anchor" aria-label="anchor" href="#the-level-beside-an-intercept"></a></h3>
+<p>The level \(\omega\) adds a constant to the recursion, so an intercept
+\(c\) in the same equation spans the same direction. The two are exactly
+confounded: shifting \(c\) by \(k\) and \(\omega\) by
+\(-k(1 - \sum_j b_j)\) leaves every predictor unchanged. A fitting layer
+therefore estimates at most one of them. In <span class="pkg">statmodels7</span> the intercept
+is kept and \(\omega\) is held at zero, which a summary reports as
+<code>omega (held)</code>; written without the intercept, as <code>0 + gas(...)</code>, the
+level is estimated instead. The same holds for any set of columns whose
+span contains the constant, such as a factor coded without an intercept.</p>
+<p>The two spellings are one model with the same log-likelihood, loadings
+and persistence, and their constants measure different quantities. The
+score has zero conditional mean, so the level fluctuates around the fixed
+point of the recursion,
+$$\mathrm{E}[f_t] = \frac{\omega}{1 - \sum_{j=1}^{q} b_j},$$
+and this is what the intercept estimates when \(\omega\) is held:
+$$\eta_t = c + f_t \;\text{with}\; \omega = 0
+  \qquad\text{and}\qquad
+  \eta_t = f_t \;\text{with}\; c = \frac{\omega}{1 - \sum_j b_j}$$
+describe the same predictor. With a persistence close to one the factor
+\(1/(1 - \sum_j b_j)\) is large, so \(\omega\) is small, and its
+standard error is not comparable with the intercept's: a change in
+\(\omega\) moves the level by that factor. The identity is for a scalar
+level; a level developed by a subformula is confounded with the part of
+its span the equation's design shares.</p>
 </div>
 
 <div class="section">
@@ -323,10 +351,22 @@ their charts, <code><a href="term_readable.html">term_readable()</a></code> for 
 <span class="r-in"><span>                             <span class="fu">distributions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/distributions7/reference/gaussian1_distrib.html" class="external-link">gaussian1_distrib</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">fd</span><span class="op">)</span></span></span>
 <span class="r-in"><span>  <span class="co"># truth: omega 0.05, alpha 0.3, beta 0.9. beta is reported as the</span></span></span>
 <span class="r-in"><span>  <span class="co"># autoregressive coefficient, which its coordinate is not.</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">ft</span><span class="op">)</span><span class="op">$</span><span class="va">mu</span>, <span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">ft</span><span class="op">)</span><span class="op">$</span><span class="va">mu</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span>  <span class="co"># With an intercept the level is held at zero and the intercept</span></span></span>
+<span class="r-in"><span>  <span class="co"># estimates omega / (1 - beta) instead: the same model, reparametrized.</span></span></span>
+<span class="r-in"><span>  <span class="va">fi</span> <span class="op">&lt;-</span> <span class="fu">statmodels7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/statmodels7/reference/statmod.html" class="external-link">statmod</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="fl">1</span> <span class="op">+</span> <span class="fu">gas</span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span>, time <span class="op">=</span> <span class="va">t</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                             <span class="fu">distributions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/distributions7/reference/gaussian1_distrib.html" class="external-link">gaussian1_distrib</a></span><span class="op">(</span><span class="op">)</span>, <span class="va">fd</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik</a></span><span class="op">(</span><span class="va">ft</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/stats/logLik.html" class="external-link">logLik</a></span><span class="op">(</span><span class="va">fi</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="va">cf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">ft</span><span class="op">)</span><span class="op">$</span><span class="va">mu</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>intercept  <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fi</span><span class="op">)</span><span class="op">$</span><span class="va">mu</span><span class="op">[[</span><span class="st">"(Intercept)"</span><span class="op">]</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>    from_omega <span class="op">=</span> <span class="va">cf</span><span class="op">[[</span><span class="st">"gas.omega"</span><span class="op">]</span><span class="op">]</span> <span class="op">/</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">cf</span><span class="op">[[</span><span class="st">"gas.beta1"</span><span class="op">]</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  gas.omega gas.alpha1  gas.beta1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>      0.071      0.329      0.915 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] -867.599 -867.599</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  intercept from_omega </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  0.8376033  0.8376033 </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
