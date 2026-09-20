@@ -141,6 +141,39 @@ test_that("anisotropic = FALSE sums the margins under one parameter", {
   expect_error(te(x, z, anisotropic = NA), "TRUE or FALSE")
 })
 
+test_that("a tensor penalty does not depend on the units of its covariates", {
+  # A roughness matrix carries the units of its own covariate: the
+  # second-derivative Gram over [0, 365] is some 1e8 times smaller than the
+  # same one over [0, 1]. Each margin is therefore normalized to a largest
+  # entry of one, dividing and multiplying alike, so a covariate measured in
+  # days and the same covariate measured in years give the same penalty.
+  set.seed(7)
+  m <- 250
+  ud <- data.frame(x = runif(m), doy = runif(m, 0, 365))
+  ud$yr <- ud$doy / 365
+  sm <- bspline_smooth(k = 5)
+
+  b1 <- term_build(te(doy, x, smooths = sm), ud)
+  b2 <- term_build(te(yr, x, smooths = sm), ud)
+
+  # the bases place their knots over the observed range, so the two blocks are
+  # the same and the penalty is the only thing the units could reach
+  expect_equal(unname(term_matrix(b1)), unname(term_matrix(b2)))
+
+  c1 <- term_penalty(b1)@mats
+  c2 <- term_penalty(b2)@mats
+  expect_equal(c1, c2)
+
+  # and the two components are of comparable size, which is what a rule that
+  # only divided did not give the wide margin: the sizes stand as 1.04 here
+  # and as 2.3e+05 when the wide one is left at its own units. The normalizing
+  # is done before the Kronecker product and the centering congruence, so the
+  # largest entry of an assembled component is near one rather than one.
+  sz <- vapply(c1, function(M) max(abs(M)), 0)
+  expect_lt(max(sz) / min(sz), 10)
+  expect_true(all(sz > 0.1 & sz < 10))
+})
+
 test_that("a tensor smooth recovers an interaction surface", {
   set.seed(3)
   m <- 300

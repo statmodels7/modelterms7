@@ -400,6 +400,22 @@ retired_smooth_args <- function(dots, fn) {
 #' `lambda` governs the total, which costs one hyperparameter instead of one
 #' per margin.
 #'
+#' Each component is normalized to a largest entry of one before either of
+#' those happens, since a roughness matrix carries the units of its own
+#' covariate: measured at `k = 4` over 300 observations, the
+#' second-derivative Gram of a covariate on \eqn{[0, 365]} has a largest
+#' entry of 7.455e-07 against 3.652e+01 for one on \eqn{[0, 1]}, a factor of
+#' 4.9e+07. The size also falls with the number of knots, a coarser basis
+#' being flatter, so the quantity that decides is the matrix and not the
+#' range. Under
+#' `anisotropic = TRUE` that is a reparametrization and nothing about the fit
+#' moves: the component's own `lambda` absorbs the factor, so what the
+#' normalization buys there is that the reported parameters of two margins are
+#' comparable with each other. Under `anisotropic = FALSE` it is part of the
+#' model, one `lambda` weighting a sum whose terms it fixes, and margins on
+#' very different ranges then contribute comparably where otherwise the widest
+#' would contribute almost nothing.
+#'
 #' The marginal bases are **not** reparametrized, so the marginal linear
 #' effects are not separated out as [s()] separates its one. They lie in the
 #' null space of the tensor penalty, and a strongly penalized fit is shrunk
@@ -848,7 +864,15 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
       # the margin's own roughness matrix, at the order and the measure its
       # smoother carries; at the defaults this is basis_gram(order = 2)
       Pj <- basis7::smoother_gram(sms[[j]], marg[[j]], xs[[j]])
-      Pj <- Pj / max(1, max(abs(Pj)))
+      # EVERY margin is brought to a unit largest entry, dividing and
+      # multiplying alike. A roughness matrix carries the units of its own
+      # covariate -- the second-derivative Gram over [0, 365] is 3.9e-06
+      # where the same one over [0, 1] is 1.9e+02 -- so a rule that only
+      # divides leaves two margins of a product incommensurable by whatever
+      # their ranges happen to be, and the smoothing parameters reported
+      # for them are then not comparable with each other.
+      sj <- max(abs(Pj))
+      if (sj > 0) Pj <- Pj / sj
       blocks <- lapply(seq_len(nv), function(i)
         if (i == j) Pj else diag(dims[i]))
       # tensor_basis varies the FIRST margin fastest, so the Kronecker

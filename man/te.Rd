@@ -88,6 +88,22 @@ a tensor smooth. With \code{anisotropic = FALSE} they are summed first and one
 \code{lambda} governs the total, which costs one hyperparameter instead of one
 per margin.
 
+Each component is normalized to a largest entry of one before either of
+those happens, since a roughness matrix carries the units of its own
+covariate: measured at \code{k = 4} over 300 observations, the
+second-derivative Gram of a covariate on \eqn{[0, 365]} has a largest
+entry of 7.455e-07 against 3.652e+01 for one on \eqn{[0, 1]}, a factor of
+4.9e+07. The size also falls with the number of knots, a coarser basis
+being flatter, so the quantity that decides is the matrix and not the
+range. Under
+\code{anisotropic = TRUE} that is a reparametrization and nothing about the fit
+moves: the component's own \code{lambda} absorbs the factor, so what the
+normalization buys there is that the reported parameters of two margins are
+comparable with each other. Under \code{anisotropic = FALSE} it is part of the
+model, one \code{lambda} weighting a sum whose terms it fixes, and margins on
+very different ranges then contribute comparably where otherwise the widest
+would contribute almost nothing.
+
 The marginal bases are \strong{not} reparametrized, so the marginal linear
 effects are not separated out as \code{\link[=s]{s()}} separates its one. They lie in the
 null space of the tensor penalty, and a strongly penalized fit is shrunk

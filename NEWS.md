@@ -1,3 +1,83 @@
+# modelterms7 0.76.0
+
+* **A tensor product normalizes every marginal roughness matrix to a largest
+  entry of one, dividing and multiplying alike, where the rule divided only.**
+  A roughness matrix carries the units of its own covariate: measured at
+  `k = 4` over 300 observations, the second-derivative Gram of a covariate on
+  \eqn{[0, 365]} has a largest entry of `7.455e-07` and the same one over
+  \eqn{[0, 1]} has `3.652e+01`. `max(1, max(abs(Pj)))` leaves the first alone
+  and divides the second, so after normalizing, the two margins of one
+  product stood as `2.3e+05` to one. They stand as `1.04` to one now. It is
+  what the page of `term_build()` has said all along -- "each \eqn{P_v} the
+  margin's second-derivative Gram normalized to a maximum entry of one" --
+  and what penalties7 already does one layer down, `additive_penalty()`
+  normalizing both ways for the rank and `additive_stable()` for its
+  partition.
+
+* ⚠️ **The two rules COINCIDE for every margin whose roughness matrix exceeds
+  one, which is what confines the change.** `max(1, s)` is `s` there, so only
+  a margin whose roughness matrix is SMALL moves. ⚠️ That is not the same
+  as a wide covariate, and the measurement is what says so: the Gram also
+  falls with the number of knots, a coarser basis being flatter, so at
+  `k = 4` a covariate on \eqn{[-1.99, 2.99]} already reads `2.90e-01` while
+  at `k = 5` the same one reads `1.55e+00` and is untouched. Measured over a
+  battery of eight shapes on a margin over \eqn{[0, 365]}, four are
+  `identical()` on all eight leaves (two margins on one scale, anisotropic
+  and isotropic, a three-margin product, and an `s()` control); and over the
+  twelve models of `gate_nonsmooth`'s lotto 0 battery, whose tensor has both
+  margins on \eqn{[0, 1]}, **168 comparisons of 168 are identical**.
+  On `gate_smooth`'s own data, of four `te()` shapes two are identical to
+  the printed digit (`k = 5`, and `k = 5` at degree 2), the anisotropic
+  `k = 4` moves in its seventh digit (`-105.0400436898` to
+  `-105.0401481304`, the search's own path) and the isotropic `k = 4` moves
+  in its second decimal, `-102.7725431020` to `-102.7607667294` at 14.937
+  effective degrees of freedom against 15.248.
+
+* ⚠️ **Under `anisotropic = TRUE` it is a reparametrization and the fit does
+  not move; under `anisotropic = FALSE` it is part of the model.** The
+  component's own `lambda` absorbs the factor exactly: measured,
+  \eqn{\lambda_1^{\text{after}}/\lambda_1^{\text{before}} = 7.454951e-07}
+  against a margin whose scale is `7.454951e-07`, a ratio of `1.000000`, with
+  the fitted values agreeing to `1.3e-07` and the rmse against a known truth
+  unchanged to four decimals. With one `lambda` over the sum there is no such
+  factor: the fit changes, and which way depends on the truth. On a truth
+  LINEAR in the wide margin the rmse goes `0.2764` to `0.2814` over eight
+  seeds, because under the old rule that margin's roughness was effectively
+  absent from the sum and ignoring it was the right thing to do there; on a
+  truth ROUGH in it the sign reverses, `0.2436` to `0.2415`, better on six
+  seeds of eight and tied on the other two, at fewer effective degrees of
+  freedom (33.1-34.0 against 34.3-35.0) and converging 8 of 8 against 6.
+
+* ⚠️ **WHAT IT BUYS IS THAT THE SEARCH REACHES THE ANSWER, and the
+  measurement that says so is an invariance the old rule broke.** The same
+  model fitted on a covariate in days and on the same covariate in years has
+  the identical design block, the bases placing their knots over the observed
+  range, so only the penalty's scale differs. Under the old rule those two
+  fits are not the same fit: log-likelihood `-55.901` against `-53.689` and
+  fitted values `6.0e-02` apart, under the DEFAULT anisotropic branch, where
+  the family of penalties is mathematically the same and only the parameter
+  has six more orders to travel. They agree to `6.2e-16` now. The same
+  mechanism decides a Poisson tensor over a wide margin: over eight seeds the
+  old rule converges in `0 of 8` and the new one in `8 of 8`, with the rmse
+  against the true mean better on all eight (`0.169` against `0.233`, `0.240`
+  against `0.333`, `0.287` against `0.323`, `0.161` against `0.307`, `0.375`
+  against `0.448`, `0.222` against `0.341`, `0.200` against `0.356`, `0.206`
+  against `0.366`).
+
+* ⚠️ **The smoothing parameters a `te()` reports therefore change wherever a
+  margin was left at its own units**, which is the visible cost of the
+  release: a fit whose \eqn{\lambda_1} read `8.22e+03` reads `6.13e-03`, the
+  same penalty written in the margin's own scale rather than in the units its
+  covariate happens to be measured in. Nothing about the fitted surface moves
+  with it.
+
+* The normalizing is done before the Kronecker product and before the
+  centering congruence, so the largest entry of an assembled component is
+  near one rather than one -- `1.192` and `1.148` on the pair measured.
+  `test-smooth.R` pins the unit invariance and the comparability of the two
+  sizes; under the old rule three of its assertions fail, the size ratio
+  reading `231322.6` against a limit of 10.
+
 # modelterms7 0.75.0
 
 * The page of `gas()` states the identity between the level and an intercept
