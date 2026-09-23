@@ -17,7 +17,7 @@ regime_forward_cpp <- function(order, LF, SC, dmu, P, dP, delta, ddelta) {
     .Call(`_modelterms7_regime_forward_cpp`, order, LF, SC, dmu, P, dP, delta, ddelta)
 }
 
-seg_block_cpp <- function(kind, xv, psi, del, kap, cvec, lin, linear, lo, hi) {
-    .Call(`_modelterms7_seg_block_cpp`, kind, xv, psi, del, kap, cvec, lin, linear, lo, hi)
+seg_block_cpp <- function(kind, xv, psi, del, kap, cvec, lin, linear, lo, hi, tie) {
+    .Call(`_modelterms7_seg_block_cpp`, kind, xv, psi, del, kap, cvec, lin, linear, lo, hi, tie)
 }
 

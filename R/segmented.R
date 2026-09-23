@@ -998,6 +998,25 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   list(psi = psi, pk = pk)
 }
 
+# WHICH SIDE OF A BREAK-POINT AN OBSERVATION SITTING ON IT IS READ ON. The
+# truncated line (x - psi)_+ is continuous there and its derivative in the
+# break-point is not: -1 from the left and 0 from the right. A penalized fit
+# whose break-point is developed over groups lands such a point exactly on an
+# observation more often than one might think, the objective having a kink
+# minimum there, and where it lands is decided by the inner tolerance --
+# measured on seg(x, psi ~ random(~1 | id)), within 2e-11 of the observation
+# on one side or the other according to the path. Read with a bare x > psi the
+# Jacobian column, and with it the Laplace determinant a marginal criterion
+# takes, then depended on that last digit: the REML criterion at ONE smoothing
+# parameter and ONE penalized mode read -224.3895 or -224.4388. Within a band
+# of sqrt(eps) of the covariate's range the observation is read on the
+# INACTIVE side, always, so the column is a function of the mode and not of
+# the path to it. The band is far below any spacing of the data a fit can
+# resolve and far above the accuracy the inner fit locates a mode to.
+.seg_tie <- function(bp) sqrt(.Machine$double.eps) * (bp$hi - bp$lo)
+
+.seg_active <- function(bp, xv, psi) xv - psi > .seg_tie(bp)
+
 # The rescaled covariate of Fasola, Muggeo and Kuchenhoff: the two
 # intervals on either side of the break-point are shrunk towards the
 # ends of the range, leaving a gap of width c around psi.
@@ -1047,7 +1066,7 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   }
   if (bp$kind == "seg") {
     for (k in seq_len(K)) {
-      put(paste0("psi", k), -gam[[k]] * (xv > psi[, k]))
+      put(paste0("psi", k), -gam[[k]] * .seg_active(bp, xv, psi[, k]))
     }
   } else {
     W <- vector("list", K)
@@ -1085,7 +1104,7 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   out <- seg_block_cpp(switch(bp$kind, seg = 0L, jump = 1L, jseg = 2L),
                        xv, psi1, gam, del, cscale,
                        if (bp$linear) coef[1L] else 0, bp$linear,
-                       bp$lo, bp$hi)
+                       bp$lo, bp$hi, .seg_tie(bp))
   list(X = out$X, value = out$value, psi = pos$psi, pk = pos$pk)
 }
 
@@ -1800,7 +1819,7 @@ S7::method(term_block_contract, SegTerm) <- function(term, coef = NULL, A,
     pk <- paste0("psi", k)
     gk <- paste0("gamma", k)
     psi <- pos$psi[, k]
-    ind <- as.numeric(xv > psi)
+    ind <- as.numeric(.seg_active(bp, xv, psi))
     # where the position is against a limit it does not move with its
     # coefficients, and neither does anything downstream of it
     zp <- bp$Z[[pk]]
@@ -1856,7 +1875,7 @@ S7::method(term_block_deriv, SegTerm) <- function(term, coef = NULL, v, ...) {
     pk <- paste0("psi", k)
     gk <- paste0("gamma", k)
     psi <- pos$psi[, k]
-    ind <- as.numeric(xv > psi)
+    ind <- as.numeric(.seg_active(bp, xv, psi))
     zp <- bp$Z[[pk]]
     vv <- if (is.null(zp)) rep(pos$pk[[k]], n) else
       as.numeric(as.matrix(zp) %*% pos$pk[[k]])
@@ -1868,6 +1887,70 @@ S7::method(term_block_deriv, SegTerm) <- function(term, coef = NULL, v, ...) {
     put(pk, -ind * along(gk))
   }
   out
+}
+
+#' @title Where a Break-Point Term's Objective Has a Kink
+#' @name term_kinks.SegTerm
+#'
+#' @description
+#' The positions, within the term's own coefficient vector, of the
+#' coefficients that move a break-point sitting on an observation, for the
+#' continuous construction only. There the truncated line \eqn{(x-\psi)_+}
+#' has a derivative in \eqn{\psi} of \eqn{-1} from one side and \eqn{0} from
+#' the other, so the objective is not differentiable in any coefficient that
+#' moves \eqn{\psi}: the break-point's own when it carries no development,
+#' and otherwise every coefficient of its development whose column is not zero
+#' at the observations concerned. An observation counts as sitting on the
+#' break-point within the band the block's own column reads its side in.
+#'
+#' A discontinuous construction answers `integer(0)`: its position is read off
+#' a product of the unknowns and it is fitted by working fits rather than by a
+#' line search on the objective. A smoothed term answers `integer(0)`, having
+#' no kink, and so does a marginal one, which integrates the break-point out.
+#'
+#' @param term A built [seg()], [jump()] or [jseg()] term.
+#' @param coef The term's coefficients. `NULL` reads the stored ones.
+#' @param ... Unused.
+#'
+#' @return An integer vector of positions in the term's coefficients, possibly
+#'   empty.
+#'
+#' @examples
+#' d <- data.frame(x = seq(0, 10, length.out = 41))
+#' d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0)
+#' b <- term_build(seg(x), d)
+#' # the break-point placed on the observation at x = 6 is a kink in psi1
+#' cf <- c(0.5, 2, 6)
+#' term_kinks(b, cf)
+#' # and between two observations it is not
+#' term_kinks(b, c(0.5, 2, 6.1))
+#'
+#' @keywords internal
+S7::method(term_kinks, SegTerm) <- function(term, coef = NULL, ...) {
+  bp <- term@blueprint
+  if (!length(bp)) stop("the term is not built.", call. = FALSE)
+  if (!identical(bp$kind, "seg") || !is.null(bp$smooth)) return(integer(0))
+  cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
+  n <- length(bp$xv)
+  pos <- .seg_positions(bp, cf, n)
+  tie <- .seg_tie(bp)
+  out <- integer(0)
+  for (k in seq_len(bp$npsi)) {
+    psi <- pos$psi[, k]
+    on <- which(abs(bp$xv - psi) <= tie &
+                  psi > bp$lim[1L] & psi < bp$lim[2L])
+    if (!length(on)) next
+    pk <- paste0("psi", k)
+    idx <- bp$index[[pk]]
+    z <- bp$Z[[pk]]
+    if (is.null(z)) {
+      out <- c(out, idx)
+    } else {
+      zz <- as.matrix(z[on, , drop = FALSE])
+      out <- c(out, idx[colSums(abs(zz)) > 0])
+    }
+  }
+  sort(unique(as.integer(out)))
 }
 
 #' @title How a Break-Point Term's Columns Divide

@@ -936,6 +936,54 @@ term_jacobian_block <- S7::new_generic("term_jacobian_block", "term",
 
 S7::method(term_jacobian_block, model_term) <- function(term, ...) TRUE
 
+#' @title Where a Term's Objective Has a Kink
+#'
+#' @description
+#' The positions, among the term's own coefficients, of those in which the
+#' model's objective is not differentiable at the coefficients given. A
+#' fitting layer reads it where a line search rejects every step along a
+#' Newton or Gauss-Newton direction: holding those coordinates at their
+#' values and solving for the rest is the step at a kink, the same thing
+#' holding a coordinate at a bound is at a boundary.
+#'
+#' @details
+#' A term whose contribution is a smooth function of its coefficients has no
+#' kink, and that is the base method's answer. The one shipped term that
+#' answers otherwise is the continuous break-point construction, [seg()],
+#' whose truncated line \eqn{(x-\psi)_+} is not differentiable in
+#' \eqn{\psi} at an observation. Measured on
+#' `seg(x, psi ~ random(~1 | id))`, the penalized mode puts one group's
+#' break-point exactly on an observation, the one-sided slopes there being
+#' \eqn{+6.0} and \eqn{-1.6}, and a scoring step on all the coefficients is
+#' rejected at every length: the other groups' deviations then stay where they
+#' were, with scores up to \eqn{1.6}, and the objective 0.010 above the mode.
+#' Holding the two coordinates that move that break-point reaches the mode in
+#' four iterations.
+#'
+#' @param term A built term.
+#' @param coef The term's coefficients, `NULL` for the stored ones.
+#' @param ... Passed to methods.
+#'
+#' @return An integer vector of positions in the term's coefficients, possibly
+#'   empty.
+#'
+#' @seealso [term_jacobian_block()], [term_refresh()], [seg()].
+#'
+#' @examples
+#' d <- data.frame(x = seq(0, 10, length.out = 41))
+#' d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0)
+#' term_kinks(term_build(linpar(~ x), d))
+#' term_kinks(term_build(seg(x), d), c(0.5, 2, 6))
+#'
+#' @export
+#' @aliases term_kinks.model_term
+term_kinks <- S7::new_generic("term_kinks", "term",
+  function(term, coef = NULL, ...) S7::S7_dispatch())
+
+S7::method(term_kinks, model_term) <- function(term, coef = NULL, ...) {
+  integer(0)
+}
+
 #' @title The Covariance Label of a Term
 #'
 #' @description

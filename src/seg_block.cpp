@@ -24,7 +24,8 @@ using namespace Rcpp;
 // [[Rcpp::export]]
 List seg_block_cpp(int kind, NumericVector xv, NumericVector psi,
                    NumericVector del, NumericVector kap, NumericVector cvec,
-                   double lin, bool linear, double lo, double hi) {
+                   double lin, bool linear, double lo, double hi,
+                   double tie) {
   const R_xlen_t n = xv.size();
   const int npsi = psi.size();
   const bool has_delta = (kind == 0 || kind == 2);
@@ -74,7 +75,9 @@ List seg_block_cpp(int kind, NumericVector xv, NumericVector psi,
     for (int j = 0; j < npsi; j++) {
       const double p = psi[j], d = del[j];
       double* cj = Xp + (R_xlen_t)(col + j) * n;
-      for (R_xlen_t i = 0; i < n; i++) cj[i] = (x[i] > p) ? -d : 0.0;
+      // an observation within `tie` of the break-point is read on the
+      // inactive side, as .seg_active() reads it: see there
+      for (R_xlen_t i = 0; i < n; i++) cj[i] = (x[i] - p > tie) ? -d : 0.0;
     }
   } else if (has_jump) {
     for (int j = 0; j < npsi; j++) {
