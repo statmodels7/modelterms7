@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.76.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.77.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,13 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.77.0" id="modelterms7-0770">modelterms7 0.77.0<a class="anchor" aria-label="anchor" href="#modelterms7-0770"></a></h2>
+<ul><li>
+<strong>An observation sitting on a <code><a href="../reference/seg.html">seg()</a></code> break-point is read on one side, always.</strong> The truncated line  is continuous at an observation and its derivative in  is not, so the break-point column of the block, , depended there on the last digits of . A penalized fit with a developed break-point puts one on an observation more often than one might think – the objective has a kink minimum there – and where it lands is the inner tolerance’s: measured on <code>seg(x, psi ~ random(~1 | id))</code>, within 2e-11 of the observation on either side according to the path. The Laplace determinant a marginal criterion reads then took two values at one smoothing parameter and one penalized mode, -224.3895 and -224.4388. Within  of the covariate’s range the observation is now read on the inactive side, in the R block, in the compiled one and in <code><a href="../reference/term_block_contract.html">term_block_contract()</a></code>/<code><a href="../reference/term_block_deriv.html">term_block_deriv()</a></code>, and the three starting points that read the two values agree to 7.7e-05, the rest being how well the mode is located. Nothing else moves: the lots 0 and D1 nets are identical to the previous release.</li>
+<li>
+<strong><code><a href="../reference/term_kinks.html">term_kinks()</a></code></strong>, a new generic: the positions, among a term’s own coefficients, of those in which the objective is not differentiable at the coefficients given. The base method answers <code>integer(0)</code>; the continuous break-point construction answers the coefficients that move a break-point sitting on an observation – its own, or the intercept and the group’s deviation of its development. A fitting layer holds them where a line search rejects every step.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.76.0" id="modelterms7-0760">modelterms7 0.76.0<a class="anchor" aria-label="anchor" href="#modelterms7-0760"></a></h2>
 <ul><li><p><strong>A tensor product normalizes every marginal roughness matrix to a largest entry of one, dividing and multiplying alike, where the rule divided only.</strong> A roughness matrix carries the units of its own covariate: measured at <code>k = 4</code> over 300 observations, the second-derivative Gram of a covariate on  has a largest entry of <code>7.455e-07</code> and the same one over  has <code>3.652e+01</code>. <code>max(1, max(abs(Pj)))</code> leaves the first alone and divides the second, so after normalizing, the two margins of one product stood as <code>2.3e+05</code> to one. They stand as <code>1.04</code> to one now. It is what the page of <code><a href="../reference/term_build.html">term_build()</a></code> has said all along – “each  the margin’s second-derivative Gram normalized to a maximum entry of one” – and what penalties7 already does one layer down, <code>additive_penalty()</code> normalizing both ways for the rank and <code>additive_stable()</code> for its partition.</p></li>

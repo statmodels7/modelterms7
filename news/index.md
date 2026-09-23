@@ -1,5 +1,34 @@
 # Changelog
 
+## modelterms7 0.77.0
+
+- **An observation sitting on a
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  break-point is read on one side, always.** The truncated line is
+  continuous at an observation and its derivative in is not, so the
+  break-point column of the block, , depended there on the last digits
+  of . A penalized fit with a developed break-point puts one on an
+  observation more often than one might think – the objective has a kink
+  minimum there – and where it lands is the inner tolerance’s: measured
+  on `seg(x, psi ~ random(~1 | id))`, within 2e-11 of the observation on
+  either side according to the path. The Laplace determinant a marginal
+  criterion reads then took two values at one smoothing parameter and
+  one penalized mode, -224.3895 and -224.4388. Within of the covariate’s
+  range the observation is now read on the inactive side, in the R
+  block, in the compiled one and in
+  [`term_block_contract()`](https://statmodels7.github.io/modelterms7/reference/term_block_contract.md)/[`term_block_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md),
+  and the three starting points that read the two values agree to
+  7.7e-05, the rest being how well the mode is located. Nothing else
+  moves: the lots 0 and D1 nets are identical to the previous release.
+- **[`term_kinks()`](https://statmodels7.github.io/modelterms7/reference/term_kinks.md)**,
+  a new generic: the positions, among a term’s own coefficients, of
+  those in which the objective is not differentiable at the coefficients
+  given. The base method answers `integer(0)`; the continuous
+  break-point construction answers the coefficients that move a
+  break-point sitting on an observation – its own, or the intercept and
+  the group’s deviation of its development. A fitting layer holds them
+  where a line search rejects every step.
+
 ## modelterms7 0.76.0
 
 - **A tensor product normalizes every marginal roughness matrix to a

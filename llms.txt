@@ -314,6 +314,8 @@ structural term takes instead.
   : Coefficients a Term Draws for Itself
 - [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
   : Is a Term's Block the Jacobian of Its Contribution?
+- [`term_kinks()`](https://statmodels7.github.io/modelterms7/reference/term_kinks.md)
+  : Where a Term's Objective Has a Kink
 - [`term_tag()`](https://statmodels7.github.io/modelterms7/reference/term_tag.md)
   : The Covariance Label of a Term
 - [`term_group()`](https://statmodels7.github.io/modelterms7/reference/term_group.md)
