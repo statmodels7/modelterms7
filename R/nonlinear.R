@@ -153,9 +153,43 @@ NlTerm <- S7::new_class(
 #' parameter's unconstrained scale. The penalties the sub-terms carry are
 #' reported through [term_penalties()] under the key
 #' `parameter::subterm`, so a fitting layer estimates their
-#' hyperparameters as it does any other term's. A structural term, and a
-#' term whose block moves with its coefficients, are rejected: a
-#' parameter's submodel must be a fixed design.
+#' hyperparameters as it does any other term's. A structural term is
+#' rejected.
+#' }
+#'
+#' \subsection{A parameter that changes at a break-point}{
+#' A subformula may carry a break-point term whose block is the Jacobian of
+#' its contribution: [seg()], and [jump()], [jseg()] or [seg()] with
+#' `smoothed =`. Then \eqn{g_j(\theta_j) = \eta_j(\gamma_j)} is no longer
+#' linear in the coefficients: it is the sum of the sub-terms' contributions.
+#' Under a log link, `nl(~ a * exp(-r * x), r ~ jump(t, smoothed = sm))` with
+#' `sm` a [numericals7::smooth_probit()] is a rate whose logarithm steps at
+#' an estimated time. The block of \eqn{f} carries the chain
+#' rule through the sub-term's own block,
+#' \eqn{\partial f/\partial\theta_j \cdot (g_j^{-1})' \cdot X_s(\gamma_s)},
+#' and its derivatives in the coefficients add the sub-term's own
+#' [term_block_deriv()], [term_block_contract()] and [term_block_deriv2()]
+#' where \eqn{X_s} moves, so a fitting layer's exact outer derivatives reach
+#' it unchanged. The position is confined to the sub-term's own interval, as
+#' it is where the term stands alone.
+#'
+#' A sharp [jump()] or [jseg()] is rejected, naming `smoothed =`: its block is
+#' a working linearization with a frozen weight and a position read off a
+#' product of two coefficients, which is not a Jacobian and cannot sit inside
+#' another one.
+#'
+#' The objective in a break-point's position has several optima, so where a
+#' response is given, [term_coef_start()] tries each break-point at five
+#' interior quantiles of its covariate, takes damped Gauss-Newton steps on the
+#' response from each and keeps the best. Measured on a smoothed [jseg()]
+#' inside a log-rate, the same model written out by hand in the formula
+#' recovered the break-point from a single start on 8 samples of 20, and
+#' through this search on 20 of 20. A fitting layer's own restarts of a
+#' break-point term do not reach one nested here.
+#'
+#' The fitted positions are read off the sub-term, which the term carries at
+#' its fitted coefficients: `seg_psi(term_components(built)$r$subs[[k]])`,
+#' with `k` the sub-term's place in the subformula.
 #' }
 #'
 #' \subsection{Penalizing a parameter}{
@@ -425,11 +459,23 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
 # where term_block_deriv2() asks. The third is not computed by default because
 # this runs once per Jacobian evaluation and nothing on that path reads it.
 .nl_theta <- function(bp, coef, order = 2L) {
-  out <- list(value = list(), deriv = list())
+  out <- list(value = list(), deriv = list(), X = list())
   for (p in bp$params) {
     idx <- bp$index[[p]]
-    Z <- bp$Z[[p]]
-    eta <- if (is.null(Z)) coef[idx] else as.numeric(Z %*% coef[idx])
+    # a parameter developed over a sub-term whose block moves has neither a
+    # fixed design nor a predictor linear in its coefficients: both are read
+    # at these coefficients. `X` carries the design each parameter's
+    # coefficients multiply here, so every reader below takes it from one
+    # place; for a fixed development it is the stored design itself.
+    if (isTRUE(bp$mobile[[p]])) {
+      pa <- .nl_param_at(bp, p, coef[idx])
+      eta <- pa$eta
+      out$X[p] <- list(pa$X)
+    } else {
+      Z <- bp$Z[[p]]
+      eta <- if (is.null(Z)) coef[idx] else as.numeric(Z %*% coef[idx])
+      out$X[p] <- list(Z)
+    }
     lk <- bp$links[[p]]
     out$value[[p]] <- linkfunctions7::linkinv(lk, eta)
     out$deriv[[p]] <- linkfunctions7::dlinkinv(lk, eta)
@@ -796,7 +842,7 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
   for (k in seq_along(bp$params)) {
     p <- bp$params[k]
     w <- fv$grad[[p]] * th$deriv[[p]]
-    Z <- bp$Z[[p]]
+    Z <- th$X[[p]]
     blocks[[k]] <- if (is.null(Z)) matrix(w, ncol = 1L) else w * Z
   }
   list(J = .nl_bind(blocks), value = fv$value)
@@ -809,6 +855,121 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
     return(do.call(cbind, blocks))
   }
   Reduce(Matrix::cbind2, blocks)
+}
+
+# Whether a sub-term's block moves with its own coefficients: it registers a
+# term_refresh() of its own rather than inheriting the identity.
+.nl_sub_moves <- function(sub) {
+  m <- S7::method(term_refresh, S7::S7_class(sub))
+  !identical(attr(attr(m, "signature")[[1L]], "name"), "model_term")
+}
+
+# A MOVING sub-term's contribution and block at its coefficients `g`, on the
+# fitting rows or on `newdata`, as a pure function of `g`. A break-point term
+# is assembled directly from its blueprint rather than through
+# term_refresh(): for the constructions admitted here -- the continuous one
+# and every smoothed one -- the block and the value depend on the
+# coefficients alone, while a refresh would also relabel crossed
+# break-points, which permutes the coefficients the block's columns belong
+# to. Anything else goes through the generics.
+.nl_sub_at <- function(sub, g, newdata = NULL) {
+  if (S7::S7_inherits(sub, SegTerm)) {
+    sb <- sub@blueprint
+    if (is.null(newdata)) {
+      a <- .seg_assemble(sb, sb$xv, g, sb$cscale, sb$Z, sb$pk)
+    } else {
+      a <- .seg_assemble(sb, .seg_x(sb$var, newdata), g, sb$cscale,
+                         .seg_z_at(sb, newdata), sb$pk)
+    }
+    return(list(X = a$X, value = a$value))
+  }
+  r <- term_refresh(sub, g)
+  if (is.null(newdata)) {
+    list(X = term_matrix(r), value = term_value(r))
+  } else {
+    list(X = term_predict(r, newdata), value = term_value(r, newdata = newdata))
+  }
+}
+
+# The sub-term carried at its coefficients `g`, for a reader of the fitted
+# term: the block, the value and the positions a break-point term reports
+# through seg_psi(). Nothing the evaluation above reads is changed.
+.nl_sub_commit <- function(sub, g) {
+  if (S7::S7_inherits(sub, SegTerm)) {
+    sb <- sub@blueprint
+    a <- .seg_assemble(sb, sb$xv, g, sb$cscale, sb$Z, sb$pk)
+    X <- a$X
+    colnames(X) <- sub@coef_names
+    sb$coef <- g
+    sb$value <- a$value
+    sb$psi <- a$psi
+    sb$pk <- a$pk
+    sub@X <- X
+    sub@blueprint <- sb
+    return(sub)
+  }
+  term_refresh(sub, g)
+}
+
+# One developed parameter whose submodel carries a moving sub-term: its
+# predictor, the sum of the sub-terms' contributions, and the design its
+# coefficients multiply, the sub-terms' blocks side by side. A fixed sub-term
+# contributes its stored design times its coefficients; `bp$subX` holds that
+# design on the rows the blueprint is read on.
+.nl_param_at <- function(bp, p, g) {
+  subs <- bp$subs[[p]]
+  cols <- bp$sub_cols[[p]]
+  eta <- numeric(bp$n)
+  blocks <- vector("list", length(subs))
+  for (s in seq_along(subs)) {
+    gs <- g[cols[[s]]]
+    if (bp$sub_moves[[p]][[s]]) {
+      ev <- .nl_sub_at(subs[[s]], gs, bp$newdata)
+      blocks[[s]] <- ev$X
+      eta <- eta + as.numeric(ev$value)
+    } else {
+      Zs <- bp$subX[[p]][[s]]
+      blocks[[s]] <- Zs
+      eta <- eta + as.numeric(Zs %*% gs)
+    }
+  }
+  list(eta = eta, X = .nl_bind(blocks))
+}
+
+# The derivative of a developed parameter's design along a direction `v` of
+# its own coefficients, dX_p[v], one block per sub-term: a fixed sub-term's
+# design does not move and contributes zeros, a moving one answers through
+# its own term_block_deriv(). Read on the fitting rows only.
+.nl_param_dX <- function(bp, p, g, v) {
+  cols <- bp$sub_cols[[p]]
+  out <- matrix(0, bp$n, length(g))
+  for (s in seq_along(cols)) {
+    if (!bp$sub_moves[[p]][[s]]) next
+    ci <- cols[[s]]
+    out[, ci] <- as.matrix(term_block_deriv(bp$subs[[p]][[s]], coef = g[ci],
+                                            v = v[ci]))
+  }
+  out
+}
+
+# The second derivative of the same design in two directions, d2X_p[v, u].
+.nl_param_d2X <- function(bp, p, g, v, u) {
+  cols <- bp$sub_cols[[p]]
+  out <- matrix(0, bp$n, length(g))
+  for (s in seq_along(cols)) {
+    if (!bp$sub_moves[[p]][[s]]) next
+    ci <- cols[[s]]
+    out[, ci] <- as.matrix(term_block_deriv2(bp$subs[[p]][[s]], coef = g[ci],
+                                             v = v[ci], u = u[ci]))
+  }
+  out
+}
+
+# The predictor's own second derivative in two directions,
+# d2 eta_p[v, u] = sum_s dX_s[u] v_s: nonzero only where a sub-term moves,
+# a fixed development being linear in its coefficients.
+.nl_param_t2 <- function(bp, p, g, v, u) {
+  as.numeric(.nl_param_dX(bp, p, g, u) %*% v)
 }
 
 #' @title Build a Nonlinear Term
@@ -834,8 +995,10 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
 #'
 #' Each parameter's subformula goes through [interpret_formula()] and its
 #' terms are built, so their blueprints are recorded and reapplied at
-#' prediction. A structural sub-term, and one whose own block moves with its
-#' coefficients, are rejected: a parameter's submodel must be a fixed design.
+#' prediction. A structural sub-term is rejected, and so is one whose own block
+#' moves with its coefficients unless that block is a Jacobian, as for [seg()]
+#' and every smoothed break-point term; such a parameter's design and predictor
+#' are then read at the coefficients rather than stored.
 #'
 #' # The starting point
 #'
@@ -905,6 +1068,14 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
   Z <- stats::setNames(vector("list", length(params)), params)
   subs <- stats::setNames(vector("list", length(params)), params)
   index <- stats::setNames(vector("list", length(params)), params)
+  # a development carrying a sub-term whose block moves (a break-point term
+  # admitted by .nl_reject_subterm()) makes the parameter MOBILE: its design
+  # and its predictor are read at the coefficients rather than stored, and
+  # these record how its columns divide among the sub-terms
+  mobile <- stats::setNames(as.list(logical(length(params))), params)
+  sub_cols <- stats::setNames(vector("list", length(params)), params)
+  sub_moves <- stats::setNames(vector("list", length(params)), params)
+  subX <- stats::setNames(vector("list", length(params)), params)
   sub_pens <- list()
   cn <- character(0)
   pos <- 0L
@@ -915,9 +1086,15 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
       index[[p]] <- pos
       cn <- c(cn, p)
     } else {
-      sub <- .nl_submodel(p, sf, data)
+      sub <- .nl_submodel(p, sf, data, allow_moving = TRUE)
       subs[[p]] <- sub$terms
       Z[[p]] <- sub$Z
+      if (any(unlist(sub$moving))) {
+        mobile[[p]] <- TRUE
+        sub_cols[[p]] <- unname(sub$cols)
+        sub_moves[[p]] <- unname(sub$moving)
+        subX[[p]] <- unname(sub$mats)
+      }
       index[[p]] <- pos + seq_len(ncol(sub$Z))
       pos <- pos + ncol(sub$Z)
       cn <- c(cn, paste(p, sub$coef_names, sep = "."))
@@ -993,6 +1170,12 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
              is_formula = is_f,
              supplied = supplied, sym_exprs = sym,
              analytic_order = max(1L, ana))
+  if (any(unlist(mobile))) {
+    bp$mobile <- mobile
+    bp$sub_cols <- sub_cols
+    bp$sub_moves <- sub_moves
+    bp$subX <- subX
+  }
 
   # the penalties are the sub-terms' own, collected above with the key
   # parameter::subterm: a penalty is asked for inside the subformula,
@@ -1004,7 +1187,14 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
   start <- term@spec$start
   coef0 <- numeric(pos)
   for (p in params) {
-    if (!is.null(start[[p]])) {
+    if (isTRUE(mobile[[p]])) {
+      # a mobile parameter is never started at zero coefficients, which
+      # would put a break-point at the origin of its covariate: its chart is
+      # set to the starting value, or to zero, from the sub-terms' own start
+      ev <- if (is.null(start[[p]])) 0 else
+        linkfunctions7::linkfun(links[[p]], start[[p]])
+      coef0[index[[p]]] <- .nl_chart_mobile(bp, p, ev)
+    } else if (!is.null(start[[p]])) {
       ev <- linkfunctions7::linkfun(links[[p]], start[[p]])
       # through the submodel rather than at its first column: where the
       # development is coded full rank there is no intercept to carry the
@@ -1035,16 +1225,19 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
 # penalties the sub-terms declare with their indices in the bound design.
 # What is kept is the BUILT terms, because prediction reapplies each one's
 # own blueprint (levels, knots, constants) rather than rebuilding it.
-.nl_submodel <- function(p, sf, data) {
+.nl_submodel <- function(p, sf, data, allow_moving = FALSE) {
   ir <- interpret_formula(sf, data)
   for (lb in names(ir$terms)) {
-    .nl_reject_subterm(ir$terms[[lb]], p, lb)
+    .nl_reject_subterm(ir$terms[[lb]], p, lb, allow_moving)
   }
   subs <- lapply(ir$terms, term_build, data = data)
   mats <- lapply(subs, term_matrix)
+  moving <- lapply(subs, .nl_sub_moves)
+  cols <- list()
   pens <- list()
   off <- 0L
   for (lb in names(subs)) {
+    cols[[lb]] <- off + seq_len(ncol(mats[[lb]]))
     for (e in term_penalties(subs[[lb]])) {
       key <- if (is.null(e$name) || !nzchar(e$name)) lb
         else paste0(lb, "::", e$name)
@@ -1059,24 +1252,38 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
   }
   list(terms = subs, Z = .nl_bind(mats),
        coef_names = unlist(lapply(subs, term_coef_names), use.names = FALSE),
-       penalties = pens)
+       penalties = pens, moving = moving, cols = cols, mats = mats)
 }
 
-# What a parameter's submodel must be: a fixed design. A structural term
-# reports no block at all, and a term whose block moves with its own
-# coefficients would put an iteration inside the Jacobian of another one.
-.nl_reject_subterm <- function(tm, p, lb) {
+# What a parameter's submodel may carry. A structural term reports no block
+# at all and is always rejected. A term whose block moves with its own
+# coefficients is admitted only where the caller allows it -- nl() does,
+# gas() and the developments of seg() do not -- and then only where that
+# block is the TRUE Jacobian of its contribution: the chain rule nl() writes
+# multiplies it by the derivative of f, which is a Jacobian only if the block
+# is one. A sharp jump() or jseg() carries a working linearization with a
+# frozen weight and a position read off a product of the unknowns, which is
+# the other thing.
+.nl_reject_subterm <- function(tm, p, lb, allow_moving = FALSE) {
   if (S7::S7_inherits(tm, structural_term)) {
     stop(sprintf(paste("the subformula of '%s' carries '%s', a structural",
                        "term; a parameter's submodel must be a fixed",
                        "design."), p, lb), call. = FALSE)
   }
-  m <- S7::method(term_refresh, S7::S7_class(tm))
-  cls <- attr(m, "signature")[[1L]]
-  if (!identical(attr(cls, "name"), "model_term")) {
+  if (!.nl_sub_moves(tm)) return(invisible(NULL))
+  if (!allow_moving) {
     stop(sprintf(paste("the subformula of '%s' carries '%s', whose block",
                        "moves with its coefficients; a parameter's submodel",
                        "must be a fixed design."), p, lb), call. = FALSE)
+  }
+  if (!isTRUE(term_jacobian_block(tm))) {
+    stop(sprintf(paste("the subformula of '%s' carries '%s', a sharp",
+                       "break-point term whose block is a working",
+                       "linearization rather than a Jacobian, so it cannot",
+                       "develop a parameter of a nonlinear function; write",
+                       "it with 'smoothed =', for example smoothed =",
+                       "numericals7::smooth_probit()."), p, lb),
+         call. = FALSE)
   }
   invisible(NULL)
 }
@@ -1107,7 +1314,16 @@ S7::method(term_penalties, NlTerm) <- function(term, ...) {
   nb$one <- numeric(nrow(newdata))
   nb$data_vars <- as.list(newdata)
   for (p in bp$params) {
-    if (!is.null(bp$Z[[p]])) {
+    if (isTRUE(bp$mobile[[p]])) {
+      # a moving sub-term is evaluated on the new rows at the coefficients
+      # asked for, through .nl_param_at(); only the fixed ones are reapplied
+      # here, once
+      nb$newdata <- newdata
+      nb$subX[[p]] <- lapply(seq_along(bp$subs[[p]]), function(s) {
+        if (bp$sub_moves[[p]][[s]]) NULL
+        else term_predict(bp$subs[[p]][[s]], newdata = newdata)
+      })
+    } else if (!is.null(bp$Z[[p]])) {
       nb$Z[[p]] <- .nl_bind(lapply(bp$subs[[p]], term_predict,
                                    newdata = newdata))
     }
@@ -1384,7 +1600,7 @@ S7::method(term_block_deriv, NlTerm) <- function(term, coef = NULL, v, ...) {
   # parameter, the development's design already applied
   tvp <- lapply(params, function(p) {
     idx <- bp$index[[p]]
-    Z <- bp$Z[[p]]
+    Z <- th$X[[p]]
     if (is.null(Z)) rep(v[idx], bp$n) else as.numeric(as.matrix(Z) %*% v[idx])
   })
   names(tvp) <- params
@@ -1401,8 +1617,15 @@ S7::method(term_block_deriv, NlTerm) <- function(term, coef = NULL, v, ...) {
       acc <- acc + q * tvp[[p2]]
     }
     idx <- bp$index[[p1]]
-    Z <- bp$Z[[p1]]
+    Z <- th$X[[p1]]
     out[, idx] <- if (is.null(Z)) acc else as.matrix(Z) * acc
+    # a mobile parameter's design moves too: X_p = w_p D_p with
+    # w_p = f_p h'_p, so the derivative gains w_p dD_p[v], the sub-terms'
+    # own term_block_deriv() on their stretch of v
+    if (isTRUE(bp$mobile[[p1]])) {
+      w <- as.numeric(f1[[p1]]) * th$deriv[[p1]]
+      out[, idx] <- out[, idx] + w * .nl_param_dX(bp, p1, cf[idx], v[idx])
+    }
   }
   out
 }
@@ -1424,7 +1647,7 @@ S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
   # parameter's own sub-design
   s <- lapply(params, function(p) {
     idx <- bp$index[[p]]
-    Z <- bp$Z[[p]]
+    Z <- th$X[[p]]
     Ap <- A[, idx, drop = FALSE]
     if (is.null(Z)) as.numeric(Ap[, 1L]) else
       as.numeric(rowSums(Ap * as.matrix(Z)))
@@ -1443,9 +1666,25 @@ S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
       acc <- acc + q * s[[p1]]
     }
     idx <- bp$index[[p2]]
-    Z <- bp$Z[[p2]]
+    Z <- th$X[[p2]]
     out[idx] <- if (is.null(Z)) sum(acc) else
       as.numeric(crossprod(as.matrix(Z), acc))
+  }
+  # a mobile parameter's own design moves: the adjoint of term_block_deriv()'s
+  # extra piece, each moving sub-term contracted against its columns of A
+  # weighted by w_p = f_p h'_p, through its own term_block_contract()
+  for (p in params) {
+    if (!isTRUE(bp$mobile[[p]])) next
+    w <- as.numeric(f1[[p]]) * th$deriv[[p]]
+    idx <- bp$index[[p]]
+    cols <- bp$sub_cols[[p]]
+    for (k in seq_along(cols)) {
+      if (!bp$sub_moves[[p]][[k]]) next
+      gi <- idx[cols[[k]]]
+      out[gi] <- out[gi] +
+        term_block_contract(bp$subs[[p]][[k]], coef = cf[gi],
+                            A = A[, gi, drop = FALSE] * w)
+    }
   }
   out
 }
@@ -1592,8 +1831,25 @@ S7::method(term_block_deriv2, NlTerm) <- function(term, coef = NULL, v, u,
   h1 <- th$deriv
   h2 <- th$deriv2
   h3 <- th$deriv3
-  tv <- .nl_direction(bp, v)
-  tu <- .nl_direction(bp, u)
+  tv <- .nl_direction(bp, v, th$X)
+  tu <- .nl_direction(bp, u, th$X)
+  # a mobile parameter's predictor is not linear in its coefficients, so it
+  # carries a second derivative of its own, d2 eta_p[v, u]; it enters every
+  # parameter's weight through q_{p1 p2}, the first derivative of w_{p1} in
+  # eta_{p2}
+  mob <- params[vapply(params, function(p) isTRUE(bp$mobile[[p]]),
+                       logical(1))]
+  t2 <- list()
+  for (p in mob) {
+    idx <- bp$index[[p]]
+    t2[[p]] <- .nl_param_t2(bp, p, cf[idx], v[idx], u[idx])
+  }
+  qfun <- function(i1, i2) {
+    q <- as.numeric(f2[[.nl_key(params, c(i1, i2))]]) *
+      h1[[params[i1]]] * h1[[params[i2]]]
+    if (i1 == i2) q <- q + as.numeric(f1[[params[i1]]]) * h2[[params[i1]]]
+    q
+  }
   out <- matrix(0, bp$n, bp$ncoef)
   for (i1 in seq_len(np)) {
     p1 <- params[i1]
@@ -1622,12 +1878,31 @@ S7::method(term_block_deriv2, NlTerm) <- function(term, coef = NULL, v, u,
         acc <- acc + r * tv[[p2]] * tu[[p3]]
       }
     }
+    for (p2 in mob) acc <- acc + qfun(i1, match(p2, params)) * t2[[p2]]
     idx <- bp$index[[p1]]
-    Z <- bp$Z[[p1]]
+    Z <- th$X[[p1]]
     # the return is dense by contract, but a sparse development is scaled in
     # its OWN storage and densified once rather than densified and then
     # scaled: at order three this runs once per PAIR of hyperparameters.
     out[, idx] <- if (is.null(Z)) acc else as.matrix(Z * acc)
+    # and where the parameter's own design moves, the product rule on
+    # X_p = w_p D_p gives three more pieces: dw_p[v] dD_p[u], dw_p[u] dD_p[v]
+    # and w_p d2D_p[v, u], with dw_p[v] = sum_{p2} q_{p p2} tv_{p2}
+    if (p1 %in% mob) {
+      dwv <- 0 * bp$one
+      dwu <- 0 * bp$one
+      for (i2 in seq_len(np)) {
+        q <- qfun(i1, i2)
+        dwv <- dwv + q * tv[[params[i2]]]
+        dwu <- dwu + q * tu[[params[i2]]]
+      }
+      g <- cf[idx]
+      w <- as.numeric(f1[[p1]]) * h1[[p1]]
+      out[, idx] <- out[, idx] +
+        dwv * .nl_param_dX(bp, p1, g, u[idx]) +
+        dwu * .nl_param_dX(bp, p1, g, v[idx]) +
+        w * .nl_param_d2X(bp, p1, g, v[idx], u[idx])
+    }
   }
   out
 }
@@ -1692,10 +1967,10 @@ S7::method(term_components, NlTerm) <- function(term, ...) {
 # A direction carried onto each parameter's own scale, one vector per
 # parameter, with the development's design applied. A sparse submodel is
 # multiplied in its own storage and never densified.
-.nl_direction <- function(bp, v) {
+.nl_direction <- function(bp, v, X = bp$Z) {
   out <- lapply(bp$params, function(p) {
     idx <- bp$index[[p]]
-    Z <- bp$Z[[p]]
+    Z <- X[[p]]
     if (is.null(Z)) rep(v[idx], bp$n) else as.numeric(Z %*% v[idx])
   })
   names(out) <- bp$params
@@ -1792,11 +2067,64 @@ S7::method(term_refresh, NlTerm) <- function(term, coef, ...) {
   jv <- .nl_jacobian(bp, coef)
   bp$coef <- coef
   bp$value <- jv$value
+  # a moving sub-term is carried at its stretch of the coefficients, so that
+  # a reader of the fitted term finds it where the term is -- seg_psi() on a
+  # break-point developing a parameter. The evaluation reads only what the
+  # sub-term was built with, so this changes nothing a fit computes.
+  for (p in bp$params) {
+    if (!isTRUE(bp$mobile[[p]])) next
+    idx <- bp$index[[p]]
+    for (k in seq_along(bp$subs[[p]])) {
+      if (!bp$sub_moves[[p]][[k]]) next
+      bp$subs[[p]][[k]] <- .nl_sub_commit(bp$subs[[p]][[k]],
+                                          coef[idx[bp$sub_cols[[p]][[k]]]])
+    }
+  }
   X <- jv$J
   colnames(X) <- term@coef_names
   term@X <- X
   term@blueprint <- bp
   term
+}
+
+#' @title Where a Nonlinear Term's Objective Has a Kink
+#' @name term_kinks.NlTerm
+#'
+#' @description
+#' The coefficients of the term that move a break-point sitting on an
+#' observation, where a parameter is developed over a sharp [seg()]: the
+#' answer of that sub-term's own [term_kinks()] carried to the term's
+#' coefficients. Every other nonlinear term answers `integer(0)`.
+#'
+#' @param term A built [NlTerm()].
+#' @param coef The term's coefficients. `NULL` reads the stored ones.
+#' @param ... Unused.
+#'
+#' @return An integer vector of positions in the term's coefficients, possibly
+#'   empty.
+#'
+#' @examples
+#' d <- data.frame(t = seq(0, 10, length.out = 41), x = rep(1:2, length.out = 41))
+#' b <- term_build(nl(~ a * exp(-r * x), r ~ seg(t),
+#'                    start = list(a = 2, r = 0.5)), d)
+#' term_kinks(b)
+#'
+#' @keywords internal
+S7::method(term_kinks, NlTerm) <- function(term, coef = NULL, ...) {
+  bp <- term@blueprint
+  if (!length(bp)) stop("the term is not built.", call. = FALSE)
+  cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
+  out <- integer(0)
+  for (p in bp$params) {
+    if (!isTRUE(bp$mobile[[p]])) next
+    idx <- bp$index[[p]]
+    for (k in seq_along(bp$subs[[p]])) {
+      if (!bp$sub_moves[[p]][[k]]) next
+      gi <- idx[bp$sub_cols[[p]][[k]]]
+      out <- c(out, gi[term_kinks(bp$subs[[p]][[k]], cf[gi])])
+    }
+  }
+  sort(unique(as.integer(out)))
 }
 
 #' @title The Contribution of a Term at Its Current Coefficients
@@ -1980,8 +2308,99 @@ S7::method(term_coef_start, NlTerm) <- function(term, target = NULL, ...) {
   coef0 <- term@blueprint$coef
   if (is.null(target)) return(coef0)
   auto <- tryCatch(.nl_auto_start(term, target), error = function(e) NULL)
-  if (is.null(auto) || length(auto) != length(coef0) || !all(is.finite(auto)))
-    coef0 else auto
+  out <- if (is.null(auto) || length(auto) != length(coef0) ||
+             !all(is.finite(auto))) coef0 else auto
+  bp <- term@blueprint
+  if (any(unlist(bp$mobile))) {
+    out <- tryCatch(.nl_breakpoint_start(bp, out, target),
+                    error = function(e) out)
+  }
+  out
+}
+
+# Where a parameter is developed over a break-point term, the constant chart
+# above says nothing about where the break-point is, and the objective in its
+# position has several optima -- measured on a smoothed jseg inside a
+# log-rate, a single start recovers the break-point on 8 samples of 20 and
+# the best of five on 20 of 20. So each break-point is tried at five interior
+# quantiles of its covariate (every choice of K of them for K break-points),
+# a few damped Gauss-Newton steps are taken on the target from each, and the
+# best fit is kept, one break-point term at a time. The sub-terms' own
+# confinement holds the positions inside the data throughout. A development
+# of the position is set by projecting the candidate onto its design.
+.nl_breakpoint_start <- function(bp, coef, target, n_steps = 50L) {
+  y <- as.numeric(target)
+  keep <- is.finite(y)
+  if (length(y) != bp$n || sum(keep) < 2L) return(coef)
+  sse <- function(cf) {
+    v <- tryCatch(.nl_jacobian(bp, cf)$value, error = function(e) NULL)
+    if (is.null(v) || !all(is.finite(v[keep]))) Inf else sum((y - v)[keep]^2)
+  }
+  gn <- function(cf) {
+    cur <- sse(cf)
+    if (!is.finite(cur)) return(list(coef = cf, sse = Inf))
+    mu <- 1e-3
+    for (it in seq_len(n_steps)) {
+      jv <- tryCatch(.nl_jacobian(bp, cf), error = function(e) NULL)
+      if (is.null(jv)) break
+      J <- as.matrix(jv$J)[keep, , drop = FALSE]
+      r <- (y - jv$value)[keep]
+      if (!all(is.finite(J)) || !all(is.finite(r))) break
+      JtJ <- crossprod(J)
+      g <- as.numeric(crossprod(J, r))
+      dg <- pmax(diag(JtJ), 1e-12 * max(1, diag(JtJ)))
+      moved <- FALSE
+      for (tr in 1:8) {
+        d <- tryCatch(solve(JtJ + mu * diag(dg, nrow = length(dg)), g),
+                      error = function(e) NULL)
+        if (!is.null(d) && all(is.finite(d))) {
+          nw <- cf + d
+          s <- sse(nw)
+          if (s < cur) {
+            cf <- nw
+            moved <- (cur - s) > 1e-10 * cur
+            cur <- s
+            mu <- max(mu / 10, 1e-12)
+            break
+          }
+        }
+        mu <- mu * 10
+      }
+      if (!moved) break
+    }
+    list(coef = cf, sse = cur)
+  }
+  best <- gn(coef)
+  for (p in bp$params) {
+    if (!isTRUE(bp$mobile[[p]])) next
+    idx <- bp$index[[p]]
+    for (k in seq_along(bp$subs[[p]])) {
+      sub <- bp$subs[[p]][[k]]
+      if (!bp$sub_moves[[p]][[k]] || !S7::S7_inherits(sub, SegTerm)) next
+      sb <- sub@blueprint
+      gi <- idx[bp$sub_cols[[p]][[k]]]
+      xin <- sb$xv[sb$xv >= sb$lim[1L] & sb$xv <= sb$lim[2L]]
+      grid <- unique(as.numeric(stats::quantile(xin, (1:5) / 6,
+                                                names = FALSE)))
+      K <- sb$npsi
+      if (length(grid) < K) next
+      cands <- if (K == 1L) as.list(grid) else
+        utils::combn(grid, K, simplify = FALSE)
+      base <- best$coef
+      for (cd in cands) {
+        cf <- base
+        for (j in seq_len(K)) {
+          pj <- paste0("psi", j)
+          zj <- sb$Z[[pj]]
+          cf[gi[sb$index[[pj]]]] <- if (is.null(zj)) cd[j] else
+            .seg_proj_start(zj, cd[j])
+        }
+        r <- gn(cf)
+        if (r$sse < best$sse) best <- r
+      }
+    }
+  }
+  if (all(is.finite(best$coef))) best$coef else coef
 }
 
 # The coefficients of one parameter's submodel that put its chart at a
@@ -2002,6 +2421,37 @@ S7::method(term_coef_start, NlTerm) <- function(term, target = NULL, ...) {
   # written by hand gives and what a reader of the coefficients expects
   b[abs(b) < 1e-12 * max(1, abs(cval))] <- 0
   b
+}
+
+# The same question for a MOBILE parameter, whose predictor is not linear in
+# its coefficients. The moving sub-terms start from their own coefficients --
+# a break-point at the position its term chose, not at the origin -- and the
+# whole submodel is then moved by the least-squares increment of its
+# linearization there towards the constant. For a break-point term that
+# increment cancels the change it started with, so the chart is constant and
+# the position is left where its term put it: which break-point to start at
+# is the start search's question (.nl_breakpoint_start()), not this one.
+.nl_chart_mobile <- function(bp, p, cval) {
+  cols <- bp$sub_cols[[p]]
+  base <- numeric(length(bp$index[[p]]))
+  for (s in seq_along(cols)) {
+    if (bp$sub_moves[[p]][[s]]) {
+      base[cols[[s]]] <- term_coef_start(bp$subs[[p]][[s]])
+    }
+  }
+  pa <- .nl_param_at(bp, p, base)
+  X <- as.matrix(pa$X)
+  # the MINIMUM-NORM increment, through the singular values: a development of
+  # the position over an intercept and every level of a group is collinear by
+  # construction, and a pivoted QR reads a rounding-sized pivot there as a
+  # column and returns coefficients of 1e185 -- measured on
+  # r ~ jump(t, psi ~ random(~1 | id)). The minimum-norm solution moves
+  # nothing the linearization does not ask for.
+  sv <- svd(X)
+  ok <- sv$d > max(sv$d) * sqrt(.Machine$double.eps)
+  d <- sv$v[, ok, drop = FALSE] %*%
+    (crossprod(sv$u[, ok, drop = FALSE], cval - pa$eta) / sv$d[ok])
+  base + as.numeric(d)
 }
 
 # f at a given theta, or NULL where it cannot be evaluated there
@@ -2187,7 +2637,8 @@ S7::method(term_coef_start, NlTerm) <- function(term, target = NULL, ...) {
     if (!inside(p, v)) return(NULL)
     e <- suppressWarnings(linkfunctions7::linkfun(bp$links[[p]], v))
     if (!is.finite(e)) return(NULL)
-    out[idx] <- .nl_chart_coefs(bp$Z[[p]], e, length(idx))
+    out[idx] <- if (isTRUE(bp$mobile[[p]])) .nl_chart_mobile(bp, p, e)
+      else .nl_chart_coefs(bp$Z[[p]], e, length(idx))
   }
   if (!all(is.finite(out))) return(NULL)
   out

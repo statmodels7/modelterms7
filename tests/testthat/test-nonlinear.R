@@ -255,11 +255,15 @@ test_that("a sparse sub-design stays sparse through the jacobian", {
                numDeriv::jacobian(f, b), tolerance = 1e-6)
 })
 
-test_that("a submodel must be a fixed design", {
+test_that("a submodel may move only where its block is a Jacobian", {
   expect_error(term_build(nl(~ a * exp(-r * x), a ~ gas(p = 1, q = 1)), dd),
                "structural")
-  expect_error(term_build(nl(~ a * exp(-r * x), a ~ seg(x)), dd),
-               "moves with its coefficients")
+  # a sharp jump carries a working linearization, not a Jacobian
+  expect_error(term_build(nl(~ a * exp(-r * x), a ~ jump(x)), dd),
+               "smoothed =")
+  # a continuous seg() does, and is admitted (test-nl-breakpoint.R)
+  expect_true(term_is_built(term_build(nl(~ a * exp(-r * x), a ~ seg(x),
+                                          start = list(a = 2, r = 1)), dd)))
 })
 
 test_that("term_value answers on other rows, where the block cannot", {

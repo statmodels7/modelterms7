@@ -117,9 +117,43 @@ parameter move smoothly with a covariate, and
 parameter's unconstrained scale. The penalties the sub-terms carry are
 reported through \code{\link[=term_penalties]{term_penalties()}} under the key
 \code{parameter::subterm}, so a fitting layer estimates their
-hyperparameters as it does any other term's. A structural term, and a
-term whose block moves with its coefficients, are rejected: a
-parameter's submodel must be a fixed design.
+hyperparameters as it does any other term's. A structural term is
+rejected.
+}
+
+\subsection{A parameter that changes at a break-point}{
+A subformula may carry a break-point term whose block is the Jacobian of
+its contribution: \code{\link[=seg]{seg()}}, and \code{\link[=jump]{jump()}}, \code{\link[=jseg]{jseg()}} or \code{\link[=seg]{seg()}} with
+\verb{smoothed =}. Then \eqn{g_j(\theta_j) = \eta_j(\gamma_j)} is no longer
+linear in the coefficients: it is the sum of the sub-terms' contributions.
+Under a log link, \code{nl(~ a * exp(-r * x), r ~ jump(t, smoothed = sm))} with
+\code{sm} a \code{\link[numericals7:smooth_probit]{numericals7::smooth_probit()}} is a rate whose logarithm steps at
+an estimated time. The block of \eqn{f} carries the chain
+rule through the sub-term's own block,
+\eqn{\partial f/\partial\theta_j \cdot (g_j^{-1})' \cdot X_s(\gamma_s)},
+and its derivatives in the coefficients add the sub-term's own
+\code{\link[=term_block_deriv]{term_block_deriv()}}, \code{\link[=term_block_contract]{term_block_contract()}} and \code{\link[=term_block_deriv2]{term_block_deriv2()}}
+where \eqn{X_s} moves, so a fitting layer's exact outer derivatives reach
+it unchanged. The position is confined to the sub-term's own interval, as
+it is where the term stands alone.
+
+A sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} is rejected, naming \verb{smoothed =}: its block is
+a working linearization with a frozen weight and a position read off a
+product of two coefficients, which is not a Jacobian and cannot sit inside
+another one.
+
+The objective in a break-point's position has several optima, so where a
+response is given, \code{\link[=term_coef_start]{term_coef_start()}} tries each break-point at five
+interior quantiles of its covariate, takes damped Gauss-Newton steps on the
+response from each and keeps the best. Measured on a smoothed \code{\link[=jseg]{jseg()}}
+inside a log-rate, the same model written out by hand in the formula
+recovered the break-point from a single start on 8 samples of 20, and
+through this search on 20 of 20. A fitting layer's own restarts of a
+break-point term do not reach one nested here.
+
+The fitted positions are read off the sub-term, which the term carries at
+its fitted coefficients: \code{seg_psi(term_components(built)$r$subs[[k]])},
+with \code{k} the sub-term's place in the subformula.
 }
 
 \subsection{Penalizing a parameter}{

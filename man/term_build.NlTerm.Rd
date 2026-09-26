@@ -33,8 +33,10 @@ is worse than not having it.
 
 Each parameter's subformula goes through \code{\link[=interpret_formula]{interpret_formula()}} and its
 terms are built, so their blueprints are recorded and reapplied at
-prediction. A structural sub-term, and one whose own block moves with its
-coefficients, are rejected: a parameter's submodel must be a fixed design.
+prediction. A structural sub-term is rejected, and so is one whose own block
+moves with its coefficients unless that block is a Jacobian, as for \code{\link[=seg]{seg()}}
+and every smoothed break-point term; such a parameter's design and predictor
+are then read at the coefficients rather than stored.
 }
 
 \section{The starting point}{
