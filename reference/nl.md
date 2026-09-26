@@ -138,9 +138,59 @@ unconstrained scale. The penalties the sub-terms carry are reported
 through
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 under the key `parameter::subterm`, so a fitting layer estimates their
-hyperparameters as it does any other term's. A structural term, and a
-term whose block moves with its coefficients, are rejected: a
-parameter's submodel must be a fixed design.
+hyperparameters as it does any other term's. A structural term is
+rejected.
+
+### A parameter that changes at a break-point
+
+A subformula may carry a break-point term whose block is the Jacobian of
+its contribution:
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+and
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md),
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+or [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+with `smoothed =`. Then \\g_j(\theta_j) = \eta_j(\gamma_j)\\ is no
+longer linear in the coefficients: it is the sum of the sub-terms'
+contributions. Under a log link,
+`nl(~ a * exp(-r * x), r ~ jump(t, smoothed = sm))` with `sm` a
+[`numericals7::smooth_probit()`](https://statmodels7.github.io/numericals7/reference/smooth_probit.html)
+is a rate whose logarithm steps at an estimated time. The block of \\f\\
+carries the chain rule through the sub-term's own block, \\\partial
+f/\partial\theta_j \cdot (g_j^{-1})' \cdot X_s(\gamma_s)\\, and its
+derivatives in the coefficients add the sub-term's own
+[`term_block_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md),
+[`term_block_contract()`](https://statmodels7.github.io/modelterms7/reference/term_block_contract.md)
+and
+[`term_block_deriv2()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv2.md)
+where \\X_s\\ moves, so a fitting layer's exact outer derivatives reach
+it unchanged. The position is confined to the sub-term's own interval,
+as it is where the term stands alone.
+
+A sharp
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+or
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+is rejected, naming `smoothed =`: its block is a working linearization
+with a frozen weight and a position read off a product of two
+coefficients, which is not a Jacobian and cannot sit inside another one.
+
+The objective in a break-point's position has several optima, so where a
+response is given,
+[`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)
+tries each break-point at five interior quantiles of its covariate,
+takes damped Gauss-Newton steps on the response from each and keeps the
+best. Measured on a smoothed
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+inside a log-rate, the same model written out by hand in the formula
+recovered the break-point from a single start on 8 samples of 20, and
+through this search on 20 of 20. A fitting layer's own restarts of a
+break-point term do not reach one nested here.
+
+The fitted positions are read off the sub-term, which the term carries
+at its fitted coefficients:
+`seg_psi(term_components(built)$r$subs[[k]])`, with `k` the sub-term's
+place in the subformula.
 
 ### Penalizing a parameter
 

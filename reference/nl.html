@@ -15,7 +15,7 @@ covariates."><meta property="og:image" content="https://statmodels7.github.io/mo
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.78.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -180,9 +180,41 @@ parameter move smoothly with a covariate, and
 parameter's unconstrained scale. The penalties the sub-terms carry are
 reported through <code><a href="term_penalties.html">term_penalties()</a></code> under the key
 <code>parameter::subterm</code>, so a fitting layer estimates their
-hyperparameters as it does any other term's. A structural term, and a
-term whose block moves with its coefficients, are rejected: a
-parameter's submodel must be a fixed design.</p>
+hyperparameters as it does any other term's. A structural term is
+rejected.</p>
+</div>
+
+<div class="section">
+<h3 id="a-parameter-that-changes-at-a-break-point">A parameter that changes at a break-point<a class="anchor" aria-label="anchor" href="#a-parameter-that-changes-at-a-break-point"></a></h3>
+<p>A subformula may carry a break-point term whose block is the Jacobian of
+its contribution: <code><a href="seg.html">seg()</a></code>, and <code><a href="jump.html">jump()</a></code>, <code><a href="jseg.html">jseg()</a></code> or <code><a href="seg.html">seg()</a></code> with
+<code>smoothed =</code>. Then \(g_j(\theta_j) = \eta_j(\gamma_j)\) is no longer
+linear in the coefficients: it is the sum of the sub-terms' contributions.
+Under a log link, <code>nl(~ a * exp(-r * x), r ~ jump(t, smoothed = sm))</code> with
+<code>sm</code> a <code><a href="https://statmodels7.github.io/numericals7/reference/smooth_probit.html" class="external-link">numericals7::smooth_probit()</a></code> is a rate whose logarithm steps at
+an estimated time. The block of \(f\) carries the chain
+rule through the sub-term's own block,
+\(\partial f/\partial\theta_j \cdot (g_j^{-1})' \cdot X_s(\gamma_s)\),
+and its derivatives in the coefficients add the sub-term's own
+<code><a href="term_block_deriv.html">term_block_deriv()</a></code>, <code><a href="term_block_contract.html">term_block_contract()</a></code> and <code><a href="term_block_deriv2.html">term_block_deriv2()</a></code>
+where \(X_s\) moves, so a fitting layer's exact outer derivatives reach
+it unchanged. The position is confined to the sub-term's own interval, as
+it is where the term stands alone.</p>
+<p>A sharp <code><a href="jump.html">jump()</a></code> or <code><a href="jseg.html">jseg()</a></code> is rejected, naming <code>smoothed =</code>: its block is
+a working linearization with a frozen weight and a position read off a
+product of two coefficients, which is not a Jacobian and cannot sit inside
+another one.</p>
+<p>The objective in a break-point's position has several optima, so where a
+response is given, <code><a href="term_coef_start.html">term_coef_start()</a></code> tries each break-point at five
+interior quantiles of its covariate, takes damped Gauss-Newton steps on the
+response from each and keeps the best. Measured on a smoothed <code><a href="jseg.html">jseg()</a></code>
+inside a log-rate, the same model written out by hand in the formula
+recovered the break-point from a single start on 8 samples of 20, and
+through this search on 20 of 20. A fitting layer's own restarts of a
+break-point term do not reach one nested here.</p>
+<p>The fitted positions are read off the sub-term, which the term carries at
+its fitted coefficients: <code>seg_psi(term_components(built)$r$subs[[k]])</code>,
+with <code>k</code> the sub-term's place in the subformula.</p>
 </div>
 
 <div class="section">

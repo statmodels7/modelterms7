@@ -15,7 +15,7 @@ the right components."><meta property="og:image" content="https://statmodels7.gi
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.78.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,8 +83,10 @@ the numerical route would leave an exact derivative silently unused, which
 is worse than not having it.</p>
 <p>Each parameter's subformula goes through <code><a href="interpret_formula.html">interpret_formula()</a></code> and its
 terms are built, so their blueprints are recorded and reapplied at
-prediction. A structural sub-term, and one whose own block moves with its
-coefficients, are rejected: a parameter's submodel must be a fixed design.</p>
+prediction. A structural sub-term is rejected, and so is one whose own block
+moves with its coefficients unless that block is a Jacobian, as for <code><a href="seg.html">seg()</a></code>
+and every smoothed break-point term; such a parameter's design and predictor
+are then read at the coefficients rather than stored.</p>
     </div>
     <div class="section level2">
     <h2 id="the-starting-point">The starting point<a class="anchor" aria-label="anchor" href="#the-starting-point"></a></h2>

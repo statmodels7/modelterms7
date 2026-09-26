@@ -1,5 +1,74 @@
 # Changelog
 
+## modelterms7 0.79.0
+
+- **A parameter of
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+  may be developed over a break-point term**, so that a parameter of
+  changes at an estimated point on the free scale of its link: a step, a
+  change of slope or both.
+  `nl(~ a * exp(-r * x), r ~ jump(t, smoothed = numericals7::smooth_probit()), links = list(r = log_link()))`
+  is a rate whose logarithm steps at an estimated time. Admitted are the
+  sub-terms whose block is the Jacobian of their contribution, which
+  [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
+  reports:
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+  and
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md),
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  or
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  with `smoothed =`. A sharp
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  or
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  is rejected by name, pointing at `smoothed =`: its block is a working
+  linearization with a frozen weight and a position read off a product
+  of two coefficients, which cannot sit inside another term’s Jacobian.
+  The admission is
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)‘s
+  alone; the developments of
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  and of the break-point terms’ own coefficients keep asking for a fixed
+  design.
+- Such a parameter is MOBILE: its predictor is the sum of the sub-terms’
+  contributions and its design is read at the coefficients rather than
+  stored, through one helper that every reader of the design goes
+  through. The block carries the chain rule through the sub-term’s
+  block, and
+  [`term_block_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md),
+  [`term_block_contract()`](https://statmodels7.github.io/modelterms7/reference/term_block_contract.md)
+  and
+  [`term_block_deriv2()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv2.md)
+  add the sub-term’s own derivatives where it moves – nothing is
+  re-derived. Checked at every order against one numerical
+  differentiation of the order below, on a smoothed jump, jseg and seg,
+  a sharp seg, a break-point developed over `random(~1 | id)` and two
+  developed parameters at once: 1e-11 to 4e-10. A 5 per cent error in
+  any of the five pieces of the chain fails the tests. A parameter with
+  a fixed development is untouched: 40 outputs of four such terms are
+  [`identical()`](https://rdrr.io/r/base/identical.html) to 0.78.0’s.
+- **The break-point is searched for at the start.** Where a response is
+  given,
+  [`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)
+  tries each nested break-point at five interior quantiles of its
+  covariate, takes damped Gauss-Newton steps on the response from each,
+  and keeps the best. On 600 observations of `y = 5 exp(-r_t x)` with
+  changing at , fitted with
+  [`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
+  over 20 samples, the smoothed jump, seg and jseg recover the
+  break-point within 0.2 on 20 of 20 (rmse 0.009, 0.059 and 0.012) and
+  the sharp seg on 20 of 20 (rmse 0.058), in 0.2 to 0.4 s a fit. The
+  same models written out by hand in the formula recover it on 20, 20, 8
+  and 12 samples of 20, the sharp truncated line escaping to 8e11 for
+  want of the confinement the sub-term carries.
+- **[`term_kinks()`](https://statmodels7.github.io/modelterms7/reference/term_kinks.md)
+  on
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)**
+  carries a nested sharp
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)’s
+  kink to the term’s own coefficients.
+
 ## modelterms7 0.78.0
 
 - **[`term_stalled()`](https://statmodels7.github.io/modelterms7/reference/term_stalled.md)**,
