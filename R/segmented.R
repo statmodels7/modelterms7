@@ -2068,6 +2068,7 @@ S7::method(term_block_deriv2, SegTerm) <- function(term, coef = NULL, v, u,
   bp$pk <- bp$pk[o]
   bp$cscale <- bp$cscale[o]
   bp$sgn <- bp$sgn[o]
+  if (!is.null(bp$floor)) bp$floor <- bp$floor[o]
   list(coef = coef, bp = bp, psi_new = psi_new[, o, drop = FALSE])
 }
 
@@ -2206,6 +2207,10 @@ S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   # squares it and needs a factor a thousand times larger, which is why
   # the working model is fitted by a QR of X, as `segmented` does.
   cmin <- sqrt(.Machine$double.eps) * pmax(dfar, amax) / dnear
+  # A factor held at that floor no longer shrinks the step, so a
+  # break-point still moving there is moving under no step control at all;
+  # term_stalled() reads this.
+  bp$floor <- bp$cscale <= cmin
   bp$cscale <- pmax(bp$cscale, cmin)
   bp$sgn[s != 0] <- s[s != 0]
   # The first refresh evaluates the block at the starting coefficients,
@@ -2505,6 +2510,7 @@ seg_reheat <- function(term) {
   bp$sgn <- rep(0, bp$npsi)
   bp$step <- rep(NA_real_, bp$npsi)
   bp$nref <- 0L
+  bp$floor <- NULL
   term@blueprint <- bp
   term
 }
@@ -2581,6 +2587,7 @@ seg_relocate <- function(term, psi) {
   bp$sgn <- rep(0, K)
   bp$step <- rep(NA_real_, K)
   bp$nref <- 0L
+  bp$floor <- NULL
   asm <- .seg_assemble(bp, bp$xv, cf)
   X <- asm$X
   colnames(X) <- term@coef_names
@@ -2606,6 +2613,29 @@ seg_relocate <- function(term, psi) {
 #' @keywords internal
 S7::method(term_converged, SegTerm) <- function(term, ...) {
   isTRUE(seg_converged(term))
+}
+
+#' @title Has a Break-Point Term Run Out of Step Control?
+#' @name term_stalled.SegTerm
+#'
+#' @description
+#' `TRUE` for a [jump()] or [jseg()] term when at least one break-point has
+#' not settled and every break-point that has not settled sits at the floor
+#' of its scaling factor, which [term_refresh()] records at each refresh.
+#' Always `FALSE` for [seg()] and for a smoothed construction, which have
+#' no scaling schedule, and for a term not yet refreshed twice, whose step
+#' has not been measured.
+#' @param term A built [SegTerm()].
+#' @param ... Unused.
+#' @return A single logical.
+#' @keywords internal
+S7::method(term_stalled, SegTerm) <- function(term, ...) {
+  bp <- term@blueprint
+  if (!is.null(bp$smooth) || !bp$kind %in% c("jump", "jseg")) return(FALSE)
+  st <- bp$step
+  if (is.null(bp$floor) || anyNA(st)) return(FALSE)
+  open <- st >= bp$delta
+  any(open) && all(bp$floor[open])
 }
 
 #' Starting Positions for a Break-Point Term

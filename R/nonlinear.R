@@ -1741,6 +1741,47 @@ term_converged <- S7::new_generic("term_converged", "term",
 
 S7::method(term_converged, model_term) <- function(term, ...) TRUE
 
+#' @title Has a Term's Own Iteration Run Out of Step Control?
+#'
+#' @description
+#' `TRUE` when a term whose block is refreshed has not settled and its
+#' iteration has no means left of bringing it to rest, so further refreshes
+#' cannot be expected to settle it. A term with no iteration of its own
+#' answers `FALSE`.
+#'
+#' @details
+#' The discontinuous break-point terms, [jump()] and [jseg()], control their
+#' step with the scaling factor of Fasola, Muggeo and Kuchenhoff, halved
+#' whenever a break-point reverses direction and held at a floor derived from
+#' the conditioning of the working block (see [term_refresh()]). Once every
+#' break-point that has not settled sits at that floor the factor can shrink
+#' no further, and the iteration continues without step control. The profile
+#' objective of a discontinuous term is constant between two consecutive
+#' observations, so a break-point in that state can pass from one
+#' observation to the next indefinitely. A fitting layer reads this to end
+#' the working phase and report the fit as not converged.
+#'
+#' A term whose block is the Jacobian of its contribution, [seg()] and every
+#' smoothed construction among them, has no scaling schedule and answers
+#' `FALSE`.
+#'
+#' @param term A built term.
+#' @param ... Passed to methods.
+#'
+#' @return A single logical.
+#'
+#' @examples
+#' dd <- data.frame(x = seq(0, 2, length.out = 20))
+#' term_stalled(term_build(linpar(~x), dd))
+#'
+#' @seealso [term_converged()], [term_refresh()]
+#' @export
+#' @aliases term_stalled.model_term
+term_stalled <- S7::new_generic("term_stalled", "term",
+  function(term, ...) S7::S7_dispatch())
+
+S7::method(term_stalled, model_term) <- function(term, ...) FALSE
+
 S7::method(term_refresh, NlTerm) <- function(term, coef, ...) {
   .assert_built(term)
   bp <- term@blueprint

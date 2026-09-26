@@ -879,3 +879,36 @@ test_that("the profile is read at a point and swept, weighted or not", {
   expect_true(all(pw >= b@blueprint$lim[1] & pw <= b@blueprint$lim[2]))
   expect_error(seg_profile_rss(b, d$y, weights = rep(-1, 400)), "weights")
 })
+
+test_that("term_stalled reports a break-point moving at its scaling floor", {
+  set.seed(2); n <- 400
+  d <- data.frame(x = sort(stats::runif(n, 0, 10)))
+  d$y <- 1 + 0.4 * d$x + 2 * pmax(d$x - 6, 0) + 1.5 * (d$x > 6) +
+    stats::rnorm(n, sd = 0.3)
+  walk <- function(tm, k) {
+    b <- term_build(tm, d); cf <- b@blueprint$coef
+    seen <- logical(k)
+    for (it in seq_len(k)) {
+      b <- term_refresh(b, cf)
+      cf <- qr.coef(qr(cbind(1, term_matrix(b))), d$y)[-1]
+      seen[it] <- term_stalled(b)
+    }
+    list(b = b, seen = seen)
+  }
+  # from psi = 5 the factor reaches its floor while the break-point still
+  # moves (measured at the 43rd refresh), and the term says so
+  w <- walk(jseg(x, psi = 5), 60)
+  expect_true(any(w$seen))
+  expect_true(all(w$b@blueprint$floor[w$b@blueprint$step >= w$b@blueprint$delta]))
+  # a start inside the basin settles without ever touching the floor
+  w2 <- walk(jseg(x, psi = 6.5), 25)
+  expect_false(any(w2$seen))
+  expect_true(seg_converged(w2$b))
+  # a continuous construction has no schedule, and a fresh term no step yet
+  expect_false(term_stalled(term_build(seg(x, psi = 5), d)))
+  expect_false(term_stalled(term_build(jseg(x, psi = 5), d)))
+  expect_false(term_stalled(term_build(linpar(~x), d)))
+  # a reheated schedule clears the record
+  expect_null(seg_reheat(w$b)@blueprint$floor)
+  expect_false(term_stalled(seg_reheat(w$b)))
+})

@@ -101,6 +101,7 @@ reference:
   - term_block_deriv2
   - term_value
   - term_converged
+  - term_stalled
 - title: Break-point terms
   desc: >
     The break-points at which an effect changes slope, level or both,
