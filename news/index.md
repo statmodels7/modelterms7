@@ -1,5 +1,34 @@
 # Changelog
 
+## modelterms7 0.78.0
+
+- **[`term_stalled()`](https://statmodels7.github.io/modelterms7/reference/term_stalled.md)**,
+  a new generic: `TRUE` when a term whose block is refreshed has not
+  settled and its iteration has no step control left. The discontinuous
+  break-point terms control their step with the scaling factor of
+  Fasola, Muggeo and Kuchenhoff, halved at every reversal and held at a
+  floor derived from the conditioning of the working block;
+  [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
+  now records which break-points sit at that floor, and
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  answer `TRUE` once every break-point still moving sits there. The
+  profile objective of a discontinuous term is constant between
+  consecutive observations, so such a break-point passes from one
+  observation to the next indefinitely: measured on `jseg(x, psi = 5)`
+  over 400 observations, the factor reaches its floor at the 43rd
+  refresh with the break-point at 5.17 against a truth of 6, and the
+  iteration then wanders until a step small enough by chance ends it at
+  the 1447th.
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+  a smoothed construction and every other term answer `FALSE`, having no
+  scaling schedule;
+  [`seg_reheat()`](https://statmodels7.github.io/modelterms7/reference/seg_reheat.md)
+  and
+  [`seg_relocate()`](https://statmodels7.github.io/modelterms7/reference/seg_relocate.md)
+  clear the record. Nothing else moves.
+
 ## modelterms7 0.77.0
 
 - **An observation sitting on a

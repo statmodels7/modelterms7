@@ -406,6 +406,8 @@ Gauss-Newton step.
   : The Contribution of a Term at Its Current Coefficients
 - [`term_converged()`](https://statmodels7.github.io/modelterms7/reference/term_converged.md)
   : Has a Term's Own Iteration Settled?
+- [`term_stalled()`](https://statmodels7.github.io/modelterms7/reference/term_stalled.md)
+  : Has a Term's Own Iteration Run Out of Step Control?
 
 ## Break-point terms
 

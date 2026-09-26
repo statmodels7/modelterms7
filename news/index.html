@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.77.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.78.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,11 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.78.0" id="modelterms7-0780">modelterms7 0.78.0<a class="anchor" aria-label="anchor" href="#modelterms7-0780"></a></h2>
+<ul><li>
+<strong><code><a href="../reference/term_stalled.html">term_stalled()</a></code></strong>, a new generic: <code>TRUE</code> when a term whose block is refreshed has not settled and its iteration has no step control left. The discontinuous break-point terms control their step with the scaling factor of Fasola, Muggeo and Kuchenhoff, halved at every reversal and held at a floor derived from the conditioning of the working block; <code><a href="../reference/term_refresh.html">term_refresh()</a></code> now records which break-points sit at that floor, and <code><a href="../reference/jump.html">jump()</a></code> and <code><a href="../reference/jseg.html">jseg()</a></code> answer <code>TRUE</code> once every break-point still moving sits there. The profile objective of a discontinuous term is constant between consecutive observations, so such a break-point passes from one observation to the next indefinitely: measured on <code>jseg(x, psi = 5)</code> over 400 observations, the factor reaches its floor at the 43rd refresh with the break-point at 5.17 against a truth of 6, and the iteration then wanders until a step small enough by chance ends it at the 1447th. <code><a href="../reference/seg.html">seg()</a></code>, a smoothed construction and every other term answer <code>FALSE</code>, having no scaling schedule; <code><a href="../reference/seg_reheat.html">seg_reheat()</a></code> and <code><a href="../reference/seg_relocate.html">seg_relocate()</a></code> clear the record. Nothing else moves.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.77.0" id="modelterms7-0770">modelterms7 0.77.0<a class="anchor" aria-label="anchor" href="#modelterms7-0770"></a></h2>
 <ul><li>
