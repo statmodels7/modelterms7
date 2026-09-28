@@ -1017,6 +1017,17 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 
 .seg_active <- function(bp, xv, psi) xv - psi > .seg_tie(bp)
 
+# WHERE A BREAK-POINT SITS AGAINST ITS CONFINEMENT LIMIT, THE CONTRIBUTION
+# DOES NOT MOVE WITH IT, so the Jacobian's column for its coefficients is
+# zero there: the position is clamped, and a clamped quantity has no
+# derivative in what it was clamped from. The derivative generics have gated
+# by this all along; the block did not, and a gradient read off the block was
+# then not the gradient of the objective. Measured on jseg(x, psi ~ random(~1
+# | g), smoothed = smooth_probit()) with the break-point below the 5th
+# percentile, the objective was constant to the sixth decimal along the
+# break-point's intercept and the block's gradient read 145 there.
+.seg_inside <- function(bp, psi) psi > bp$lim[1L] & psi < bp$lim[2L]
+
 # The rescaled covariate of Fasola, Muggeo and Kuchenhoff: the two
 # intervals on either side of the break-point are shrunk towards the
 # ends of the range, leaving a gap of width c around psi.
@@ -1066,7 +1077,8 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   }
   if (bp$kind == "seg") {
     for (k in seq_len(K)) {
-      put(paste0("psi", k), -gam[[k]] * .seg_active(bp, xv, psi[, k]))
+      put(paste0("psi", k), -gam[[k]] * .seg_active(bp, xv, psi[, k]) *
+            .seg_inside(bp, psi[, k]))
     }
   } else {
     W <- vector("list", K)
@@ -1105,7 +1117,16 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
                        xv, psi1, gam, del, cscale,
                        if (bp$linear) coef[1L] else 0, bp$linear,
                        bp$lo, bp$hi, .seg_tie(bp))
-  list(X = out$X, value = out$value, psi = pos$psi, pk = pos$pk)
+  X <- out$X
+  if (bp$kind == "seg") {
+    # the continuous construction's block is its Jacobian, gated as
+    # .seg_inside() says; the discontinuous ones carry a working
+    # linearization, which is not a derivative to gate
+    pc <- ncol(X) - K + seq_len(K)
+    X[, pc] <- X[, pc, drop = FALSE] *
+      rep(as.numeric(.seg_inside(bp, psi1)), each = nrow(X))
+  }
+  list(X = X, value = out$value, psi = pos$psi, pk = pos$pk)
 }
 
 # The smoothed derivatives at one set of points: s^(order) with the width
@@ -1179,7 +1200,7 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
       value <- value + del * S
       dpsi <- dpsi + del * s2 / 2
     }
-    put(paste0("psi", k), -dpsi)
+    put(paste0("psi", k), -dpsi * .seg_inside(bp, psi[, k]))
   }
   list(X = .nl_bind(cols[bp$params]), value = value, psi = psi, pk = pos$pk)
 }
@@ -1659,13 +1680,13 @@ S7::method(term_jacobian_block, SegTerm) <- function(term, ...) {
     if (has_g) {
       gk <- paste0("gamma", k)
       place(pk, -pt$S * sfun(gk) * pt$free)
-      place(gk, -pt$S * sfun(pk))
+      place(gk, -pt$S * sfun(pk) * pt$free)
       dself <- dself + val(gk) * pt$P
     }
     if (has_d) {
       dk <- paste0("delta", k)
       place(pk, -pt$P * sfun(dk) * pt$free)
-      place(dk, -pt$P * sfun(pk))
+      place(dk, -pt$P * sfun(pk) * pt$free)
       dself <- dself + val(dk) * pt$T
     }
     place(pk, dself * sfun(pk) * pt$free)
@@ -1695,13 +1716,13 @@ S7::method(term_jacobian_block, SegTerm) <- function(term, ...) {
     if (has_g) {
       gk <- paste0("gamma", k)
       put(gk, -pt$S * pt$free * along(pk))
-      put(pk, -pt$S * along(gk))
+      put(pk, -pt$S * pt$free * along(gk))
       dself <- dself + val(gk) * pt$P
     }
     if (has_d) {
       dk <- paste0("delta", k)
       put(dk, -pt$P * pt$free * along(pk))
-      put(pk, -pt$P * along(dk))
+      put(pk, -pt$P * pt$free * along(dk))
       dself <- dself + val(dk) * pt$T
     }
     put(pk, dself * pt$free * along(pk))
@@ -1830,10 +1851,11 @@ S7::method(term_block_contract, SegTerm) <- function(term, coef = NULL, A,
     # the truncated line (x - psi)_+ has derivative -1(x > psi) in the
     # break-point: bounded, and existing everywhere but at the point itself
     place(pk, -sfun(gk) * ind * free)
-    # the break-point column is -gamma(x) 1(x > psi). Its derivative in the
-    # CHANGE is the same indicator; in the break-point it is zero almost
-    # everywhere, the indicator being a step, and that is the value taken.
-    place(gk, -sfun(pk) * ind)
+    # the break-point column is -gamma(x) 1(x > psi), gated by the
+    # confinement as the block is. Its derivative in the CHANGE is the same
+    # indicator; in the break-point it is zero almost everywhere, the
+    # indicator being a step, and that is the value taken.
+    place(gk, -sfun(pk) * ind * free)
   }
   out
 }
@@ -1884,7 +1906,7 @@ S7::method(term_block_deriv, SegTerm) <- function(term, coef = NULL, v, ...) {
     # the change: the same two pieces term_block_contract() carries, read the
     # other way round
     put(gk, -ind * free * along(pk))
-    put(pk, -ind * along(gk))
+    put(pk, -ind * free * along(gk))
   }
   out
 }

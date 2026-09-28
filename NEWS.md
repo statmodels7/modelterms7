@@ -1,3 +1,25 @@
+# modelterms7 0.80.0
+
+* A break-point against its confinement limit gives its block a zero column.
+  The position is clamped there, so the contribution does not move with the
+  coefficients that place it, and the block of `seg()` and of every smoothed
+  construction is the Jacobian of the contribution. The derivative generics
+  `term_block_contract()` and `term_block_deriv()` gated by the confinement
+  already; the block did not, so a gradient read off the block was not the
+  gradient of the objective. Measured on
+  `jseg(x, psi ~ random(~1 | g), smoothed = smooth_probit())` with the
+  break-point below the 5th percentile, the objective was constant to the
+  sixth decimal along the break-point's intercept while the block's gradient
+  read 145 there. The derivatives of the break-point's column in the change
+  and in the level carry the same gate now. The discontinuous constructions'
+  sharp blocks are working linearizations and are unchanged.
+  `test-confined.R` checks the block against a difference of `term_value()`
+  and the derivatives against a difference of the block at a confined
+  break-point; with the gate removed 20 of its 30 assertions fail. A test in
+  `test-block-deriv2.R` asserted the old asymmetry, a first derivative that
+  was not zero at a confined break-point; it asserts zero at both orders
+  now, with an interior point as the control.
+
 # modelterms7 0.79.0
 
 * **A parameter of `nl()` may be developed over a break-point term**, so that

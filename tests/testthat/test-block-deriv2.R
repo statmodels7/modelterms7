@@ -266,25 +266,33 @@ test_that("the smoothed second derivative matches one stencil on the first", {
   }
 })
 
-test_that("a confined break-point contributes exactly zero, unlike order one", {
-  # Every addend of the second derivative carries a direction in the
-  # break-point, so where the position sits against a confinement limit the
-  # whole contribution vanishes exactly. The FIRST derivative does not: the
-  # position column is -gamma S(u), whose derivative in the CHANGE carries no
-  # break-point direction at all. That asymmetry is what makes this a control
-  # on the second derivative rather than on the gate the two share.
+test_that("a confined break-point contributes exactly zero, at both orders", {
+  # Where the position sits against a confinement limit it is clamped, so the
+  # block's break-point column is zero there (modelterms7 0.80.0) and so is
+  # every derivative of the block: at order two every addend carries a
+  # direction in the break-point, and at order one the break-point column's
+  # derivative in the change carries the same gate as the column. Until
+  # 0.80.0 the column was not gated and its derivative in the change was not
+  # zero, which made the block disagree with the gradient of the objective.
+  # At an interior position the first derivative is not zero, which keeps
+  # the confined assertions from being satisfied by a block that is zero
+  # everywhere.
   sp <- numericals7::smooth_probit()
   for (tm in list(term_build(seg(x, smoothed = sp), dsm),
                   term_build(jump(x, smoothed = sp), dsm),
                   term_build(jseg(x, smoothed = sp), dsm))) {
     cf <- tm@blueprint$coef
     nms <- term_coef_names(tm)
-    cf[grep("psi[0-9]*$", nms)] <- tm@blueprint$lim[2L] + 5
     k <- length(cf)
     set.seed(2)
+    v <- rnorm(k)
+    expect_gt(max(abs(term_block_deriv(tm, coef = cf, v = v))), 1e-6)
+    cf[grep("psi[0-9]*$", nms)] <- tm@blueprint$lim[2L] + 5
     expect_true(all(term_block_deriv2(tm, coef = cf, v = rnorm(k),
                                       u = rnorm(k)) == 0))
-    expect_gt(max(abs(term_block_deriv(tm, coef = cf, v = rnorm(k)))), 1e-6)
+    d1 <- term_block_deriv(tm, coef = cf, v = v)
+    psi_cols <- grep("psi[0-9]*$", nms)
+    expect_true(all(d1[, psi_cols] == 0))
   }
 })
 
