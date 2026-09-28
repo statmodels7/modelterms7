@@ -16,7 +16,8 @@ RegimeTerm(
   k = integer(0),
   by = NULL,
   time = NULL,
-  chain = NULL
+  chain = NULL,
+  n_start = integer(0)
 )
 }
 \arguments{

@@ -262,6 +262,49 @@ S7::method(term_draw, structural_term) <- function(term, sd = 1, ...) {
   z + stats::rnorm(length(z), 0, sd / 2)
 }
 
+#' @title Where a Fit of a Term's Own Parameters Starts, Several Times
+#'
+#' @description
+#' The starting points a fitting layer tries for a structural term's own
+#' parameters, as a list of vectors of the kind [term_start()] returns. The
+#' layer fits from each and keeps the best.
+#'
+#' @details
+#' The base method returns one start, [term_start()]'s, so a term that says
+#' nothing is fitted once, as before. [regime()] returns `n_start` of them:
+#' its likelihood has several maxima and the term can say which region of
+#' its parameters is worth covering.
+#'
+#' The first element is always [term_start()]'s, so a fit with one start is
+#' the fit without this generic.
+#'
+#' @param term A built structural term.
+#' @param ... Passed to [term_start()].
+#' @param target The response on the scale of the predictor, or `NULL`, as
+#'   [term_start()] reads it.
+#'
+#' @return A non-empty list of named numeric vectors on the unconstrained
+#'   scale, each of length [term_npar()] and named as [term_params()].
+#'
+#' @seealso [term_start()] for the first start, [regime()] for a term that
+#'   returns several.
+#'
+#' @examples
+#' length(term_starts(gas(p = 1, q = 1)))
+#' st <- term_starts(regime(k = 2, n_start = 3))
+#' length(st)
+#' identical(st[[1]], term_start(regime(k = 2)))
+#'
+#' @export
+#' @aliases term_starts.structural_term
+term_starts <- S7::new_generic("term_starts", "term",
+  function(term, ..., target = NULL) S7::S7_dispatch())
+
+S7::method(term_starts, structural_term) <- function(term, ...,
+                                                     target = NULL) {
+  list(term_start(term, ..., target = target))
+}
+
 
 #' @title Apply a Structural Term to a Linear Predictor
 #'

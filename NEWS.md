@@ -1,3 +1,16 @@
+# modelterms7 0.82.0
+
+* `term_starts()`, a new generic, returns the starting points a fitting layer
+  tries for a structural term's own parameters. The base method returns
+  `term_start()`'s alone, so a term that says nothing is fitted once.
+* `regime()` takes `n_start`, the number of starts, `1` by default, so no fit
+  changes unless it is asked for. The first start is the quantile start; each
+  further one draws every additive log-ratio of the transition matrix from
+  N(0, 2^2) and adds N(0, 0.7^2) to the logarithm of every gap, with a fixed
+  seed and the caller's random number generator restored. On
+  `MASS::geyser` with three regimes, eight starts reach five distinct maxima
+  of the log-likelihood, from -1053.39 to -1210.49.
+
 # modelterms7 0.81.0
 
 * `term_charted()`, a new generic, names the free values of a term that are

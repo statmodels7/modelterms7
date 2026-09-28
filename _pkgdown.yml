@@ -134,6 +134,7 @@ reference:
   - term_links
   - term_charted
   - term_start
+  - term_starts
   - term_draw
   - term_level_design
   - term_filter

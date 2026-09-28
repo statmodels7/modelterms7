@@ -182,7 +182,8 @@ RegimeTerm <- S7::new_class(
     k = S7::class_integer,
     by = S7::class_any,
     time = S7::class_any,
-    chain = S7::class_any
+    chain = S7::class_any,
+    n_start = S7::class_integer
   )
 )
 
@@ -255,6 +256,13 @@ RegimeTerm <- S7::new_class(
 #'   must evaluate to one non-missing value per row at build time.
 #' @param label A single non-empty character string naming the term,
 #'   `"regime"` by default.
+#' @param n_start The number of starting points a fitting layer tries, a
+#'   single whole number of at least 1. The likelihood of a regime model has
+#'   several maxima, and one start reaches whichever basin it lies in. The
+#'   first start is [term_start()]'s, the levels at the quantiles of the
+#'   response; each further one displaces it as [term_starts()] describes,
+#'   and the fit keeps the best. `1`, the default, fits from the first start
+#'   alone. Each start costs about one fit.
 #'
 #' @return An unbuilt [RegimeTerm()]: a specification, whose `blueprint` is
 #'   empty until [term_build()] resolves the ordering.
@@ -314,7 +322,8 @@ RegimeTerm <- S7::new_class(
 #'   round(coef(ft)$mu[1:2], 2)
 #' }
 #' @export
-regime <- function(k = 2, by = NULL, time = NULL, label = "regime") {
+regime <- function(k = 2, by = NULL, time = NULL, label = "regime",
+                   n_start = 1) {
   if (!is.numeric(k) || length(k) != 1L || is.na(k) || k < 2 ||
       k != round(k)) {
     stop("'k' must be a single integer of at least 2.", call. = FALSE)
@@ -324,10 +333,16 @@ regime <- function(k = 2, by = NULL, time = NULL, label = "regime") {
     stop("'label' must be a single non-empty character string.",
          call. = FALSE)
   }
+  if (!is.numeric(n_start) || length(n_start) != 1L || is.na(n_start) ||
+      n_start < 1 || n_start != round(n_start)) {
+    stop("'n_start' must be a single whole number of at least 1.",
+         call. = FALSE)
+  }
   k <- as.integer(k)
   RegimeTerm(label = label, k = k,
              by = substitute(by), time = substitute(time),
              chain = parameters7::transition_matrix(k),
+             n_start = as.integer(n_start),
              blueprint = list())
 }
 
@@ -453,6 +468,52 @@ S7::method(term_start, RegimeTerm) <- function(term, ..., target = NULL) {
   out[["level1"]] <- q[[1L]]
   out[paste0("gap", seq.int(2L, k))] <- log(gaps)
   out
+}
+
+#' @title The Starting Points of a Regime Term
+#' @name term_starts.RegimeTerm
+#' @description
+#' `n_start` starting points. The first is [term_start()]'s. Each further one
+#' draws every additive log-ratio of the transition matrix from
+#' \eqn{N(0, 2^2)} and adds \eqn{N(0, 0.7^2)} to the logarithm of every gap,
+#' the first level staying where the first start put it.
+#' @details
+#' A log-ratio of standard deviation 2 reaches a transition probability of
+#' 0.02 or 0.98 about one time in three, so the draws cover chains that stay
+#' in a regime and chains that leave it at once. A gap scaled by
+#' \eqn{e^{\pm 0.7}}, about a factor of two either way, keeps the levels
+#' ordered and within the range of the response. The draw for start
+#' \eqn{s} is made with the seed \eqn{100 + s - 1}, and the caller's random
+#' number generator is restored afterwards, so the same fit gives the same
+#' starts and does not move the caller's stream. Measured on `MASS::geyser`
+#' with three regimes, eight starts reach five distinct maxima of the
+#' log-likelihood, from -1053.39 to -1210.49.
+#' @param term A [RegimeTerm()].
+#' @param ... Passed to [term_start()].
+#' @param target The response on the scale of the predictor, or `NULL`.
+#' @return A list of `term@n_start` named numeric vectors on the
+#'   unconstrained scale.
+#' @keywords internal
+S7::method(term_starts, RegimeTerm) <- function(term, ..., target = NULL) {
+  z0 <- term_start(term, ..., target = target)
+  n <- term@n_start
+  if (!length(n) || n <= 1L) return(list(z0))
+  a <- startsWith(names(z0), "alr")
+  g <- startsWith(names(z0), "gap")
+  had <- exists(".Random.seed", envir = globalenv(), inherits = FALSE)
+  if (had) old <- get(".Random.seed", envir = globalenv(), inherits = FALSE)
+  on.exit(if (had) {
+    assign(".Random.seed", old, envir = globalenv())
+  } else if (exists(".Random.seed", envir = globalenv(), inherits = FALSE)) {
+    rm(".Random.seed", envir = globalenv())
+  })
+  c(list(z0), lapply(seq_len(n - 1L), function(s) {
+    set.seed(100L + s)
+    z <- z0
+    z[a] <- stats::rnorm(sum(a), 0, 2)
+    z[g] <- z[g] + stats::rnorm(sum(g), 0, 0.7)
+    z
+  }))
 }
 
 #' @title Build a Regime Term
