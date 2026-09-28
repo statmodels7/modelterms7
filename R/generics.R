@@ -1084,6 +1084,42 @@ term_group <- S7::new_generic("term_group", "term",
 
 S7::method(term_group, model_term) <- function(term, ...) NULL
 
+#' @title The Within-Group Design of a Term With Grouped Effects
+#'
+#' @description
+#' The design row each group's effect multiplies, at new rows.
+#'
+#' @details
+#' A term whose coefficients are one effect per group, [random()], builds
+#' its block by interacting a within-group design with the group indicators.
+#' This returns the first factor alone, which does not depend on the
+#' grouping: a caller integrating the effect of a group the fit never saw
+#' reads \eqn{z_i^\top b} from it with \eqn{b} drawn from the prior.
+#'
+#' The base method returns `NULL`, which is the answer for every term but
+#' [random()].
+#'
+#' @param term A built term.
+#' @param newdata A data frame.
+#' @param ... Passed to methods.
+#'
+#' @return A numeric matrix of `nrow(newdata)` rows, or `NULL`.
+#'
+#' @seealso [term_group()] for the layout of the block,
+#'   [term_within.RandomTerm()] for the method.
+#'
+#' @examples
+#' d <- data.frame(x = rnorm(6), g = factor(rep(c("a", "b", "c"), 2)))
+#' term_within(term_build(random(~ 1 + x | g), d), d[1:2, ])
+#' term_within(term_build(linpar(~ x), d), d)
+#'
+#' @export
+#' @aliases term_within.model_term
+term_within <- S7::new_generic("term_within", "term",
+  function(term, newdata, ...) S7::S7_dispatch())
+
+S7::method(term_within, model_term) <- function(term, newdata, ...) NULL
+
 #' @title Which of a Term's Hyperparameters Are Shared
 #'
 #' @description

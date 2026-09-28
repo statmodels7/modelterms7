@@ -542,11 +542,11 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
   v
 }
 
-.random_group <- function(expr, data, levels = NULL) {
+.random_group <- function(expr, data, levels = NULL, unseen = "error") {
   v <- eval(expr, data, baseenv())
   if (is.null(levels)) return(factor(.random_check_group(v, expr)))
   f <- factor(v, levels = levels)
-  if (any(is.na(f) & !is.na(v))) {
+  if (identical(unseen, "error") && any(is.na(f) & !is.na(v))) {
     bad <- unique(as.character(v)[is.na(f) & !is.na(v)])
     stop(sprintf("grouping level '%s' was not present at build time.",
                  bad[1L]), call. = FALSE)
@@ -570,12 +570,15 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
   d <- ncol(W)
   n <- nrow(W)
   gi <- as.integer(g)
+  # a row whose group is NA -- a level the fit never saw, read as having no
+  # effect of its own -- lands in no column and is a row of zeros
+  ok <- which(!is.na(gi))
   # one entry per (row, within-column) pair: row i lands in the d columns of
   # its own group, and in no other
   Matrix::sparseMatrix(
-    i = rep(seq_len(n), each = d),
-    j = as.vector(t(outer((gi - 1L) * d, seq_len(d), `+`))),
-    x = as.vector(t(W)),
+    i = rep(ok, each = d),
+    j = as.vector(t(outer((gi[ok] - 1L) * d, seq_len(d), `+`))),
+    x = as.vector(t(W[ok, , drop = FALSE])),
     dims = c(n, m * d))
 }
 
@@ -1168,6 +1171,11 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
 #' @param newdata A data frame carrying the grouping variable and the
 #'   within-group covariates. Its grouping factor need carry only the levels
 #'   its own rows use.
+#' @param unseen What a row of a level the term never saw gets: `"error"`
+#'   (the default) signals the error described above, `"zero"` gives it a row
+#'   of zeros, which is the prediction with that group's effect at zero. It
+#'   is what `statmodels7`'s `predict(random = "zero")` and
+#'   `predict(random = "marginal")` ask for.
 #' @param ... Unused.
 #'
 #' @return A `dgCMatrix` of `nrow(newdata)` rows and [term_npar()] columns,
@@ -1193,15 +1201,63 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
 #' levels(bad$g) <- c("a", "b", "zz")
 #' try(term_predict(b, bad))
 #'
+#' # Unless it is asked to give such a row no effect of its own.
+#' as.matrix(term_predict(b, bad, unseen = "zero"))[bad$g == "zz", ]
+#'
 #' @keywords internal
-S7::method(term_predict, RandomTerm) <- function(term, newdata, ...) {
+S7::method(term_predict, RandomTerm) <- function(term, newdata,
+                                                 unseen = c("error", "zero"),
+                                                 ...) {
+  unseen <- match.arg(unseen)
   .assert_built(term)
   bp <- term@blueprint
-  g <- .random_group(bp$gexpr, newdata, levels = bp$glevels)
-  mf <- stats::model.frame(bp$terms, newdata, na.action = stats::na.pass,
-                           xlev = bp$xlev)
-  W <- stats::model.matrix(bp$terms, mf, contrasts.arg = bp$contrasts)
-  Z <- .random_block(g, W)
+  g <- .random_group(bp$gexpr, newdata, levels = bp$glevels, unseen = unseen)
+  Z <- .random_block(g, .random_within(bp, newdata))
   colnames(Z) <- term@coef_names
   Z
+}
+
+# The within-group design at new rows, from the blueprint the build recorded.
+.random_within <- function(bp, newdata) {
+  mf <- stats::model.frame(bp$terms, newdata, na.action = stats::na.pass,
+                           xlev = bp$xlev)
+  stats::model.matrix(bp$terms, mf, contrasts.arg = bp$contrasts)
+}
+
+#' @title The Within-Group Design of a Random-Effect Term
+#' @name term_within.RandomTerm
+#' @description
+#' The design one group's effect multiplies, at new rows: the intercept, the
+#' covariates of a random slope, one column per coordinate of the effect.
+#'
+#' @details
+#' Read from the blueprint the build recorded, so a factor keeps its levels
+#' and contrasts. It does not depend on the grouping, which is what lets a
+#' caller integrate the effect of a group the fit never saw: the effect is
+#' \eqn{z_i^\top b} with \eqn{z_i} this row and \eqn{b} drawn from the
+#' term's prior.
+#'
+#' @param term A built [RandomTerm()].
+#' @param newdata A data frame carrying the within-group covariates.
+#' @param ... Unused.
+#'
+#' @return A numeric matrix of `nrow(newdata)` rows and `term_group(term)$dim`
+#'   columns, named as `term_group(term)$names`.
+#'
+#' @seealso [term_within()] for the generic, [term_group()] for the layout.
+#'
+#' @examples
+#' dd <- data.frame(x = c(0.5, 1, 2), g = factor(c("a", "b", "a")))
+#' b <- term_build(random(~ 1 + x | g), dd)
+#' term_within(b, data.frame(x = c(3, 4), g = c("new", "a")))
+#'
+#' @keywords internal
+S7::method(term_within, RandomTerm) <- function(term, newdata, ...) {
+  .assert_built(term)
+  W <- .random_within(term@blueprint, newdata)
+  gr <- term_group(term)
+  if (!is.null(gr) && ncol(W) == length(gr$names)) colnames(W) <- gr$names
+  attr(W, "assign") <- NULL
+  attr(W, "contrasts") <- NULL
+  W
 }

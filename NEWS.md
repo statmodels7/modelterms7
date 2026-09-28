@@ -1,3 +1,16 @@
+# modelterms7 0.83.0
+
+* `term_predict()` on a `random()` term takes `unseen = c("error", "zero")`.
+  By default a level the fit never saw is still refused; `"zero"` gives its
+  rows zeros, which is the prediction with that group's effect at zero.
+  `statmodels7`'s `predict(random = "zero")` and `"marginal"` ask for it.
+
+* `term_within()`, a new generic: the within-group design a group's effect
+  multiplies, at new rows, one column per coordinate of the effect and named
+  as `term_group()$names`. It does not depend on the grouping, which is what
+  lets a caller integrate the effect of a group the fit never saw. The base
+  method returns `NULL`.
+
 # modelterms7 0.82.1
 
 * Requires penalties7 0.28.0, whose standardized penalties carry the

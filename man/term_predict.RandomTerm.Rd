@@ -11,6 +11,12 @@
 within-group covariates. Its grouping factor need carry only the levels
 its own rows use.}
 
+\item{unseen}{What a row of a level the term never saw gets: \code{"error"}
+(the default) signals the error described above, \code{"zero"} gives it a row
+of zeros, which is the prediction with that group's effect at zero. It
+is what \code{statmodels7}'s \code{predict(random = "zero")} and
+\code{predict(random = "marginal")} ask for.}
+
 \item{...}{Unused.}
 }
 \value{
@@ -48,6 +54,9 @@ all.equal(term_predict(b, dd), term_matrix(b))
 bad <- dd
 levels(bad$g) <- c("a", "b", "zz")
 try(term_predict(b, bad))
+
+# Unless it is asked to give such a row no effect of its own.
+as.matrix(term_predict(b, bad, unseen = "zero"))[bad$g == "zz", ]
 
 }
 \seealso{
