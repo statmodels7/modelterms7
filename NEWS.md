@@ -1,3 +1,10 @@
+# modelterms7 0.82.1
+
+* Requires penalties7 0.28.0, whose standardized penalties carry the
+  Jacobian of their map. The test that compares a standardized penalty with
+  the same penalty on a standardized design now includes that term,
+  `-sum(log(sd))`. No code in this package changed.
+
 # modelterms7 0.82.0
 
 * `term_starts()`, a new generic, returns the starting points a fitting layer

@@ -239,7 +239,9 @@ test_that("standardize attaches the column spreads as a diagonal map", {
 test_that("the standardized penalty is the penalty on a standardized design", {
   # the whole claim: rho(S beta_x) with S = diag(sd) is what a penalty on the
   # columns divided by their own spread comes to, so the two routes agree at
-  # machine precision and the design is never touched
+  # machine precision and the design is never touched. Since penalties7
+  # 0.28.0 the value is the density of beta_x rather than of S beta_x, so it
+  # carries the Jacobian of the map, -sum(log(sd)).
   set.seed(12)
   d <- data.frame(x1 = rnorm(50, 10, 2), x2 = rnorm(50) * 500)
   built <- term_build(lasso(~ x1 + x2, standardize = TRUE), d)
@@ -255,7 +257,8 @@ test_that("the standardized penalty is the penalty on a standardized design", {
   # beta_z = s beta_x is the same fitted function on the standardized design
   expect_equal(as.numeric(X %*% beta_x), as.numeric(Z %*% (s * beta_x)))
   expect_equal(penalties7::penalty_value(pen_std, beta_x, th),
-               penalties7::penalty_value(pen_raw, s * beta_x, th))
+               penalties7::penalty_value(pen_raw, s * beta_x, th) -
+                 sum(log(s)))
 })
 
 test_that("standardizing SCAD and MCP composes BOTH hyperparameters", {
