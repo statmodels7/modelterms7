@@ -422,6 +422,39 @@ S7::method(term_links, RegimeTerm) <- function(term, ...) {
   }), nm)
 }
 
+#' @title Where a Regime Term's Parameters Start
+#' @name term_start.RegimeTerm
+#' @description
+#' The levels at the quantiles of the response at \eqn{(2j-1)/(2k)},
+#' \eqn{j = 1, \dots, k}, and the transition matrix with every row uniform.
+#' @details
+#' Without the response every level starts at zero and every gap at one,
+#' which puts the regimes wherever the scale of the data does not; on
+#' response in the hundreds that start is far from any mode. The quantiles
+#' spread the regimes over the data, as [seg_start()] spreads break-points
+#' over a covariate. `target` is the response on the scale of the predictor,
+#' which the fitting layer supplies where the family reads the parameter
+#' directly; where it is absent, or where two quantiles coincide, the
+#' conventional start is returned.
+#' @param term A [RegimeTerm()].
+#' @param ... Unused.
+#' @param target The response on the scale of the predictor, or `NULL`.
+#' @return A named numeric vector on the unconstrained scale.
+#' @keywords internal
+S7::method(term_start, RegimeTerm) <- function(term, ..., target = NULL) {
+  nm <- term_params(term)
+  out <- stats::setNames(numeric(length(nm)), nm)
+  k <- term@k
+  y <- if (is.null(target)) numeric(0) else target[is.finite(target)]
+  if (k < 2L || length(y) < k) return(out)
+  q <- stats::quantile(y, (2 * seq_len(k) - 1) / (2 * k), names = FALSE)
+  gaps <- diff(q)
+  if (any(!(gaps > 0))) return(out)
+  out[["level1"]] <- q[[1L]]
+  out[paste0("gap", seq.int(2L, k))] <- log(gaps)
+  out
+}
+
 #' @title Build a Regime Term
 #' @name term_build.RegimeTerm
 #'

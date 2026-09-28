@@ -1,6 +1,6 @@
 Package: modelterms7
 Title: Model Terms as Objects for Formula-Based Modeling
-Version: 0.80.0
+Version: 0.81.0
 Authors@R:
     person("Giovanni", "Tinervia", , "giovannitinervia9@gmail.com", role = c("aut", "cre"))
 Description: Model terms as 'S7' objects: the mapping from a data frame to
@@ -57,18 +57,19 @@ Collate:
     'RcppExports.R'
     'term_classes.R'
     'generics.R'
+    'nonlinear.R'
+    'structural.R'
+    'regime.R'
+    'charted.R'
     'check_term.R'
     'penalized.R'
     'fitted_views.R'
     'linpar.R'
     'formula.R'
-    'structural.R'
     'gas.R'
     'gas_submodels.R'
     'hyper.R'
-    'nonlinear.R'
     'segmented.R'
-    'regime.R'
     'marginal.R'
     'modelterms7-package.R'
     'penalized_ctors.R'

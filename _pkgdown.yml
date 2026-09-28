@@ -132,6 +132,7 @@ reference:
   - MarginalBreakTerm
   - term_params
   - term_links
+  - term_charted
   - term_start
   - term_draw
   - term_level_design

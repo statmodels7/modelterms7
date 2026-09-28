@@ -1,3 +1,18 @@
+# modelterms7 0.81.0
+
+* `term_charted()`, a new generic, names the free values of a term that are
+  coordinates of a chart mapping onto a bounded set: for a structural term
+  every parameter whose link is not the identity, plus the additive
+  log-ratios of `regime()`'s transition matrix; for `nl()` the positions of
+  the scalar parameters with a link. statmodels7 reads it to check that a
+  coordinate at the edge of its chart is at a maximum.
+* `regime()` starts its levels at the quantiles of the response at
+  (2j-1)/(2k) when the fitting layer supplies the response on the scale of
+  the predictor, where every level started at zero and every gap at one. On
+  `MASS::geyser`, `waiting ~ regime(k = 2)` then reaches the maximum,
+  -1099.63, where the zero start stopped at -1134.01; with three regimes it
+  reaches -1053.39 where it stopped at -1132.68.
+
 # modelterms7 0.80.0
 
 * A break-point against its confinement limit gives its block a zero column.
