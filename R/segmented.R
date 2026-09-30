@@ -220,7 +220,10 @@ SegTerm <- S7::new_class(
 #'   `numericals7::smooth_probit()`. The smoother replaces the step and
 #'   the hinge by their smooth versions, \eqn{(1 + s'(u))/2} and
 #'   \eqn{(u + s(u))/2}, so every break-point becomes an ordinary
-#'   parameter of a \eqn{C^\infty} model: there is no working
+#'   parameter of a model as smooth as the smoother (\eqn{C^\infty} for
+#'   the probit and the hyperbolic, \eqn{C^3} for the quintic, whose
+#'   page says what that costs under an outer criterion, where the
+#'   probit is the choice): there is no working
 #'   parametrization, no auxiliary coefficient and no scaling schedule
 #'   (`c0` is ignored, with a message), the block is the true Jacobian
 #'   and the term is fitted by Gauss-Newton like [nl()]. A
@@ -230,7 +233,10 @@ SegTerm <- S7::new_class(
 #'   smoother's width is resolved at build from the covariate's spacing
 #'   (the median gap between distinct values, within groups where a
 #'   break-point development supplies a partition) unless the object
-#'   carries one, and is reported: it is the width of the transition, the
+#'   carries one; for the quintic, which is exact outside its width, it is
+#'   raised to at least 0.55 times the largest gap over the range a
+#'   break-point may take, so that a break-point cannot sit in a gap with
+#'   no observation within its width. The width is reported: it is the width of the transition, the
 #'   bent-cable reading, and the smoothing bias it buys is confined to a
 #'   window of that width (probit, quintic) or decays as \eqn{c/(4|u|)}
 #'   (hyperbolic). The objective is still multimodal in the positions --
@@ -1342,6 +1348,20 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
     # the covariate varies (checked above), so the global gap set is
     # non-empty
     global_sp <- stats::median(gaps_of(xv))
+    # the largest gap over the range a break-point is confined to: a
+    # smoother exact outside a radius (the quintic) gives a break-point in a
+    # gap wider than twice that radius no curvature, and the median spacing
+    # does not bound the largest gap (about log2(n) median spacings among n
+    # uniform points), so numericals7::smoother_width() is told it
+    conf <- as.numeric(stats::quantile(xv, c(0.05, 0.95), names = FALSE))
+    maxgap_of <- function(v) {
+      u <- sort(unique(v))
+      if (length(u) < 2L) return(NA_real_)
+      k <- which(u[-1L] > conf[1L] & u[-length(u)] < conf[2L])
+      if (length(k)) max(diff(u)[k]) else NA_real_
+    }
+    global_mg <- maxgap_of(xv)
+    if (is.na(global_mg)) global_mg <- 0
     gp <- NULL
     gcols <- NULL
     for (k in seq_len(term@npsi)) {
@@ -1361,6 +1381,10 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
         g <- gaps_of(xv[Zg[, j] == 1])
         if (length(g)) stats::median(g) else global_sp
       }, numeric(1))
+      per_mg <- vapply(seq_len(ncol(Zg)), function(j) {
+        g <- maxgap_of(xv[Zg[, j] == 1])
+        if (is.na(g)) global_mg else g
+      }, numeric(1))
     }
     floorw <- numericals7::smoother_width_floor(smoothed, diff(rr))
     if (isTRUE(smoothed@per_group)) {
@@ -1371,7 +1395,7 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
                    "gives."), call. = FALSE)
       }
       wg <- if (is.null(smoothed@width)) {
-        numericals7::smoother_width(smoothed, per)
+        numericals7::smoother_width(smoothed, per, max_gap = per_mg)
       } else {
         rep(smoothed@width, length(per))
       }
@@ -1386,7 +1410,9 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
                      group_cols = gcols, width = stats::median(wg))
     } else {
       sp <- if (!is.null(per)) stats::median(per) else global_sp
-      wd <- numericals7::smoother_width(smoothed, sp)
+      # one width shared by the groups covers the widest of their gaps
+      mg <- if (!is.null(per)) max(per_mg) else global_mg
+      wd <- numericals7::smoother_width(smoothed, sp, max_gap = mg)
       if (wd < floorw) {
         stop(sprintf(paste("the smoother's width (%.3g) is below the floor",
                            "%.3g = the width at which the Jacobian column,",

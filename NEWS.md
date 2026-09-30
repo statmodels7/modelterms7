@@ -1,3 +1,21 @@
+# modelterms7 0.84.0
+
+* A smoothed break-point term passes numericals7 the largest gap between
+  consecutive distinct values of its covariate over the range a break-point
+  may take (the central 90 per cent), per group where a development supplies
+  a partition and the widest of the groups' where one width is shared.
+  `smooth_quintic()`, exact outside its width, then has its width raised to
+  at least 0.55 times that gap, so a break-point cannot sit in a gap with no
+  observation within its width. Measured on 400 uniform points, a `jump()`
+  whose fitted break-point had landed in a gap of 0.0155 against 2h = 0.0129
+  had its column exactly zero and was named not identified. The probit and
+  the hyperbolic keep their widths. Requires numericals7 0.17.0.
+
+* The page of `seg()`, `jump()` and `jseg()` no longer calls a smoothed
+  model C^infinity whatever the smoother: it is as smooth as the smoother,
+  C^3 for the quintic, whose page says what that costs under an outer
+  criterion.
+
 # modelterms7 0.83.0
 
 * `term_predict()` on a `random()` term takes `unseen = c("error", "zero")`.

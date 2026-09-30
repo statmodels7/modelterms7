@@ -178,3 +178,27 @@ test_that("a smoothed seg converges to the sharp answer on a smooth truth", {
                         smoothed = numericals7::smooth_probit(h = 0.05)))
   expect_lt(abs(as.numeric(sharp) - as.numeric(smoothd)), 0.05)
 })
+
+test_that("the quintic's width covers half of the largest gap a break-point may sit in", {
+  # 400 uniform points: the largest gap is about log2(400) = 8.6 median
+  # spacings, against the 3.61 the quintic's width takes from the spacing
+  set.seed(3)
+  d <- data.frame(x = stats::runif(400))
+  u <- sort(unique(d$x))
+  conf <- stats::quantile(d$x, c(0.05, 0.95), names = FALSE)
+  k <- which(u[-1L] > conf[1L] & u[-length(u)] < conf[2L])
+  mg <- max(diff(u)[k])
+  g <- stats::median(diff(u))
+  expect_gt(mg, 2 * 5 * g / (2 * log(2)))
+  tm <- term_build(jump(x, smoothed = numericals7::smooth_quintic()), d)
+  expect_equal(tm@blueprint$smooth$width, 0.55 * mg)
+  # a break-point at the middle of that gap keeps an observation inside
+  # its width, so its column is not zero
+  j <- k[which.max(diff(u)[k])]
+  mid <- (u[j] + u[j + 1L]) / 2
+  expect_gt(min(abs(d$x - mid)), 0)
+  expect_lt(min(abs(d$x - mid)), tm@blueprint$smooth$width)
+  # the probit, which is not exact outside a radius, keeps its width
+  tp <- term_build(jump(x, smoothed = numericals7::smooth_probit()), d)
+  expect_equal(tp@blueprint$smooth$width, g)
+})

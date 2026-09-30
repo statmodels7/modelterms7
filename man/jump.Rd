@@ -45,7 +45,10 @@ documented above) or a \pkg{numericals7}
 \code{numericals7::smooth_probit()}. The smoother replaces the step and
 the hinge by their smooth versions, \eqn{(1 + s'(u))/2} and
 \eqn{(u + s(u))/2}, so every break-point becomes an ordinary
-parameter of a \eqn{C^\infty} model: there is no working
+parameter of a model as smooth as the smoother (\eqn{C^\infty} for
+the probit and the hyperbolic, \eqn{C^3} for the quintic, whose
+page says what that costs under an outer criterion, where the
+probit is the choice): there is no working
 parametrization, no auxiliary coefficient and no scaling schedule
 (\code{c0} is ignored, with a message), the block is the true Jacobian
 and the term is fitted by Gauss-Newton like \code{\link[=nl]{nl()}}. A
@@ -55,7 +58,10 @@ that constrained the discontinuous constructions having gone. The
 smoother's width is resolved at build from the covariate's spacing
 (the median gap between distinct values, within groups where a
 break-point development supplies a partition) unless the object
-carries one, and is reported: it is the width of the transition, the
+carries one; for the quintic, which is exact outside its width, it is
+raised to at least 0.55 times the largest gap over the range a
+break-point may take, so that a break-point cannot sit in a gap with
+no observation within its width. The width is reported: it is the width of the transition, the
 bent-cable reading, and the smoothing bias it buys is confined to a
 window of that width (probit, quintic) or decays as \eqn{c/(4|u|)}
 (hyperbolic). The objective is still multimodal in the positions --
