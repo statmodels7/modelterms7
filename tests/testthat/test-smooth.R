@@ -94,8 +94,9 @@ test_that("by a factor gives one smooth per level with a shared parameter", {
 test_that("by a numeric is a varying-coefficient term", {
   built <- term_build(s(x, bspline_smooth(k = 6), by = w), dd)
   plain <- term_build(s(x, bspline_smooth(k = 6)), dd)
-  expect_identical(term_npar(built), term_npar(plain))
-  expect_equal(term_matrix(built), dd$w * term_matrix(plain),
+  # the constant is kept: one more column than the centered smooth
+  expect_identical(term_npar(built), term_npar(plain) + 1L)
+  expect_equal(term_matrix(built), dd$w * cbind(1, term_matrix(plain)),
                ignore_attr = TRUE)
   res <- check_term(s(x, bspline_smooth(k = 6), by = w), dd, verbose = FALSE)
   expect_true(all(res$status == "OK"))

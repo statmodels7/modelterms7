@@ -178,8 +178,14 @@ SmoothTerm <- S7::new_class(
 #'
 #' A **numeric** `by` gives a varying-coefficient term: the smooth multiplies
 #' that variable, and the fitted function is the coefficient of `by` as it
-#' changes with the covariate. It has no levels, so `by_hyper = "level"` is
-#' rejected rather than read as `"shared"`.
+#' changes with the covariate. The term is not centered: its first column is
+#' the constant times `by`, unpenalized and named `const`, because the
+#' constant of the coefficient is the main effect of `by`, which no other term
+#' carries (this is also what \pkg{mgcv} does). Writing `by` in the formula as
+#' well makes that column aliased. The default label is `s(x):z` for a `by`
+#' called `z`, so a formula may carry `s(x)` and `s(x, by = z)` together. A
+#' numeric `by` has no levels, so `by_hyper = "level"` is rejected rather than
+#' read as `"shared"`.
 #'
 #' @section Sparse storage:
 #' A factor `by` is the one place a smooth's block can be sparse, each row
@@ -657,7 +663,8 @@ te_smoothers <- function(smooths, nv) {
       if (nv > 1L) sprintf(", or a list of %d", nv) else ""),
       call. = FALSE)
   }
-  if (is.null(label)) label <- default_label
+  default <- is.null(label)
+  if (default) label <- default_label
   if (!is.character(label) || length(label) != 1L || is.na(label) ||
       !nzchar(label)) {
     stop("'label' must be a single non-empty character string.",
@@ -689,12 +696,21 @@ te_smoothers <- function(smooths, nv) {
   deferred <- identical(by_hyper, "level") ||
     any(vapply(smoothers, function(sm) !is.null(sm@penalty), logical(1)))
   SmoothTerm(label = label, vars = vars, by = by, sparse = sparse,
-             spec = list(smoothers = smoothers, by_hyper = by_hyper),
+             spec = list(smoothers = smoothers, by_hyper = by_hyper,
+                         default_label = default),
              hyper = if (deferred) as_hyper(hyper, label)
                      else smooth_hyper(hyper, names, label),
              ids = check_ids(ids, if (deferred) NULL else names, label),
              X = NULL, coef_names = character(0),
              blueprint = list(), penalty = NULL)
+}
+
+# A roughness matrix with a zero row and column in front, for the constant
+# column a numeric `by` puts back: the constant is not penalized.
+.smooth_pad_const <- function(P) {
+  out <- matrix(0, nrow(P) + 1L, ncol(P) + 1L)
+  out[-1L, -1L] <- as.matrix(P)
+  out
 }
 
 # the covariate values, one column per variable
@@ -902,6 +918,26 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
     core <- list(kind = "tensor", basis = tb)
   }
 
+  by <- .smooth_by(term@by, data)
+  # A NUMERIC `by` IS NOT CENTERED. The term is f(x) z, and the constant of
+  # f is the coefficient of z itself, which no other term carries: the
+  # centered block would leave it out and the fitted function would not be
+  # the coefficient of z. So a leading unpenalized column, the constant, is
+  # put back before the block is multiplied by z, as mgcv does. A factor
+  # `by` stays centered, each level's constant being its main effect.
+  if (!is.null(by) && identical(by$kind, "numeric")) {
+    Z <- cbind(1, Z)
+    nm <- c("const", nm)
+    P <- if (is.list(P)) lapply(P, .smooth_pad_const) else .smooth_pad_const(P)
+    unpen <- unpen + 1L
+    # the default label names the by variable, as mgcv's s(x):z does, so
+    # that s(x) and s(x, by = z) in one formula do not share their names
+    if (isTRUE(term@spec$default_label)) {
+      term@label <- paste0(term@label, ":", paste(deparse(term@by),
+                                                  collapse = ""))
+    }
+  }
+
   # THE PENALTY OF ONE LEVEL, kept before the `by` expansion widens it. A
   # per-level reading needs it as it stands here, one copy rather than m.
   P_block <- P
@@ -911,7 +947,6 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
   # settled here and carried to the blueprint: without a factor `by` there is
   # nothing sparse to build, so the answer is FALSE whatever was asked
   sp <- FALSE
-  by <- .smooth_by(term@by, data)
   if (!is.null(by)) {
     if (identical(by$kind, "factor")) {
       m <- nlevels(by$value)
@@ -1158,7 +1193,8 @@ S7::method(term_predict, SmoothTerm) <- function(term, newdata, ...) {
       Z <- .smooth_by_block(Z, by$value, length(bp$by_levels),
                             isTRUE(bp$sparse))
     } else {
-      Z <- by$value * Z
+      # the constant column the build put back, then the multiplication
+      Z <- by$value * cbind(1, Z)
     }
   }
   colnames(Z) <- term@coef_names

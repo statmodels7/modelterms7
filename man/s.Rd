@@ -159,8 +159,14 @@ to, \code{hyper = c(lambda.a = 2)}, and so is an \code{id}.
 
 A \strong{numeric} \code{by} gives a varying-coefficient term: the smooth multiplies
 that variable, and the fitted function is the coefficient of \code{by} as it
-changes with the covariate. It has no levels, so \code{by_hyper = "level"} is
-rejected rather than read as \code{"shared"}.
+changes with the covariate. The term is not centered: its first column is
+the constant times \code{by}, unpenalized and named \code{const}, because the
+constant of the coefficient is the main effect of \code{by}, which no other term
+carries (this is also what \pkg{mgcv} does). Writing \code{by} in the formula as
+well makes that column aliased. The default label is \code{s(x):z} for a \code{by}
+called \code{z}, so a formula may carry \code{s(x)} and \code{s(x, by = z)} together. A
+numeric \code{by} has no levels, so \code{by_hyper = "level"} is rejected rather than
+read as \code{"shared"}.
 }
 
 \section{Sparse storage}{

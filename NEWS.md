@@ -1,3 +1,22 @@
+# modelterms7 0.86.0
+
+* **A smooth with a numeric `by` is no longer centered.** `s(x, by = z)` is
+  the term \eqn{f(x) z}, and the constant of \eqn{f} is the coefficient of
+  `z` itself, which no other term carries. The centered block left it out,
+  so a fit missed the main effect of `z` unless the formula also wrote `z`:
+  measured on 400 simulated observations of
+  \eqn{\sin(2\pi x) + (1 + 2x^2) z}, `y ~ s(x) + s(x, by = z)` had 5.33
+  effective degrees of freedom and fitted values 6.3 away from mgcv's, where
+  mgcv, which does not center such a term, has 11.64. The block now carries a
+  leading unpenalized column `const`, the constant times `z`, in `s()` and in
+  `te()`, and the same model has 11.95571 effective degrees of freedom
+  against mgcv's 11.95571, the fitted values 2.5e-07 apart. Writing `z` in
+  the formula as well makes the column aliased. A factor `by` stays centered.
+
+* The default label of a smooth with a numeric `by` names the variable,
+  `s(x):z` as in mgcv, so a formula may carry `s(x)` and `s(x, by = z)`
+  without the two giving their coefficients the same names.
+
 # modelterms7 0.85.0
 
 * A `linpar()` written in a formula that carries an intercept drops its own
