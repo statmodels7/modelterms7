@@ -74,6 +74,11 @@ expression gives a numeric vector, and a response constructor such as
 The intercept convention is the formula's own, carried into the collected
 parametric block. \code{y ~ ridge(~ g)} still produces an intercept-only
 \code{linpar} block, and \code{y ~ ridge(~ g) - 1} produces no \code{linpar} block at all.
+
+A \code{\link[=linpar]{linpar()}} written in a formula that carries an intercept drops its own
+column \code{(Intercept)} after its model matrix is built, so its factors keep
+the coding they have with an intercept and \code{y ~ linpar(~ x + g)} gives the
+columns of \code{lm(y ~ x + g)}. Under \verb{0 +} it keeps the column.
 }
 
 \section{One covariate is removed}{
@@ -123,6 +128,10 @@ vapply(out2$terms, term_is_built, logical(1))
 # The intercept convention is the formula's own.
 names(interpret_formula(y ~ ridge(~ g), dd)$terms)
 names(interpret_formula(y ~ ridge(~ g) - 1, dd)$terms)
+
+# A linpar() written beside the formula's intercept drops its own.
+li <- interpret_formula(y ~ linpar(~ x1 + g), dd)
+term_coef_names(term_build(li$terms[["linpar(~x1 + g)"]], dd))
 
 # An interaction is a covariate: `:` is never evaluated.
 interpret_formula(y ~ x1:x2 + g, dd)$terms$linpar@formula

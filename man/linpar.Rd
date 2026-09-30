@@ -63,6 +63,12 @@ explicit constructor is for callers wanting more than one parametric block
 with distinct labels, or wanting to set \code{sparse} or \code{contrasts} on it.
 Arguments for the block \code{\link[=interpret_formula]{interpret_formula()}} builds implicitly go through
 that function's own \code{linpar} argument.
+
+The intercept belongs to the formula. When the formula carries one, a
+\code{linpar()} written in it drops its own column \code{(Intercept)} after the model
+matrix is built, so its factors keep their contrasts and
+\code{y ~ linpar(~ x + g)} gives the columns of \code{lm(y ~ x + g)}. Under \verb{0 +} the
+block keeps its intercept.
 }
 
 \section{Sparse storage}{

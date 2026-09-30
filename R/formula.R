@@ -50,6 +50,11 @@ NULL
 #' parametric block. `y ~ ridge(~ g)` still produces an intercept-only
 #' `linpar` block, and `y ~ ridge(~ g) - 1` produces no `linpar` block at all.
 #'
+#' A [linpar()] written in a formula that carries an intercept drops its own
+#' column `(Intercept)` after its model matrix is built, so its factors keep
+#' the coding they have with an intercept and `y ~ linpar(~ x + g)` gives the
+#' columns of `lm(y ~ x + g)`. Under `0 +` it keeps the column.
+#'
 #' # One covariate is removed
 #'
 #' A [seg()] or [jseg()] term built with `linear = TRUE`, which is the default,
@@ -128,6 +133,10 @@ NULL
 #' names(interpret_formula(y ~ ridge(~ g), dd)$terms)
 #' names(interpret_formula(y ~ ridge(~ g) - 1, dd)$terms)
 #'
+#' # A linpar() written beside the formula's intercept drops its own.
+#' li <- interpret_formula(y ~ linpar(~ x1 + g), dd)
+#' term_coef_names(term_build(li$terms[["linpar(~x1 + g)"]], dd))
+#'
 #' # An interaction is a covariate: `:` is never evaluated.
 #' interpret_formula(y ~ x1:x2 + g, dd)$terms$linpar@formula
 #'
@@ -192,6 +201,7 @@ interpret_formula <- function(formula, data, linpar = list()) {
   }
 
   ordinary <- .absorb_linear(ordinary, specials)
+  if (intercept) specials <- .yield_intercept(specials)
 
   # The IMPLICIT linpar is the one a caller never writes -- the bare
   # covariates of the formula collapsed into one term -- so the only place
@@ -211,6 +221,23 @@ interpret_formula <- function(formula, data, linpar = list()) {
 
   list(response = response, terms = terms_list,
        intercept = intercept, formula = formula)
+}
+
+# The formula's intercept lives in the implicit block, so a linpar() written
+# beside it gives its own up. The column is removed after the coding (see
+# LinparTerm@drop_intercept); a block whose formula is nothing but the
+# intercept is left alone, having no other column to keep.
+.yield_intercept <- function(specials) {
+  for (nm in names(specials)) {
+    tm <- specials[[nm]]
+    if (!S7::S7_inherits(tm, LinparTerm)) next
+    tt <- stats::terms(tm@formula)
+    if (attr(tt, "intercept") == 1L && length(attr(tt, "term.labels"))) {
+      tm@drop_intercept <- TRUE
+      specials[[nm]] <- tm
+    }
+  }
+  specials
 }
 
 # A break-point term that carries the linear effect carries the column the

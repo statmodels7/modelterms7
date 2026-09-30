@@ -37,6 +37,12 @@ NULL
 #' Arguments for the block [interpret_formula()] builds implicitly go through
 #' that function's own `linpar` argument.
 #'
+#' The intercept belongs to the formula. When the formula carries one, a
+#' `linpar()` written in it drops its own column `(Intercept)` after the model
+#' matrix is built, so its factors keep their contrasts and
+#' `y ~ linpar(~ x + g)` gives the columns of `lm(y ~ x + g)`. Under `0 +` the
+#' block keeps its intercept.
+#'
 #' @section Sparse storage:
 #' `sparse = TRUE` builds through [Matrix::sparse.model.matrix()], which builds
 #' the block sparse. Building a dense matrix and compressing it would cost the
@@ -377,7 +383,7 @@ S7::method(term_build, LinparTerm) <- function(term, data, ...) {
   b <- .design_matrix(tt, mf,
                       if (length(term@contrasts)) term@contrasts else NULL,
                       sp)
-  X <- b$X
+  X <- .drop_intercept_col(b$X, term@drop_intercept)
   cn <- colnames(X)
   if (nzchar(term@label)) cn <- paste(term@label, cn, sep = ".")
   colnames(X) <- cn
@@ -390,9 +396,19 @@ S7::method(term_build, LinparTerm) <- function(term, data, ...) {
     # the SETTLED storage, not what the constructor was given: new data may
     # carry any number of rows, and a prediction that decided again could
     # build a block of a different kind from the one that was fitted
-    sparse = sp
+    sparse = sp,
+    drop_intercept = isTRUE(term@drop_intercept)
   )
   term
+}
+
+# The column the formula's own intercept already supplies, removed after the
+# coding so that the factors keep their contrasts.
+.drop_intercept_col <- function(X, drop) {
+  if (!isTRUE(drop)) return(X)
+  j <- colnames(X) == "(Intercept)"
+  if (!any(j)) return(X)
+  X[, !j, drop = FALSE]
 }
 
 #' @title A Parametric Block at New Rows
@@ -454,6 +470,7 @@ S7::method(term_predict, LinparTerm) <- function(term, newdata, ...) {
   # the STORAGE is part of the blueprint: a prediction that densified would
   # spend at new data what the build was careful not to
   X <- .design_matrix(bp$terms, mf, bp$contrasts, isTRUE(bp$sparse))$X
+  X <- .drop_intercept_col(X, bp$drop_intercept)
   colnames(X) <- term@coef_names
   X
 }

@@ -407,9 +407,14 @@ structural_term <- S7::new_class(
 #' @param contrasts A named list of contrasts for the formula's factors, in
 #'   [stats::model.matrix()]'s own form, or an empty list for the session's
 #'   defaults.
+#' @param drop_intercept `TRUE` to remove the column `(Intercept)` after the
+#'   model matrix is built, so that the factors keep the coding they have in a
+#'   formula with an intercept. [interpret_formula()] sets it on a `linpar()`
+#'   written in a formula that already carries an intercept; `FALSE` by
+#'   default.
 #'
 #' @return An S7 object of class `LinparTerm`, inheriting from
-#'   [additive_term()] and [model_term()], with the three properties above
+#'   [additive_term()] and [model_term()], with the four properties above
 #'   beside the ten they supply.
 #'
 #' @seealso [linpar()], the constructor to use; [interpret_formula()], which
@@ -449,6 +454,11 @@ LinparTerm <- S7::new_class(
     # NULL until the build settles it from the design; the settled value is
     # what the blueprint carries.
     sparse = S7::class_any,
-    contrasts = S7::new_property(S7::class_list, default = quote(list()))
+    contrasts = S7::new_property(S7::class_list, default = quote(list())),
+    # the formula's intercept lives in the implicit block, so a linpar()
+    # written beside it drops its own intercept column AFTER the coding: a
+    # formula rewritten as ~ . - 1 would code its factors with full
+    # indicators and alias one of them against that intercept
+    drop_intercept = S7::new_property(S7::class_logical, default = FALSE)
   )
 )

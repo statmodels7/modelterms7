@@ -18,7 +18,8 @@ LinparTerm(
   penalty = NULL,
   formula = NULL,
   sparse = NULL,
-  contrasts = list()
+  contrasts = list(),
+  drop_intercept = FALSE
 )
 }
 \arguments{
@@ -78,10 +79,16 @@ the build choose. It is kept as given; the storage actually used is in
 \item{contrasts}{A named list of contrasts for the formula's factors, in
 \code{\link[stats:model.matrix]{stats::model.matrix()}}'s own form, or an empty list for the session's
 defaults.}
+
+\item{drop_intercept}{\code{TRUE} to remove the column \code{(Intercept)} after the
+model matrix is built, so that the factors keep the coding they have in a
+formula with an intercept. \code{\link[=interpret_formula]{interpret_formula()}} sets it on a \code{linpar()}
+written in a formula that already carries an intercept; \code{FALSE} by
+default.}
 }
 \value{
 An S7 object of class \code{LinparTerm}, inheriting from
-\code{\link[=additive_term]{additive_term()}} and \code{\link[=model_term]{model_term()}}, with the three properties above
+\code{\link[=additive_term]{additive_term()}} and \code{\link[=model_term]{model_term()}}, with the four properties above
 beside the ten they supply.
 }
 \description{

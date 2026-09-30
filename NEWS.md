@@ -1,3 +1,18 @@
+# modelterms7 0.85.0
+
+* A `linpar()` written in a formula that carries an intercept drops its own
+  column `(Intercept)` after its model matrix is built, so its factors keep
+  their contrasts and `y ~ linpar(~ x * g, contrasts = ...)` gives the
+  columns of `lm(y ~ x * g, contrasts = ...)`. Before, the two intercepts
+  shared the name `(Intercept)` and `statmodels7::statmod()` stopped with
+  "duplicate 'row.names' are not allowed"; with a label the second one was
+  aliased with a warning. The column is removed after the coding and not by
+  writing the formula as `~ . - 1`, which would code a factor with full
+  indicators and alias one of them against the formula's intercept. Under
+  `0 +` the block keeps its intercept. `LinparTerm` gains the property
+  `drop_intercept`, set by `interpret_formula()` and recorded in the
+  blueprint, so `term_predict()` removes the column too.
+
 # modelterms7 0.84.0
 
 * A smoothed break-point term passes numericals7 the largest gap between
