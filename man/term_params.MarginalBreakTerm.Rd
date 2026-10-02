@@ -18,10 +18,11 @@ break-point, then the changes of slope \code{gamma1} ... and the changes of
 level \code{delta1} ....
 }
 \details{
-The prior's parameters are \code{mk} and \code{tauk} under the default Gaussian, the
-location and the scale of break-point \eqn{k}. Where \code{random(distrib = )}
-named another family the names are that family's own, its location fixed at
-zero and \code{mk} carrying the position, so a Student t prior adds \code{nuk}.
+The prior's parameters are \code{psik.mean} and \code{psik.sd} under the default
+Gaussian, the mean and the standard deviation of the positions of
+break-point \eqn{k} in the population. Where \code{random(distrib = )} named
+another family the names are that family's own, its location fixed at zero
+and \code{psi1.mean} carrying the position, so a Student t prior adds \code{nu}.
 
 Which of \code{gamma} and \code{delta} appear is the kind: \code{"seg"} has the changes of
 slope, \code{"jump"} the changes of level, \code{"jseg"} both. Only \code{"seg"} and

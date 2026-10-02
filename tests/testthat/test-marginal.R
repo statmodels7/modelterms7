@@ -23,7 +23,7 @@ test_that("the constructor takes the psi ~ random subformula and nothing else", 
   tm <- jump(x, psi ~ random(~1 | id), marginal = TRUE)
   expect_true(S7::S7_inherits(tm, MarginalBreakTerm))
   expect_true(S7::S7_inherits(tm, structural_term))
-  expect_identical(term_params(tm), c("m1", "tau1", "delta1"))
+  expect_identical(term_params(tm), c("psi1.mean", "psi1.sd", "delta1"))
 
   expect_error(jump(x, marginal = TRUE), "requires the break-point")
   expect_error(jump(x, psi ~ random(~1 | id), npsi = 9, marginal = TRUE),
@@ -73,7 +73,7 @@ test_that("the exact sum agrees with a brute-force quadrature of the marginal", 
   tm <- term_build(jump(x, psi ~ random(~1 | id), marginal = TRUE), dd)
   cb <- marg_cb(dd)
   eta <- rep(1, nrow(dd))
-  psi <- list(m1 = 4.8, tau1 = 0.6, delta1 = 1.8)
+  psi <- list(psi1.mean = 4.8, psi1.sd = 0.6, delta1 = 1.8)
   out <- term_loglik(tm, eta, dd$y, cb$ld, cb$sc, psi)
 
   brute <- 0
@@ -100,10 +100,10 @@ test_that("the jacobian is exact against numDeriv, row by row", {
   eta <- rep(1, nrow(dd))
   v0 <- c(4.8, 0.6, 1.8)
   out <- term_loglik(tm, eta, dd$y, cb$ld, cb$sc,
-                     list(m1 = v0[1], tau1 = v0[2], delta1 = v0[3]))
+                     list(psi1.mean = v0[1], psi1.sd = v0[2], delta1 = v0[3]))
   J <- numDeriv::jacobian(function(v)
     term_loglik(tm, eta, dd$y, cb$ld, cb$sc,
-                list(m1 = v[1], tau1 = v[2], delta1 = v[3]))$loglik, v0)
+                list(psi1.mean = v[1], psi1.sd = v[2], delta1 = v[3]))$loglik, v0)
   expect_lt(max(abs(J - out$jacobian)), 1e-6 * max(1, max(abs(J))))
 })
 
@@ -113,7 +113,7 @@ test_that("the posterior carries Fisher's identity and the levels", {
   tm <- term_build(jump(x, psi ~ random(~1 | id), marginal = TRUE), dd)
   cb <- marg_cb(dd)
   eta <- rep(1, nrow(dd))
-  psi <- list(m1 = 4.8, tau1 = 0.6, delta1 = 1.8)
+  psi <- list(psi1.mean = 4.8, psi1.sd = 0.6, delta1 = 1.8)
   P <- term_posterior(tm, eta, dd$y, cb$ld, psi)
   expect_equal(rowSums(P), rep(1, nrow(dd)), tolerance = 1e-12)
   # the shifted probability grows with the covariate within a group, the
@@ -151,7 +151,7 @@ test_that("the observed Hessian agrees with numDeriv on the joint unknowns", {
   tm <- term_build(jump(x, psi ~ random(~1 | id), marginal = TRUE), dd)
   cb <- marg_cb(dd)
   eta <- rep(1, n)
-  psi <- list(m1 = 4.8, tau1 = 0.6, delta1 = 1.8)
+  psi <- list(psi1.mean = 4.8, psi1.sd = 0.6, delta1 = 1.8)
   seed <- list(cbind(rep(1, n), 0, 0, 0))
   oh <- term_hessian(tm, eta, dd$y, cb$ld,
                      grad = function(e, i)
@@ -161,7 +161,7 @@ test_that("the observed Hessian agrees with numDeriv on the joint unknowns", {
                      psi = psi, seed = seed, cols = 2:4, level = 1L)
   f_u <- function(u) {
     sum(term_loglik(tm, rep(u[1], n), dd$y, cb$ld, cb$sc,
-                    list(m1 = u[2], tau1 = exp(u[3]), delta1 = u[4]))$loglik)
+                    list(psi1.mean = u[2], psi1.sd = exp(u[3]), delta1 = u[4]))$loglik)
   }
   u0 <- c(1, 4.8, log(0.6), 1.8)
   expect_equal(oh$gradient, numDeriv::grad(f_u, u0), tolerance = 1e-6)
@@ -190,7 +190,7 @@ test_that("the latent posterior tracks the truth at the generating values", {
   tm <- term_build(jump(x, psi ~ random(~1 | id), marginal = TRUE), dd)
   cb <- marg_cb(dd)
   lat <- term_latent(tm, rep(1, nrow(dd)), dd$y, cb$ld,
-                     list(m1 = 5, tau1 = 0.5, delta1 = 2))
+                     list(psi1.mean = 5, psi1.sd = 0.5, delta1 = 2))
   expect_identical(nrow(lat), 8L)
   expect_true(all(is.finite(lat$mean)) && all(lat$sd > 0))
   truth <- tapply(dd$psi_true, dd$id, function(v) v[1L])
@@ -201,18 +201,18 @@ test_that("the start reads the exact profile off the target", {
   dd <- marg_data(8L, 16L, seed = 13)
   tm <- term_build(jump(x, psi ~ random(~1 | id), marginal = TRUE), dd)
   st <- term_start(tm, target = dd$y)
-  expect_identical(names(st), c("m1", "tau1", "delta1"))
-  expect_lt(abs(st[["m1"]] - 5), 1)
+  expect_identical(names(st), c("psi1.mean", "psi1.sd", "delta1"))
+  expect_lt(abs(st[["psi1.mean"]] - 5), 1)
   expect_gt(st[["delta1"]], 1)
-  expect_true(is.finite(st[["tau1"]]))
+  expect_true(is.finite(st[["psi1.sd"]]))
   # without a target the covariate answers, with the change at zero
   st0 <- term_start(tm)
   expect_identical(st0[["delta1"]], 0)
   # a caller's psi seeds the position either way
   tm2 <- term_build(jump(x, psi ~ random(~1 | id), marginal = TRUE,
                          psi = 3.3), dd)
-  expect_identical(term_start(tm2)[["m1"]], 3.3)
-  expect_identical(term_start(tm2, target = dd$y)[["m1"]], 3.3)
+  expect_identical(term_start(tm2)[["psi1.mean"]], 3.3)
+  expect_identical(term_start(tm2, target = dd$y)[["psi1.mean"]], 3.3)
 })
 
 # ---- several break-points (the product partition) ----
@@ -232,10 +232,10 @@ test_that("two latent break-points agree with a brute-force 2-D quadrature", {
   tm <- term_build(jump(x, psi ~ random(~1 | id), npsi = 2, marginal = TRUE),
                    dd)
   expect_identical(term_params(tm),
-                   c("m1", "tau1", "m2", "tau2", "delta1", "delta2"))
+                   c("psi1.mean", "psi1.sd", "psi2.mean", "psi2.sd", "delta1", "delta2"))
   cb <- marg_cb(dd)
   eta <- rep(1, nrow(dd))
-  psi <- list(m1 = 3.1, tau1 = 0.5, m2 = 6.8, tau2 = 0.4,
+  psi <- list(psi1.mean = 3.1, psi1.sd = 0.5, psi2.mean = 6.8, psi2.sd = 0.4,
               delta1 = 1.8, delta2 = -1.2)
   out <- term_loglik(tm, eta, dd$y, cb$ld, cb$sc, psi)
 
@@ -274,7 +274,7 @@ test_that("two latent break-points agree with a brute-force 2-D quadrature", {
   v0 <- c(3.1, 0.5, 6.8, 0.4, 1.8, -1.2)
   J <- numDeriv::jacobian(function(v)
     term_loglik(tm, eta, dd$y, cb$ld, cb$sc,
-                list(m1 = v[1], tau1 = v[2], m2 = v[3], tau2 = v[4],
+                list(psi1.mean = v[1], psi1.sd = v[2], psi2.mean = v[3], psi2.sd = v[4],
                      delta1 = v[5], delta2 = v[6]))$loglik, v0)
   expect_lt(max(abs(J - out$jacobian)), 1e-6 * max(1, max(abs(J))))
 
@@ -294,7 +294,7 @@ test_that("the two-break-point Hessian agrees with numDeriv", {
                    dd)
   cb <- marg_cb(dd)
   eta <- rep(1, n)
-  psi <- list(m1 = 3.1, tau1 = 0.5, m2 = 6.8, tau2 = 0.4,
+  psi <- list(psi1.mean = 3.1, psi1.sd = 0.5, psi2.mean = 6.8, psi2.sd = 0.4,
               delta1 = 1.8, delta2 = -1.2)
   seed <- list(cbind(rep(1, n), matrix(0, n, 6L)))
   oh <- term_hessian(tm, eta, dd$y, cb$ld,
@@ -305,8 +305,8 @@ test_that("the two-break-point Hessian agrees with numDeriv", {
                      psi = psi, seed = seed, cols = 2:7, level = 1L)
   f_u <- function(u) {
     sum(term_loglik(tm, rep(u[1], n), dd$y, cb$ld, cb$sc,
-                    list(m1 = u[2], tau1 = exp(u[3]), m2 = u[4],
-                         tau2 = exp(u[5]), delta1 = u[6],
+                    list(psi1.mean = u[2], psi1.sd = exp(u[3]), psi2.mean = u[4],
+                         psi2.sd = exp(u[5]), delta1 = u[6],
                          delta2 = u[7]))$loglik)
   }
   u0 <- c(1, 3.1, log(0.5), 6.8, log(0.4), 1.8, -1.2)
@@ -321,7 +321,7 @@ test_that("the general step Hessian matches the propagated one at one break-poin
   tm <- term_build(jump(x, psi ~ random(~1 | id), marginal = TRUE), dd)
   cb <- marg_cb(dd)
   eta <- rep(1, n)
-  psi <- list(m1 = 4.8, tau1 = 0.6, delta1 = 1.8)
+  psi <- list(psi1.mean = 4.8, psi1.sd = 0.6, delta1 = 1.8)
   seed <- list(cbind(rep(1, n), 0, 0, 0))
   gr <- function(e, i) matrix((dd$y[i] - e) / 0.4^2, ncol = 1L)
   he <- function(e, i) array(-1 / 0.4^2, c(length(i), 1L, 1L))
@@ -350,10 +350,10 @@ marg_seg_data <- function(mI = 4L, nI = 12L, seed = 31, kind = "seg") {
 test_that("the seg marginal agrees with a fine quadrature and numDeriv", {
   dd <- marg_seg_data(4L, 10L)
   tm <- term_build(seg(x, psi ~ random(~1 | id), marginal = TRUE), dd)
-  expect_identical(term_params(tm), c("beta", "m1", "tau1", "gamma1"))
+  expect_identical(term_params(tm), c("beta", "psi1.mean", "psi1.sd", "gamma1"))
   cb <- marg_cb(dd)
   eta <- rep(1, nrow(dd))
-  psi <- list(beta = 0.5, m1 = 4.8, tau1 = 0.6, gamma1 = -1.2)
+  psi <- list(beta = 0.5, psi1.mean = 4.8, psi1.sd = 0.6, gamma1 = -1.2)
   out <- term_loglik(tm, eta, dd$y, cb$ld, cb$sc, psi)
 
   # a fine trapezoid over the prior's support, sharing nothing with the
@@ -376,7 +376,7 @@ test_that("the seg marginal agrees with a fine quadrature and numDeriv", {
   v0 <- c(0.5, 4.8, 0.6, -1.2)
   J <- numDeriv::jacobian(function(v)
     term_loglik(tm, eta, dd$y, cb$ld, cb$sc,
-                list(beta = v[1], m1 = v[2], tau1 = v[3],
+                list(beta = v[1], psi1.mean = v[2], psi1.sd = v[3],
                      gamma1 = v[4]))$loglik, v0)
   expect_lt(max(abs(J - out$jacobian)), 2e-5 * max(1, max(abs(J))))
 
@@ -385,7 +385,7 @@ test_that("the seg marginal agrees with a fine quadrature and numDeriv", {
   P <- term_posterior(tm, eta, dd$y, cb$ld, psi)
   expect_equal(rowSums(P), rep(1, nrow(dd)), tolerance = 1e-10)
   lat <- term_latent(tm, eta, dd$y, cb$ld,
-                     list(beta = 0.5, m1 = 5, tau1 = 0.5, gamma1 = -1.2))
+                     list(beta = 0.5, psi1.mean = 5, psi1.sd = 0.5, gamma1 = -1.2))
   truth <- tapply(dd$psi_true, dd$id, function(v) v[1L])
   expect_gt(cor(lat$mean, as.numeric(truth)), 0.5)
 })
@@ -406,10 +406,10 @@ test_that("the seg marginal jacobian carries the edge panels' node motion", {
   eta <- rep(1, nrow(dd))
   v0 <- c(1.2, 0.7, -0.8)
   out <- term_loglik(tm, eta, dd$y, cb$ld, cb$sc,
-                     list(m1 = v0[1], tau1 = v0[2], gamma1 = v0[3]))
+                     list(psi1.mean = v0[1], psi1.sd = v0[2], gamma1 = v0[3]))
   J <- numDeriv::jacobian(function(v)
     term_loglik(tm, eta, dd$y, cb$ld, cb$sc,
-                list(m1 = v[1], tau1 = v[2], gamma1 = v[3]))$loglik, v0)
+                list(psi1.mean = v[1], psi1.sd = v[2], gamma1 = v[3]))$loglik, v0)
   expect_lt(max(abs(J - out$jacobian)), 2e-5 * max(1, max(abs(J))))
 })
 
@@ -423,7 +423,7 @@ test_that("the seg and jseg Hessians agree with numDeriv", {
     cb <- marg_cb(dd)
     eta <- rep(1, n)
     nmv <- term_params(tm)
-    v0 <- c(beta = 0.5, m1 = 4.8, tau1 = 0.6, gamma1 = -1.2,
+    v0 <- c(beta = 0.5, psi1.mean = 4.8, psi1.sd = 0.6, gamma1 = -1.2,
             delta1 = 1.5)[nmv]
     np <- length(nmv)
     seed <- list(cbind(rep(1, n), matrix(0, n, np)))
@@ -436,11 +436,11 @@ test_that("the seg and jseg Hessians agree with numDeriv", {
                        cols = 1L + seq_len(np), level = 1L)
     f_u <- function(u) {
       vv <- as.list(stats::setNames(u[-1L], nmv))
-      vv$tau1 <- exp(vv$tau1)
+      vv$psi1.sd <- exp(vv$psi1.sd)
       sum(term_loglik(tm, rep(u[1], n), dd$y, cb$ld, cb$sc, vv)$loglik)
     }
     z0 <- v0
-    z0["tau1"] <- log(v0[["tau1"]])
+    z0["psi1.sd"] <- log(v0[["psi1.sd"]])
     u0 <- c(1, unname(z0))
     expect_equal(oh$gradient, numDeriv::grad(f_u, u0), tolerance = 1e-5)
     Hn <- numDeriv::hessian(f_u, u0)
@@ -456,10 +456,10 @@ test_that("a t prior's masses and derivatives ride the cdf surface", {
   pr <- distributions7::fixed(distributions7::student_t1_distrib(), mu = 0)
   tm <- term_build(jump(x, psi ~ random(~1 | id, distrib = pr),
                         marginal = TRUE), dd)
-  expect_identical(term_params(tm), c("m1", "sigma", "nu", "delta1"))
+  expect_identical(term_params(tm), c("psi1.mean", "sigma", "nu", "delta1"))
   cb <- marg_cb(dd)
   eta <- rep(1, nrow(dd))
-  psi <- list(m1 = 4.8, sigma = 0.6, nu = 5, delta1 = 1.8)
+  psi <- list(psi1.mean = 4.8, sigma = 0.6, nu = 5, delta1 = 1.8)
   out <- term_loglik(tm, eta, dd$y, cb$ld, cb$sc, psi)
 
   # the independent route: a fine quadrature of the same marginal with the
@@ -483,7 +483,7 @@ test_that("a t prior's masses and derivatives ride the cdf surface", {
   v0 <- c(4.8, 0.6, 5, 1.8)
   J <- numDeriv::jacobian(function(v)
     term_loglik(tm, eta, dd$y, cb$ld, cb$sc,
-                list(m1 = v[1], sigma = v[2], nu = v[3],
+                list(psi1.mean = v[1], sigma = v[2], nu = v[3],
                      delta1 = v[4]))$loglik, v0)
   expect_lt(max(abs(J[, -3L] - out$jacobian[, -3L])),
             1e-6 * max(1, max(abs(J))))
@@ -501,7 +501,7 @@ test_that("a t prior's masses and derivatives ride the cdf surface", {
   lk_nu <- term_links(tm)$nu
   f_u <- function(u) {
     sum(term_loglik(tm, rep(u[1], n), dd$y, cb$ld, cb$sc,
-                    list(m1 = u[2], sigma = exp(u[3]),
+                    list(psi1.mean = u[2], sigma = exp(u[3]),
                          nu = linkfunctions7::linkinv(lk_nu, u[4]),
                          delta1 = u[5]))$loglik)
   }
@@ -528,8 +528,8 @@ test_that("three latent break-points match the bare-loop cell sum", {
   ms <- c(3, 6, 8.5)
   ts <- c(0.5, 0.4, 0.5)
   ds <- c(1.5, -1, 2)
-  psi <- list(m1 = ms[1], tau1 = ts[1], m2 = ms[2], tau2 = ts[2],
-              m3 = ms[3], tau3 = ts[3],
+  psi <- list(psi1.mean = ms[1], psi1.sd = ts[1], psi2.mean = ms[2], psi2.sd = ts[2],
+              psi3.mean = ms[3], psi3.sd = ts[3],
               delta1 = ds[1], delta2 = ds[2], delta3 = ds[3])
   out <- term_loglik(tm, eta, dd$y, cb$ld, cb$sc, psi)
 
@@ -569,8 +569,8 @@ test_that("three latent break-points match the bare-loop cell sum", {
   v0 <- c(ms[1], ts[1], ms[2], ts[2], ms[3], ts[3], ds)
   J3 <- numDeriv::jacobian(function(v)
     term_loglik(tm, eta, dd$y, cb$ld, cb$sc,
-                list(m1 = v[1], tau1 = v[2], m2 = v[3], tau2 = v[4],
-                     m3 = v[5], tau3 = v[6], delta1 = v[7], delta2 = v[8],
+                list(psi1.mean = v[1], psi1.sd = v[2], psi2.mean = v[3], psi2.sd = v[4],
+                     psi3.mean = v[5], psi3.sd = v[6], delta1 = v[7], delta2 = v[8],
                      delta3 = v[9]))$loglik, v0)
   expect_lt(max(abs(J3 - out$jacobian)), 1e-6 * max(1, max(abs(J3))))
 
@@ -633,7 +633,7 @@ test_that("the compiled seg quadrature is its R twin", {
     tm <- if (kind == "seg") seg(t, psi ~ random(~1 | id), marginal = TRUE, linear = lin) else
       jseg(t, psi ~ random(~1 | id), marginal = TRUE, linear = lin)
     b <- term_build(tm, d)
-    psi <- list(beta = 0.5, m1 = 4.6, tau1 = 0.7, gamma1 = -1, delta1 = 0.4)
+    psi <- list(beta = 0.5, psi1.mean = 4.6, psi1.sd = 0.7, gamma1 = -1, delta1 = 0.4)
     psi <- psi[term_params(b)]
     a <- .marg_seg_loglik(b, eta, y, logdens, score, psi)
     r <- .marg_seg_loglik_r(b, eta, y, logdens, score, psi)

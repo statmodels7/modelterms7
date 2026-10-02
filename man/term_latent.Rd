@@ -65,7 +65,7 @@ tm <- term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd)
 # with a spread well inside the prior's own 0.5.
 term_latent(tm, rep(0, 24), dd$y,
             logdens = function(e, i) dnorm(dd$y[i], e, 0.4, log = TRUE),
-            psi = list(m1 = 4.5, tau1 = 0.5, delta1 = 2))
+            psi = list(psi1.mean = 4.5, psi1.sd = 0.5, delta1 = 2))
 
 }
 \seealso{

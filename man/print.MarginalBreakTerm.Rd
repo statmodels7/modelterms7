@@ -21,7 +21,7 @@ The form is
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{<MarginalBreakTerm> 'jump' (jump): 1 latent break-point per group,
                     integrated out (3 groups)
-  parameters: m1, tau1, delta1
+  parameters: psi1.mean, psi1.sd, delta1
 }\if{html}{\out{</div>}}
 
 The prior line appears only where \code{random(distrib = )} named a family; under

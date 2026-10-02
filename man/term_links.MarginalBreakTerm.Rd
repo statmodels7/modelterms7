@@ -13,7 +13,7 @@ A named list of \pkg{linkfunctions7} links, one per entry of
 \code{\link[=term_params]{term_params()}}.
 }
 \description{
-The \strong{log} link on every \code{tauk}, a prior's own link on any parameter it
+The \strong{log} link on every \code{psik.sd}, a prior's own link on any parameter it
 contributes, and the identity on everything else. A prior scale must be
 positive; a position, a change of level and a change of slope are already
 unconstrained.

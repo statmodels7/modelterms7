@@ -62,7 +62,7 @@ NULL
 #' dd <- data.frame(id = rep(1:3, each = 8), x = rep(1:8, 3))
 #' dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
 #' tm <- term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd)
-#' term_levels(tm, list(m1 = 4.5, tau1 = 0.5, delta1 = 2))
+#' term_levels(tm, list(psi1.mean = 4.5, psi1.sd = 0.5, delta1 = 2))
 #'
 #' @export
 #' @aliases term_levels.structural_term
@@ -151,7 +151,7 @@ S7::method(term_levels, RegimeTerm) <- function(term, psi, ...) {
 #' # with a spread well inside the prior's own 0.5.
 #' term_latent(tm, rep(0, 24), dd$y,
 #'             logdens = function(e, i) dnorm(dd$y[i], e, 0.4, log = TRUE),
-#'             psi = list(m1 = 4.5, tau1 = 0.5, delta1 = 2))
+#'             psi = list(psi1.mean = 4.5, psi1.sd = 0.5, delta1 = 2))
 #'
 #' @export
 #' @aliases term_latent.structural_term
@@ -190,16 +190,17 @@ S7::method(term_latent, structural_term) <- function(term, eta, y, logdens,
 #' `group` is the grouping expression, taken from the break-point's `random()`
 #' subformula. `prior` is the latent's distribution: `NULL` for the Gaussian,
 #' or a \pkg{distributions7} object where `random(distrib = )` named one, and
-#' its location must be fixed at zero, `m1` carrying the position.
+#' its location must be fixed at zero, `psi1.mean` carrying the position.
 #'
 #' `spec` holds the resolved construction settings and `blueprint` the
 #' grouping and the interval structure [term_build()] worked out.
 #'
 #' # The parameters
 #'
-#' They are numbered, one set per break-point: `m1`, `tau1`, `delta1` for a
-#' one-break-point step term, with `m` the prior's location, `tau` its scale on
-#' a log chart, and `delta` the change of level. A continuous kind adds `beta`
+#' They are numbered, one set per break-point: `psi1.mean`, `psi1.sd`,
+#' `delta1` for a one-break-point step term, with `psi1.mean` the mean of the
+#' positions in the population, `psi1.sd` their standard deviation between
+#' groups on a log chart, and `delta1` the change of level. A continuous kind adds `beta`
 #' for the linear effect and `gamma1` for the change of slope.
 #'
 #' # What it costs
@@ -420,7 +421,7 @@ MarginalBreakTerm <- S7::new_class(
     if (any(loc %in% prior@params)) {
       stop(sprintf(paste("the prior's location ('%s') must be fixed at zero",
                          "-- fixed(%s, %s = 0) -- since the population",
-                         "position m1 carries it."),
+                         "position psi1.mean carries it."),
                    loc[1L], "student_t1_distrib()", loc[1L]), call. = FALSE)
     }
   }
@@ -438,9 +439,17 @@ MarginalBreakTerm <- S7::new_class(
 # The names of the prior's own parameters for one break-point: the
 # gaussian's are the position and the scale, named by the break-point; an
 # explicit prior contributes its own free names beside the position.
+# The names of break-point k's prior parameters under the default gaussian,
+# psi_ik ~ N(mean, sd^2): the mean of the positions in the population, which
+# is the population position, and their standard deviation between groups.
+# They were m1 and tau1 until modelterms7 0.90.0, names that did not say they
+# describe the position.
+.marg_mname <- function(k) paste0("psi", k, ".mean")
+.marg_tname <- function(k) paste0("psi", k, ".sd")
+
 .marg_prior_names <- function(term, k) {
-  if (is.null(term@prior)) c(paste0("m", k), paste0("tau", k))
-  else c("m1", term@prior@params)
+  if (is.null(term@prior)) c(.marg_mname(k), .marg_tname(k))
+  else c(.marg_mname(1L), term@prior@params)
 }
 
 #' @title The Parameters of a Marginal Break-Point Term
@@ -453,10 +462,11 @@ MarginalBreakTerm <- S7::new_class(
 #' level `delta1` ....
 #'
 #' @details
-#' The prior's parameters are `mk` and `tauk` under the default Gaussian, the
-#' location and the scale of break-point \eqn{k}. Where `random(distrib = )`
-#' named another family the names are that family's own, its location fixed at
-#' zero and `mk` carrying the position, so a Student t prior adds `nuk`.
+#' The prior's parameters are `psik.mean` and `psik.sd` under the default
+#' Gaussian, the mean and the standard deviation of the positions of
+#' break-point \eqn{k} in the population. Where `random(distrib = )` named
+#' another family the names are that family's own, its location fixed at zero
+#' and `psi1.mean` carrying the position, so a Student t prior adds `nu`.
 #'
 #' Which of `gamma` and `delta` appear is the kind: `"seg"` has the changes of
 #' slope, `"jump"` the changes of level, `"jseg"` both. Only `"seg"` and
@@ -496,7 +506,7 @@ S7::method(term_params, MarginalBreakTerm) <- function(term, ...) {
 #' @name term_links.MarginalBreakTerm
 #'
 #' @description
-#' The **log** link on every `tauk`, a prior's own link on any parameter it
+#' The **log** link on every `psik.sd`, a prior's own link on any parameter it
 #' contributes, and the identity on everything else. A prior scale must be
 #' positive; a position, a change of level and a change of slope are already
 #' unconstrained.
@@ -527,7 +537,7 @@ S7::method(term_links, MarginalBreakTerm) <- function(term, ...) {
   nm <- term_params(term)
   out <- stats::setNames(vector("list", length(nm)), nm)
   for (p in nm) {
-    out[[p]] <- if (grepl("^tau[0-9]+$", p)) {
+    out[[p]] <- if (grepl("^psi[0-9]+[.]sd$", p)) {
       linkfunctions7::log_link()
     } else if (!is.null(term@prior) && p %in% term@prior@params) {
       term@prior@link_params[[p]]
@@ -745,7 +755,7 @@ S7::method(term_build, MarginalBreakTerm) <- function(term, data, ...) {
   Gd[!ok, ] <- 0
   Gd[ok, ] <- Gd[ok, , drop = FALSE] / mass[ok]
   dlm <- cbind(dm_col, Gd)
-  colnames(dlm) <- c("m1", prior@params)
+  colnames(dlm) <- c(.marg_mname(1L), prior@params)
   list(lm = lm, mass = mass, ok = ok, dlm = dlm, l = l, u = u)
 }
 
@@ -756,7 +766,7 @@ S7::method(term_build, MarginalBreakTerm) <- function(term, data, ...) {
     stop(sprintf("'psi' must supply %s.", paste(nm, collapse = ", ")),
          call. = FALSE)
   }
-  taus <- grep("^tau[0-9]+$", nm, value = TRUE)
+  taus <- grep("^psi[0-9]+[.]sd$", nm, value = TRUE)
   if (length(taus) && any(v[taus] <= 0)) {
     stop("every prior scale must be positive.", call. = FALSE)
   }
@@ -805,8 +815,8 @@ S7::method(term_build, MarginalBreakTerm) <- function(term, data, ...) {
       npc <- ncol(pr$dlm[[k]])
       A <- array(0, c(J, npc, npc))
       if (is.null(term@prior)) {
-        iv <- .marg_intervals(xs, v[[paste0("m", k)]],
-                              v[[paste0("tau", k)]], d2 = TRUE)
+        iv <- .marg_intervals(xs, v[[.marg_mname(k)]],
+                              v[[.marg_tname(k)]], d2 = TRUE)
         # d2 mass = mass (d2 log mass + d log mass squared)
         dl <- pr$dlm[[k]]
         A[, 1L, 1L] <- mass * (iv$dmm + dl[, 1L]^2)
@@ -855,7 +865,7 @@ S7::method(term_build, MarginalBreakTerm) <- function(term, data, ...) {
   nb <- length(b)
   l <- b[-nb]
   u <- b[-1L]
-  m <- v[["m1"]]
+  m <- v[[.marg_mname(1L)]]
   th <- stats::setNames(as.list(v[prior@params]), prior@params)
   npc <- 1L + length(prior@params)
   J <- length(l)
@@ -948,18 +958,18 @@ S7::method(term_build, MarginalBreakTerm) <- function(term, data, ...) {
   K <- term@npsi
   if (is.null(term@prior)) {
     ivs <- lapply(seq_len(K), function(k)
-      .marg_intervals(xs, v[[paste0("m", k)]], v[[paste0("tau", k)]]))
+      .marg_intervals(xs, v[[.marg_mname(k)]], v[[.marg_tname(k)]]))
     list(
       lm = lapply(ivs, `[[`, "lm"),
       dlm = lapply(seq_len(K), function(k) {
         M <- cbind(ivs[[k]]$dm, ivs[[k]]$dt)
         M[!ivs[[k]]$ok, ] <- 0
-        colnames(M) <- c(paste0("m", k), paste0("tau", k))
+        colnames(M) <- c(.marg_mname(k), .marg_tname(k))
         M
       }),
       ivs = ivs)
   } else {
-    pv <- .marg_prior_intervals(term@prior, xs, v[["m1"]],
+    pv <- .marg_prior_intervals(term@prior, xs, v[[.marg_mname(1L)]],
                                 v[term@prior@params])
     list(lm = list(pv$lm), dlm = list(pv$dlm), ivs = list(pv))
   }
@@ -1242,7 +1252,7 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
   jac <- matrix(0, n, length(nm), dimnames = list(NULL, nm))
   for (rs in bp$groups) {
     ng <- length(rs)
-    nd <- .marg_nodes_r(bp$x[rs], v[["m1"]], v[["tau1"]])
+    nd <- .marg_nodes_r(bp$x[rs], v[[.marg_mname(1L)]], v[[.marg_tname(1L)]])
     C <- length(nd$p)
     sh <- .marg_seg_shift_r(term, bp$x[rs], nd, v)
     ei <- rep(eta[rs], C) + as.numeric(sh$shift)
@@ -1273,9 +1283,9 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
         acc[[p]] <- a2
       }
       ap2 <- accp + SC[t, ] * sh$dshift_dpsi[t, ]
-      jac[row, "m1"] <- sum(w * (nd$glw_m + ap2 * nd$dpsi_m)) -
+      jac[row, .marg_mname(1L)] <- sum(w * (nd$glw_m + ap2 * nd$dpsi_m)) -
         sum(u * (nd$glw_m + accp * nd$dpsi_m))
-      jac[row, "tau1"] <- sum(w * (nd$glw_t + ap2 * nd$dpsi_t)) -
+      jac[row, .marg_tname(1L)] <- sum(w * (nd$glw_t + ap2 * nd$dpsi_t)) -
         sum(u * (nd$glw_t + accp * nd$dpsi_t))
       accp <- ap2
       A <- A2
@@ -1320,7 +1330,7 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
            if (term@kind == "jseg") "delta1")
   for (rs in bp$groups) {
     ng <- length(rs)
-    nd <- .marg_nodes(bp$x[rs], v[["m1"]], v[["tau1"]])
+    nd <- .marg_nodes(bp$x[rs], v[[.marg_mname(1L)]], v[[.marg_tname(1L)]])
     C <- length(nd$p)
     sh <- .marg_seg_shift(term, bp$x[rs], nd, v)
     ei <- rep(eta[rs], C) + as.numeric(sh$shift)
@@ -1334,8 +1344,8 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
                                nd$glw_t, nd$dpsi_m, nd$dpsi_t)
     ll[rs] <- fw$loglik
     jac[rs, own] <- fw$own
-    jac[rs, "m1"] <- fw$m
-    jac[rs, "tau1"] <- fw$tau
+    jac[rs, .marg_mname(1L)] <- fw$m
+    jac[rs, .marg_tname(1L)] <- fw$tau
   }
   list(loglik = ll, jacobian = jac)
 }
@@ -1350,7 +1360,7 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
   Cmax <- 0L
   for (g in seq_along(bp$groups)) {
     rs <- bp$groups[[g]]
-    nd <- .marg_nodes(bp$x[rs], v[["m1"]], v[["tau1"]])
+    nd <- .marg_nodes(bp$x[rs], v[[.marg_mname(1L)]], v[[.marg_tname(1L)]])
     sh[[g]] <- .marg_seg_shift(term, bp$x[rs], nd, v)$shift
     Cmax <- max(Cmax, ncol(sh[[g]]))
   }
@@ -1542,7 +1552,7 @@ S7::method(term_posterior, MarginalBreakTerm) <- function(term, eta, y,
   Cmax <- 0L
   for (g in seq_along(bp$groups)) {
     rs <- bp$groups[[g]]
-    nd <- .marg_nodes(bp$x[rs], v[["m1"]], v[["tau1"]])
+    nd <- .marg_nodes(bp$x[rs], v[[.marg_mname(1L)]], v[[.marg_tname(1L)]])
     sh <- .marg_seg_shift(term, bp$x[rs], nd, v)
     C <- length(nd$p)
     ei <- rep(eta[rs], C) + as.numeric(sh$shift)
@@ -1653,10 +1663,10 @@ S7::method(term_latent, MarginalBreakTerm) <- function(term, eta, y, logdens,
       wt <- w[C]
       if (wt > 0) {
         xn <- max(bp$x[st$rs])
-        zn <- (xn - v[["m1"]]) / v[["tau1"]]
+        zn <- (xn - v[[.marg_mname(1L)]]) / v[[.marg_tname(1L)]]
         lam <- numericals7::mills_ratio(-zn)$r
-        mu_t <- v[["m1"]] + v[["tau1"]] * lam
-        var_t <- v[["tau1"]]^2 * (1 + zn * lam - lam^2)
+        mu_t <- v[[.marg_mname(1L)]] + v[[.marg_tname(1L)]] * lam
+        var_t <- v[[.marg_tname(1L)]]^2 * (1 + zn * lam - lam^2)
         m1 <- m1 + wt * mu_t
         m2 <- m2 + wt * (var_t + mu_t^2)
       }
@@ -1673,8 +1683,8 @@ S7::method(term_latent, MarginalBreakTerm) <- function(term, eta, y, logdens,
 .marg_interval_moments <- function(term, xs, v, k, wm, pr) {
   J <- length(wm)
   if (is.null(term@prior)) {
-    m <- v[[paste0("m", k)]]
-    tau <- v[[paste0("tau", k)]]
+    m <- v[[.marg_mname(k)]]
+    tau <- v[[.marg_tname(k)]]
     iv <- pr$ivs[[k]]
     r1 <- ifelse(iv$ok, (iv$phi_l - iv$phi_u) / iv$mass, 0)
     r2 <- ifelse(iv$ok, (iv$zp_l - iv$zp_u) / iv$mass, 0)
@@ -1706,15 +1716,15 @@ S7::method(term_latent, MarginalBreakTerm) <- function(term, eta, y, logdens,
     # an infinite endpoint is omitted rather than passed: truncating at the
     # support's own bound removes no mass and truncated() rejects it
     tr_args <- list(term@prior)
-    if (is.finite(iv$l[j])) tr_args$lower <- iv$l[j] - v[["m1"]]
-    if (is.finite(iv$u[j])) tr_args$upper <- iv$u[j] - v[["m1"]]
+    if (is.finite(iv$l[j])) tr_args$lower <- iv$l[j] - v[[.marg_mname(1L)]]
+    if (is.finite(iv$u[j])) tr_args$upper <- iv$u[j] - v[[.marg_mname(1L)]]
     tr <- do.call(distributions7::truncated, tr_args)
     e1 <- tryCatch(as.numeric(distributions7::expectation(
       tr, function(y, theta) y, th)), error = function(e) NA_real_)
     e2 <- tryCatch(as.numeric(distributions7::expectation(
       tr, function(y, theta) y^2, th)), error = function(e) NA_real_)
-    mu <- mu + wm[j] * (v[["m1"]] + e1)
-    m2 <- m2 + wm[j] * (e2 + 2 * v[["m1"]] * e1 + v[["m1"]]^2)
+    mu <- mu + wm[j] * (v[[.marg_mname(1L)]] + e1)
+    m2 <- m2 + wm[j] * (e2 + 2 * v[[.marg_mname(1L)]] * e1 + v[[.marg_mname(1L)]]^2)
   }
   sc <- sum(wm[wm >= 1e-9])
   list(mean = mu / sc,
@@ -1763,12 +1773,12 @@ S7::method(term_start, MarginalBreakTerm) <- function(term, ...,
   tau0 <- pmax(tau0, .marg_gap_floor(bp))
   for (k in seq_len(K)) {
     if (is.null(term@prior)) {
-      out[[paste0("m", k)]] <- m0[k]
-      out[[paste0("tau", k)]] <- log(tau0[k])
+      out[[.marg_mname(k)]] <- m0[k]
+      out[[.marg_tname(k)]] <- log(tau0[k])
     }
   }
   if (!is.null(term@prior)) {
-    out[["m1"]] <- m0[1L]
+    out[[.marg_mname(1L)]] <- m0[1L]
     # a prior parameter read as a scale starts at the profile's spread,
     # carried through its own chart; the others keep the chart's zero
     ip <- tryCatch(term@prior@params_interpretation, error = function(e) NULL)
@@ -2330,12 +2340,12 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
       DA[, dc] <- DA[, dc] + colSums(GL * ownm[[p]]) * chain[match(p, nm)]
     }
     cpsi <- colSums(GL * st$sh$dshift_dpsi)
-    im <- cols[match("m1", nm)]
-    it <- cols[match("tau1", nm)]
+    im <- cols[match(.marg_mname(1L), nm)]
+    it <- cols[match(.marg_tname(1L), nm)]
     DA[, im] <- DA[, im] +
-      (st$nd$glw_m + cpsi * st$nd$dpsi_m) * chain[match("m1", nm)]
+      (st$nd$glw_m + cpsi * st$nd$dpsi_m) * chain[match(.marg_mname(1L), nm)]
     DA[, it] <- DA[, it] +
-      (st$nd$glw_t + cpsi * st$nd$dpsi_t) * chain[match("tau1", nm)]
+      (st$nd$glw_t + cpsi * st$nd$dpsi_t) * chain[match(.marg_tname(1L), nm)]
     gbar <- as.numeric(crossprod(DA, st$w))
     gradient <- gradient + wi * gbar
     hessian <- hessian + wi * (crossprod(DA, st$w * DA) - outer(gbar, gbar))
@@ -2352,9 +2362,9 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
         aug[, cols[match(p, nm)]] <- ownm[[p]][, c0] * chain[match(p, nm)]
       }
       aug[, im] <- aug[, im] +
-        st$sh$dshift_dpsi[, c0] * st$nd$dpsi_m[c0] * chain[match("m1", nm)]
+        st$sh$dshift_dpsi[, c0] * st$nd$dpsi_m[c0] * chain[match(.marg_mname(1L), nm)]
       aug[, it] <- aug[, it] +
-        st$sh$dshift_dpsi[, c0] * st$nd$dpsi_t[c0] * chain[match("tau1", nm)]
+        st$sh$dshift_dpsi[, c0] * st$nd$dpsi_t[c0] * chain[match(.marg_tname(1L), nm)]
       seedc[[level]] <- seedc[[level]] + aug
       for (aq in seq_len(npar)) {
         for (bq in seq_len(npar)) {
@@ -2365,8 +2375,8 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
     }
 
     # the weights' own curvature, closed because the node motion is affine
-    Jm <- chain[match("m1", nm)]
-    Jt <- chain[match("tau1", nm)]
+    Jm <- chain[match(.marg_mname(1L), nm)]
+    Jt <- chain[match(.marg_tname(1L), nm)]
     a_mm <- sum(st$w * st$nd$alw_mm)
     a_mt <- sum(st$w * st$nd$alw_mt)
     a_tt <- sum(st$w * st$nd$alw_tt)
@@ -2404,8 +2414,8 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
                                 cols, level, w) {
   bp <- term@blueprint
   v <- .marg_check_psi(term, psi)
-  m <- v[["m1"]]
-  tau <- v[["tau1"]]
+  m <- v[[.marg_mname(1L)]]
+  tau <- v[[.marg_tname(1L)]]
   delta <- v[["delta1"]]
   n <- bp$n
   npar <- length(seed)
@@ -2431,7 +2441,7 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
     gm0 <- gm0 + G0[, q] * seed[[q]]
     gm1 <- gm1 + G1[, q] * seed[[q]]
   }
-  ic <- cols[match(c("m1", "tau1", "delta1"), term_params(term))]
+  ic <- cols[match(c(.marg_mname(1L), .marg_tname(1L), "delta1"), term_params(term))]
   gm1[, ic[3L]] <- gm1[, ic[3L]] + G1[, level]
 
   loglik <- numeric(n)
@@ -2522,7 +2532,7 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
 #' ```
 #' <MarginalBreakTerm> 'jump' (jump): 1 latent break-point per group,
 #'                     integrated out (3 groups)
-#'   parameters: m1, tau1, delta1
+#'   parameters: psi1.mean, psi1.sd, delta1
 #' ```
 #'
 #' The prior line appears only where `random(distrib = )` named a family; under
@@ -2614,12 +2624,12 @@ S7::method(term_simulate, MarginalBreakTerm) <- function(term, psi, eta,
     ps <- numeric(K)
     for (k in seq_len(K)) {
       ps[[k]] <- if (is.null(term@prior)) {
-        stats::rnorm(1, v[[paste0("m", k)]], v[[paste0("tau", k)]])
+        stats::rnorm(1, v[[.marg_mname(k)]], v[[.marg_tname(k)]])
       } else {
-        # the prior's location is fixed at zero and m1 carries it, which is
+        # the prior's location is fixed at zero and psi1.mean carries it, which is
         # the convention the likelihood is written with
         th <- as.list(v[term@prior@params])
-        v[["m1"]] + as.numeric(
+        v[[.marg_mname(1L)]] + as.numeric(
           distributions7::distrib_rng(term@prior, 1L, th))
       }
       if (term@kind %in% c("jump", "jseg")) {

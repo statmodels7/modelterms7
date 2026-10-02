@@ -100,16 +100,17 @@ do.
 \code{group} is the grouping expression, taken from the break-point's \code{random()}
 subformula. \code{prior} is the latent's distribution: \code{NULL} for the Gaussian,
 or a \pkg{distributions7} object where \code{random(distrib = )} named one, and
-its location must be fixed at zero, \code{m1} carrying the position.
+its location must be fixed at zero, \code{psi1.mean} carrying the position.
 
 \code{spec} holds the resolved construction settings and \code{blueprint} the
 grouping and the interval structure \code{\link[=term_build]{term_build()}} worked out.
 }
 
 \section{The parameters}{
-They are numbered, one set per break-point: \code{m1}, \code{tau1}, \code{delta1} for a
-one-break-point step term, with \code{m} the prior's location, \code{tau} its scale on
-a log chart, and \code{delta} the change of level. A continuous kind adds \code{beta}
+They are numbered, one set per break-point: \code{psi1.mean}, \code{psi1.sd},
+\code{delta1} for a one-break-point step term, with \code{psi1.mean} the mean of the
+positions in the population, \code{psi1.sd} their standard deviation between
+groups on a log chart, and \code{delta1} the change of level. A continuous kind adds \code{beta}
 for the linear effect and \code{gamma1} for the change of slope.
 }
 

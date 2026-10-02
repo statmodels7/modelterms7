@@ -1,3 +1,14 @@
+# modelterms7 0.90.0
+
+* The parameters of a marginal break-point term's gaussian prior are named
+  for what they are: `psi1.mean`, the mean of the positions in the
+  population, which is the population position, and `psi1.sd`, their
+  standard deviation between groups (`psik.mean` and `psik.sd` for
+  break-point \eqn{k}). They were `m1` and `tau1`, which did not say that they
+  describe the position, while the developed construction calls the same
+  population position `psi1.(Intercept)`. Under an explicit prior the
+  location is `psi1.mean` beside the prior's own parameters.
+
 # modelterms7 0.89.0
 
 * `seg_polish_exact()` polishes a held `jump()` or `jseg()` whose
