@@ -618,3 +618,32 @@ test_that("a label on a marginal break-point is refused, and says why", {
   expect_no_error(term_build(jump(x, psi ~ random(~ 1 | id),
                                   marginal = TRUE), dd))
 })
+
+test_that("the compiled seg quadrature is its R twin", {
+  set.seed(5)
+  m <- 6; ni <- 9
+  id <- factor(rep(1:m, each = ni))
+  t <- rep(seq(0, 10, length.out = ni), m) + runif(m * ni, 0, 0.3)
+  y <- 1 + 0.5 * t - pmax(t - 5, 0) + rnorm(m * ni, sd = 0.3)
+  d <- data.frame(id = id, t = t, y = y)
+  eta <- rep(1, m * ni) + rnorm(m * ni, sd = 0.05)
+  logdens <- function(e, i) stats::dnorm(y[i], e, 0.3, log = TRUE)
+  score <- function(e, i) (y[i] - e) / 0.09
+  for (kind in c("seg", "jseg")) for (lin in c(TRUE, FALSE)) {
+    tm <- if (kind == "seg") seg(t, psi ~ random(~1 | id), marginal = TRUE, linear = lin) else
+      jseg(t, psi ~ random(~1 | id), marginal = TRUE, linear = lin)
+    b <- term_build(tm, d)
+    psi <- list(beta = 0.5, m1 = 4.6, tau1 = 0.7, gamma1 = -1, delta1 = 0.4)
+    psi <- psi[term_params(b)]
+    a <- .marg_seg_loglik(b, eta, y, logdens, score, psi)
+    r <- .marg_seg_loglik_r(b, eta, y, logdens, score, psi)
+    expect_equal(a$loglik, r$loglik, tolerance = 1e-12)
+    expect_equal(a$jacobian, r$jacobian, tolerance = 1e-11)
+    xs <- sort(t[id == 1])
+    expect_equal(.marg_nodes(xs, 4.6, 0.7), .marg_nodes_r(xs, 4.6, 0.7)[
+      names(.marg_nodes(xs, 4.6, 0.7))], tolerance = 1e-13)
+    # an extreme scale reaches the panel caps
+    expect_equal(.marg_nodes(xs, 4.6, 1e-6), .marg_nodes_r(xs, 4.6, 1e-6)[
+      names(.marg_nodes(xs, 4.6, 1e-6))], tolerance = 1e-13)
+  }
+})

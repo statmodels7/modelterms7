@@ -1121,7 +1121,7 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
 
 # the node set of one group: positions, log quadrature weights (prior
 # density included), and the geometry the derivatives need
-.marg_nodes <- function(xs, m, tau) {
+.marg_nodes_r <- function(xs, m, tau) {
   gk <- numericals7::gauss_kronrod15()
   x1 <- xs[1L]
   xn <- xs[length(xs)]
@@ -1219,7 +1219,7 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
 
 # the shift each node adds to each of the group's observations, and its
 # derivatives in the term's own coefficients and in the position
-.marg_seg_shift <- function(term, xg, nd, v) {
+.marg_seg_shift_r <- function(term, xg, nd, v) {
   hinge <- outer(xg, nd$p, function(x, p) pmax(x - ifelse(is.finite(p), p,
                                                           Inf), 0))
   step <- outer(xg, nd$p, function(x, p) as.numeric(is.finite(p) & x >= p))
@@ -1233,7 +1233,7 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
   list(shift = shift, hinge = hinge, step = step, dshift_dpsi = dshift_dpsi)
 }
 
-.marg_seg_loglik <- function(term, eta, y, logdens, score, psi) {
+.marg_seg_loglik_r <- function(term, eta, y, logdens, score, psi) {
   bp <- .marg_built(term)
   v <- .marg_check_psi(term, psi)
   nm <- term_params(term)
@@ -1242,9 +1242,9 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
   jac <- matrix(0, n, length(nm), dimnames = list(NULL, nm))
   for (rs in bp$groups) {
     ng <- length(rs)
-    nd <- .marg_nodes(bp$x[rs], v[["m1"]], v[["tau1"]])
+    nd <- .marg_nodes_r(bp$x[rs], v[["m1"]], v[["tau1"]])
     C <- length(nd$p)
-    sh <- .marg_seg_shift(term, bp$x[rs], nd, v)
+    sh <- .marg_seg_shift_r(term, bp$x[rs], nd, v)
     ei <- rep(eta[rs], C) + as.numeric(sh$shift)
     ii <- rep(rs, C)
     LD <- matrix(as.numeric(logdens(ei, ii)), ng, C)
@@ -1284,6 +1284,81 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
     }
   }
   list(loglik = ll, jacobian = jac)
+}
+
+# THE COMPILED ROUTE. .marg_nodes_r(), .marg_seg_shift_r() and
+# .marg_seg_loglik_r() above are the definitions, with the derivation of
+# every term; src/marg_seg.cpp writes the same arithmetic out, and the three
+# below are what the term calls. The R versions stay as the twins the tests
+# hold the compiled ones to. The family's density and score are R callbacks,
+# one vectorized call each per group, made before the loop. Measured on a
+# 20 x 15 panel, a fit of seg(t, psi ~ random(~1 | id), marginal = TRUE)
+# calls the log-likelihood several hundred times and the posterior over a
+# thousand times per refit.
+.marg_nodes <- function(xs, m, tau) {
+  gk <- numericals7::gauss_kronrod15()
+  zn <- (xs[length(xs)] - m) / tau
+  mr <- numericals7::mills_ratio(-zn)$r
+  marg_seg_nodes_cpp(as.numeric(xs), m, tau, gk$nodes, gk$wk, mr)
+}
+
+.marg_seg_shift <- function(term, xg, nd, v) {
+  jseg <- term@kind == "jseg"
+  marg_seg_shift_cpp(as.numeric(xg), nd$p, term@linear,
+                     if (term@linear) v[["beta"]] else 0, v[["gamma1"]],
+                     jseg, if (jseg) v[["delta1"]] else 0)
+}
+
+.marg_seg_loglik <- function(term, eta, y, logdens, score, psi) {
+  bp <- .marg_built(term)
+  v <- .marg_check_psi(term, psi)
+  nm <- term_params(term)
+  n <- bp$n
+  ll <- numeric(n)
+  jac <- matrix(0, n, length(nm), dimnames = list(NULL, nm))
+  own <- c(if (term@linear) "beta", "gamma1",
+           if (term@kind == "jseg") "delta1")
+  for (rs in bp$groups) {
+    ng <- length(rs)
+    nd <- .marg_nodes(bp$x[rs], v[["m1"]], v[["tau1"]])
+    C <- length(nd$p)
+    sh <- .marg_seg_shift(term, bp$x[rs], nd, v)
+    ei <- rep(eta[rs], C) + as.numeric(sh$shift)
+    ii <- rep(rs, C)
+    LD <- matrix(as.numeric(logdens(ei, ii)), ng, C)
+    SC <- matrix(as.numeric(score(ei, ii)), ng, C)
+    D <- list(beta = if (term@linear) matrix(bp$x[rs], ng, C) else NULL,
+              gamma1 = sh$hinge,
+              delta1 = if (term@kind == "jseg") sh$step else NULL)[own]
+    fw <- marg_seg_forward_cpp(nd$lw, LD, SC, D, sh$dshift_dpsi, nd$glw_m,
+                               nd$glw_t, nd$dpsi_m, nd$dpsi_t)
+    ll[rs] <- fw$loglik
+    jac[rs, own] <- fw$own
+    jac[rs, "m1"] <- fw$m
+    jac[rs, "tau1"] <- fw$tau
+  }
+  list(loglik = ll, jacobian = jac)
+}
+
+# The shift of every node at every observation, aligned with the columns of
+# .marg_seg_posterior(); term_levels() needs nothing else, so it does not
+# evaluate the family.
+.marg_seg_shifts <- function(term, psi) {
+  bp <- .marg_built(term)
+  v <- .marg_check_psi(term, psi)
+  sh <- list()
+  Cmax <- 0L
+  for (g in seq_along(bp$groups)) {
+    rs <- bp$groups[[g]]
+    nd <- .marg_nodes(bp$x[rs], v[["m1"]], v[["tau1"]])
+    sh[[g]] <- .marg_seg_shift(term, bp$x[rs], nd, v)$shift
+    Cmax <- max(Cmax, ncol(sh[[g]]))
+  }
+  shift <- matrix(0, bp$n, Cmax)
+  for (g in seq_along(bp$groups)) {
+    shift[bp$groups[[g]], seq_len(ncol(sh[[g]]))] <- sh[[g]]
+  }
+  shift
 }
 
 #' @title Posterior Components of a Marginal Break-Point Term
@@ -1493,14 +1568,13 @@ S7::method(term_posterior, MarginalBreakTerm) <- function(term, eta, y,
 #' For the step kind, the constant shift of each side pattern, the sums of
 #' the changes of level over the active break-points. For the continuous
 #' kinds the shift varies by observation, each node contributing its own
-#' hinge value, and
-#' a matrix is returned, aligned with [term_posterior()]'s
-#' columns; it takes the callbacks because the node set is theirs to
-#' rebuild.
+#' hinge value, and a matrix is returned, aligned with [term_posterior()]'s
+#' columns. The node set depends on the term's parameters alone, so the
+#' family is not evaluated.
 #' @param term A built [MarginalBreakTerm()].
 #' @param psi The term's parameters.
-#' @param eta,y,logdens For the continuous kinds, the quantities the node
-#'   set is built from; ignored by the step kind.
+#' @param eta,y,logdens Accepted for the interface of [term_levels()] and
+#'   not used.
 #' @param ... Unused.
 #' @return A numeric vector, or a matrix with one row per observation.
 #' @keywords internal
@@ -1512,12 +1586,7 @@ S7::method(term_levels, MarginalBreakTerm) <- function(term, psi, eta = NULL,
     return(.marg_bits(term@npsi,
                       v[paste0("delta", seq_len(term@npsi))])$shifts)
   }
-  if (is.null(eta) || is.null(logdens)) {
-    stop(paste("the continuous kinds shift each observation by its node's",
-               "hinge value: pass eta, y and logdens so the node set can be",
-               "rebuilt."), call. = FALSE)
-  }
-  .marg_seg_posterior(term, eta, y, logdens, psi)$shift
+  .marg_seg_shifts(term, psi)
 }
 
 #' @title Posterior Break-Points of a Marginal Term

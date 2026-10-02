@@ -1,3 +1,32 @@
+# modelterms7 0.89.0
+
+* `seg_polish_exact()` polishes a held `jump()` or `jseg()` whose
+  break-point is developed, \eqn{\psi_i = w_i'p}, by exact line searches in
+  \eqn{p}: along a line the position of each observation crosses its
+  covariate at one value of the line's parameter, so the profile is
+  evaluated once between consecutive crossings, and for a `jseg()` it is
+  then minimized inside the best interval. Where the sub-design partitions
+  the observations into groups (`psi ~ 0 + g`, `by = ~ 0 + g`) the lines
+  move one group at a time and a second sweep starts from each group's own
+  minimum. With a continuous covariate the lines are the coordinate
+  directions and eight fixed directions in each plane of two coordinates.
+  On three groups of 80 the polished `jump(x, psi ~ 0 + g)` reaches the
+  minimum of an exhaustive search over all 357,911 triples of intervals,
+  RSS 60.534 where the working fit stopped at 65.685, and
+  `jseg(x, psi ~ 0 + g)` reaches 65.221 where it stopped at 170.85;
+  `jump(x, psi ~ z)` reaches the minimum of a 2-D grid, 71.090 against
+  71.637.
+* `term_readable()` reports the developed position of a held term as
+  `psi1.<column>`, one value per column of the sub-design, where it reported
+  nothing and a summary printed the working slots \eqn{-\delta\psi}.
+* The quadrature of a marginal `seg()` or `jseg()` is compiled: the node set,
+  the shift of every node and the forward accumulation of the log-likelihood
+  and its Jacobian (`src/marg_seg.cpp`). The R versions stay as the twins
+  the tests hold the compiled ones to, at 1e-12. `term_levels()` for these
+  kinds builds the shifts alone and no longer evaluates the family. Per call,
+  on a 20 x 15 panel, the log-likelihood goes from 42 ms to 16 ms, the
+  posterior from 58 ms to 8 ms and the levels from 12 ms to 4 ms.
+
 # modelterms7 0.88.0
 
 * `seg_profile_intervals()`: the least-squares profile of a sharp `jump()` or

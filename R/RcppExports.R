@@ -13,6 +13,18 @@ gas_filter_sub_cpp <- function(eta, groups, p, q, om, A, B, np, score, curvature
     .Call(`_modelterms7_gas_filter_sub_cpp`, eta, groups, p, q, om, A, B, np, score, curvature, fast, threads)
 }
 
+marg_seg_nodes_cpp <- function(xs, m, tau, gk_nodes, gk_wk, mr) {
+    .Call(`_modelterms7_marg_seg_nodes_cpp`, xs, m, tau, gk_nodes, gk_wk, mr)
+}
+
+marg_seg_shift_cpp <- function(xg, p, linear, beta, gamma, jseg, delta) {
+    .Call(`_modelterms7_marg_seg_shift_cpp`, xg, p, linear, beta, gamma, jseg, delta)
+}
+
+marg_seg_forward_cpp <- function(lw, LD, SC, D, dsdpsi, glw_m, glw_t, dpsi_m, dpsi_t) {
+    .Call(`_modelterms7_marg_seg_forward_cpp`, lw, LD, SC, D, dsdpsi, glw_m, glw_t, dpsi_m, dpsi_t)
+}
+
 regime_forward_cpp <- function(order, LF, SC, dmu, P, dP, delta, ddelta) {
     .Call(`_modelterms7_regime_forward_cpp`, order, LF, SC, dmu, P, dP, delta, ddelta)
 }

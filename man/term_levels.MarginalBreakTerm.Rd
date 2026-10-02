@@ -8,8 +8,8 @@
 
 \item{psi}{The term's parameters.}
 
-\item{eta, y, logdens}{For the continuous kinds, the quantities the node
-set is built from; ignored by the step kind.}
+\item{eta, y, logdens}{Accepted for the interface of \code{\link[=term_levels]{term_levels()}} and
+not used.}
 
 \item{...}{Unused.}
 }
@@ -20,9 +20,8 @@ A numeric vector, or a matrix with one row per observation.
 For the step kind, the constant shift of each side pattern, the sums of
 the changes of level over the active break-points. For the continuous
 kinds the shift varies by observation, each node contributing its own
-hinge value, and
-a matrix is returned, aligned with \code{\link[=term_posterior]{term_posterior()}}'s
-columns; it takes the callbacks because the node set is theirs to
-rebuild.
+hinge value, and a matrix is returned, aligned with \code{\link[=term_posterior]{term_posterior()}}'s
+columns. The node set depends on the term's parameters alone, so the
+family is not evaluated.
 }
 \keyword{internal}

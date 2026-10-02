@@ -84,6 +84,58 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// marg_seg_nodes_cpp
+List marg_seg_nodes_cpp(const NumericVector& xs, double m, double tau, const NumericVector& gk_nodes, const NumericVector& gk_wk, double mr);
+RcppExport SEXP _modelterms7_marg_seg_nodes_cpp(SEXP xsSEXP, SEXP mSEXP, SEXP tauSEXP, SEXP gk_nodesSEXP, SEXP gk_wkSEXP, SEXP mrSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type xs(xsSEXP);
+    Rcpp::traits::input_parameter< double >::type m(mSEXP);
+    Rcpp::traits::input_parameter< double >::type tau(tauSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type gk_nodes(gk_nodesSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type gk_wk(gk_wkSEXP);
+    Rcpp::traits::input_parameter< double >::type mr(mrSEXP);
+    rcpp_result_gen = Rcpp::wrap(marg_seg_nodes_cpp(xs, m, tau, gk_nodes, gk_wk, mr));
+    return rcpp_result_gen;
+END_RCPP
+}
+// marg_seg_shift_cpp
+List marg_seg_shift_cpp(const NumericVector& xg, const NumericVector& p, bool linear, double beta, double gamma, bool jseg, double delta);
+RcppExport SEXP _modelterms7_marg_seg_shift_cpp(SEXP xgSEXP, SEXP pSEXP, SEXP linearSEXP, SEXP betaSEXP, SEXP gammaSEXP, SEXP jsegSEXP, SEXP deltaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type xg(xgSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type p(pSEXP);
+    Rcpp::traits::input_parameter< bool >::type linear(linearSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    Rcpp::traits::input_parameter< double >::type gamma(gammaSEXP);
+    Rcpp::traits::input_parameter< bool >::type jseg(jsegSEXP);
+    Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
+    rcpp_result_gen = Rcpp::wrap(marg_seg_shift_cpp(xg, p, linear, beta, gamma, jseg, delta));
+    return rcpp_result_gen;
+END_RCPP
+}
+// marg_seg_forward_cpp
+List marg_seg_forward_cpp(const NumericVector& lw, const NumericMatrix& LD, const NumericMatrix& SC, const List& D, const NumericMatrix& dsdpsi, const NumericVector& glw_m, const NumericVector& glw_t, const NumericVector& dpsi_m, const NumericVector& dpsi_t);
+RcppExport SEXP _modelterms7_marg_seg_forward_cpp(SEXP lwSEXP, SEXP LDSEXP, SEXP SCSEXP, SEXP DSEXP, SEXP dsdpsiSEXP, SEXP glw_mSEXP, SEXP glw_tSEXP, SEXP dpsi_mSEXP, SEXP dpsi_tSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericVector& >::type lw(lwSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type LD(LDSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type SC(SCSEXP);
+    Rcpp::traits::input_parameter< const List& >::type D(DSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type dsdpsi(dsdpsiSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type glw_m(glw_mSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type glw_t(glw_tSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type dpsi_m(dpsi_mSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type dpsi_t(dpsi_tSEXP);
+    rcpp_result_gen = Rcpp::wrap(marg_seg_forward_cpp(lw, LD, SC, D, dsdpsi, glw_m, glw_t, dpsi_m, dpsi_t));
+    return rcpp_result_gen;
+END_RCPP
+}
 // regime_forward_cpp
 List regime_forward_cpp(const List& order, const NumericMatrix& LF, const NumericMatrix& SC, const NumericMatrix& dmu, const NumericMatrix& P, const List& dP, const NumericVector& delta, const NumericMatrix& ddelta);
 RcppExport SEXP _modelterms7_regime_forward_cpp(SEXP orderSEXP, SEXP LFSEXP, SEXP SCSEXP, SEXP dmuSEXP, SEXP PSEXP, SEXP dPSEXP, SEXP deltaSEXP, SEXP ddeltaSEXP) {
@@ -128,6 +180,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_modelterms7_gas_curvature_sub_cpp", (DL_FUNC) &_modelterms7_gas_curvature_sub_cpp, 16},
     {"_modelterms7_gas_filter_cpp", (DL_FUNC) &_modelterms7_gas_filter_cpp, 16},
     {"_modelterms7_gas_filter_sub_cpp", (DL_FUNC) &_modelterms7_gas_filter_sub_cpp, 12},
+    {"_modelterms7_marg_seg_nodes_cpp", (DL_FUNC) &_modelterms7_marg_seg_nodes_cpp, 6},
+    {"_modelterms7_marg_seg_shift_cpp", (DL_FUNC) &_modelterms7_marg_seg_shift_cpp, 7},
+    {"_modelterms7_marg_seg_forward_cpp", (DL_FUNC) &_modelterms7_marg_seg_forward_cpp, 9},
     {"_modelterms7_regime_forward_cpp", (DL_FUNC) &_modelterms7_regime_forward_cpp, 8},
     {"_modelterms7_seg_block_cpp", (DL_FUNC) &_modelterms7_seg_block_cpp, 11},
     {NULL, NULL, 0}
