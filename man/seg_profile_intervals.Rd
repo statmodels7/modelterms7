@@ -18,14 +18,15 @@ the response, net of whatever the caller wants held.}
 profile is then weighted least squares.}
 }
 \value{
-A data frame with columns \code{psi}, the midpoints, and \code{rss}, the
-profile there (\code{Inf} where the design is singular).
+A data frame with columns \code{psi}, the position in each interval,
+and \code{rss}, the profile there (\code{Inf} where the design is singular).
 }
 \description{
-The least-squares profile of a sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} term in one of its
-break-points, the others held where they are: the residual sum of squares
-at the midpoint of every interval between consecutive distinct values of
-the covariate inside the confinement limits. It is the quantity
+The least-squares profile of a sharp \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} term in
+one of its break-points, the others held where they are: the residual sum
+of squares in every interval between consecutive distinct values of the
+covariate inside the confinement limits, at the midpoint for a change of
+level and at the minimizing position for a change of slope. It is the quantity
 \code{\link[=seg_polish_exact]{seg_polish_exact()}} minimizes, returned whole so that a caller whose
 objective the profile only approximates can take several candidates from
 it.

@@ -22,12 +22,13 @@ profile is then weighted least squares.}
 The term at the polished positions (see \code{\link[=seg_relocate]{seg_relocate()}}).
 }
 \description{
-The exact minimum of the least-squares profile of a sharp \code{\link[=jump]{jump()}} or
-\code{\link[=jseg]{jseg()}} term, one break-point at a time with the others held. The
-profile of such a term is constant between consecutive observations of the
-covariate, so its minimum over one break-point is found by evaluating it
-once in each interval between consecutive distinct values, and this
-function does that for every interval inside the confinement limits.
+The exact minimum of the least-squares profile of a sharp \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}}
+or \code{\link[=jseg]{jseg()}} term, one break-point at a time with the others held. The
+profile of a change of level is constant between consecutive observations
+of the covariate, and the profile of a change of slope has one stationary
+point inside each such interval, so its minimum over one break-point is
+found interval by interval, and this function does that for every interval
+inside the confinement limits.
 }
 \details{
 Write \eqn{F} for the columns that do not move with the break-point being
@@ -41,8 +42,19 @@ is a sum over the observations above \eqn{q} of a fixed quantity, or of
 one fixed quantity minus \eqn{q} times another. Sorted once, those sums
 are cumulative sums, so all the intervals cost \eqn{O(np^2)} together
 rather than one linear fit each. The sweeps over the break-points repeat
-until none moves. Each break-point is placed at the midpoint of its
-interval.
+until none moves. Each break-point of a \code{\link[=jump]{jump()}} or a \code{\link[=jseg]{jseg()}} is placed at
+the midpoint of its interval.
+
+For a \code{\link[=seg]{seg()}} the column that moves is \eqn{(x - q)_+}. Inside the
+interval between the consecutive values \eqn{u_k < u_{k+1}} it is
+\eqn{t - q s}, with \eqn{s = 1(x > u_k)} and \eqn{t = x s}, so the part
+of the residual sum of squares it removes is
+\eqn{(c_t - q c_s)^2 / (a_{tt} - 2 q a_{ts} + q^2 a_{ss})}, the
+\eqn{c} and \eqn{a} being the cross products of \eqn{t}, \eqn{s} and
+the response after the fixed columns are projected out. Its one
+stationary point is \eqn{q^* = -b/\gamma} of the least-squares fit on
+\eqn{t} and \eqn{s}, so the minimum over the interval is at \eqn{q^*}
+when it falls inside, or at an end, which is an observed value.
 
 \code{\link[=seg_polish]{seg_polish()}} sweeps a grid of \code{k} points instead, which reaches a
 neighbourhood of the minimum and not the interval: measured on 16 samples

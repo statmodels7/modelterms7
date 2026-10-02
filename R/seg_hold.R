@@ -181,12 +181,13 @@ seg_hold <- function(term, hold = TRUE) {
 #' Polish a Break-Point Term's Positions Over Every Interval
 #'
 #' @description
-#' The exact minimum of the least-squares profile of a sharp [jump()] or
-#' [jseg()] term, one break-point at a time with the others held. The
-#' profile of such a term is constant between consecutive observations of the
-#' covariate, so its minimum over one break-point is found by evaluating it
-#' once in each interval between consecutive distinct values, and this
-#' function does that for every interval inside the confinement limits.
+#' The exact minimum of the least-squares profile of a sharp [seg()], [jump()]
+#' or [jseg()] term, one break-point at a time with the others held. The
+#' profile of a change of level is constant between consecutive observations
+#' of the covariate, and the profile of a change of slope has one stationary
+#' point inside each such interval, so its minimum over one break-point is
+#' found interval by interval, and this function does that for every interval
+#' inside the confinement limits.
 #'
 #' @details
 #' Write \eqn{F} for the columns that do not move with the break-point being
@@ -200,8 +201,19 @@ seg_hold <- function(term, hold = TRUE) {
 #' one fixed quantity minus \eqn{q} times another. Sorted once, those sums
 #' are cumulative sums, so all the intervals cost \eqn{O(np^2)} together
 #' rather than one linear fit each. The sweeps over the break-points repeat
-#' until none moves. Each break-point is placed at the midpoint of its
-#' interval.
+#' until none moves. Each break-point of a [jump()] or a [jseg()] is placed at
+#' the midpoint of its interval.
+#'
+#' For a [seg()] the column that moves is \eqn{(x - q)_+}. Inside the
+#' interval between the consecutive values \eqn{u_k < u_{k+1}} it is
+#' \eqn{t - q s}, with \eqn{s = 1(x > u_k)} and \eqn{t = x s}, so the part
+#' of the residual sum of squares it removes is
+#' \eqn{(c_t - q c_s)^2 / (a_{tt} - 2 q a_{ts} + q^2 a_{ss})}, the
+#' \eqn{c} and \eqn{a} being the cross products of \eqn{t}, \eqn{s} and
+#' the response after the fixed columns are projected out. Its one
+#' stationary point is \eqn{q^* = -b/\gamma} of the least-squares fit on
+#' \eqn{t} and \eqn{s}, so the minimum over the interval is at \eqn{q^*}
+#' when it falls inside, or at an end, which is an observed value.
 #'
 #' [seg_polish()] sweeps a grid of `k` points instead, which reaches a
 #' neighbourhood of the minimum and not the interval: measured on 16 samples
@@ -260,14 +272,17 @@ seg_polish_exact <- function(term, y, sweeps = 10, weights = NULL) {
     moved <- FALSE
     for (j in seq_len(K)) {
       v <- ev$rss_at(j, psi)
+      at <- attr(v, "psi")
+      if (is.null(at)) at <- mid
       i <- which.min(v)
       if (length(i) && is.finite(v[i]) && v[i] < best - 1e-10 * (best + 1)) {
-        psi[j] <- mid[i]
+        psi[j] <- at[i]
         best <- v[i]
         moved <- TRUE
       }
     }
     if (!moved) break
+    psi <- sort(psi)
   }
   seg_relocate(term, psi)
 }
@@ -275,10 +290,11 @@ seg_polish_exact <- function(term, y, sweeps = 10, weights = NULL) {
 #' The Profile of One Break-Point Over Every Interval
 #'
 #' @description
-#' The least-squares profile of a sharp [jump()] or [jseg()] term in one of its
-#' break-points, the others held where they are: the residual sum of squares
-#' at the midpoint of every interval between consecutive distinct values of
-#' the covariate inside the confinement limits. It is the quantity
+#' The least-squares profile of a sharp [seg()], [jump()] or [jseg()] term in
+#' one of its break-points, the others held where they are: the residual sum
+#' of squares in every interval between consecutive distinct values of the
+#' covariate inside the confinement limits, at the midpoint for a change of
+#' level and at the minimizing position for a change of slope. It is the quantity
 #' [seg_polish_exact()] minimizes, returned whole so that a caller whose
 #' objective the profile only approximates can take several candidates from
 #' it.
@@ -286,8 +302,8 @@ seg_polish_exact <- function(term, y, sweeps = 10, weights = NULL) {
 #' @inheritParams seg_polish
 #' @param k Which break-point, an integer.
 #'
-#' @return A data frame with columns `psi`, the midpoints, and `rss`, the
-#'   profile there (`Inf` where the design is singular).
+#' @return A data frame with columns `psi`, the position in each interval,
+#'   and `rss`, the profile there (`Inf` where the design is singular).
 #'
 #' @seealso [seg_polish_exact()].
 #'
@@ -309,7 +325,9 @@ seg_profile_intervals <- function(term, y, k = 1L, weights = NULL) {
   }
   if (!length(ev$mid)) return(data.frame(psi = numeric(0), rss = numeric(0)))
   psi <- as.numeric(term@blueprint$psi[1L, ])
-  data.frame(psi = ev$mid, rss = ev$rss_at(k, psi))
+  v <- ev$rss_at(k, psi)
+  at <- attr(v, "psi")
+  data.frame(psi = if (is.null(at)) ev$mid else at, rss = as.numeric(v))
 }
 
 # The machinery of the two: the midpoints and an evaluator of the profile in
@@ -317,8 +335,8 @@ seg_profile_intervals <- function(term, y, k = 1L, weights = NULL) {
 .seg_interval_eval <- function(term, y, weights = NULL) {
   pr <- .seg_profile(term, y, weights)
   bp <- term@blueprint
-  if (identical(bp$kind, "seg") || !is.null(bp$smooth)) {
-    stop("only a sharp jump() or jseg() term is polished over intervals.",
+  if (!is.null(bp$smooth)) {
+    stop("only a sharp seg(), jump() or jseg() term is polished over intervals.",
          call. = FALSE)
   }
   xv <- bp$xv
@@ -330,14 +348,27 @@ seg_profile_intervals <- function(term, y, k = 1L, weights = NULL) {
   ws <- w[o]
   ys <- yv[o]
   u <- unique(xs)
-  mid <- (u[-1L] + u[-length(u)]) / 2
-  mid <- mid[mid > pr$lim[1L] & mid < pr$lim[2L]]
-  # the first sorted observation above each candidate
-  first <- findInterval(mid, xs) + 1L
+  seg <- identical(bp$kind, "seg")
+  if (seg) {
+    # a change of slope moves the fit continuously inside an interval, so
+    # each interval is kept whole, clipped to the confinement limits, and the
+    # position is optimized inside it
+    keep <- u[-1L] > pr$lim[1L] & u[-length(u)] < pr$lim[2L]
+    lo <- pmax(u[-length(u)], pr$lim[1L])[keep]
+    hi <- pmin(u[-1L], pr$lim[2L])[keep]
+    mid <- (lo + hi) / 2
+    first <- findInterval(u[-length(u)][keep], xs) + 1L
+  } else {
+    mid <- (u[-1L] + u[-length(u)]) / 2
+    mid <- mid[mid > pr$lim[1L] & mid < pr$lim[2L]]
+    # the first sorted observation above each candidate
+    first <- findInterval(mid, xs) + 1L
+  }
   jseg <- identical(bp$kind, "jseg")
   K <- bp$npsi
   cols_of <- function(q) {
-    if (jseg) cbind(pmax(xs - q, 0), as.numeric(xs > q))
+    if (seg) matrix(pmax(xs - q, 0), ncol = 1L)
+    else if (jseg) cbind(pmax(xs - q, 0), as.numeric(xs > q))
     else matrix(as.numeric(xs > q), ncol = 1L)
   }
   # suffix sums over the sorted observations, read at `first`
@@ -364,6 +395,43 @@ seg_profile_intervals <- function(term, y, k = 1L, weights = NULL) {
     qI <- rowSums((SwF %*% Mi) * SwF)
     sII <- Sw - qI
     cI <- SwR
+    if (seg) {
+      # inside the interval (u_k, u_k+1) the column is (x - q) s with s the
+      # indicator of the observations above u_k, so with t = x s the part it
+      # explains is (cT - q cI)^2 / (sTT - 2 q sTI + q^2 sII), whose one
+      # stationary point is q* = -b / gamma of the fit on t and s
+      # (the covariate is centred first: the squares of a calendar year
+      # cost seven digits of the profile)
+      c0 <- mean(xs)
+      xc <- xs - c0
+      Swx <- suffix(ws * xc)[, 1L]
+      Swxx <- suffix(ws * xc^2)[, 1L]
+      SwxF <- suffix(ws * xc * Fm)
+      cT <- suffix(ws * xc * r)[, 1L]
+      sTT <- Swxx - rowSums((SwxF %*% Mi) * SwxF)
+      sTI <- Swx - rowSums((SwxF %*% Mi) * SwF)
+      lo <- lo - c0
+      hi <- hi - c0
+      gain <- function(q) {
+        d <- sTT - 2 * q * sTI + q^2 * sII
+        g <- (cT - q * cI)^2 / d
+        g[!(d > 1e-12 * pmax(sTT, 1e-300))] <- -Inf
+        g
+      }
+      den <- sTI * cI - cT * sII
+      qs <- (cI * sTT - cT * sTI) / den
+      inside <- is.finite(qs) & qs > lo & qs < hi
+      qs[!inside] <- lo[!inside]
+      cand <- cbind(lo, hi, qs)
+      gv <- cbind(gain(lo), gain(hi), ifelse(inside, gain(qs), -Inf))
+      b <- max.col(gv, ties.method = "first")
+      at <- cand[cbind(seq_along(b), b)]
+      g <- gv[cbind(seq_along(b), b)]
+      out <- rss_f - g
+      out[!is.finite(g)] <- Inf
+      attr(out, "psi") <- at + c0
+      return(out)
+    }
     if (!jseg) {
       out <- rss_f - cI^2 / sII
       out[!(sII > 1e-12 * pmax(Sw, 1))] <- Inf

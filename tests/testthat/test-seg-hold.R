@@ -162,3 +162,52 @@ test_that("a developed term is polished only when held", {
   b <- term_build(jump(x, psi ~ 0 + g), d)
   expect_error(seg_polish_exact(b, rnorm(60)), "polished held")
 })
+
+test_that("seg_polish_exact() reaches the profile minimum of a change of slope", {
+  set.seed(5)
+  n <- 150
+  x <- runif(n, 0, 10)
+  y <- 1 + 0.5 * x - 0.9 * pmax(x - 4, 0) + 0.7 * pmax(x - 7.5, 0) +
+    rnorm(n, sd = 0.3)
+  d <- data.frame(x = x)
+  rss <- function(q) {
+    sum(stats::lm.fit(cbind(1, x, sapply(q, function(v) pmax(x - v, 0))),
+                      y)$residuals^2)
+  }
+  # one break-point: the profile over every interval against a fine grid
+  b <- term_build(seg(x, psi = 2), d)
+  pr <- seg_profile_intervals(b, y)
+  expect_equal(pr$rss, vapply(pr$psi, rss, 1), tolerance = 1e-9)
+  g <- seq(min(pr$psi), max(pr$psi), length.out = 5000)
+  expect_lte(min(pr$rss), min(vapply(g, rss, 1)) + 1e-10)
+  # two: from a poor start the polish reaches the two-dimensional minimum
+  e <- seg_polish_exact(term_build(seg(x, npsi = 2, psi = c(2, 3)), d), y)
+  g2 <- expand.grid(a = seq(3, 5, by = 0.02), b = seq(6.5, 8.5, by = 0.02))
+  expect_lte(rss(seg_psi(e)), min(apply(g2, 1, rss)) + 1e-10)
+  # weighted
+  w <- rexp(n)
+  pw <- seg_profile_intervals(b, y, weights = w)
+  ref <- vapply(pw$psi, function(q) {
+    Z <- cbind(1, x, pmax(x - q, 0))
+    sum(w * stats::lm.wfit(Z, y, w)$residuals^2)
+  }, 1)
+  expect_equal(pw$rss, ref, tolerance = 1e-9)
+})
+
+test_that("a break-point term starts from least squares when given a target", {
+  set.seed(6)
+  x <- 1900 + runif(120, 0, 100)
+  y <- 0.01 * (x - 1900) - 0.03 * pmax(x - 1960, 0) + rnorm(120, sd = 0.1)
+  b <- term_build(seg(x, psi = 1960), data.frame(x = x))
+  expect_identical(unname(term_coef_start(b)[2]), 1)
+  cf <- term_coef_start(b, target = y)
+  l <- stats::lm.fit(cbind(1, x, pmax(x - 1960, 0)), y)$coefficients
+  expect_equal(unname(cf[1:2]), unname(l[2:3]), tolerance = 1e-8)
+  expect_equal(unname(cf[3]), 1960)
+  j <- term_build(jump(x, psi = 1960), data.frame(x = x))
+  cj <- term_coef_start(j, target = y)
+  lj <- stats::lm.fit(cbind(1, as.numeric(x > 1960)), y)$coefficients
+  expect_equal(unname(cj[1]), unname(lj[2]), tolerance = 1e-8)
+  # the slot carries -delta psi, which reads back the starting position
+  expect_equal(unname(-cj[2] / cj[1]), 1960)
+})

@@ -1,3 +1,17 @@
+# modelterms7 0.92.0
+
+* `seg_polish_exact()` and `seg_profile_intervals()` accept a sharp `seg()`.
+  Inside each interval between consecutive values of the covariate the
+  profile of a change of slope has one stationary point, the position
+  -b/g of the least-squares fit on x 1(x > u) and 1(x > u), so its minimum
+  over every interval is exact. On `segmented::globTempAnom` with four
+  changes of slope the polish reaches a residual sum of squares of 1.388930
+  from the default start, against 1.628 for `segmented`'s own fit.
+* `term_coef_start()` of a break-point term, given `target`, starts the
+  slope and the changes at their least-squares values at the starting
+  positions instead of at one. A unit change on calendar years put the
+  starting mean a hundred units from the data.
+
 # modelterms7 0.91.0
 
 * `term_readable()` for `regime()` reports the transition probabilities

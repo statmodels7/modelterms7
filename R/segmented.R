@@ -3062,22 +3062,68 @@ S7::method(print, SegTerm) <- function(x, ...) {
 #' @title Where a Break-Point Term's Coefficients Begin
 #' @name term_coef_start.SegTerm
 #' @description
-#' The start [term_build()] computed: unit changes, and the
-#' break-points at the positions `psi` names or at the interior
-#' quantiles of the covariate. Zero is degenerate here, never neutral: a
+#' The start [term_build()] computed: the break-points at the positions
+#' `psi` names or at the interior quantiles of the covariate, and unit
+#' changes. Where `target` is given (the response on the scale of the
+#' predictor) and no coefficient carries a development, the slope and the
+#' changes are instead the least-squares coefficients of `target` on an
+#' intercept and the term's exact columns at the starting positions, which
+#' puts the starting mean near the data whatever the scale of the covariate.
+#' Zero is degenerate here, never neutral: a
 #' discontinuous term reads its break-point off \eqn{-g_k/\delta_k},
 #' which at zero is the same clamped position for every one of them, and a
 #' continuous term's Jacobian column vanishes, so a fitting layer that
 #' starts every coefficient at zero has to be told otherwise.
 #' @param term A built [SegTerm()].
-#' @param target Unused: a break-point term already reads the covariate's
-#'   interior quantiles at [term_build()].
+#' @param target The response on the scale of the predictor, one value per
+#'   observation of the build data, or `NULL` for the unit changes.
 #' @param ... Unused.
 #' @return A numeric vector, one value per column of the block.
 #' @keywords internal
 S7::method(term_coef_start, SegTerm) <- function(term, target = NULL, ...) {
   .assert_built(term)
-  term@blueprint$coef
+  bp <- term@blueprint
+  cf <- bp$coef
+  y <- if (is.null(target)) NULL else
+    tryCatch(suppressWarnings(as.numeric(target)), error = function(e) NULL)
+  xv <- bp$xv
+  K <- bp$npsi
+  if (is.null(y) || length(y) != length(xv) || !all(is.finite(y)) ||
+      any(vapply(bp$Z, Negate(is.null), logical(1)))) {
+    return(cf)
+  }
+  # the changes are the least-squares ones at the starting positions: a unit
+  # change is a start only on a covariate of unit scale, and on calendar
+  # years it put the starting mean a hundred units from the data and sent
+  # the dispersion to the edge of its chart
+  psi <- as.numeric(bp$psi[1L, ])
+  cols <- list()
+  if (bp$linear) cols$beta <- xv
+  for (k in seq_len(K)) {
+    if (bp$kind %in% c("seg", "jseg")) {
+      cols[[paste0("gamma", k)]] <- pmax(xv - psi[k], 0)
+    }
+    if (bp$kind %in% c("jump", "jseg")) {
+      cols[[paste0("delta", k)]] <- as.numeric(xv > psi[k])
+    }
+  }
+  fit <- tryCatch(stats::lm.fit(cbind(1, do.call(cbind, cols)), y),
+                  error = function(e) NULL)
+  if (is.null(fit) || fit$rank < length(cols) + 1L) return(cf)
+  b <- fit$coefficients[-1L]
+  for (i in seq_along(cols)) cf[bp$index[[names(cols)[i]]]] <- b[[i]]
+  if (bp$kind != "seg" && is.null(bp$smooth)) {
+    # the working construction reads the position off -g_k / delta_k
+    for (k in seq_len(K)) {
+      dk <- cf[bp$index[[paste0("delta", k)]]]
+      if (abs(dk) < 1e-8) {
+        dk <- 1
+        cf[bp$index[[paste0("delta", k)]]] <- dk
+      }
+      cf[bp$index[[paste0("psi", k)]]] <- -dk * psi[k]
+    }
+  }
+  cf
 }
 
 #' @title A Break-Point Term's Own Coefficients, Drawn
