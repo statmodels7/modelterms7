@@ -3249,16 +3249,18 @@ S7::method(term_coef_draw, SegTerm) <- function(term, coef, sd = 1, ...) {
 #' interval between the 5th and the 95th percentile. Where a coefficient
 #' carries a development there is no single number to report, a
 #' break-point then having one value per observation, and the method
-#' returns nothing, leaving a caller to report the coefficients
-#' themselves.
+#' leaves that coefficient to the caller to report. The exception is the
+#' position of a held [jump()] or [jseg()]: its slot holds the development's
+#' coefficients \eqn{p} in \eqn{\psi_i = w_i'p}, and they are reported as
+#' `psi1.<column>`, one per column of the sub-design.
 #'
 #' @param term A built [SegTerm()].
 #' @param zeta The term's coefficients, in the order of its block.
 #' @param ... Unused.
 #'
 #' @return A list with `name`, `value`, `jacobian` and
-#'   `scale`, as [term_readable()] documents, or
-#'   `NULL` where a coefficient carries a development.
+#'   `scale`, as [term_readable()] documents, or `NULL` where no quantity
+#'   is reported.
 #'
 #' @keywords internal
 S7::method(term_readable, SegTerm) <- function(term, zeta, ...) {
@@ -3308,7 +3310,20 @@ S7::method(term_readable, SegTerm) <- function(term, zeta, ...) {
     min(max(v, bp$lim[1L]), bp$lim[2L])
   }
   for (k in seq_len(K)) {
-    if (dev(paste0("psi", k))) next
+    if (dev(paste0("psi", k))) {
+      # a held term holds the coefficients of the development themselves,
+      # psi_i = w_i'p, so they are reported one per column of the sub-design,
+      # each read through its slot
+      if (isTRUE(bp$held)) {
+        ip <- bp$index[[paste0("psi", k)]]
+        sub <- sub(paste0("^(.*\\.)?g", k, "\\."), "", term@coef_names[ip])
+        for (j in seq_along(ip)) {
+          push(paste0("psi", k, ".", sub[j]), as.numeric(bp$pk[[k]][j]),
+               sel(ip[j]))
+        }
+      }
+      next
+    }
     ip <- at(paste0("psi", k))
     # a held term reports the position it holds, read through its slot
     if (bp$kind == "seg" || !is.null(bp$smooth) || isTRUE(bp$held)) {

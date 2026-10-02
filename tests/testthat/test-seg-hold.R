@@ -113,3 +113,52 @@ test_that("seg_profile_intervals() is the brute-force profile over every interva
   expect_equal(pr2$rss[ok], ref2[ok], tolerance = 1e-10)
   expect_error(seg_profile_intervals(b2, y, k = 3), "'k' must be one of 1 to 2")
 })
+
+test_that("a held developed jump is polished to the exhaustive per-group minimum", {
+  set.seed(1)
+  g <- factor(rep(c("a", "b", "c"), each = 30))
+  x <- runif(90, 0, 10)
+  gi <- as.integer(g)
+  y <- 1 + 1.5 * (x > c(3, 5, 7)[gi]) + rnorm(90, sd = 0.5)
+  d <- data.frame(x = x, g = g)
+  b <- seg_hold(term_build(jump(x, psi ~ 0 + g), d))
+  e <- seg_polish_exact(b, y)
+  rss <- function(q) sum(stats::.lm.fit(cbind(1, x > q[gi]), y)$residuals^2)
+  cand <- lapply(1:3, function(j) {
+    u <- sort(unique(x[gi == j]))
+    m <- (u[-1] + u[-length(u)]) / 2
+    lim <- stats::quantile(x[gi == j], c(0.05, 0.95))
+    m[m > lim[1] & m < lim[2]]
+  })
+  best <- Inf
+  for (a in cand[[1]]) for (bb in cand[[2]]) {
+    r <- vapply(cand[[3]], function(v) rss(c(a, bb, v)), 1)
+    best <- min(best, r)
+  }
+  q <- vapply(1:3, function(j) e@blueprint$psi[which(gi == j)[1], 1], 1)
+  expect_equal(rss(q), best, tolerance = 1e-10)
+  # the held positions are reported one per level
+  rd <- term_readable(e, e@blueprint$coef)
+  expect_identical(rd$name[grepl("^psi", rd$name)], c("psi1.ga", "psi1.gb", "psi1.gc"))
+  expect_equal(rd$value[grepl("^psi", rd$name)], unname(q), tolerance = 1e-12)
+})
+
+test_that("a held jump developed on a continuous covariate reaches the grid minimum", {
+  set.seed(2)
+  n <- 150
+  x <- runif(n, 0, 10)
+  z <- runif(n, -1, 1)
+  y <- 1 + 1.5 * (x > 5 + 1.5 * z) + rnorm(n, sd = 0.4)
+  b <- seg_hold(term_build(jump(x, psi ~ z), data.frame(x = x, z = z)))
+  e <- seg_polish_exact(b, y)
+  rss <- function(p) sum(stats::.lm.fit(cbind(1, x > p[1] + p[2] * z), y)$residuals^2)
+  gr <- expand.grid(p0 = seq(3, 7, by = 0.05), p1 = seq(-1, 4, by = 0.05))
+  grid_min <- min(apply(gr, 1, rss))
+  expect_lte(rss(e@blueprint$pk[[1]]), grid_min + 1e-10)
+})
+
+test_that("a developed term is polished only when held", {
+  d <- data.frame(x = runif(60, 0, 10), g = factor(rep(1:2, 30)))
+  b <- term_build(jump(x, psi ~ 0 + g), d)
+  expect_error(seg_polish_exact(b, rnorm(60)), "polished held")
+})

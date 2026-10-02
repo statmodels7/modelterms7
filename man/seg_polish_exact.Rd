@@ -51,9 +51,24 @@ the global minimum in 11.
 
 The profile is least squares of \code{y} on the term's own columns plus an
 intercept, exact for a gaussian response; a fitting layer for any other
-family accepts the positions only where its own objective improves. A
-term whose per-break-point coefficients carry a development is rejected,
-its positions being one per observation.
+family accepts the positions only where its own objective improves.
+
+A held term whose break-point is developed, \eqn{\psi_i = w_i'p} with
+\eqn{w_i} the row of the sub-design, is polished in the coefficients
+\eqn{p}. Along a line \eqn{p + tv} the position of observation \eqn{i}
+crosses \eqn{x_i} at \eqn{t_i = (x_i - \psi_i)/(w_i'v)}, so the profile
+is evaluated once between each pair of consecutive crossings, and for a
+\code{\link[=jseg]{jseg()}} whose change of slope is not developed like its position it is
+then minimized inside the best interval, where it varies smoothly. Where
+the sub-design partitions the observations into groups (\code{psi ~ g},
+\code{by = ~ 0 + g}) the lines move one group's position at a time, which is a
+search over every interval of that group, and the sweep also starts from
+each group's own minimum, the minimum of the profile on that group's
+observations alone; the better of the two results is kept. With a
+continuous covariate in the sub-design the lines are the coordinate
+directions and eight fixed directions in each plane of two coordinates,
+so the result is the best point found along those lines and not a global
+minimum. A developed term is polished only when held (see \code{\link[=seg_hold]{seg_hold()}}).
 }
 \examples{
 set.seed(1)

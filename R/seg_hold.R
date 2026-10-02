@@ -210,9 +210,24 @@ seg_hold <- function(term, hold = TRUE) {
 #'
 #' The profile is least squares of `y` on the term's own columns plus an
 #' intercept, exact for a gaussian response; a fitting layer for any other
-#' family accepts the positions only where its own objective improves. A
-#' term whose per-break-point coefficients carry a development is rejected,
-#' its positions being one per observation.
+#' family accepts the positions only where its own objective improves.
+#'
+#' A held term whose break-point is developed, \eqn{\psi_i = w_i'p} with
+#' \eqn{w_i} the row of the sub-design, is polished in the coefficients
+#' \eqn{p}. Along a line \eqn{p + tv} the position of observation \eqn{i}
+#' crosses \eqn{x_i} at \eqn{t_i = (x_i - \psi_i)/(w_i'v)}, so the profile
+#' is evaluated once between each pair of consecutive crossings, and for a
+#' [jseg()] whose change of slope is not developed like its position it is
+#' then minimized inside the best interval, where it varies smoothly. Where
+#' the sub-design partitions the observations into groups (`psi ~ g`,
+#' `by = ~ 0 + g`) the lines move one group's position at a time, which is a
+#' search over every interval of that group, and the sweep also starts from
+#' each group's own minimum, the minimum of the profile on that group's
+#' observations alone; the better of the two results is kept. With a
+#' continuous covariate in the sub-design the lines are the coordinate
+#' directions and eight fixed directions in each plane of two coordinates,
+#' so the result is the best point found along those lines and not a global
+#' minimum. A developed term is polished only when held (see [seg_hold()]).
 #'
 #' @inheritParams seg_polish
 #'
@@ -229,6 +244,11 @@ seg_hold <- function(term, hold = TRUE) {
 #'
 #' @export
 seg_polish_exact <- function(term, y, sweeps = 10, weights = NULL) {
+  if (S7::S7_inherits(term, SegTerm) && isTRUE(term@blueprint$developed) &&
+      !identical(term@blueprint$kind, "seg") &&
+      is.null(term@blueprint$smooth)) {
+    return(.seg_polish_developed(term, y, weights, sweeps))
+  }
   ev <- .seg_interval_eval(term, y, weights)
   pr <- ev$pr
   mid <- ev$mid
@@ -367,4 +387,218 @@ seg_profile_intervals <- function(term, y, k = 1L, weights = NULL) {
     out
   }
   list(pr = pr, mid = mid, rss_at = rss_at)
+}
+
+# The polish of a held term whose break-points carry a development: exact
+# line searches in the coefficients p_k of each position, psi_i = w_i'p_k.
+# See seg_polish_exact().
+.seg_polish_developed <- function(term, y, weights = NULL, sweeps = 10) {
+  bp <- term@blueprint
+  if (!isTRUE(bp$held)) {
+    stop("a break-point term with a development is polished held; see seg_hold().",
+         call. = FALSE)
+  }
+  xv <- bp$xv
+  n <- length(xv)
+  y <- as.numeric(y)
+  if (length(y) != n) {
+    stop("'y' must have one value per observation of the build data.",
+         call. = FALSE)
+  }
+  w <- if (is.null(weights)) rep(1, n) else as.numeric(weights)
+  if (length(w) != n || anyNA(w) || any(w < 0)) {
+    stop("'weights' must be non-negative, one per observation.", call. = FALSE)
+  }
+  sw <- sqrt(w)
+  ys <- sw * y
+  K <- bp$npsi
+  jseg <- identical(bp$kind, "jseg")
+  lim <- bp$lim
+
+  # the profile: least squares of y on an intercept and the term's columns
+  rss_of <- function(tm) {
+    X <- as.matrix(tm@X)
+    keep <- colSums(abs(X)) > 0
+    Z <- cbind(1, X[, keep, drop = FALSE]) * sw
+    out <- tryCatch(sum(qr.resid(qr(Z), ys)^2), error = function(e) Inf)
+    if (is.finite(out)) out else Inf
+  }
+  at_pk <- function(tm, k, p) {
+    b <- tm@blueprint
+    b$pk[[k]] <- p
+    asm <- .seg_assemble(b, b$xv, b$coef)
+    X <- asm$X
+    colnames(X) <- tm@coef_names
+    b$value <- asm$value
+    b$psi <- asm$psi
+    b$pk <- asm$pk
+    tm@X <- X
+    tm@blueprint <- b
+    tm
+  }
+  design_of <- function(k) {
+    z <- bp$Z[[paste0("psi", k)]]
+    if (is.null(z)) matrix(1, n, 1L) else as.matrix(z)
+  }
+
+  # one exact line search for break-point k along v, the positions moving
+  # only inside `range`; NULL where no candidate improves
+  line <- function(tm, k, v, range, cur) {
+    Zk <- design_of(k)
+    p0 <- as.numeric(tm@blueprint$pk[[k]])
+    s <- as.numeric(Zk %*% v)
+    psi0 <- as.numeric(Zk %*% p0)
+    mv <- abs(s) > 1e-12 * max(abs(s))
+    if (!any(mv)) return(NULL)
+    tb <- sort(unique((xv[mv] - psi0[mv]) / s[mv]))
+    if (length(tb) < 2L) return(NULL)
+    cand <- (tb[-1L] + tb[-length(tb)]) / 2
+    inside <- vapply(cand, function(t) {
+      q <- psi0[mv] + t * s[mv]
+      all(q > range[1L] & q < range[2L])
+    }, logical(1))
+    if (!any(inside)) return(NULL)
+    ix <- which(inside)
+    r <- vapply(cand[ix], function(t) rss_of(at_pk(tm, k, p0 + t * v)),
+                numeric(1))
+    i <- which.min(r)
+    if (!length(i) || !is.finite(r[i])) return(NULL)
+    tbest <- cand[ix[i]]
+    rbest <- r[i]
+    # a jseg whose change of slope is not developed like its position varies
+    # inside the interval: (x - psi_i)_+ moves with t on the active rows
+    if (jseg) {
+      j <- ix[i]
+      o <- tryCatch(stats::optimize(
+        function(t) rss_of(at_pk(tm, k, p0 + t * v)),
+        c(tb[j], tb[j + 1L])), error = function(e) NULL)
+      if (!is.null(o) && is.finite(o$objective) && o$objective < rbest) {
+        tbest <- o$minimum
+        rbest <- o$objective
+      }
+    }
+    if (rbest < cur - 1e-10 * (cur + 1)) {
+      list(tm = at_pk(tm, k, p0 + tbest * v), rss = rbest)
+    } else NULL
+  }
+
+  # the groups a sub-design defines, where its distinct rows are as many as
+  # its columns and of full rank: then each group's position is free
+  groups_of <- function(Zk) {
+    key <- apply(Zk, 1L, function(r) paste(format(r, digits = 17), collapse = "\r"))
+    first <- !duplicated(key)
+    U <- Zk[first, , drop = FALSE]
+    if (nrow(U) != ncol(Zk) || qr(U)$rank < ncol(Zk)) return(NULL)
+    list(U = U, grp = match(key, key[first]))
+  }
+  # the directions for break-point k and the range each may move in
+  plan_of <- function(k) {
+    Zk <- design_of(k)
+    gr <- groups_of(Zk)
+    if (!is.null(gr)) {
+      dirs <- lapply(seq_len(ncol(Zk)), function(j) {
+        e <- numeric(ncol(Zk))
+        e[j] <- 1
+        v <- solve(gr$U, e)
+        # U v = e_j: only the rows of group j move
+        rows <- which(gr$grp == j)
+        xg <- xv[rows]
+        qg <- as.numeric(stats::quantile(xg, c(0.05, 0.95), names = FALSE))
+        list(v = v, range = c(max(lim[1L], qg[1L]), min(lim[2L], qg[2L])),
+             rows = rows)
+      })
+      return(list(groups = gr, dirs = dirs))
+    }
+    # with a continuous covariate the positions are confined by the clamp of
+    # .seg_positions() alone, so every crossing is a candidate
+    q <- ncol(Zk)
+    a <- sqrt(colMeans(Zk^2))
+    a[a == 0] <- 1
+    dirs <- list()
+    free <- c(-Inf, Inf)
+    for (j in seq_len(q)) {
+      e <- numeric(q)
+      e[j] <- 1 / a[j]
+      dirs[[length(dirs) + 1L]] <- list(v = e, range = free)
+    }
+    if (q > 1L) {
+      for (i in seq_len(q - 1L)) for (j in (i + 1L):q) {
+        for (th in (1:7) * pi / 8) {
+          if (abs(th - pi / 2) < 1e-12) next
+          e <- numeric(q)
+          e[i] <- cos(th) / a[i]
+          e[j] <- sin(th) / a[j]
+          dirs[[length(dirs) + 1L]] <- list(v = e, range = free)
+        }
+      }
+    }
+    list(groups = NULL, dirs = dirs)
+  }
+
+  plans <- lapply(seq_len(K), plan_of)
+  descend <- function(tm) {
+    cur <- rss_of(tm)
+    for (s in seq_len(as.integer(sweeps))) {
+      moved <- FALSE
+      for (k in seq_len(K)) {
+        for (d in plans[[k]]$dirs) {
+          res <- line(tm, k, d$v, d$range, cur)
+          if (!is.null(res)) {
+            tm <- res$tm
+            cur <- res$rss
+            moved <- TRUE
+          }
+        }
+      }
+      if (!moved) break
+    }
+    list(tm = tm, rss = cur)
+  }
+
+  # each group's own minimum: the profile on that group's observations alone,
+  # the other break-points held where they are
+  own_start <- function(tm) {
+    for (k in seq_len(K)) {
+      pl <- plans[[k]]
+      if (is.null(pl$groups)) next
+      psi <- tm@blueprint$psi
+      qk <- numeric(length(pl$dirs))
+      for (j in seq_along(pl$dirs)) {
+        d <- pl$dirs[[j]]
+        rows <- d$rows
+        xg <- xv[rows]
+        u <- sort(unique(xg))
+        mid <- (u[-1L] + u[-length(u)]) / 2
+        mid <- mid[mid > d$range[1L] & mid < d$range[2L]]
+        cur_k <- psi[rows[1L], k]
+        if (!length(mid)) {
+          qk[j] <- cur_k
+          next
+        }
+        fixed <- matrix(1, length(xg), 1L)
+        if (bp$linear) fixed <- cbind(fixed, xg)
+        for (kk in setdiff(seq_len(K), k)) {
+          pk2 <- psi[rows, kk]
+          fixed <- cbind(fixed, if (jseg) pmax(xg - pk2, 0), as.numeric(xg > pk2))
+        }
+        swg <- sw[rows]
+        yg <- ys[rows]
+        r <- vapply(mid, function(q) {
+          Zl <- cbind(fixed, if (jseg) pmax(xg - q, 0), as.numeric(xg > q)) * swg
+          out <- tryCatch(sum(qr.resid(qr(Zl), yg)^2), error = function(e) Inf)
+          if (is.finite(out)) out else Inf
+        }, numeric(1))
+        qk[j] <- if (any(is.finite(r))) mid[which.min(r)] else cur_k
+      }
+      tm <- at_pk(tm, k, as.numeric(solve(pl$groups$U, qk)))
+    }
+    tm
+  }
+
+  best <- descend(term)
+  if (any(vapply(plans, function(pl) !is.null(pl$groups), logical(1)))) {
+    alt <- descend(own_start(term))
+    if (alt$rss < best$rss) best <- alt
+  }
+  if (best$rss < rss_of(term) - 1e-10 * (rss_of(term) + 1)) best$tm else term
 }
