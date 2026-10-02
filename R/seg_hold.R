@@ -229,6 +229,72 @@ seg_hold <- function(term, hold = TRUE) {
 #'
 #' @export
 seg_polish_exact <- function(term, y, sweeps = 10, weights = NULL) {
+  ev <- .seg_interval_eval(term, y, weights)
+  pr <- ev$pr
+  mid <- ev$mid
+  if (!length(mid)) return(term)
+  K <- term@npsi
+  psi <- as.numeric(term@blueprint$psi[1L, ])
+  best <- pr$rss(psi)
+  for (s in seq_len(as.integer(sweeps))) {
+    moved <- FALSE
+    for (j in seq_len(K)) {
+      v <- ev$rss_at(j, psi)
+      i <- which.min(v)
+      if (length(i) && is.finite(v[i]) && v[i] < best - 1e-10 * (best + 1)) {
+        psi[j] <- mid[i]
+        best <- v[i]
+        moved <- TRUE
+      }
+    }
+    if (!moved) break
+  }
+  seg_relocate(term, psi)
+}
+
+#' The Profile of One Break-Point Over Every Interval
+#'
+#' @description
+#' The least-squares profile of a sharp [jump()] or [jseg()] term in one of its
+#' break-points, the others held where they are: the residual sum of squares
+#' at the midpoint of every interval between consecutive distinct values of
+#' the covariate inside the confinement limits. It is the quantity
+#' [seg_polish_exact()] minimizes, returned whole so that a caller whose
+#' objective the profile only approximates can take several candidates from
+#' it.
+#'
+#' @inheritParams seg_polish
+#' @param k Which break-point, an integer.
+#'
+#' @return A data frame with columns `psi`, the midpoints, and `rss`, the
+#'   profile there (`Inf` where the design is singular).
+#'
+#' @seealso [seg_polish_exact()].
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(x = sort(runif(200, 0, 10)))
+#' dd$y <- 1 + 1.5 * (dd$x > 6) + rnorm(200, sd = 0.4)
+#' b <- term_build(jump(x, psi = 4), dd)
+#' pr <- seg_profile_intervals(b, dd$y)
+#' pr$psi[which.min(pr$rss)]
+#'
+#' @export
+seg_profile_intervals <- function(term, y, k = 1L, weights = NULL) {
+  ev <- .seg_interval_eval(term, y, weights)
+  K <- term@npsi
+  k <- as.integer(k)
+  if (length(k) != 1L || is.na(k) || k < 1L || k > K) {
+    stop(sprintf("'k' must be one of 1 to %d.", K), call. = FALSE)
+  }
+  if (!length(ev$mid)) return(data.frame(psi = numeric(0), rss = numeric(0)))
+  psi <- as.numeric(term@blueprint$psi[1L, ])
+  data.frame(psi = ev$mid, rss = ev$rss_at(k, psi))
+}
+
+# The machinery of the two: the midpoints and an evaluator of the profile in
+# break-point j over every midpoint, the other positions given.
+.seg_interval_eval <- function(term, y, weights = NULL) {
   pr <- .seg_profile(term, y, weights)
   bp <- term@blueprint
   if (identical(bp$kind, "seg") || !is.null(bp$smooth)) {
@@ -246,12 +312,10 @@ seg_polish_exact <- function(term, y, sweeps = 10, weights = NULL) {
   u <- unique(xs)
   mid <- (u[-1L] + u[-length(u)]) / 2
   mid <- mid[mid > pr$lim[1L] & mid < pr$lim[2L]]
-  if (!length(mid)) return(term)
   # the first sorted observation above each candidate
   first <- findInterval(mid, xs) + 1L
   jseg <- identical(bp$kind, "jseg")
   K <- bp$npsi
-  psi <- as.numeric(bp$psi[1L, ])
   cols_of <- function(q) {
     if (jseg) cbind(pmax(xs - q, 0), as.numeric(xs > q))
     else matrix(as.numeric(xs > q), ncol = 1L)
@@ -263,7 +327,7 @@ seg_polish_exact <- function(term, y, sweeps = 10, weights = NULL) {
     cs <- rbind(as.matrix(cs), 0)
     cs[first, , drop = FALSE]
   }
-  rss_at <- function(j) {
+  rss_at <- function(j, psi) {
     Fm <- if (bp$linear) cbind(1, xs) else matrix(1, n, 1L)
     for (k in seq_len(K)) if (k != j) Fm <- cbind(Fm, cols_of(psi[k]))
     sw <- sqrt(ws)
@@ -302,19 +366,5 @@ seg_polish_exact <- function(term, y, sweeps = 10, weights = NULL) {
     out[!(det > 1e-12 * pmax(sTT * sII, 1e-300))] <- Inf
     out
   }
-  best <- pr$rss(psi)
-  for (s in seq_len(as.integer(sweeps))) {
-    moved <- FALSE
-    for (j in seq_len(K)) {
-      v <- rss_at(j)
-      i <- which.min(v)
-      if (length(i) && is.finite(v[i]) && v[i] < best - 1e-10 * (best + 1)) {
-        psi[j] <- mid[i]
-        best <- v[i]
-        moved <- TRUE
-      }
-    }
-    if (!moved) break
-  }
-  seg_relocate(term, psi)
+  list(pr = pr, mid = mid, rss_at = rss_at)
 }

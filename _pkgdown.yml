@@ -122,6 +122,7 @@ reference:
   - seg_polish
   - seg_profile_rss
   - seg_polish_exact
+  - seg_profile_intervals
   - seg_hold
 - title: Structural terms
   desc: >

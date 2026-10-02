@@ -1,3 +1,12 @@
+# modelterms7 0.88.0
+
+* `seg_profile_intervals()`: the least-squares profile of a sharp `jump()` or
+  `jseg()` term in one of its break-points, the others held, at the midpoint
+  of every interval between consecutive distinct values of the covariate. It
+  is the quantity `seg_polish_exact()` minimizes, returned whole, with the
+  same \eqn{O(np^2)} cost; it agrees with one weighted linear fit per
+  interval to 1e-10.
+
 # modelterms7 0.87.0
 
 * `seg_hold()` puts a sharp `jump()` or `jseg()` term in a held state: the

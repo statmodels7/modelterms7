@@ -82,3 +82,34 @@ test_that("seg_hold() rejects a continuous or smoothed term", {
   expect_error(seg_hold(term_build(jump(x, smoothed = numericals7::smooth_probit()), d)),
                "sharp jump")
 })
+
+test_that("seg_profile_intervals() is the brute-force profile over every interval", {
+  set.seed(4)
+  n <- 120
+  x <- runif(n, 0, 10)
+  y <- 1 + 0.3 * x + 2 * (x > 3) - 1.5 * (x > 7) + rnorm(n, sd = 0.4)
+  w <- rexp(n)
+  d <- data.frame(x = x)
+  u <- sort(unique(x))
+  m <- (u[-1] + u[-length(u)]) / 2
+  # one break-point of a jseg
+  b <- term_build(jseg(x, psi = 4), d)
+  pr <- seg_profile_intervals(b, y, weights = w)
+  lim <- b@blueprint$lim
+  expect_equal(pr$psi, m[m > lim[1] & m < lim[2]])
+  ref <- vapply(pr$psi, function(q) {
+    Z <- cbind(1, x, pmax(x - q, 0), as.numeric(x > q))
+    sum(w * stats::lm.wfit(Z, y, w)$residuals^2)
+  }, 1)
+  expect_equal(pr$rss, ref, tolerance = 1e-10)
+  # the second break-point of a jump, the first held where it is
+  b2 <- term_build(jump(x, npsi = 2, psi = c(3.1, 6)), d)
+  pr2 <- seg_profile_intervals(b2, y, k = 2)
+  q1 <- seg_psi(b2)[1]
+  ref2 <- vapply(pr2$psi, function(q) {
+    sum(stats::lm.fit(cbind(1, x > q1, x > q), y)$residuals^2)
+  }, 1)
+  ok <- is.finite(pr2$rss)
+  expect_equal(pr2$rss[ok], ref2[ok], tolerance = 1e-10)
+  expect_error(seg_profile_intervals(b2, y, k = 3), "'k' must be one of 1 to 2")
+})
