@@ -1,3 +1,26 @@
+# modelterms7 0.87.0
+
+* `seg_hold()` puts a sharp `jump()` or `jseg()` term in a held state: the
+  break-points stay where they are, the block is the exact design there --
+  the covariate, \eqn{(x - \psi_k)_+} and \eqn{1(x > \psi_k)} -- and the slot
+  that carried each position is a column of zeros. `term_refresh()` no longer
+  moves the positions, `term_jacobian_block()` answers `TRUE`, and
+  `term_readable()` reports the held position through its slot.
+  `seg_hold(term, hold = FALSE)` writes the position back as
+  \eqn{g_k = -\delta_k\psi_k}, so the working construction can continue.
+* `term_held()`, a new generic: the positions among a term's coefficients
+  that the term holds. Every term answers `integer(0)` except a held
+  break-point term, which answers its position slots.
+* `seg_polish_exact()`: the exact minimum of the least-squares profile of a
+  sharp `jump()` or `jseg()` term, one break-point at a time. The profile is
+  constant between consecutive observations, so it is evaluated once per
+  interval; by Frisch-Waugh every cross product the moving columns enter is
+  a suffix sum over the sorted covariate, so all intervals cost
+  \eqn{O(np^2)} together. It agrees with a brute-force search over every
+  interval on 16 of 16 samples of 200 and on a weighted two-break-point case
+  searched over the full set of interval pairs, and takes 0.25 s at
+  \eqn{n = 50000} where one linear fit per interval took 99 s.
+
 # modelterms7 0.86.0
 
 * **A smooth with a numeric `by` is no longer centered.** `s(x, by = z)` is

@@ -43,6 +43,7 @@ reference:
   - term_coef_draw
   - term_jacobian_block
   - term_kinks
+  - term_held
   - term_tag
   - term_group
   - term_within
@@ -120,6 +121,8 @@ reference:
   - seg_relocate
   - seg_polish
   - seg_profile_rss
+  - seg_polish_exact
+  - seg_hold
 - title: Structural terms
   desc: >
     Terms that rewrite the likelihood instead of adding to the

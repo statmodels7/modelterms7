@@ -967,6 +967,9 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 # from the quadratic of the joint construction, both componentwise, which
 # is exact under the conditions .seg_check_devs() enforces.
 .seg_pk <- function(bp, coef, k, prev = NULL) {
+  # a held term keeps its positions whatever the coefficients are; see
+  # seg_hold()
+  if (isTRUE(bp$held)) return(bp$pk[[k]])
   cf <- coef[bp$index[[paste0("psi", k)]]]
   # a smoothed term holds the break-point directly whatever its kind
   if (bp$kind == "seg" || !is.null(bp$smooth)) return(cf)
@@ -1213,7 +1216,8 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 
 .seg_assemble <- function(bp, xv, coef, cscale = bp$cscale, Z = bp$Z,
                           prev = bp$pk) {
-  if (!is.null(bp$smooth)) .seg_block_smooth(bp, xv, coef, Z, prev)
+  if (isTRUE(bp$held)) .seg_block_held(bp, xv, coef, Z)
+  else if (!is.null(bp$smooth)) .seg_block_smooth(bp, xv, coef, Z, prev)
   else if (bp$developed) .seg_block(bp, xv, coef, cscale, Z, prev)
   else .seg_block_cpp(bp, xv, coef, cscale, prev)
 }
@@ -1641,7 +1645,8 @@ S7::method(term_penalties, SegTerm) <- function(term, ...) {
 #'
 #' @keywords internal
 S7::method(term_jacobian_block, SegTerm) <- function(term, ...) {
-  identical(term@kind, "seg") || !is.null(term@spec$smoothed)
+  identical(term@kind, "seg") || !is.null(term@spec$smoothed) ||
+    isTRUE(term@blueprint$held)
 }
 
 # How a smoothed block moves with the coefficients, in the two shapes the
@@ -2209,6 +2214,19 @@ S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   # moves no value. A term whose per-break-point coefficients carry a
   # development is left alone: its positions are one per observation and
   # a single order need not exist.
+  # a held term has no schedule and no read-off: the positions stay where
+  # seg_hold() put them and only the coefficients of the exact block move
+  if (isTRUE(bp$held)) {
+    asm <- .seg_assemble(bp, bp$xv, coef)
+    X <- asm$X
+    colnames(X) <- term@coef_names
+    bp$nref <- bp$nref + 1L
+    bp$coef <- coef
+    bp$value <- asm$value
+    term@X <- X
+    term@blueprint <- bp
+    return(term)
+  }
   psi_new <- .seg_positions(bp, coef, length(bp$xv))$psi
   ro <- .seg_reorder(bp, coef, psi_new)
   if (!is.null(ro)) {
@@ -2660,7 +2678,7 @@ seg_relocate <- function(term, psi) {
 #' @return A single logical.
 #' @keywords internal
 S7::method(term_converged, SegTerm) <- function(term, ...) {
-  isTRUE(seg_converged(term))
+  isTRUE(term@blueprint$held) || isTRUE(seg_converged(term))
 }
 
 #' @title Has a Break-Point Term Run Out of Step Control?
@@ -2679,7 +2697,8 @@ S7::method(term_converged, SegTerm) <- function(term, ...) {
 #' @keywords internal
 S7::method(term_stalled, SegTerm) <- function(term, ...) {
   bp <- term@blueprint
-  if (!is.null(bp$smooth) || !bp$kind %in% c("jump", "jseg")) return(FALSE)
+  if (!is.null(bp$smooth) || !bp$kind %in% c("jump", "jseg") ||
+      isTRUE(bp$held)) return(FALSE)
   st <- bp$step
   if (is.null(bp$floor) || anyNA(st)) return(FALSE)
   open <- st >= bp$delta
@@ -3291,7 +3310,8 @@ S7::method(term_readable, SegTerm) <- function(term, zeta, ...) {
   for (k in seq_len(K)) {
     if (dev(paste0("psi", k))) next
     ip <- at(paste0("psi", k))
-    if (bp$kind == "seg" || !is.null(bp$smooth)) {
+    # a held term reports the position it holds, read through its slot
+    if (bp$kind == "seg" || !is.null(bp$smooth) || isTRUE(bp$held)) {
       push(paste0("psi", k), pos_at(k), sel(ip))
     } else {
       if (dev(paste0("delta", k))) next
