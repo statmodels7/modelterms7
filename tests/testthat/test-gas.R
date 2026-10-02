@@ -307,6 +307,18 @@ test_that("the reported quantities are the literature's, with a jacobian", {
   rho <- linkfunctions7::linkinv(linkfunctions7::rhobit_link(), c(1.2, -0.4))
   expect_false(isTRUE(all.equal(term_readable(gas(1, 2), z2)$value[[3L]],
                                 rho[[1L]])))
+  # and the interval follows the same split: at q = 1 it is built on the
+  # coordinate's own link, whichever the caller chose, above it on the
+  # identity, the stationary region not being a box
+  sc1 <- term_readable(gas(1, 1), z1)$scale[[3L]]
+  expect_identical(sc1@link_name,
+                   linkfunctions7::rhobit_link()@link_name)
+  bl <- linkfunctions7::bounded_link(lwr = -1, upr = 1)
+  own <- term_readable(gas(1, 1, links = list(pacf1 = bl)), z1)$scale[[3L]]
+  expect_identical(own@link_name, bl@link_name)
+  sc2 <- term_readable(gas(1, 2), z2)$scale
+  expect_identical(unname(vapply(sc2[3:4], function(g) g@link_name, "")),
+                   rep(linkfunctions7::identity_link()@link_name, 2L))
 
   # the level's coordinate IS its quantity; a loading is reported through
   # its chart, exp of the coordinate on the default log link

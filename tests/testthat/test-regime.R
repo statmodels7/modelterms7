@@ -465,3 +465,39 @@ test_that("term_hessian rejects what it cannot use", {
                             list(omega = 0, alpha1 = 0, pacf1 = 0), sd, 2:4, 1L),
                "does not implement term_hessian")
 })
+
+test_that("a regime reports its transition probabilities, not the log-ratios", {
+  tm <- regime(3)
+  z <- c(level1 = 0.5, gap2 = log(2), gap3 = log(1.5), alr1.1 = 0.3,
+         alr1.2 = -0.2, alr2.1 = 1, alr2.2 = 0.5, alr3.1 = -1, alr3.2 = 0.1)
+  rd <- term_readable(tm, as.list(z))
+  P <- as.matrix(parameters7::param_value(tm@chain, z[tm@chain@free_names]))
+  pn <- sprintf("p%d.%d", rep(1:3, each = 3), rep(1:3, 3))
+  expect_identical(rd$name, c("level1", "gap2", "gap3", pn))
+  expect_equal(rd$value, c(0.5, 2, 1.5, as.numeric(t(P))), tolerance = 1e-14)
+  # each row of the matrix is a distribution
+  expect_equal(rowSums(matrix(rd$value[-(1:3)], 3, byrow = TRUE)), rep(1, 3),
+               tolerance = 1e-14)
+  # the Jacobian is the derivative of the values, against numDeriv
+  num <- numDeriv::jacobian(function(v)
+    term_readable(tm, as.list(stats::setNames(v, names(z))))$value, z)
+  expect_equal(unname(rd$jacobian), num, tolerance = 1e-8)
+  # an entry reads the log-ratios of its own row only
+  expect_true(all(rd$jacobian["p2.1", c("alr1.1", "alr1.2", "alr3.1",
+                                         "alr3.2")] == 0))
+  expect_true(all(vapply(rd$scale[pn], function(g) g@link_name, "") ==
+                    linkfunctions7::logit_link()@link_name))
+})
+
+test_that("the latent states of a regime are its smoothed probabilities", {
+  set.seed(2)
+  dd <- data.frame(t = 1:40, y = c(rnorm(20), rnorm(20, 3)))
+  b <- term_build(regime(2, time = t), dd)
+  ld <- function(e, i) dnorm(dd$y[i], e, log = TRUE)
+  psi <- list(level1 = 0, gap2 = 3, alr1.1 = 2, alr2.1 = -2)
+  lt <- term_latent(b, rep(0, 40), dd$y, ld, psi)
+  expect_identical(names(lt), c("state1", "state2"))
+  expect_equal(as.matrix(lt), unname(term_posterior(b, rep(0, 40), dd$y, ld, psi)),
+               ignore_attr = TRUE)
+  expect_equal(rowSums(lt), rep(1, 40), tolerance = 1e-12)
+})

@@ -102,7 +102,8 @@ S7::method(term_levels, RegimeTerm) <- function(term, psi, ...) {
 #' the whole sample. For a marginal break-point term it is the posterior mean
 #' and standard deviation of each group's break-points. That is what a reader
 #' wants from such a fit: where each group's change happened, and how sure the
-#' data are about it.
+#' data are about it. For a [regime()] term it is the smoothed probability of
+#' each regime at each observation.
 #'
 #' @details
 #' [term_posterior()] answers the fitting layer's question, the component
@@ -119,9 +120,10 @@ S7::method(term_levels, RegimeTerm) <- function(term, psi, ...) {
 #' below two no variance, and the quadrature returns `NA` there instead of a
 #' number. That is a property of the prior the caller chose.
 #'
-#' The method on [structural_term()] throws, naming the class: [gas()] and
-#' [regime()] have no continuous latent to summarize this way, a regime's
-#' latent being the discrete state [term_posterior()] already reports.
+#' The method on [structural_term()] throws, naming the class: [gas()] has no
+#' latent variable, its level being a deterministic function of the data. A
+#' regime's latent is the discrete state, and its method returns the
+#' probabilities [term_posterior()] computes, labelled by regime.
 #'
 #' @param term A built structural term.
 #' @param eta The static predictor of the equation the term sits in, one value
@@ -133,10 +135,12 @@ S7::method(term_levels, RegimeTerm) <- function(term, psi, ...) {
 #'   [term_params()].
 #' @param ... Passed to methods.
 #'
-#' @return A data frame with one row per group and break-point and four
-#'   columns: `group`, the grouping level; `psi`, which break-point;
-#'   `mean` and `sd`, the posterior moments of its position. `NA` in a moment
-#'   the prior does not possess.
+#' @return For a marginal break-point term, a data frame with one row per
+#'   group and break-point and four columns: `group`, the grouping level;
+#'   `psi`, which break-point; `mean` and `sd`, the posterior moments of its
+#'   position. `NA` in a moment the prior does not possess. For a regime
+#'   term, a data frame with one row per observation and one column per
+#'   regime, `state1`, `state2`, and so on.
 #'
 #' @seealso [term_posterior()] for the component weights a fit reads,
 #'   [jump()] and [seg()] for the terms that implement it.
@@ -162,6 +166,34 @@ S7::method(term_latent, structural_term) <- function(term, eta, y, logdens,
                                                      psi, ...) {
   stop(sprintf("the term class '%s' does not implement term_latent().",
                attr(S7::S7_class(term), "name")), call. = FALSE)
+}
+
+#' @title The Smoothed States of a Regime Term
+#' @name term_latent.RegimeTerm
+#' @description
+#' The probability of each regime at each observation given the whole series,
+#' \eqn{P(S_t = j \mid y_1, \dots, y_n)}, as a data frame.
+#' @details
+#' The probabilities are [term_posterior()]'s, computed by the forward and
+#' backward recursions; this method only labels them. The rows are in the
+#' order of the data the term was built on, whatever `by` and `time` say, so
+#' the result can be bound to that data directly.
+#' @param term A built [RegimeTerm()].
+#' @param eta The static predictor.
+#' @param y The response.
+#' @param logdens The log-density, as [term_loglik()] takes it.
+#' @param psi The term's parameters on the parameter scale.
+#' @param ... Unused.
+#' @return A data frame with one row per observation and one column per
+#'   regime, `state1`, `state2`, and so on; every row sums to one.
+#' @keywords internal
+S7::method(term_latent, RegimeTerm) <- function(term, eta, y, logdens, psi,
+                                                ...) {
+  g <- term_posterior(term, eta, y, logdens, psi)
+  out <- as.data.frame(g)
+  names(out) <- paste0("state", seq_len(ncol(g)))
+  rownames(out) <- NULL
+  out
 }
 
 

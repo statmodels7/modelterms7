@@ -398,6 +398,50 @@ S7::method(term_params, RegimeTerm) <- function(term, ...) {
 #' @keywords internal
 S7::method(term_level_param, RegimeTerm) <- function(term, ...) "level1"
 
+#' @title What a Fitted Regime Term Reports
+#' @name term_readable.RegimeTerm
+#' @description
+#' The first level, the gaps between consecutive levels and the transition
+#' probabilities \eqn{p_{ij} = P(S_t = j \mid S_{t-1} = i)}, with the
+#' Jacobian from the term's own parameters.
+#' @details
+#' The levels and the gaps are reported through their own links, as the base
+#' method does. The chain is estimated on the additive log-ratios of each row
+#' of the transition matrix, which are coordinates and not the quantities a
+#' reader wants, so every entry of the matrix is reported instead, \eqn{k^2}
+#' of them, row by row and named `p1.1`, `p1.2`, and so on. Entry
+#' \eqn{p_{ij}} depends on the log-ratios of row \eqn{i} alone, and its row
+#' of the Jacobian is the derivative of [parameters7::transition_matrix()]'s
+#' value. Each interval is built on the logit scale and mapped back, so it
+#' stays inside \eqn{(0, 1)}.
+#' @param term A [RegimeTerm()].
+#' @param zeta The parameters on the unconstrained scale.
+#' @param ... Unused.
+#' @return A list, as [term_readable()] documents.
+#' @keywords internal
+S7::method(term_readable, RegimeTerm) <- function(term, zeta, ...) {
+  nm <- term_params(term)
+  out <- S7::method(term_readable, model_term)(term, zeta)
+  fr <- term@chain@free_names
+  keep <- !(nm %in% fr)
+  k <- term@k
+  z <- unlist(zeta[nm])
+  eta <- z[fr]
+  P <- as.matrix(parameters7::param_value(term@chain, eta))
+  dP <- parameters7::param_d1(term@chain, eta)
+  ij <- expand.grid(j = seq_len(k), i = seq_len(k))[, c("i", "j")]
+  pn <- sprintf("p%d.%d", ij$i, ij$j)
+  Jp <- matrix(0, nrow(ij), length(nm), dimnames = list(pn, nm))
+  for (f in fr) Jp[, f] <- dP[[f]][cbind(ij$i, ij$j)]
+  J <- rbind(out$jacobian[keep, , drop = FALSE], Jp)
+  list(name = c(out$name[keep], pn),
+       value = c(out$value[keep], P[cbind(ij$i, ij$j)]),
+       jacobian = J,
+       scale = c(out$scale[keep],
+                 stats::setNames(rep(list(linkfunctions7::logit_link()),
+                                     nrow(ij)), pn)))
+}
+
 #' @title The Charts of a Regime Term's Parameters
 #' @name term_links.RegimeTerm
 #'

@@ -29,6 +29,12 @@ a delta-method standard error for \eqn{\beta_j} needs. At \eqn{q = 1}
 the two coincide and the chain factor is the link's alone; above it
 they do not.
 
+The scale an interval is built on follows the same split. At \eqn{q = 1}
+it is the link of the partial autocorrelation (the rhobit unless \code{links}
+gives another), so the interval stays inside the coordinate's range.
+Above it the coefficients range over the stationary region, which is not
+a box, and the interval is built on the identity scale.
+
 A deviation is reported as it stands, being unconstrained and defined on
 the scale of the parameter it departs from.
 }

@@ -24,17 +24,20 @@ per observation.}
 \item{...}{Passed to methods.}
 }
 \value{
-A data frame with one row per group and break-point and four
-columns: \code{group}, the grouping level; \code{psi}, which break-point;
-\code{mean} and \code{sd}, the posterior moments of its position. \code{NA} in a moment
-the prior does not possess.
+For a marginal break-point term, a data frame with one row per
+group and break-point and four columns: \code{group}, the grouping level;
+\code{psi}, which break-point; \code{mean} and \code{sd}, the posterior moments of its
+position. \code{NA} in a moment the prior does not possess. For a regime
+term, a data frame with one row per observation and one column per
+regime, \code{state1}, \code{state2}, and so on.
 }
 \description{
 A summary of the latent variable a structural term integrates over, given
 the whole sample. For a marginal break-point term it is the posterior mean
 and standard deviation of each group's break-points. That is what a reader
 wants from such a fit: where each group's change happened, and how sure the
-data are about it.
+data are about it. For a \code{\link[=regime]{regime()}} term it is the smoothed probability of
+each regime at each observation.
 }
 \details{
 \code{\link[=term_posterior]{term_posterior()}} answers the fitting layer's question, the component
@@ -50,9 +53,10 @@ Student t below one degree of freedom has no mean on an edge interval and
 below two no variance, and the quadrature returns \code{NA} there instead of a
 number. That is a property of the prior the caller chose.
 
-The method on \code{\link[=structural_term]{structural_term()}} throws, naming the class: \code{\link[=gas]{gas()}} and
-\code{\link[=regime]{regime()}} have no continuous latent to summarize this way, a regime's
-latent being the discrete state \code{\link[=term_posterior]{term_posterior()}} already reports.
+The method on \code{\link[=structural_term]{structural_term()}} throws, naming the class: \code{\link[=gas]{gas()}} has no
+latent variable, its level being a deterministic function of the data. A
+regime's latent is the discrete state, and its method returns the
+probabilities \code{\link[=term_posterior]{term_posterior()}} computes, labelled by regime.
 }
 
 \examples{

@@ -581,6 +581,12 @@ S7::method(term_level_design, GasTerm) <- function(term, ...) {
 #' the two coincide and the chain factor is the link's alone; above it
 #' they do not.
 #'
+#' The scale an interval is built on follows the same split. At \eqn{q = 1}
+#' it is the link of the partial autocorrelation (the rhobit unless `links`
+#' gives another), so the interval stays inside the coordinate's range.
+#' Above it the coefficients range over the stationary region, which is not
+#' a box, and the interval is built on the identity scale.
+#'
 #' A deviation is reported as it stands, being unconstrained and defined on
 #' the scale of the parameter it departs from.
 #' @param term A [GasTerm()].
@@ -615,9 +621,14 @@ S7::method(term_readable, GasTerm) <- function(term, zeta, ...) {
   out$jacobian[i_pa, i_pa] <- ld$jacobian * rep(k1, each = q)
   rownames(out$jacobian)[i_pa] <- out$name[i_pa]
   # a coefficient of a stationary autoregression is not confined to an
-  # interval a scalar link expresses, the region not being a box, so its
-  # interval is built on the identity scale
-  out$scale[i_pa] <- rep(list(linkfunctions7::identity_link()), q)
+  # interval a scalar link expresses, the region not being a box, so above
+  # q = 1 its interval is built on the identity scale. At q = 1 the
+  # coefficient IS the partial autocorrelation, so its interval is built on
+  # that coordinate's own link and mapped back, and stays inside its range:
+  # on the identity scale a persistence of 0.845 with a standard error of
+  # 0.114 (the Nile flows) got an upper end of 1.068.
+  out$scale[i_pa] <- if (q == 1L) list(lk) else
+    rep(list(linkfunctions7::identity_link()), q)
   names(out$scale)[i_pa] <- out$name[i_pa]
   out
 }

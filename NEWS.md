@@ -1,3 +1,15 @@
+# modelterms7 0.91.0
+
+* `term_readable()` for `regime()` reports the transition probabilities
+  `p1.1`, `p1.2`, ..., every entry of the matrix row by row, in place of the
+  additive log-ratios they are estimated on, with the Jacobian in those
+  log-ratios and an interval scale on the logit.
+* `term_latent()` for `regime()` returns the smoothed probability of each
+  regime at each observation, in the order of the data.
+* The interval of `beta1` of a `gas()` term with `q = 1` is built on the link
+  of `pacf1` (the rhobit unless `links` gives another) and stays inside its
+  range; above `q = 1` it is built on the identity, as before.
+
 # modelterms7 0.90.0
 
 * The parameters of a marginal break-point term's gaussian prior are named
