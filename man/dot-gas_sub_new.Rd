@@ -24,6 +24,9 @@ A list of three:
 \item{\code{B}}{\code{nrow(newdata)} by \code{q}, the autoregressive coefficients,
 Levinson-Durbin applied row by row. A zero-column matrix at
 \eqn{q = 0}.}
+\item{\code{dom}, \code{dA}, \code{dB}}{the derivatives of \code{om}, of each column of
+\code{A} and of each column of \code{B} in \code{u}, each a \code{nrow(newdata)} by
+\code{length(u)} matrix (\code{dA} and \code{dB} are lists of them).}
 }
 }
 \description{

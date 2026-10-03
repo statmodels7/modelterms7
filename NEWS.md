@@ -1,3 +1,12 @@
+# modelterms7 0.93.0
+
+* `term_continue()` for `gas()` accepts `deriv`, the derivatives of the past
+  predictor, of the past scores and of the developed parameters with
+  respect to a vector of coordinates, and returns the derivative of the
+  continued predictor in the attribute `"jacobian"`. The recursion is
+  differentiated exactly, including the stationary chart of the
+  autoregressive coefficients and a developed `omega`, `alpha` or `beta`.
+
 # modelterms7 0.92.0
 
 * `seg_polish_exact()` and `seg_profile_intervals()` accept a sharp `seg()`.

@@ -2499,14 +2499,23 @@ S7::method(term_static_deriv, GasTerm) <- function(term, curv, X, psi, ...) {
 #' @param s_past The score at each observed row.
 #' @param newdata The rows to continue onto.
 #' @param ... Ignored.
+#' @param deriv `NULL`, or a list giving the derivatives of the inputs in a
+#'   vector of `m` coordinates of the caller's choosing: `df_past` and
+#'   `ds_past`, one row per observed row and `m` columns, the derivatives of
+#'   `f_past` and `s_past`; and `dpsi`, `length(psi)` rows and `m` columns,
+#'   the derivative of `psi`. The continuation is then differentiated along
+#'   with its value, by the same recursion run on derivative rows, the score
+#'   past the data and its derivative being zero.
 #'
-#' @return A numeric vector of `nrow(newdata)` levels.
+#' @return A numeric vector of `nrow(newdata)` levels. With `deriv`, it
+#'   carries the attribute `"jacobian"`, a `nrow(newdata)` by `m` matrix:
+#'   the derivative of each level in the caller's coordinates.
 #'
 #' @seealso [term_continue()], [term_filter()]
 #'
 #' @keywords internal
 S7::method(term_continue, GasTerm) <- function(term, psi, f_past, s_past,
-                                               newdata, ...) {
+                                               newdata, ..., deriv = NULL) {
   bp <- term@blueprint
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
@@ -2540,16 +2549,43 @@ S7::method(term_continue, GasTerm) <- function(term, psi, f_past, s_past,
 
   # the parameters at each row: constant, or the development read at the
   # NEW rows through each sub-term's own blueprint
+  np <- length(u)
   if (is.null(bp$sub)) {
     cf <- .gas_coefs(u[.gas_base_params(p, q)], p, q)
     om_new <- rep(cf$omega, nn)
     A_new <- matrix(rep(cf$a, each = nn), nn, p)
     B_new <- matrix(rep(cf$b, each = nn), nn, q)
+    # their derivatives in u, constant over the rows: the level and the
+    # loadings are coordinates of their own, the coefficients come through
+    # Levinson-Durbin's jacobian
+    row_of <- function(g) matrix(g, nn, np, byrow = TRUE)
+    e <- function(k) { g <- numeric(np); g[k] <- 1; g }
+    dom_new <- row_of(e(1L))
+    dA_new <- lapply(seq_len(p), function(i) row_of(e(1L + i)))
+    dB_new <- lapply(seq_len(q), function(j) row_of(cf$db[j, ]))
   } else {
     v <- .gas_sub_new(term, u, newdata)
     om_new <- v$om
     A_new <- v$A
     B_new <- v$B
+    dom_new <- v$dom
+    dA_new <- v$dA
+    dB_new <- v$dB
+  }
+
+  # THE DERIVATIVE OF THE CONTINUATION, where the caller asks for one. The
+  # recursion past the data is affine in the past level and the past score
+  # and smooth in the parameters, so its derivative in any vector of the
+  # caller's coordinates is the same recursion run on derivative rows: the
+  # caller supplies those of the past level, of the past score and of the
+  # term's parameters, and every new row's comes from the rows before it.
+  dw <- NULL
+  if (!is.null(deriv)) {
+    m <- ncol(deriv$dpsi)
+    dw <- list(om = dom_new %*% deriv$dpsi,
+               A = lapply(dA_new, function(M) M %*% deriv$dpsi),
+               B = lapply(dB_new, function(M) M %*% deriv$dpsi))
+    jac <- matrix(0, nn, m)
   }
 
   out <- numeric(nn)
@@ -2576,26 +2612,51 @@ S7::method(term_continue, GasTerm) <- function(term, psi, f_past, s_past,
     f <- c(f_past[rows_old], numeric(length(new)))
     sc <- c(s_past[rows_old], numeric(length(new)))
     n0 <- length(rows_old)
+    if (!is.null(dw)) {
+      dF <- rbind(deriv$df_past[rows_old, , drop = FALSE],
+                  matrix(0, length(new), m))
+      dS <- rbind(deriv$ds_past[rows_old, , drop = FALSE],
+                  matrix(0, length(new), m))
+    }
     for (h in seq_along(new)) {
       t <- n0 + h
       r <- new[[h]]
       ft <- om_new[[r]]
+      if (!is.null(dw)) dft <- dw$om[r, ]
       if (p > 0L) {
         for (i in seq_len(p)) {
-          if (t - i >= 1L) ft <- ft + A_new[r, i] * sc[[t - i]]
+          if (t - i >= 1L) {
+            ft <- ft + A_new[r, i] * sc[[t - i]]
+            if (!is.null(dw)) {
+              dft <- dft + sc[[t - i]] * dw$A[[i]][r, ] +
+                A_new[r, i] * dS[t - i, ]
+            }
+          }
         }
       }
       if (q > 0L) {
         for (j in seq_len(q)) {
-          if (t - j >= 1L) ft <- ft + B_new[r, j] * f[[t - j]]
+          if (t - j >= 1L) {
+            ft <- ft + B_new[r, j] * f[[t - j]]
+            if (!is.null(dw)) {
+              dft <- dft + f[[t - j]] * dw$B[[j]][r, ] +
+                B_new[r, j] * dF[t - j, ]
+            }
+          }
         }
       }
       f[[t]] <- ft
-      # the score past the data is at its conditional mean, which is zero
+      # the score past the data is at its conditional mean, which is zero,
+      # and so is its derivative
       sc[[t]] <- 0
       out[[r]] <- ft
+      if (!is.null(dw)) {
+        dF[t, ] <- dft
+        jac[r, ] <- dft
+      }
     }
   }
+  if (!is.null(dw)) attr(out, "jacobian") <- jac
   out
 }
 

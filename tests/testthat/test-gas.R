@@ -774,6 +774,52 @@ test_that("term_continue carries the recursion past the series", {
                "inside the observed series")
 })
 
+test_that("the continuation's jacobian is its derivative", {
+  # Differentiated in the caller's coordinates: here the whole vector of the
+  # term's parameters, the past levels and the past scores, so the reference
+  # is numDeriv on the continuation as a plain function of that vector.
+  check <- function(tm, psi, n, nd) {
+    set.seed(12)
+    f0 <- rnorm(n, sd = 0.3)
+    s0 <- rnorm(n)
+    np <- length(psi)
+    fc <- function(v) {
+      ps <- stats::setNames(as.list(v[seq_len(np)]), names(psi))
+      as.numeric(term_continue(tm, ps, v[np + seq_len(n)],
+                               v[np + n + seq_len(n)], nd))
+    }
+    v0 <- c(unlist(psi), f0, s0)
+    m <- length(v0)
+    I <- diag(m)
+    got <- term_continue(tm, psi, f0, s0, nd, deriv = list(
+      dpsi = I[seq_len(np), , drop = FALSE],
+      df_past = I[np + seq_len(n), , drop = FALSE],
+      ds_past = I[np + n + seq_len(n), , drop = FALSE]))
+    expect_equal(as.numeric(got), fc(v0))
+    expect_equal(unname(attr(got, "jacobian")), numDeriv::jacobian(fc, v0),
+                 tolerance = 1e-8)
+  }
+  n <- 30
+  dd <- data.frame(t = rep(seq_len(15), 2), g = rep(c("a", "b"), each = 15),
+                   x = rnorm(n))
+  # constant parameters, q = 1 and q = 2, two groups
+  check(term_build(gas(p = 1, q = 1, by = g, time = t), dd),
+        list(omega = 0.2, alpha1 = 0.3, pacf1 = 0.5), n,
+        data.frame(t = c(16, 17, 16, 18), g = c("a", "a", "b", "b")))
+  check(term_build(gas(p = 2, q = 2, by = g, time = t), dd),
+        list(omega = 0.2, alpha1 = 0.3, alpha2 = 0.1, pacf1 = 0.5,
+             pacf2 = -0.3), n,
+        data.frame(t = c(16, 17, 18), g = c("a", "a", "a")))
+  # every parameter developed over a covariate read at the new rows
+  tm <- term_build(gas(p = 1, q = 2, omega ~ x, alpha1 ~ x, pacf1 ~ x,
+                       by = g, time = t), dd)
+  nm <- term_params(tm)
+  psi <- stats::setNames(as.list(seq(-0.2, 0.3, length.out = length(nm))),
+                         nm)
+  check(tm, psi, n, data.frame(t = c(16, 17, 16), g = c("a", "a", "b"),
+                               x = c(0.4, -1, 0.2)))
+})
+
 test_that("a term without state says so rather than returning zero", {
   dd <- data.frame(x = runif(20), y = rnorm(20))
   tm <- term_build(linpar(~ x), dd)

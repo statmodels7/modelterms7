@@ -1171,6 +1171,9 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 #'     \item{`B`}{`nrow(newdata)` by `q`, the autoregressive coefficients,
 #'       Levinson-Durbin applied row by row. A zero-column matrix at
 #'       \eqn{q = 0}.}
+#'     \item{`dom`, `dA`, `dB`}{the derivatives of `om`, of each column of
+#'       `A` and of each column of `B` in `u`, each a `nrow(newdata)` by
+#'       `length(u)` matrix (`dA` and `dB` are lists of them).}
 #'   }
 #'
 #' @seealso [term_continue()], the only caller; [term_filter()] for the same
@@ -1182,29 +1185,52 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
   p <- term@p
   q <- term@q
   nn <- nrow(newdata)
+  np <- length(u)
   base <- .gas_base_params(p, q)
   lay <- .gas_sub_layout(term)
   v <- list()
+  # the derivative of each value in the term's parameters, on the mixed
+  # scale `u` is on: one for a scalar parameter, h'(z' gamma) z for a
+  # developed one
+  dv <- list()
   for (j in base) {
     idx <- lay$idx[[j]]
     lk <- .gas_param_link(term, j)
     sj <- bp$sub[[j]]
+    D <- matrix(0, nn, np)
     if (is.null(sj)) {
       v[[j]] <- rep(u[[idx]], nn)
+      D[, idx] <- 1
     } else {
-      Z <- .nl_bind(lapply(sj$terms, term_predict, newdata = newdata))
-      v[[j]] <- linkfunctions7::linkinv(lk, as.numeric(as.matrix(Z) %*%
-                                                         u[idx]))
+      Z <- as.matrix(.nl_bind(lapply(sj$terms, term_predict,
+                                     newdata = newdata)))
+      eta <- as.numeric(Z %*% u[idx])
+      v[[j]] <- linkfunctions7::linkinv(lk, eta)
+      D[, idx] <- linkfunctions7::dlinkinv(lk, eta) * Z
     }
+    dv[[j]] <- D
   }
   A <- matrix(0, nn, p)
-  for (i in seq_len(p)) A[, i] <- v[[paste0("alpha", i)]]
-  B <- matrix(0, nn, q)
-  if (q > 0L) {
-    pac <- vapply(seq_len(q), function(j) v[[paste0("pacf", j)]],
-                  numeric(nn))
-    pac <- matrix(pac, nn, q)
-    for (r in seq_len(nn)) B[r, ] <- gas_levinson(pac[r, ])$phi
+  dA <- vector("list", p)
+  for (i in seq_len(p)) {
+    A[, i] <- v[[paste0("alpha", i)]]
+    dA[[i]] <- dv[[paste0("alpha", i)]]
   }
-  list(om = v$omega, A = A, B = B)
+  B <- matrix(0, nn, q)
+  dB <- replicate(q, matrix(0, nn, np), simplify = FALSE)
+  if (q > 0L) {
+    pj <- paste0("pacf", seq_len(q))
+    pac <- vapply(seq_len(q), function(j) v[[pj[j]]], numeric(nn))
+    pac <- matrix(pac, nn, q)
+    for (r in seq_len(nn)) {
+      ld <- gas_levinson(pac[r, ])
+      B[r, ] <- ld$phi
+      for (j in seq_len(q)) {
+        for (k in seq_len(q)) {
+          dB[[j]][r, ] <- dB[[j]][r, ] + ld$jacobian[j, k] * dv[[pj[k]]][r, ]
+        }
+      }
+    }
+  }
+  list(om = v$omega, A = A, B = B, dom = dv$omega, dA = dA, dB = dB)
 }

@@ -15,9 +15,19 @@
 \item{newdata}{The rows to continue onto.}
 
 \item{...}{Ignored.}
+
+\item{deriv}{\code{NULL}, or a list giving the derivatives of the inputs in a
+vector of \code{m} coordinates of the caller's choosing: \code{df_past} and
+\code{ds_past}, one row per observed row and \code{m} columns, the derivatives of
+\code{f_past} and \code{s_past}; and \code{dpsi}, \code{length(psi)} rows and \code{m} columns,
+the derivative of \code{psi}. The continuation is then differentiated along
+with its value, by the same recursion run on derivative rows, the score
+past the data and its derivative being zero.}
 }
 \value{
-A numeric vector of \code{nrow(newdata)} levels.
+A numeric vector of \code{nrow(newdata)} levels. With \code{deriv}, it
+carries the attribute \code{"jacobian"}, a \code{nrow(newdata)} by \code{m} matrix:
+the derivative of each level in the caller's coordinates.
 }
 \description{
 The level the recursion reaches at rows that come after the observed
