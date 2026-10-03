@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include <Rmath.h>
 #include <R_ext/Rdynload.h>
 #include <fenv.h>
 #include <RcppParallel.h>
@@ -48,6 +49,16 @@ struct FastCtx {
     lf7_inv12_t inv12 = nullptr;
     lf7_clamp_t clamp = nullptr;
     d7_sc_t sc = nullptr;
+    // gas(scaling = d): the score is multiplied by the expected information
+    // to the power -d, read through the family's d7_info_dinfo
+    double scaling = 0.0;
+    d7_sc_t info = nullptr;
+
+    // R's `^`, which the callback route uses: x * x at an exponent of two,
+    // R_pow otherwise
+    static inline double rpow(double x, double y) {
+        return y == 2.0 ? x * x : R_pow(x, y);
+    }
 
     inline void step(double e_t, int row1, double* s_t, double* c_t) const {
         double h, h1, h2;
@@ -61,8 +72,24 @@ struct FastCtx {
         sc(fam, k, y[row1 - 1], thl, out);
         // the same composition, in the same order, as distrib_kernel():
         // g * h1, and h * h1 * h1 + g * h2
-        *s_t = out[0] * h1;
-        *c_t = out[1] * h1 * h1 + out[0] * h2;
+        double s = out[0] * h1;
+        double c = out[1] * h1 * h1 + out[0] * h2;
+        if (scaling == 0.0) {
+            *s_t = s;
+            *c_t = c;
+            return;
+        }
+        // and the scaled score, as statmodels7's structural_callbacks()
+        // composes it from the kernel's information and dinformation:
+        // I = -E h1^2, I' = -(E' h1^3 + 2 E h1 h2), u = s I^-d,
+        // u' = c I^-d - d s I^(-d-1) I'
+        double ei[2];
+        info(fam, k, y[row1 - 1], thl, ei);
+        double I = -ei[0] * h1 * h1;
+        double Ip = -(ei[1] * h1 * h1 * h1 + 2.0 * ei[0] * h1 * h2);
+        *s_t = s * rpow(I, -scaling);
+        *c_t = c * rpow(I, -scaling) -
+            scaling * s * rpow(I, -scaling - 1.0) * Ip;
     }
 };
 
@@ -94,6 +121,12 @@ FastCtx fast_ctx(SEXP fastS) {
     c.inv12 = (lf7_inv12_t) R_GetCCallable("linkfunctions7", "lf7_inv12");
     c.clamp = (lf7_clamp_t) R_GetCCallable("linkfunctions7", "lf7_clamp");
     c.sc = (d7_sc_t) R_GetCCallable("distributions7", "d7_score_curv");
+    if (fast.containsElementNamed("scaling")) {
+        c.scaling = as<double>(fast["scaling"]);
+    }
+    if (c.scaling != 0.0) {
+        c.info = (d7_sc_t) R_GetCCallable("distributions7", "d7_info_dinfo");
+    }
     c.ok = true;
     return c;
 }

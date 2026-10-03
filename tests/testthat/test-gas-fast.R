@@ -150,3 +150,75 @@ test_that("an uncovered family or link leaves the context inert", {
   expect_identical(term_filter(tb, eta0, dd$y, cb$score, cb$curvature, psi,
                                fast = sp), ref)
 })
+
+# gas(scaling = d): the callbacks compose u = s I^-d and its derivative from
+# distrib_kernel()'s information and dinformation exactly as statmodels7's
+# structural_callbacks() does, and the fast route composes the same quantities
+# from the family's d7_info_dinfo
+cb_scaled <- function(d7, param, theta, y, d) {
+  k <- distributions7::distrib_kernel(d7, param)
+  th_at <- function(i) lapply(theta, function(v) v[[min(i, length(v))]])
+  list(score = function(e, i) {
+         th <- th_at(i)
+         as.numeric(k$score(y[i], th, e)) *
+           as.numeric(k$information(y[i], th, e))^(-d)
+       },
+       curvature = function(e, i) {
+         th <- th_at(i)
+         s <- as.numeric(k$score(y[i], th, e))
+         info <- as.numeric(k$information(y[i], th, e))
+         as.numeric(k$curvature(y[i], th, e)) * info^(-d) -
+           d * s * info^(-d - 1) * as.numeric(k$dinformation(y[i], th, e))
+       })
+}
+
+test_that("the fast route reproduces the scaled callbacks", {
+  dd <- fast_panel(3, groups = 10, per = 25)
+  n <- nrow(dd)
+  psi <- list(omega = 0.2, alpha1 = 0.15, pacf1 = 0.4)
+  set.seed(4)
+  for (case in list(
+    # the information of a gaussian mean is 1/sigma^2, varying by observation
+    list(d7 = distributions7::gaussian1_distrib(), param = "mu", d = 0.5,
+         theta = list(mu = 0, sigma = stats::runif(n, 0.8, 1.6))),
+    list(d7 = distributions7::gaussian1_distrib(), param = "sigma", d = 1,
+         theta = list(mu = 0.5, sigma = 1)),
+    list(d7 = distributions7::gamma1_distrib(), param = "mu", d = 1,
+         theta = list(mu = 3, phi = 0.4)),
+    list(d7 = distributions7::gamma1_distrib(), param = "phi", d = -0.5,
+         theta = list(mu = stats::runif(n, 2, 4), phi = 0.4)))) {
+    tb <- term_build(gas(p = 1, q = 1, by = id, time = t, scaling = case$d), dd)
+    eta0 <- rep(0.1, n)
+    if (case$param == "phi") eta0 <- rep(log(0.4), n)
+    cb <- cb_scaled(case$d7, case$param, case$theta, dd$y, case$d)
+    ref <- term_filter(tb, eta0, dd$y, cb$score, cb$curvature, psi)
+    fs <- fast_spec(case$d7, case$param, case$theta, dd$y)
+    fs$scaling <- case$d
+    fst <- term_filter(tb, eta0, dd$y, cb$score, cb$curvature, psi, fast = fs)
+    expect_equal(ref, fst, tolerance = 1e-13,
+                 label = paste(case$param, case$d))
+    # and the threads over groups move no bit
+    fst4 <- term_filter(tb, eta0, dd$y, cb$score, cb$curvature, psi, fast = fs,
+                        threads = 4L)
+    expect_identical(fst, fst4)
+  }
+})
+
+test_that("the fast route reproduces the scaled callbacks on the submodel route", {
+  dd <- fast_panel(5, groups = 10, per = 25)
+  tb <- term_build(gas(p = 1, q = 1, omega ~ random(~1 | id),
+                       by = id, time = t, scaling = 1), dd)
+  nm <- term_params(tb)
+  psi <- stats::setNames(as.list(c(0.2, rep(0.05, length(nm) - 3L),
+                                   0.15, 0.4)), nm)
+  d7 <- distributions7::gaussian1_distrib()
+  set.seed(6)
+  theta <- list(mu = 0, sigma = stats::runif(nrow(dd), 0.8, 1.6))
+  cb <- cb_scaled(d7, "mu", theta, dd$y, 1)
+  eta0 <- rep(0.1, nrow(dd))
+  ref <- term_filter(tb, eta0, dd$y, cb$score, cb$curvature, psi)
+  fs <- fast_spec(d7, "mu", theta, dd$y)
+  fs$scaling <- 1
+  fst <- term_filter(tb, eta0, dd$y, cb$score, cb$curvature, psi, fast = fs)
+  expect_equal(ref, fst, tolerance = 1e-13)
+})
