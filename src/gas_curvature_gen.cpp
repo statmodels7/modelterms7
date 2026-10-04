@@ -21,7 +21,8 @@ using namespace Rcpp;
 // The lags are held in ring buffers of max(p, q) + 1 slots, so the memory
 // is constant in the length of a group. Groups run over threads with each
 // group's W accumulated locally and merged on the main thread in group
-// order, as in gas_curvature.cpp.
+// order, so no reduction is split and the result does not depend on the
+// thread count, bit for bit.
 
 namespace {
 
