@@ -22,14 +22,17 @@
 \item{...}{Unused.}
 
 \item{fast}{The fast context of the caller, or \code{NULL}: a list with
-\code{family} (the distribution's S7 class name), \code{link} (the
-parameter's link name), \code{k} (the parameter's 1-based index),
-\code{bounds}, \code{y} and \code{theta} (the per-observation
-parameters). Where the C registries of \pkg{distributions7} and
-\pkg{linkfunctions7} cover the pair, the recursion reads the score and
-the curvature through their scalar entry points instead of the R
-callbacks, bit-identically; where they do not, the context is inert
-and the callbacks run as before.}
+\code{family} and \code{link} (the names that
+\code{\link[distributions7:distrib_scalar_route]{distributions7::distrib_scalar_route()}} and
+\code{\link[linkfunctions7:link_scalar_route]{linkfunctions7::link_scalar_route()}} return), \code{link_par} (the link's
+own parameters, from the same function), \code{k} (the parameter's 1-based
+index), \code{bounds}, \code{y} and \code{theta} (the per-observation parameters,
+followed by the distribution's constants). Where the C registries of
+\pkg{distributions7} and \pkg{linkfunctions7} cover the pair, the
+recursion reads the score and the curvature through their scalar entry
+points instead of the R callbacks; where they do not, the context is
+inert and the callbacks run as before. The groups run over threads only
+when the distribution's entries are safe on a worker thread.}
 
 \item{threads}{How many threads the recursion may use, over groups and
 only on the fast route: a group's filter is independent of the others

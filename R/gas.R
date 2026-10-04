@@ -1226,14 +1226,17 @@ S7::method(term_build, GasTerm) <- function(term, data, ...) {
 #' @param psi The parameters, named as [term_params()].
 #' @param ... Unused.
 #' @param fast The fast context of the caller, or `NULL`: a list with
-#'   `family` (the distribution's S7 class name), `link` (the
-#'   parameter's link name), `k` (the parameter's 1-based index),
-#'   `bounds`, `y` and `theta` (the per-observation
-#'   parameters). Where the C registries of \pkg{distributions7} and
-#'   \pkg{linkfunctions7} cover the pair, the recursion reads the score and
-#'   the curvature through their scalar entry points instead of the R
-#'   callbacks, bit-identically; where they do not, the context is inert
-#'   and the callbacks run as before.
+#'   `family` and `link` (the names that
+#'   [distributions7::distrib_scalar_route()] and
+#'   [linkfunctions7::link_scalar_route()] return), `link_par` (the link's
+#'   own parameters, from the same function), `k` (the parameter's 1-based
+#'   index), `bounds`, `y` and `theta` (the per-observation parameters,
+#'   followed by the distribution's constants). Where the C registries of
+#'   \pkg{distributions7} and \pkg{linkfunctions7} cover the pair, the
+#'   recursion reads the score and the curvature through their scalar entry
+#'   points instead of the R callbacks; where they do not, the context is
+#'   inert and the callbacks run as before. The groups run over threads only
+#'   when the distribution's entries are safe on a worker thread.
 #' @param threads How many threads the recursion may use, over groups and
 #'   only on the fast route: a group's filter is independent of the others
 #'   and its writes land on its own rows, so no reduction is split and the

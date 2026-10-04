@@ -26,12 +26,16 @@ cb_from_kernel <- function(d7, param, theta, y) {
        curvature = function(e, i) as.numeric(k$curvature(y[i], th_at(i), e)))
 }
 
+# the registry's name and the constants after the parameters, as
+# statmodels7's structural_callbacks() builds them
 fast_spec <- function(d7, param, theta, y) {
   params <- d7@params
   lk <- d7@link_params[[param]]
-  list(family = attr(S7::S7_class(d7), "name"), link = lk@link_name,
+  rt <- distributions7::distrib_scalar_route(d7)
+  lr <- linkfunctions7::link_scalar_route(lk)
+  list(family = rt$name, link = lr$name, link_par = lr$par,
        k = match(param, params), bounds = as.numeric(lk@link_bounds),
-       y = as.numeric(y), theta = theta)
+       y = as.numeric(y), theta = c(theta, rt$constants))
 }
 
 run_both <- function(term, dd, psi, d7, param, theta, threads = 1L) {
@@ -59,6 +63,25 @@ test_that("the fast route reproduces the callbacks, scalar filter", {
                      case$d7, case$param, case$theta)
     expect_equal(both$ref, both$fst, tolerance = 1e-13)
   }
+})
+
+test_that("the fast route reads a family's constants after its parameters", {
+  set.seed(4)
+  dd <- fast_panel(4, groups = 10, per = 25)
+  dd$y <- stats::rbinom(nrow(dd), size = 10, prob = 0.4)
+  psi <- list(omega = 0.1, alpha1 = 0.05, pacf1 = 0.4)
+  d7 <- distributions7::binomial_distrib(size = 10)
+  both <- run_both(gas(p = 1, q = 1, by = id, time = t), dd, psi, d7, "mu",
+                   list(mu = 0.4))
+  expect_equal(both$ref, both$fst, tolerance = 1e-13)
+  # the size reaches the entry: read as one trial, the filter moves
+  cb <- cb_from_kernel(d7, "mu", list(mu = 0.4), dd$y)
+  wrong <- term_filter(term_build(gas(p = 1, q = 1, by = id, time = t), dd),
+                       rep(0.1, nrow(dd)), dd$y, cb$score, cb$curvature, psi,
+                       fast = utils::modifyList(
+                         fast_spec(d7, "mu", list(mu = 0.4), dd$y),
+                         list(theta = list(mu = 0.4, size = 1))))
+  expect_gt(max(abs(wrong$eta - both$fst$eta)), 1e-3)
 })
 
 test_that("the fast route reproduces the callbacks on the submodel route too", {
