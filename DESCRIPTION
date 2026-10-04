@@ -10,7 +10,7 @@ Description: Model terms as 'S7' objects: the mapping from a data frame to
     name, so user-defined terms work in formulas without registration.
     Includes the unpenalized parametric term and the censored-response
     constructor. Part of the 'statmodels7' toolkit.
-License: MIT + file LICENSE
+License: GPL (>= 2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
