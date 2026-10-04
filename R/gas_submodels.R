@@ -666,6 +666,12 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
     return(list(jacobian = res$jacobian, curvature = W))
   }
 
+  # the compiled route of every order (gas_curvature_gen.cpp): the groups
+  # are described below, after each one's starting level, and the per-row
+  # recursion runs in C++
+  use_gen <- .gas_gen_ok(score_values, curvature_values, blocks_data, nd)
+  gen_groups <- if (use_gen) vector("list", length(bp$order)) else NULL
+
   # does the caller take the active set? A three-argument callback is the
   # earlier contract and is given the full row instead
   wants_act <- length(formals(blocks)) >= 4L
@@ -955,6 +961,55 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
       f0_4 <- cst * (om1_4 + .gas_prod4(Sj, fj))
     }
 
+    if (use_gen) {
+      mg <- length(rows)
+      gval <- function(j) {
+        vj <- vals[[j]]
+        at <- pos[[j]]
+        ok <- !is.na(at)
+        Wm <- matrix(0, mg, mk)
+        Zm <- matrix(0, mg, mk)
+        if (any(ok)) {
+          Wm[, at[ok]] <- vj$W[rows, ok, drop = FALSE]
+          Zm[, at[ok]] <- if (vj$developed) vj$Z[rows, ok, drop = FALSE] else 1
+        }
+        .gas_gen_val(vj$v[rows], Wm, Zm, vj$k2[rows],
+                     if (third) vj$k3[rows], if (fourth) vj$k4[rows])
+      }
+      okp <- !is.na(ppos)
+      grp <- list(rows = as.integer(rows), act = as.integer(act),
+                  om = gval("omega"), al = lapply(aj, gval),
+                  varying_b = varying_b,
+                  db = lapply(seq_len(q), function(j) {
+                    M <- matrix(0, mg, mk)
+                    if (any(okp)) M[, ppos[okp]] <- bd$DB[[j]][rows, okp, drop = FALSE]
+                    M
+                  }),
+                  f0 = f0, f0u = f0_u, f0uu = f0_uu)
+      if (q > 0L) {
+        if (varying_b) {
+          grp$pa <- lapply(pj, gval)
+        } else {
+          grp$hb <- hb_const_l
+          if (third) grp$tb <- tb_const_l
+          if (fourth) grp$qb <- qb_const_l
+        }
+      }
+      if (third) {
+        grp$vks <- matrix(unlist(vks), mk, nd)
+        if (is.null(grp$tb)) grp$tb <- lapply(seq_len(nd), function(d) list())
+        grp$f0_3 <- f0_3
+        grp$df0 <- unlist(df0)
+        grp$dphi0 <- matrix(unlist(dphi0), mk, nd)
+      }
+      if (fourth) {
+        grp$f0_4 <- f0_4
+        if (is.null(grp$qb)) grp$qb <- list()
+      }
+      gen_groups[[l]] <- grp
+      next
+    }
+
     Wl <- matrix(0, mk, mk)
     k <- length(rows)
     f <- numeric(k)
@@ -1122,6 +1177,14 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
       }
     }
     W[act, act] <- W[act, act] + Wl
+  }
+  if (use_gen) {
+    aj_v <- matrix(0, bp$n, p)
+    for (i in seq_len(p)) aj_v[, i] <- vals[[aj[i]]]$v
+    B <- if (q > 0L) bd$B else matrix(0, bp$n, 0)
+    return(.gas_gen_run(eta, gen_groups, p, q, nd, vals$omega$v, aj_v, B,
+                        score_values, curvature_values, g, seed, blocks_data,
+                        threads))
   }
   W <- (W + t(W)) / 2
   if (fourth) {

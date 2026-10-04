@@ -23,6 +23,13 @@
 \item{direction}{The direction to contract against.}
 
 \item{...}{Unused.}
+
+\item{score_values, curvature_values, blocks_data}{As for
+\code{\link[=term_curvature]{term_curvature()}}; supplying all three, with \code{blocks_data} carrying the
+fourth derivatives \code{D4}, routes the recursion through the compiled
+kernel.}
+
+\item{threads}{Threads for the compiled route's group loop.}
 }
 \value{
 A list with \code{jacobian}, \code{dphi} and \code{curvature}.

@@ -103,7 +103,7 @@ test_that("the compiled curvature is the R route's, and never calls back", {
   }
 })
 
-test_that("a developed autoregressive chart keeps the R route", {
+test_that("a developed autoregressive chart runs on the general compiled route", {
   X <- cbind(1, as.numeric(scale(seq_len(n_c))))
   mb <- ncol(X)
   term <- term_build(gas(p = 1, q = 2, pacf1 ~ z, time = t), dd_c)
@@ -130,10 +130,11 @@ test_that("a developed autoregressive chart keeps the R route", {
                         lay$cb, score_values = s_at,
                         curvature_values = rep(-1, n_c),
                         blocks_data = lay$data, threads = 2L)
-  # varying_b: the kernel declines and the callback runs, so the result is
-  # the R route's by construction
-  expect_gt(lay$calls$k, 0L)
+  # varying_b: the second-order kernel declines and the general one
+  # (gas_curvature_gen.cpp) runs instead, the Levinson-Durbin map read per
+  # observation in C++, so the callback is never called
+  expect_identical(lay$calls$k, 0L)
   ref <- term_curvature(term, eta0, dd_c$y, sc2, cu2, psi, gw, seed, lay$cb)
-  expect_identical(got$jacobian, ref$jacobian)
-  expect_identical(got$curvature, ref$curvature)
+  expect_equal(got$jacobian, ref$jacobian, tolerance = 1e-13)
+  expect_equal(got$curvature, ref$curvature, tolerance = 1e-13)
 })

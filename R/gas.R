@@ -1671,7 +1671,9 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #'   one column per parameter pair, pair `(r, r2)` at column
 #'   `(r - 1) * np + r2`), `Vs` (the per-parameter jacobian rows
 #'   of the other equations) and `ap` (the filter's own parameter
-#'   index). Read only by the compiled route.
+#'   index), and for the third and fourth orders `D4` and `D5`, one column
+#'   per index triple and quadruple laid out the same way. Read only by the
+#'   compiled route.
 #' @param threads Threads for the compiled route's group loop, as
 #'   `numericals7::n_threads()` counts them; 1 is sequential.
 #' @return A list with `jacobian` and `curvature`.
@@ -1717,13 +1719,24 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
 #' @param blocks The model's derivative pieces; see [term_third()].
 #' @param direction The direction to contract against.
 #' @param ... Unused.
+#' @param score_values,curvature_values,blocks_data As for
+#'   [term_curvature()]; supplying all three, with `blocks_data` carrying the
+#'   fourth derivatives `D4`, routes the recursion through the compiled
+#'   kernel.
+#' @param threads Threads for the compiled route's group loop.
 #' @return A list with `jacobian`, `dphi` and `curvature`.
 #' @keywords internal
 S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
                                             psi, g, seed, blocks, direction,
-                                            ...) {
+                                            ...,
+                                            score_values = NULL,
+                                            curvature_values = NULL,
+                                            blocks_data = NULL,
+                                            threads = 1L) {
   .gas_curvature_core(term, eta, y, score, curvature, psi, g, seed, blocks,
-                      direction = direction)
+                      direction = direction, score_values = score_values,
+                      curvature_values = curvature_values,
+                      blocks_data = blocks_data, threads = threads)
 }
 
 #' @title The Score-Driven Recursion's Fourth Derivative
@@ -1756,18 +1769,29 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
 #' @param blocks The model's derivative pieces; see [term_fourth()].
 #' @param directions A list of two directions to contract against.
 #' @param ... Unused.
+#' @param score_values,curvature_values,blocks_data As for
+#'   [term_curvature()]; supplying all three, with `blocks_data` carrying the
+#'   fourth and fifth derivatives `D4` and `D5`, routes the recursion
+#'   through the compiled kernel.
+#' @param threads Threads for the compiled route's group loop.
 #' @return A list with `jacobian`, `dphi`, `dpsi` and
 #'   `curvature`.
 #' @keywords internal
 S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
                                              psi, g, seed, blocks, directions,
-                                             ...) {
+                                             ...,
+                                             score_values = NULL,
+                                             curvature_values = NULL,
+                                             blocks_data = NULL,
+                                             threads = 1L) {
   if (!is.list(directions) || length(directions) != 2L) {
     stop("'directions' must be a list of two vectors, one per direction.",
          call. = FALSE)
   }
   .gas_curvature_core(term, eta, y, score, curvature, psi, g, seed, blocks,
-                      direction = directions)
+                      direction = directions, score_values = score_values,
+                      curvature_values = curvature_values,
+                      blocks_data = blocks_data, threads = threads)
 }
 
 #' The Score-Driven Recursion's Second and Third Derivatives
@@ -1985,6 +2009,18 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
     out
   }
   shared <- prep(1L, seq_len(m))
+
+  # the compiled route, where the caller hands the score and the curvature
+  # as lookups and the model's pieces as data (gas_curvature_gen.cpp)
+  if (.gas_gen_ok(score_values, curvature_values, blocks_data, nd)) {
+    groups <- .gas_gen_groups_scalar(term, zeta, links, base, zcol, shared,
+                                     bp, m, dirs, nd)
+    A <- matrix(rep(shared$a, each = bp$n), bp$n, p)
+    B <- matrix(rep(shared$b, each = bp$n), bp$n, q)
+    return(.gas_gen_run(eta, groups, p, q, nd, rep(shared$omega, bp$n), A, B,
+                        score_values, curvature_values, g, seed, blocks_data,
+                        threads))
+  }
 
   # does the caller take the active set? A three-argument callback is the
   # earlier contract and is given the full row instead

@@ -37,7 +37,9 @@ column per distribution parameter), \code{D3} (the third derivatives,
 one column per parameter pair, pair \verb{(r, r2)} at column
 \code{(r - 1) * np + r2}), \code{Vs} (the per-parameter jacobian rows
 of the other equations) and \code{ap} (the filter's own parameter
-index). Read only by the compiled route.}
+index), and for the third and fourth orders \code{D4} and \code{D5}, one column
+per index triple and quadruple laid out the same way. Read only by the
+compiled route.}
 
 \item{threads}{Threads for the compiled route's group loop, as
 \code{numericals7::n_threads()} counts them; 1 is sequential.}
