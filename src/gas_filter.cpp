@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include <Rmath.h>
 #include <R_ext/Rdynload.h>
 #include <fenv.h>
 #include <RcppParallel.h>
@@ -27,10 +28,12 @@ using namespace Rcpp;
 namespace {
 
 typedef int (*lf7_id_t)(const char*);
-typedef void (*lf7_inv12_t)(int, double, double*, double*, double*);
+typedef void (*lf7_inv12p_t)(int, const double*, double, double*, double*,
+                             double*);
 typedef double (*lf7_clamp_t)(double, double, double);
 typedef int (*d7_id_t)(const char*);
 typedef void (*d7_sc_t)(int, int, double, const double*, double*);
+typedef int (*d7_safe_t)(int);
 
 constexpr int kMaxPar = 16;
 // below this many groups the opening of the parallel region is not worth
@@ -40,18 +43,35 @@ constexpr int kMinGroupsPar = 8;
 
 struct FastCtx {
     bool ok = false;
+    // whether the family's entries may run on a worker thread: a family
+    // whose entries can reach an R warning answers 0 in distributions7's
+    // d7_scalar_thread_safe(), and its groups then run on the calling thread
+    bool thread_safe = false;
     int fam = -1, link = -1, k = 0, npar = 0;
     double lwr = 0.0, upr = 0.0;
     const double* y = nullptr;
     const double* th[kMaxPar];
     int th_scalar[kMaxPar];
-    lf7_inv12_t inv12 = nullptr;
+    // the link's own parameters (link_scalar_route()'s par): lambda, a,
+    // or the bounds of a bounded link
+    double lpar[4] = {0.0, 0.0, 0.0, 0.0};
+    lf7_inv12p_t inv12 = nullptr;
     lf7_clamp_t clamp = nullptr;
     d7_sc_t sc = nullptr;
+    // gas(scaling = d): the score is multiplied by the expected information
+    // to the power -d, read through the family's d7_info_dinfo
+    double scaling = 0.0;
+    d7_sc_t info = nullptr;
+
+    // R's `^`, which the callback route uses: x * x at an exponent of two,
+    // R_pow otherwise
+    static inline double rpow(double x, double y) {
+        return y == 2.0 ? x * x : R_pow(x, y);
+    }
 
     inline void step(double e_t, int row1, double* s_t, double* c_t) const {
         double h, h1, h2;
-        inv12(link, e_t, &h, &h1, &h2);
+        inv12(link, lpar, e_t, &h, &h1, &h2);
         double thl[kMaxPar];
         for (int j = 0; j < npar; ++j) {
             thl[j] = th_scalar[j] ? th[j][0] : th[j][row1 - 1];
@@ -61,8 +81,24 @@ struct FastCtx {
         sc(fam, k, y[row1 - 1], thl, out);
         // the same composition, in the same order, as distrib_kernel():
         // g * h1, and h * h1 * h1 + g * h2
-        *s_t = out[0] * h1;
-        *c_t = out[1] * h1 * h1 + out[0] * h2;
+        double s = out[0] * h1;
+        double c = out[1] * h1 * h1 + out[0] * h2;
+        if (scaling == 0.0) {
+            *s_t = s;
+            *c_t = c;
+            return;
+        }
+        // and the scaled score, as statmodels7's structural_callbacks()
+        // composes it from the kernel's information and dinformation:
+        // I = -E h1^2, I' = -(E' h1^3 + 2 E h1 h2), u = s I^-d,
+        // u' = c I^-d - d s I^(-d-1) I'
+        double ei[2];
+        info(fam, k, y[row1 - 1], thl, ei);
+        double I = -ei[0] * h1 * h1;
+        double Ip = -(ei[1] * h1 * h1 * h1 + 2.0 * ei[0] * h1 * h2);
+        *s_t = s * rpow(I, -scaling);
+        *c_t = c * rpow(I, -scaling) -
+            scaling * s * rpow(I, -scaling - 1.0) * Ip;
     }
 };
 
@@ -74,11 +110,16 @@ FastCtx fast_ctx(SEXP fastS) {
     std::string lnk = as<std::string>(fast["link"]);
     d7_id_t d7id = (d7_id_t) R_GetCCallable("distributions7", "d7_scalar_id");
     lf7_id_t lfid = (lf7_id_t) R_GetCCallable("linkfunctions7",
-                                              "lf7_scalar_id");
+                                              "lf7_class_id");
     c.fam = d7id(fam.c_str());
     c.link = lfid(lnk.c_str());
     List th = fast["theta"];
-    if (c.fam < 0 || c.link < 0 || th.size() > kMaxPar) return c;
+    NumericVector lpar = fast.containsElementNamed("link_par") ?
+        NumericVector(fast["link_par"]) : NumericVector(0);
+    if (c.fam < 0 || c.link < 0 || th.size() > kMaxPar || lpar.size() > 4) {
+        return c;
+    }
+    for (int j = 0; j < lpar.size(); ++j) c.lpar[j] = lpar[j];
     c.k = as<int>(fast["k"]) - 1;
     NumericVector bounds = fast["bounds"];
     c.lwr = bounds[0];
@@ -91,9 +132,18 @@ FastCtx fast_ctx(SEXP fastS) {
         c.th[j] = v.begin();
         c.th_scalar[j] = (v.size() == 1);
     }
-    c.inv12 = (lf7_inv12_t) R_GetCCallable("linkfunctions7", "lf7_inv12");
+    c.inv12 = (lf7_inv12p_t) R_GetCCallable("linkfunctions7", "lf7_inv12p");
     c.clamp = (lf7_clamp_t) R_GetCCallable("linkfunctions7", "lf7_clamp");
     c.sc = (d7_sc_t) R_GetCCallable("distributions7", "d7_score_curv");
+    d7_safe_t safe = (d7_safe_t) R_GetCCallable("distributions7",
+                                                "d7_scalar_thread_safe");
+    c.thread_safe = (safe(c.fam) == 1);
+    if (fast.containsElementNamed("scaling")) {
+        c.scaling = as<double>(fast["scaling"]);
+    }
+    if (c.scaling != 0.0) {
+        c.info = (d7_sc_t) R_GetCCallable("distributions7", "d7_info_dinfo");
+    }
     c.ok = true;
     return c;
 }
@@ -247,7 +297,7 @@ List gas_filter_cpp(NumericVector eta, List order, int p, int q,
     // did not gets the count it asked for instead of every core there is
     auto body = [&](std::size_t gi) { run_group(gi, fc.ok); };
     GroupWorker<decltype(body)> w(body);
-    if (fc.ok && threads > 1 && ng >= kMinGroupsPar) {
+    if (fc.ok && fc.thread_safe && threads > 1 && ng >= kMinGroupsPar) {
         RcppParallel::parallelFor(0, static_cast<std::size_t>(ng), w, 1,
                                   threads);
     } else {
@@ -392,7 +442,7 @@ List gas_filter_sub_cpp(NumericVector eta, List groups, int p, int q,
     // did not gets the count it asked for instead of every core there is
     auto body = [&](std::size_t gi) { run_group(gi, fc.ok); };
     GroupWorker<decltype(body)> w(body);
-    if (fc.ok && threads > 1 && ng >= kMinGroupsPar) {
+    if (fc.ok && fc.thread_safe && threads > 1 && ng >= kMinGroupsPar) {
         RcppParallel::parallelFor(0, static_cast<std::size_t>(ng), w, 1,
                                   threads);
     } else {

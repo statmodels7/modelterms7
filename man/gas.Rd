@@ -4,7 +4,16 @@
 \alias{gas}
 \title{Score-Driven Dynamics}
 \usage{
-gas(p = 1, q = 1, ..., by = NULL, time = NULL, links = NULL, label = "gas")
+gas(
+  p = 1,
+  q = 1,
+  ...,
+  by = NULL,
+  time = NULL,
+  scaling = 0,
+  links = NULL,
+  label = "gas"
+)
 }
 \arguments{
 \item{p}{The number of score lags. Defaults to 1.}
@@ -21,6 +30,10 @@ formula here is the shorthand giving the same subformula to every
 parameter, and then no grouping is implied.}
 
 \item{time}{An optional ordering variable, evaluated in the data.}
+
+\item{scaling}{A single finite number \eqn{d}: the score is multiplied by
+the expected information to the power \eqn{-d}. Defaults to 0, the score
+as it is; see the section on the scaling of the score.}
 
 \item{links}{An optional named list of \pkg{linkfunctions7} links over
 the parameters of \code{\link[=term_params]{term_params()}}, overriding the defaults
@@ -41,7 +54,8 @@ driven by the score of the observation density at the previous times,
   \sum_{j=1}^{q} b_j f_{t-j},}
 with \eqn{s_t = \partial \ell_t / \partial \eta_t} the derivative of the
 log-likelihood contribution with respect to the predictor it is
-evaluated at.
+evaluated at, multiplied by a power of the expected information when
+\code{scaling} is not zero.
 }
 \details{
 The term adds no columns. The predictor at one time depends on the
@@ -100,10 +114,35 @@ layer. The persistence would also need a different chart: the
 partial-autocorrelation construction below is a scalar one, and the
 stationary region of a matrix autoregression is a bound on the
 spectral radius of its companion matrix, which is not a box.
+}
 
-The score driving the recursion is used unscaled. The general
-formulation carries a scaling matrix, usually an inverse information,
-which the curvature this term already receives would supply.
+\subsection{The scaling of the score}{
+The recursion is driven by the score multiplied by a power of the
+expected information of the same predictor,
+\deqn{s_t = \mathcal{I}_t^{-d}\,\frac{\partial \ell_t}{\partial \eta_t},
+  \qquad \mathcal{I}_t = -\mathrm{E}\!\left[
+  \frac{\partial^2 \ell_t}{\partial \eta_t^2}\right],}
+where \eqn{d} is the argument \code{scaling} and \eqn{\mathcal{I}_t} is evaluated
+at the predictor and at the other parameters of observation \eqn{t}. The
+level is scalar, so \eqn{\mathcal{I}_t} is a number and every real
+\eqn{d} defines a valid model. The literature uses three values
+(\cite{creal2013}). With \eqn{d = 0}, the default, the score is used as
+it is. With \eqn{d = 1/2} the scaled score has unit conditional variance.
+With \eqn{d = 1} the update is the score premultiplied by the inverse
+information, a step of Fisher scoring, and to first order it does not
+depend on the link of the parameter. The value \eqn{d = 1} with the
+identity link gives three known models exactly: GARCH(1, 1) for the
+variance of a gaussian, the INGARCH(1, 1) model for the mean of a Poisson
+and the ACD(1, 1) model for the mean of an exponential.
+
+Wherever \eqn{\mathcal{I}_t} varies with the observation, the loadings
+\eqn{a_i} have different units for different values of \eqn{d}. Where it
+is constant, as for the log-scale of a gaussian, changing \eqn{d} only
+rescales the loadings and leaves the likelihood unchanged. A scaling
+other than zero requires a family whose expected information has an
+analytic second derivative (\code{\link[distributions7:distrib_d2expected_hessian]{distributions7::distrib_d2expected_hessian()}}),
+because the derivatives of the filter reach the fourth derivative of
+\eqn{\mathcal{I}_t}.
 }
 
 \subsection{The level beside an intercept}{

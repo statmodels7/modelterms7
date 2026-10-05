@@ -18,7 +18,8 @@ GasTerm(
   by = NULL,
   time = NULL,
   links = list(),
-  submodels = list()
+  submodels = list(),
+  scaling = numeric(0)
 )
 }
 \arguments{
@@ -70,6 +71,9 @@ defaults, empty where none was given.}
 
 \item{submodels}{A named list of one-sided formulas, one per parameter
 developed over covariates. Empty where none is.}
+
+\item{scaling}{The power \eqn{d} of the expected information the score is
+multiplied by, \eqn{\mathcal{I}^{-d}}; zero for the score as it is.}
 }
 \value{
 An S7 object of class \code{GasTerm}, inheriting from

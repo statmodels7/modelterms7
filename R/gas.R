@@ -44,6 +44,8 @@ NULL
 #' @param by An optional grouping expression; each group is filtered
 #'   independently. `NULL` for one series.
 #' @param time An optional ordering expression. `NULL` for row order.
+#' @param scaling The power \eqn{d} of the expected information the score is
+#'   multiplied by, \eqn{\mathcal{I}^{-d}}; zero for the score as it is.
 #' @param links A named list of \pkg{linkfunctions7} links overriding the
 #'   defaults, empty where none was given.
 #' @param submodels A named list of one-sided formulas, one per parameter
@@ -86,7 +88,8 @@ GasTerm <- S7::new_class(
     by = S7::class_any,
     time = S7::class_any,
     links = S7::class_list,
-    submodels = S7::class_list
+    submodels = S7::class_list,
+    scaling = S7::class_double
   )
 )
 
@@ -100,7 +103,8 @@ GasTerm <- S7::new_class(
 #'   \sum_{j=1}^{q} b_j f_{t-j},}
 #' with \eqn{s_t = \partial \ell_t / \partial \eta_t} the derivative of the
 #' log-likelihood contribution with respect to the predictor it is
-#' evaluated at.
+#' evaluated at, multiplied by a power of the expected information when
+#' `scaling` is not zero.
 #'
 #' @details
 #' The term adds no columns. The predictor at one time depends on the
@@ -159,10 +163,35 @@ GasTerm <- S7::new_class(
 #' partial-autocorrelation construction below is a scalar one, and the
 #' stationary region of a matrix autoregression is a bound on the
 #' spectral radius of its companion matrix, which is not a box.
+#' }
 #'
-#' The score driving the recursion is used unscaled. The general
-#' formulation carries a scaling matrix, usually an inverse information,
-#' which the curvature this term already receives would supply.
+#' \subsection{The scaling of the score}{
+#' The recursion is driven by the score multiplied by a power of the
+#' expected information of the same predictor,
+#' \deqn{s_t = \mathcal{I}_t^{-d}\,\frac{\partial \ell_t}{\partial \eta_t},
+#'   \qquad \mathcal{I}_t = -\mathrm{E}\!\left[
+#'   \frac{\partial^2 \ell_t}{\partial \eta_t^2}\right],}
+#' where \eqn{d} is the argument `scaling` and \eqn{\mathcal{I}_t} is evaluated
+#' at the predictor and at the other parameters of observation \eqn{t}. The
+#' level is scalar, so \eqn{\mathcal{I}_t} is a number and every real
+#' \eqn{d} defines a valid model. The literature uses three values
+#' (\cite{creal2013}). With \eqn{d = 0}, the default, the score is used as
+#' it is. With \eqn{d = 1/2} the scaled score has unit conditional variance.
+#' With \eqn{d = 1} the update is the score premultiplied by the inverse
+#' information, a step of Fisher scoring, and to first order it does not
+#' depend on the link of the parameter. The value \eqn{d = 1} with the
+#' identity link gives three known models exactly: GARCH(1, 1) for the
+#' variance of a gaussian, the INGARCH(1, 1) model for the mean of a Poisson
+#' and the ACD(1, 1) model for the mean of an exponential.
+#'
+#' Wherever \eqn{\mathcal{I}_t} varies with the observation, the loadings
+#' \eqn{a_i} have different units for different values of \eqn{d}. Where it
+#' is constant, as for the log-scale of a gaussian, changing \eqn{d} only
+#' rescales the loadings and leaves the likelihood unchanged. A scaling
+#' other than zero requires a family whose expected information has an
+#' analytic second derivative ([distributions7::distrib_d2expected_hessian()]),
+#' because the derivatives of the filter reach the fourth derivative of
+#' \eqn{\mathcal{I}_t}.
 #' }
 #'
 #' \subsection{The level beside an intercept}{
@@ -265,6 +294,9 @@ GasTerm <- S7::new_class(
 #'   formula here is the shorthand giving the same subformula to every
 #'   parameter, and then no grouping is implied.
 #' @param time An optional ordering variable, evaluated in the data.
+#' @param scaling A single finite number \eqn{d}: the score is multiplied by
+#'   the expected information to the power \eqn{-d}. Defaults to 0, the score
+#'   as it is; see the section on the scaling of the score.
 #' @param links An optional named list of \pkg{linkfunctions7} links over
 #'   the parameters of [term_params()], overriding the defaults
 #'   described above. A deviation cannot be named: it is unconstrained by
@@ -365,7 +397,7 @@ GasTerm <- S7::new_class(
 #'     from_omega = cf[["gas.omega"]] / (1 - cf[["gas.beta1"]]))
 #' }
 #' @export
-gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL,
+gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
                 links = NULL, label = "gas") {
   chk <- function(v, nm, lo) {
     if (!is.numeric(v) || length(v) != 1L || is.na(v) || v < lo ||
@@ -377,6 +409,9 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL,
   }
   p <- chk(p, "p", 1L)
   q <- chk(q, "q", 0L)
+  if (!is.numeric(scaling) || length(scaling) != 1L || !is.finite(scaling)) {
+    stop("'scaling' must be a single finite number.", call. = FALSE)
+  }
   if (!is.character(label) || length(label) != 1L || is.na(label) ||
       !nzchar(label)) {
     stop("'label' must be a single non-empty character string.",
@@ -423,6 +458,7 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL,
           by = by, time = substitute(time),
           links = if (is.null(links)) list() else links,
           submodels = submodels,
+          scaling = as.double(scaling),
           blueprint = list())
 }
 
@@ -1190,14 +1226,17 @@ S7::method(term_build, GasTerm) <- function(term, data, ...) {
 #' @param psi The parameters, named as [term_params()].
 #' @param ... Unused.
 #' @param fast The fast context of the caller, or `NULL`: a list with
-#'   `family` (the distribution's S7 class name), `link` (the
-#'   parameter's link name), `k` (the parameter's 1-based index),
-#'   `bounds`, `y` and `theta` (the per-observation
-#'   parameters). Where the C registries of \pkg{distributions7} and
-#'   \pkg{linkfunctions7} cover the pair, the recursion reads the score and
-#'   the curvature through their scalar entry points instead of the R
-#'   callbacks, bit-identically; where they do not, the context is inert
-#'   and the callbacks run as before.
+#'   `family` and `link` (the names that
+#'   [distributions7::distrib_scalar_route()] and
+#'   [linkfunctions7::link_scalar_route()] return), `link_par` (the link's
+#'   own parameters, from the same function), `k` (the parameter's 1-based
+#'   index), `bounds`, `y` and `theta` (the per-observation parameters,
+#'   followed by the distribution's constants). Where the C registries of
+#'   \pkg{distributions7} and \pkg{linkfunctions7} cover the pair, the
+#'   recursion reads the score and the curvature through their scalar entry
+#'   points instead of the R callbacks; where they do not, the context is
+#'   inert and the callbacks run as before. The groups run over threads only
+#'   when the distribution's entries are safe on a worker thread.
 #' @param threads How many threads the recursion may use, over groups and
 #'   only on the fast route: a group's filter is independent of the others
 #'   and its writes land on its own rows, so no reduction is split and the
@@ -1635,7 +1674,9 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #'   one column per parameter pair, pair `(r, r2)` at column
 #'   `(r - 1) * np + r2`), `Vs` (the per-parameter jacobian rows
 #'   of the other equations) and `ap` (the filter's own parameter
-#'   index). Read only by the compiled route.
+#'   index), and for the third and fourth orders `D4` and `D5`, one column
+#'   per index triple and quadruple laid out the same way. Read only by the
+#'   compiled route.
 #' @param threads Threads for the compiled route's group loop, as
 #'   `numericals7::n_threads()` counts them; 1 is sequential.
 #' @return A list with `jacobian` and `curvature`.
@@ -1681,13 +1722,24 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
 #' @param blocks The model's derivative pieces; see [term_third()].
 #' @param direction The direction to contract against.
 #' @param ... Unused.
+#' @param score_values,curvature_values,blocks_data As for
+#'   [term_curvature()]; supplying all three, with `blocks_data` carrying the
+#'   fourth derivatives `D4`, routes the recursion through the compiled
+#'   kernel.
+#' @param threads Threads for the compiled route's group loop.
 #' @return A list with `jacobian`, `dphi` and `curvature`.
 #' @keywords internal
 S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
                                             psi, g, seed, blocks, direction,
-                                            ...) {
+                                            ...,
+                                            score_values = NULL,
+                                            curvature_values = NULL,
+                                            blocks_data = NULL,
+                                            threads = 1L) {
   .gas_curvature_core(term, eta, y, score, curvature, psi, g, seed, blocks,
-                      direction = direction)
+                      direction = direction, score_values = score_values,
+                      curvature_values = curvature_values,
+                      blocks_data = blocks_data, threads = threads)
 }
 
 #' @title The Score-Driven Recursion's Fourth Derivative
@@ -1720,18 +1772,29 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
 #' @param blocks The model's derivative pieces; see [term_fourth()].
 #' @param directions A list of two directions to contract against.
 #' @param ... Unused.
+#' @param score_values,curvature_values,blocks_data As for
+#'   [term_curvature()]; supplying all three, with `blocks_data` carrying the
+#'   fourth and fifth derivatives `D4` and `D5`, routes the recursion
+#'   through the compiled kernel.
+#' @param threads Threads for the compiled route's group loop.
 #' @return A list with `jacobian`, `dphi`, `dpsi` and
 #'   `curvature`.
 #' @keywords internal
 S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
                                              psi, g, seed, blocks, directions,
-                                             ...) {
+                                             ...,
+                                             score_values = NULL,
+                                             curvature_values = NULL,
+                                             blocks_data = NULL,
+                                             threads = 1L) {
   if (!is.list(directions) || length(directions) != 2L) {
     stop("'directions' must be a list of two vectors, one per direction.",
          call. = FALSE)
   }
   .gas_curvature_core(term, eta, y, score, curvature, psi, g, seed, blocks,
-                      direction = directions)
+                      direction = directions, score_values = score_values,
+                      curvature_values = curvature_values,
+                      blocks_data = blocks_data, threads = threads)
 }
 
 #' The Score-Driven Recursion's Second and Third Derivatives
@@ -1949,6 +2012,18 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
     out
   }
   shared <- prep(1L, seq_len(m))
+
+  # the compiled route, where the caller hands the score and the curvature
+  # as lookups and the model's pieces as data (gas_curvature_gen.cpp)
+  if (.gas_gen_ok(score_values, curvature_values, blocks_data, nd)) {
+    groups <- .gas_gen_groups_scalar(term, zeta, links, base, zcol, shared,
+                                     bp, m, dirs, nd)
+    A <- matrix(rep(shared$a, each = bp$n), bp$n, p)
+    B <- matrix(rep(shared$b, each = bp$n), bp$n, q)
+    return(.gas_gen_run(eta, groups, p, q, nd, rep(shared$omega, bp$n), A, B,
+                        score_values, curvature_values, g, seed, blocks_data,
+                        threads))
+  }
 
   # does the caller take the active set? A three-argument callback is the
   # earlier contract and is given the full row instead
@@ -2309,6 +2384,10 @@ S7::method(print, GasTerm) <- function(x, ...) {
   if (length(x@submodels)) {
     cat("  developed: ", paste(names(x@submodels), collapse = ", "),
         "\n", sep = "")
+  }
+  if (x@scaling != 0) {
+    cat(sprintf("  score scaled by the information to the power %s\n",
+                format(-x@scaling)))
   }
   cat("  parameters: ", paste(term_params(x), collapse = ", "), "\n", sep = "")
   invisible(x)

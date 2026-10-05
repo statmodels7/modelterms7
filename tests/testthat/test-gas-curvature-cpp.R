@@ -1,7 +1,7 @@
-# The compiled second-order recursion of the submodel route against the R
-# route, which stays the reference: same term, same point, the callbacks as
-# lookups and the layer's blocks as data on one side, the plain callbacks on
-# the other. The comparison carries a tolerance (the seg_block rule: a
+# The compiled recursion (gas_curvature_gen.cpp) at the second order, on the
+# submodel route, against the R route, which stays the reference: same term,
+# same point, the callbacks as lookups and the layer's blocks as data on one
+# side, the plain callbacks on the other. The comparison carries a tolerance (the seg_block rule: a
 # compiler is free to contract a multiply-add), while the SAME kernel across
 # thread counts is compared with identical() -- the groups are decomposed by
 # output element and no reduction is split.
@@ -103,7 +103,7 @@ test_that("the compiled curvature is the R route's, and never calls back", {
   }
 })
 
-test_that("a developed autoregressive chart keeps the R route", {
+test_that("a developed autoregressive chart runs on the general compiled route", {
   X <- cbind(1, as.numeric(scale(seq_len(n_c))))
   mb <- ncol(X)
   term <- term_build(gas(p = 1, q = 2, pacf1 ~ z, time = t), dd_c)
@@ -130,10 +130,11 @@ test_that("a developed autoregressive chart keeps the R route", {
                         lay$cb, score_values = s_at,
                         curvature_values = rep(-1, n_c),
                         blocks_data = lay$data, threads = 2L)
-  # varying_b: the kernel declines and the callback runs, so the result is
-  # the R route's by construction
-  expect_gt(lay$calls$k, 0L)
+  # varying_b: the compiled kernel (gas_curvature_gen.cpp) reads the
+  # Levinson-Durbin map per observation in C++, so the callback is never
+  # called
+  expect_identical(lay$calls$k, 0L)
   ref <- term_curvature(term, eta0, dd_c$y, sc2, cu2, psi, gw, seed, lay$cb)
-  expect_identical(got$jacobian, ref$jacobian)
-  expect_identical(got$curvature, ref$curvature)
+  expect_equal(got$jacobian, ref$jacobian, tolerance = 1e-13)
+  expect_equal(got$curvature, ref$curvature, tolerance = 1e-13)
 })
