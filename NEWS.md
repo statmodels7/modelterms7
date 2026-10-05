@@ -1,3 +1,17 @@
+# modelterms7 0.94.0
+
+* `gas()` takes `scaling`, the power `d` of the expected information by
+  which the score driving the recursion is multiplied,
+  `u_t = s_t I_t^(-d)`, both on the link scale of the filtered parameter.
+  The default 0 is the unscaled score; 1/2 and 1 are the scalings of the
+  literature, and any finite value is accepted.
+* The derivatives of orders two to four of the recursion are compiled. Where
+  the scalar registries of distributions7 and linkfunctions7 cover the
+  family and the link, the filter reads the score, the curvature and the
+  expected information through their C entries instead of calling back into
+  R, with the same results.
+* Requires distributions7 0.70.0 and linkfunctions7 0.5.0.
+
 # modelterms7 0.93.0
 
 * `term_continue()` for `gas()` accepts `deriv`, the derivatives of the past
