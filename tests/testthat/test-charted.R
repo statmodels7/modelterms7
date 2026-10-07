@@ -1,6 +1,6 @@
 test_that("term_charted names the coordinates that ride a chart with an edge", {
   expect_identical(term_charted(regime(2)), c("gap2", "alr1.1", "alr2.1"))
-  expect_identical(term_charted(gas(p = 1, q = 1)), c("alpha1", "pacf1"))
+  expect_identical(term_charted(gas(p = 1, q = 1)), c("kappa1", "pacf1"))
   expect_identical(term_charted(linpar(~ x)), character(0))
   set.seed(1)
   dd <- data.frame(x = runif(50), g = factor(rep(1:5, 10)))

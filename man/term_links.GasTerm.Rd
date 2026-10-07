@@ -42,7 +42,7 @@ vapply(lk, function(l) paste(l@link_bounds, collapse = ", "), character(1))
 
 # Overridden: a loading free in sign.
 vapply(term_links(gas(p = 1, q = 1,
-                      links = list(alpha1 = linkfunctions7::identity_link()))),
+                      links = list(kappa1 = linkfunctions7::identity_link()))),
        function(l) l@link_name, character(1))
 
 }

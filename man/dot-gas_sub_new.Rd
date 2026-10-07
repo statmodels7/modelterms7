@@ -30,7 +30,7 @@ Levinson-Durbin applied row by row. A zero-column matrix at
 }
 }
 \description{
-Evaluates the recursion's coefficients \eqn{(\omega_t, \alpha_t, \phi_t)}
+Evaluates the recursion's coefficients \eqn{(\omega_t, \kappa_t, \xi_t)}
 at each row of \code{newdata}, so that \code{\link[=term_continue]{term_continue()}} can carry a score-driven
 filter past the end of its series. A parameter carrying a subformula is read
 by calling \code{\link[=term_predict]{term_predict()}} on each of its sub-terms, which reapplies the
@@ -50,7 +50,7 @@ with no subformula is taken as it stands, on the parameter scale, while a
 developed parameter's entries are its coefficients on the unconstrained
 scale and go through the chart here. With \eqn{p = q = 1} and no
 development, \code{u = c(0.3, 0.4, 0.7)} gives \eqn{\omega = 0.3},
-\eqn{\alpha_1 = 0.4} and a partial autocorrelation of 0.7.
+\eqn{\kappa_1 = 0.4} and a partial autocorrelation of 0.7.
 }
 \seealso{
 \code{\link[=term_continue]{term_continue()}}, the only caller; \code{\link[=term_filter]{term_filter()}} for the same

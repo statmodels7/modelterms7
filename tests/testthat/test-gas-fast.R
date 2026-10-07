@@ -51,7 +51,7 @@ run_both <- function(term, dd, psi, d7, param, theta, threads = 1L) {
 
 test_that("the fast route reproduces the callbacks, scalar filter", {
   dd <- fast_panel(1, groups = 10, per = 25)
-  psi <- list(omega = 0.2, alpha1 = 0.15, pacf1 = 0.4)
+  psi <- list(omega = 0.2, kappa1 = 0.15, pacf1 = 0.4)
   for (case in list(
     list(d7 = distributions7::gaussian1_distrib(), param = "mu",
          theta = list(mu = 0, sigma = 1.3)),
@@ -69,7 +69,7 @@ test_that("the fast route reads a family's constants after its parameters", {
   set.seed(4)
   dd <- fast_panel(4, groups = 10, per = 25)
   dd$y <- stats::rbinom(nrow(dd), size = 10, prob = 0.4)
-  psi <- list(omega = 0.1, alpha1 = 0.05, pacf1 = 0.4)
+  psi <- list(omega = 0.1, kappa1 = 0.05, pacf1 = 0.4)
   d7 <- distributions7::binomial_distrib(size = 10)
   both <- run_both(gas(p = 1, q = 1, by = id, time = t), dd, psi, d7, "mu",
                    list(mu = 0.4))
@@ -104,7 +104,7 @@ test_that("the fast route reproduces the callbacks on the submodel route too", {
 
 test_that("the result does not depend on threads, bit for bit", {
   dd <- fast_panel(3, groups = 12, per = 20)   # above the group threshold
-  psi <- list(omega = 0.2, alpha1 = 0.15, pacf1 = 0.4)
+  psi <- list(omega = 0.2, kappa1 = 0.15, pacf1 = 0.4)
   d7 <- distributions7::gaussian1_distrib()
   theta <- list(mu = 0, sigma = 1.1)
   b1 <- run_both(gas(p = 1, q = 1, by = id, time = t), dd, psi, d7, "mu",
@@ -130,7 +130,7 @@ test_that("the adjoint rides the fast forward pass and calls nothing back", {
 
   # the scalar route
   tb <- term_build(gas(p = 1, q = 1, by = id, time = t), dd)
-  psi <- list(omega = 0.2, alpha1 = 0.15, pacf1 = 0.4)
+  psi <- list(omega = 0.2, kappa1 = 0.15, pacf1 = 0.4)
   ref <- term_adjoint(tb, eta0, dd$y, sc_cnt, cu_cnt, psi, g = gw)
   expect_gt(calls$k, 0L)
   calls$k <- 0L
@@ -157,7 +157,7 @@ test_that("the adjoint rides the fast forward pass and calls nothing back", {
 
 test_that("an uncovered family or link leaves the context inert", {
   dd <- fast_panel(4, groups = 6, per = 20)
-  psi <- list(omega = 0.2, alpha1 = 0.15, pacf1 = 0.4)
+  psi <- list(omega = 0.2, kappa1 = 0.15, pacf1 = 0.4)
   d7 <- distributions7::gaussian1_distrib()
   theta <- list(mu = 0, sigma = 1.3)
   tb <- term_build(gas(p = 1, q = 1, by = id, time = t), dd)
@@ -198,7 +198,7 @@ cb_scaled <- function(d7, param, theta, y, d) {
 test_that("the fast route reproduces the scaled callbacks", {
   dd <- fast_panel(3, groups = 10, per = 25)
   n <- nrow(dd)
-  psi <- list(omega = 0.2, alpha1 = 0.15, pacf1 = 0.4)
+  psi <- list(omega = 0.2, kappa1 = 0.15, pacf1 = 0.4)
   set.seed(4)
   for (case in list(
     # the information of a gaussian mean is 1/sigma^2, varying by observation

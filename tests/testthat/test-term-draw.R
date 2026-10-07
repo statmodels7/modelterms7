@@ -14,7 +14,7 @@ test_that("a draw has term_start's shape and spreads around it", {
   # the whole point: zero on a log chart is a loading of one
   m <- rowMeans(replicate(400, term_draw(g)))
   expect_equal(unname(m), unname(term_start(g)), tolerance = 0.1)
-  expect_lt(term_start(g)[["alpha1"]], -2)
+  expect_lt(term_start(g)[["kappa1"]], -2)
 })
 
 test_that("the width is half of sd", {
@@ -39,7 +39,7 @@ test_that("a draw is admissible on every chart it rides", {
                   numeric(1))
     # the loadings are positive and the persistences stationary, at any
     # coordinate whatever, which is what the charts are for
-    expect_true(all(psi[c("alpha1", "alpha2")] > 0))
+    expect_true(all(psi[c("kappa1", "kappa2")] > 0))
     expect_true(all(abs(psi[c("pacf1", "pacf2")]) < 1))
   }
 })

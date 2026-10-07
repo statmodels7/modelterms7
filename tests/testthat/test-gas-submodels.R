@@ -13,36 +13,36 @@ gauss_curv <- function(y) function(e, i) -1
 
 test_that("the syntax is validated where it is written", {
   expect_error(gas(p = 1, q = 1, gamma ~ z), "the parameters are")
-  expect_error(gas(p = 1, q = 1, alpha1 ~ z, alpha1 ~ g),
+  expect_error(gas(p = 1, q = 1, kappa1 ~ z, kappa1 ~ g),
                "two subformulas")
   expect_error(gas(p = 1, q = 1, ~z), "two-sided formulas")
-  expect_error(gas(p = 1, q = 1, by = ~ridge(~g), alpha1 ~ z),
+  expect_error(gas(p = 1, q = 1, by = ~ridge(~g), kappa1 ~ z),
                "mixing it with per-parameter")
   # by as a formula is the shorthand: every parameter gets the subformula
   sh <- gas(p = 1, q = 1, by = ~z)
-  expect_identical(names(sh@submodels), c("omega", "alpha1", "pacf1"))
+  expect_identical(names(sh@submodels), c("omega", "kappa1", "pacf1"))
 })
 
 test_that("a development of ~1 is the scalar filter in other coordinates", {
   term_sc <- term_build(gas(p = 1, q = 1, time = t), dd)
-  psi <- list(omega = 0.2, alpha1 = 0.3, pacf1 = 0.5)
+  psi <- list(omega = 0.2, kappa1 = 0.3, pacf1 = 0.5)
   sc <- term_filter(term_sc, rep(0, n), dd$y, gauss_score(dd$y),
                     gauss_curv(dd$y), psi)
 
   # omega ~ 1 on the identity chart: the coordinate IS omega
   t_om <- term_build(gas(p = 1, q = 1, omega ~ 1, time = t), dd)
   expect_identical(term_params(t_om),
-                   c("omega.(Intercept)", "alpha1", "pacf1"))
-  ps <- list("omega.(Intercept)" = 0.2, alpha1 = 0.3, pacf1 = 0.5)
+                   c("omega.(Intercept)", "kappa1", "pacf1"))
+  ps <- list("omega.(Intercept)" = 0.2, kappa1 = 0.3, pacf1 = 0.5)
   got <- term_filter(t_om, rep(0, n), dd$y, gauss_score(dd$y),
                      gauss_curv(dd$y), ps)
   expect_equal(got$eta, sc$eta, tolerance = 1e-12)
   expect_equal(unname(got$jacobian), unname(sc$jacobian), tolerance = 1e-10)
 
-  # alpha1 ~ 1 rides the log chart inside, so its coordinate is
-  # log(alpha1) and the jacobian column carries the chain factor
-  t_al <- term_build(gas(p = 1, q = 1, alpha1 ~ 1, time = t), dd)
-  ps2 <- list(omega = 0.2, "alpha1.(Intercept)" = log(0.3), pacf1 = 0.5)
+  # kappa1 ~ 1 rides the log chart inside, so its coordinate is
+  # log(kappa1) and the jacobian column carries the chain factor
+  t_al <- term_build(gas(p = 1, q = 1, kappa1 ~ 1, time = t), dd)
+  ps2 <- list(omega = 0.2, "kappa1.(Intercept)" = log(0.3), pacf1 = 0.5)
   got2 <- term_filter(t_al, rep(0, n), dd$y, gauss_score(dd$y),
                       gauss_curv(dd$y), ps2)
   expect_equal(got2$eta, sc$eta, tolerance = 1e-12)
@@ -51,12 +51,12 @@ test_that("a development of ~1 is the scalar filter in other coordinates", {
 })
 
 test_that("a time-varying loading reproduces a recursion written by hand", {
-  term <- term_build(gas(p = 1, q = 1, alpha1 ~ z, time = t), dd)
+  term <- term_build(gas(p = 1, q = 1, kappa1 ~ z, time = t), dd)
   g0 <- log(0.2)
   g1 <- 0.4
   om <- 0.1
   rho <- 0.5
-  ps <- list(omega = om, "alpha1.(Intercept)" = g0, "alpha1.z" = g1,
+  ps <- list(omega = om, "kappa1.(Intercept)" = g0, "kappa1.z" = g1,
              pacf1 = rho)
   got <- term_filter(term, rep(0, n), dd$y, gauss_score(dd$y),
                      gauss_curv(dd$y), ps)
@@ -77,10 +77,10 @@ test_that("a time-varying loading reproduces a recursion written by hand", {
 })
 
 test_that("the jacobian of a developed filter is exact", {
-  for (cfg in list(list(f = quote(gas(p = 1, q = 1, alpha1 ~ z, time = t))),
+  for (cfg in list(list(f = quote(gas(p = 1, q = 1, kappa1 ~ z, time = t))),
                    list(f = quote(gas(p = 1, q = 1, omega ~ g,
                                       pacf1 ~ z, time = t))),
-                   list(f = quote(gas(p = 2, q = 2, alpha2 ~ z,
+                   list(f = quote(gas(p = 2, q = 2, kappa2 ~ z,
                                       time = t))))) {
     term <- term_build(eval(cfg$f), dd)
     nm <- term_params(term)
@@ -139,7 +139,7 @@ test_that("a per-group development is the population-and-departures model", {
   # on the log chart the same model: a loading developed per group is
   # exp(gamma0 + delta) = alpha_pop * exp(delta), positive whatever the
   # departure is -- the property the development exists for
-  t_sl <- term_build(gas(p = 1, q = 1, alpha1 ~ random(~1 | g), by = g,
+  t_sl <- term_build(gas(p = 1, q = 1, kappa1 ~ random(~1 | g), by = g,
                          time = t), dd)
   ps_sl <- stats::setNames(list(om, log(al), d_a, d_b, rho),
                            term_params(t_sl))
@@ -166,10 +166,10 @@ test_that("the compiled recursion is the R route's twin", {
   # .gas_filter_sub_r is the same loop in R, sharing no code with the
   # kernel; the comparison carries a tolerance rather than asking identity,
   # a compiler being free to contract a multiply-add (the seg_block lesson)
-  for (cfg in list(quote(gas(p = 1, q = 1, alpha1 ~ z, time = t)),
+  for (cfg in list(quote(gas(p = 1, q = 1, kappa1 ~ z, time = t)),
                    quote(gas(p = 1, q = 1, omega ~ random(~1 | g),
                              pacf1 ~ z, by = g, time = t)),
-                   quote(gas(p = 2, q = 2, alpha2 ~ z, omega ~ g,
+                   quote(gas(p = 2, q = 2, kappa2 ~ z, omega ~ g,
                              time = t)))) {
     term <- term_build(eval(cfg), dd)
     nm <- term_params(term)
@@ -190,9 +190,9 @@ test_that("the compiled recursion is the R route's twin", {
 })
 
 test_that("the adjoint of a developed filter matches the definition", {
-  term <- term_build(gas(p = 1, q = 1, alpha1 ~ z, time = t), dd)
-  ps <- list(omega = 0.1, "alpha1.(Intercept)" = log(0.25),
-             "alpha1.z" = 0.3, pacf1 = 0.4)
+  term <- term_build(gas(p = 1, q = 1, kappa1 ~ z, time = t), dd)
+  ps <- list(omega = 0.1, "kappa1.(Intercept)" = log(0.25),
+             "kappa1.z" = 0.3, pacf1 = 0.4)
   set.seed(9)
   gw <- rnorm(n)
   out <- term_adjoint(term, rep(0, n), dd$y, gauss_score(dd$y),
@@ -210,7 +210,7 @@ test_that("the curvature of a developed filter is exact", {
   mb <- ncol(X)
   sc <- gauss_score(dd$y)
   cu <- gauss_curv(dd$y)
-  for (cfg in list(quote(gas(p = 1, q = 1, alpha1 ~ z, time = t)),
+  for (cfg in list(quote(gas(p = 1, q = 1, kappa1 ~ z, time = t)),
                    quote(gas(p = 1, q = 1, omega ~ g, time = t)),
                    quote(gas(p = 1, q = 2, pacf1 ~ z, time = t)))) {
     term <- term_build(eval(cfg), dd)
@@ -261,9 +261,9 @@ test_that("the third derivative of a developed filter is exact", {
   l3 <- function(e, i) { t <- tt(e, i); 2 * t * (1 - t^2) }
   l4 <- function(e, i) { t <- tt(e, i); (1 - t^2) * (2 - 6 * t^2) }
 
-  for (cfg in list(quote(gas(p = 1, q = 1, alpha1 ~ z, time = t)),
+  for (cfg in list(quote(gas(p = 1, q = 1, kappa1 ~ z, time = t)),
                    quote(gas(p = 1, q = 3, pacf1 ~ z, time = t)),
-                   quote(gas(p = 2, q = 2, omega ~ z, alpha1 ~ g, time = t)),
+                   quote(gas(p = 2, q = 2, omega ~ z, kappa1 ~ g, time = t)),
                    # a panel, which is the shape a real fit has: the second
                    # and third derivatives are accumulated on each group's
                    # ACTIVE SET rather than as a square over every unknown
@@ -308,7 +308,7 @@ test_that("the third derivative of a developed filter is exact", {
 
 test_that("the contract views answer for a developed term", {
   term <- term_build(gas(p = 1, q = 1, omega ~ random(~1 | g),
-                         alpha1 ~ z, by = g, time = t), dd)
+                         kappa1 ~ z, by = g, time = t), dd)
   # penalties: the random intercept's, keyed parameter::subterm, over the
   # indicator coordinates in the term's own numbering
   ent <- term_penalties(term)
@@ -319,7 +319,7 @@ test_that("the contract views answer for a developed term", {
   # the start projects each parameter's own target onto its design: omega
   # at zero, the loading at 0.1 through its log chart
   z0 <- term_start(term)
-  expect_equal(unname(z0[["alpha1.(Intercept)"]]), log(0.1),
+  expect_equal(unname(z0[["kappa1.(Intercept)"]]), log(0.1),
                tolerance = 1e-8)
   expect_equal(unname(z0[["omega.(Intercept)"]]), 0, tolerance = 1e-8)
   # the level's constant coordinate is the intercept of its development

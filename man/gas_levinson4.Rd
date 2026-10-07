@@ -45,7 +45,7 @@ a single contraction cannot reach this order.
 The map is multilinear of degree \eqn{k} in the first \eqn{k} partial
 autocorrelations, so the result is identically zero for \eqn{q \le 3}: the
 first coefficient carrying a monomial of degree four is
-\eqn{\phi^{(4)}_1}, which needs \eqn{q = 4}. A check of this function that
+\eqn{\xi^{(4)}_1}, which needs \eqn{q = 4}. A check of this function that
 stops at \eqn{q = 3} compares zero with zero and asserts nothing.
 }
 \seealso{

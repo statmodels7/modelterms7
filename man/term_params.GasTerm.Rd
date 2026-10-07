@@ -13,7 +13,7 @@ so a developed parameter still appears as itself.}
 A character vector of length \code{\link[=term_npar]{term_npar()}}.
 }
 \description{
-\code{"omega"}, then \code{"alpha1"} ... \code{"alphap"}, then \code{"pacf1"} ... \code{"pacfq"}:
+\code{"omega"}, then \code{"kappa1"} ... \code{"kappap"}, then \code{"pacf1"} ... \code{"pacfq"}:
 the level, one loading per score lag, and one partial autocorrelation per
 autoregressive lag. A parameter carrying a subformula is \strong{expanded in
 place} into its coefficients, named \code{parameter.coefficient}.
@@ -21,7 +21,7 @@ place} into its coefficients, named \code{parameter.coefficient}.
 \details{
 The persistence coordinates are named for the chart they live on, never
 for the quantity a reader reads. \code{pacf1} is a partial autocorrelation;
-the autoregressive coefficient \eqn{\phi_1} the literature writes is a
+the autoregressive coefficient \eqn{\xi_1} the literature writes is a
 function of the whole chart through Levinson-Durbin, and coincides with the
 coordinate only at \eqn{q = 1}. \code{\link[=term_readable]{term_readable()}} is what carries the
 coordinates onto the coefficients.

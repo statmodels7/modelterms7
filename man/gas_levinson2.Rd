@@ -20,8 +20,8 @@ coefficients in the partial autocorrelations propagated as well.
 }
 \details{
 The recursion is
-\deqn{\phi^{(k)}_k = \rho_k, \qquad
-  \phi^{(k)}_i = \phi^{(k-1)}_i - \rho_k\phi^{(k-1)}_{k-i},}
+\deqn{\xi^{(k)}_k = \rho_k, \qquad
+  \xi^{(k)}_i = \xi^{(k-1)}_i - \rho_k\xi^{(k-1)}_{k-i},}
 which is bilinear: \eqn{\rho_k} multiplies quantities that do not depend
 on it. Differentiating twice therefore adds no new kind of term, only the
 two places the product rule puts the first derivative,

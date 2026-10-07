@@ -104,7 +104,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 .gas_param_link <- function(term, j) {
   if (!is.null(term@links[[j]])) return(term@links[[j]])
   if (startsWith(j, "pacf")) linkfunctions7::rhobit_link()
-  else if (startsWith(j, "alpha")) linkfunctions7::log_link()
+  else if (startsWith(j, "kappa")) linkfunctions7::log_link()
   else linkfunctions7::identity_link()
 }
 
@@ -234,7 +234,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
   bp <- term@blueprint
   p <- term@p
   q <- term@q
-  aj <- if (p > 0L) paste0("alpha", seq_len(p)) else character(0)
+  aj <- if (p > 0L) paste0("kappa", seq_len(p)) else character(0)
   scatter <- function(j, rows, act) {
     vj <- vals[[j]]
     at <- match(vj$idx, act)
@@ -313,7 +313,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
   vals <- .gas_sub_values(term, u, "parameter")
   bd <- .gas_sub_b(term, vals)
   acts <- .gas_sub_active(term, vals)
-  aj <- if (p > 0L) paste0("alpha", seq_len(p)) else character(0)
+  aj <- if (p > 0L) paste0("kappa", seq_len(p)) else character(0)
 
   eta_out <- numeric(bp$n)
   jac <- matrix(0, bp$n, np)
@@ -410,7 +410,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
   q <- term@q
   vals <- .gas_sub_values(term, u, "parameter")
   bd <- .gas_sub_b(term, vals)
-  aj <- if (p > 0L) paste0("alpha", seq_len(p)) else character(0)
+  aj <- if (p > 0L) paste0("kappa", seq_len(p)) else character(0)
   cvv <- .gas_filter_sub(term, eta, y, score, curvature, u,
                          fast = fast, threads = threads)$curv
 
@@ -477,7 +477,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
                           fourth = fourth)
   bd <- .gas_sub_b(term, vals)
   acts <- .gas_sub_active(term, vals)
-  aj <- if (p > 0L) paste0("alpha", seq_len(p)) else character(0)
+  aj <- if (p > 0L) paste0("kappa", seq_len(p)) else character(0)
   pj <- if (q > 0L) paste0("pacf", seq_len(q)) else character(0)
 
   seed <- as.matrix(seed)
@@ -1047,7 +1047,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 #' The Filter's Parameters at Rows Outside the Fitting Data
 #'
 #' @description
-#' Evaluates the recursion's coefficients \eqn{(\omega_t, \alpha_t, \phi_t)}
+#' Evaluates the recursion's coefficients \eqn{(\omega_t, \kappa_t, \xi_t)}
 #' at each row of `newdata`, so that [term_continue()] can carry a score-driven
 #' filter past the end of its series. A parameter carrying a subformula is read
 #' by calling [term_predict()] on each of its sub-terms, which reapplies the
@@ -1067,7 +1067,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 #' developed parameter's entries are its coefficients on the unconstrained
 #' scale and go through the chart here. With \eqn{p = q = 1} and no
 #' development, `u = c(0.3, 0.4, 0.7)` gives \eqn{\omega = 0.3},
-#' \eqn{\alpha_1 = 0.4} and a partial autocorrelation of 0.7.
+#' \eqn{\kappa_1 = 0.4} and a partial autocorrelation of 0.7.
 #'
 #' @param term A built `GasTerm` whose blueprint carries at least one
 #'   subformula. With no development the caller uses `.gas_coefs()` instead.
@@ -1125,8 +1125,8 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
   A <- matrix(0, nn, p)
   dA <- vector("list", p)
   for (i in seq_len(p)) {
-    A[, i] <- v[[paste0("alpha", i)]]
-    dA[[i]] <- dv[[paste0("alpha", i)]]
+    A[, i] <- v[[paste0("kappa", i)]]
+    dA[[i]] <- dv[[paste0("kappa", i)]]
   }
   B <- matrix(0, nn, q)
   dB <- replicate(q, matrix(0, nn, np), simplify = FALSE)

@@ -85,14 +85,14 @@ test_that("a structural term divides its parameter vector", {
   b <- term_build(gas(p = 1, q = 1, omega ~ random(~ 1 | g), by = g,
                       time = t), dd)
   cp <- term_components(b)
-  expect_identical(names(cp), c("omega", "alpha1", "pacf1"))
+  expect_identical(names(cp), c("omega", "kappa1", "pacf1"))
   # a structural term has no design columns: what is divided is the vector
   # term_params() reports, which its state and its variance matrix share
   idx <- unlist(lapply(cp, `[[`, "index"), use.names = FALSE)
   expect_identical(sort(as.integer(idx)),
                    seq_along(term_params(b)))
   expect_identical(length(cp$omega$subs), 2L)
-  expect_identical(cp$alpha1$subs, list())
+  expect_identical(cp$kappa1$subs, list())
   expect_identical(unlist(cp$omega$sub_index, use.names = FALSE),
                    as.integer(cp$omega$index))
   # and the positions really are that sub-term's: the term's own parameter
@@ -111,6 +111,6 @@ test_that("a scalar structural term divides into one position each", {
   b <- term_build(gas(p = 1, q = 1, time = t), dd)
   cp <- term_components(b)
   expect_identical(vapply(cp, function(z) length(z$index), integer(1)),
-                   c(omega = 1L, alpha1 = 1L, pacf1 = 1L))
+                   c(omega = 1L, kappa1 = 1L, pacf1 = 1L))
   expect_true(all(vapply(cp, function(z) length(z$subs) == 0L, logical(1))))
 })

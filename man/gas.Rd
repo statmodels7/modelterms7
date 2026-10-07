@@ -22,7 +22,7 @@ gas(
 
 \item{...}{Two-sided formulas whose left side names a parameter, one
 per parameter to be developed with covariates, e.g.
-\code{alpha1 ~ s(x)}; see the section above.}
+\code{kappa1 ~ s(x)}; see the section above.}
 
 \item{by}{An optional grouping variable, evaluated in the data; each
 group is filtered independently, from its own starting level. A
@@ -50,8 +50,8 @@ An object of class \code{\link[=GasTerm]{GasTerm()}} (a specification; see
 A generalized autoregressive score component (\cite{creal2013},
 \cite{harvey2013}): a level \eqn{f_t} added to the linear predictor,
 driven by the score of the observation density at the previous times,
-\deqn{f_t = \omega + \sum_{i=1}^{p} a_i s_{t-i} +
-  \sum_{j=1}^{q} \phi_j f_{t-j},}
+\deqn{f_t = \omega + \sum_{i=1}^{p} \kappa_i s_{t-i} +
+  \sum_{j=1}^{q} \xi_j f_{t-j},}
 with \eqn{s_t = \partial \ell_t / \partial \eta_t} the derivative of the
 log-likelihood contribution with respect to the predictor it is
 evaluated at, multiplied by a power of the expected information when
@@ -73,7 +73,7 @@ its size.
 
 \subsection{The parameters and their chart}{
 The parameters are the level \eqn{\omega}, the score loadings
-\eqn{a_1, \dots, a_p}, and the persistence. Each is estimated on the
+\eqn{\kappa_1, \dots, \kappa_p}, and the persistence. Each is estimated on the
 unconstrained scale of a link, and \code{links} overrides any of them;
 the defaults are the following.
 
@@ -83,10 +83,10 @@ score, which is the case the score-driven literature writes, and
 positivity is then structural. A deviation or a submodel moves the loading
 on the log scale, so no group and no observation can take a negative one.
 A loading that must be free in sign is asked for with
-\code{links = list(alpha1 = linkfunctions7::identity_link())}.
+\code{links = list(kappa1 = linkfunctions7::identity_link())}.
 
 The persistence is carried by \strong{partial autocorrelations} rather
-than by the coefficients \eqn{\phi_j}: the stationary region of an
+than by the coefficients \eqn{\xi_j}: the stationary region of an
 autoregression is not a box, so no collection of scalar links covers
 it, while the partial autocorrelations each range over \eqn{(-1, 1)}
 independently and the Levinson-Durbin recursion carries them onto the
@@ -136,7 +136,7 @@ variance of a gaussian, the INGARCH(1, 1) model for the mean of a Poisson
 and the ACD(1, 1) model for the mean of an exponential.
 
 Wherever \eqn{\mathcal{I}_t} varies with the observation, the loadings
-\eqn{a_i} have different units for different values of \eqn{d}. Where it
+\eqn{\kappa_i} have different units for different values of \eqn{d}. Where it
 is constant, as for the log-scale of a gaussian, changing \eqn{d} only
 rescales the loadings and leaves the likelihood unchanged. A scaling
 other than zero requires a family whose expected information has an
@@ -149,7 +149,7 @@ because the derivatives of the filter reach the fourth derivative of
 The level \eqn{\omega} adds a constant to the recursion, so an intercept
 \eqn{c} in the same equation spans the same direction. The two are exactly
 confounded: shifting \eqn{c} by \eqn{k} and \eqn{\omega} by
-\eqn{-k(1 - \sum_j \phi_j)} leaves every predictor unchanged. A fitting layer
+\eqn{-k(1 - \sum_j \xi_j)} leaves every predictor unchanged. A fitting layer
 therefore estimates at most one of them. In \pkg{statmodels7} the intercept
 is kept and \eqn{\omega} is held at zero, which a summary reports as
 \code{omega (held)}; written without the intercept, as \code{0 + gas(...)}, the
@@ -160,13 +160,13 @@ The two spellings are one model with the same log-likelihood, loadings
 and persistence, and their constants measure different quantities. The
 score has zero conditional mean, so the level fluctuates around the fixed
 point of the recursion,
-\deqn{\mathrm{E}[f_t] = \frac{\omega}{1 - \sum_{j=1}^{q} \phi_j},}
+\deqn{\mathrm{E}[f_t] = \frac{\omega}{1 - \sum_{j=1}^{q} \xi_j},}
 and this is what the intercept estimates when \eqn{\omega} is held:
 \deqn{\eta_t = c + f_t \;\text{with}\; \omega = 0
   \qquad\text{and}\qquad
-  \eta_t = f_t \;\text{with}\; c = \frac{\omega}{1 - \sum_j \phi_j}}
+  \eta_t = f_t \;\text{with}\; c = \frac{\omega}{1 - \sum_j \xi_j}}
 describe the same predictor. With a persistence close to one the factor
-\eqn{1/(1 - \sum_j \phi_j)} is large, so \eqn{\omega} is small, and its
+\eqn{1/(1 - \sum_j \xi_j)} is large, so \eqn{\omega} is small, and its
 standard error is not comparable with the intercept's: a change in
 \eqn{\omega} moves the level by that factor. The identity is for a scalar
 level; a level developed by a subformula is confounded with the part of
@@ -185,7 +185,7 @@ develops it as \eqn{\psi_{j,t} = g_j^{-1}(z_t^\top\gamma_j)}, the
 design \eqn{Z} built from the right-hand side through
 \code{\link[=interpret_formula]{interpret_formula()}}, so it takes any additive term of the
 package:
-\preformatted{gas(p = 1, q = 1, omega ~ ridge(~g), alpha1 ~ s(x),
+\preformatted{gas(p = 1, q = 1, omega ~ ridge(~g), kappa1 ~ s(x),
     pacf1 ~ random(~1 | id), by = id)}
 The development acts on the unconstrained scale of the parameter's own
 link. That is what keeps every per-observation value inside the
@@ -253,7 +253,7 @@ b <- term_build(gas(p = 1, q = 1, time = t), dd)
 out <- term_filter(b, eta = rep(0, 60), y = dd$y,
                    score = function(e, i) dd$y[i] - e,
                    curvature = function(e, i) -1,
-                   psi = list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.8))
+                   psi = list(omega = 0.1, kappa1 = 0.3, pacf1 = 0.8))
 
 # The level tracks the change in the mean.
 round(out$eta[c(1, 15, 30, 32, 45, 60)], 3)
@@ -263,7 +263,7 @@ round(out$eta[c(1, 15, 30, 32, 45, 60)], 3)
 f <- function(v) sum(term_filter(b, rep(0, 60), dd$y,
                                  function(e, i) dd$y[i] - e,
                                  function(e, i) -1,
-                                 list(omega = v[1], alpha1 = v[2],
+                                 list(omega = v[1], kappa1 = v[2],
                                       pacf1 = v[3]))$eta)
 v0 <- c(0.1, 0.3, 0.8)
 h  <- 1e-5
@@ -300,18 +300,18 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   fd <- data.frame(t = seq_len(600), y = yy)
   ft <- statmodels7::statmod(y ~ 0 + gas(p = 1, q = 1, time = t),
                              distributions7::gaussian1_distrib(), fd)
-  # truth: omega 0.05, alpha 0.3, phi 0.9. phi is reported as the
+  # truth: omega 0.05, kappa 0.3, xi 0.9. xi is reported as the
   # autoregressive coefficient, which its coordinate is not.
   print(round(coef(ft)$mu, 3))
 
   # With an intercept the level is held at zero and the intercept
-  # estimates omega / (1 - phi) instead: the same model, reparametrized.
+  # estimates omega / (1 - xi) instead: the same model, reparametrized.
   fi <- statmodels7::statmod(y ~ 1 + gas(p = 1, q = 1, time = t),
                              distributions7::gaussian1_distrib(), fd)
   print(c(logLik(ft), logLik(fi)))
   cf <- coef(ft)$mu
   c(intercept  = coef(fi)$mu[["(Intercept)"]],
-    from_omega = cf[["gas.omega"]] / (1 - cf[["gas.phi1"]]))
+    from_omega = cf[["gas.omega"]] / (1 - cf[["gas.xi1"]]))
 }
 }
 \references{

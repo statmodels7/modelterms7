@@ -48,8 +48,8 @@ gauss_curv_c <- function(y) function(e, i) -1
 test_that("the compiled curvature is the R route's, and never calls back", {
   X <- cbind(1, as.numeric(scale(seq_len(n_c))))
   mb <- ncol(X)
-  for (cfg in list(quote(gas(p = 1, q = 1, alpha1 ~ z, time = t)),
-                   quote(gas(p = 2, q = 2, omega ~ z, alpha1 ~ g, time = t)),
+  for (cfg in list(quote(gas(p = 1, q = 1, kappa1 ~ z, time = t)),
+                   quote(gas(p = 2, q = 2, omega ~ z, kappa1 ~ g, time = t)),
                    quote(gas(p = 1, q = 1, omega ~ g, by = g, time = t)),
                    quote(gas(p = 1, q = 1, omega ~ z, by = g8, time = t)))) {
     term <- term_build(eval(cfg), dd_c)

@@ -77,7 +77,7 @@ NULL
                  if (third) rep(linkfunctions7::d3linkinv(lk, z), mg),
                  if (fourth) rep(linkfunctions7::d4linkinv(lk, z), mg))
   }
-  aj <- if (p > 0L) paste0("alpha", seq_len(p)) else character(0)
+  aj <- if (p > 0L) paste0("kappa", seq_len(p)) else character(0)
   lapply(bp$order, function(rows) {
     mg <- length(rows)
     out <- list(rows = as.integer(rows), act = seq_len(m),

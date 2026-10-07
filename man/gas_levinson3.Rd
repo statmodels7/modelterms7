@@ -40,7 +40,7 @@ being \eqn{\rho_k} itself.
 The map is multilinear of degree \eqn{k} in the first \eqn{k} partial
 autocorrelations, so the result is identically zero for \eqn{q \le 2}:
 at \eqn{q = 2} the only non-trivial coefficient is
-\eqn{\phi_1 = \rho_1(1-\rho_2)}, which is bilinear. A check of this
+\eqn{\xi_1 = \rho_1(1-\rho_2)}, which is bilinear. A check of this
 function that stops at \eqn{q = 2} compares zero with zero and asserts
 nothing.
 }

@@ -99,8 +99,8 @@ GasTerm <- S7::new_class(
 #' A generalized autoregressive score component (\cite{creal2013},
 #' \cite{harvey2013}): a level \eqn{f_t} added to the linear predictor,
 #' driven by the score of the observation density at the previous times,
-#' \deqn{f_t = \omega + \sum_{i=1}^{p} a_i s_{t-i} +
-#'   \sum_{j=1}^{q} \phi_j f_{t-j},}
+#' \deqn{f_t = \omega + \sum_{i=1}^{p} \kappa_i s_{t-i} +
+#'   \sum_{j=1}^{q} \xi_j f_{t-j},}
 #' with \eqn{s_t = \partial \ell_t / \partial \eta_t} the derivative of the
 #' log-likelihood contribution with respect to the predictor it is
 #' evaluated at, multiplied by a power of the expected information when
@@ -122,7 +122,7 @@ GasTerm <- S7::new_class(
 #'
 #' \subsection{The parameters and their chart}{
 #' The parameters are the level \eqn{\omega}, the score loadings
-#' \eqn{a_1, \dots, a_p}, and the persistence. Each is estimated on the
+#' \eqn{\kappa_1, \dots, \kappa_p}, and the persistence. Each is estimated on the
 #' unconstrained scale of a link, and `links` overrides any of them;
 #' the defaults are the following.
 #'
@@ -132,10 +132,10 @@ GasTerm <- S7::new_class(
 #' positivity is then structural. A deviation or a submodel moves the loading
 #' on the log scale, so no group and no observation can take a negative one.
 #' A loading that must be free in sign is asked for with
-#' `links = list(alpha1 = linkfunctions7::identity_link())`.
+#' `links = list(kappa1 = linkfunctions7::identity_link())`.
 #'
 #' The persistence is carried by **partial autocorrelations** rather
-#' than by the coefficients \eqn{\phi_j}: the stationary region of an
+#' than by the coefficients \eqn{\xi_j}: the stationary region of an
 #' autoregression is not a box, so no collection of scalar links covers
 #' it, while the partial autocorrelations each range over \eqn{(-1, 1)}
 #' independently and the Levinson-Durbin recursion carries them onto the
@@ -185,7 +185,7 @@ GasTerm <- S7::new_class(
 #' and the ACD(1, 1) model for the mean of an exponential.
 #'
 #' Wherever \eqn{\mathcal{I}_t} varies with the observation, the loadings
-#' \eqn{a_i} have different units for different values of \eqn{d}. Where it
+#' \eqn{\kappa_i} have different units for different values of \eqn{d}. Where it
 #' is constant, as for the log-scale of a gaussian, changing \eqn{d} only
 #' rescales the loadings and leaves the likelihood unchanged. A scaling
 #' other than zero requires a family whose expected information has an
@@ -198,7 +198,7 @@ GasTerm <- S7::new_class(
 #' The level \eqn{\omega} adds a constant to the recursion, so an intercept
 #' \eqn{c} in the same equation spans the same direction. The two are exactly
 #' confounded: shifting \eqn{c} by \eqn{k} and \eqn{\omega} by
-#' \eqn{-k(1 - \sum_j \phi_j)} leaves every predictor unchanged. A fitting layer
+#' \eqn{-k(1 - \sum_j \xi_j)} leaves every predictor unchanged. A fitting layer
 #' therefore estimates at most one of them. In \pkg{statmodels7} the intercept
 #' is kept and \eqn{\omega} is held at zero, which a summary reports as
 #' `omega (held)`; written without the intercept, as `0 + gas(...)`, the
@@ -209,13 +209,13 @@ GasTerm <- S7::new_class(
 #' and persistence, and their constants measure different quantities. The
 #' score has zero conditional mean, so the level fluctuates around the fixed
 #' point of the recursion,
-#' \deqn{\mathrm{E}[f_t] = \frac{\omega}{1 - \sum_{j=1}^{q} \phi_j},}
+#' \deqn{\mathrm{E}[f_t] = \frac{\omega}{1 - \sum_{j=1}^{q} \xi_j},}
 #' and this is what the intercept estimates when \eqn{\omega} is held:
 #' \deqn{\eta_t = c + f_t \;\text{with}\; \omega = 0
 #'   \qquad\text{and}\qquad
-#'   \eta_t = f_t \;\text{with}\; c = \frac{\omega}{1 - \sum_j \phi_j}}
+#'   \eta_t = f_t \;\text{with}\; c = \frac{\omega}{1 - \sum_j \xi_j}}
 #' describe the same predictor. With a persistence close to one the factor
-#' \eqn{1/(1 - \sum_j \phi_j)} is large, so \eqn{\omega} is small, and its
+#' \eqn{1/(1 - \sum_j \xi_j)} is large, so \eqn{\omega} is small, and its
 #' standard error is not comparable with the intercept's: a change in
 #' \eqn{\omega} moves the level by that factor. The identity is for a scalar
 #' level; a level developed by a subformula is confounded with the part of
@@ -234,7 +234,7 @@ GasTerm <- S7::new_class(
 #' design \eqn{Z} built from the right-hand side through
 #' [interpret_formula()], so it takes any additive term of the
 #' package:
-#' \preformatted{gas(p = 1, q = 1, omega ~ ridge(~g), alpha1 ~ s(x),
+#' \preformatted{gas(p = 1, q = 1, omega ~ ridge(~g), kappa1 ~ s(x),
 #'     pacf1 ~ random(~1 | id), by = id)}
 #' The development acts on the unconstrained scale of the parameter's own
 #' link. That is what keeps every per-observation value inside the
@@ -288,7 +288,7 @@ GasTerm <- S7::new_class(
 #' @param q The number of autoregressive lags. Defaults to 1.
 #' @param ... Two-sided formulas whose left side names a parameter, one
 #'   per parameter to be developed with covariates, e.g.
-#'   `alpha1 ~ s(x)`; see the section above.
+#'   `kappa1 ~ s(x)`; see the section above.
 #' @param by An optional grouping variable, evaluated in the data; each
 #'   group is filtered independently, from its own starting level. A
 #'   formula here is the shorthand giving the same subformula to every
@@ -336,7 +336,7 @@ GasTerm <- S7::new_class(
 #' out <- term_filter(b, eta = rep(0, 60), y = dd$y,
 #'                    score = function(e, i) dd$y[i] - e,
 #'                    curvature = function(e, i) -1,
-#'                    psi = list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.8))
+#'                    psi = list(omega = 0.1, kappa1 = 0.3, pacf1 = 0.8))
 #'
 #' # The level tracks the change in the mean.
 #' round(out$eta[c(1, 15, 30, 32, 45, 60)], 3)
@@ -346,7 +346,7 @@ GasTerm <- S7::new_class(
 #' f <- function(v) sum(term_filter(b, rep(0, 60), dd$y,
 #'                                  function(e, i) dd$y[i] - e,
 #'                                  function(e, i) -1,
-#'                                  list(omega = v[1], alpha1 = v[2],
+#'                                  list(omega = v[1], kappa1 = v[2],
 #'                                       pacf1 = v[3]))$eta)
 #' v0 <- c(0.1, 0.3, 0.8)
 #' h  <- 1e-5
@@ -383,18 +383,18 @@ GasTerm <- S7::new_class(
 #'   fd <- data.frame(t = seq_len(600), y = yy)
 #'   ft <- statmodels7::statmod(y ~ 0 + gas(p = 1, q = 1, time = t),
 #'                              distributions7::gaussian1_distrib(), fd)
-#'   # truth: omega 0.05, alpha 0.3, phi 0.9. phi is reported as the
+#'   # truth: omega 0.05, kappa 0.3, xi 0.9. xi is reported as the
 #'   # autoregressive coefficient, which its coordinate is not.
 #'   print(round(coef(ft)$mu, 3))
 #'
 #'   # With an intercept the level is held at zero and the intercept
-#'   # estimates omega / (1 - phi) instead: the same model, reparametrized.
+#'   # estimates omega / (1 - xi) instead: the same model, reparametrized.
 #'   fi <- statmodels7::statmod(y ~ 1 + gas(p = 1, q = 1, time = t),
 #'                              distributions7::gaussian1_distrib(), fd)
 #'   print(c(logLik(ft), logLik(fi)))
 #'   cf <- coef(ft)$mu
 #'   c(intercept  = coef(fi)$mu[["(Intercept)"]],
-#'     from_omega = cf[["gas.omega"]] / (1 - cf[["gas.phi1"]]))
+#'     from_omega = cf[["gas.omega"]] / (1 - cf[["gas.xi1"]]))
 #' }
 #' @export
 gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
@@ -478,7 +478,7 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
   for (d in dots) {
     if (!inherits(d, "formula") || length(d) != 3L || !is.name(d[[2L]])) {
       stop(paste("arguments in '...' must be two-sided formulas whose left",
-                 "side names a parameter, e.g. alpha1 ~ s(x)."),
+                 "side names a parameter, e.g. kappa1 ~ s(x)."),
            call. = FALSE)
     }
     pn <- as.character(d[[2L]])
@@ -500,13 +500,13 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
   # The level and the score loadings carry the names the score-driven
   # literature gives them, spelled out: they are the quantities themselves,
   # each reported through its own link, so a name can promise what it
-  # reports. The persistence cannot be named `phi`: it rides a partial
+  # reports. The persistence cannot be named `xi`: it rides a partial
   # autocorrelation, the stationary region not being a box, and a free
   # coordinate named after the coefficient would promise the coefficient and
   # report the chart. The coefficient is what a fitted model REPORTS,
   # through `term_readable()`.
   c("omega",
-    if (p > 0L) paste0("alpha", seq_len(p)),
+    if (p > 0L) paste0("kappa", seq_len(p)),
     if (q > 0L) paste0("pacf", seq_len(q)))
 }
 
@@ -514,7 +514,7 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
 #' @name term_params.GasTerm
 #'
 #' @description
-#' `"omega"`, then `"alpha1"` ... `"alphap"`, then `"pacf1"` ... `"pacfq"`:
+#' `"omega"`, then `"kappa1"` ... `"kappap"`, then `"pacf1"` ... `"pacfq"`:
 #' the level, one loading per score lag, and one partial autocorrelation per
 #' autoregressive lag. A parameter carrying a subformula is **expanded in
 #' place** into its coefficients, named `parameter.coefficient`.
@@ -522,7 +522,7 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
 #' @details
 #' The persistence coordinates are named for the chart they live on, never
 #' for the quantity a reader reads. `pacf1` is a partial autocorrelation;
-#' the autoregressive coefficient \eqn{\phi_1} the literature writes is a
+#' the autoregressive coefficient \eqn{\xi_1} the literature writes is a
 #' function of the whole chart through Levinson-Durbin, and coincides with the
 #' coordinate only at \eqn{q = 1}. [term_readable()] is what carries the
 #' coordinates onto the coefficients.
@@ -604,7 +604,7 @@ S7::method(term_level_design, GasTerm) <- function(term, ...) {
 #' @name term_readable.GasTerm
 #' @description
 #' The level, the score loadings and the autoregressive coefficients of the
-#' literature, `omega`, `alpha1` and `phi1`, with the
+#' literature, `omega`, `kappa1` and `xi1`, with the
 #' Jacobian from the term's own parameters.
 #' @details
 #' The level and the loadings are reported through their own links, each a
@@ -613,7 +613,7 @@ S7::method(term_level_design, GasTerm) <- function(term, ...) {
 #' autocorrelation, and the coefficients come from the Levinson-Durbin
 #' recursion, whose Jacobian the term already computes for the filter.
 #' Chained onto the rhobit link of each coordinate, that Jacobian is what
-#' a delta-method standard error for \eqn{\phi_j} needs. At \eqn{q = 1}
+#' a delta-method standard error for \eqn{\xi_j} needs. At \eqn{q = 1}
 #' the two coincide and the chain factor is the link's alone; above it
 #' they do not.
 #'
@@ -641,15 +641,16 @@ S7::method(term_readable, GasTerm) <- function(term, zeta, ...) {
 
   i_pa <- match(paste0("pacf", seq_len(q)), nm)
   # with any partial autocorrelation developed, the coefficients vary by
-  # observation and there is no single phi to report: the coordinates are
+  # observation and there is no single xi to report: the coordinates are
   # reported as the base method gives them
   if (anyNA(i_pa)) return(out)
   lk <- links[[nm[i_pa[1L]]]]
   rho <- linkfunctions7::linkinv(lk, z[i_pa])
   k1 <- linkfunctions7::dlinkinv(lk, z[i_pa])
   ld <- gas_levinson(rho)
-  # phi and not beta: beta names the coefficients of the linear part
-  out$name[i_pa] <- paste0("phi", seq_len(q))
+  # xi, a letter no other term uses: beta names the linear
+  # coefficients and phi the dispersion of several families
+  out$name[i_pa] <- paste0("xi", seq_len(q))
   out$value[i_pa] <- ld$phi
   # the whole chart reaches every coefficient: row j of the recursion's
   # jacobian scaled by the link's derivative, and NOT the diagonal entry the
@@ -711,7 +712,7 @@ S7::method(term_readable, GasTerm) <- function(term, zeta, ...) {
 #'
 #' # Overridden: a loading free in sign.
 #' vapply(term_links(gas(p = 1, q = 1,
-#'                       links = list(alpha1 = linkfunctions7::identity_link()))),
+#'                       links = list(kappa1 = linkfunctions7::identity_link()))),
 #'        function(l) l@link_name, character(1))
 #'
 #' @keywords internal
@@ -753,7 +754,7 @@ S7::method(term_start, GasTerm) <- function(term, ...) {
   z <- stats::setNames(numeric(length(nm)), nm)
   base <- .gas_base_params(term@p, term@q)
   target <- function(j) {
-    if (startsWith(j, "alpha")) {
+    if (startsWith(j, "kappa")) {
       linkfunctions7::linkfun(.gas_param_link(term, j), 0.1)
     } else 0
   }
@@ -849,8 +850,8 @@ gas_levinson <- function(pacf) {
 #'
 #' @details
 #' The recursion is
-#' \deqn{\phi^{(k)}_k = \rho_k, \qquad
-#'   \phi^{(k)}_i = \phi^{(k-1)}_i - \rho_k\phi^{(k-1)}_{k-i},}
+#' \deqn{\xi^{(k)}_k = \rho_k, \qquad
+#'   \xi^{(k)}_i = \xi^{(k-1)}_i - \rho_k\xi^{(k-1)}_{k-i},}
 #' which is bilinear: \eqn{\rho_k} multiplies quantities that do not depend
 #' on it. Differentiating twice therefore adds no new kind of term, only the
 #' two places the product rule puts the first derivative,
@@ -935,7 +936,7 @@ gas_levinson2 <- function(pacf) {
 #' The map is multilinear of degree \eqn{k} in the first \eqn{k} partial
 #' autocorrelations, so the result is identically zero for \eqn{q \le 2}:
 #' at \eqn{q = 2} the only non-trivial coefficient is
-#' \eqn{\phi_1 = \rho_1(1-\rho_2)}, which is bilinear. A check of this
+#' \eqn{\xi_1 = \rho_1(1-\rho_2)}, which is bilinear. A check of this
 #' function that stops at \eqn{q = 2} compares zero with zero and asserts
 #' nothing.
 #'
@@ -1019,7 +1020,7 @@ gas_levinson3 <- function(pacf, w) {
 #' The map is multilinear of degree \eqn{k} in the first \eqn{k} partial
 #' autocorrelations, so the result is identically zero for \eqn{q \le 3}: the
 #' first coefficient carrying a monomial of degree four is
-#' \eqn{\phi^{(4)}_1}, which needs \eqn{q = 4}. A check of this function that
+#' \eqn{\xi^{(4)}_1}, which needs \eqn{q = 4}. A check of this function that
 #' stops at \eqn{q = 3} compares zero with zero and asserts nothing.
 #'
 #' @param pacf A numeric vector of partial autocorrelations in
@@ -1463,7 +1464,7 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' derivatives is a single diagonal entry, the link's own \eqn{h'''} times
 #' the direction's component there. The persistence is a composition, the
 #' Levinson-Durbin map read at \eqn{\rho = h^{-1}(z)}, and differentiating
-#' \eqn{B(z) = \phi(\rho(z))} three times and contracting the last slot gives
+#' \eqn{B(z) = \xi(\rho(z))} three times and contracting the last slot gives
 #' \deqn{T_{kl}h'_kh'_l + P_{kl}(h''_kv_kh'_l + h'_kh''_lv_l)
 #'   + \delta_{kl}\big((Hw)_k h''_k + P_kh'''_kv_k\big),}
 #' with \eqn{w_m = h'_mv_m} the direction pushed onto the partial
@@ -1542,7 +1543,7 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' derivatives is a single diagonal entry, the link's own \eqn{h''''} times
 #' the two directions' components there. The persistence is a composition,
 #' the Levinson-Durbin map read at \eqn{\rho = h^{-1}(z)}, whose inner map is
-#' DIAGONAL: differentiating \eqn{B(z) = \phi(\rho(z))} four times and
+#' DIAGONAL: differentiating \eqn{B(z) = \xi(\rho(z))} four times and
 #' contracting two slots leaves, with \eqn{p_v = h'v} and \eqn{p_w = h'w} the
 #' directions pushed onto the partial autocorrelations,
 #' \deqn{Q[p_v,p_w]h'h'^{\top}
@@ -2308,7 +2309,7 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
 #'
 #' @details
 #' The recursion multiplies a chart quantity by a lagged score or level three
-#' times over -- \eqn{a_i s_{t-i}}, \eqn{\phi_j f_{t-j}}, and the starting
+#' times over -- \eqn{\kappa_i s_{t-i}}, \eqn{\xi_j f_{t-j}}, and the starting
 #' level's own fixed point \eqn{f_0 = \omega + Sf_0} -- so the rule is written
 #' once here. Writing \eqn{S} for the set of slots that go to the first
 #' factor, the sixteen subsets of \eqn{\{m,n,b,c\}} give, after contracting
@@ -2349,7 +2350,7 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
 #' ```
 #' <GasTerm> 'gas': score-driven, p = 1, q = 1; 3 group(s)
 #'   developed: omega
-#'   parameters: omega.(Intercept), omega.g2, alpha1, pacf1
+#'   parameters: omega.(Intercept), omega.g2, kappa1, pacf1
 #' ```
 #'
 #' The `developed` line appears only where a subformula was given. The
@@ -2518,7 +2519,7 @@ S7::method(term_static_deriv, GasTerm) <- function(term, curv, X, psi, ...) {
     vals <- .gas_sub_values(term, psi, "parameter")
     bd <- .gas_sub_b(term, vals)
     A <- matrix(0, n, p)
-    for (i in seq_len(p)) A[, i] <- vals[[paste0("alpha", i)]]$v
+    for (i in seq_len(p)) A[, i] <- vals[[paste0("kappa", i)]]$v
     B <- matrix(0, n, q)
     for (j in seq_len(q)) B[, j] <- bd$B[, j]
   }
@@ -2564,8 +2565,8 @@ S7::method(term_static_deriv, GasTerm) <- function(term, curv, X, psi, ...) {
 #' the model's own defining property, so at a row whose response is not
 #' observed the driving term is its expectation and the continuation is the
 #' deterministic recursion
-#' \deqn{f_{n+h} = \omega + \sum_i \alpha_i s_{n+h-i} +
-#'   \sum_j \phi_j f_{n+h-j},}
+#' \deqn{f_{n+h} = \omega + \sum_i \kappa_i s_{n+h-i} +
+#'   \sum_j \xi_j f_{n+h-j},}
 #' the loadings contributing only while \eqn{n+h-i} is still an observed
 #' time. No simulation and no integration is involved.
 #'

@@ -13,52 +13,52 @@ gauss_curv <- function(y) function(e, i) -1
 
 test_that("the parameters are named for the chart they live on", {
   expect_identical(term_params(gas(p = 1, q = 1)),
-                   c("omega", "alpha1", "pacf1"))
+                   c("omega", "kappa1", "pacf1"))
   expect_identical(term_params(gas(p = 2, q = 3)),
-                   c("omega", "alpha1", "alpha2", "pacf1", "pacf2", "pacf3"))
+                   c("omega", "kappa1", "kappa2", "pacf1", "pacf2", "pacf3"))
   lk <- term_links(gas(p = 1, q = 2))
   expect_identical(vapply(lk, function(l) l@link_name, character(1)),
-                   c(omega = "identity", alpha1 = "log",
+                   c(omega = "identity", kappa1 = "log",
                      pacf1 = "rhobit", pacf2 = "rhobit"))
   # every loading is positive by default, not only the first
   lk2 <- term_links(gas(p = 3, q = 0))
   expect_identical(vapply(lk2, function(l) l@link_name, character(1)),
-                   c(omega = "identity", alpha1 = "log", alpha2 = "log",
-                     alpha3 = "log"))
+                   c(omega = "identity", kappa1 = "log", kappa2 = "log",
+                     kappa3 = "log"))
 })
 
 test_that("the links are configurable and validated", {
   # an override replaces the default for the parameter it names alone
   term <- gas(p = 2, q = 1,
-              links = list(alpha2 = linkfunctions7::identity_link()))
+              links = list(kappa2 = linkfunctions7::identity_link()))
   lk <- term_links(term)
   expect_identical(vapply(lk, function(l) l@link_name, character(1)),
-                   c(omega = "identity", alpha1 = "log",
-                     alpha2 = "identity", pacf1 = "rhobit"))
+                   c(omega = "identity", kappa1 = "log",
+                     kappa2 = "identity", pacf1 = "rhobit"))
 
   # a name that is not a parameter, a value that is not a link, and an
   # unnamed list are each rejected where they are written
   expect_error(gas(links = list(gamma = linkfunctions7::log_link())),
                "the parameters are")
-  expect_error(gas(links = list(alpha1 = "log")), "not a linkfunctions7 link")
+  expect_error(gas(links = list(kappa1 = "log")), "not a linkfunctions7 link")
   expect_error(gas(links = list(linkfunctions7::log_link())), "named list")
 })
 
 test_that("the start is the term's own, and the loadings start weak", {
   z <- term_start(gas(p = 1, q = 1))
-  expect_identical(names(z), c("omega", "alpha1", "pacf1"))
+  expect_identical(names(z), c("omega", "kappa1", "pacf1"))
   expect_identical(unname(z[c("omega", "pacf1")]), c(0, 0))
-  # alpha starts at 0.1 on the parameter scale, through whatever chart it
+  # kappa starts at 0.1 on the parameter scale, through whatever chart it
   # rides: log(0.1) on the default, 0.1 under an identity override
-  expect_equal(unname(z[["alpha1"]]), log(0.1))
+  expect_equal(unname(z[["kappa1"]]), log(0.1))
   z2 <- term_start(gas(p = 1, q = 1,
-                       links = list(alpha1 = linkfunctions7::identity_link())))
-  expect_equal(unname(z2[["alpha1"]]), 0.1)
+                       links = list(kappa1 = linkfunctions7::identity_link())))
+  expect_equal(unname(z2[["kappa1"]]), 0.1)
   # the departures of a development start at zero, being departures
   term <- term_build(gas(p = 1, q = 1, omega ~ random(~1 | g), by = g), dd)
   z3 <- term_start(term)
-  expect_identical(unname(z3[!grepl("^alpha", names(z3))]),
-                   numeric(sum(!grepl("^alpha", names(z3)))))
+  expect_identical(unname(z3[!grepl("^kappa", names(z3))]),
+                   numeric(sum(!grepl("^kappa", names(z3)))))
 })
 
 test_that("the Levinson-Durbin map is stationary and its jacobian is right", {
@@ -78,7 +78,7 @@ test_that("the Levinson-Durbin map is stationary and its jacobian is right", {
 
 test_that("the filter reproduces the recursion written out by hand", {
   term <- term_build(gas(p = 1, q = 1, time = t), dd)
-  psi <- list(omega = 0.2, alpha1 = 0.3, pacf1 = 0.6)
+  psi <- list(omega = 0.2, kappa1 = 0.3, pacf1 = 0.6)
   out <- term_filter(term, eta = rep(0, n), y = dd$y,
                      score = gauss_score(dd$y), curvature = gauss_curv(dd$y),
                      psi = psi)
@@ -118,7 +118,7 @@ test_that("the jacobian of the filter is exact", {
 
 test_that("a static predictor shifts the filter and the groups stay apart", {
   term <- term_build(gas(p = 1, q = 1, by = g, time = t), dd)
-  psi <- list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.5)
+  psi <- list(omega = 0.1, kappa1 = 0.2, pacf1 = 0.5)
   out <- term_filter(term, eta = rep(0, n), y = dd$y,
                      score = gauss_score(dd$y), curvature = gauss_curv(dd$y),
                      psi = psi)
@@ -143,22 +143,22 @@ test_that("time orders the recursion and the result is scattered back", {
   a <- term_filter(term_build(gas(p = 1, q = 1, time = t), dd),
                    eta = rep(0, n), y = dd$y, score = gauss_score(dd$y),
                    curvature = gauss_curv(dd$y),
-                   psi = list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.5))
+                   psi = list(omega = 0.1, kappa1 = 0.2, pacf1 = 0.5))
   b <- term_filter(term_build(gas(p = 1, q = 1, time = t), shuffled),
                    eta = rep(0, n), y = shuffled$y,
                    score = gauss_score(shuffled$y),
                    curvature = gauss_curv(shuffled$y),
-                   psi = list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.5))
+                   psi = list(omega = 0.1, kappa1 = 0.2, pacf1 = 0.5))
   # the same series in a different row order gives the same values per row
   expect_equal(a$eta[shuffled$t], b$eta, tolerance = 1e-12)
 })
 
 test_that("a purely autoregressive term needs no score lag budget", {
   term <- term_build(gas(p = 1, q = 0, time = t), dd)
-  expect_identical(term_params(term), c("omega", "alpha1"))
+  expect_identical(term_params(term), c("omega", "kappa1"))
   out <- term_filter(term, eta = rep(0, n), y = dd$y,
                      score = gauss_score(dd$y), curvature = gauss_curv(dd$y),
-                     psi = list(omega = 0.3, alpha1 = 0.4))
+                     psi = list(omega = 0.3, kappa1 = 0.4))
   # with q = 0 the level is omega plus the score lag alone
   expect_equal(out$eta[1], 0.3)
 })
@@ -174,7 +174,7 @@ test_that("the term is routed, printed, and refuses what it cannot do", {
   expect_error(gas(p = 0), "at least 1")
   expect_error(gas(label = ""), "non-empty")
   expect_error(term_filter(gas(), rep(0, n), dd$y, gauss_score(dd$y),
-                           gauss_curv(dd$y), list(omega = 0, alpha1 = 0, pacf1 = 0)),
+                           gauss_curv(dd$y), list(omega = 0, kappa1 = 0, pacf1 = 0)),
                "not been built")
   # a structural term has no design block
   expect_error(term_build(gas(), data.frame(z = 1:3)), NA)
@@ -209,7 +209,7 @@ test_that("the compiled filter and the R twin agree exactly", {
     }
     ref <- gas_filter_r(rep(0.05, n), term@blueprint$order, p_, q_,
                         v[["omega"]],
-                        if (p_ > 0) v[paste0("alpha", seq_len(p_))] else
+                        if (p_ > 0) v[paste0("kappa", seq_len(p_))] else
                           numeric(0),
                         ld$phi, db, f0, df0, 1L + seq_len(p_), np,
                         gauss_score(dd$y), gauss_curv(dd$y))
@@ -226,16 +226,16 @@ test_that("the compiled filter and the R twin agree exactly", {
 test_that("departures at zero reproduce the shared-parameter filter", {
   shared <- term_build(gas(p = 1, q = 1, by = g, time = t), dd)
   dev <- term_build(gas(p = 1, q = 1, omega ~ random(~1 | g),
-                        alpha1 ~ random(~1 | g), pacf1 ~ random(~1 | g),
+                        kappa1 ~ random(~1 | g), pacf1 ~ random(~1 | g),
                         by = g, time = t), dd)
-  psi <- list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.5)
+  psi <- list(omega = 0.1, kappa1 = 0.2, pacf1 = 0.5)
   a <- term_filter(shared, eta = rep(0, n), y = dd$y,
                    score = gauss_score(dd$y), curvature = gauss_curv(dd$y),
                    psi = psi)
   nm <- term_params(dev)
   v <- stats::setNames(rep(list(0), length(nm)), nm)
   v[["omega.(Intercept)"]] <- 0.1
-  v[["alpha1.(Intercept)"]] <- log(0.2)
+  v[["kappa1.(Intercept)"]] <- log(0.2)
   lkr <- linkfunctions7::rhobit_link()
   v[["pacf1.(Intercept)"]] <- linkfunctions7::linkfun(lkr, 0.5)
   b <- term_filter(dev, eta = rep(0, n), y = dd$y,
@@ -277,7 +277,7 @@ test_that("a shift shared by the population and the departures does nothing", {
 test_that("the reported quantities are the literature's, with a jacobian", {
   # omega and the loadings are the coordinates themselves, each on the
   # identity link. The persistence is NOT: it rides a partial
-  # autocorrelation, and what the literature calls phi_j is the
+  # autocorrelation, and what the literature calls xi_j is the
   # autoregressive coefficient, a function of the whole chart.
   for (q in 1:3) {
     tm <- gas(p = 1, q = q)
@@ -286,7 +286,7 @@ test_that("the reported quantities are the literature's, with a jacobian", {
     z <- stats::setNames(c(0.3, 0.4, stats::runif(q, -0.6, 0.8)), nmv)
     rd <- term_readable(tm, z)
     expect_identical(rd$name,
-                     c("omega", "alpha1", paste0("phi", seq_len(q))))
+                     c("omega", "kappa1", paste0("xi", seq_len(q))))
     # the coefficients are those of a stationary autoregression
     expect_true(all(Mod(polyroot(c(1, -rd$value[-(1:2)]))) > 1 + 1e-8))
     # and the jacobian is the one a delta method needs
@@ -298,12 +298,12 @@ test_that("the reported quantities are the literature's, with a jacobian", {
 
   # at q = 1 the coefficient IS the partial autocorrelation, so the chain
   # factor is the link's alone and the two coincide exactly
-  z1 <- c(omega = 0.2, alpha1 = 0.3, pacf1 = 0.9)
+  z1 <- c(omega = 0.2, kappa1 = 0.3, pacf1 = 0.9)
   expect_equal(term_readable(gas(1, 1), z1)$value[[3L]],
                linkfunctions7::linkinv(linkfunctions7::rhobit_link(), 0.9))
   # above it they do not, which is the whole reason the coordinate is not
   # named after the coefficient
-  z2 <- c(omega = 0.2, alpha1 = 0.3, pacf1 = 1.2, pacf2 = -0.4)
+  z2 <- c(omega = 0.2, kappa1 = 0.3, pacf1 = 1.2, pacf2 = -0.4)
   rho <- linkfunctions7::linkinv(linkfunctions7::rhobit_link(), c(1.2, -0.4))
   expect_false(isTRUE(all.equal(term_readable(gas(1, 2), z2)$value[[3L]],
                                 rho[[1L]])))
@@ -322,13 +322,13 @@ test_that("the reported quantities are the literature's, with a jacobian", {
 
   # the level's coordinate IS its quantity; a loading is reported through
   # its chart, exp of the coordinate on the default log link
-  base <- term_readable(gas(p = 1, q = 0), c(omega = 0.5, alpha1 = 0.2))
-  expect_identical(base$name, c("omega", "alpha1"))
+  base <- term_readable(gas(p = 1, q = 0), c(omega = 0.5, kappa1 = 0.2))
+  expect_identical(base$name, c("omega", "kappa1"))
   expect_equal(base$value, c(0.5, exp(0.2)))
   # and under an identity override it is the coordinate again
   ident <- term_readable(
-    gas(p = 1, q = 0, links = list(alpha1 = linkfunctions7::identity_link())),
-    c(omega = 0.5, alpha1 = 0.2))
+    gas(p = 1, q = 0, links = list(kappa1 = linkfunctions7::identity_link())),
+    c(omega = 0.5, kappa1 = 0.2))
   expect_equal(ident$value, c(0.5, 0.2))
 })
 
@@ -353,14 +353,14 @@ test_that("the adjoint is the derivative in the static predictor", {
 
   cfgs <- list(
     list(term = term_build(gas(p = 1, q = 1, time = t), dd),
-         psi = list(omega = 0.15, alpha1 = 0.3, pacf1 = 0.5),
+         psi = list(omega = 0.15, kappa1 = 0.3, pacf1 = 0.5),
          eta = rep(0.2, n)),
     list(term = term_build(gas(p = 2, q = 2, time = t), dd),
-         psi = list(omega = 0.1, alpha1 = 0.25, alpha2 = -0.15,
+         psi = list(omega = 0.1, kappa1 = 0.25, kappa2 = -0.15,
                     pacf1 = 0.4, pacf2 = -0.2),
          eta = sin(seq_len(n) / 5)),
     list(term = term_build(gas(p = 1, q = 1, by = g, time = t), dd),
-         psi = list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.5),
+         psi = list(omega = 0.1, kappa1 = 0.2, pacf1 = 0.5),
          eta = rep(0.1, n))
   )
   for (cf in cfgs) {
@@ -386,7 +386,7 @@ test_that("the adjoint carries the derivative through the score as well", {
   # ANOTHER by multiplying dscore by the mixed second derivative, so the
   # quantity is checked by perturbing the score the caller supplies
   term <- term_build(gas(p = 1, q = 1, time = t), dd)
-  psi <- list(omega = 0.15, alpha1 = 0.3, pacf1 = 0.5)
+  psi <- list(omega = 0.15, kappa1 = 0.3, pacf1 = 0.5)
   eta0 <- rep(0.2, n)
   set.seed(31)
   u <- stats::rnorm(n)
@@ -405,7 +405,7 @@ test_that("the adjoint carries the derivative through the score as well", {
 
 test_that("the adjoint refuses what it cannot answer", {
   term <- term_build(gas(p = 1, q = 1, time = t), dd)
-  psi <- list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.5)
+  psi <- list(omega = 0.1, kappa1 = 0.2, pacf1 = 0.5)
   expect_error(term_adjoint(term, rep(0, n), dd$y, gauss_score(dd$y),
                             gauss_curv(dd$y), psi, g = rep(1, 3)),
                "one value per observation")
@@ -620,7 +620,7 @@ test_that("the second-order recursion gives the exact curvature", {
 test_that("the curvature refuses what it does not carry", {
   term <- term_build(gas(p = 1, q = 1, time = t), dd)
   nm <- term_params(term)
-  psi <- list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.5)
+  psi <- list(omega = 0.1, kappa1 = 0.2, pacf1 = 0.5)
   sd0 <- matrix(0, n, 3)
   bl <- function(e, i, D) list(cross = numeric(3), M = matrix(0, 3, 3))
   expect_error(term_curvature(term, rep(0, n), dd$y, gauss_score(dd$y),
@@ -664,10 +664,10 @@ test_that("the curvature of a per-group development has the affine structure", {
   ng <- length(term@blueprint$order)
   u0 <- c(0.3, -0.2, 0.15, 0.25, 0.4)
   a <- at(plain, u0)$curvature
-  # the developed layout: omega.(Intercept), the departures, alpha1, pacf1
+  # the developed layout: omega.(Intercept), the departures, kappa1, pacf1
   i_int <- mb + match("omega.(Intercept)", nm)
   i_dev <- mb + which(startsWith(nm, "omega.random"))
-  i_al <- mb + match("alpha1", nm)
+  i_al <- mb + match("kappa1", nm)
   i_pa <- mb + match("pacf1", nm)
   u_dev <- c(u0[1:2], 0.15, numeric(ng), 0.25, 0.4)
   b <- at(term, u_dev)$curvature
@@ -719,7 +719,7 @@ test_that("the third derivative of a development has the affine structure", {
   u0 <- c(0.3, -0.2, 0.15, -0.25, 0.4)
   i_int <- mb + match("omega.(Intercept)", nm)
   i_dev <- mb + which(startsWith(nm, "omega.random"))
-  keep <- c(seq_len(mb), i_int, mb + match(c("alpha1", "pacf1"), nm))
+  keep <- c(seq_len(mb), i_int, mb + match(c("kappa1", "pacf1"), nm))
 
   # (1) at ZERO departures the developed term IS the shared-parameter one,
   # along a direction that does not move the departures -- a direction that
@@ -746,7 +746,7 @@ test_that("term_continue carries the recursion past the series", {
   set.seed(11)
   n <- 60
   dd <- data.frame(t = seq_len(n), y = rnorm(n))
-  psi <- list(omega = 0.2, alpha1 = 0.3, pacf1 = 0.5)
+  psi <- list(omega = 0.2, kappa1 = 0.3, pacf1 = 0.5)
   tm <- term_build(gas(p = 1, q = 1, time = t), dd)
   sc <- function(e, i) if (is.na(yv[[i]])) 0 else yv[[i]] - e
   cv <- function(e, i) if (is.na(yv[[i]])) 0 else -1
@@ -804,14 +804,14 @@ test_that("the continuation's jacobian is its derivative", {
                    x = rnorm(n))
   # constant parameters, q = 1 and q = 2, two groups
   check(term_build(gas(p = 1, q = 1, by = g, time = t), dd),
-        list(omega = 0.2, alpha1 = 0.3, pacf1 = 0.5), n,
+        list(omega = 0.2, kappa1 = 0.3, pacf1 = 0.5), n,
         data.frame(t = c(16, 17, 16, 18), g = c("a", "a", "b", "b")))
   check(term_build(gas(p = 2, q = 2, by = g, time = t), dd),
-        list(omega = 0.2, alpha1 = 0.3, alpha2 = 0.1, pacf1 = 0.5,
+        list(omega = 0.2, kappa1 = 0.3, kappa2 = 0.1, pacf1 = 0.5,
              pacf2 = -0.3), n,
         data.frame(t = c(16, 17, 18), g = c("a", "a", "a")))
   # every parameter developed over a covariate read at the new rows
-  tm <- term_build(gas(p = 1, q = 2, omega ~ x, alpha1 ~ x, pacf1 ~ x,
+  tm <- term_build(gas(p = 1, q = 2, omega ~ x, kappa1 ~ x, pacf1 ~ x,
                        by = g, time = t), dd)
   nm <- term_params(tm)
   psi <- stats::setNames(as.list(seq(-0.2, 0.3, length.out = length(nm))),
@@ -880,7 +880,7 @@ test_that("the chart's fourth derivative is exact under a non-identity link", {
     nm <- .gas_base_params(p, q)
     links <- stats::setNames(lapply(nm, function(j) {
       if (startsWith(j, "pacf")) lk_rho
-      else if (startsWith(j, "alpha")) lk_a
+      else if (startsWith(j, "kappa")) lk_a
       else linkfunctions7::identity_link()
     }), nm)
     zeta <- stats::setNames(stats::rnorm(length(nm), 0, 0.4), nm)
@@ -1033,7 +1033,7 @@ test_that("term_fourth is zero for an additive term and refused where absent", {
   gt <- term_build(gas(p = 1, q = 1), td)
   expect_error(term_fourth(gt, rep(0, 20), td$y, function(e, i) 0,
                            function(e, i) -1,
-                           list(omega = 0.1, alpha1 = 0.2, pacf1 = 0.3),
+                           list(omega = 0.1, kappa1 = 0.2, pacf1 = 0.3),
                            rep(1, 20), matrix(0, 20, 3),
                            function(e, i, D, act) NULL, c(1, 0, 0)),
                "list of two")
@@ -1058,7 +1058,7 @@ test_that("the fourth order reaches a term whose parameters are developed", {
 
   specs <- list(
     quote(gas(p = 1, q = 1, by = id, time = t, omega ~ 1 + z)),
-    quote(gas(p = 1, q = 1, by = id, time = t, alpha1 ~ 1 + z)),
+    quote(gas(p = 1, q = 1, by = id, time = t, kappa1 ~ 1 + z)),
     # a developed PERSISTENCE makes the autoregressive coefficients vary by
     # observation, which is the branch that rebuilds the map at every row
     quote(gas(p = 1, q = 2, by = id, time = t, pacf1 ~ 1 + z)))
@@ -1074,7 +1074,7 @@ test_that("the fourth order reaches a term whose parameters are developed", {
     dev <- grepl(".", nm, fixed = TRUE)
     u0 <- stats::setNames(rep(0.2, np), nm)
     u0[startsWith(nm, "pacf")] <- 0.35
-    u0[startsWith(nm, "alpha")] <- 0.25
+    u0[startsWith(nm, "kappa")] <- 0.25
     u0[dev] <- 0.15
     # the caller hands the parameter scale for a scalar coordinate and the
     # coefficients for a developed one, which is what term_filter() takes

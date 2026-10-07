@@ -21,7 +21,7 @@ The form is
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{<GasTerm> 'gas': score-driven, p = 1, q = 1; 3 group(s)
   developed: omega
-  parameters: omega.(Intercept), omega.g2, alpha1, pacf1
+  parameters: omega.(Intercept), omega.g2, kappa1, pacf1
 }\if{html}{\out{</div>}}
 
 The \code{developed} line appears only where a subformula was given. The
