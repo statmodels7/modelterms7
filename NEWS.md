@@ -1,3 +1,13 @@
+# modelterms7 0.94.1
+
+* The autoregressive coefficients of `gas()` are reported as `phi1`, ...,
+  `phiq` (`gas.phi1` among the coefficients), where they were `beta1`, ...:
+  `beta` names the coefficients of the linear part. The coordinates they are
+  estimated on keep the names `pacf1`, ...
+* `term_links()` of `regime()` and `gas()` builds each kind of link once and
+  shares it among the parameters. A fit with three regimes on `geyser` takes
+  27 per cent less time.
+
 # modelterms7 0.94.0
 
 * `gas()` takes `scaling`, the power `d` of the expected information by

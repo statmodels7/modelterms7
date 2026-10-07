@@ -475,10 +475,13 @@ S7::method(term_readable, RegimeTerm) <- function(term, zeta, ...) {
 #' @keywords internal
 S7::method(term_links, RegimeTerm) <- function(term, ...) {
   nm <- term_params(term)
-  stats::setNames(lapply(nm, function(p) {
-    if (startsWith(p, "gap")) linkfunctions7::log_link()
-    else linkfunctions7::identity_link()
-  }), nm)
+  # one object of each kind, shared: building an S7 link validates it, and
+  # this is read at every evaluation of a fit (38 per cent of a
+  # three-regime fit on geyser when built once per parameter)
+  lg <- linkfunctions7::log_link()
+  id <- linkfunctions7::identity_link()
+  stats::setNames(lapply(nm, function(p) if (startsWith(p, "gap")) lg else id),
+                  nm)
 }
 
 #' @title Where a Regime Term's Parameters Start

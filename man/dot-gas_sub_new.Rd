@@ -30,7 +30,7 @@ Levinson-Durbin applied row by row. A zero-column matrix at
 }
 }
 \description{
-Evaluates the recursion's coefficients \eqn{(\omega_t, \alpha_t, \beta_t)}
+Evaluates the recursion's coefficients \eqn{(\omega_t, \alpha_t, \phi_t)}
 at each row of \code{newdata}, so that \code{\link[=term_continue]{term_continue()}} can carry a score-driven
 filter past the end of its series. A parameter carrying a subformula is read
 by calling \code{\link[=term_predict]{term_predict()}} on each of its sub-terms, which reapplies the

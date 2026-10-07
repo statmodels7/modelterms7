@@ -277,7 +277,7 @@ test_that("a shift shared by the population and the departures does nothing", {
 test_that("the reported quantities are the literature's, with a jacobian", {
   # omega and the loadings are the coordinates themselves, each on the
   # identity link. The persistence is NOT: it rides a partial
-  # autocorrelation, and what the literature calls beta_j is the
+  # autocorrelation, and what the literature calls phi_j is the
   # autoregressive coefficient, a function of the whole chart.
   for (q in 1:3) {
     tm <- gas(p = 1, q = q)
@@ -286,7 +286,7 @@ test_that("the reported quantities are the literature's, with a jacobian", {
     z <- stats::setNames(c(0.3, 0.4, stats::runif(q, -0.6, 0.8)), nmv)
     rd <- term_readable(tm, z)
     expect_identical(rd$name,
-                     c("omega", "alpha1", paste0("beta", seq_len(q))))
+                     c("omega", "alpha1", paste0("phi", seq_len(q))))
     # the coefficients are those of a stationary autoregression
     expect_true(all(Mod(polyroot(c(1, -rd$value[-(1:2)]))) > 1 + 1e-8))
     # and the jacobian is the one a delta method needs

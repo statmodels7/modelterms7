@@ -1047,7 +1047,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 #' The Filter's Parameters at Rows Outside the Fitting Data
 #'
 #' @description
-#' Evaluates the recursion's coefficients \eqn{(\omega_t, \alpha_t, \beta_t)}
+#' Evaluates the recursion's coefficients \eqn{(\omega_t, \alpha_t, \phi_t)}
 #' at each row of `newdata`, so that [term_continue()] can carry a score-driven
 #' filter past the end of its series. A parameter carrying a subformula is read
 #' by calling [term_predict()] on each of its sub-terms, which reapplies the

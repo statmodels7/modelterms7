@@ -18,7 +18,7 @@ factors, with two of the four slots contracted against the directions.
 }
 \details{
 The recursion multiplies a chart quantity by a lagged score or level three
-times over -- \eqn{a_i s_{t-i}}, \eqn{b_j f_{t-j}}, and the starting
+times over -- \eqn{a_i s_{t-i}}, \eqn{\phi_j f_{t-j}}, and the starting
 level's own fixed point \eqn{f_0 = \omega + Sf_0} -- so the rule is written
 once here. Writing \eqn{S} for the set of slots that go to the first
 factor, the sixteen subsets of \eqn{\{m,n,b,c\}} give, after contracting

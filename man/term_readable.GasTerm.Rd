@@ -15,7 +15,7 @@ A list, as \code{\link[=term_readable]{term_readable()}} documents.
 }
 \description{
 The level, the score loadings and the autoregressive coefficients of the
-literature, \code{omega}, \code{alpha1} and \code{beta1}, with the
+literature, \code{omega}, \code{alpha1} and \code{phi1}, with the
 Jacobian from the term's own parameters.
 }
 \details{
@@ -25,7 +25,7 @@ does. The persistence is not: it is carried on a partial
 autocorrelation, and the coefficients come from the Levinson-Durbin
 recursion, whose Jacobian the term already computes for the filter.
 Chained onto the rhobit link of each coordinate, that Jacobian is what
-a delta-method standard error for \eqn{\beta_j} needs. At \eqn{q = 1}
+a delta-method standard error for \eqn{\phi_j} needs. At \eqn{q = 1}
 the two coincide and the chain factor is the link's alone; above it
 they do not.
 
