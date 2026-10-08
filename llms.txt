@@ -316,10 +316,14 @@ structural term takes instead.
   : Is a Term's Block the Jacobian of Its Contribution?
 - [`term_kinks()`](https://statmodels7.github.io/modelterms7/reference/term_kinks.md)
   : Where a Term's Objective Has a Kink
+- [`term_held()`](https://statmodels7.github.io/modelterms7/reference/term_held.md)
+  : The Coefficients a Term Holds
 - [`term_tag()`](https://statmodels7.github.io/modelterms7/reference/term_tag.md)
   : The Covariance Label of a Term
 - [`term_group()`](https://statmodels7.github.io/modelterms7/reference/term_group.md)
   : The Grouping a Term's Coefficients Are Indexed By
+- [`term_within()`](https://statmodels7.github.io/modelterms7/reference/term_within.md)
+  : The Within-Group Design of a Term With Grouped Effects
 - [`term_coef_names()`](https://statmodels7.github.io/modelterms7/reference/term_coef_names.md)
   : Coefficient Names of a Built Term
 - [`term_smooth()`](https://statmodels7.github.io/modelterms7/reference/term_smooth.md)
@@ -438,6 +442,12 @@ grid rule that chooses where to start.
   : Polish a Break-Point Term's Positions on the Exact Profile
 - [`seg_profile_rss()`](https://statmodels7.github.io/modelterms7/reference/seg_profile_rss.md)
   : The Exact Profile of a Break-Point Term at Its Positions
+- [`seg_polish_exact()`](https://statmodels7.github.io/modelterms7/reference/seg_polish_exact.md)
+  : Polish a Break-Point Term's Positions Over Every Interval
+- [`seg_profile_intervals()`](https://statmodels7.github.io/modelterms7/reference/seg_profile_intervals.md)
+  : The Profile of One Break-Point Over Every Interval
+- [`seg_hold()`](https://statmodels7.github.io/modelterms7/reference/seg_hold.md)
+  : Hold a Break-Point Term at Its Positions
 
 ## Structural terms
 
@@ -459,8 +469,12 @@ exact derivative beside the state.
   : Parameters of a Structural Term
 - [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
   : Links of a Structural Term's Parameters
+- [`term_charted()`](https://statmodels7.github.io/modelterms7/reference/term_charted.md)
+  : The Coordinates of a Term That Ride a Chart With an Edge
 - [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
   : Where a Term's Own Parameters Start
+- [`term_starts()`](https://statmodels7.github.io/modelterms7/reference/term_starts.md)
+  : Where a Fit of a Term's Own Parameters Starts, Several Times
 - [`term_draw()`](https://statmodels7.github.io/modelterms7/reference/term_draw.md)
   : Drawing a Term's Own Parameters
 - [`term_level_design()`](https://statmodels7.github.io/modelterms7/reference/term_level_design.md)

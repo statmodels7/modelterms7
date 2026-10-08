@@ -1,6 +1,6 @@
 # The Filter's Parameters at Rows Outside the Fitting Data
 
-Evaluates the recursion's coefficients \\(\omega_t, \alpha_t, \beta_t)\\
+Evaluates the recursion's coefficients \\(\omega_t, \kappa_t, \xi_t)\\
 at each row of `newdata`, so that
 [`term_continue()`](https://statmodels7.github.io/modelterms7/reference/term_continue.md)
 can carry a score-driven filter past the end of its series. A parameter
@@ -52,6 +52,12 @@ A list of three:
   `nrow(newdata)` by `q`, the autoregressive coefficients,
   Levinson-Durbin applied row by row. A zero-column matrix at \\q = 0\\.
 
+- `dom`, `dA`, `dB`:
+
+  the derivatives of `om`, of each column of `A` and of each column of
+  `B` in `u`, each a `nrow(newdata)` by `length(u)` matrix (`dA` and
+  `dB` are lists of them).
+
 ## Details
 
 For a developed parameter \\j\\ the value at row \\t\\ is \\\psi\_{j,t}
@@ -66,7 +72,7 @@ is handed: a parameter with no subformula is taken as it stands, on the
 parameter scale, while a developed parameter's entries are its
 coefficients on the unconstrained scale and go through the chart here.
 With \\p = q = 1\\ and no development, `u = c(0.3, 0.4, 0.7)` gives
-\\\omega = 0.3\\, \\\alpha_1 = 0.4\\ and a partial autocorrelation of
+\\\omega = 0.3\\, \\\kappa_1 = 0.4\\ and a partial autocorrelation of
 0.7.
 
 ## See also

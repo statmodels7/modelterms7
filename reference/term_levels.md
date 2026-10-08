@@ -96,6 +96,6 @@ set.seed(1)
 dd <- data.frame(id = rep(1:3, each = 8), x = rep(1:8, 3))
 dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
 tm <- term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd)
-term_levels(tm, list(m1 = 4.5, tau1 = 0.5, delta1 = 2))
+term_levels(tm, list(psi1.mean = 4.5, psi1.sd = 0.5, delta1 = 2))
 #> [1] 0 2
 ```

@@ -44,7 +44,7 @@ third derivative is zero at every order, it being \\\rho_k\\ itself.
 
 The map is multilinear of degree \\k\\ in the first \\k\\ partial
 autocorrelations, so the result is identically zero for \\q \le 2\\: at
-\\q = 2\\ the only non-trivial coefficient is \\\phi_1 =
+\\q = 2\\ the only non-trivial coefficient is \\\xi_1 =
 \rho_1(1-\rho_2)\\, which is bilinear. A check of this function that
 stops at \\q = 2\\ compares zero with zero and asserts nothing.
 

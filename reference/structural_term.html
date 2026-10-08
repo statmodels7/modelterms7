@@ -19,7 +19,7 @@ term_matrix() method."><meta property="og:image" content="https://statmodels7.gi
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -179,9 +179,9 @@ estimates.</p></div>
 <span class="r-in"><span><span class="co"># A structural term names its own parameters instead of coefficients.</span></span></span>
 <span class="r-in"><span><span class="va">g</span> <span class="op">&lt;-</span> <span class="fu"><a href="gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="term_params.html">term_params</a></span><span class="op">(</span><span class="va">g</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"  "alpha1" "pacf1"  "pacf2" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"  "kappa1" "pacf1"  "pacf2" </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="term_links.html">term_links</a></span><span class="op">(</span><span class="va">g</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">l</span><span class="op">)</span> <span class="va">l</span><span class="op">@</span><span class="va">link_name</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      omega     alpha1      pacf1      pacf2 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      omega     kappa1      pacf1      pacf2 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> "identity"      "log"   "rhobit"   "rhobit" </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># And has no design block at all.</span></span></span>

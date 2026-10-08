@@ -3,11 +3,13 @@
 the whole sample. For a marginal break-point term it is the posterior mean
 and standard deviation of each group's break-points. That is what a reader
 wants from such a fit: where each group's change happened, and how sure the
-data are about it."><meta property="og:description" content="A summary of the latent variable a structural term integrates over, given
+data are about it. For a regime() term it is the smoothed probability of
+each regime at each observation."><meta property="og:description" content="A summary of the latent variable a structural term integrates over, given
 the whole sample. For a marginal break-point term it is the posterior mean
 and standard deviation of each group's break-points. That is what a reader
 wants from such a fit: where each group's change happened, and how sure the
-data are about it."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
+data are about it. For a regime() term it is the smoothed probability of
+each regime at each observation."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -15,7 +17,7 @@ data are about it."><meta property="og:image" content="https://statmodels7.githu
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,7 +48,8 @@ data are about it."><meta property="og:image" content="https://statmodels7.githu
 the whole sample. For a marginal break-point term it is the posterior mean
 and standard deviation of each group's break-points. That is what a reader
 wants from such a fit: where each group's change happened, and how sure the
-data are about it.</p>
+data are about it. For a <code><a href="regime.html">regime()</a></code> term it is the smoothed probability of
+each regime at each observation.</p>
     </div>
 
     <div class="section level2">
@@ -87,10 +90,12 @@ per observation.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data frame with one row per group and break-point and four
-columns: <code>group</code>, the grouping level; <code>psi</code>, which break-point;
-<code>mean</code> and <code>sd</code>, the posterior moments of its position. <code>NA</code> in a moment
-the prior does not possess.</p>
+    <p>For a marginal break-point term, a data frame with one row per
+group and break-point and four columns: <code>group</code>, the grouping level;
+<code>psi</code>, which break-point; <code>mean</code> and <code>sd</code>, the posterior moments of its
+position. <code>NA</code> in a moment the prior does not possess. For a regime
+term, a data frame with one row per observation and one column per
+regime, <code>state1</code>, <code>state2</code>, and so on.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -107,9 +112,10 @@ posterior.</p>
 Student t below one degree of freedom has no mean on an edge interval and
 below two no variance, and the quadrature returns <code>NA</code> there instead of a
 number. That is a property of the prior the caller chose.</p>
-<p>The method on <code><a href="structural_term.html">structural_term()</a></code> throws, naming the class: <code><a href="gas.html">gas()</a></code> and
-<code><a href="regime.html">regime()</a></code> have no continuous latent to summarize this way, a regime's
-latent being the discrete state <code><a href="term_posterior.html">term_posterior()</a></code> already reports.</p>
+<p>The method on <code><a href="structural_term.html">structural_term()</a></code> throws, naming the class: <code><a href="gas.html">gas()</a></code> has no
+latent variable, its level being a deterministic function of the data. A
+regime's latent is the discrete state, and its method returns the
+probabilities <code><a href="term_posterior.html">term_posterior()</a></code> computes, labelled by regime.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -128,7 +134,7 @@ latent being the discrete state <code><a href="term_posterior.html">term_posteri
 <span class="r-in"><span><span class="co"># with a spread well inside the prior's own 0.5.</span></span></span>
 <span class="r-in"><span><span class="fu">term_latent</span><span class="op">(</span><span class="va">tm</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">24</span><span class="op">)</span>, <span class="va">dd</span><span class="op">$</span><span class="va">y</span>,</span></span>
 <span class="r-in"><span>            logdens <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span>, <span class="va">i</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">dnorm</a></span><span class="op">(</span><span class="va">dd</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, <span class="va">e</span>, <span class="fl">0.4</span>, log <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>            psi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>m1 <span class="op">=</span> <span class="fl">4.5</span>, tau1 <span class="op">=</span> <span class="fl">0.5</span>, delta1 <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>            psi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>psi1.mean <span class="op">=</span> <span class="fl">4.5</span>, psi1.sd <span class="op">=</span> <span class="fl">0.5</span>, delta1 <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   group psi     mean        sd</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1     1   1 4.498117 0.2722611</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2     2   1 4.500010 0.2698055</span>

@@ -124,7 +124,7 @@ term_is_built(spec)
 # A structural term records its recursion's bookkeeping and no block.
 g <- term_build(gas(p = 1, q = 1), data.frame(y = rnorm(30)))
 term_params(g)
-#> [1] "omega"  "alpha1" "pacf1" 
+#> [1] "omega"  "kappa1" "pacf1" 
 try(term_matrix(g))
 #> Error : Can't find method for `term_matrix(<modelterms7::GasTerm>)`.
 

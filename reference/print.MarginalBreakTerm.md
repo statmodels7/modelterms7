@@ -27,7 +27,7 @@ The form is
 
     <MarginalBreakTerm> 'jump' (jump): 1 latent break-point per group,
                         integrated out (3 groups)
-      parameters: m1, tau1, delta1
+      parameters: psi1.mean, psi1.sd, delta1
 
 The prior line appears only where `random(distrib = )` named a family;
 under the default Gaussian there is nothing to name. A built structural
@@ -49,8 +49,8 @@ dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
 # A specification, and the same term built over three groups.
 jump(x, psi ~ random(~ 1 | id), marginal = TRUE)
 #> <MarginalBreakTerm> 'jump' (jump): 1 latent break-point per group, integrated out (specification)
-#>   parameters: m1, tau1, delta1
+#>   parameters: psi1.mean, psi1.sd, delta1
 term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd)
 #> <MarginalBreakTerm> 'jump' (jump): 1 latent break-point per group, integrated out (3 groups)
-#>   parameters: m1, tau1, delta1
+#>   parameters: psi1.mean, psi1.sd, delta1
 ```

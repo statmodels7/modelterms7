@@ -10,7 +10,7 @@ everything else.
 ## Usage
 
 ``` r
-regime(k = 2, by = NULL, time = NULL, label = "regime")
+regime(k = 2, by = NULL, time = NULL, label = "regime", n_start = 1)
 ```
 
 ## Arguments
@@ -36,6 +36,19 @@ regime(k = 2, by = NULL, time = NULL, label = "regime")
 
   A single non-empty character string naming the term, `"regime"` by
   default.
+
+- n_start:
+
+  The number of starting points a fitting layer tries, a single whole
+  number of at least 1. The likelihood of a regime model has several
+  maxima, and one start reaches whichever basin it lies in. The first
+  start is
+  [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)'s,
+  the levels at the quantiles of the response; each further one
+  displaces it as
+  [`term_starts()`](https://statmodels7.github.io/modelterms7/reference/term_starts.md)
+  describes, and the fit keeps the best. `1`, the default, fits from the
+  first start alone. Each start costs about one fit.
 
 ## Value
 

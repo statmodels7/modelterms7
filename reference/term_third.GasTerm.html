@@ -11,7 +11,7 @@ orders are."><meta property="og:image" content="https://statmodels7.github.io/mo
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,6 +86,17 @@ orders are.</p>
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Unused.</p></dd>
+
+
+<dt id="arg-score-values-curvature-values-blocks-data">score_values, curvature_values, blocks_data<a class="anchor" aria-label="anchor" href="#arg-score-values-curvature-values-blocks-data"></a></dt>
+<dd><p>As for
+<code><a href="term_curvature.html">term_curvature()</a></code>; supplying all three, with <code>blocks_data</code> carrying the
+fourth derivatives <code>D4</code>, routes the recursion through the compiled
+kernel.</p></dd>
+
+
+<dt id="arg-threads">threads<a class="anchor" aria-label="anchor" href="#arg-threads"></a></dt>
+<dd><p>Threads for the compiled route's group loop.</p></dd>
 
 </dl></div>
     <div class="section level2">

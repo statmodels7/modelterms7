@@ -86,6 +86,12 @@ it. Arguments for the block
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
 builds implicitly go through that function's own `linpar` argument.
 
+The intercept belongs to the formula. When the formula carries one, a
+`linpar()` written in it drops its own column `(Intercept)` after the
+model matrix is built, so its factors keep their contrasts and
+`y ~ linpar(~ x + g)` gives the columns of `lm(y ~ x + g)`. Under `0 +`
+the block keeps its intercept.
+
 ## Sparse storage
 
 `sparse = TRUE` builds through

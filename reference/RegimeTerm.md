@@ -25,7 +25,8 @@ RegimeTerm(
   k = integer(0),
   by = NULL,
   time = NULL,
-  chain = NULL
+  chain = NULL,
+  n_start = integer(0)
 )
 ```
 
@@ -107,13 +108,19 @@ RegimeTerm(
   [`parameters7::transition_matrix()`](https://statmodels7.github.io/parameters7/reference/transition_matrix.html)
   of side `k`.
 
+- n_start:
+
+  The number of starting points a fitting layer tries, a single whole
+  number of at least 1, as set by
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md).
+
 ## Value
 
 An S7 object of class `RegimeTerm`, inheriting from
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
 and
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
-with the five properties above beside
+with the six properties above beside
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)'s
 six.
 

@@ -78,10 +78,13 @@ seg(
   [`numericals7::smooth_probit()`](https://statmodels7.github.io/numericals7/reference/smooth_probit.html).
   The smoother replaces the step and the hinge by their smooth versions,
   \\(1 + s'(u))/2\\ and \\(u + s(u))/2\\, so every break-point becomes
-  an ordinary parameter of a \\C^\infty\\ model: there is no working
-  parametrization, no auxiliary coefficient and no scaling schedule
-  (`c0` is ignored, with a message), the block is the true Jacobian and
-  the term is fitted by Gauss-Newton like
+  an ordinary parameter of a model as smooth as the smoother
+  (\\C^\infty\\ for the probit and the hyperbolic, \\C^3\\ for the
+  quintic, whose page says what that costs under an outer criterion,
+  where the probit is the choice): there is no working parametrization,
+  no auxiliary coefficient and no scaling schedule (`c0` is ignored,
+  with a message), the block is the true Jacobian and the term is fitted
+  by Gauss-Newton like
   [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md). A
   development of a break-point, `psi ~ random(~1 | id)` and penalized
   ones included, is then legal for every kind, the read-off that
@@ -89,14 +92,17 @@ seg(
   smoother's width is resolved at build from the covariate's spacing
   (the median gap between distinct values, within groups where a
   break-point development supplies a partition) unless the object
-  carries one, and is reported: it is the width of the transition, the
-  bent-cable reading, and the smoothing bias it buys is confined to a
-  window of that width (probit, quintic) or decays as \\c/(4\|u\|)\\
-  (hyperbolic). The objective is still multimodal in the positions –
-  smoothing rounds the local optima and does not remove them, so the
-  profile start and the `n_boot` restarts stay necessary; a smoothed fit
-  from a bad start has been measured converging to an absurd local
-  optimum while reporting success.
+  carries one; for the quintic, which is exact outside its width, it is
+  raised to at least 0.55 times the largest gap over the range a
+  break-point may take, so that a break-point cannot sit in a gap with
+  no observation within its width. The width is reported: it is the
+  width of the transition, the bent-cable reading, and the smoothing
+  bias it buys is confined to a window of that width (probit, quintic)
+  or decays as \\c/(4\|u\|)\\ (hyperbolic). The objective is still
+  multimodal in the positions – smoothing rounds the local optima and
+  does not remove them, so the profile start and the `n_boot` restarts
+  stay necessary; a smoothed fit from a bad start has been measured
+  converging to an absurd local optimum while reporting success.
 
 - marginal:
 

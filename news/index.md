@@ -1,5 +1,366 @@
 # Changelog
 
+## modelterms7 0.95.1
+
+- Documentation repairs found by `R CMD check --as-cran`: the examples
+  and the shared parameter description of the structural generics name
+  the
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  loadings `kappa1`, …, `kappap`, as 0.95.0 renamed them (the example of
+  [`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
+  stopped on the old name);
+  [`RegimeTerm()`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md)
+  documents its `n_start` property.
+
+## modelterms7 0.95.0
+
+- The score loadings of
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  are named `kappa1`, …, `kappap`, where they were `alpha1`, …, and the
+  autoregressive coefficients are reported as `xi1`, …, `xiq`, where
+  they were `beta1`, …: letters that no other term uses (`beta` names
+  the linear coefficients, `alpha` and `phi` parameters of several
+  families). A subformula on a loading is written `kappa1 ~ x`, and a
+  link is given as `links = list(kappa1 = ...)`. The coordinates of the
+  persistence keep the names `pacf1`, …
+- [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
+  of
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  and
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  builds each kind of link once and shares it among the parameters. A
+  fit with three regimes on `geyser` takes 27 per cent less time.
+
+## modelterms7 0.94.0
+
+- [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  takes `scaling`, the power `d` of the expected information by which
+  the score driving the recursion is multiplied, `u_t = s_t I_t^(-d)`,
+  both on the link scale of the filtered parameter. The default 0 is the
+  unscaled score; 1/2 and 1 are the scalings of the literature, and any
+  finite value is accepted.
+- The derivatives of orders two to four of the recursion are compiled.
+  Where the scalar registries of distributions7 and linkfunctions7 cover
+  the family and the link, the filter reads the score, the curvature and
+  the expected information through their C entries instead of calling
+  back into R, with the same results.
+- Requires distributions7 0.70.0 and linkfunctions7 0.5.0.
+
+## modelterms7 0.93.0
+
+- [`term_continue()`](https://statmodels7.github.io/modelterms7/reference/term_continue.md)
+  for
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  accepts `deriv`, the derivatives of the past predictor, of the past
+  scores and of the developed parameters with respect to a vector of
+  coordinates, and returns the derivative of the continued predictor in
+  the attribute `"jacobian"`. The recursion is differentiated exactly,
+  including the stationary chart of the autoregressive coefficients and
+  a developed `omega`, `alpha` or `beta`.
+
+## modelterms7 0.92.0
+
+- [`seg_polish_exact()`](https://statmodels7.github.io/modelterms7/reference/seg_polish_exact.md)
+  and
+  [`seg_profile_intervals()`](https://statmodels7.github.io/modelterms7/reference/seg_profile_intervals.md)
+  accept a sharp
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md).
+  Inside each interval between consecutive values of the covariate the
+  profile of a change of slope has one stationary point, the position
+  -b/g of the least-squares fit on x 1(x \> u) and 1(x \> u), so its
+  minimum over every interval is exact. On `segmented::globTempAnom`
+  with four changes of slope the polish reaches a residual sum of
+  squares of 1.388930 from the default start, against 1.628 for
+  `segmented`’s own fit.
+- [`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)
+  of a break-point term, given `target`, starts the slope and the
+  changes at their least-squares values at the starting positions
+  instead of at one. A unit change on calendar years put the starting
+  mean a hundred units from the data.
+
+## modelterms7 0.91.0
+
+- [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
+  for
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  reports the transition probabilities `p1.1`, `p1.2`, …, every entry of
+  the matrix row by row, in place of the additive log-ratios they are
+  estimated on, with the Jacobian in those log-ratios and an interval
+  scale on the logit.
+- [`term_latent()`](https://statmodels7.github.io/modelterms7/reference/term_latent.md)
+  for
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  returns the smoothed probability of each regime at each observation,
+  in the order of the data.
+- The interval of `beta1` of a
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  term with `q = 1` is built on the link of `pacf1` (the rhobit unless
+  `links` gives another) and stays inside its range; above `q = 1` it is
+  built on the identity, as before.
+
+## modelterms7 0.90.0
+
+- The parameters of a marginal break-point term’s gaussian prior are
+  named for what they are: `psi1.mean`, the mean of the positions in the
+  population, which is the population position, and `psi1.sd`, their
+  standard deviation between groups (`psik.mean` and `psik.sd` for
+  break-point ). They were `m1` and `tau1`, which did not say that they
+  describe the position, while the developed construction calls the same
+  population position `psi1.(Intercept)`. Under an explicit prior the
+  location is `psi1.mean` beside the prior’s own parameters.
+
+## modelterms7 0.89.0
+
+- [`seg_polish_exact()`](https://statmodels7.github.io/modelterms7/reference/seg_polish_exact.md)
+  polishes a held
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  or
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  whose break-point is developed, , by exact line searches in : along a
+  line the position of each observation crosses its covariate at one
+  value of the line’s parameter, so the profile is evaluated once
+  between consecutive crossings, and for a
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  it is then minimized inside the best interval. Where the sub-design
+  partitions the observations into groups (`psi ~ 0 + g`,
+  `by = ~ 0 + g`) the lines move one group at a time and a second sweep
+  starts from each group’s own minimum. With a continuous covariate the
+  lines are the coordinate directions and eight fixed directions in each
+  plane of two coordinates. On three groups of 80 the polished
+  `jump(x, psi ~ 0 + g)` reaches the minimum of an exhaustive search
+  over all 357,911 triples of intervals, RSS 60.534 where the working
+  fit stopped at 65.685, and `jseg(x, psi ~ 0 + g)` reaches 65.221 where
+  it stopped at 170.85; `jump(x, psi ~ z)` reaches the minimum of a 2-D
+  grid, 71.090 against 71.637.
+- [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
+  reports the developed position of a held term as `psi1.<column>`, one
+  value per column of the sub-design, where it reported nothing and a
+  summary printed the working slots .
+- The quadrature of a marginal
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  or
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  is compiled: the node set, the shift of every node and the forward
+  accumulation of the log-likelihood and its Jacobian
+  (`src/marg_seg.cpp`). The R versions stay as the twins the tests hold
+  the compiled ones to, at 1e-12.
+  [`term_levels()`](https://statmodels7.github.io/modelterms7/reference/term_levels.md)
+  for these kinds builds the shifts alone and no longer evaluates the
+  family. Per call, on a 20 x 15 panel, the log-likelihood goes from 42
+  ms to 16 ms, the posterior from 58 ms to 8 ms and the levels from 12
+  ms to 4 ms.
+
+## modelterms7 0.88.0
+
+- [`seg_profile_intervals()`](https://statmodels7.github.io/modelterms7/reference/seg_profile_intervals.md):
+  the least-squares profile of a sharp
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  or
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  term in one of its break-points, the others held, at the midpoint of
+  every interval between consecutive distinct values of the covariate.
+  It is the quantity
+  [`seg_polish_exact()`](https://statmodels7.github.io/modelterms7/reference/seg_polish_exact.md)
+  minimizes, returned whole, with the same cost; it agrees with one
+  weighted linear fit per interval to 1e-10.
+
+## modelterms7 0.87.0
+
+- [`seg_hold()`](https://statmodels7.github.io/modelterms7/reference/seg_hold.md)
+  puts a sharp
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  or
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  term in a held state: the break-points stay where they are, the block
+  is the exact design there – the covariate, and – and the slot that
+  carried each position is a column of zeros.
+  [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
+  no longer moves the positions,
+  [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
+  answers `TRUE`, and
+  [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
+  reports the held position through its slot.
+  `seg_hold(term, hold = FALSE)` writes the position back as , so the
+  working construction can continue.
+- [`term_held()`](https://statmodels7.github.io/modelterms7/reference/term_held.md),
+  a new generic: the positions among a term’s coefficients that the term
+  holds. Every term answers `integer(0)` except a held break-point term,
+  which answers its position slots.
+- [`seg_polish_exact()`](https://statmodels7.github.io/modelterms7/reference/seg_polish_exact.md):
+  the exact minimum of the least-squares profile of a sharp
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  or
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  term, one break-point at a time. The profile is constant between
+  consecutive observations, so it is evaluated once per interval; by
+  Frisch-Waugh every cross product the moving columns enter is a suffix
+  sum over the sorted covariate, so all intervals cost together. It
+  agrees with a brute-force search over every interval on 16 of 16
+  samples of 200 and on a weighted two-break-point case searched over
+  the full set of interval pairs, and takes 0.25 s at where one linear
+  fit per interval took 99 s.
+
+## modelterms7 0.86.0
+
+- **A smooth with a numeric `by` is no longer centered.** `s(x, by = z)`
+  is the term , and the constant of is the coefficient of `z` itself,
+  which no other term carries. The centered block left it out, so a fit
+  missed the main effect of `z` unless the formula also wrote `z`:
+  measured on 400 simulated observations of , `y ~ s(x) + s(x, by = z)`
+  had 5.33 effective degrees of freedom and fitted values 6.3 away from
+  mgcv’s, where mgcv, which does not center such a term, has 11.64. The
+  block now carries a leading unpenalized column `const`, the constant
+  times `z`, in
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
+  in
+  [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md),
+  and the same model has 11.95571 effective degrees of freedom against
+  mgcv’s 11.95571, the fitted values 2.5e-07 apart. Writing `z` in the
+  formula as well makes the column aliased. A factor `by` stays
+  centered.
+
+- The default label of a smooth with a numeric `by` names the variable,
+  `s(x):z` as in mgcv, so a formula may carry `s(x)` and `s(x, by = z)`
+  without the two giving their coefficients the same names.
+
+## modelterms7 0.85.0
+
+- A
+  [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
+  written in a formula that carries an intercept drops its own column
+  `(Intercept)` after its model matrix is built, so its factors keep
+  their contrasts and `y ~ linpar(~ x * g, contrasts = ...)` gives the
+  columns of `lm(y ~ x * g, contrasts = ...)`. Before, the two
+  intercepts shared the name `(Intercept)` and
+  [`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
+  stopped with “duplicate ‘row.names’ are not allowed”; with a label the
+  second one was aliased with a warning. The column is removed after the
+  coding and not by writing the formula as `~ . - 1`, which would code a
+  factor with full indicators and alias one of them against the
+  formula’s intercept. Under `0 +` the block keeps its intercept.
+  `LinparTerm` gains the property `drop_intercept`, set by
+  [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
+  and recorded in the blueprint, so
+  [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
+  removes the column too.
+
+## modelterms7 0.84.0
+
+- A smoothed break-point term passes numericals7 the largest gap between
+  consecutive distinct values of its covariate over the range a
+  break-point may take (the central 90 per cent), per group where a
+  development supplies a partition and the widest of the groups’ where
+  one width is shared. `smooth_quintic()`, exact outside its width, then
+  has its width raised to at least 0.55 times that gap, so a break-point
+  cannot sit in a gap with no observation within its width. Measured on
+  400 uniform points, a
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  whose fitted break-point had landed in a gap of 0.0155 against 2h =
+  0.0129 had its column exactly zero and was named not identified. The
+  probit and the hyperbolic keep their widths. Requires numericals7
+  0.17.0.
+
+- The page of
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  no longer calls a smoothed model C^infinity whatever the smoother: it
+  is as smooth as the smoother, C^3 for the quintic, whose page says
+  what that costs under an outer criterion.
+
+## modelterms7 0.83.0
+
+- [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
+  on a
+  [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
+  term takes `unseen = c("error", "zero")`. By default a level the fit
+  never saw is still refused; `"zero"` gives its rows zeros, which is
+  the prediction with that group’s effect at zero. `statmodels7`’s
+  `predict(random = "zero")` and `"marginal"` ask for it.
+
+- [`term_within()`](https://statmodels7.github.io/modelterms7/reference/term_within.md),
+  a new generic: the within-group design a group’s effect multiplies, at
+  new rows, one column per coordinate of the effect and named as
+  `term_group()$names`. It does not depend on the grouping, which is
+  what lets a caller integrate the effect of a group the fit never saw.
+  The base method returns `NULL`.
+
+## modelterms7 0.82.1
+
+- Requires penalties7 0.28.0, whose standardized penalties carry the
+  Jacobian of their map. The test that compares a standardized penalty
+  with the same penalty on a standardized design now includes that term,
+  `-sum(log(sd))`. No code in this package changed.
+
+## modelterms7 0.82.0
+
+- [`term_starts()`](https://statmodels7.github.io/modelterms7/reference/term_starts.md),
+  a new generic, returns the starting points a fitting layer tries for a
+  structural term’s own parameters. The base method returns
+  [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)’s
+  alone, so a term that says nothing is fitted once.
+- [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  takes `n_start`, the number of starts, `1` by default, so no fit
+  changes unless it is asked for. The first start is the quantile start;
+  each further one draws every additive log-ratio of the transition
+  matrix from N(0, 2^2) and adds N(0, 0.7^2) to the logarithm of every
+  gap, with a fixed seed and the caller’s random number generator
+  restored. On
+  [`MASS::geyser`](https://rdrr.io/pkg/MASS/man/geyser.html) with three
+  regimes, eight starts reach five distinct maxima of the
+  log-likelihood, from -1053.39 to -1210.49.
+
+## modelterms7 0.81.0
+
+- [`term_charted()`](https://statmodels7.github.io/modelterms7/reference/term_charted.md),
+  a new generic, names the free values of a term that are coordinates of
+  a chart mapping onto a bounded set: for a structural term every
+  parameter whose link is not the identity, plus the additive log-ratios
+  of
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)’s
+  transition matrix; for
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+  the positions of the scalar parameters with a link. statmodels7 reads
+  it to check that a coordinate at the edge of its chart is at a
+  maximum.
+- [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  starts its levels at the quantiles of the response at (2j-1)/(2k) when
+  the fitting layer supplies the response on the scale of the predictor,
+  where every level started at zero and every gap at one. On
+  [`MASS::geyser`](https://rdrr.io/pkg/MASS/man/geyser.html),
+  `waiting ~ regime(k = 2)` then reaches the maximum, -1099.63, where
+  the zero start stopped at -1134.01; with three regimes it reaches
+  -1053.39 where it stopped at -1132.68.
+
+## modelterms7 0.80.0
+
+- A break-point against its confinement limit gives its block a zero
+  column. The position is clamped there, so the contribution does not
+  move with the coefficients that place it, and the block of
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  and of every smoothed construction is the Jacobian of the
+  contribution. The derivative generics
+  [`term_block_contract()`](https://statmodels7.github.io/modelterms7/reference/term_block_contract.md)
+  and
+  [`term_block_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md)
+  gated by the confinement already; the block did not, so a gradient
+  read off the block was not the gradient of the objective. Measured on
+  `jseg(x, psi ~ random(~1 | g), smoothed = smooth_probit())` with the
+  break-point below the 5th percentile, the objective was constant to
+  the sixth decimal along the break-point’s intercept while the block’s
+  gradient read 145 there. The derivatives of the break-point’s column
+  in the change and in the level carry the same gate now. The
+  discontinuous constructions’ sharp blocks are working linearizations
+  and are unchanged. `test-confined.R` checks the block against a
+  difference of
+  [`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
+  and the derivatives against a difference of the block at a confined
+  break-point; with the gate removed 20 of its 30 assertions fail. A
+  test in `test-block-deriv2.R` asserted the old asymmetry, a first
+  derivative that was not zero at a confined break-point; it asserts
+  zero at both orders now, with an interior point as the control.
+
 ## modelterms7 0.79.0
 
 - **A parameter of

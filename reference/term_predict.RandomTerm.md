@@ -20,6 +20,14 @@ happen to use. A level the term never saw is refused.
   covariates. Its grouping factor need carry only the levels its own
   rows use.
 
+- unseen:
+
+  What a row of a level the term never saw gets: `"error"` (the default)
+  signals the error described above, `"zero"` gives it a row of zeros,
+  which is the prediction with that group's effect at zero. It is what
+  `statmodels7`'s `predict(random = "zero")` and
+  `predict(random = "marginal")` ask for.
+
 - ...:
 
   Unused.
@@ -69,4 +77,11 @@ bad <- dd
 levels(bad$g) <- c("a", "b", "zz")
 try(term_predict(b, bad))
 #> Error : grouping level 'zz' was not present at build time.
+
+# Unless it is asked to give such a row no effect of its own.
+as.matrix(term_predict(b, bad, unseen = "zero"))[bad$g == "zz", ]
+#>      random.a random.b random.c
+#> [1,]        0        0        0
+#> [2,]        0        0        0
+#> [3,]        0        0        0
 ```

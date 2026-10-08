@@ -177,9 +177,9 @@ vapply(list(gas(p = 1, q = 1), regime(k = 2), s(x, basis7::bspline_smooth(k = 5)
 # A structural term names its own parameters instead of coefficients.
 g <- gas(p = 1, q = 2)
 term_params(g)
-#> [1] "omega"  "alpha1" "pacf1"  "pacf2" 
+#> [1] "omega"  "kappa1" "pacf1"  "pacf2" 
 vapply(term_links(g), function(l) l@link_name, character(1))
-#>      omega     alpha1      pacf1      pacf2 
+#>      omega     kappa1      pacf1      pacf2 
 #> "identity"      "log"   "rhobit"   "rhobit" 
 
 # And has no design block at all.

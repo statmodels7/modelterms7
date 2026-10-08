@@ -37,7 +37,7 @@ A character vector, one name per parameter, of length
 
 The names are the term's own vocabulary.
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
-answers `omega` for the level, `alpha1` ... `alphap` for the score
+answers `omega` for the level, `kappa1` ... `kappap` for the score
 loadings and `pacf1` ... `pacfq` for the persistence;
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
 answers its levels and the free entries of its transition matrix. They
@@ -74,15 +74,15 @@ for the additive branch's equivalent.
 ``` r
 # The score-driven vocabulary: a level, a loading, a persistence.
 term_params(gas(p = 1, q = 1))
-#> [1] "omega"  "alpha1" "pacf1" 
+#> [1] "omega"  "kappa1" "pacf1" 
 term_params(gas(p = 2, q = 2))
-#> [1] "omega"  "alpha1" "alpha2" "pacf1"  "pacf2" 
+#> [1] "omega"  "kappa1" "kappa2" "pacf1"  "pacf2" 
 
 # A subformula expands the parameter it develops, in place.
 set.seed(1)
 d <- data.frame(y = rnorm(30), z = rnorm(30), t = 1:30)
 term_params(term_build(gas(p = 1, q = 1, omega ~ z, time = t), d))
-#> [1] "omega.(Intercept)" "omega.z"           "alpha1"           
+#> [1] "omega.(Intercept)" "omega.z"           "kappa1"           
 #> [4] "pacf1"            
 
 # It is what term_npar() counts on this branch.

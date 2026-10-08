@@ -11,7 +11,7 @@ lists the parameters themselves."><meta property="og:image" content="https://sta
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,7 +65,7 @@ lists the parameters themselves.</p>
     <p>The form is</p>
 <p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="sc">&lt;</span>GasTerm<span class="sc">&gt;</span> <span class="st">'gas'</span><span class="sc">:</span> score<span class="sc">-</span>driven, p <span class="ot">=</span> <span class="dv">1</span>, q <span class="ot">=</span> <span class="dv">1</span>; <span class="dv">3</span> <span class="fu">group</span>(s)</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  developed<span class="sc">:</span> omega</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  parameters<span class="sc">:</span> <span class="fu">omega.</span>(Intercept), omega.g2, alpha1, pacf1</span></code></pre><p></p></div>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  parameters<span class="sc">:</span> <span class="fu">omega.</span>(Intercept), omega.g2, kappa1, pacf1</span></code></pre><p></p></div>
 <p>The <code>developed</code> line appears only where a subformula was given. The
 parameter list is <code><a href="term_params.html">term_params()</a></code>, so a developed parameter shows there as
 its coefficients.</p>
@@ -86,16 +86,16 @@ its coefficients.</p>
 <span class="r-in"><span><span class="co"># A specification, and the same term built over three groups.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;GasTerm&gt; 'gas': score-driven, p = 1, q = 2 (specification)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   parameters: omega, alpha1, pacf1, pacf2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   parameters: omega, kappa1, pacf1, pacf2</span>
 <span class="r-in"><span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span>, by <span class="op">=</span> <span class="va">id</span>, time <span class="op">=</span> <span class="va">t</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;GasTerm&gt; 'gas': score-driven, p = 1, q = 1; 3 group(s)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   parameters: omega, alpha1, pacf1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   parameters: omega, kappa1, pacf1</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A developed parameter is named on its own line.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span>, <span class="va">omega</span> <span class="op">~</span> <span class="va">g</span>, by <span class="op">=</span> <span class="va">id</span>, time <span class="op">=</span> <span class="va">t</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;GasTerm&gt; 'gas': score-driven, p = 1, q = 1; 3 group(s)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   developed: omega</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   parameters: omega.(Intercept), omega.gv, alpha1, pacf1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   parameters: omega.(Intercept), omega.gv, kappa1, pacf1</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

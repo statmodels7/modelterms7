@@ -41,14 +41,20 @@ parameters, propagated alongside the state.
 
 - fast:
 
-  The fast context of the caller, or `NULL`: a list with `family` (the
-  distribution's S7 class name), `link` (the parameter's link name), `k`
-  (the parameter's 1-based index), `bounds`, `y` and `theta` (the
-  per-observation parameters). Where the C registries of distributions7
+  The fast context of the caller, or `NULL`: a list with `family` and
+  `link` (the names that
+  [`distributions7::distrib_scalar_route()`](https://statmodels7.github.io/distributions7/reference/distrib_scalar_route.html)
+  and
+  [`linkfunctions7::link_scalar_route()`](https://statmodels7.github.io/linkfunctions7/reference/link_scalar_route.html)
+  return), `link_par` (the link's own parameters, from the same
+  function), `k` (the parameter's 1-based index), `bounds`, `y` and
+  `theta` (the per-observation parameters, followed by the
+  distribution's constants). Where the C registries of distributions7
   and linkfunctions7 cover the pair, the recursion reads the score and
   the curvature through their scalar entry points instead of the R
-  callbacks, bit-identically; where they do not, the context is inert
-  and the callbacks run as before.
+  callbacks; where they do not, the context is inert and the callbacks
+  run as before. The groups run over threads only when the
+  distribution's entries are safe on a worker thread.
 
 - threads:
 

@@ -15,7 +15,7 @@ predictor to report."><meta property="og:image" content="https://statmodels7.git
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,8 @@ predictor to report.</p>
 <span>  k <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  time <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  chain <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  chain <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -137,11 +138,16 @@ recursion. <code>NULL</code> for one group.</p></dd>
 <dt id="arg-chain">chain<a class="anchor" aria-label="anchor" href="#arg-chain"></a></dt>
 <dd><p>A <code><a href="https://statmodels7.github.io/parameters7/reference/transition_matrix.html" class="external-link">parameters7::transition_matrix()</a></code> of side <code>k</code>.</p></dd>
 
+
+<dt id="arg-n-start">n_start<a class="anchor" aria-label="anchor" href="#arg-n-start"></a></dt>
+<dd><p>The number of starting points a fitting layer tries, a
+single whole number of at least 1, as set by <code><a href="regime.html">regime()</a></code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An S7 object of class <code>RegimeTerm</code>, inheriting from
-<code><a href="structural_term.html">structural_term()</a></code> and <code><a href="model_term.html">model_term()</a></code>, with the five properties above
+<code><a href="structural_term.html">structural_term()</a></code> and <code><a href="model_term.html">model_term()</a></code>, with the six properties above
 beside <code><a href="model_term.html">model_term()</a></code>'s six.</p>
     </div>
     <div class="section level2">

@@ -63,12 +63,12 @@ for the additive branch's equivalent.
 ``` r
 # The level and the persistence start at zero; the loading does not.
 term_start(gas(p = 1, q = 1))
-#>     omega    alpha1     pacf1 
+#>     omega    kappa1     pacf1 
 #>  0.000000 -2.302585  0.000000 
 
 # Because zero on a log chart is a loading of one.
 lk <- term_links(gas(p = 1, q = 1))
-linkfunctions7::linkinv(lk$alpha1, term_start(gas(p = 1, q = 1))[["alpha1"]])
+linkfunctions7::linkinv(lk$kappa1, term_start(gas(p = 1, q = 1))[["kappa1"]])
 #> [1] 0.1
 
 # One value per parameter, whatever the order.

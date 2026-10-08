@@ -64,31 +64,31 @@ for the same shape applied to a matrix parameter.
 ## Examples
 
 ``` r
-term_readable(gas(p = 1, q = 1), c(omega = 0.3, alpha1 = 0.4, pacf1 = 0.8))
+term_readable(gas(p = 1, q = 1), c(omega = 0.3, kappa1 = 0.4, pacf1 = 0.8))
 #> $name
-#> [1] "omega"  "alpha1" "beta1" 
+#> [1] "omega"  "kappa1" "xi1"   
 #> 
 #> $value
 #> [1] 0.3000000 1.4918247 0.6640368
 #> 
 #> $jacobian
-#>        omega   alpha1     pacf1
+#>        omega   kappa1     pacf1
 #> omega      1 0.000000 0.0000000
-#> alpha1     0 1.491825 0.0000000
-#> beta1      0 0.000000 0.5590552
+#> kappa1     0 1.491825 0.0000000
+#> xi1        0 0.000000 0.5590552
 #> 
 #> $scale
 #> $scale$omega
 #> S7 Link Object: identity
 #>   - Parameter domain (theta): (-Inf, Inf)
 #> 
-#> $scale$alpha1
+#> $scale$kappa1
 #> S7 Link Object: log
 #>   - Parameter domain (theta): (0, Inf)
 #> 
-#> $scale$beta1
-#> S7 Link Object: identity
-#>   - Parameter domain (theta): (-Inf, Inf)
+#> $scale$xi1
+#> S7 Link Object: rhobit
+#>   - Parameter domain (theta): (-1, 1)
 #> 
 #> 
 ```

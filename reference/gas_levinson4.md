@@ -53,7 +53,7 @@ a single contraction cannot reach this order.
 The map is multilinear of degree \\k\\ in the first \\k\\ partial
 autocorrelations, so the result is identically zero for \\q \le 3\\: the
 first coefficient carrying a monomial of degree four is
-\\\phi^{(4)}\_1\\, which needs \\q = 4\\. A check of this function that
+\\\xi^{(4)}\_1\\, which needs \\q = 4\\. A check of this function that
 stops at \\q = 3\\ compares zero with zero and asserts nothing.
 
 ## See also

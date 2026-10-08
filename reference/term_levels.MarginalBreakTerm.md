@@ -5,8 +5,8 @@ the changes of level over the active break-points. For the continuous
 kinds the shift varies by observation, each node contributing its own
 hinge value, and a matrix is returned, aligned with
 [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)'s
-columns; it takes the callbacks because the node set is theirs to
-rebuild.
+columns. The node set depends on the term's parameters alone, so the
+family is not evaluated.
 
 ## Arguments
 
@@ -21,8 +21,9 @@ rebuild.
 
 - eta, y, logdens:
 
-  For the continuous kinds, the quantities the node set is built from;
-  ignored by the step kind.
+  Accepted for the interface of
+  [`term_levels()`](https://statmodels7.github.io/modelterms7/reference/term_levels.md)
+  and not used.
 
 - ...:
 

@@ -29,7 +29,8 @@ GasTerm(
   by = NULL,
   time = NULL,
   links = list(),
-  submodels = list()
+  submodels = list(),
+  scaling = numeric(0)
 )
 ```
 
@@ -120,6 +121,11 @@ GasTerm(
   A named list of one-sided formulas, one per parameter developed over
   covariates. Empty where none is.
 
+- scaling:
+
+  The power \\d\\ of the expected information the score is multiplied
+  by, \\\mathcal{I}^{-d}\\; zero for the score as it is.
+
 ## Value
 
 An S7 object of class `GasTerm`, inheriting from
@@ -184,9 +190,9 @@ c(p = tm@p, q = tm@q)
 
 # 1 + p + q parameters, and one chart each.
 term_params(tm)
-#> [1] "omega"  "alpha1" "pacf1"  "pacf2" 
+#> [1] "omega"  "kappa1" "pacf1"  "pacf2" 
 vapply(term_links(tm), function(l) l@link_name, character(1))
-#>      omega     alpha1      pacf1      pacf2 
+#>      omega     kappa1      pacf1      pacf2 
 #> "identity"      "log"   "rhobit"   "rhobit" 
 
 # The build resolves the ordering; there is no block to read.

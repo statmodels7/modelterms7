@@ -30,9 +30,21 @@ ones.
 
   Ignored.
 
+- deriv:
+
+  `NULL`, or a list giving the derivatives of the inputs in a vector of
+  `m` coordinates of the caller's choosing: `df_past` and `ds_past`, one
+  row per observed row and `m` columns, the derivatives of `f_past` and
+  `s_past`; and `dpsi`, `length(psi)` rows and `m` columns, the
+  derivative of `psi`. The continuation is then differentiated along
+  with its value, by the same recursion run on derivative rows, the
+  score past the data and its derivative being zero.
+
 ## Value
 
-A numeric vector of `nrow(newdata)` levels.
+A numeric vector of `nrow(newdata)` levels. With `deriv`, it carries the
+attribute `"jacobian"`, a `nrow(newdata)` by `m` matrix: the derivative
+of each level in the caller's coordinates.
 
 ## Details
 
@@ -42,7 +54,7 @@ past the data is the score: it has zero conditional mean by
 construction, the model's own defining property, so at a row whose
 response is not observed the driving term is its expectation and the
 continuation is the deterministic recursion \$\$f\_{n+h} = \omega +
-\sum_i \alpha_i s\_{n+h-i} + \sum_j \beta_j f\_{n+h-j},\$\$ the loadings
+\sum_i \kappa_i s\_{n+h-i} + \sum_j \xi_j f\_{n+h-j},\$\$ the loadings
 contributing only while \\n+h-i\\ is still an observed time. No
 simulation and no integration is involved.
 

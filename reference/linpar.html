@@ -21,7 +21,7 @@ count exactly."><meta property="og:image" content="https://statmodels7.github.io
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -121,6 +121,11 @@ explicit constructor is for callers wanting more than one parametric block
 with distinct labels, or wanting to set <code>sparse</code> or <code>contrasts</code> on it.
 Arguments for the block <code><a href="interpret_formula.html">interpret_formula()</a></code> builds implicitly go through
 that function's own <code>linpar</code> argument.</p>
+<p>The intercept belongs to the formula. When the formula carries one, a
+<code>linpar()</code> written in it drops its own column <code>(Intercept)</code> after the model
+matrix is built, so its factors keep their contrasts and
+<code>y ~ linpar(~ x + g)</code> gives the columns of <code>lm(y ~ x + g)</code>. Under <code>0 +</code> the
+block keeps its intercept.</p>
     </div>
     <div class="section level2">
     <h2 id="sparse-storage">Sparse storage<a class="anchor" aria-label="anchor" href="#sparse-storage"></a></h2>

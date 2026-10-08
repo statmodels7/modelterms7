@@ -1,6 +1,6 @@
 # The Parameters of a Score-Driven Term
 
-`"omega"`, then `"alpha1"` ... `"alphap"`, then `"pacf1"` ... `"pacfq"`:
+`"omega"`, then `"kappa1"` ... `"kappap"`, then `"pacf1"` ... `"pacfq"`:
 the level, one loading per score lag, and one partial autocorrelation
 per autoregressive lag. A parameter carrying a subformula is **expanded
 in place** into its coefficients, named `parameter.coefficient`.
@@ -27,7 +27,7 @@ A character vector of length
 
 The persistence coordinates are named for the chart they live on, never
 for the quantity a reader reads. `pacf1` is a partial autocorrelation;
-the autoregressive coefficient \\\beta_1\\ the literature writes is a
+the autoregressive coefficient \\\xi_1\\ the literature writes is a
 function of the whole chart through Levinson-Durbin, and coincides with
 the coordinate only at \\q = 1\\.
 [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
@@ -52,14 +52,14 @@ for what they mean.
 
 ``` r
 term_params(gas(p = 1, q = 1))
-#> [1] "omega"  "alpha1" "pacf1" 
+#> [1] "omega"  "kappa1" "pacf1" 
 term_params(gas(p = 2, q = 3))
-#> [1] "omega"  "alpha1" "alpha2" "pacf1"  "pacf2"  "pacf3" 
+#> [1] "omega"  "kappa1" "kappa2" "pacf1"  "pacf2"  "pacf3" 
 
 # A subformula expands its parameter in place.
 set.seed(1)
 dd <- data.frame(t = 1:40, y = rnorm(40), g = factor(rep(c("u", "v"), 20)))
 term_params(term_build(gas(p = 1, q = 1, omega ~ g, time = t), dd))
-#> [1] "omega.(Intercept)" "omega.gv"          "alpha1"           
+#> [1] "omega.(Intercept)" "omega.gv"          "kappa1"           
 #> [4] "pacf1"            
 ```

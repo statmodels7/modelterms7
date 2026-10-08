@@ -24,11 +24,12 @@ A character vector, of length
 
 ## Details
 
-The prior's parameters are `mk` and `tauk` under the default Gaussian,
-the location and the scale of break-point \\k\\. Where
-`random(distrib = )` named another family the names are that family's
-own, its location fixed at zero and `mk` carrying the position, so a
-Student t prior adds `nuk`.
+The prior's parameters are `psik.mean` and `psik.sd` under the default
+Gaussian, the mean and the standard deviation of the positions of
+break-point \\k\\ in the population. Where `random(distrib = )` named
+another family the names are that family's own, its location fixed at
+zero and `psi1.mean` carrying the position, so a Student t prior adds
+`nu`.
 
 Which of `gamma` and `delta` appear is the kind: `"seg"` has the changes
 of slope, `"jump"` the changes of level, `"jseg"` both. Only `"seg"` and
@@ -50,9 +51,9 @@ dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
 
 # A step term: the prior's location and scale, and the change of level.
 term_params(term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd))
-#> [1] "m1"     "tau1"   "delta1"
+#> [1] "psi1.mean" "psi1.sd"   "delta1"   
 
 # A continuous one adds the linear effect and the change of slope.
 term_params(term_build(seg(x, psi ~ random(~ 1 | id), marginal = TRUE), dd))
-#> [1] "beta"   "m1"     "tau1"   "gamma1"
+#> [1] "beta"      "psi1.mean" "psi1.sd"   "gamma1"   
 ```

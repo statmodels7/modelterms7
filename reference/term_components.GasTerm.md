@@ -56,13 +56,13 @@ dd <- data.frame(t = 1:40, y = rnorm(40), z = rnorm(40))
 # for the loading and the persistence.
 b <- term_build(gas(p = 1, q = 1, omega ~ z, time = t), dd)
 term_params(b)
-#> [1] "omega.(Intercept)" "omega.z"           "alpha1"           
+#> [1] "omega.(Intercept)" "omega.z"           "kappa1"           
 #> [4] "pacf1"            
 lapply(term_components(b), function(z) z$index)
 #> $omega
 #> [1] 1 2
 #> 
-#> $alpha1
+#> $kappa1
 #> [1] 3
 #> 
 #> $pacf1

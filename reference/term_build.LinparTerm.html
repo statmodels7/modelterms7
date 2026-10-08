@@ -13,7 +13,7 @@ deleted, the factor levels, the contrasts used, and the storage settled on."><me
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -106,7 +106,8 @@ build a block of a different kind from the fitted one.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 7           1 7  0  1  0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 8           1 8  0  0  1</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">b</span><span class="op">@</span><span class="va">blueprint</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "terms"     "xlev"      "contrasts" "sparse"   </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "terms"          "xlev"           "contrasts"      "sparse"        </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [5] "drop_intercept"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A missing value keeps its row.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="term_matrix.html">term_matrix</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="linpar.html">linpar</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="cn">NA</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>

@@ -19,7 +19,7 @@ the block is sparse, and the contrasts used for the formula's factors."><meta pr
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,7 +71,8 @@ the block is sparse, and the contrasts used for the formula's factors.</p>
 <span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  formula <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sparse <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  contrasts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  contrasts <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  drop_intercept <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -163,11 +164,19 @@ the build choose. It is kept as given; the storage actually used is in
 <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">stats::model.matrix()</a></code>'s own form, or an empty list for the session's
 defaults.</p></dd>
 
+
+<dt id="arg-drop-intercept">drop_intercept<a class="anchor" aria-label="anchor" href="#arg-drop-intercept"></a></dt>
+<dd><p><code>TRUE</code> to remove the column <code>(Intercept)</code> after the
+model matrix is built, so that the factors keep the coding they have in a
+formula with an intercept. <code><a href="interpret_formula.html">interpret_formula()</a></code> sets it on a <code><a href="linpar.html">linpar()</a></code>
+written in a formula that already carries an intercept; <code>FALSE</code> by
+default.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An S7 object of class <code>LinparTerm</code>, inheriting from
-<code><a href="additive_term.html">additive_term()</a></code> and <code><a href="model_term.html">model_term()</a></code>, with the three properties above
+<code><a href="additive_term.html">additive_term()</a></code> and <code><a href="model_term.html">model_term()</a></code>, with the four properties above
 beside the ten they supply.</p>
     </div>
     <div class="section level2">
@@ -204,7 +213,7 @@ builds one implicitly; <code><a href="term_build.html">term_build()</a></code> a
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span><span class="va">tm</span><span class="op">@</span><span class="va">formula</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x + g</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x557a5a9690c8&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5611f70d52c0&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The property keeps what was asked for; the blueprint records what the</span></span></span>
 <span class="r-in"><span><span class="co"># build settled on, and that is what a prediction reads.</span></span></span>

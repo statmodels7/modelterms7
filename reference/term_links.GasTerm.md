@@ -49,19 +49,19 @@ its coefficients are unconstrained on the identity.
 
 ``` r
 vapply(term_links(gas(p = 2, q = 2)), function(l) l@link_name, character(1))
-#>      omega     alpha1     alpha2      pacf1      pacf2 
+#>      omega     kappa1     kappa2      pacf1      pacf2 
 #> "identity"      "log"      "log"   "rhobit"   "rhobit" 
 
 # Each carries its own set onto the line, so nothing is out of range.
 lk <- term_links(gas(p = 1, q = 1))
 vapply(lk, function(l) paste(l@link_bounds, collapse = ", "), character(1))
-#>       omega      alpha1       pacf1 
+#>       omega      kappa1       pacf1 
 #> "-Inf, Inf"    "0, Inf"     "-1, 1" 
 
 # Overridden: a loading free in sign.
 vapply(term_links(gas(p = 1, q = 1,
-                      links = list(alpha1 = linkfunctions7::identity_link()))),
+                      links = list(kappa1 = linkfunctions7::identity_link()))),
        function(l) l@link_name, character(1))
-#>      omega     alpha1      pacf1 
+#>      omega     kappa1      pacf1 
 #> "identity" "identity"   "rhobit" 
 ```

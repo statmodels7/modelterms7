@@ -340,5 +340,5 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
           cor = cor(cf[grep("^random", names(cf))], bb)), 3)
 }
 #> slope   cor 
-#> 0.471 0.989 
+#> 0.472 0.989 
 ```

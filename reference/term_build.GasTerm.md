@@ -71,7 +71,7 @@ lengths(term_build(gas(p = 1, q = 1, by = id, time = t), dd)@blueprint$order)
 gb <- term_build(gas(p = 1, q = 1, omega ~ ridge(~ g), time = t), dd)
 term_params(gb)
 #> [1] "omega.(Intercept)" "omega.ridge.gu"    "omega.ridge.gv"   
-#> [4] "alpha1"            "pacf1"            
+#> [4] "kappa1"            "pacf1"            
 vapply(term_penalties(gb), function(e) e$name, character(1))
 #> [1] "omega::ridge(~g)"
 ```

@@ -11,7 +11,7 @@ can carry it across by the delta method."><meta property="og:image" content="htt
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,31 +99,31 @@ matrix parameter.</p></div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">term_readable</span><span class="op">(</span><span class="fu"><a href="gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>omega <span class="op">=</span> <span class="fl">0.3</span>, alpha1 <span class="op">=</span> <span class="fl">0.4</span>, pacf1 <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span><span class="op">)</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">term_readable</span><span class="op">(</span><span class="fu"><a href="gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>omega <span class="op">=</span> <span class="fl">0.3</span>, kappa1 <span class="op">=</span> <span class="fl">0.4</span>, pacf1 <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $name</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"  "alpha1" "beta1" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"  "kappa1" "xi1"   </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.3000000 1.4918247 0.6640368</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $jacobian</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>        omega   alpha1     pacf1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>        omega   kappa1     pacf1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> omega      1 0.000000 0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> alpha1     0 1.491825 0.0000000</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> beta1      0 0.000000 0.5590552</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> kappa1     0 1.491825 0.0000000</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> xi1        0 0.000000 0.5590552</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $scale</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $scale$omega</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> S7 Link Object: identity</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - Parameter domain (theta): (-Inf, Inf)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $scale$alpha1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $scale$kappa1</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> S7 Link Object: log</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   - Parameter domain (theta): (0, Inf)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $scale$beta1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> S7 Link Object: identity</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   - Parameter domain (theta): (-Inf, Inf)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $scale$xi1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> S7 Link Object: rhobit</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   - Parameter domain (theta): (-1, 1)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>

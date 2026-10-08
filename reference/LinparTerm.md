@@ -33,7 +33,8 @@ LinparTerm(
   penalty = NULL,
   formula = NULL,
   sparse = NULL,
-  contrasts = list()
+  contrasts = list(),
+  drop_intercept = FALSE
 )
 ```
 
@@ -135,13 +136,24 @@ LinparTerm(
   [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)'s
   own form, or an empty list for the session's defaults.
 
+- drop_intercept:
+
+  `TRUE` to remove the column `(Intercept)` after the model matrix is
+  built, so that the factors keep the coding they have in a formula with
+  an intercept.
+  [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
+  sets it on a
+  [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
+  written in a formula that already carries an intercept; `FALSE` by
+  default.
+
 ## Value
 
 An S7 object of class `LinparTerm`, inheriting from
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 and
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
-with the three properties above beside the ten they supply.
+with the four properties above beside the ten they supply.
 
 ## The three properties of its own
 
@@ -190,7 +202,7 @@ S7::S7_inherits(tm, LinparTerm)
 #> [1] TRUE
 tm@formula
 #> ~x + g
-#> <environment: 0x557a5a9690c8>
+#> <environment: 0x5611f70d52c0>
 
 # The property keeps what was asked for; the blueprint records what the
 # build settled on, and that is what a prediction reads.

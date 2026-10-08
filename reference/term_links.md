@@ -74,13 +74,13 @@ for the quantities the coordinates map to.
 ``` r
 # Identity for the level, log for the loading, rhobit for the persistence.
 vapply(term_links(gas(p = 1, q = 2)), function(l) l@link_name, character(1))
-#>      omega     alpha1      pacf1      pacf2 
+#>      omega     kappa1      pacf1      pacf2 
 #> "identity"      "log"   "rhobit"   "rhobit" 
 
 # Each carries its parameter's own set onto the whole line.
 lk <- term_links(gas(p = 1, q = 1))
 vapply(lk, function(l) paste(l@link_bounds, collapse = ", "), character(1))
-#>       omega      alpha1       pacf1 
+#>       omega      kappa1       pacf1 
 #> "-Inf, Inf"    "0, Inf"     "-1, 1" 
 
 # So any coordinate at all gives an admissible parameter. At a
@@ -91,6 +91,6 @@ all(rho > -1 & rho < 1)
 #> [1] TRUE
 1 - rho[3]
 #> [1] 2.220446e-16
-linkfunctions7::linkinv(lk$alpha1, c(-40, 0, 40))
+linkfunctions7::linkinv(lk$kappa1, c(-40, 0, 40))
 #> [1] 4.248354e-18 1.000000e+00 2.353853e+17
 ```

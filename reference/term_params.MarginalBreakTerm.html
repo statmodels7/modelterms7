@@ -13,7 +13,7 @@ level delta1 ...."><meta property="og:image" content="https://statmodels7.github
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,10 +65,11 @@ level <code>delta1</code> ....</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The prior's parameters are <code>mk</code> and <code>tauk</code> under the default Gaussian, the
-location and the scale of break-point \(k\). Where <code>random(distrib = )</code>
-named another family the names are that family's own, its location fixed at
-zero and <code>mk</code> carrying the position, so a Student t prior adds <code>nuk</code>.</p>
+    <p>The prior's parameters are <code>psik.mean</code> and <code>psik.sd</code> under the default
+Gaussian, the mean and the standard deviation of the positions of
+break-point \(k\) in the population. Where <code>random(distrib = )</code> named
+another family the names are that family's own, its location fixed at zero
+and <code>psi1.mean</code> carrying the position, so a Student t prior adds <code>nu</code>.</p>
 <p>Which of <code>gamma</code> and <code>delta</code> appear is the kind: <code>"seg"</code> has the changes of
 slope, <code>"jump"</code> the changes of level, <code>"jseg"</code> both. Only <code>"seg"</code> and
 <code>"jseg"</code> carry <code>beta</code>.</p>
@@ -87,11 +88,11 @@ what they mean.</p></div>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A step term: the prior's location and scale, and the change of level.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="term_params.html">term_params</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="jump.html">jump</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">psi</span> <span class="op">~</span> <span class="fu"><a href="random.html">random</a></span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span> <span class="op">|</span> <span class="va">id</span><span class="op">)</span>, marginal <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "m1"     "tau1"   "delta1"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "psi1.mean" "psi1.sd"   "delta1"   </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A continuous one adds the linear effect and the change of slope.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="term_params.html">term_params</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="seg.html">seg</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">psi</span> <span class="op">~</span> <span class="fu"><a href="random.html">random</a></span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span> <span class="op">|</span> <span class="va">id</span><span class="op">)</span>, marginal <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "beta"   "m1"     "tau1"   "gamma1"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "beta"      "psi1.mean" "psi1.sd"   "gamma1"   </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

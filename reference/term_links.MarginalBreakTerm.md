@@ -1,8 +1,8 @@
 # The Charts of a Marginal Break-Point Term's Parameters
 
-The **log** link on every `tauk`, a prior's own link on any parameter it
-contributes, and the identity on everything else. A prior scale must be
-positive; a position, a change of level and a change of slope are
+The **log** link on every `psik.sd`, a prior's own link on any parameter
+it contributes, and the identity on everything else. A prior scale must
+be positive; a position, a change of level and a change of slope are
 already unconstrained.
 
 ## Arguments
@@ -42,6 +42,6 @@ dd <- data.frame(id = rep(1:3, each = 8), x = rep(1:8, 3))
 dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
 tm <- term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd)
 vapply(term_links(tm), function(l) l@link_name, character(1))
-#>         m1       tau1     delta1 
+#>  psi1.mean    psi1.sd     delta1 
 #> "identity"      "log" "identity" 
 ```

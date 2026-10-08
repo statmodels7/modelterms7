@@ -154,7 +154,8 @@ carries the linear effect as a parameter of its own, which `seg` and
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
 subformula. `prior` is the latent's distribution: `NULL` for the
 Gaussian, or a distributions7 object where `random(distrib = )` named
-one, and its location must be fixed at zero, `m1` carrying the position.
+one, and its location must be fixed at zero, `psi1.mean` carrying the
+position.
 
 `spec` holds the resolved construction settings and `blueprint` the
 grouping and the interval structure
@@ -163,10 +164,12 @@ worked out.
 
 ## The parameters
 
-They are numbered, one set per break-point: `m1`, `tau1`, `delta1` for a
-one-break-point step term, with `m` the prior's location, `tau` its
-scale on a log chart, and `delta` the change of level. A continuous kind
-adds `beta` for the linear effect and `gamma1` for the change of slope.
+They are numbered, one set per break-point: `psi1.mean`, `psi1.sd`,
+`delta1` for a one-break-point step term, with `psi1.mean` the mean of
+the positions in the population, `psi1.sd` their standard deviation
+between groups on a log chart, and `delta1` the change of level. A
+continuous kind adds `beta` for the linear effect and `gamma1` for the
+change of slope.
 
 ## What it costs
 
@@ -204,9 +207,9 @@ c(kind = tm@kind, npsi = tm@npsi, linear = tm@linear)
 
 # Numbered parameters: the prior's location and scale, and the change.
 term_params(tm)
-#> [1] "m1"     "tau1"   "delta1"
+#> [1] "psi1.mean" "psi1.sd"   "delta1"   
 vapply(term_links(tm), function(l) l@link_name, character(1))
-#>         m1       tau1     delta1 
+#>  psi1.mean    psi1.sd     delta1 
 #> "identity"      "log" "identity" 
 
 # The prior is part of the likelihood, so nothing is declared penalized.
@@ -215,5 +218,5 @@ length(term_penalties(tm))
 
 # A continuous kind adds the linear effect and the change of slope.
 term_params(term_build(seg(x, psi ~ random(~ 1 | id), marginal = TRUE), dd))
-#> [1] "beta"   "m1"     "tau1"   "gamma1"
+#> [1] "beta"      "psi1.mean" "psi1.sd"   "gamma1"   
 ```

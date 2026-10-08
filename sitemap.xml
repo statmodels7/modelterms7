@@ -1,7 +1,5 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://statmodels7.github.io/modelterms7/404.html</loc></url>
-<url><loc>https://statmodels7.github.io/modelterms7/LICENSE-text.html</loc></url>
-<url><loc>https://statmodels7.github.io/modelterms7/LICENSE.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/articles/defining-a-model-term.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/articles/index.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/authors.html</loc></url>
@@ -93,7 +91,10 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/s.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/scad.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/seg.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/seg_hold.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/seg_polish.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/seg_polish_exact.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/seg_profile_intervals.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/seg_profile_rss.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/seg_psi.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/seg_reheat.html</loc></url>
@@ -119,6 +120,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.SegTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.SmoothTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_charted.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_coef_draw.SegTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_coef_draw.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_coef_names.html</loc></url>
@@ -144,6 +146,8 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_grid.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_group.RandomTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_group.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_held.SegTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_held.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_hessian.MarginalBreakTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_hessian.RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_hessian.html</loc></url>
@@ -156,6 +160,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_kinks.SegTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_kinks.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_latent.MarginalBreakTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_latent.RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_latent.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_level_design.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_level_design.html</loc></url>
@@ -197,6 +202,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_predict.SmoothTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_predict.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_readable.GasTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_readable.RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_readable.SegTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_readable.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_refresh.SegTerm.html</loc></url>
@@ -212,7 +218,10 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_stalled.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_start.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_start.MarginalBreakTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_start.RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_start.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_starts.RegimeTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_starts.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_static_deriv.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_static_deriv.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_static_deriv.model_term.html</loc></url>
@@ -223,5 +232,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_value.SegTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_value.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_values.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_within.RandomTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_within.html</loc></url>
 </urlset>
 

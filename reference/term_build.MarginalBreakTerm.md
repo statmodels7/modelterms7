@@ -64,8 +64,8 @@ b@blueprint$labels
 
 # The start is data-based, zero being degenerate here.
 round(term_start(b), 4)
-#>     m1   tau1 delta1 
-#> 4.5000 0.1542 0.0000 
+#> psi1.mean   psi1.sd    delta1 
+#>    4.5000    0.1542    0.0000 
 
 # A constant covariate has no break-point to place.
 flat <- transform(dd, x = 1)

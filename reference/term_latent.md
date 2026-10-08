@@ -4,7 +4,9 @@ A summary of the latent variable a structural term integrates over,
 given the whole sample. For a marginal break-point term it is the
 posterior mean and standard deviation of each group's break-points. That
 is what a reader wants from such a fit: where each group's change
-happened, and how sure the data are about it.
+happened, and how sure the data are about it. For a
+[`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+term it is the smoothed probability of each regime at each observation.
 
 ## Usage
 
@@ -45,10 +47,12 @@ term_latent(term, eta, y, logdens, psi, ...)
 
 ## Value
 
-A data frame with one row per group and break-point and four columns:
-`group`, the grouping level; `psi`, which break-point; `mean` and `sd`,
-the posterior moments of its position. `NA` in a moment the prior does
-not possess.
+For a marginal break-point term, a data frame with one row per group and
+break-point and four columns: `group`, the grouping level; `psi`, which
+break-point; `mean` and `sd`, the posterior moments of its position.
+`NA` in a moment the prior does not possess. For a regime term, a data
+frame with one row per observation and one column per regime, `state1`,
+`state2`, and so on.
 
 ## Details
 
@@ -70,12 +74,11 @@ The method on
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
 throws, naming the class:
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
-and
-[`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
-have no continuous latent to summarize this way, a regime's latent being
-the discrete state
+has no latent variable, its level being a deterministic function of the
+data. A regime's latent is the discrete state, and its method returns
+the probabilities
 [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)
-already reports.
+computes, labelled by regime.
 
 ## See also
 
@@ -98,7 +101,7 @@ tm <- term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd)
 # with a spread well inside the prior's own 0.5.
 term_latent(tm, rep(0, 24), dd$y,
             logdens = function(e, i) dnorm(dd$y[i], e, 0.4, log = TRUE),
-            psi = list(m1 = 4.5, tau1 = 0.5, delta1 = 2))
+            psi = list(psi1.mean = 4.5, psi1.sd = 0.5, delta1 = 2))
 #>   group psi     mean        sd
 #> 1     1   1 4.498117 0.2722611
 #> 2     2   1 4.500010 0.2698055

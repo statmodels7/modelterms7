@@ -21,7 +21,7 @@ are estimated by plain maximum likelihood."><meta property="og:image" content="h
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -180,15 +180,16 @@ do.</p>
 <p><code>group</code> is the grouping expression, taken from the break-point's <code><a href="random.html">random()</a></code>
 subformula. <code>prior</code> is the latent's distribution: <code>NULL</code> for the Gaussian,
 or a <span class="pkg">distributions7</span> object where <code>random(distrib = )</code> named one, and
-its location must be fixed at zero, <code>m1</code> carrying the position.</p>
+its location must be fixed at zero, <code>psi1.mean</code> carrying the position.</p>
 <p><code>spec</code> holds the resolved construction settings and <code>blueprint</code> the
 grouping and the interval structure <code><a href="term_build.html">term_build()</a></code> worked out.</p>
     </div>
     <div class="section level2">
     <h2 id="the-parameters">The parameters<a class="anchor" aria-label="anchor" href="#the-parameters"></a></h2>
-    <p>They are numbered, one set per break-point: <code>m1</code>, <code>tau1</code>, <code>delta1</code> for a
-one-break-point step term, with <code>m</code> the prior's location, <code>tau</code> its scale on
-a log chart, and <code>delta</code> the change of level. A continuous kind adds <code>beta</code>
+    <p>They are numbered, one set per break-point: <code>psi1.mean</code>, <code>psi1.sd</code>,
+<code>delta1</code> for a one-break-point step term, with <code>psi1.mean</code> the mean of the
+positions in the population, <code>psi1.sd</code> their standard deviation between
+groups on a log chart, and <code>delta1</code> the change of level. A continuous kind adds <code>beta</code>
 for the linear effect and <code>gamma1</code> for the change of slope.</p>
     </div>
     <div class="section level2">
@@ -221,9 +222,9 @@ positions a reader wants.</p></div>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Numbered parameters: the prior's location and scale, and the change.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="term_params.html">term_params</a></span><span class="op">(</span><span class="va">tm</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "m1"     "tau1"   "delta1"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "psi1.mean" "psi1.sd"   "delta1"   </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="term_links.html">term_links</a></span><span class="op">(</span><span class="va">tm</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">l</span><span class="op">)</span> <span class="va">l</span><span class="op">@</span><span class="va">link_name</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         m1       tau1     delta1 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  psi1.mean    psi1.sd     delta1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> "identity"      "log" "identity" </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The prior is part of the likelihood, so nothing is declared penalized.</span></span></span>
@@ -232,7 +233,7 @@ positions a reader wants.</p></div>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A continuous kind adds the linear effect and the change of slope.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="term_params.html">term_params</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="seg.html">seg</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">psi</span> <span class="op">~</span> <span class="fu"><a href="random.html">random</a></span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span> <span class="op">|</span> <span class="va">id</span><span class="op">)</span>, marginal <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "beta"   "m1"     "tau1"   "gamma1"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "beta"      "psi1.mean" "psi1.sd"   "gamma1"   </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

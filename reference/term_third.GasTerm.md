@@ -48,6 +48,17 @@ two orders are.
 
   Unused.
 
+- score_values, curvature_values, blocks_data:
+
+  As for
+  [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md);
+  supplying all three, with `blocks_data` carrying the fourth
+  derivatives `D4`, routes the recursion through the compiled kernel.
+
+- threads:
+
+  Threads for the compiled route's group loop.
+
 ## Value
 
 A list with `jacobian`, `dphi` and `curvature`.

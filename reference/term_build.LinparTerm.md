@@ -72,7 +72,8 @@ term_matrix(b)
 #> 7           1 7  0  1  0
 #> 8           1 8  0  0  1
 names(b@blueprint)
-#> [1] "terms"     "xlev"      "contrasts" "sparse"   
+#> [1] "terms"          "xlev"           "contrasts"      "sparse"        
+#> [5] "drop_intercept"
 
 # A missing value keeps its row.
 term_matrix(term_build(linpar(~ x), data.frame(x = c(1, NA, 3))))

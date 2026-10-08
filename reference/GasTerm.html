@@ -15,7 +15,7 @@ term_filter() and has no term_matrix() method at all."><meta property="og:image"
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,7 +65,8 @@ observation density, added to the predictor of one distribution parameter.
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  time <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  links <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  submodels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  submodels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  scaling <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -149,6 +150,11 @@ defaults, empty where none was given.</p></dd>
 <dd><p>A named list of one-sided formulas, one per parameter
 developed over covariates. Empty where none is.</p></dd>
 
+
+<dt id="arg-scaling">scaling<a class="anchor" aria-label="anchor" href="#arg-scaling"></a></dt>
+<dd><p>The power \(d\) of the expected information the score is
+multiplied by, \(\mathcal{I}^{-d}\); zero for the score as it is.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -200,9 +206,9 @@ the other dynamic term.</p></div>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># 1 + p + q parameters, and one chart each.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="term_params.html">term_params</a></span><span class="op">(</span><span class="va">tm</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"  "alpha1" "pacf1"  "pacf2" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"  "kappa1" "pacf1"  "pacf2" </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="term_links.html">term_links</a></span><span class="op">(</span><span class="va">tm</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">l</span><span class="op">)</span> <span class="va">l</span><span class="op">@</span><span class="va">link_name</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      omega     alpha1      pacf1      pacf2 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      omega     kappa1      pacf1      pacf2 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> "identity"      "log"   "rhobit"   "rhobit" </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The build resolves the ordering; there is no block to read.</span></span></span>

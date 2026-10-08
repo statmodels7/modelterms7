@@ -15,7 +15,7 @@ term_npar() counts them."><meta property="og:image" content="https://statmodels7
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,7 +76,7 @@ does not implement the generic throws
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The names are the term's own vocabulary. <code><a href="gas.html">gas()</a></code> answers <code>omega</code> for the
-level, <code>alpha1</code> ... <code>alphap</code> for the score loadings and <code>pacf1</code> ... <code>pacfq</code>
+level, <code>kappa1</code> ... <code>kappap</code> for the score loadings and <code>pacf1</code> ... <code>pacfq</code>
 for the persistence; <code><a href="regime.html">regime()</a></code> answers its levels and the free entries of
 its transition matrix. They are what indexes everything else about the
 term: <code><a href="term_start.html">term_start()</a></code> returns one value per name, <code><a href="term_readable.html">term_readable()</a></code> carries
@@ -100,15 +100,15 @@ they begin, <code><a href="term_readable.html">term_readable()</a></code> for th
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># The score-driven vocabulary: a level, a loading, a persistence.</span></span></span>
 <span class="r-in"><span><span class="fu">term_params</span><span class="op">(</span><span class="fu"><a href="gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"  "alpha1" "pacf1" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"  "kappa1" "pacf1" </span>
 <span class="r-in"><span><span class="fu">term_params</span><span class="op">(</span><span class="fu"><a href="gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">2</span>, q <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"  "alpha1" "alpha2" "pacf1"  "pacf2" </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"  "kappa1" "kappa2" "pacf1"  "pacf2" </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A subformula expands the parameter it develops, in place.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">30</span><span class="op">)</span>, z <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">30</span><span class="op">)</span>, t <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">term_params</span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span>, <span class="va">omega</span> <span class="op">~</span> <span class="va">z</span>, time <span class="op">=</span> <span class="va">t</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega.(Intercept)" "omega.z"           "alpha1"           </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega.(Intercept)" "omega.z"           "kappa1"           </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [4] "pacf1"            </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># It is what term_npar() counts on this branch.</span></span></span>

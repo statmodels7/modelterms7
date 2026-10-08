@@ -9,7 +9,7 @@ coefficients in the partial autocorrelations propagated as well."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,8 +62,8 @@ last a list of one symmetric matrix per coefficient.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The recursion is
-$$\phi^{(k)}_k = \rho_k, \qquad
-  \phi^{(k)}_i = \phi^{(k-1)}_i - \rho_k\phi^{(k-1)}_{k-i},$$
+$$\xi^{(k)}_k = \rho_k, \qquad
+  \xi^{(k)}_i = \xi^{(k-1)}_i - \rho_k\xi^{(k-1)}_{k-i},$$
 which is bilinear: \(\rho_k\) multiplies quantities that do not depend
 on it. Differentiating twice therefore adds no new kind of term, only the
 two places the product rule puts the first derivative,

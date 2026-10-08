@@ -191,7 +191,13 @@ belongs to, `hyper = c(lambda.a = 2)`, and so is an `id`.
 
 A **numeric** `by` gives a varying-coefficient term: the smooth
 multiplies that variable, and the fitted function is the coefficient of
-`by` as it changes with the covariate. It has no levels, so
+`by` as it changes with the covariate. The term is not centered: its
+first column is the constant times `by`, unpenalized and named `const`,
+because the constant of the coefficient is the main effect of `by`,
+which no other term carries (this is also what mgcv does). Writing `by`
+in the formula as well makes that column aliased. The default label is
+`s(x):z` for a `by` called `z`, so a formula may carry `s(x)` and
+`s(x, by = z)` together. A numeric `by` has no levels, so
 `by_hyper = "level"` is rejected rather than read as `"shared"`.
 
 ## Sparse storage
@@ -263,7 +269,7 @@ X <- term_matrix(b)
 cor(X[, 1], dd$x)
 #> [1] 1
 max(abs(crossprod(X[, 1], X[, -1])))
-#> [1] 4.418688e-14
+#> [1] 8.992806e-14
 
 # So edf runs from k - 1 down to one, not to zero.
 H <- crossprod(X)
@@ -306,7 +312,7 @@ term_penalties(bp)[[1]]$penalty@params
 max(abs(term_predict(b, dd[1:10, ]) - X[1:10, ]))
 #> [1] 0
 max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 8)), dd[1:10, ])) - X[1:10, ]))
-#> [1] 3.628495
+#> [1] 2.849289
 
 # Sparsity needs a factor `by`, and says so when there is none.
 try(term_build(s(x, basis7::bspline_smooth(k = 5), sparse = TRUE), dd))
@@ -328,5 +334,5 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
           rmse = sqrt(mean((fitted(ft) - sin(fd$z))^2))), 3)
 }
 #>   edf  rmse 
-#> 8.510 0.027 
+#> 8.482 0.027 
 ```

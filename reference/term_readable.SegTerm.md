@@ -26,7 +26,7 @@ variance matrix can carry it across.
 
 A list with `name`, `value`, `jacobian` and `scale`, as
 [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
-documents, or `NULL` where a coefficient carries a development.
+documents, or `NULL` where no quantity is reported.
 
 ## Details
 
@@ -55,5 +55,12 @@ Every quantity is on the identity scale: a change is unbounded and a
 break-point is a position on the covariate's own scale, held inside the
 interval between the 5th and the 95th percentile. Where a coefficient
 carries a development there is no single number to report, a break-point
-then having one value per observation, and the method returns nothing,
-leaving a caller to report the coefficients themselves.
+then having one value per observation, and the method leaves that
+coefficient to the caller to report. The exception is the position of a
+held
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+or
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md):
+its slot holds the development's coefficients \\p\\ in \\\psi_i =
+w_i'p\\, and they are reported as `psi1.<column>`, one per column of the
+sub-design.

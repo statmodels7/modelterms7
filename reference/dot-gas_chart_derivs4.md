@@ -42,7 +42,7 @@ The level and the loadings ride scalar links, so each of their fourth
 derivatives is a single diagonal entry, the link's own \\h''''\\ times
 the two directions' components there. The persistence is a composition,
 the Levinson-Durbin map read at \\\rho = h^{-1}(z)\\, whose inner map is
-DIAGONAL: differentiating \\B(z) = \phi(\rho(z))\\ four times and
+DIAGONAL: differentiating \\B(z) = \xi(\rho(z))\\ four times and
 contracting two slots leaves, with \\p_v = h'v\\ and \\p_w = h'w\\ the
 directions pushed onto the partial autocorrelations,
 \$\$Q\[p_v,p_w\]h'h'^{\top} + T\[p_v\]\big(h''w\\h'^{\top} +

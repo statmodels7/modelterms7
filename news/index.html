@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,110 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.95.1" id="modelterms7-0951">modelterms7 0.95.1<a class="anchor" aria-label="anchor" href="#modelterms7-0951"></a></h2>
+<ul><li>Documentation repairs found by <code>R CMD check --as-cran</code>: the examples and the shared parameter description of the structural generics name the <code><a href="../reference/gas.html">gas()</a></code> loadings <code>kappa1</code>, …, <code>kappap</code>, as 0.95.0 renamed them (the example of <code><a href="../reference/term_adjoint.html">term_adjoint()</a></code> stopped on the old name); <code><a href="../reference/RegimeTerm.html">RegimeTerm()</a></code> documents its <code>n_start</code> property.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.95.0" id="modelterms7-0950">modelterms7 0.95.0<a class="anchor" aria-label="anchor" href="#modelterms7-0950"></a></h2>
+<ul><li>The score loadings of <code><a href="../reference/gas.html">gas()</a></code> are named <code>kappa1</code>, …, <code>kappap</code>, where they were <code>alpha1</code>, …, and the autoregressive coefficients are reported as <code>xi1</code>, …, <code>xiq</code>, where they were <code>beta1</code>, …: letters that no other term uses (<code>beta</code> names the linear coefficients, <code>alpha</code> and <code>phi</code> parameters of several families). A subformula on a loading is written <code>kappa1 ~ x</code>, and a link is given as <code>links = list(kappa1 = ...)</code>. The coordinates of the persistence keep the names <code>pacf1</code>, …</li>
+<li>
+<code><a href="../reference/term_links.html">term_links()</a></code> of <code><a href="../reference/regime.html">regime()</a></code> and <code><a href="../reference/gas.html">gas()</a></code> builds each kind of link once and shares it among the parameters. A fit with three regimes on <code>geyser</code> takes 27 per cent less time.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.94.0" id="modelterms7-0940">modelterms7 0.94.0<a class="anchor" aria-label="anchor" href="#modelterms7-0940"></a></h2>
+<ul><li>
+<code><a href="../reference/gas.html">gas()</a></code> takes <code>scaling</code>, the power <code>d</code> of the expected information by which the score driving the recursion is multiplied, <code>u_t = s_t I_t^(-d)</code>, both on the link scale of the filtered parameter. The default 0 is the unscaled score; 1/2 and 1 are the scalings of the literature, and any finite value is accepted.</li>
+<li>The derivatives of orders two to four of the recursion are compiled. Where the scalar registries of distributions7 and linkfunctions7 cover the family and the link, the filter reads the score, the curvature and the expected information through their C entries instead of calling back into R, with the same results.</li>
+<li>Requires distributions7 0.70.0 and linkfunctions7 0.5.0.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.93.0" id="modelterms7-0930">modelterms7 0.93.0<a class="anchor" aria-label="anchor" href="#modelterms7-0930"></a></h2>
+<ul><li>
+<code><a href="../reference/term_continue.html">term_continue()</a></code> for <code><a href="../reference/gas.html">gas()</a></code> accepts <code>deriv</code>, the derivatives of the past predictor, of the past scores and of the developed parameters with respect to a vector of coordinates, and returns the derivative of the continued predictor in the attribute <code>"jacobian"</code>. The recursion is differentiated exactly, including the stationary chart of the autoregressive coefficients and a developed <code>omega</code>, <code>alpha</code> or <code>beta</code>.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.92.0" id="modelterms7-0920">modelterms7 0.92.0<a class="anchor" aria-label="anchor" href="#modelterms7-0920"></a></h2>
+<ul><li>
+<code><a href="../reference/seg_polish_exact.html">seg_polish_exact()</a></code> and <code><a href="../reference/seg_profile_intervals.html">seg_profile_intervals()</a></code> accept a sharp <code><a href="../reference/seg.html">seg()</a></code>. Inside each interval between consecutive values of the covariate the profile of a change of slope has one stationary point, the position -b/g of the least-squares fit on x 1(x &gt; u) and 1(x &gt; u), so its minimum over every interval is exact. On <code>segmented::globTempAnom</code> with four changes of slope the polish reaches a residual sum of squares of 1.388930 from the default start, against 1.628 for <code>segmented</code>’s own fit.</li>
+<li>
+<code><a href="../reference/term_coef_start.html">term_coef_start()</a></code> of a break-point term, given <code>target</code>, starts the slope and the changes at their least-squares values at the starting positions instead of at one. A unit change on calendar years put the starting mean a hundred units from the data.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.91.0" id="modelterms7-0910">modelterms7 0.91.0<a class="anchor" aria-label="anchor" href="#modelterms7-0910"></a></h2>
+<ul><li>
+<code><a href="../reference/term_readable.html">term_readable()</a></code> for <code><a href="../reference/regime.html">regime()</a></code> reports the transition probabilities <code>p1.1</code>, <code>p1.2</code>, …, every entry of the matrix row by row, in place of the additive log-ratios they are estimated on, with the Jacobian in those log-ratios and an interval scale on the logit.</li>
+<li>
+<code><a href="../reference/term_latent.html">term_latent()</a></code> for <code><a href="../reference/regime.html">regime()</a></code> returns the smoothed probability of each regime at each observation, in the order of the data.</li>
+<li>The interval of <code>beta1</code> of a <code><a href="../reference/gas.html">gas()</a></code> term with <code>q = 1</code> is built on the link of <code>pacf1</code> (the rhobit unless <code>links</code> gives another) and stays inside its range; above <code>q = 1</code> it is built on the identity, as before.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.90.0" id="modelterms7-0900">modelterms7 0.90.0<a class="anchor" aria-label="anchor" href="#modelterms7-0900"></a></h2>
+<ul><li>The parameters of a marginal break-point term’s gaussian prior are named for what they are: <code>psi1.mean</code>, the mean of the positions in the population, which is the population position, and <code>psi1.sd</code>, their standard deviation between groups (<code>psik.mean</code> and <code>psik.sd</code> for break-point ). They were <code>m1</code> and <code>tau1</code>, which did not say that they describe the position, while the developed construction calls the same population position <code>psi1.(Intercept)</code>. Under an explicit prior the location is <code>psi1.mean</code> beside the prior’s own parameters.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.89.0" id="modelterms7-0890">modelterms7 0.89.0<a class="anchor" aria-label="anchor" href="#modelterms7-0890"></a></h2>
+<ul><li>
+<code><a href="../reference/seg_polish_exact.html">seg_polish_exact()</a></code> polishes a held <code><a href="../reference/jump.html">jump()</a></code> or <code><a href="../reference/jseg.html">jseg()</a></code> whose break-point is developed, , by exact line searches in : along a line the position of each observation crosses its covariate at one value of the line’s parameter, so the profile is evaluated once between consecutive crossings, and for a <code><a href="../reference/jseg.html">jseg()</a></code> it is then minimized inside the best interval. Where the sub-design partitions the observations into groups (<code>psi ~ 0 + g</code>, <code>by = ~ 0 + g</code>) the lines move one group at a time and a second sweep starts from each group’s own minimum. With a continuous covariate the lines are the coordinate directions and eight fixed directions in each plane of two coordinates. On three groups of 80 the polished <code>jump(x, psi ~ 0 + g)</code> reaches the minimum of an exhaustive search over all 357,911 triples of intervals, RSS 60.534 where the working fit stopped at 65.685, and <code>jseg(x, psi ~ 0 + g)</code> reaches 65.221 where it stopped at 170.85; <code>jump(x, psi ~ z)</code> reaches the minimum of a 2-D grid, 71.090 against 71.637.</li>
+<li>
+<code><a href="../reference/term_readable.html">term_readable()</a></code> reports the developed position of a held term as <code>psi1.&lt;column&gt;</code>, one value per column of the sub-design, where it reported nothing and a summary printed the working slots .</li>
+<li>The quadrature of a marginal <code><a href="../reference/seg.html">seg()</a></code> or <code><a href="../reference/jseg.html">jseg()</a></code> is compiled: the node set, the shift of every node and the forward accumulation of the log-likelihood and its Jacobian (<code>src/marg_seg.cpp</code>). The R versions stay as the twins the tests hold the compiled ones to, at 1e-12. <code><a href="../reference/term_levels.html">term_levels()</a></code> for these kinds builds the shifts alone and no longer evaluates the family. Per call, on a 20 x 15 panel, the log-likelihood goes from 42 ms to 16 ms, the posterior from 58 ms to 8 ms and the levels from 12 ms to 4 ms.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.88.0" id="modelterms7-0880">modelterms7 0.88.0<a class="anchor" aria-label="anchor" href="#modelterms7-0880"></a></h2>
+<ul><li>
+<code><a href="../reference/seg_profile_intervals.html">seg_profile_intervals()</a></code>: the least-squares profile of a sharp <code><a href="../reference/jump.html">jump()</a></code> or <code><a href="../reference/jseg.html">jseg()</a></code> term in one of its break-points, the others held, at the midpoint of every interval between consecutive distinct values of the covariate. It is the quantity <code><a href="../reference/seg_polish_exact.html">seg_polish_exact()</a></code> minimizes, returned whole, with the same  cost; it agrees with one weighted linear fit per interval to 1e-10.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.87.0" id="modelterms7-0870">modelterms7 0.87.0<a class="anchor" aria-label="anchor" href="#modelterms7-0870"></a></h2>
+<ul><li>
+<code><a href="../reference/seg_hold.html">seg_hold()</a></code> puts a sharp <code><a href="../reference/jump.html">jump()</a></code> or <code><a href="../reference/jseg.html">jseg()</a></code> term in a held state: the break-points stay where they are, the block is the exact design there – the covariate,  and  – and the slot that carried each position is a column of zeros. <code><a href="../reference/term_refresh.html">term_refresh()</a></code> no longer moves the positions, <code><a href="../reference/term_jacobian_block.html">term_jacobian_block()</a></code> answers <code>TRUE</code>, and <code><a href="../reference/term_readable.html">term_readable()</a></code> reports the held position through its slot. <code>seg_hold(term, hold = FALSE)</code> writes the position back as , so the working construction can continue.</li>
+<li>
+<code><a href="../reference/term_held.html">term_held()</a></code>, a new generic: the positions among a term’s coefficients that the term holds. Every term answers <code>integer(0)</code> except a held break-point term, which answers its position slots.</li>
+<li>
+<code><a href="../reference/seg_polish_exact.html">seg_polish_exact()</a></code>: the exact minimum of the least-squares profile of a sharp <code><a href="../reference/jump.html">jump()</a></code> or <code><a href="../reference/jseg.html">jseg()</a></code> term, one break-point at a time. The profile is constant between consecutive observations, so it is evaluated once per interval; by Frisch-Waugh every cross product the moving columns enter is a suffix sum over the sorted covariate, so all intervals cost  together. It agrees with a brute-force search over every interval on 16 of 16 samples of 200 and on a weighted two-break-point case searched over the full set of interval pairs, and takes 0.25 s at  where one linear fit per interval took 99 s.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.86.0" id="modelterms7-0860">modelterms7 0.86.0<a class="anchor" aria-label="anchor" href="#modelterms7-0860"></a></h2>
+<ul><li><p><strong>A smooth with a numeric <code>by</code> is no longer centered.</strong> <code>s(x, by = z)</code> is the term , and the constant of  is the coefficient of <code>z</code> itself, which no other term carries. The centered block left it out, so a fit missed the main effect of <code>z</code> unless the formula also wrote <code>z</code>: measured on 400 simulated observations of , <code>y ~ s(x) + s(x, by = z)</code> had 5.33 effective degrees of freedom and fitted values 6.3 away from mgcv’s, where mgcv, which does not center such a term, has 11.64. The block now carries a leading unpenalized column <code>const</code>, the constant times <code>z</code>, in <code><a href="../reference/s.html">s()</a></code> and in <code><a href="../reference/te.html">te()</a></code>, and the same model has 11.95571 effective degrees of freedom against mgcv’s 11.95571, the fitted values 2.5e-07 apart. Writing <code>z</code> in the formula as well makes the column aliased. A factor <code>by</code> stays centered.</p></li>
+<li><p>The default label of a smooth with a numeric <code>by</code> names the variable, <code>s(x):z</code> as in mgcv, so a formula may carry <code>s(x)</code> and <code>s(x, by = z)</code> without the two giving their coefficients the same names.</p></li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.85.0" id="modelterms7-0850">modelterms7 0.85.0<a class="anchor" aria-label="anchor" href="#modelterms7-0850"></a></h2>
+<ul><li>A <code><a href="../reference/linpar.html">linpar()</a></code> written in a formula that carries an intercept drops its own column <code>(Intercept)</code> after its model matrix is built, so its factors keep their contrasts and <code>y ~ linpar(~ x * g, contrasts = ...)</code> gives the columns of <code>lm(y ~ x * g, contrasts = ...)</code>. Before, the two intercepts shared the name <code>(Intercept)</code> and <code><a href="https://statmodels7.github.io/statmodels7/reference/statmod.html" class="external-link">statmodels7::statmod()</a></code> stopped with “duplicate ‘row.names’ are not allowed”; with a label the second one was aliased with a warning. The column is removed after the coding and not by writing the formula as <code>~ . - 1</code>, which would code a factor with full indicators and alias one of them against the formula’s intercept. Under <code>0 +</code> the block keeps its intercept. <code>LinparTerm</code> gains the property <code>drop_intercept</code>, set by <code><a href="../reference/interpret_formula.html">interpret_formula()</a></code> and recorded in the blueprint, so <code><a href="../reference/term_predict.html">term_predict()</a></code> removes the column too.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.84.0" id="modelterms7-0840">modelterms7 0.84.0<a class="anchor" aria-label="anchor" href="#modelterms7-0840"></a></h2>
+<ul><li><p>A smoothed break-point term passes numericals7 the largest gap between consecutive distinct values of its covariate over the range a break-point may take (the central 90 per cent), per group where a development supplies a partition and the widest of the groups’ where one width is shared. <code>smooth_quintic()</code>, exact outside its width, then has its width raised to at least 0.55 times that gap, so a break-point cannot sit in a gap with no observation within its width. Measured on 400 uniform points, a <code><a href="../reference/jump.html">jump()</a></code> whose fitted break-point had landed in a gap of 0.0155 against 2h = 0.0129 had its column exactly zero and was named not identified. The probit and the hyperbolic keep their widths. Requires numericals7 0.17.0.</p></li>
+<li><p>The page of <code><a href="../reference/seg.html">seg()</a></code>, <code><a href="../reference/jump.html">jump()</a></code> and <code><a href="../reference/jseg.html">jseg()</a></code> no longer calls a smoothed model C^infinity whatever the smoother: it is as smooth as the smoother, C^3 for the quintic, whose page says what that costs under an outer criterion.</p></li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.83.0" id="modelterms7-0830">modelterms7 0.83.0<a class="anchor" aria-label="anchor" href="#modelterms7-0830"></a></h2>
+<ul><li><p><code><a href="../reference/term_predict.html">term_predict()</a></code> on a <code><a href="../reference/random.html">random()</a></code> term takes <code>unseen = c("error", "zero")</code>. By default a level the fit never saw is still refused; <code>"zero"</code> gives its rows zeros, which is the prediction with that group’s effect at zero. <code>statmodels7</code>’s <code>predict(random = "zero")</code> and <code>"marginal"</code> ask for it.</p></li>
+<li><p><code><a href="../reference/term_within.html">term_within()</a></code>, a new generic: the within-group design a group’s effect multiplies, at new rows, one column per coordinate of the effect and named as <code>term_group()$names</code>. It does not depend on the grouping, which is what lets a caller integrate the effect of a group the fit never saw. The base method returns <code>NULL</code>.</p></li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.82.1" id="modelterms7-0821">modelterms7 0.82.1<a class="anchor" aria-label="anchor" href="#modelterms7-0821"></a></h2>
+<ul><li>Requires penalties7 0.28.0, whose standardized penalties carry the Jacobian of their map. The test that compares a standardized penalty with the same penalty on a standardized design now includes that term, <code>-sum(log(sd))</code>. No code in this package changed.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.82.0" id="modelterms7-0820">modelterms7 0.82.0<a class="anchor" aria-label="anchor" href="#modelterms7-0820"></a></h2>
+<ul><li>
+<code><a href="../reference/term_starts.html">term_starts()</a></code>, a new generic, returns the starting points a fitting layer tries for a structural term’s own parameters. The base method returns <code><a href="../reference/term_start.html">term_start()</a></code>’s alone, so a term that says nothing is fitted once.</li>
+<li>
+<code><a href="../reference/regime.html">regime()</a></code> takes <code>n_start</code>, the number of starts, <code>1</code> by default, so no fit changes unless it is asked for. The first start is the quantile start; each further one draws every additive log-ratio of the transition matrix from N(0, 2^2) and adds N(0, 0.7^2) to the logarithm of every gap, with a fixed seed and the caller’s random number generator restored. On <code><a href="https://rdrr.io/pkg/MASS/man/geyser.html" class="external-link">MASS::geyser</a></code> with three regimes, eight starts reach five distinct maxima of the log-likelihood, from -1053.39 to -1210.49.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.81.0" id="modelterms7-0810">modelterms7 0.81.0<a class="anchor" aria-label="anchor" href="#modelterms7-0810"></a></h2>
+<ul><li>
+<code><a href="../reference/term_charted.html">term_charted()</a></code>, a new generic, names the free values of a term that are coordinates of a chart mapping onto a bounded set: for a structural term every parameter whose link is not the identity, plus the additive log-ratios of <code><a href="../reference/regime.html">regime()</a></code>’s transition matrix; for <code><a href="../reference/nl.html">nl()</a></code> the positions of the scalar parameters with a link. statmodels7 reads it to check that a coordinate at the edge of its chart is at a maximum.</li>
+<li>
+<code><a href="../reference/regime.html">regime()</a></code> starts its levels at the quantiles of the response at (2j-1)/(2k) when the fitting layer supplies the response on the scale of the predictor, where every level started at zero and every gap at one. On <code><a href="https://rdrr.io/pkg/MASS/man/geyser.html" class="external-link">MASS::geyser</a></code>, <code>waiting ~ regime(k = 2)</code> then reaches the maximum, -1099.63, where the zero start stopped at -1134.01; with three regimes it reaches -1053.39 where it stopped at -1132.68.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.80.0" id="modelterms7-0800">modelterms7 0.80.0<a class="anchor" aria-label="anchor" href="#modelterms7-0800"></a></h2>
+<ul><li>A break-point against its confinement limit gives its block a zero column. The position is clamped there, so the contribution does not move with the coefficients that place it, and the block of <code><a href="../reference/seg.html">seg()</a></code> and of every smoothed construction is the Jacobian of the contribution. The derivative generics <code><a href="../reference/term_block_contract.html">term_block_contract()</a></code> and <code><a href="../reference/term_block_deriv.html">term_block_deriv()</a></code> gated by the confinement already; the block did not, so a gradient read off the block was not the gradient of the objective. Measured on <code>jseg(x, psi ~ random(~1 | g), smoothed = smooth_probit())</code> with the break-point below the 5th percentile, the objective was constant to the sixth decimal along the break-point’s intercept while the block’s gradient read 145 there. The derivatives of the break-point’s column in the change and in the level carry the same gate now. The discontinuous constructions’ sharp blocks are working linearizations and are unchanged. <code>test-confined.R</code> checks the block against a difference of <code><a href="../reference/term_value.html">term_value()</a></code> and the derivatives against a difference of the block at a confined break-point; with the gate removed 20 of its 30 assertions fail. A test in <code>test-block-deriv2.R</code> asserted the old asymmetry, a first derivative that was not zero at a confined break-point; it asserts zero at both orders now, with an interior point as the control.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.79.0" id="modelterms7-0790">modelterms7 0.79.0<a class="anchor" aria-label="anchor" href="#modelterms7-0790"></a></h2>
 <ul><li>

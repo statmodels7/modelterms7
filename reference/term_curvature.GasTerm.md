@@ -60,7 +60,9 @@ propagated through the recursion beside the state.
   parameter), `D3` (the third derivatives, one column per parameter
   pair, pair `(r, r2)` at column `(r - 1) * np + r2`), `Vs` (the
   per-parameter jacobian rows of the other equations) and `ap` (the
-  filter's own parameter index). Read only by the compiled route.
+  filter's own parameter index), and for the third and fourth orders
+  `D4` and `D5`, one column per index triple and quadruple laid out the
+  same way. Read only by the compiled route.
 
 - threads:
 

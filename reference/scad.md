@@ -214,5 +214,5 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   c(round(cf[2:5], 2), kept = sum(cf[-1] != 0))
 }
 #> scad.1 scad.2 scad.3 scad.4   kept 
-#>   1.97  -1.51   0.99   0.00   5.00 
+#>   2.00  -1.54   1.02   0.00   5.00 
 ```

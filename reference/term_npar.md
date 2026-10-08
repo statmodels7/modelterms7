@@ -79,6 +79,6 @@ c(npar = term_npar(gz), params = length(term_params(gz)))
 #>   npar params 
 #>      4      4 
 term_params(gz)
-#> [1] "omega.(Intercept)" "omega.z"           "alpha1"           
+#> [1] "omega.(Intercept)" "omega.z"           "kappa1"           
 #> [4] "pacf1"            
 ```

@@ -17,7 +17,7 @@ holding their variance matrix can carry it across."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,8 +72,8 @@ holding their variance matrix can carry it across.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with <code>name</code>, <code>value</code>, <code>jacobian</code> and
-<code>scale</code>, as <code><a href="term_readable.html">term_readable()</a></code> documents, or
-<code>NULL</code> where a coefficient carries a development.</p>
+<code>scale</code>, as <code><a href="term_readable.html">term_readable()</a></code> documents, or <code>NULL</code> where no quantity
+is reported.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -99,8 +99,10 @@ break-point is a position on the covariate's own scale, held inside the
 interval between the 5th and the 95th percentile. Where a coefficient
 carries a development there is no single number to report, a
 break-point then having one value per observation, and the method
-returns nothing, leaving a caller to report the coefficients
-themselves.</p>
+leaves that coefficient to the caller to report. The exception is the
+position of a held <code><a href="jump.html">jump()</a></code> or <code><a href="jseg.html">jseg()</a></code>: its slot holds the development's
+coefficients \(p\) in \(\psi_i = w_i'p\), and they are reported as
+<code>psi1.&lt;column&gt;</code>, one per column of the sub-design.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

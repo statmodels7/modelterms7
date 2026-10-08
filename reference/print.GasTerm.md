@@ -27,7 +27,7 @@ The form is
 
     <GasTerm> 'gas': score-driven, p = 1, q = 1; 3 group(s)
       developed: omega
-      parameters: omega.(Intercept), omega.g2, alpha1, pacf1
+      parameters: omega.(Intercept), omega.g2, kappa1, pacf1
 
 The `developed` line appears only where a subformula was given. The
 parameter list is
@@ -52,14 +52,14 @@ dd <- data.frame(t = 1:60, y = rnorm(60), id = rep(1:3, each = 20),
 # A specification, and the same term built over three groups.
 gas(p = 1, q = 2)
 #> <GasTerm> 'gas': score-driven, p = 1, q = 2 (specification)
-#>   parameters: omega, alpha1, pacf1, pacf2
+#>   parameters: omega, kappa1, pacf1, pacf2
 term_build(gas(p = 1, q = 1, by = id, time = t), dd)
 #> <GasTerm> 'gas': score-driven, p = 1, q = 1; 3 group(s)
-#>   parameters: omega, alpha1, pacf1
+#>   parameters: omega, kappa1, pacf1
 
 # A developed parameter is named on its own line.
 term_build(gas(p = 1, q = 1, omega ~ g, by = id, time = t), dd)
 #> <GasTerm> 'gas': score-driven, p = 1, q = 1; 3 group(s)
 #>   developed: omega
-#>   parameters: omega.(Intercept), omega.gv, alpha1, pacf1
+#>   parameters: omega.(Intercept), omega.gv, kappa1, pacf1
 ```

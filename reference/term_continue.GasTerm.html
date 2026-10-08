@@ -9,7 +9,7 @@ ones."><meta property="og:image" content="https://statmodels7.github.io/modelter
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.79.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,10 +68,22 @@ ones.</p>
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Ignored.</p></dd>
 
+
+<dt id="arg-deriv">deriv<a class="anchor" aria-label="anchor" href="#arg-deriv"></a></dt>
+<dd><p><code>NULL</code>, or a list giving the derivatives of the inputs in a
+vector of <code>m</code> coordinates of the caller's choosing: <code>df_past</code> and
+<code>ds_past</code>, one row per observed row and <code>m</code> columns, the derivatives of
+<code>f_past</code> and <code>s_past</code>; and <code>dpsi</code>, <code>length(psi)</code> rows and <code>m</code> columns,
+the derivative of <code>psi</code>. The continuation is then differentiated along
+with its value, by the same recursion run on derivative rows, the score
+past the data and its derivative being zero.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A numeric vector of <code>nrow(newdata)</code> levels.</p>
+    <p>A numeric vector of <code>nrow(newdata)</code> levels. With <code>deriv</code>, it
+carries the attribute <code>"jacobian"</code>, a <code>nrow(newdata)</code> by <code>m</code> matrix:
+the derivative of each level in the caller's coordinates.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -81,8 +93,8 @@ past the data is the score: it has zero conditional mean by construction,
 the model's own defining property, so at a row whose response is not
 observed the driving term is its expectation and the continuation is the
 deterministic recursion
-$$f_{n+h} = \omega + \sum_i \alpha_i s_{n+h-i} +
-  \sum_j \beta_j f_{n+h-j},$$
+$$f_{n+h} = \omega + \sum_i \kappa_i s_{n+h-i} +
+  \sum_j \xi_j f_{n+h-j},$$
 the loadings contributing only while \(n+h-i\) is still an observed
 time. No simulation and no integration is involved.</p>
 <p>A new row is placed by its own time within its own group, and must come

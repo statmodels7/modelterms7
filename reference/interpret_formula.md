@@ -110,6 +110,13 @@ collected parametric block. `y ~ ridge(~ g)` still produces an
 intercept-only `linpar` block, and `y ~ ridge(~ g) - 1` produces no
 `linpar` block at all.
 
+A
+[`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
+written in a formula that carries an intercept drops its own column
+`(Intercept)` after its model matrix is built, so its factors keep the
+coding they have with an intercept and `y ~ linpar(~ x + g)` gives the
+columns of `lm(y ~ x + g)`. Under `0 +` it keeps the column.
+
 ## One covariate is removed
 
 A [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
@@ -166,7 +173,7 @@ names(out$terms)
 #> [1] "linpar"
 out$terms$linpar@formula
 #> ~x1 + log(x2)
-#> <environment: 0x557a657b64c0>
+#> <environment: 0x56120aaefc40>
 
 # A constructor call becomes a term, keyed by its label in the formula.
 out2 <- interpret_formula(y ~ x1 + s(x2, basis7::bspline_smooth(k = 5)) + ridge(~ g), dd)
@@ -193,22 +200,27 @@ names(interpret_formula(y ~ ridge(~ g), dd)$terms)
 names(interpret_formula(y ~ ridge(~ g) - 1, dd)$terms)
 #> [1] "ridge(~g)"
 
+# A linpar() written beside the formula's intercept drops its own.
+li <- interpret_formula(y ~ linpar(~ x1 + g), dd)
+term_coef_names(term_build(li$terms[["linpar(~x1 + g)"]], dd))
+#> [1] "x1" "gb" "gc" "gd"
+
 # An interaction is a covariate: `:` is never evaluated.
 interpret_formula(y ~ x1:x2 + g, dd)$terms$linpar@formula
 #> ~g + x1:x2
-#> <environment: 0x557a657b64c0>
+#> <environment: 0x56120aaefc40>
 
 # seg() carries the linear effect, so the bare covariate is removed.
 w <- interpret_formula(y ~ x1 + seg(x1), dd)
 #> Warning: the covariate 'x1' is exactly collinear with the linear effect that 'seg' carries, and has been removed from the parametric part. Write seg(x1, linear = FALSE) to keep the linear effect outside the term instead.
 w$terms$linpar@formula          # x1 is gone; the term carries it
 #> ~1
-#> <environment: 0x557a657b64c0>
+#> <environment: 0x56120aaefc40>
 
 # Unless the term is told not to own it.
 interpret_formula(y ~ x1 + seg(x1, linear = FALSE), dd)$terms$linpar@formula
 #> ~x1
-#> <environment: 0x557a657b64c0>
+#> <environment: 0x56120aaefc40>
 
 # Arguments for the implicit block go through `linpar`.
 sp <- interpret_formula(y ~ g, dd, linpar = list(sparse = TRUE))
