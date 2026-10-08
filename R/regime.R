@@ -150,9 +150,11 @@ S7::method(term_loglik, structural_term) <- function(term, eta, y, logdens,
 #' @param chain A [parameters7::transition_matrix()] of side `k`.
 #' @param blueprint A named list of the resolved ordering and grouping, empty
 #'   until [term_build()] fills it.
+#' @param n_start The number of starting points a fitting layer tries, a
+#'   single whole number of at least 1, as set by [regime()].
 #'
 #' @return An S7 object of class `RegimeTerm`, inheriting from
-#'   [structural_term()] and [model_term()], with the five properties above
+#'   [structural_term()] and [model_term()], with the six properties above
 #'   beside [model_term()]'s six.
 #'
 #' @seealso [regime()], the constructor; [term_loglik()] for what it computes;

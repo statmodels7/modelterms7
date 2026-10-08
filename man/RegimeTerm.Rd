@@ -63,10 +63,13 @@ recursion. \code{NULL} for one group.}
 \item{time}{An optional ordering expression. \code{NULL} for row order.}
 
 \item{chain}{A \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}} of side \code{k}.}
+
+\item{n_start}{The number of starting points a fitting layer tries, a
+single whole number of at least 1, as set by \code{\link[=regime]{regime()}}.}
 }
 \value{
 An S7 object of class \code{RegimeTerm}, inheriting from
-\code{\link[=structural_term]{structural_term()}} and \code{\link[=model_term]{model_term()}}, with the five properties above
+\code{\link[=structural_term]{structural_term()}} and \code{\link[=model_term]{model_term()}}, with the six properties above
 beside \code{\link[=model_term]{model_term()}}'s six.
 }
 \description{

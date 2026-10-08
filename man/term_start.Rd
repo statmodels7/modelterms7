@@ -41,7 +41,7 @@ term_start(gas(p = 1, q = 1))
 
 # Because zero on a log chart is a loading of one.
 lk <- term_links(gas(p = 1, q = 1))
-linkfunctions7::linkinv(lk$alpha1, term_start(gas(p = 1, q = 1))[["alpha1"]])
+linkfunctions7::linkinv(lk$kappa1, term_start(gas(p = 1, q = 1))[["kappa1"]])
 
 # One value per parameter, whatever the order.
 g <- gas(p = 2, q = 2)

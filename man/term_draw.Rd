@@ -73,7 +73,7 @@ identical(names(term_draw(g)), term_params(g))
 # persistence stays stationary, whatever comes out.
 lk <- term_links(g)
 z <- term_draw(g)
-c(alpha1 = linkfunctions7::linkinv(lk$alpha1, z[["alpha1"]]),
+c(kappa1 = linkfunctions7::linkinv(lk$kappa1, z[["kappa1"]]),
   pacf1 = linkfunctions7::linkinv(lk$pacf1, z[["pacf1"]]))
 
 # A wider draw is a wider model.

@@ -58,7 +58,7 @@ nothing from the term.
 set.seed(1)
 dd <- data.frame(t = 1:20, y = rnorm(20), x = rnorm(20))
 term <- term_build(gas(p = 1, q = 1, time = t), dd)
-psi <- list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.5)
+psi <- list(omega = 0.1, kappa1 = 0.3, pacf1 = 0.5)
 out <- term_filter(term, eta = rep(0, 20), y = dd$y,
                    score = function(e, i) dd$y[i] - e,
                    curvature = function(e, i) -1, psi = psi)

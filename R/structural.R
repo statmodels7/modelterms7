@@ -12,7 +12,7 @@ NULL
 #'
 #' @details
 #' The names are the term's own vocabulary. [gas()] answers `omega` for the
-#' level, `alpha1` ... `alphap` for the score loadings and `pacf1` ... `pacfq`
+#' level, `kappa1` ... `kappap` for the score loadings and `pacf1` ... `pacfq`
 #' for the persistence; [regime()] answers its levels and the free entries of
 #' its transition matrix. They are what indexes everything else about the
 #' term: [term_start()] returns one value per name, [term_readable()] carries
@@ -114,7 +114,7 @@ term_params <- S7::new_generic("term_params", "term",
 #' rho <- linkfunctions7::linkinv(lk$pacf1, c(-40, 0, 40))
 #' all(rho > -1 & rho < 1)
 #' 1 - rho[3]
-#' linkfunctions7::linkinv(lk$alpha1, c(-40, 0, 40))
+#' linkfunctions7::linkinv(lk$kappa1, c(-40, 0, 40))
 #'
 #' @export
 #' @aliases term_links.structural_term
@@ -157,7 +157,7 @@ term_links <- S7::new_generic("term_links", "term",
 #'
 #' # Because zero on a log chart is a loading of one.
 #' lk <- term_links(gas(p = 1, q = 1))
-#' linkfunctions7::linkinv(lk$alpha1, term_start(gas(p = 1, q = 1))[["alpha1"]])
+#' linkfunctions7::linkinv(lk$kappa1, term_start(gas(p = 1, q = 1))[["kappa1"]])
 #'
 #' # One value per parameter, whatever the order.
 #' g <- gas(p = 2, q = 2)
@@ -240,7 +240,7 @@ S7::method(term_start, structural_term) <- function(term, ...) {
 #' # persistence stays stationary, whatever comes out.
 #' lk <- term_links(g)
 #' z <- term_draw(g)
-#' c(alpha1 = linkfunctions7::linkinv(lk$alpha1, z[["alpha1"]]),
+#' c(kappa1 = linkfunctions7::linkinv(lk$kappa1, z[["kappa1"]]),
 #'   pacf1 = linkfunctions7::linkinv(lk$pacf1, z[["pacf1"]]))
 #'
 #' # A wider draw is a wider model.
@@ -364,7 +364,7 @@ S7::method(term_starts, structural_term) <- function(term, ...,
 #' out <- term_filter(term, eta = rep(0, 20), y = dd$y,
 #'                    score = function(e, i) dd$y[i] - e,
 #'                    curvature = function(e, i) -1,
-#'                    psi = list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.5))
+#'                    psi = list(omega = 0.1, kappa1 = 0.3, pacf1 = 0.5))
 #' head(out$eta, 3)
 #' dim(out$jacobian)
 #'
@@ -425,7 +425,7 @@ term_filter <- S7::new_generic("term_filter", "term",
 #' set.seed(1)
 #' dd <- data.frame(t = 1:20, y = rnorm(20), x = rnorm(20))
 #' term <- term_build(gas(p = 1, q = 1, time = t), dd)
-#' psi <- list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.5)
+#' psi <- list(omega = 0.1, kappa1 = 0.3, pacf1 = 0.5)
 #' out <- term_filter(term, eta = rep(0, 20), y = dd$y,
 #'                    score = function(e, i) dd$y[i] - e,
 #'                    curvature = function(e, i) -1, psi = psi)
@@ -468,7 +468,7 @@ term_static_deriv <- S7::new_generic("term_static_deriv", "term",
 #' set.seed(1)
 #' dd <- data.frame(t = 1:20, y = rnorm(20))
 #' term <- term_build(gas(p = 1, q = 1, time = t), dd)
-#' psi <- list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.5)
+#' psi <- list(omega = 0.1, kappa1 = 0.3, pacf1 = 0.5)
 #' out <- term_filter(term, eta = rep(0, 20), y = dd$y,
 #'                    score = function(e, i) dd$y[i] - e,
 #'                    curvature = function(e, i) -1, psi = psi)
@@ -517,7 +517,7 @@ term_continue <- S7::new_generic("term_continue", "term",
 #' set.seed(1)
 #' dd <- data.frame(t = 1:30)
 #' term <- term_build(gas(p = 1, q = 1, time = t), dd)
-#' out <- term_simulate(term, list(omega = 0.5, alpha1 = 0.3, pacf1 = 0.6),
+#' out <- term_simulate(term, list(omega = 0.5, kappa1 = 0.3, pacf1 = 0.6),
 #'                      rep(0, 30),
 #'                      draw = function(e, i) stats::rnorm(1, e, 1))
 #' head(out$y, 3)
@@ -686,7 +686,7 @@ S7::method(term_level_design, model_term) <- function(term, ...) NULL
 #'   an interval for each quantity is built on.
 #'
 #' @examples
-#' term_readable(gas(p = 1, q = 1), c(omega = 0.3, alpha1 = 0.4, pacf1 = 0.8))
+#' term_readable(gas(p = 1, q = 1), c(omega = 0.3, kappa1 = 0.4, pacf1 = 0.8))
 #'
 #' @seealso [term_params()] for the coordinates, [term_links()] for their
 #'   charts, [parameters7::param_readable()] for the same shape applied to a
@@ -766,7 +766,7 @@ S7::method(term_readable, model_term) <- function(term, zeta, ...) {
 #' out <- term_adjoint(term, eta = rep(0, 20), y = dd$y,
 #'                     score = function(e, i) dd$y[i] - e,
 #'                     curvature = function(e, i) -1,
-#'                     psi = list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.5),
+#'                     psi = list(omega = 0.1, kappa1 = 0.3, pacf1 = 0.5),
 #'                     g = rep(1, 20))
 #' head(out$deta, 3)
 #'
@@ -854,7 +854,7 @@ S7::method(term_adjoint, structural_term) <- function(term, eta, y, score,
 #'   term, eta = rep(0, 20), y = dd$y,
 #'   score = function(e, i) dd$y[i] - e,
 #'   curvature = function(e, i) -1,
-#'   psi = list(omega = 0.1, alpha1 = 0.3, pacf1 = 0.5),
+#'   psi = list(omega = 0.1, kappa1 = 0.3, pacf1 = 0.5),
 #'   g = rep(1, 20), seed = matrix(0, 20, m),
 #'   blocks = function(e, i, D) list(cross = numeric(m),
 #'                                   M = matrix(0, m, m)))

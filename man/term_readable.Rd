@@ -46,7 +46,7 @@ with the diagonal Jacobian of their links. That is the right answer for
 every term whose coordinates are already its quantities.
 }
 \examples{
-term_readable(gas(p = 1, q = 1), c(omega = 0.3, alpha1 = 0.4, pacf1 = 0.8))
+term_readable(gas(p = 1, q = 1), c(omega = 0.3, kappa1 = 0.4, pacf1 = 0.8))
 
 }
 \seealso{

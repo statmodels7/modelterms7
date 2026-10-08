@@ -47,7 +47,7 @@ the caller to draw at the predictor.
 set.seed(1)
 dd <- data.frame(t = 1:30)
 term <- term_build(gas(p = 1, q = 1, time = t), dd)
-out <- term_simulate(term, list(omega = 0.5, alpha1 = 0.3, pacf1 = 0.6),
+out <- term_simulate(term, list(omega = 0.5, kappa1 = 0.3, pacf1 = 0.6),
                      rep(0, 30),
                      draw = function(e, i) stats::rnorm(1, e, 1))
 head(out$y, 3)

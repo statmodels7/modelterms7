@@ -27,7 +27,7 @@ distribution's, on the unconstrained scale \code{\link[=term_links]{term_links()
 }
 \details{
 The names are the term's own vocabulary. \code{\link[=gas]{gas()}} answers \code{omega} for the
-level, \code{alpha1} ... \code{alphap} for the score loadings and \code{pacf1} ... \code{pacfq}
+level, \code{kappa1} ... \code{kappap} for the score loadings and \code{pacf1} ... \code{pacfq}
 for the persistence; \code{\link[=regime]{regime()}} answers its levels and the free entries of
 its transition matrix. They are what indexes everything else about the
 term: \code{\link[=term_start]{term_start()}} returns one value per name, \code{\link[=term_readable]{term_readable()}} carries

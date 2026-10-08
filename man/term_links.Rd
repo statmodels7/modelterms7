@@ -60,7 +60,7 @@ vapply(lk, function(l) paste(l@link_bounds, collapse = ", "), character(1))
 rho <- linkfunctions7::linkinv(lk$pacf1, c(-40, 0, 40))
 all(rho > -1 & rho < 1)
 1 - rho[3]
-linkfunctions7::linkinv(lk$alpha1, c(-40, 0, 40))
+linkfunctions7::linkinv(lk$kappa1, c(-40, 0, 40))
 
 }
 \seealso{

@@ -1,3 +1,11 @@
+# modelterms7 0.95.1
+
+* Documentation repairs found by `R CMD check --as-cran`: the examples and
+  the shared parameter description of the structural generics name the
+  `gas()` loadings `kappa1`, ..., `kappap`, as 0.95.0 renamed them (the
+  example of `term_adjoint()` stopped on the old name); `RegimeTerm()`
+  documents its `n_start` property.
+
 # modelterms7 0.95.0
 
 * The score loadings of `gas()` are named `kappa1`, ..., `kappap`, where they
