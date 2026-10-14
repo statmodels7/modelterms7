@@ -17,8 +17,7 @@ The term's \code{tag} as a single string, \code{NA_character_} where it carries 
 }
 \details{
 The property is a character vector and is empty on a term built before the
-label existed, so the two spellings of "no label" are read in one place
-rather than at each caller.
+label existed, so the two spellings of "no label" are read in one place.
 }
 \seealso{
 \code{\link[=term_tag]{term_tag()}}, which returns it.

@@ -10,14 +10,14 @@ term_tag(term, ...)
 \arguments{
 \item{term}{A term, built or not.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A single string, or \code{NA_character_} where the term carries no label.
 }
 \description{
-The label a term carries to say that its coefficients share a covariance
-block with those of other terms, or \code{NA_character_} where it carries none.
+The label that marks a term whose coefficients share a covariance block with
+those of other terms, or \code{NA_character_} where the term carries none.
 }
 \details{
 The label is written in the middle position of a bar formula,
@@ -27,7 +27,10 @@ label and the same grouping describe effects that are correlated with each
 other, and a fitting layer collects them into one block.
 
 The label is a \strong{name and not data}. It is read as a symbol and never
-evaluated, so a column of the data with the same name is not looked at.
+evaluated, so a column of the data with the same name is not looked at. A
+term that carries a label declares no penalties through
+\code{\link[=term_penalties]{term_penalties()}}: the prior of the shared covariance block is built by the
+fitting layer.
 
 The base method returns \code{NA_character_}, which is the answer for every term
 but \code{\link[=random]{random()}}, so a term written outside this package needs no method here.

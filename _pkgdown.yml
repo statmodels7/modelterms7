@@ -18,10 +18,10 @@ navbar:
 reference:
 - title: The classes and the generics
   desc: >
-    The contract a term implements: how it builds a block from data,
-    how it reproduces that block on new rows, what it carries in
-    the way of coefficients, hyperparameters and penalties, and
-    the two shapes a structural term takes instead.
+    The two branches of the class tree and the generics that a term
+    implements: building a block from data, reproducing that block on new
+    rows, and reporting coefficients, hyperparameters and penalties. A
+    structural term implements a filter or a likelihood instead of a block.
   contents:
   - model_term
   - additive_term
@@ -74,16 +74,16 @@ reference:
 - title: The random-effect term
   desc: >
     Grouped intercepts and slopes, with the effects' distribution
-    attached as the penalty. That is what a random effect is under
+    attached as the penalty, which is how a random effect enters a
     penalized likelihood.
   contents:
   - random
   - RandomTerm
 - title: Smooth terms
   desc: >
-    The penalized smooths of one and of several covariates, built on
-    basis7: a Demmler-Reinsch reparametrization for one variable
-    and a tensor product, anisotropic by default, for more.
+    The penalized smooths of one and of several covariates, built on the
+    smoothers of basis7: s() for one covariate and te() for a tensor
+    product, anisotropic by default.
   contents:
   - s
   - te
@@ -106,9 +106,11 @@ reference:
   - term_stalled
 - title: Break-point terms
   desc: >
-    The break-points at which an effect changes slope, level or both,
-    each written as a working linear model in the break-point
-    position, with the grid rule that chooses where to start.
+    The break-points at which an effect changes slope, level or both.
+    The sharp constructions are estimated through a working linear model
+    in the break-point position, a smoothed construction treats each
+    break-point as an ordinary parameter, and the grid rule chooses where
+    to start.
   contents:
   - seg
   - jump
@@ -127,8 +129,9 @@ reference:
 - title: Structural terms
   desc: >
     Terms that rewrite the likelihood instead of adding to the
-    predictor: score-driven dynamics and a latent Markov chain,
-    both propagating their exact derivative beside the state.
+    predictor: score-driven dynamics, a latent Markov chain and
+    break-points integrated out of the likelihood, each carrying its exact
+    derivatives through its recursion.
   contents:
   - gas
   - GasTerm
@@ -159,29 +162,31 @@ reference:
   - term_readable
 - title: The formula layer
   desc: >
-    Reading a model formula into terms, by what each call evaluates
-    to and never by its name, so a term class defined outside the
-    package needs no registration.
+    Reading a model formula into terms. A call is a term when its value
+    inherits from model_term, whatever the name of the function, so a
+    term class defined outside the package needs no registration.
   contents:
   - interpret_formula
 - title: The response
   desc: >
-    Marking a censored response on the left side of a formula, the
+    Marking a censored response on the left side of a formula, with the
     status of each observation derived from the values given.
+    statmodels7::statmod() rejects a censored response.
   contents:
   - cens
   - censored_response
 - title: Fitted views
   desc: >
-    What a fitted term reports: effective degrees of freedom counted
-    per penalty, the printed summary, and the plot at supplied
-    coefficients.
+    The effective degrees of freedom of a term, computed from the
+    coefficients, the curvature and the hyperparameters of a fit: one for
+    each unpenalized parameter, a count of the nonzero coefficients under
+    a kinked penalty, and one trace over the remaining parameters.
   contents:
   - edf
 - title: Validation
   desc: >
-    The structural checks a term must pass against a data frame,
-    including the one a term that rebuilds instead of reapplying
-    its blueprint fails.
+    The structural checks of an additive term against a data frame,
+    among them the subset check that a term fails when it rebuilds its
+    block instead of reapplying its blueprint.
   contents:
   - check_term

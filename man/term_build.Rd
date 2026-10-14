@@ -12,17 +12,18 @@ term_build(term, data, ...)
 \item{term}{An object inheriting from \code{\link[=model_term]{model_term()}}, built or not. A built
 term is rebuilt.}
 
-\item{data}{A data frame carrying every variable the term names. Anything
-else throws \code{"'data' must be a data frame."} from the generic, before
-dispatch.}
+\item{data}{A data frame carrying every variable the term names. Any other
+object is rejected by the generic, before dispatch, with the error
+\code{"'data' must be a data frame."}.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A built term of the same class as \code{term}. For an additive term the
-\code{X}, \code{coef_names} and \code{blueprint} properties are filled; for a structural
-term the \code{blueprint} is. \code{\link[=term_is_built]{term_is_built()}} is \code{TRUE} either way, reading
-whichever of the two the branch fills.
+\code{X}, \code{coef_names} and \code{blueprint} properties are filled, and \code{penalty} is
+where the term is penalized; for a structural term the \code{blueprint} is.
+\code{\link[=term_is_built]{term_is_built()}} is \code{TRUE} either way, reading whichever of the two the
+branch fills.
 }
 \description{
 Turns a term specification into a built term: an additive term computes its
@@ -56,15 +57,16 @@ has no method for them.
 Building is not idempotent in general: a term built again on new data
 re-derives its factor levels and its knots from those rows. That is what
 \code{\link[=term_predict]{term_predict()}} exists to avoid, and what \code{\link[=check_term]{check_term()}}'s subset check
-tests for. Build once, predict thereafter.
+tests for. A term is therefore built once and applied to other rows with
+\code{\link[=term_predict]{term_predict()}}.
 }
 
 \section{The default}{
-There is one, on \code{\link[=model_term]{model_term()}}, and it throws
-\code{"the term class 'X' does not implement term_build()."}, naming the class,
-so a term class that supplies nothing else says so clearly. It covers both
-branches: every shipped structural term registers a method of its own, and
-a structural class written elsewhere that does not is named the same way.
+The default method is registered on \code{\link[=model_term]{model_term()}}. It signals the error
+\code{"the term class 'X' does not implement term_build()."}, which names the
+class of the term. It covers both branches: every shipped structural term
+registers a method of its own, and a structural class written elsewhere
+that does not register one receives the same error.
 }
 
 \examples{
@@ -85,7 +87,7 @@ g <- term_build(gas(p = 1, q = 1), data.frame(y = rnorm(30)))
 term_params(g)
 try(term_matrix(g))
 
-# A class that implements nothing is told which class it is.
+# A class without a method signals an error that names the class.
 Foo <- S7::new_class("Foo", parent = additive_term)
 try(term_build(Foo(), d))
 

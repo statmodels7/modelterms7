@@ -4,17 +4,19 @@
 \alias{plot.additive_term}
 \title{Plot an Additive Term's Coefficients}
 \arguments{
-\item{x}{A built additive term. An unbuilt one throws
+\item{x}{A built additive term. An unbuilt term signals the error
 \code{"the term has not been built; call term_build(term, data) first."}.}
 
 \item{coef}{The coefficients to draw, a numeric vector of length
-\code{term_npar(x)}. Required: \code{NULL} throws
-\code{"'coef' is required: a term is displayed at fitted coefficients."}, and
-any other length throws with the required length named.}
+\code{term_npar(x)}. Required: \code{NULL} signals the error
+\code{"'coef' is required: a term is displayed at fitted coefficients."}, and a
+vector of any other length signals an error that gives the required
+length.}
 
 \item{...}{Passed to \code{\link[graphics:plot.default]{graphics::plot()}}, so \code{col}, \code{ylim}, \code{cex} and the
-rest of the usual graphical arguments work. \code{xaxt}, \code{xlab}, \code{ylab},
-\code{main} and \code{pch} are set here.}
+other usual graphical arguments are accepted. The method sets \code{xaxt},
+\code{xlab}, \code{ylab}, \code{main} and \code{pch} itself, and passing any of them signals an
+error.}
 }
 \value{
 \code{x}, invisibly. Called for the plot.
@@ -27,8 +29,8 @@ axis. It shows which coefficients a penalty has driven to zero and how large
 the survivors are, so it reads a lasso or a smooth at a glance.
 
 The coefficients are supplied by the caller. A term holds a design block and
-no fit, so there is nothing to display without them, and \code{coef = NULL}
-throws.
+no fit, so there is nothing to display without them, and \code{coef = NULL} is
+rejected.
 }
 \details{
 The panel's title is the term's \code{label} when it has one, so \code{"ridge"} or
@@ -37,9 +39,9 @@ seven lines so that the coefficient names fit, and \code{\link[graphics:par]{gra
 restored on exit.
 
 The horizontal axis is the coefficient's position in the block, so the
-picture is of the block and not of the covariate. For a smooth, whose block
-is a Demmler-Reinsch reparametrization, the columns are ordered from least
-to most wiggly, and a penalized fit shows a decaying profile.
+plot shows the block and not the covariate. For \code{\link[=s]{s()}}, whose block is a
+Demmler-Reinsch reparametrization, the columns are ordered from the smoothest
+to the most wiggly, and a penalized fit shows a decaying profile.
 }
 \examples{
 set.seed(5)

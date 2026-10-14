@@ -19,13 +19,13 @@ Validates the sweep a constructor was given for the term's own kinked
 hyperparameters.
 }
 \details{
-One word per term, one per hyperparameter being meaningless: it says how the
-hyperparameters are combined with each other, which is not a property any
-one of them has. It belongs to the term because a penalty with a kink is
-fitted by a scheme of its own, and how that scheme sweeps its own
-hyperparameters is part of the scheme. A criterion applies to every
-hyperparameter of the model, the smooth ones included, and would be
-carrying an argument most of them cannot read.
+The sweep is one word per term, because it states how the hyperparameters
+are combined with each other, which is not a property of any single
+hyperparameter. It belongs to the term because a penalty with a kink is
+fitted by a scheme of its own, and the way that scheme sweeps its
+hyperparameters is part of it. A criterion is applied to every
+hyperparameter of the model, the smooth ones included, and most of them
+cannot use such an argument.
 }
 \seealso{
 \code{\link[=term_search]{term_search()}}, \code{\link[=check_min_ratio]{check_min_ratio()}}

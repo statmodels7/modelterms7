@@ -18,7 +18,8 @@ which is the default; one per level of a factor \code{by} under
 the smoother carries a penalty factory.
 }
 \details{
-The default answer is the base reading of \code{\link[=term_penalties]{term_penalties()}}, returned by
-calling that method rather than by repeating it, so the two cannot drift.
+The default answer is the base reading of \code{\link[=term_penalties]{term_penalties()}}, obtained by
+calling the method on \code{\link[=model_term]{model_term()}}. Every entry carries the fields that
+\code{\link[=term_penalties]{term_penalties()}} documents.
 }
 \keyword{internal}

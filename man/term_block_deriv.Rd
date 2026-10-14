@@ -12,7 +12,8 @@ term_block_deriv(term, coef = NULL, v, ...)
 \arguments{
 \item{term}{A built term.}
 
-\item{coef}{The coefficients, or \code{NULL} for the ones it carries.}
+\item{coef}{The coefficients, one per coefficient of the term, or \code{NULL} for
+the ones it carries.}
 
 \item{v}{A numeric vector as long as the term's coefficients.}
 
@@ -40,9 +41,11 @@ derivative the other did not: for \code{\link[=nl]{nl()}}, writing
 \eqn{q_{p_1p_2} = f_{p_1p_2}h_{p_1}'h_{p_2}' + \delta_{p_1p_2}f_{p_1}h_{p_1}''},
 \deqn{\Big(\frac{\partial X}{\partial\beta}v\Big)[i, c_1] =
   Z_{p_1}[i,c_1]\sum_{p_2} q_{p_1p_2}(i)\,(Z_{p_2}v_{p_2})[i],}
-the second derivative of \eqn{f}, one order below what an array would need.
+so the only derivative of \eqn{f} that enters is the second, as in
+\code{\link[=term_block_contract]{term_block_contract()}}.
 
-The base method returns zeros, right for a block that does not move.
+The base method returns zeros, which is exact for a block that does not
+move.
 }
 \examples{
 dd <- data.frame(x = seq(0.2, 3, length.out = 20))

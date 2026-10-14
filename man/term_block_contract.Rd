@@ -12,7 +12,8 @@ term_block_contract(term, coef = NULL, A, ...)
 \arguments{
 \item{term}{A built term.}
 
-\item{coef}{The coefficients, or \code{NULL} for the ones it carries.}
+\item{coef}{The coefficients, one per coefficient of the term, or \code{NULL} for
+the ones it carries.}
 
 \item{A}{A numeric matrix, one row per observation and one column per
 coefficient of the term.}
@@ -37,7 +38,8 @@ marginal criterion reads \eqn{\log|K|} with
 \eqn{\partial X/\partial\beta}.
 
 \strong{Only the contraction is computed.} \eqn{\partial X/\partial\beta} is
-\eqn{n \times m \times m} and nothing needs it whole. For \code{\link[=nl]{nl()}} it is closed form at \eqn{O(nm)}:
+\eqn{n \times m \times m} and nothing needs it whole. For \code{\link[=nl]{nl()}} it is
+closed form at \eqn{O(nm)}:
 writing \eqn{X_{i,c} = w_{p}(i) Z_p[i,c]} with
 \eqn{w_p = (\partial f/\partial\theta_p)\,h_p'},
 \deqn{\frac{\partial X_{i,c_1}}{\partial\beta_{c_2}} =
@@ -45,28 +47,28 @@ writing \eqn{X_{i,c} = w_{p}(i) Z_p[i,c]} with
   + \delta_{p_1p_2} f_{p_1} h_{p_1}''\Big),}
 so with \eqn{s_{p}(i) = \sum_{c\in p} A_{ic}Z_{p}[i,c]} the answer is
 \eqn{Z_{p_2}'\sum_{p_1} q_{p_1p_2}s_{p_1}}, one crossprod per parameter.
-The chain rule onto the coefficients, each parameter's link and its
-subformula's design, stays here, this being the only place that knows them.
+The chain rule onto the coefficients, through each parameter's link and its
+subformula's design, is applied in this method.
 
-\code{\link[=seg]{seg()}} has its own, written from the closed forms. Theirs is not a
-difference a caller could take: a break-point column is a step function in
-its break-point, so the quotient diverges as the step shrinks. Measured at
-\eqn{h}, \eqn{h/4} and \eqn{h/16} it reads 3.6e4, 1.4e5 and 5.8e5, where
-\code{\link[=nl]{nl()}}'s stays at 0.6038 throughout. What is bounded is written out
-instead. The truncated line \eqn{(x-\psi)_+} has derivative
+\code{\link[=seg]{seg()}} has its own, written from the closed forms. Its derivative is not a
+difference that a caller could take: a break-point column is a step function
+in its break-point, so the difference quotient diverges as the step shrinks.
+The bounded quantities are written out instead. The truncated line
+\eqn{(x-\psi)_+} has derivative
 \eqn{-\mathbf{1}(x>\psi)} in the break-point, and the break-point column
 \eqn{-\gamma(x)\mathbf{1}(x>\psi)} has the same indicator as its derivative
 in the change and zero almost everywhere in the break-point, which is the
 value taken.
 
-\code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}} keep the base method's zeros.
-Their position is read off a product of the unknowns, \eqn{\psi = -g/\delta},
+A sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} keeps the base method's zeros.
+Its position is read off a product of the unknowns, \eqn{\psi = -g/\delta},
 so a column's derivative runs through that read-off instead of through a
 development's design, and the weight \eqn{W = 1/(2\lvert\tilde x-\psi\rvert)}
-they carry has an unbounded derivative in the break-point. Their block is a
-working linearization with a frozen weight, which is
-the same fact that makes \code{\link[=term_converged]{term_converged()}} answer differently for
-them.
+it carries has an unbounded derivative in the break-point. Its block is a
+working linearization with a frozen weight, which is the reason that
+\code{\link[=term_jacobian_block]{term_jacobian_block()}} answers \code{FALSE} for it. A break-point term with
+\verb{smoothed =} has a block that is a true Jacobian, and its contraction is
+written out from the smoother's derivatives.
 }
 \examples{
 dd <- data.frame(x = seq(0.2, 3, length.out = 20))

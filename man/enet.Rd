@@ -22,7 +22,7 @@ enet(
 \arguments{
 \item{x}{A one-sided formula, such as \code{~ x1 + x2} or \code{~ 0 + g}, or a numeric
 matrix, ideally a matrix column of the model data frame. A two-sided
-formula throws.}
+formula is rejected with an error.}
 
 \item{label}{A single non-empty character string prefixed to the
 coefficient names as \code{label.name}, \code{"enet"} by default, so a block
@@ -42,39 +42,44 @@ independently of \code{lambda}. Must lie in \eqn{(0, 1)}.}
 \item{id}{Labels sharing this term's hyperparameters with those of
 other terms carrying the same ones: each is then estimated at a
 single value, wherever in the formula they sit. A named vector,
-\code{c(alpha = "A")}, since the penalty carries several and which was
-meant is not a guess; \code{NULL}, the default, shares nothing. See
-\code{\link[=term_ids]{term_ids()}}, whose page says what the labels mean and what care
-they want.}
+\code{c(alpha = "A")}, because the penalty has several hyperparameters and the
+name says which one is shared; \code{NULL}, the default, shares nothing. See
+\code{\link[=term_ids]{term_ids()}} for the meaning of the labels and the restrictions on their
+use.}
 
 \item{n_lambda, n_alpha}{How many values the path visits for each, at
-least 2. They differ because the axes do: \eqn{\lambda} descends the
-size of the kink over four decades and wants that many points, while
-\eqn{\alpha} spans one bounded interval and does not.}
+least 2. The two are separate arguments because the axes differ:
+\eqn{\lambda} descends from the kink size that empties the block to
+\code{min_ratio} times that size (four decades at the default \code{min_ratio}),
+which takes more points than \eqn{\alpha}, which spans one bounded
+interval. Each signals an error when given explicitly for a
+hyperparameter that is held or written out.}
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
 stops sooner. A single number in \eqn{(0, 1)}, \code{1e-4} by default.
-Only the sweep by kink size reads it.}
+Only the sweep by kink size reads it, and it signals an error when given
+explicitly while \code{lambda} is held or written out.}
 
 \item{search}{\code{"grid"} to visit every combination of \eqn{\lambda}
 and \eqn{\alpha}, \code{"cyclic"} to sweep one at a time with the other
-held. See \code{\link[=term_search]{term_search()}}.}
+held. See \code{\link[=term_search]{term_search()}}. Given explicitly while fewer than two
+hyperparameters are swept, it signals an error.}
 
 \item{sparse}{Governs the formula route: \code{TRUE} builds a \code{dgCMatrix} through
 \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}}, \code{FALSE} a dense model matrix, and \code{NULL},
 the default, settles it at build from the size of the design. A matrix
 input needs no such argument. See the section above.}
 
-\item{...}{Not used, and reported. An argument named after another penalty's
-hyperparameter is the mistake this catches: \code{scad(~ x, gamma = 1)} throws
-\code{"'scad' has no argument 'gamma'."} and lists the ones it does have.}
+\item{...}{Not used. Any argument supplied here is rejected with an error
+that names it and lists the penalty's hyperparameters. The typical case is
+an argument named after another penalty's hyperparameter:
+\code{scad(~ x, gamma = 1)} signals \code{"'scad' has no argument 'gamma'."}.}
 }
 \value{
 An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification, with \code{X},
 \code{coef_names}, \code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}}
-fills them, and the penalty attached there over as many coefficients
-as the block turns out to have.
+fills them. The build attaches the penalty over the block's columns.
 }
 \description{
 The lasso and the ridge mixed: a kink at zero, so the term still selects,
@@ -87,10 +92,11 @@ of choosing arbitrarily among them.
   + p\log Z(\lambda, \alpha),}
 the normalizing constant being that of the product of a Laplace and a
 Gaussian at zero
-(\code{\link[distributions7:enet_distrib]{distributions7::enet_distrib()}}). It depends on both
-hyperparameters, so both are estimable, where a merely settable one would
-be all a dropped constant leaves. A penalty
-written as a formula, with the constant dropped, would not have that.
+(\code{\link[distributions7:enet_distrib]{distributions7::enet_distrib()}}). The constant depends on both
+hyperparameters and is kept, so the value is minus the log density of that
+distribution, as for the ridge and the lasso. Because of the kink at zero,
+both hyperparameters are chosen along a path and scored by
+\code{\link[statmodels7:aic]{statmodels7::bic()}} by default, as for the lasso.
 
 \eqn{\alpha} is the mixing weight: at \eqn{\alpha \to 1} the penalty is
 the lasso and at \eqn{\alpha \to 0} the ridge, and the kink at zero has
@@ -101,7 +107,7 @@ half-width \eqn{\lambda\alpha}, so both hyperparameters scale it.
 over \code{n_alpha} values across that interval, the ends excluded
 because the penalty there is one of the other two. Every combination of
 the two is visited, \code{n_lambda * n_alpha} fits, unless
-\code{search = "cyclic"} asks for one at a time instead.
+\code{search = "cyclic"} sweeps one at a time instead.
 }
 \examples{
 set.seed(3)

@@ -18,13 +18,13 @@ te(
 }
 \arguments{
 \item{...}{The covariates, bare expressions evaluated in the data, at least
-two of them. One throws \code{"'te' needs at least two covariates; use s() for one."}.}
+two of them. A single covariate signals the error \code{"'te' needs at least two covariates; use s() for one."}.}
 
 \item{smooths}{How each margin is built: one \pkg{basis7} smoother used
 for every covariate, or a list of one per covariate.
 \code{bspline_smooth(k = 5)} is the default. A margin carrying a \code{penalty}
 factory is rejected: a tensor product's penalty is the sum of the
-marginal roughnesses, and a factory does not say how it composes with
+marginal roughnesses, and a factory does not specify how it composes with
 that sum.
 
 What the product reads from a margin is its \strong{basis} and its
@@ -32,8 +32,8 @@ What the product reads from a margin is its \strong{basis} and its
 \code{upper} all act. The constraint, the null space and the
 reparametrization are the product's own and not a margin's: the tensor
 contains the constant whatever its margins do, and it is the product
-that is centered. A margin asking for one of those is rejected rather
-than ignored.}
+that is centered. A margin that sets one of those is rejected and not
+ignored.}
 
 \item{by}{An optional factor or numeric variable, as in \code{\link[=s]{s()}}, with the same
 two readings and the same sparsity rule.}
@@ -44,13 +44,13 @@ smoothing parameters (\code{"shared"}, the default) or carry a set each
 margin, so \code{"level"} gives one per margin per level.}
 
 \item{anisotropic}{\code{TRUE}, the default, for one smoothing parameter per
-margin; \code{FALSE} for one over their sum. Anything that is not a single
-logical throws.}
+margin; \code{FALSE} for one over their sum. An argument that is not a single
+non-missing logical signals an error.}
 
 \item{hyper}{The hyperparameters to hold, as a named numeric vector, with
 anything left out \strong{estimated}. An anisotropic product carries one per
 margin, so a vector of that length, or a named one holding some of
-them.}
+them. A held value must be finite.}
 
 \item{id}{Labels sharing this term's smoothing parameters with those of
 other terms carrying the same ones. An anisotropic product carries
@@ -90,24 +90,23 @@ per margin.
 
 Each component is normalized to a largest entry of one before either of
 those happens, since a roughness matrix carries the units of its own
-covariate: measured at \code{k = 4} over 300 observations, the
-second-derivative Gram of a covariate on \eqn{[0, 365]} has a largest
-entry of 7.455e-07 against 3.652e+01 for one on \eqn{[0, 1]}, a factor of
-4.9e+07. The size also falls with the number of knots, a coarser basis
-being flatter, so the quantity that decides is the matrix and not the
-range. Under
-\code{anisotropic = TRUE} that is a reparametrization and nothing about the fit
-moves: the component's own \code{lambda} absorbs the factor, so what the
-normalization buys there is that the reported parameters of two margins are
-comparable with each other. Under \code{anisotropic = FALSE} it is part of the
-model, one \code{lambda} weighting a sum whose terms it fixes, and margins on
-very different ranges then contribute comparably where otherwise the widest
-would contribute almost nothing.
+covariate: the second-derivative Gram of a covariate on \eqn{[0, 365]} has
+a largest entry many orders of magnitude smaller than that of a covariate on
+\eqn{[0, 1]}, and its size also depends on the number of knots. Under
+\code{anisotropic = TRUE} the normalization is a reparametrization and the fit is
+the same: the component's own \code{lambda} absorbs the factor, so the
+normalization makes the reported parameters of two margins comparable with
+each other. Under \code{anisotropic = FALSE} it is part of the model, since one
+\code{lambda} weights a sum whose terms it fixes, and margins on very different
+ranges then contribute comparably, where otherwise the margin on the widest
+range would contribute almost nothing.
 
 The marginal bases are \strong{not} reparametrized, so the marginal linear
-effects are not separated out as \code{\link[=s]{s()}} separates its one. They lie in the
-null space of the tensor penalty, and a strongly penalized fit is shrunk
-toward no surface at all rather than toward a plane.
+effects are not separated out as \code{\link[=s]{s()}} separates its one. With the default
+second-derivative roughness they lie in the null space of the tensor
+penalty, together with their product, so a strongly penalized fit is shrunk
+toward the bilinear surface (the centered columns for \eqn{x}, \eqn{z} and \eqn{xz})
+and not toward zero.
 }
 
 \section{Centering}{

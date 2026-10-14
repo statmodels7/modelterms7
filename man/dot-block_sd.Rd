@@ -15,8 +15,9 @@ strictly positive.
 }
 \description{
 The standard deviation of each column of a design block, computed without
-densifying a \pkg{Matrix}. It is the spread \code{standardize = TRUE} divides
-each coefficient by.
+densifying a \pkg{Matrix}. It is the spread that \code{standardize = TRUE} puts
+in the penalty's diagonal map, so that each coefficient is penalized as
+\eqn{s_j\beta_j}.
 }
 \details{
 On a base matrix it is \code{\link[stats:sd]{stats::sd()}} column by column. On a \pkg{Matrix} it

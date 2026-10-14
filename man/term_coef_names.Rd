@@ -9,10 +9,10 @@ term_coef_names(term, ...)
 }
 \arguments{
 \item{term}{A built additive term (see \code{\link[=term_build]{term_build()}}). A specification
-throws
+signals the error
 \code{"the term has not been built; call term_build(term, data) first."}.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A character vector of length \code{\link[=term_npar]{term_npar()}}, in column order.

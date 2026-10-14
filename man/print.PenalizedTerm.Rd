@@ -15,19 +15,22 @@
 Prints one line describing a \code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}}, \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}} or
 \code{\link[=mcp]{mcp()}} term. An unbuilt specification reports its label and whether it will
 standardize; a built one reports the number of coefficients, the penalty's
-name and the hyperparameters that penalty carries, and adds a second line
-giving the spread each column was standardized by when there is one.
+name and the hyperparameters that penalty carries, and, when the term is
+standardized, adds a second line giving the spread by which each column is
+standardized.
 }
 \details{
 The built form reads \code{ncol(x@X)}, \code{x@penalty@penalty_name} and
 \code{x@penalty@params}, so the hyperparameters shown are the penalty's own
-names, \code{lambda} for a ridge or a lasso, \verb{lambda, alpha} for the elastic net,
+names: \code{lambda} for a ridge or a lasso, \verb{lambda, alpha} for the elastic net,
 \verb{lambda, a} for SCAD and \verb{lambda, gamma} for MCP.
 
-The standardization line matters for reading a fitted hyperparameter: with
-\code{standardize = TRUE} the penalty acts on the coefficients of columns divided
-by those spreads, and the spreads are frozen in the blueprint at build time,
-so prediction at new rows uses the same numbers.
+The standardization line is needed to read a fitted hyperparameter. With
+\code{standardize = TRUE} the penalty is evaluated at the coefficients multiplied
+by those spreads, which are the coefficients of the columns divided by the
+spreads. The spreads are computed once at build time and recorded in the
+blueprint. They enter the penalty only: the design block is not rescaled, so
+prediction at new rows does not use them.
 }
 \examples{
 set.seed(5)

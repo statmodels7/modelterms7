@@ -12,10 +12,10 @@
 A list of entries, as \code{\link[=term_penalties]{term_penalties()}} documents.
 }
 \description{
-The penalties the sub-terms of the subformulas declare, each under the
-key \code{parameter::subterm} and covering that sub-term's coefficients
-in the term's own numbering. The list is empty when there are none, and
-for a specification, whose parameters a formula does not name until the
-data say which of them the data supply.
+The penalties the sub-terms of the subformulas declare. The list is
+unnamed: each entry carries its label in \code{name}, of the form
+\code{parameter::subterm}, and covers that sub-term's coefficients in the
+term's own numbering. The list is empty when there are none, and for a term
+that has not been built.
 }
 \keyword{internal}

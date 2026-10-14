@@ -10,11 +10,12 @@ term_search(term, ...)
 \arguments{
 \item{term}{A term, built or not.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A named list, one entry per penalty of the term, each the single
-string \code{"grid"} or \code{"cyclic"}. Empty where the term names none.
+string \code{"grid"} or \code{"cyclic"}. Empty where every penalty of the term has
+fewer than two swept hyperparameters.
 }
 \description{
 Reports whether the term's own hyperparameters are swept as a product,
@@ -22,18 +23,20 @@ Reports whether the term's own hyperparameters are swept as a product,
 names neither is covered the way the fitting layer covers one by default.
 }
 \details{
-It matters only for a term carrying \strong{more than one} hyperparameter with a
-kink, so \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}} and \code{\link[=mcp]{mcp()}}; there is nothing to combine
-otherwise, and \code{\link[=lasso]{lasso()}} does not take the argument. Under \code{"grid"} the cost
-is the product of the term's own grids, 25 by 5 at the defaults; under
-\code{"cyclic"} it is their sum per pass.
+It matters only for a term with \strong{more than one} swept hyperparameter:
+\code{\link[=enet]{enet()}} by default, and \code{\link[=scad]{scad()}} and \code{\link[=mcp]{mcp()}} when their shape is left
+\code{NULL} to be estimated, since the shape is held by default. There is
+nothing to combine otherwise, and \code{\link[=lasso]{lasso()}} does not take the argument.
+Under \code{"grid"} the cost is the product of the grids of the swept
+hyperparameters; under \code{"cyclic"} it is their sum per pass.
 
-It is one word per penalty. It says how the hyperparameters are combined
-\strong{with each other}, which is not a property any one of them has.
+It is one word per penalty, and it states how the hyperparameters are
+combined \strong{with each other}, which is not a property of any single one of
+them.
 
-Between two terms the sweep alternates whatever each one names, so
-\code{y ~ lasso(X) + enet(R)} costs the two blocks added, so one term asking for
-a product does not make the other pay for it.
+Between two terms the sweep alternates, whichever search each term names, so
+\code{y ~ lasso(X) + enet(R)} costs the two blocks added. A term with
+\code{search = "grid"} therefore does not raise the cost of the other term.
 
 The keys are \code{\link[=term_penalties]{term_penalties()}}'s entry names, \code{""} for a penalty over the
 whole term.
@@ -42,6 +45,10 @@ whole term.
 # The default is a product of the two axes; cyclic sweeps one at a time.
 term_search(enet(~ x))
 term_search(enet(~ x, search = "cyclic"))
+
+# SCAD sweeps its shape only when it is estimated.
+term_search(scad(~ x))
+term_search(scad(~ x, a = NULL))
 
 # One hyperparameter, so nothing to combine and no argument to take.
 term_search(lasso(~ x))

@@ -15,17 +15,23 @@ NULL
 #' inherits from [model_term()] it becomes a term of its own; everything else,
 #' meaning bare covariates, transformations such as `log(x)` and interactions,
 #' is collected into a single [linpar()] block with the usual
-#' [stats::model.matrix()] conventions. The terms come back unbuilt, so the
-#' caller decides which data each is built against.
+#' [stats::model.matrix()] conventions. An `offset()` term is not among the
+#' labels that [stats::terms()] returns, so it is dropped without a message;
+#' `statmodels7::statmod()` separates offsets before calling this function.
+#' The terms come back unbuilt, so the caller decides which data each is built
+#' against.
 #'
 #' @details
 #' # Recognition by evaluation
 #'
 #' A term constructor is identified by what its call returns, so a term class
-#' defined outside the package works in a formula the day it is written, with
-#' no list of special names to amend. `log(x)` evaluates to a numeric vector
-#' and stays a covariate; `s(x, bspline_smooth(k = 5))` evaluates to a `SmoothTerm` and is
-#' routed as a term.
+#' defined outside the package works in a formula without a list of special
+#' names to amend. `log(x)` evaluates to a numeric vector and stays a
+#' covariate; `s(x, basis7::bspline_smooth(k = 5))` evaluates to a `SmoothTerm`
+#' and is routed as a term. A call whose evaluation signals an error, such as a
+#' term constructor called with an argument it does not have, signals the error
+#' `"evaluating '<label>' failed: <message>"`, so the call is not treated as a
+#' covariate.
 #'
 #' Some labels are never evaluated: `:`, `*`, `^`, `%in%`, `+`, `-`, `(` and
 #' `I`. A bare interaction `x1:x2` parses as a call to `:`, which on numeric
@@ -34,11 +40,11 @@ NULL
 #' parametric block.
 #'
 #' A call whose value is neither a term nor something a model matrix can hold
-#' throws, naming the label and the class it produced. The commonest way to
-#' arrive there is a masked name. `mgcv` also exports `s()` and `te()` and
-#' `segmented` exports `seg()`, so where the package exports a term of that
-#' name and the name resolves elsewhere, the message says where it was found
-#' and suggests `modelterms7::`.
+#' signals an error that names the label and the class of the value. The
+#' commonest cause is a masked name. The package `mgcv` also exports `s()` and
+#' `te()`, and `segmented` exports `seg()`, so where this package exports a
+#' term of that name and the name resolves elsewhere, the message states where
+#' the function was found and suggests `modelterms7::`.
 #'
 #' # The response and the intercept
 #'
@@ -58,9 +64,10 @@ NULL
 #' # One covariate is removed
 #'
 #' A [seg()] or [jseg()] term built with `linear = TRUE`, which is the default,
-#' contributes the same column the bare covariate would, so `y ~ x + seg(x)` is
-#' rank deficient by one. The term owns that effect, so the covariate is
-#' dropped from the parametric block and a warning names both. Writing
+#' contributes the same column as the bare covariate, so `y ~ x + seg(x)` is
+#' rank deficient by one. The term carries that effect, so the covariate is
+#' dropped from the parametric block and a warning names both. The same holds
+#' for a marginal `seg()` or `jseg()` built with `marginal = TRUE`. Writing
 #' `seg(x, linear = FALSE)` keeps the linear effect outside the term.
 #'
 #' Only the bare main effect is removed, matched on the deparsed expression: an
@@ -68,8 +75,8 @@ NULL
 #' same direction without being that one column is reported by a warning and
 #' left unmodified. A spline basis is the case: it contains the line, and its
 #' penalty leaves the line unpenalized, so `s(x) + seg(x)` is confounded too.
-#' There is no single column to remove there, and reshaping another term is
-#' not this function's business.
+#' There is no single column to remove there, and this function does not
+#' modify another term.
 #'
 #' # What it does not do
 #'
@@ -82,20 +89,20 @@ NULL
 #' `y ~ ridge(~ x) + ridge(~ x)` gives one term, as `y ~ x + x` gives one
 #' column.
 #'
-#' @param formula A two-sided or one-sided model formula. Anything else throws
-#'   `"'formula' must be a formula."`. Its environment is where a term call's
+#' @param formula A two-sided or one-sided model formula. Anything else signals
+#'   the error `"'formula' must be a formula."`. Its environment is where a term call's
 #'   symbols are looked up when `data` does not carry them, and it is carried
 #'   onto the formula of the implicit `linpar` block.
 #' @param data A data frame in which the formula's symbols are evaluated.
-#'   Anything else throws `"'data' must be a data frame."`.
+#'   Anything else signals the error `"'data' must be a data frame."`.
 #' @param linpar A named list of arguments for the **implicit** [linpar()]
 #'   term, the one the bare covariates collapse into: `sparse` and `contrasts`.
 #'   This is the only place they can be given, that term never being written by
 #'   the caller. Empty by default, which leaves [linpar()]'s own defaults. A
 #'   `linpar()` term the caller writes out takes its own arguments and ignores
-#'   this one. Anything that is not a list throws.
+#'   this one. Anything that is not a list signals an error.
 #'
-#' @return A list of four elements:
+#' @return A list with the elements:
 #'   \describe{
 #'     \item{`response`}{The evaluated left-hand side: a numeric vector, a
 #'       [censored_response()], or `NULL` for a one-sided formula.}
@@ -103,7 +110,7 @@ NULL
 #'       collected parametric block comes first under the name `"linpar"` and
 #'       is absent when the formula has no bare covariates and no intercept.
 #'       Every other name is the term's label as it appears in the formula,
-#'       deparsed, such as `"s(x2, bspline_smooth(k = 5))"`.}
+#'       deparsed, such as `"s(x2, basis7::bspline_smooth(k = 5))"`.}
 #'     \item{`intercept`}{`TRUE` unless the formula removes the intercept.}
 #'     \item{`formula`}{The input, unchanged.}
 #'   }
@@ -151,7 +158,7 @@ NULL
 #' sp <- interpret_formula(y ~ g, dd, linpar = list(sparse = TRUE))
 #' class(term_matrix(term_build(sp$terms$linpar, dd)))
 #'
-#' # A call that returns neither a term nor a covariate is refused by name.
+#' # A call that returns neither a term nor a covariate is rejected by name.
 #' e <- new.env(parent = globalenv())
 #' assign("s", function(x, ...) structure(list(), class = "gamObject"), envir = e)
 #' f <- y ~ s(x1)
@@ -190,7 +197,10 @@ interpret_formula <- function(formula, data, linpar = list()) {
     if (is.call(ex) &&
         !as.character(ex[[1L]])[1L] %in% .formula_operators) {
       res <- tryCatch({ v <- eval(ex, data, env); ok <- TRUE; v },
-                      error = function(e) NULL)
+                      error = function(e) {
+                        stop(sprintf("evaluating '%s' failed: %s", lb,
+                                     conditionMessage(e)), call. = FALSE)
+                      })
     }
     if (S7::S7_inherits(res, model_term)) {
       specials[[lb]] <- res
@@ -257,7 +267,8 @@ interpret_formula <- function(formula, data, linpar = list()) {
 # function's business.
 .absorb_linear <- function(ordinary, specials) {
   keep <- vapply(specials, function(tm) {
-    S7::S7_inherits(tm, SegTerm) && isTRUE(tm@linear)
+    (S7::S7_inherits(tm, SegTerm) || S7::S7_inherits(tm, MarginalBreakTerm)) &&
+      isTRUE(tm@linear)
   }, logical(1))
   if (!any(keep)) return(ordinary)
   segs <- specials[keep]

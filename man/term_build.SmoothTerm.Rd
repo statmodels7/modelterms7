@@ -11,7 +11,10 @@
 \item{...}{Unused.}
 }
 \value{
-The term with \code{X}, \code{coef_names}, \code{blueprint} and \code{penalty} filled.
+The term with \code{X}, \code{coef_names} and \code{blueprint} filled, and with
+\code{penalty} filled except where the term declares penalties of its own (a
+penalty factory on the smoother, or \code{by_hyper = "level"}), in which case
+\code{penalty} is \code{NULL} and \code{\link[=term_penalties]{term_penalties()}} returns them.
 }
 \description{
 Builds the basis of an \code{\link[=s]{s()}} or \code{\link[=te]{te()}} term at the observed covariates,
@@ -23,26 +26,27 @@ again: the Demmler-Reinsch transform for \code{\link[=s]{s()}}, and the centerin
 for \code{\link[=te]{te()}}.
 }
 \section{The default basis}{
-Where no basis was supplied, each margin gets a
-\code{\link[basis7:bspline_basis]{basis7::bspline_basis()}} over the observed range of its covariate, padded
-by a thousandth of that range at each end so that the extreme observations
-are strictly inside. A basis given through \code{basis} or \code{bases} is used with
-its own range, untouched.
+Each margin is built by its smoother, \code{\link[basis7:bspline_smooth]{basis7::bspline_smooth()}} by default.
+Unless the smoother sets \code{lower} and \code{upper}, the basis is placed on the
+observed range of the covariate, padded by a thousandth of that range at each
+end so that the extreme observations are strictly inside.
 }
 
 \section{One covariate}{
-\code{\link[basis7:dr_basis]{basis7::dr_basis()}} takes the inner product at the observed values, and the
-block is that basis evaluated there. With \code{linear = TRUE} a column
-\eqn{(x - \bar{x})/s_x} is prepended and the penalty is
-\eqn{\mathrm{diag}(0, 1, \dots, 1)}; the center and the scale go into the
-blueprint with the transform. Without it the penalty is the identity.
+The block is built by \code{\link[basis7:smoother_build]{basis7::smoother_build()}}, which takes the
+Demmler-Reinsch inner product at the observed values. With the default
+\code{\link[basis7:bspline_smooth]{basis7::bspline_smooth()}} (\code{null_space = "keep"}) a column \eqn{(x - \bar{x})/s_x} is prepended and the
+penalty is \eqn{\mathrm{diag}(0, 1, \dots, 1)}; the center and the scale go
+into the blueprint with the transform. With \code{null_space = "drop"} that
+column is absent and the penalty is the identity.
 }
 
 \section{Several covariates}{
 \code{\link[basis7:tensor_basis]{basis7::tensor_basis()}} combines the margins, and one penalty component per
 margin is carried into the product as \eqn{I \otimes \cdots \otimes P_v
-\otimes \cdots \otimes I}, each \eqn{P_v} the margin's second-derivative
-Gram normalized to a maximum entry of one.
+\otimes \cdots \otimes I}, each \eqn{P_v} the margin's roughness matrix at
+the order and the measure that its smoother carries (the second-derivative
+Gram at the defaults), normalized to a maximum entry of one.
 
 The Kronecker product is taken over the \strong{reversed} blocks, because
 \code{\link[basis7:tensor_basis]{basis7::tensor_basis()}} varies the first margin fastest. The block is then
@@ -54,8 +58,10 @@ has one column fewer than the product of the marginal dimensions.
 A factor \code{by} interacts the basis with the level indicators, giving \code{m}
 copies of the block and a penalty repeated blockwise; the levels are
 recorded so a prediction uses the same set. A numeric \code{by} multiplies the
-basis. The storage is settled here and recorded, an explicit \code{sparse = TRUE}
-being refused where there is no factor \code{by}.
+basis after an unpenalized constant column, named \code{const}, has been put in
+front of it, and the block is not centered. The storage is settled here and
+recorded, an explicit \code{sparse = TRUE} being rejected where there is no factor
+\code{by}.
 }
 
 \examples{

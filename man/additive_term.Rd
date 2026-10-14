@@ -21,11 +21,11 @@ additive_term(
 \arguments{
 \item{label}{A character string prefixed to the term's coefficient names
 when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag of
-\code{\link[=print]{print()}}. \code{character(0)} and \code{""} both mean no label.}
+\code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
-\item{hyper}{The hyperparameters of the term's penalty the caller \strong{held},
-as a named list keyed by the penalty's names. Empty, the default, means
-every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
+\item{hyper}{The hyperparameters of the term's penalty that the caller
+\strong{held}, as a named list keyed by the penalty's names. Empty, the
+default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
@@ -65,60 +65,66 @@ term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 }
 \value{
 Nothing: the class is abstract and cannot be instantiated.
-\code{additive_term()} throws. As a type it is the parent of every term that
-contributes design columns, carrying the four properties above beside
-\code{\link[=model_term]{model_term()}}'s six.
+Calling \code{additive_term()} signals an error. As a type it is the parent of
+every term that contributes design columns, carrying the four properties
+above beside those of \code{\link[=model_term]{model_term()}}.
 }
 \description{
 The branch of \code{\link[=model_term]{model_term()}} whose terms contribute a block of design
 columns \eqn{X_j \beta_j} to the linear predictor of one distribution
 parameter. Everything a formula can write that is not a filter or a latent
 mixture is on this branch: \code{\link[=linpar]{linpar()}}, the five penalized terms, \code{\link[=random]{random()}},
-\code{\link[=s]{s()}} and \code{\link[=te]{te()}}, \code{\link[=nl]{nl()}} and the break-point terms.
+\code{\link[=s]{s()}} and \code{\link[=te]{te()}}, \code{\link[=nl]{nl()}} and the break-point terms \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}} and
+\code{\link[=jseg]{jseg()}}. With \code{marginal = TRUE} the break-point terms are structural
+terms instead.
 
 A built term on this branch carries four things beyond the root's
 properties: the block itself, the coefficient names, the blueprint that
 reproduces the block on new rows, and the penalty on its coefficients.
 }
-\section{What a build fills, and what stays empty}{
+\section{The build}{
 A specification has \code{X} empty and \code{blueprint} an empty list; \code{\link[=term_build]{term_build()}}
-fills all four. The blueprint is the reason \code{\link[=term_predict]{term_predict()}} can \strong{reapply}
-the mapping instead of rebuilding it: the factor levels, the contrasts, the
-knots a basis was placed on and the spreads a standardization used are
-recorded there at build time. \code{\link[=check_term]{check_term()}}'s subset check is what tests
-that they really are.
+fills \code{X}, \code{coef_names} and \code{blueprint}, and \code{penalty} as well for a term
+that carries a penalty. The blueprint is the reason \code{\link[=term_predict]{term_predict()}} can
+\strong{reapply} the mapping instead of rebuilding it: the factor levels, the
+contrasts, the knots on which a basis was placed and the spreads that a
+standardization used are recorded there at build time. \code{\link[=check_term]{check_term()}}'s
+subset check tests that they are.
 
-\code{penalty} is \code{NULL} for an unpenalized term. Reading it directly answers for
-a term carrying one penalty over its whole block; \code{\link[=term_penalties]{term_penalties()}} is the
-general form and covers a term whose penalty reaches part of its parameters
-or which carries several.
+\code{penalty} is \code{NULL} for an unpenalized term. Reading it directly gives the
+penalty of a term that carries one penalty over its whole block;
+\code{\link[=term_penalties]{term_penalties()}} is the general form and covers a term whose penalty
+reaches part of its parameters or which carries several.
 }
 
-\section{The contract on this branch}{
+\section{The methods of this branch}{
 \code{\link[=term_matrix]{term_matrix()}} returns \code{X}, \code{\link[=term_coef_names]{term_coef_names()}} returns \code{coef_names},
 \code{\link[=term_npar]{term_npar()}} counts the columns and \code{\link[=term_penalty]{term_penalty()}} returns \code{penalty}, all
-from the properties, so a subclass gets them without writing anything. What
-a subclass owes is \code{\link[=term_build]{term_build()}} and \code{\link[=term_predict]{term_predict()}}.
+from the properties, so a subclass gets them without writing anything. A
+subclass must supply \code{\link[=term_build]{term_build()}} and \code{\link[=term_predict]{term_predict()}}.
 
 A term whose block moves with its own coefficients, as \code{\link[=nl]{nl()}} and \code{\link[=seg]{seg()}}
-do, also implements \code{\link[=term_refresh]{term_refresh()}} and \code{\link[=term_value]{term_value()}}, and answers
-\code{\link[=term_jacobian_block]{term_jacobian_block()}} to say whether the block it returns is a Jacobian or
-a frozen working linearization.
+do, also implements \code{\link[=term_refresh]{term_refresh()}} and \code{\link[=term_value]{term_value()}}.
+\code{\link[=term_jacobian_block]{term_jacobian_block()}} reports whether the block is a Jacobian or a frozen
+working linearization; it is \code{TRUE} by default, and a term whose block is
+the latter overrides it.
 }
 
 \section{The block need not be dense}{
 \code{X} is \code{class_any}, so a block may be a base matrix or any \pkg{Matrix}
 class. A grouping indicator has one non-zero per row, and \code{\link[=random]{random()}} builds
-it sparse; \code{\link[=linpar]{linpar()}} and the penalized terms build sparse when asked. Code
-reading a block tests \code{is.matrix(x) && is.numeric(x)} or a two-dimensional
-S4 object, since \code{is.matrix()} alone is \code{FALSE} for every \pkg{Matrix}
-class.
+it sparse; \code{\link[=linpar]{linpar()}} and the penalized terms build sparse where their
+\code{sparse} argument is \code{TRUE}, or, when it is \code{NULL}, where the factor part of
+the design is large. Code reading a block tests
+\code{is.matrix(x) && is.numeric(x)} or a two-dimensional S4 object, since
+\code{is.matrix()} alone is \code{FALSE} for every \pkg{Matrix} class.
 }
 
 \examples{
 d <- data.frame(x = rnorm(20), g = factor(rep(letters[1:4], 5)))
 
-# A specification carries no block; a build fills all four properties.
+# A specification carries no block; a build fills the block, the names and
+# the blueprint, and the penalty where the term has one.
 spec <- ridge(~ x + g)
 c(X = length(spec@X), blueprint = length(spec@blueprint))
 b <- term_build(spec, d)
@@ -138,6 +144,6 @@ try(additive_term())
 }
 \seealso{
 \code{\link[=structural_term]{structural_term()}} for the other branch, \code{\link[=term_build]{term_build()}},
-\code{\link[=term_predict]{term_predict()}} and \code{\link[=term_matrix]{term_matrix()}} for the contract, and \code{\link[=linpar]{linpar()}} for
-the simplest term on this branch.
+\code{\link[=term_predict]{term_predict()}} and \code{\link[=term_matrix]{term_matrix()}} for the methods of the branch, and
+\code{\link[=linpar]{linpar()}} for the simplest term on this branch.
 }

@@ -11,11 +11,12 @@ term_penalties(term, ...)
 \item{term}{A built term. An unbuilt one is accepted and reports what it has,
 which is usually nothing.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 An unnamed list, possibly empty, one element per declared penalty.
-Each element is a list with
+Every element is a list with the same nine fields, an empty value standing
+for a field that is not set:
 \describe{
 \item{\code{name}}{a character label unique within the term, \code{""} for a
 penalty covering the whole of it.}
@@ -24,24 +25,29 @@ columns of the block for an additive term, positions in
 \code{\link[=term_params]{term_params()}} for a structural one.}
 \item{\code{penalty}}{a \pkg{penalties7} penalty over exactly those
 parameters, so \code{penalty@n_coef} equals \code{length(index)}.}
-\item{\code{fixed}}{the hyperparameters the caller held, a named list, empty
-when all of them are estimated.}
-\item{\code{n_values}, \code{values}, \code{min_ratio}, \code{search}}{what the caller said
-about the path over this penalty's hyperparameters, from the term's
-properties of the same names.}
+\item{\code{fixed}}{the hyperparameters that the caller held, a named list,
+empty when all of them are estimated.}
+\item{\code{n_values}, \code{values}, \code{min_ratio}, \code{search}}{what the caller
+specified about the path over this penalty's hyperparameters, taken
+from the term's properties \code{grid}, \code{values}, \code{min_ratio} and
+\code{search}.}
+\item{\code{ids}}{the sharing labels of this penalty's hyperparameters, a
+named character vector, empty where none is shared.}
 }
+An entry that a term carries up from one of its sub-terms keeps the values
+and the search that the sub-term holds.
 }
 \description{
-Returns what a term declares it wants penalized: a list of entries, each
-naming a subset of the term's own parameters, the penalty over them, and
-whatever the caller fixed about that penalty's hyperparameters. This is the
-enumeration a fitting layer runs over, and it is what \code{\link[=term_smooth]{term_smooth()}} and
-\code{\link[=edf]{edf()}} read.
+Returns the penalties a term declares: a list of entries, each naming a
+subset of the term's own parameters, the penalty over them, and the
+hyperparameters that the caller held for that penalty. A fitting layer
+enumerates penalties through this list, and \code{\link[=term_smooth]{term_smooth()}} and \code{\link[=edf]{edf()}} read
+it.
 }
 \section{Two ways it generalizes \code{\link[=term_penalty]{term_penalty()}}}{
 \strong{A term may carry more than one penalty}, over different parameters of its
-own. A panel model with a population value and a departure per group wants
-the population value free and the departures shrunk, which is one penalty
+own. A panel model with a population value and a departure per group leaves
+the population value free and shrinks the departures, which is one penalty
 over part of the parameters and none over the rest. \code{nl()} developing two of
 its parameters by two different penalized sub-terms carries two entries.
 
@@ -60,10 +66,12 @@ single entry is named \code{""}, meaning the whole term.
 
 A name is unique \strong{within} the term and is not the term's own name. Two
 \code{ridge()} terms in one formula are two terms with their own
-hyperparameters, and it is the caller who knows what it called each of them;
-\code{\link[statmodels7:statmod]{statmodels7::statmod()}} composes a key as \code{term} or \code{term::entry}.
+hyperparameters, told apart by their names in the formula;
+\code{\link[statmodels7:statmod]{statmodels7::statmod()}} files a hyperparameter under the key \code{term} for a
+term with one entry and \code{term::entry} for a term with several.
 
-The list itself is \strong{unnamed}: read \code{e$name}, not \code{names(entries)}.
+The list itself is \strong{unnamed}: the key of an entry is its \code{name} field,
+read as \code{e$name}, and \code{names(entries)} is \code{NULL}.
 }
 
 \section{A specification carries no entries}{

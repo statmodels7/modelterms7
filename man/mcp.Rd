@@ -22,7 +22,7 @@ mcp(
 \arguments{
 \item{x}{A one-sided formula, such as \code{~ x1 + x2} or \code{~ 0 + g}, or a numeric
 matrix, ideally a matrix column of the model data frame. A two-sided
-formula throws.}
+formula is rejected with an error.}
 
 \item{label}{A single non-empty character string prefixed to the
 coefficient names as \code{label.name}, \code{"mcp"} by default, so a block
@@ -45,76 +45,81 @@ visits as they stand, and \code{NULL} has the path build one. Must lie in
 \item{id}{Labels sharing this term's hyperparameters with those of
 other terms carrying the same ones: each is then estimated at a
 single value, wherever in the formula they sit. A named vector,
-\code{c(gamma = "A")}, since the penalty carries several and which was
-meant is not a guess; \code{NULL}, the default, shares nothing. See
-\code{\link[=term_ids]{term_ids()}}, whose page says what the labels mean and what care
-they want.}
+\code{c(gamma = "A")}, because the penalty has several hyperparameters and
+the name says which one is shared; \code{NULL}, the default, shares nothing.
+See \code{\link[=term_ids]{term_ids()}} for the meaning of the labels and the restrictions on
+their use.}
 
 \item{n_lambda, n_gamma}{How many values the path visits for each, at
-least 2. They differ because the axes do: \eqn{\lambda} descends the
-size of the kink over four decades and wants that many points, while
-\eqn{\gamma} spans the shape's useful range and does not.}
+least 2. The two are separate arguments because the axes differ:
+\eqn{\lambda} descends from the kink size that empties the block to
+\code{min_ratio} times that size (four decades at the default \code{min_ratio}),
+which takes more points than \eqn{\gamma}, which spans the shape's
+useful range. Each signals an error when given explicitly for a
+hyperparameter that is held or written out, so \code{n_gamma} requires
+\code{gamma = NULL}.}
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
 stops sooner. A single number in \eqn{(0, 1)}, \code{1e-4} by default.
-Only the sweep by kink size reads it.}
+Only the sweep by kink size reads it, and it signals an error when given
+explicitly while \code{lambda} is held or written out.}
 
 \item{search}{\code{"grid"} to visit every combination of \eqn{\lambda}
 and \eqn{\gamma}, \code{"cyclic"} to sweep one at a time with the other
-held. See \code{\link[=term_search]{term_search()}}.}
+held. See \code{\link[=term_search]{term_search()}}. Given explicitly while fewer than two
+hyperparameters are swept, it signals an error.}
 
 \item{sparse}{Governs the formula route: \code{TRUE} builds a \code{dgCMatrix} through
 \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}}, \code{FALSE} a dense model matrix, and \code{NULL},
 the default, settles it at build from the size of the design. A matrix
 input needs no such argument. See the section above.}
 
-\item{...}{Not used, and reported. An argument named after another penalty's
-hyperparameter is the mistake this catches: \code{scad(~ x, gamma = 1)} throws
-\code{"'scad' has no argument 'gamma'."} and lists the ones it does have.}
+\item{...}{Not used. Any argument supplied here is rejected with an error
+that names it and lists the penalty's hyperparameters. The typical case is
+an argument named after another penalty's hyperparameter:
+\code{scad(~ x, gamma = 1)} signals \code{"'scad' has no argument 'gamma'."}.}
 }
 \value{
 An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification, with \code{X},
 \code{coef_names}, \code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}}
-fills them, and the penalty attached there over as many coefficients
-as the block turns out to have.
+fills them. The build attaches the penalty over the block's columns.
 }
 \description{
 The minimax concave penalty: like SCAD it selects and then flattens, and
-it begins to flatten immediately, where SCAD waits for a first threshold.
+it begins to flatten immediately, whereas SCAD keeps the slope of the lasso
+up to \eqn{t = \lambda}.
 }
 \details{
 Defined by its derivative, for \eqn{t = \lvert\beta_j\rvert \ge 0},
 \deqn{\rho'(t) = \left(\lambda - \frac{t}{\gamma}\right)_+ ,}
 summed over the coefficients: it starts at \eqn{\lambda}, falls linearly,
-and is flat past \eqn{t = \gamma\lambda}. Improper by construction, so it
+and is flat past \eqn{t = \gamma\lambda}. The penalty is improper, so it
 carries no normalizing constant and is not reachable by a marginal
 criterion.
+
+The formula above is the penalty for a loss of unit curvature. In a
+\code{\link[statmodels7:statmod]{statmodels7::statmod()}} fit the penalty on coordinate \eqn{j} is scaled by
+the curvature \eqn{c_j} of the likelihood in that coordinate: the slope at
+zero remains \eqn{\lambda}, and the penalty is flat past
+\eqn{\gamma\lambda/c_j}, so the shape keeps its meaning whatever the scale
+of the response. Rescaling a Gaussian response by \eqn{k} and dividing
+\eqn{\lambda} by \eqn{k} reproduces the fit with \eqn{\gamma} unchanged.
+The scaling is applied by \pkg{statmodels7}; the penalty that this term
+builds is the unscaled one.
 
 \strong{Hyperparameters.} \code{lambda} on \eqn{(0, \infty)}, swept over
 \code{n_lambda} values by kink size; \code{gamma} on \eqn{(1, \infty)}, at or below
 which the penalized objective need not be convex even for an orthogonal
-design, swept over \code{n_gamma} values on a geometric grid above that bound.
+design. The shape leaves the kink at zero unchanged, so a path over the
+kink size cannot reach it. It is swept over \code{n_gamma} values on a geometric
+grid that starts just above the smallest shape at which the block can be
+fitted.
 
-\strong{The shape is HELD at \eqn{\gamma = 3} by default}, the value of
-Zhang, so only \eqn{\lambda} is searched. \code{gamma = NULL} estimates it
-over the grid instead, and \code{n_gamma} sizes that grid. Measured over eight
-data configurations, estimating it chose the grid's LOWER ENDPOINT every
-time and changed no model: the columns kept were identical and the error
-against the truth agreed to four decimals. The endpoint is the floor plus
-0.25, so what was reported as an estimate was the grid's own edge, and it
-did not move with \code{n_gamma}, which refines the interior and cannot touch
-either end.
-
-⚠️ \strong{The shape is not scale free}, which is why the literature's
-value belongs to standardized data. Rescaling the response by \eqn{k}
-sends \eqn{\beta \to k\beta}, and the fit is reproduced at
-\eqn{(\lambda/k,\ \gamma k^2)}, verified to 1.7e-13 at
-\eqn{k = 2, 5, 10}: the shape carries the units of a proximal step, and
-the floor it is swept above grows with them. On a response of much larger
-scale a small held shape falls outside the convex region the compiled
-coordinate descent needs and the fit takes the general route, measured at
-7.4 s against 0.4 s at a hundredfold response.
+The shape is held at \eqn{\gamma = 3} by default, the value that
+\pkg{ncvreg} holds, so only \eqn{\lambda} is searched. \code{gamma = NULL}
+estimates it over the grid instead, and \code{n_gamma} sizes that grid. The grid
+runs from 0.25 to 25 above the smallest admissible shape.
 }
 \examples{
 set.seed(3)
@@ -124,17 +129,20 @@ p@params
 p@params_bounds
 
 # The derivative starts at lambda and falls linearly to zero at
-# gamma * lambda, where SCAD would still be on its first segment.
+# gamma * lambda. SCAD's derivative stays at lambda up to t = lambda.
 rho1 <- function(t, lambda, gamma) pmax(lambda - t / gamma, 0)
 rho1(c(0, 1, 2, 3), lambda = 1, gamma = 2)
 
 # The kink at zero, and the pair where the second derivative breaks.
 penalties7::penalty_kinks(p, list(lambda = 1, gamma = 2))
 
-# The literature's shape, held.
-term_hyper(mcp(~ x1 + x2, gamma = 3))
+# The literature's shape is held by default, and `gamma = NULL` estimates it
+# over a grid.
+term_hyper(mcp(~ x1 + x2))
+term_hyper(mcp(~ x1 + x2, gamma = NULL))
+term_grid(mcp(~ x1 + x2, gamma = NULL))
 
-# At or below 1 the objective need not be convex, so it is refused.
+# At or below 1 the objective need not be convex, so it is rejected.
 try(mcp(~ x1 + x2, gamma = 1))
 
 

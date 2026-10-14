@@ -4,7 +4,7 @@
 \alias{term_predict.SmoothTerm}
 \title{A Smooth Term's Block at New Rows}
 \arguments{
-\item{term}{A built \code{\link[=SmoothTerm]{SmoothTerm()}}. An unbuilt one throws
+\item{term}{A built \code{\link[=SmoothTerm]{SmoothTerm()}}. An unbuilt term signals the error
 \code{"the term has not been built; call term_build(term, data) first."}.}
 
 \item{newdata}{A data frame carrying the covariates and the \code{by} variable.}
@@ -26,20 +26,23 @@ new rows.
 \details{
 The basis object in \code{blueprint$core} carries the knots and the transform, so
 the columns at new rows are the same functions of the covariate as the
-fitted ones, so \eqn{\tilde{X}\beta} is the fitted smooth evaluated
-there. Rebuilding instead would place the knots on the new range
-and compute another transform: measured on 80 points, predicting on the
-first ten agrees with those rows of the block exactly and rebuilding differs
-by 2.85.
+fitted ones, and \eqn{\tilde{X}\beta} is the fitted smooth evaluated
+there. Rebuilding on the new rows would place the knots on their range and
+compute another transform. Predicting on the first rows of the data
+reproduces those rows of the block exactly, and rebuilding on them gives a
+different block (see the examples).
 
 A factor \code{by} is expanded against \code{blueprint$by_levels}, so \code{newdata} need
 carry only the levels its own rows use and still gets every column, and the
-block is built in the storage the build settled on.
+block is built in the storage the build settled on. A level that was not
+present at build signals an error.
 
-New covariate values outside the range the basis was placed on are
-evaluated, not refused. A B-spline is zero beyond its knots, so the fitted
-function flattens rather than extrapolating a trend; read a prediction far
-outside the fitting range with that in mind.
+Covariate values outside the interval on which the basis was placed signal
+an error that counts the points outside it. For the default smoother this
+interval is the observed range of the covariate at build, widened by a
+thousandth of that range at each end, and a smoother can set it with \code{lower}
+and \code{upper}. Inside the interval the columns are evaluated from the
+recorded basis.
 }
 \examples{
 set.seed(1)

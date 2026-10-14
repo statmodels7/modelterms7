@@ -16,20 +16,21 @@ NULL
 #' list, dropping the `NULL` entries, which are the ones to be estimated.
 #'
 #' @details
-#' The check happens at construction, where the caller can see it, instead of
-#' at the fit three layers away. A name the penalty does not carry is an error
-#' naming the ones it does. That is what turns `mcp(x, a = 3)`, SCAD's shape
-#' written on an MCP whose own shape is `gamma`, into a message instead of an
-#' argument that lands in `...` and does nothing.
+#' The check is made at construction and not at the fit. A name that the
+#' penalty does not carry is an error that lists the names it does carry. In
+#' the penalized constructors, an argument written for another penalty, such as
+#' `mcp(x, a = 3)`, which gives SCAD's shape to an MCP whose own shape is
+#' `gamma`, is rejected earlier, as an argument that the constructor does not
+#' have (see [penalized_terms()]).
 #'
 #' The bounds are open, as they are everywhere in the toolkit: a ridge at
 #' \eqn{\lambda = 0} is no penalty at all, and an elastic net at
 #' \eqn{\alpha = 0} has no kink and is a penalty of another kind.
 #'
-#' One argument carries three states, each read for one hyperparameter at a
-#' time: `NULL` has the path build the grid, one number holds the
-#' hyperparameter, and several are the grid itself. This returns the second of
-#' the three; [check_values()] returns the third.
+#' One argument carries three states, read for one hyperparameter at a time:
+#' `NULL` leaves the hyperparameter to be estimated, one number holds it, and
+#' several numbers are the grid itself. This returns the second of the three;
+#' [check_values()] returns the third.
 #'
 #' @param values A named list of the constructor's arguments, `NULL`
 #'   where the hyperparameter is to be estimated.
@@ -59,9 +60,9 @@ check_hyper <- function(values, penalty, what = "this term") {
 #' @details
 #' Several values are neither a held hyperparameter nor a request to build a
 #' grid: they are the grid. Each is checked against the penalty's bounds as a
-#' held value would be. Nothing else is applied to them: the value that
+#' held value would be. No other rule is applied to them: the value that
 #' empties the block does not cap them and the depth of the path does not
-#' reach them, the caller having said which values to visit.
+#' apply to them, since the values to visit are given.
 #'
 #' They are sorted, because a path is walked from the emptiest fit towards the
 #' fullest and its warm starts follow that order, and duplicates are dropped.
@@ -146,35 +147,44 @@ check_values <- function(values, penalty, what = "this term") {
 #'
 #' @description
 #' Reports the hyperparameter values the caller fixed in the constructor, one
-#' entry per penalty the term carries. A hyperparameter left `NULL` is
-#' **estimated** by whatever criterion the fit runs and does not appear here,
-#' so an empty result means every one of them is free.
+#' entry per penalty the term carries. A hyperparameter left `NULL`, or
+#' written out as a grid, is **estimated** by the fit and does not appear
+#' here, so an empty result means that the term holds none.
 #'
 #' @details
 #' # The three states of one argument
 #'
-#' A constructor's hyperparameter argument carries three meanings, read per
-#' hyperparameter at a time. `NULL`, the default, has the path build a
-#' grid or a marginal criterion estimate the value at the mode. **One number**
-#' holds it, and that is what this reports. **Several numbers** are a grid the
-#' path visits as they stand, which [term_values()] reports; the
-#' hyperparameter is still estimated there, the caller having said where to
-#' look, leaving the answer to the fit.
+#' A constructor's hyperparameter argument carries three meanings, read for
+#' one hyperparameter at a time. `NULL` leaves the hyperparameter to be
+#' estimated: a path builds a grid for a penalty with a kink, and a marginal
+#' criterion estimates the value at the mode for a smooth one. `NULL` is the
+#' default for `lambda` and `alpha`, whereas the shape of [scad()] and [mcp()]
+#' defaults to a held number, and `NULL` there has the shape estimated.
+#' **One number** holds the hyperparameter, and that is what this function
+#' reports. **Several numbers** are a grid that the path visits as they stand,
+#' which [term_values()] reports; the hyperparameter is still estimated, the
+#' values to search being given and the estimate being left to the fit.
 #'
 #' # How the entries are keyed
 #'
 #' The names are the ones [term_penalties()] gives its entries: `""` for a
-#' penalty covering the whole term, and `parameter::label` for one a
-#' subformula brought in. A term whose penalties come from sub-terms, which is
-#' what a structural term with subformulas is, propagates their held values
-#' without a method of its own, every entry of that enumeration carrying its
-#' own in the field `fixed`.
+#' penalty covering the whole term, and `parameter::label` for a penalty
+#' brought in by a subformula. A term whose penalties come from sub-terms, such
+#' as [nl()] or [seg()] with subformulas, propagates their held values without
+#' a method of its own, every entry of that enumeration carrying its own in the
+#' field `fixed`.
 #'
-#' A built term answers from those entries and an unbuilt one from its own
-#' `hyper` property, so the answer is the same before and after a build.
+#' A built term reports those entries, and an unbuilt term reports its own
+#' `hyper` property with the names as written. The two answers are the same
+#' for the penalized terms, and for [s()] and [random()] where the names are
+#' not qualified. A qualified name, such as `lambda.a` for the level `a` of a
+#' factor, is reported as written before the build and under its entry after
+#' it. For a term whose held values sit in subformulas, such as [nl()] and
+#' [seg()], the sub-terms exist only after the build, so an unbuilt term
+#' reports an empty list.
 #'
 #' @param term A term, built or not.
-#' @param ... Passed to methods. No shipped method reads anything here.
+#' @param ... Passed to methods. The shipped methods do not use it.
 #'
 #' @return A named list, one entry per penalty of the term and named as
 #'   [term_penalties()] names it, each entry a named list of single numbers
@@ -197,12 +207,17 @@ check_values <- function(values, penalty, what = "this term") {
 #' # One of two held, the other estimated.
 #' term_hyper(enet(~ x, alpha = 0.5))
 #'
-#' # A held value on a sub-term is reported under that entry's name.
+#' # The shape of SCAD is held by default; NULL has it estimated.
+#' term_hyper(scad(~ x))
+#' term_hyper(scad(~ x, a = NULL))
+#'
+#' # A held value on a sub-term is reported under that entry's name once the
+#' # term is built.
 #' set.seed(4)
 #' d <- data.frame(x = runif(40, 0, 5), g = factor(rep(1:4, 10)))
-#' nb <- term_build(nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g, lambda = 2),
-#'                     r ~ 1), d)
-#' term_hyper(nb)
+#' nu <- nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g, lambda = 2), r ~ 1)
+#' term_hyper(nu)
+#' term_hyper(term_build(nu, d))
 #'
 #' @export
 #' @aliases term_hyper.model_term
@@ -233,9 +248,9 @@ S7::method(term_hyper, model_term) <- function(term, ...) {
 #' The Held Smoothing Parameters of a Smooth
 #'
 #' @description
-#' Carries the `lambda` a smooth's constructor was given onto the names
-#' its penalty uses, and checks it against the positivity every smoothing
-#' parameter obeys.
+#' Carries the `hyper` argument of [s()] or [te()] onto the names its penalty
+#' uses, and checks that every held smoothing parameter is finite and strictly
+#' positive.
 #'
 #' @details
 #' A one-dimensional smooth and an isotropic tensor product carry one
@@ -256,8 +271,8 @@ S7::method(term_hyper, model_term) <- function(term, ...) {
 #' @keywords internal
 smooth_hyper <- function(hyper, names, what = "this smooth") {
   if (is.null(hyper)) return(list())
-  if (!is.numeric(hyper) || !length(hyper) || anyNA(hyper)) {
-    stop(sprintf("'hyper' in '%s' must be a number, or NULL.", what),
+  if (!is.numeric(hyper) || !length(hyper) || !all(is.finite(hyper))) {
+    stop(sprintf("'hyper' in '%s' must be a finite number, or NULL.", what),
          call. = FALSE)
   }
   nm <- base::names(hyper)
@@ -301,11 +316,14 @@ smooth_hyper <- function(hyper, names, what = "this smooth") {
 #' only what can be checked before the penalty exists.
 #'
 #' @details
-#' [random()] builds one of three penalties depending on what it was given: a
-#' ridge, a structured prior over a \pkg{parameters7} matrix, or a
-#' \pkg{distributions7} family used coordinatewise. Which names there are is
-#' therefore not known until the term is built. The shape is checked here and the
-#' names against the penalty by [check_hyper()] at that point.
+#' [random()] builds its penalty from the distribution of the effects with
+#' [penalties7::distrib_penalty()]: a centered Gaussian by default, a
+#' multivariate \pkg{distributions7} family for correlated effects, or a
+#' univariate family used once for each within-group column. A smooth whose
+#' penalty comes from a factory, or that has one smoothing parameter per level
+#' of a factor, is read in the same way. The names of the hyperparameters are
+#' therefore known only when the term is built. The shape is checked here and
+#' the names against the penalty by [check_hyper()] at that point.
 #'
 #' A vector entry is a written-out grid, exactly as it is in the constructors
 #' that name their hyperparameters, so the length is not
@@ -349,16 +367,16 @@ as_hyper <- function(x, what = "this term") {
 #' @details
 #' How finely a hyperparameter is swept belongs to the term for the same
 #' reason as whether it is swept at all: a penalized block of four columns
-#' and one of four hundred want different grids, and a criterion applies to
-#' every term of the model at once and cannot know which it is looking at.
-#' Where a term says nothing the criterion's own default is used.
+#' and one of four hundred want different grids, and a criterion is applied to
+#' every term of the model at once. Where a term gives no size, the path of the
+#' fitting layer uses its own default.
 #'
-#' Two values is the smallest grid that is a grid. There is no upper limit
-#' beyond the caller's patience: each point of a path is a whole fit, so the
-#' cost is linear in the number asked for.
+#' The smallest grid has two values. There is no upper limit; each point of a
+#' path is a whole fit, so the cost grows linearly in the number of values on
+#' one axis.
 #'
 #' @param values A named list of the constructor's arguments, `NULL`
-#'   where the criterion's default is wanted.
+#'   where the path's default size is wanted.
 #' @param penalty A \pkg{penalties7} penalty, or a function returning one,
 #'   used only to read the names.
 #' @param what The constructor's name, for the message.
@@ -396,35 +414,45 @@ check_grid <- function(values, penalty, what = "this term") {
 }
 
 
-#' @title The Grid a Term Asks For
+#' @title The Grid Sizes of a Term
 #'
 #' @description
-#' Reports how many values a path visits for each of the term's
-#' hyperparameters, one entry per penalty. A hyperparameter the term names
-#' nothing for is swept at the fitting layer's own default.
+#' Reports the number of values that a path visits for each hyperparameter of
+#' the term that is swept, one entry per penalty. A hyperparameter that the
+#' term holds has no grid and is not reported. A swept hyperparameter for
+#' which the term records no size is covered at the default size of the fitting
+#' layer.
 #'
 #' @details
 #' How finely a hyperparameter is swept belongs to the term because the term is
 #' where the penalty is named: a block of four columns and one of four hundred
-#' want different grids, and an outer criterion, which is put to every
-#' hyperparameter of the model, does not know which it is looking at.
+#' want different grids, and an outer criterion applies to every
+#' hyperparameter of the model alike, so a size set there could not
+#' distinguish between them.
 #'
-#' Only a hyperparameter with a **path** has a grid. [ridge()], [s()], [te()]
-#' and [random()] report nothing, their hyperparameters being estimated at the
-#' mode by a marginal criterion; [lasso()] reports its `n_lambda`, and
-#' [enet()], [scad()] and [mcp()] report both of theirs. Those constructors
-#' write their defaults into the term, so `lasso(~ x)` reports `lambda = 25`
-#' where an unset argument would give an empty list.
+#' Only a hyperparameter with a **path** has a grid, and a held
+#' hyperparameter has none. [ridge()], [s()] and [te()] with their default
+#' penalty, and [random()] with its default Gaussian prior, report nothing,
+#' their hyperparameters being estimated at the mode by a marginal criterion.
+#' A smoother whose penalty factory has a kink is swept by a path but reports
+#' nothing either, and the path uses its default size. [lasso()] reports its
+#' `n_lambda`, [enet()] reports `n_lambda` and `n_alpha`, and [scad()] and
+#' [mcp()] report `n_lambda` together with `n_a` or `n_gamma` where the shape
+#' is estimated, since the shape is held by default. These constructors write
+#' their sizes into the term, so `lasso(~ x)` reports `lambda = 25` where an
+#' unset argument would give an empty list. A hyperparameter written out as a
+#' vector has no grid to build and is not reported here; the path visits the
+#' written-out values, which [term_values()] reports.
 #'
 #' The keys are [term_penalties()]'s entry names, `""` for a penalty over the
 #' whole term.
 #'
 #' @param term A term, built or not.
-#' @param ... Passed to methods. No shipped method reads anything here.
+#' @param ... Passed to methods. The shipped methods do not use it.
 #'
 #' @return A named list, one entry per penalty of the term, each a named list
-#'   of single whole numbers keyed by hyperparameter. Empty where the term
-#'   names no grid at all.
+#'   of single whole numbers keyed by hyperparameter. Empty where no
+#'   hyperparameter of the term has a recorded grid size.
 #'
 #' @seealso [term_path_min()] for how far down the path reaches,
 #'   [term_search()] for how several of them are combined, [term_values()] for
@@ -435,8 +463,13 @@ check_grid <- function(values, penalty, what = "this term") {
 #' term_grid(lasso(~ x))
 #' term_grid(lasso(~ x, n_lambda = 50))
 #'
-#' # Two axes, and their two sizes: the kink axis is swept far more finely.
+#' # Two axes, and their two sizes: the kink axis is swept more finely.
 #' term_grid(enet(~ x))
+#'
+#' # A held hyperparameter has no grid, and neither has the held shape of SCAD.
+#' term_grid(enet(~ x, alpha = 0.5))
+#' term_grid(scad(~ x))
+#' term_grid(scad(~ x, a = NULL))
 #'
 #' # A penalty with no kink has no path, so nothing to count.
 #' term_grid(ridge(~ x))
@@ -448,20 +481,38 @@ term_grid <- S7::new_generic("term_grid", "term",
   function(term, ...) S7::S7_dispatch())
 
 S7::method(term_grid, model_term) <- function(term, ...) {
-  ent <- tryCatch(term_penalties(term), error = function(e) list())
-  if (length(ent)) {
-    out <- list()
-    for (e in ent) {
-      g <- e$n_values
-      if (is.null(g) || !length(g)) next
-      out[[if (is.null(e$name)) "" else e$name]] <- g
-    }
-    if (length(out)) return(out)
+  out <- list()
+  for (e in .hyper_entries(term)) {
+    g <- e$n_values[.built(e)]
+    if (length(g)) out[[e$name]] <- g
   }
-  g <- term@grid
-  if (!length(g)) return(list())
-  stats::setNames(list(g), "")
+  out
 }
+
+# The entries the hyperparameter reporters read: term_penalties() of a built
+# term, and otherwise one entry over the whole term from its own properties.
+.hyper_entries <- function(term) {
+  ent <- tryCatch(term_penalties(term), error = function(e) list())
+  if (!length(ent)) {
+    ent <- list(list(name = "", fixed = term@hyper, n_values = term@grid,
+                     values = term@values, min_ratio = term@min_ratio,
+                     search = term@search))
+  }
+  lapply(ent, function(e) {
+    if (is.null(e$name)) e$name <- ""
+    e
+  })
+}
+
+# The hyperparameters of an entry that a path sweeps: those with a grid to
+# build or one written out, less those held.
+.swept <- function(e) {
+  setdiff(union(names(e$n_values), names(e$values)), names(e$fixed))
+}
+
+# The hyperparameters of an entry whose grid is built: swept, and not
+# written out.
+.built <- function(e) setdiff(.swept(e), names(e$values))
 
 
 #' Reject a Written-Out Grid Where There Is No Path
@@ -472,12 +523,12 @@ S7::method(term_grid, model_term) <- function(term, ...) {
 #'
 #' @details
 #' Several values are a grid for a path to visit, and only a penalty with a
-#' kink is swept along one: everything else has its hyperparameter read at the
-#' mode by a marginal criterion, which would take the vector and do nothing
-#' with it. The question is put to the penalty at a probe value of its own
-#' hyperparameters, the kink set being structural, so a ridge and a random
-#' effect under a Gaussian prior are covered by the same line as a family
-#' added later.
+#' kink is swept along one. For any other penalty the hyperparameter is
+#' estimated at the mode by a marginal criterion, and a vector given there
+#' would have no effect. Whether the penalty has a kink is read from the
+#' penalty at a probe value of its own hyperparameters, the kink set being
+#' structural, so a ridge and a random effect under a Gaussian prior are
+#' covered by the same test as a family added later.
 #'
 #' @param values The written-out grids, as [check_values()] returns
 #'   them.
@@ -495,7 +546,7 @@ reject_pathless_values <- function(values, pen, what = "this term") {
                 error = function(e) 0)
   if (length(k)) return(invisible(NULL))
   stop(sprintf(paste0("'%s' in '%s' has several values, and this term has no",
-                      " path to visit them\n  on: its penalty has no kink, so",
+                      " path to visit them:\n  its penalty has no kink, so",
                       " the hyperparameter is estimated by the\n  criterion at",
                       " the mode. Give one number to hold it, or NULL to",
                       " estimate it."),
@@ -516,9 +567,9 @@ reject_pathless_values <- function(values, pen, what = "this term") {
 #' does not cap it and [term_path_min()] does not extend it: those two
 #' construct a grid, and here there is nothing to construct.
 #'
-#' A hyperparameter written out is still **estimated**. What the caller fixed
-#' is where to look, not the answer, so a fit reports it as chosen by the
-#' criterion, and [term_hyper()] does not carry it.
+#' A hyperparameter written out is still **estimated**. The caller supplies the
+#' values to search and not the estimate, so a fit reports the hyperparameter as
+#' chosen by the criterion, and [term_hyper()] does not carry it.
 #'
 #' The values are sorted and deduplicated at construction, because a path is
 #' walked from the emptiest fit toward the fullest and its warm starts follow
@@ -529,7 +580,7 @@ reject_pathless_values <- function(values, pen, what = "this term") {
 #' whole term.
 #'
 #' @param term A term, built or not.
-#' @param ... Passed to methods. No shipped method reads anything here.
+#' @param ... Passed to methods. The shipped methods do not use it.
 #'
 #' @return A named list, one entry per penalty of the term, each a named list
 #'   of numeric vectors keyed by hyperparameter, sorted and without
@@ -549,7 +600,7 @@ reject_pathless_values <- function(values, pen, what = "this term") {
 #' term_values(lasso(~ x, lambda = 3))
 #' term_hyper(lasso(~ x, lambda = 3))
 #'
-#' # A penalty with no kink has no path, so several values are refused.
+#' # A penalty with no kink has no path, so several values are rejected.
 #' try(ridge(~ x, lambda = c(1, 2)))
 #'
 #' @export
@@ -580,11 +631,10 @@ S7::method(term_values, model_term) <- function(term, ...) {
 #' Validates the fraction of the emptying value a path descends to.
 #'
 #' @details
-#' One number per term, one per hyperparameter being unnecessary: only the
-#' path over the size of the kink uses it: a bounded hyperparameter is swept
-#' over its own interval and a shape that does not move the kink over a
-#' geometric grid above its lower bound, and a fraction of an emptying value
-#' means nothing in either.
+#' The fraction is one number per term, because only the path over the size of
+#' the kink uses it. A bounded hyperparameter is swept over its own interval,
+#' and a shape that does not move the kink over a geometric grid above its
+#' lower bound; a fraction of an emptying value has no meaning on either axis.
 #'
 #' @param v What the constructor was given, or `NULL`.
 #' @param what The term's label, for the message.
@@ -615,26 +665,29 @@ check_min_ratio <- function(v, what = "this term") {
 #' @details
 #' It belongs to the term for the same reason the grid size does: how far the
 #' useful range of a hyperparameter extends is a property of the block, and a
-#' criterion applies to every term of the model at once.
+#' criterion is applied to every term of the model at once.
 #'
-#' It is **one number per penalty**, one per hyperparameter being unnecessary:
-#' only the path over the size of the kink uses it. A bounded hyperparameter
-#' is swept over its own interval, and a shape that does not move the kink over
-#' a geometric grid above its lower bound; a fraction of an emptying value
-#' means nothing in either.
+#' It is **one number per penalty**, because only the path over the size of
+#' the kink uses it. A bounded hyperparameter is swept over its own interval,
+#' and a shape that does not move the kink over a geometric grid above its
+#' lower bound; a fraction of an emptying value has no meaning on either axis.
 #'
-#' [lasso()], [enet()], [scad()] and [mcp()] write their `min_ratio` default of
-#' `1e-4` into the term, so they report it whether or not the caller set one.
+#' [lasso()], [enet()], [scad()] and [mcp()] write their `min_ratio` default
+#' into the term, so each reports it whether or not the caller set one, as
+#' long as the path over `lambda` is built. A penalty whose `lambda` is held or
+#' written out reports nothing, and the constructors reject an explicit
+#' `min_ratio` for it.
 #' [ridge()], [s()], [te()] and [random()] have no path and report nothing.
 #'
 #' The keys are [term_penalties()]'s entry names, `""` for a penalty over the
 #' whole term.
 #'
 #' @param term A term, built or not.
-#' @param ... Passed to methods. No shipped method reads anything here.
+#' @param ... Passed to methods. The shipped methods do not use it.
 #'
 #' @return A named list, one entry per penalty of the term, each a single
-#'   number in \eqn{(0, 1)}. Empty where the term names none.
+#'   number in \eqn{(0, 1)}. Empty where no penalty of the term has a swept
+#'   hyperparameter and a recorded depth.
 #'
 #' @seealso [term_grid()] for how many values the path visits,
 #'   [term_search()] for how several hyperparameters are combined.
@@ -644,8 +697,9 @@ check_min_ratio <- function(v, what = "this term") {
 #' term_path_min(lasso(~ x))
 #' term_path_min(lasso(~ x, min_ratio = 1e-6))
 #'
-#' # No path, nothing to report.
+#' # No path, or no swept hyperparameter, so nothing to report.
 #' term_path_min(ridge(~ x))
+#' term_path_min(lasso(~ x, lambda = 2))
 #'
 #' @export
 #' @aliases term_path_min.model_term
@@ -653,19 +707,17 @@ term_path_min <- S7::new_generic("term_path_min", "term",
   function(term, ...) S7::S7_dispatch())
 
 S7::method(term_path_min, model_term) <- function(term, ...) {
-  ent <- tryCatch(term_penalties(term), error = function(e) list())
-  if (length(ent)) {
-    out <- list()
-    for (e in ent) {
-      m <- e$min_ratio
-      if (is.null(m) || !length(m)) next
-      out[[if (is.null(e$name)) "" else e$name]] <- as.numeric(m)
-    }
-    if (length(out)) return(out)
+  out <- list()
+  for (e in .hyper_entries(term)) {
+    m <- e$min_ratio
+    # the depth belongs to the path over lambda, the size of the kink, and
+    # to the built path of an entry whose hyperparameters have other names
+    b <- .built(e)
+    uses <- if ("lambda" %in% .swept(e) || "lambda" %in% names(e$fixed))
+      "lambda" %in% b else length(b) > 0L
+    if (length(m) && uses) out[[e$name]] <- as.numeric(m)
   }
-  m <- term@min_ratio
-  if (!length(m)) return(list())
-  stats::setNames(list(as.numeric(m)), "")
+  out
 }
 
 
@@ -676,13 +728,13 @@ S7::method(term_path_min, model_term) <- function(term, ...) {
 #' hyperparameters.
 #'
 #' @details
-#' One word per term, one per hyperparameter being meaningless: it says how the
-#' hyperparameters are combined with each other, which is not a property any
-#' one of them has. It belongs to the term because a penalty with a kink is
-#' fitted by a scheme of its own, and how that scheme sweeps its own
-#' hyperparameters is part of the scheme. A criterion applies to every
-#' hyperparameter of the model, the smooth ones included, and would be
-#' carrying an argument most of them cannot read.
+#' The sweep is one word per term, because it states how the hyperparameters
+#' are combined with each other, which is not a property of any single
+#' hyperparameter. It belongs to the term because a penalty with a kink is
+#' fitted by a scheme of its own, and the way that scheme sweeps its
+#' hyperparameters is part of it. A criterion is applied to every
+#' hyperparameter of the model, the smooth ones included, and most of them
+#' cannot use such an argument.
 #'
 #' @param v What the constructor was given, or `NULL`.
 #' @param what The term's label, for the message.
@@ -711,27 +763,30 @@ check_search <- function(v, what = "this term") {
 #' names neither is covered the way the fitting layer covers one by default.
 #'
 #' @details
-#' It matters only for a term carrying **more than one** hyperparameter with a
-#' kink, so [enet()], [scad()] and [mcp()]; there is nothing to combine
-#' otherwise, and [lasso()] does not take the argument. Under `"grid"` the cost
-#' is the product of the term's own grids, 25 by 5 at the defaults; under
-#' `"cyclic"` it is their sum per pass.
+#' It matters only for a term with **more than one** swept hyperparameter:
+#' [enet()] by default, and [scad()] and [mcp()] when their shape is left
+#' `NULL` to be estimated, since the shape is held by default. There is
+#' nothing to combine otherwise, and [lasso()] does not take the argument.
+#' Under `"grid"` the cost is the product of the grids of the swept
+#' hyperparameters; under `"cyclic"` it is their sum per pass.
 #'
-#' It is one word per penalty. It says how the hyperparameters are combined
-#' **with each other**, which is not a property any one of them has.
+#' It is one word per penalty, and it states how the hyperparameters are
+#' combined **with each other**, which is not a property of any single one of
+#' them.
 #'
-#' Between two terms the sweep alternates whatever each one names, so
-#' `y ~ lasso(X) + enet(R)` costs the two blocks added, so one term asking for
-#' a product does not make the other pay for it.
+#' Between two terms the sweep alternates, whichever search each term names, so
+#' `y ~ lasso(X) + enet(R)` costs the two blocks added. A term with
+#' `search = "grid"` therefore does not raise the cost of the other term.
 #'
 #' The keys are [term_penalties()]'s entry names, `""` for a penalty over the
 #' whole term.
 #'
 #' @param term A term, built or not.
-#' @param ... Passed to methods. No shipped method reads anything here.
+#' @param ... Passed to methods. The shipped methods do not use it.
 #'
 #' @return A named list, one entry per penalty of the term, each the single
-#'   string `"grid"` or `"cyclic"`. Empty where the term names none.
+#'   string `"grid"` or `"cyclic"`. Empty where every penalty of the term has
+#'   fewer than two swept hyperparameters.
 #'
 #' @seealso [term_grid()] for the sizes being combined, [term_path_min()] for
 #'   the depth of the kink-size axis.
@@ -740,6 +795,10 @@ check_search <- function(v, what = "this term") {
 #' # The default is a product of the two axes; cyclic sweeps one at a time.
 #' term_search(enet(~ x))
 #' term_search(enet(~ x, search = "cyclic"))
+#'
+#' # SCAD sweeps its shape only when it is estimated.
+#' term_search(scad(~ x))
+#' term_search(scad(~ x, a = NULL))
 #'
 #' # One hyperparameter, so nothing to combine and no argument to take.
 #' term_search(lasso(~ x))
@@ -751,35 +810,29 @@ term_search <- S7::new_generic("term_search", "term",
   function(term, ...) S7::S7_dispatch())
 
 S7::method(term_search, model_term) <- function(term, ...) {
-  ent <- tryCatch(term_penalties(term), error = function(e) list())
-  if (length(ent)) {
-    out <- list()
-    for (e in ent) {
-      s <- e$search
-      if (is.null(s) || !length(s)) next
-      out[[if (is.null(e$name)) "" else e$name]] <- as.character(s)
-    }
-    if (length(out)) return(out)
+  out <- list()
+  for (e in .hyper_entries(term)) {
+    s <- e$search
+    if (length(s) && length(.swept(e)) > 1L) out[[e$name]] <- as.character(s)
   }
-  s <- term@search
-  if (!length(s)) return(list())
-  stats::setNames(list(as.character(s)), "")
+  out
 }
 
 
 #' The Hyperparameter Names a Penalty Factory Produces
 #'
 #' @description
-#' Builds the penalty at a probe size and reads its `params`, returning an
-#' empty vector where it cannot be built.
+#' Builds the penalty at a probe size and reads its `params`, returning `NULL`
+#' where it cannot be built.
 #'
 #' @details
 #' A factory is a function of the coefficient count, and the names it produces
 #' do not depend on that count, so one coefficient is enough to read them. The
 #' probe is wrapped because a factory may reject a size of one, and the two
-#' outcomes are kept apart: `NULL` says nothing is known here, an empty vector
-#' says the penalty carries no hyperparameter. Every shipped factory answers,
-#' so `NULL` is reachable only from one a caller wrote.
+#' outcomes are kept apart: `NULL` marks a penalty whose names cannot be read
+#' here, and an empty vector marks a penalty with no hyperparameter. Every
+#' shipped factory returns a penalty, so `NULL` arises only from a factory
+#' written by a caller.
 #'
 #' @param factory A function of the coefficient count returning a penalty, or
 #'   a penalty.
@@ -805,23 +858,23 @@ S7::method(term_search, model_term) <- function(term, ...) {
 #' hyperparameter to share, empty where the constructor was given none.
 #'
 #' @details
-#' Two forms are accepted and they say the same thing. An unnamed single string
-#' shares **the** hyperparameter, and is legal only where the penalty carries
-#' one: it is the short form for the frequent case, a smooth or a ridge. A
-#' named vector names which, `c(alpha = "A")`, and is what a penalty carrying
-#' several needs, since sharing the mixing of an elastic net while leaving its
-#' strength free is a model and guessing which was meant is not.
+#' Two forms are accepted and both have the same meaning. An unnamed single
+#' string shares **the** hyperparameter, and is legal only where the penalty
+#' carries one: it is the short form for the frequent case, a smooth or a
+#' ridge. A named vector names which, `c(alpha = "A")`, and is what a penalty
+#' carrying several needs, since sharing the mixing of an elastic net while
+#' leaving its strength free is a different model from the reverse, and the
+#' code does not guess which one was meant.
 #'
-#' The short form on a penalty carrying several is an error listing them,
-#' rather than a rule about position. The names are checked against the
-#' penalty's own, so a misspelling is reported where it was written.
+#' The short form on a penalty carrying several hyperparameters is an error
+#' that lists them. The names are checked against the penalty's own, so a
+#' misspelling is reported where it was written.
 #'
-#' Sharing does not merge the penalties. They stay two objects estimated at one
-#' value, so nothing here asks whether they are comparable: the two may weigh
-#' quite different matrices, and whether that is the model wanted is the
-#' caller's to know. What the documentation says instead is that `id` is worth
-#' care, and that it means what one expects between penalties of the same shape
-#' over covariates of comparable scale.
+#' Sharing does not merge the penalties. They remain two objects estimated at
+#' one value, and no check is made that they are comparable: the two may weigh
+#' quite different matrices, and the caller decides whether that is the model
+#' intended. A shared value is most meaningful between penalties of the same
+#' shape over covariates of comparable scale.
 #'
 #' @param x The `id` argument as given: `NULL`, a single string, or a named
 #'   character vector.
@@ -831,7 +884,9 @@ S7::method(term_search, model_term) <- function(term, ...) {
 #'   written, to be resolved by a second call where the names are known.
 #' @param what How to name the term in a message.
 #'
-#' @return A named character vector, possibly empty.
+#' @return A character vector, possibly empty, named by the hyperparameters.
+#'   In the deferred case (`names = NULL`) a single unnamed string is returned
+#'   unnamed, to be named by the second call.
 #'
 #' @seealso [term_ids()], which reports it; [check_hyper()] for the argument
 #'   that holds a hyperparameter instead of sharing it.
@@ -864,7 +919,7 @@ check_ids <- function(x, names, what = "this term") {
   if (is.null(nm) || !all(nzchar(nm))) {
     if (length(x) != 1L || length(avail) != 1L) {
       stop(sprintf(paste0(
-        "'id' in '%s' has no names, which shares THE hyperparameter and is\n",
+        "'id' in '%s' has no names, which shares the hyperparameter and is\n",
         "  only meaningful where the penalty carries one. It carries %d: %s.\n",
         "  Name which to share, as id = c(%s = \"...\")."),
         what, length(avail), paste(avail, collapse = ", "), avail[1L]),

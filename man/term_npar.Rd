@@ -10,10 +10,10 @@ term_npar(term, ...)
 }
 \arguments{
 \item{term}{A built term (see \code{\link[=term_build]{term_build()}}). An unbuilt additive term
-throws
+signals the error
 \code{"the term has not been built; call term_build(term, data) first."}.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A single whole number.
@@ -22,13 +22,14 @@ A single whole number.
 How many parameters of its own a built term carries: the number of columns
 of the design block for an additive term, and the number of entries of
 \code{\link[=term_params]{term_params()}} for a structural one, which has no block. It is the length
-of the vector a \code{\link[=term_penalties]{term_penalties()}} entry indexes into, the length
-\code{\link[=edf]{edf()}} measures against, and the length a fit reserves for the term.
+of the vector into which a \code{\link[=term_penalties]{term_penalties()}} entry indexes, the length
+against which \code{\link[=edf]{edf()}} is measured, and the length that a fit reserves for
+the term.
 }
 \details{
 The two methods are the two branches. On \code{\link[=additive_term]{additive_term()}} it is
-\code{ncol(term@X)}, so it equals \code{length(term_coef_names(term))} and a
-specification throws. On \code{\link[=structural_term]{structural_term()}} it is
+\code{ncol(term@X)}, so it equals \code{length(term_coef_names(term))}, and a
+specification signals an error. On \code{\link[=structural_term]{structural_term()}} it is
 \code{length(term_params(term))}, which is the count of the term's own
 parameters after any subformula has expanded: \code{gas(p = 1, q = 1)} has three,
 and \code{gas(p = 1, q = 1, omega ~ z)} has four, the level's intercept and slope
@@ -53,6 +54,6 @@ term_params(gz)
 }
 \seealso{
 \code{\link[=term_coef_names]{term_coef_names()}} and \code{\link[=term_params]{term_params()}} for the names behind the
-count, \code{\link[=term_matrix]{term_matrix()}} for the block, \code{\link[=edf]{edf()}} for what the term spends of
-it.
+count, \code{\link[=term_matrix]{term_matrix()}} for the block, \code{\link[=edf]{edf()}} for the effective degrees of
+freedom of the term.
 }

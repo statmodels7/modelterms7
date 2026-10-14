@@ -28,16 +28,12 @@ The dense indicator part holds \code{n * ncol_ind} cells where the sparse one
 holds one non-zero per row, so that product is what separates the two
 routes, and the threshold is read off it rather than off a count of levels.
 
-Measured over fifteen combinations of sample size and level count, building
-the block and forming its crossproduct, the routes cross between
-\eqn{10^5} and \eqn{3 \times 10^5} cells. Below that the sparse route loses
-a little (0.6 to 0.9 times the dense route); above it the gap opens quickly:
-at 20000 rows the ratios are 1.4 at 15 levels, 12.3 at 25, 14.4 at 60,
-139 at 200 and 445 at 400.
+Below about \eqn{10^5} cells the sparse route is slightly slower than the
+dense route, and above it the sparse route is faster, so the threshold is
+placed at \eqn{10^5}.
 
 A design carrying no factor has no indicator part, so the product is zero
-and the block is built dense, which is the right answer for a purely
-continuous design.
+and the block is built dense, which suits a purely continuous design.
 }
 \seealso{
 \code{\link[=.indicator_cols]{.indicator_cols()}} for the count it reads, \code{\link[=linpar]{linpar()}} for the

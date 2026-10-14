@@ -12,7 +12,7 @@ term_kinks(term, coef = NULL, ...)
 
 \item{coef}{The term's coefficients, \code{NULL} for the stored ones.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 An integer vector of positions in the term's coefficients, possibly
@@ -20,25 +20,27 @@ empty.
 }
 \description{
 The positions, among the term's own coefficients, of those in which the
-model's objective is not differentiable at the coefficients given. A
-fitting layer reads it where a line search rejects every step along a
-Newton or Gauss-Newton direction: holding those coordinates at their
-values and solving for the rest is the step at a kink, the same thing
-holding a coordinate at a bound is at a boundary.
+term's contribution to the objective is not differentiable at the
+coefficients given. A fitting layer reads them where a line search rejects
+every step along a Newton or Gauss-Newton direction: holding those
+coordinates at their values and solving for the rest is the step at a kink,
+as holding a coordinate at a bound is the step at a boundary.
 }
 \details{
 A term whose contribution is a smooth function of its coefficients has no
-kink, and that is the base method's answer. The one shipped term that
-answers otherwise is the continuous break-point construction, \code{\link[=seg]{seg()}},
-whose truncated line \eqn{(x-\psi)_+} is not differentiable in
-\eqn{\psi} at an observation. Measured on
-\code{seg(x, psi ~ random(~1 | id))}, the penalized mode puts one group's
-break-point exactly on an observation, the one-sided slopes there being
-\eqn{+6.0} and \eqn{-1.6}, and a scoring step on all the coefficients is
-rejected at every length: the other groups' deviations then stay where they
-were, with scores up to \eqn{1.6}, and the objective 0.010 above the mode.
-Holding the two coordinates that move that break-point reaches the mode in
-four iterations.
+kink, and that is the base method's answer. Two shipped terms answer
+otherwise: the continuous break-point construction, \code{\link[=seg]{seg()}}, whose truncated
+line \eqn{(x-\psi)_+} is not differentiable in \eqn{\psi} at an
+observation, and \code{\link[=nl]{nl()}}, which reports the kinks of a \code{\link[=seg]{seg()}} sub-term that
+develops one of its parameters. A smoothed \code{\link[=seg]{seg()}} and the discontinuous
+\code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}} answer \code{integer(0)}. The kinks of a penalty are not
+reported here; \code{\link[=term_smooth]{term_smooth()}} reports them.
+
+In a penalized fit of \code{seg(x, psi ~ random(~ 1 | id))}, the mode can put one
+group's break-point exactly on an observation, where the one-sided slopes
+differ. A scoring step on all the coefficients can then be rejected at every
+length. Holding the coordinates that move that break-point and solving for
+the rest gives a step that reaches the mode.
 }
 \examples{
 d <- data.frame(x = seq(0, 10, length.out = 41))

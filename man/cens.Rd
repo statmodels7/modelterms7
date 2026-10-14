@@ -8,21 +8,22 @@ cens(y, lwr = -Inf, upr = Inf)
 }
 \arguments{
 \item{y}{A numeric vector of responses, \code{NA} at an interval-censored
-observation. Coerced with \code{\link[=as.numeric]{as.numeric()}}, so an integer vector is accepted
-and a factor is not.}
+observation. Coerced with \code{\link[=as.numeric]{as.numeric()}}, so an integer vector is accepted;
+a factor is rejected.}
 
 \item{lwr}{A numeric lower bound, of length 1 or \code{length(y)}, recycled to
-\code{length(y)}. \code{-Inf} by default, which is no left censoring. Any other
-length throws \code{"'lwr' must have length 1 or length(y)."}, and an \code{NA}
-entry throws \code{"'lwr' must not contain NA."}.}
+\code{length(y)}. \code{-Inf} by default, which is no left censoring. A factor is
+rejected. Any other length signals the error
+\code{"'lwr' must have length 1 or length(y)."}, and an \code{NA} entry signals
+\code{"'lwr' must not contain NA."}.}
 
 \item{upr}{A numeric upper bound, on the same terms, \code{Inf} by default. Every
-\code{upr} must be strictly above its \code{lwr}; equal bounds throw from the class
-validator.}
+\code{upr} must be strictly above its \code{lwr}; equal bounds are rejected by the
+class validator.}
 }
 \value{
-A \code{\link[=censored_response]{censored_response()}} object of length \code{length(y)}, carrying \code{y}
-unchanged (\code{NA} included), the recycled \code{lwr} and \code{upr}, and the derived
+A \code{\link[=censored_response]{censored_response()}} object holding \code{length(y)} observations,
+carrying \code{y} unchanged (\code{NA} included), the recycled \code{lwr} and \code{upr}, and the derived
 \code{status}.
 }
 \description{
@@ -45,22 +46,25 @@ classified by where it sits, with the bounds inclusive:\tabular{lll}{
 }
 
 
-The tests are applied in that order, so a value at or below \code{lwr} is left-
-censored even when it is also at or above \code{upr}; the validator forbids
-\code{lwr >= upr}, so the two cannot both bind. An \code{NA} value without two finite
-bounds says nothing about \eqn{Y} at all and throws.
+The left test is applied first and the right test second, and the later
+assignment overrides the earlier one, so a value that met both conditions
+would receive the status \code{"right"}. The class validator rejects
+\code{lwr >= upr}, so no value meets both. An \code{NA} value without two finite
+bounds carries no information about \eqn{Y}, and \code{cens()} signals an error.
 
-At the defaults \code{lwr = -Inf} and \code{upr = Inf} no value can reach a bound,
-every status comes back \code{"observed"}, and the object carries the same
-information the bare vector does.
+At the defaults \code{lwr = -Inf} and \code{upr = Inf}, every finite value has the
+status \code{"observed"}, and the object then carries the same information as the
+bare vector. Because the tests are inclusive, the value \code{-Inf} receives the
+status \code{"left"} and the value \code{Inf} the status \code{"right"}.
 }
 
 \section{Where it can be used}{
 On the left of a formula passed to \code{\link[=interpret_formula]{interpret_formula()}}, which returns the
-object as its \code{response} element. \code{statmodels7::statmod()} refuses that
-response with a message naming the gap: the toolkit marks censoring and does
-not yet assemble a censored likelihood from it. See \code{\link[=censored_response]{censored_response()}}
-for the four contributions such an assembler would need.
+object as its \code{response} element. \code{statmodels7::statmod()} and
+\code{statmodels7::rstatmod()} reject that response with an error message: the
+toolkit marks censoring and does not assemble a censored likelihood from it.
+See \code{\link[=censored_response]{censored_response()}} for the four contributions that such an assembler
+would need.
 }
 
 \examples{

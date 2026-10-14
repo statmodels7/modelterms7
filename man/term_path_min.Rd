@@ -10,11 +10,12 @@ term_path_min(term, ...)
 \arguments{
 \item{term}{A term, built or not.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A named list, one entry per penalty of the term, each a single
-number in \eqn{(0, 1)}. Empty where the term names none.
+number in \eqn{(0, 1)}. Empty where no penalty of the term has a swept
+hyperparameter and a recorded depth.
 }
 \description{
 Reports the fraction of the emptying value the path descends to. The path
@@ -25,16 +26,18 @@ larger one stops sooner.
 \details{
 It belongs to the term for the same reason the grid size does: how far the
 useful range of a hyperparameter extends is a property of the block, and a
-criterion applies to every term of the model at once.
+criterion is applied to every term of the model at once.
 
-It is \strong{one number per penalty}, one per hyperparameter being unnecessary:
-only the path over the size of the kink uses it. A bounded hyperparameter
-is swept over its own interval, and a shape that does not move the kink over
-a geometric grid above its lower bound; a fraction of an emptying value
-means nothing in either.
+It is \strong{one number per penalty}, because only the path over the size of
+the kink uses it. A bounded hyperparameter is swept over its own interval,
+and a shape that does not move the kink over a geometric grid above its
+lower bound; a fraction of an emptying value has no meaning on either axis.
 
-\code{\link[=lasso]{lasso()}}, \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}} and \code{\link[=mcp]{mcp()}} write their \code{min_ratio} default of
-\code{1e-4} into the term, so they report it whether or not the caller set one.
+\code{\link[=lasso]{lasso()}}, \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}} and \code{\link[=mcp]{mcp()}} write their \code{min_ratio} default
+into the term, so each reports it whether or not the caller set one, as
+long as the path over \code{lambda} is built. A penalty whose \code{lambda} is held or
+written out reports nothing, and the constructors reject an explicit
+\code{min_ratio} for it.
 \code{\link[=ridge]{ridge()}}, \code{\link[=s]{s()}}, \code{\link[=te]{te()}} and \code{\link[=random]{random()}} have no path and report nothing.
 
 The keys are \code{\link[=term_penalties]{term_penalties()}}'s entry names, \code{""} for a penalty over the
@@ -45,8 +48,9 @@ whole term.
 term_path_min(lasso(~ x))
 term_path_min(lasso(~ x, min_ratio = 1e-6))
 
-# No path, nothing to report.
+# No path, or no swept hyperparameter, so nothing to report.
 term_path_min(ridge(~ x))
+term_path_min(lasso(~ x, lambda = 2))
 
 }
 \seealso{

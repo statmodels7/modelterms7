@@ -18,30 +18,32 @@ written, to be resolved by a second call where the names are known.}
 \item{what}{How to name the term in a message.}
 }
 \value{
-A named character vector, possibly empty.
+A character vector, possibly empty, named by the hyperparameters.
+In the deferred case (\code{names = NULL}) a single unnamed string is returned
+unnamed, to be named by the second call.
 }
 \description{
 Validates \code{id} and returns it as a named character vector, one entry per
 hyperparameter to share, empty where the constructor was given none.
 }
 \details{
-Two forms are accepted and they say the same thing. An unnamed single string
-shares \strong{the} hyperparameter, and is legal only where the penalty carries
-one: it is the short form for the frequent case, a smooth or a ridge. A
-named vector names which, \code{c(alpha = "A")}, and is what a penalty carrying
-several needs, since sharing the mixing of an elastic net while leaving its
-strength free is a model and guessing which was meant is not.
+Two forms are accepted and both have the same meaning. An unnamed single
+string shares \strong{the} hyperparameter, and is legal only where the penalty
+carries one: it is the short form for the frequent case, a smooth or a
+ridge. A named vector names which, \code{c(alpha = "A")}, and is what a penalty
+carrying several needs, since sharing the mixing of an elastic net while
+leaving its strength free is a different model from the reverse, and the
+code does not guess which one was meant.
 
-The short form on a penalty carrying several is an error listing them,
-rather than a rule about position. The names are checked against the
-penalty's own, so a misspelling is reported where it was written.
+The short form on a penalty carrying several hyperparameters is an error
+that lists them. The names are checked against the penalty's own, so a
+misspelling is reported where it was written.
 
-Sharing does not merge the penalties. They stay two objects estimated at one
-value, so nothing here asks whether they are comparable: the two may weigh
-quite different matrices, and whether that is the model wanted is the
-caller's to know. What the documentation says instead is that \code{id} is worth
-care, and that it means what one expects between penalties of the same shape
-over covariates of comparable scale.
+Sharing does not merge the penalties. They remain two objects estimated at
+one value, and no check is made that they are comparable: the two may weigh
+quite different matrices, and the caller decides whether that is the model
+intended. A shared value is most meaningful between penalties of the same
+shape over covariates of comparable scale.
 }
 \seealso{
 \code{\link[=term_ids]{term_ids()}}, which reports it; \code{\link[=check_hyper]{check_hyper()}} for the argument

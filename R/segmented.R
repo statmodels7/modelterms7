@@ -1536,25 +1536,19 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
     for (i in seq_along(ent)) {
       idx <- unlist(lapply(ps, function(p) index[[p]][ent[[i]]$index]),
                     use.names = FALSE)
-      out[[length(out) + 1L]] <- list(
-        name = paste0(g, "::", ent[[i]]$name), index = idx,
-        penalty = fac[[i]](length(idx)),
-        # the pooled entry is ONE penalty over the union, so it holds what
-        # the shared sub-term holds -- they are the same declaration read
-        # once per coefficient of the kind
-        fixed = ent[[i]]$fixed, n_values = ent[[i]]$n_values,
-        min_ratio = ent[[i]]$min_ratio, ids = ent[[i]]$ids)
+      # the pooled entry is ONE penalty over the union, so it holds what
+      # the shared sub-term holds -- they are the same declaration read
+      # once per coefficient of the kind
+      out[[length(out) + 1L]] <- .entry_relabel(
+        ent[[i]], paste0(g, "::", ent[[i]]$name), idx,
+        penalty = fac[[i]](length(idx)))
     }
     pooled <- c(pooled, ps)
   }
   for (p in setdiff(devd, pooled)) {
     for (e in dev[[p]]$pens) {
-      out[[length(out) + 1L]] <- list(name = paste0(p, "::", e$name),
-                                      index = index[[p]][e$index],
-                                      penalty = e$penalty, fixed = e$fixed,
-                                      n_values = e$n_values,
-                                      min_ratio = e$min_ratio,
-                                      search = e$search, ids = e$ids)
+      out[[length(out) + 1L]] <- .entry_relabel(
+        e, paste0(p, "::", e$name), index[[p]][e$index])
     }
   }
   out

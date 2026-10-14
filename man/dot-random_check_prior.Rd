@@ -22,8 +22,8 @@ names what is wrong with it.
 }
 \details{
 What is rejected is a free location. It is confounded with the intercept of
-the equation the term sits in, leaving a flat direction along which the fit
-has no answer.
+the equation in which the term sits, leaving a flat direction in the
+objective.
 
 A location held at a value is identified whatever that value is, and it is
 not policed: it shrinks the effects toward that value, which is a modeling

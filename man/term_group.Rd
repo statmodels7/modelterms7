@@ -10,7 +10,7 @@ term_group(term, ...)
 \arguments{
 \item{term}{A built term. An unbuilt one returns \code{NULL}.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A list with \code{expr} (a language object), \code{levels} (a character
@@ -19,8 +19,8 @@ vector), \code{dim} (a single integer) and \code{names} (\code{dim} column names
 }
 \description{
 For a term whose coefficients are one set per level of a grouping variable,
-the expression that variable came from, the levels it took, and how many
-columns each level carries. \code{NULL} for every other term.
+the expression that defines that variable, its levels, and the number of
+columns that each level carries. \code{NULL} for every other term.
 }
 \details{
 Two labelled terms belong to the same covariance block only if they share a
@@ -30,13 +30,14 @@ same grouping and \code{id} under two subsets is the same expression for two
 different ones. The levels settle it, and the expression makes a message
 readable.
 
-\code{dim} is the number of columns one level carries, which with the levels
-says how the block is laid out: the coefficients are group-major, so level
-\eqn{i} occupies positions \eqn{(i-1)d + 1} to \eqn{id}. A consumer stacking
-two such blocks into one covariance needs exactly that, and \code{names} carries
-the within-group design's own column names in the same order, so that the
-coordinates of the covariance it builds can be said to belong to \code{x} or to
-the intercept rather than numbered.
+\code{dim} is the number of columns that one level carries, which together with
+the levels gives the layout of the block: the coefficients are group-major,
+so level \eqn{i} occupies positions \eqn{(i-1)d + 1} to \eqn{id}, where
+\eqn{d} is \code{dim}. A consumer stacking two such blocks into one covariance
+needs this layout, and \code{names} carries the within-group design's own column
+names in the same order, so that each coordinate of the covariance that it
+builds is identified as belonging to \code{x} or to the intercept and is not
+merely numbered.
 
 The base method returns \code{NULL}, which is the answer for every term but
 \code{\link[=random]{random()}}.

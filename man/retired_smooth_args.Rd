@@ -21,11 +21,13 @@ rather than left to R's own "unused argument", which names the argument
 and not what to write instead.
 }
 \details{
-The four decisions a smooth is made of -- the basis, the penalty, the
-null space and the reparametrization -- now travel together on a
-\pkg{basis7} smoother, so the settings that described the first two
-belong there. \code{k} and \code{degree} are a B-spline's and were never general;
-\code{linear} named the null space as "linear", which it is only when the
-penalty is of order 2.
+The four decisions a smooth is made of (the basis, the penalty, the
+null space and the reparametrization) travel together on a \pkg{basis7}
+smoother, so the settings that described the first two belong there. \code{k} and
+\code{degree} belong to a B-spline and not to smoothers in general; \code{linear}
+named the null space as "linear", which it is only when the penalty is of
+order 2. The smoothing parameter \code{lambda} is now a hyperparameter of the
+term, held through \code{hyper}. An argument that is not one of these is reported
+as having no such argument.
 }
 \keyword{internal}

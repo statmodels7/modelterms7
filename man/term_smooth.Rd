@@ -11,7 +11,7 @@ term_smooth(term, ...)
 \item{term}{An object inheriting from \code{\link[=model_term]{model_term()}}. Build it first, or the
 answer is \code{TRUE} by default.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A single logical, never \code{NA}.
@@ -23,21 +23,22 @@ coefficient vector into the block a classical optimizer handles and the
 block that needs a proximal step or a coordinate descent.
 }
 \section{The answer comes from the penalties}{
-The term does not declare it. Every entry of \code{\link[=term_penalties]{term_penalties()}} is asked for
-its kink set through \code{\link[penalties7:penalty_kinks]{penalties7::penalty_kinks()}}, at a probe value inside
-each hyperparameter's bounds, and the answer is \code{FALSE} as soon as one
-entry reports a point. So an unpenalized term is smooth, a ridge or a
-Gaussian prior is smooth, and lasso, SCAD, MCP and the elastic net are not.
-A term cannot disagree with its own penalties.
+The term does not declare the answer. For every entry of \code{\link[=term_penalties]{term_penalties()}}
+the function evaluates the kink set through \code{\link[penalties7:penalty_kinks]{penalties7::penalty_kinks()}}, at
+a probe value inside each hyperparameter's bounds, and the result is \code{FALSE}
+as soon as one entry has a point in its kink set. An unpenalized term is
+therefore smooth, a ridge or a Gaussian prior is smooth, and lasso, SCAD, MCP
+and the elastic net are not. The answer always agrees with the penalties
+that the term carries.
 
 The probe is any admissible value, the kink set being structural: the
 midpoint of a bounded interval, one step inside a half-bounded one, zero
 where the interval is the whole line.
 }
 
-\section{It answers for the whole term}{
+\section{The answer covers the whole term}{
 A term carrying a penalty over part of its parameters and none over the rest
-answers for the part. \code{nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g))} is not
+answers from the part that is penalized. \code{nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g))} is not
 smooth: the coefficients developing \code{a} sit at a kink, although \code{r} is
 unpenalized.
 }
@@ -46,7 +47,8 @@ unpenalized.
 The penalty is attached at \code{\link[=term_build]{term_build()}}, so \code{term_penalties()} on an
 unbuilt term is empty and this answers \code{TRUE} whatever penalty the term will
 carry. \code{term_smooth(lasso(~ x))} is \code{TRUE} and
-\code{term_smooth(term_build(lasso(~ x), d))} is \code{FALSE}. Ask a built term.
+\code{term_smooth(term_build(lasso(~ x), d))} is \code{FALSE}. The function is
+therefore applied to a built term.
 }
 
 \examples{
@@ -73,7 +75,7 @@ c(spec = term_smooth(lasso(~ x)), built = term_smooth(term_build(lasso(~ x), d))
 
 }
 \seealso{
-\code{\link[=term_penalties]{term_penalties()}} for the entries it runs over,
-\code{\link[penalties7:penalty_kinks]{penalties7::penalty_kinks()}} for the set it reads, \code{\link[=edf]{edf()}}, which uses
+\code{\link[=term_penalties]{term_penalties()}} for the entries that it evaluates,
+\code{\link[penalties7:penalty_kinks]{penalties7::penalty_kinks()}} for the kink set, \code{\link[=edf]{edf()}}, which uses
 the same split to count degrees of freedom.
 }

@@ -14,9 +14,9 @@
 \description{
 Prints one line naming the term's class, its label when it has one, and
 whether it is built. A built term reports how many coefficients its block
-carries; a specification says so and names the call that would build it.
-This is the default for every term class, and several classes override it to
-add what they alone carry.
+carries; a specification is marked as one and names the call that would
+build it. This is the default for every term class, and several classes
+override it to add what they alone carry.
 }
 \details{
 The two forms are
@@ -34,8 +34,8 @@ line is reached only by a structural class written outside the package.
 
 The classes that override this add something of their own:
 \code{\link[=print.PenalizedTerm]{print.PenalizedTerm()}} names the penalty and the standardization,
-\code{\link[=gas]{gas()}}'s and \code{\link[=regime]{regime()}}'s report their parameters, \code{\link[=nl]{nl()}}'s its formula and
-\code{\link[=seg]{seg()}}'s its break-points.
+\code{\link[=gas]{gas()}} and \code{\link[=regime]{regime()}} report their parameters, \code{\link[=nl]{nl()}} reports its parameters
+and its derivative mode, and \code{\link[=seg]{seg()}} reports its break-points.
 }
 \examples{
 d <- data.frame(x = 1:4)

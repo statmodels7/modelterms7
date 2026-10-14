@@ -2,7 +2,7 @@
 % Please edit documentation in R/random.R
 \name{.random_has_cross}
 \alias{.random_has_cross}
-\title{Whether a Multivariate Family Answers Its Mixed Block}
+\title{Whether a Multivariate Family Defines Its Mixed Block}
 \usage{
 .random_has_cross(d)
 }
@@ -14,15 +14,14 @@ A single logical.
 }
 \description{
 \code{TRUE} when \code{distrib_cross_y} comes from the family itself. The
-multivariate base class rejects that generic, so a family that has not
-overridden it answers \code{FALSE}.
+multivariate base class rejects that generic, so the function returns
+\code{FALSE} for a family that has not overridden it.
 }
 \details{
 A marginal criterion reads that block to estimate the covariance of the
-effects, so a family without one can be fitted at held hyperparameters and
-not at estimated ones. The owning class of a method is read through its
-signature and compared by name, never with \code{identical()}, which is
-object identity and fails whenever a package's code is re-evaluated rather
-than loaded.
+effects, so a family without one is rejected when the term is built. The
+class that owns the method is read from its
+signature and compared by name, since \code{identical()} compares object
+identity and fails when a package's code is re-evaluated instead of loaded.
 }
 \keyword{internal}

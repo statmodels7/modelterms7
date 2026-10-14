@@ -8,12 +8,13 @@
 }
 \arguments{
 \item{sparse}{What the constructor was given: \code{TRUE}, \code{FALSE}, or \code{NULL} for
-the storage to be settled at build. Anything else throws, the message
-naming \code{what}.}
+the storage to be settled at build. Any other value signals an error whose
+message names \code{what}.}
 
 \item{contrasts}{What the constructor was given: a named list, or \code{NULL}.
-Anything else throws. The names are not checked against the formula's
-factors; \code{\link[stats:model.matrix]{stats::model.matrix()}} does that at build.}
+Any other value signals an error. The names are not checked against the
+formula's factors; at build, \code{\link[stats:model.matrix]{stats::model.matrix()}} warns about a name
+that the data do not carry and ignores that entry.}
 
 \item{what}{The constructor's name, used in the two messages.}
 }
@@ -24,8 +25,8 @@ empty list.
 \description{
 Validates the \code{sparse} and \code{contrasts} arguments the design-building
 constructors share, and normalizes \code{contrasts = NULL} to an empty list so
-that the class property is always a list. Called from the constructor, so a
-mistake is reported where it was written.
+that the class property is always a list. Called from the constructor, so an
+invalid value is rejected at the call that wrote it.
 }
 \seealso{
 \code{\link[=linpar]{linpar()}} and \code{\link[=penalized_terms]{penalized_terms()}}, the constructors that call it.

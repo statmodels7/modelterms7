@@ -26,28 +26,32 @@ Gaussian), a \pkg{distributions7} object, or a list of them with one per
 within-group column.}
 
 \item{correlated}{Logical; whether the default Gaussian lets the
-within-group effects correlate. It is an error together with
-\code{distrib}, which says the same thing and more.}
+within-group effects correlate. Giving it together with \code{distrib} is an
+error, since \code{distrib} determines the same thing.}
 
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}
 
 \item{hyper}{The hyperparameters of the effects' distribution to hold, as
-a named vector or list; those not named are estimated. The names are the
-distribution's own parameters, with the within-group column appended
-where there is one copy per column. A name the penalty does not carry is
-reported when the term is built, which is where the penalty first exists.}
+a named vector or list; those not named are estimated. For a distribution
+whose log-density has a kink, several values for one name are the grid
+that the path visits, and for any other distribution they are rejected.
+The names are the distribution's own parameters, with the within-group
+column appended where there is one copy per column. A name that the
+penalty does not carry is rejected when the term is built, which is where
+the penalty first exists.}
 
-\item{id}{Labels sharing the effects' hyperparameters with those of
-other terms carrying the same ones, so that two random effects may
-be given one variance component. The names are \code{hyper}'s, checked at
-the same point and for the same reason; a single unnamed string will
-do where the effects' distribution carries one hyperparameter.
-\code{NULL}, the default, shares nothing. See \code{\link[=term_ids]{term_ids()}}.}
+\item{id}{Labels under which the effects' hyperparameters are shared with
+the hyperparameters of other terms carrying the same labels, so that two
+random effects may be given one variance component. The names are
+\code{hyper}'s, checked at the same point and for the same reason; a single
+unnamed string is accepted where the effects' distribution carries one
+hyperparameter. \code{NULL}, the default, shares nothing. See \code{\link[=term_ids]{term_ids()}}.}
 
-\item{...}{Unused. A named argument here is reported by name, so a removed
-one such as \code{precision} or \code{kinks} gets a message saying what replaced
-it.}
+\item{...}{Not used. A named argument is rejected with an error naming it,
+and the removed arguments \code{precision} and \code{kinks} are rejected with a
+message giving the replacement. An unnamed argument beyond those of the
+signature is rejected as well.}
 }
 \value{
 An object of class \code{\link[=RandomTerm]{RandomTerm()}} (a specification;
@@ -58,7 +62,7 @@ Random intercepts and slopes for a grouping factor:
 \code{random(~ 1 | g)} builds one coefficient per level of \code{g},
 and \code{random(~ x | g)} one intercept and one slope per level, with
 the distribution of the effects attached as the penalty on those
-coefficients. That is what a random effect is under penalized likelihood.
+coefficients, which is how a random effect enters a penalized likelihood.
 }
 \details{
 The left side of the bar is an ordinary one-sided formula for the
@@ -68,10 +72,10 @@ within-group design, with the usual intercept convention:
 with the group indicators, ordered group by group, so the coefficients
 of one group are adjacent.
 
-The constructor asks for two things: the formula and the distribution of
-the effects. Which chart the hyperparameters ride, what they are called,
-how many there are and where the log-density has a kink are all properties
-of that distribution, read off it at build time.
+The formula and the distribution of the effects determine the term. The
+parametrization in which the hyperparameters are estimated, their names,
+their number and the points where the log-density has a kink are all
+properties of that distribution, read from it at build time.
 }
 \section{The covariance label, and the second bar}{
 
@@ -79,27 +83,27 @@ A formula may carry two bars, \code{~ 1 + x | u | g}, following \pkg{brms}. The
 last position is the grouping variable and the middle one is a label: terms
 carrying the same label and the same grouping describe effects that are
 correlated with each other, so an intercept in one equation and a slope in
-another can share one covariance block. R nests bars to the left, so that
-reading comes out of the parser rather than being imposed.
+another can share one covariance block. R nests bars to the left, so the
+parser itself yields that reading.
 
 The label is a \strong{name and not data}. It is read as a symbol and never
 evaluated, and a column of the data carrying the same name is not looked at,
-so \code{~ 1 | u | g} builds exactly the block \code{~ 1 | g} builds whatever \code{u}
-happens to be.
+so \code{~ 1 | u | g} builds the same block as \code{~ 1 | g}, whatever \code{u} is.
 
-\strong{A labelled term declares no penalty of its own}, and that is the answer
-rather than a gap: the covariance block spans columns the term cannot see,
-possibly in another equation, so the prior over it belongs to the class and
-is built by the fitting layer. \code{\link[=term_penalties]{term_penalties()}} returns an empty list and
-\code{\link[=term_penalty]{term_penalty()}} is \code{NULL}. What follows from it is that \code{hyper} is refused
-here, the hyperparameters being the class's, and that a \code{distrib} given on a
-labelled term names the \strong{class's} joint prior: it must be multivariate,
-and its dimension is checked where the class is known.
+\strong{A labelled term declares no penalty of its own.} The covariance block
+spans columns that the term cannot see, possibly in another equation, so the
+prior over it belongs to the class and is built by the fitting layer.
+\code{\link[=term_penalties]{term_penalties()}} returns an empty list and \code{\link[=term_penalty]{term_penalty()}} is \code{NULL}.
+Consequently \code{hyper} and \code{id} are rejected when the term is built, the
+hyperparameters being those of the class, and a \code{distrib} given on a
+labelled term is the \strong{class's} joint prior: it must be multivariate, and
+its dimension is checked where the class is known.
 
-The two scopes are different and stay two arguments. \code{correlated} says
-whether the columns of \strong{this} term may depend on each other; the label
-says that its columns depend on those of \strong{other} terms. Asking for
-\code{correlated = FALSE} beside a label asks for both at once and is refused.
+The two arguments have different scopes. \code{correlated} states whether the
+columns of \strong{this} term may depend on each other, and the label states
+that its columns depend on those of \strong{other} terms. The combination of
+\code{correlated = FALSE} with a label is contradictory and is rejected when the
+term is built.
 }
 
 \section{The distribution of the effects}{
@@ -111,10 +115,12 @@ A multivariate distribution of the within-group dimension lets the effects
 of one group depend on each other, its matrix parameter carrying the
 dependence: \code{mvgaussian2_distrib(2, ar1(2))} is a prior whose
 precision is autoregressive, \code{mvstudent_t1_distrib(2)} a heavy-tailed
-one. Correlation is available exactly for the families that carry a matrix
-parameter: a location block as long as the dimension, together with a
-covariance, precision or scale matrix. The term reads that property off the
-family, so a family added later is covered without an edit here.
+one. Correlated effects require a family that carries a matrix parameter,
+that is, a location block as long as the dimension together with a
+covariance, precision or scale matrix, and that defines the mixed
+response-parameter derivative block read by a marginal criterion. The term
+reads these properties from the family, so a family added later is covered
+without an edit here.
 
 A univariate distribution makes the effects independent, the penalty being
 the product of the densities. With more than one within-group column it is
@@ -124,28 +130,31 @@ scale would price them against each other. A list of distributions gives
 one per column explicitly, when the columns want different priors.
 
 The default is Gaussian: \code{gaussian1_distrib} at one column, so the
-hyperparameter IS the standard deviation of the effects; the multivariate
-Gaussian on an unstructured covariance when there are several and
-\code{correlated = TRUE}; the template of the first when
-\code{correlated = FALSE}, one standard deviation per column.
+hyperparameter is the standard deviation of the effects; the multivariate
+Gaussian on an unstructured covariance when there are several columns and
+\code{correlated = TRUE}; and the template of the first when
+\code{correlated = FALSE}, with one standard deviation per column. The default
+has its location parameters held at zero.
 
-Whatever it is, the distribution is centered, its location parameters held
-with \code{\link[distributions7:fixed]{distributions7::fixed()}}. A free mean in the effects is
-confounded with the intercept of the equation the term sits in, so a free
-location is rejected at build time with a message naming it. The value it
-is held at is usually zero and is not policed: the model is identified
-whatever it is. Where the prior is a transformation of another family the
-parameter is the mean on the original scale, so
+A distribution supplied in \code{distrib} must have its location parameters held
+with \code{\link[distributions7:fixed]{distributions7::fixed()}}. A free location in the effects is
+confounded with the intercept of the equation in which the term sits, so a
+free location is rejected at build time with a message naming it. The value
+at which it is held is usually zero and is not checked, since the model is
+identified whatever the value is. Where the prior is a transformation of
+another family, the parameter is the mean on the original scale, so
 \code{fixed(transformation(gamma2_distrib(), log_transform()), mu = 1)} is a
-log-gamma prior whose own mean is \eqn{\psi(a) - \log a}, within
-\eqn{\sigma^2/2} of zero and exactly zero in the limit.
+log-gamma prior with shape \eqn{a = 1/\sigma^2}, where \eqn{\sigma^2} is the
+parameter \code{sigma2} of the gamma. The mean of that prior,
+\eqn{\psi(a) - \log a}, lies between \eqn{-\sigma^2} and
+\eqn{-\sigma^2/2} and tends to zero as \eqn{\sigma^2} tends to zero.
 
 A distribution used as a penalty gives joint-mode (penalized likelihood)
 estimation of the effects. With Gaussian effects and a Gaussian response
 the Laplace approximation behind a marginal criterion is exact, so the
-variance component it returns is the marginal estimate; with any other
-prior it is an approximation, and the marginal likelihood is not computed
-here.
+variance component that the criterion returns is the marginal estimate.
+With any other prior the Laplace approximation is not exact, and
+\pkg{modelterms7} does not compute the marginal likelihood.
 }
 
 \section{The hyperparameters}{
@@ -158,75 +167,65 @@ it: it becomes a constant of the prior and appears nowhere among the
 model's hyperparameters. Naming it in \code{hyper} keeps it, reported as held at
 the value given, as a penalized term's own hyperparameter argument does.
 
-A smooth prior's hyperparameters are estimated by a marginal criterion. A
-prior whose log-density has a kink, a Laplace or an elastic net, has none a
-marginal criterion can reach, and its hyperparameter is chosen by a path on
-a prediction criterion instead.
+The hyperparameters of a prior with a smooth log-density are estimated by
+the outer criterion. A prior whose log-density has a kink, a Laplace or an
+elastic net, has none that a marginal criterion can reach, and its
+hyperparameter is chosen by a path over the sparse criterion of
+\code{\link[statmodels7:statmod]{statmodels7::statmod()}}, \code{\link[statmodels7:aic]{statmodels7::bic()}} by default.
 
-Every estimated hyperparameter is reported with a standard error and an
-interval, shape parameters included. Where one is absent the cause is the
-point the run ended at: a criterion with no maximum there leaves a
-curvature of the wrong sign, and no interval follows from it. A shape
-escaping toward a limit is the common case.
+An estimated hyperparameter is reported with a standard error and an
+interval, a shape parameter included. The standard error is absent where
+the criterion at the point at which the run ended has a curvature of the
+wrong sign, since no interval follows from such a point. A shape parameter
+that moves toward a limit is the common case.
 
-Which parametrization of a family is used matters here in a way it does
-not elsewhere. The centered skew normal
-(\code{\link[distributions7:skewnormal2_distrib]{distributions7::skewnormal2_distrib()}}) carries the skewness
-itself, and its map to the direct parametrization is not twice
-differentiable at zero skewness: the first derivatives have a finite limit
-there and the second ones grow like \eqn{\gamma_1^{-2/3}}. A marginal
-criterion reads the second, and the symmetric bounds put the starting
-value at exactly that point, so the direct parametrization
-(\code{\link[distributions7:skewnormal1_distrib]{distributions7::skewnormal1_distrib()}}) is the one to use as a
-prior; its derivatives at \eqn{\alpha = 0} are ordinary numbers.
+The parametrization of a family that is used as a prior matters. The
+centered skew normal (\code{\link[distributions7:skewnormal2_distrib]{distributions7::skewnormal2_distrib()}}) carries the
+skewness itself, and its map to the direct parametrization is not twice
+differentiable at zero skewness. The derivatives of the log-density with
+respect to the skewness have a finite first-order limit there, and the
+second-order ones grow like \eqn{\gamma_1^{-2/3}}. A marginal criterion
+reads the second-order ones, and the symmetric bounds place the starting
+value at that point, so the direct parametrization
+(\code{\link[distributions7:skewnormal1_distrib]{distributions7::skewnormal1_distrib()}}) is the one to use as a prior; its
+derivatives at \eqn{\alpha = 0} are finite.
 
-How well a shape parameter is estimated depends on how many groups there
-are, since it is read off that many latent values and the prior shrinks
-them. Measured on effects drawn from a standard Student t with four
-degrees of freedom, twelve observations per group and unit residual
-standard deviation, the prior being a Student t with \eqn{\nu} free and
-the criterion \code{\link[statmodels7:reml]{statmodels7::reml()}}:\tabular{lll}{
-   groups \tab \eqn{\hat\nu} \tab \eqn{\hat\sigma} \cr
-   20 \tab 5.97e+04 \tab 0.769 \cr
-   100 \tab 1.98 \tab 0.817 \cr
-   500 \tab 2.65 \tab 0.923 \cr
-}
+How well a shape parameter is estimated depends on the number of groups,
+since the parameter is read from that many latent values, which the prior
+shrinks. With few groups the estimate of a shape parameter can move to the
+Gaussian limit, and then only the scale is estimated. With more groups the
+estimate stays finite, but the criterion is flat over the small values, so
+the estimate locates the shape only to its order of magnitude. A shape
+parameter can be held with \code{\link[distributions7:fixed]{distributions7::fixed()}} when the number of
+groups is small, and an estimate from a moderate number of groups describes
+the weight of the tail without fixing its value. The \eqn{\nu} of a
+pseudo-Huber prior, the point at which the loss stops being quadratic, is
+subject to the same limitation.
 
+Prediction maps new data onto the levels seen at build time. A level that
+the term has not seen, or a missing grouping value, is rejected by
+\code{\link[=term_predict]{term_predict()}} unless \code{unseen = "zero"} is given, in which case the rows
+get no effect of their own.
 
-At twenty groups the shape escapes to the Gaussian limit and only the
-scale is really being fitted. From a hundred it stays finite, and the
-profile is decisive about that much: with \eqn{\nu} held, the criterion is
--1922.4 at 3, -1923.7 at 4, -1924.9 at 5 and -1936.1 in the Gaussian
-limit. What it is not decisive about is the value, the profile being flat
-enough over the small integers that a single sample locates \eqn{\nu} to
-little better than its order of magnitude. Estimate a shape from a hundred
-groups or so, hold it below that, and read the estimate as a statement
-about the tail rather than a measurement of it.
-
-A pseudo-Huber's \eqn{\nu} is the weaker case, being the point at which
-the loss stops being quadratic; at 40 groups it escapes.
-
-Prediction maps new data onto the levels seen at build time; a level
-the term has not seen is rejected.
-
-A random effect is not standardized, and there is no \code{standardize}
-argument to ask for it with; passing one is an error. Its columns are
-grouping indicators and its hyperparameter is a variance component with a
-meaning of its own. Dividing each coefficient by the spread of its
-indicator would weight the effects by the sizes of the groups, which
-changes the model itself.
+A random effect is not standardized, and \code{random()} has no \code{standardize}
+argument; passing one is an error. Its columns are grouping indicators and
+its hyperparameter is a variance component with a meaning of its own.
+Dividing each coefficient by the spread of its indicator would weight the
+effects by the sizes of the groups, which changes the model itself.
 }
 
 \section{The block and its penalty}{
 
 With \eqn{m} levels and a within-group design \eqn{Z_i} of \eqn{d}
 columns, the block is the interaction of that design with the group
-indicators, ordered group by group,
+indicators, ordered group by group. When the rows of the data are ordered by
+group, the block and the coefficient vector are
 
 \deqn{Z = \operatorname{diag}(Z_1, \dots, Z_m),
   \qquad b = (b_1', \dots, b_m')',}
 
-so the \eqn{d} coefficients of one group occupy adjacent positions and the
+and otherwise the rows of this matrix are permuted to follow the data. The
+\eqn{d} coefficients of one group occupy adjacent positions and the
 penalty reads them one block at a time,
 
 \deqn{\rho(b; \theta) = -\sum_{i=1}^m \log f(b_i; \theta),}
@@ -238,7 +237,7 @@ for the effects' density \eqn{f}. Under the default Gaussian that is
   + \tfrac{md}{2}\log(2\pi),}
 
 and minimizing the penalized least squares in \eqn{(\beta, b)} is the
-mixed-model equation at the variance ratio \eqn{\Sigma} encodes, so the
+mixed-model equation at the variance ratio that \eqn{\Sigma} encodes, so the
 minimizer is the best linear unbiased predictor. At \eqn{d = 1} and
 \eqn{\Sigma = \sigma_b^2} it is the ridge, up to the constant that makes
 \eqn{\sigma_b} estimable.

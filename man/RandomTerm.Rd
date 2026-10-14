@@ -25,11 +25,11 @@ RandomTerm(
 \arguments{
 \item{label}{A character string prefixed to the term's coefficient names
 when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag of
-\code{\link[=print]{print()}}. \code{character(0)} and \code{""} both mean no label.}
+\code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
-\item{hyper}{The hyperparameters of the term's penalty the caller \strong{held},
-as a named list keyed by the penalty's names. Empty, the default, means
-every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
+\item{hyper}{The hyperparameters of the term's penalty that the caller
+\strong{held}, as a named list keyed by the penalty's names. Empty, the
+default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
@@ -82,8 +82,8 @@ default Gaussian.}
 }
 \value{
 An S7 object of class \code{RandomTerm}, inheriting from
-\code{\link[=additive_term]{additive_term()}} and \code{\link[=model_term]{model_term()}}, with the four properties above
-beside the ten they supply.
+\code{\link[=additive_term]{additive_term()}} and \code{\link[=model_term]{model_term()}}, with the four properties above in
+addition to those of the two parent classes.
 }
 \description{
 The subclass of \code{\link[=additive_term]{additive_term()}} holding grouped coefficients with a
@@ -92,22 +92,22 @@ group indicators, one coefficient per group and per within-group column,
 and a penalty carrying that distribution's negative log-density. \code{\link[=random]{random()}}
 constructs it.
 }
-\section{The three properties of its own}{
+\section{The properties of its own}{
 \code{formula} is the bar formula as given, \code{~ 1 | g} or \code{~ x | g}, kept with its
-environment. \code{correlated} says whether the \strong{default} Gaussian lets the
-within-group effects depend on each other; it is read only where \code{distrib}
-is \code{NULL}, the two saying the same thing.
+environment. \code{correlated} states whether the \strong{default} Gaussian lets the
+within-group effects depend on each other. It is read only where \code{distrib}
+is \code{NULL}, since a distribution given in \code{distrib} determines the same
+thing.
 
 \code{tag} is the covariance label written between two bars, \code{~ 1 | u | g}, or
 \code{NA_character_} where the formula carries one bar. It is reported by
-\code{\link[=term_tag]{term_tag()}}. The two say different things and the difference is the scope:
-\code{correlated} is about the columns of this term, \code{tag} about the columns of
-other terms.
+\code{\link[=term_tag]{term_tag()}}. The \code{tag} and \code{correlated} differ in scope: \code{correlated}
+concerns the columns of this term, and \code{tag} the columns of other terms.
 
 \code{distrib} is the effects' distribution as supplied, or \code{NULL} for the
-default. What the build turns it into is a \pkg{penalties7} penalty, read
-through \code{\link[=term_penalty]{term_penalty()}} or \code{\link[=term_penalties]{term_penalties()}}, so the hyperparameter names
-and their bounds all come from the distribution.
+default. The build turns it into a \pkg{penalties7} penalty, read through
+\code{\link[=term_penalty]{term_penalty()}} or \code{\link[=term_penalties]{term_penalties()}}, so the hyperparameter names and
+their bounds all come from the distribution.
 }
 
 \section{The block is sparse by construction}{
@@ -136,5 +136,6 @@ term_penalty(b)@params
 }
 \seealso{
 \code{\link[=random]{random()}}, the constructor; \code{\link[=term_penalties]{term_penalties()}} for the entries a
-built one declares; \code{\link[=edf]{edf()}} for what a fitted random effect spends.
+built one declares; \code{\link[=edf]{edf()}} for the effective degrees of freedom of a
+fitted random effect.
 }

@@ -10,7 +10,7 @@ term_values(term, ...)
 \arguments{
 \item{term}{A term, built or not.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A named list, one entry per penalty of the term, each a named list
@@ -28,9 +28,9 @@ A written-out grid is used as it stands. The value that empties the block
 does not cap it and \code{\link[=term_path_min]{term_path_min()}} does not extend it: those two
 construct a grid, and here there is nothing to construct.
 
-A hyperparameter written out is still \strong{estimated}. What the caller fixed
-is where to look, not the answer, so a fit reports it as chosen by the
-criterion, and \code{\link[=term_hyper]{term_hyper()}} does not carry it.
+A hyperparameter written out is still \strong{estimated}. The caller supplies the
+values to search and not the estimate, so a fit reports the hyperparameter as
+chosen by the criterion, and \code{\link[=term_hyper]{term_hyper()}} does not carry it.
 
 The values are sorted and deduplicated at construction, because a path is
 walked from the emptiest fit toward the fullest and its warm starts follow
@@ -51,7 +51,7 @@ term_values(lasso(~ x, lambda = c(10, 0.1, 1, 1)))
 term_values(lasso(~ x, lambda = 3))
 term_hyper(lasso(~ x, lambda = 3))
 
-# A penalty with no kink has no path, so several values are refused.
+# A penalty with no kink has no path, so several values are rejected.
 try(ridge(~ x, lambda = c(1, 2)))
 
 }

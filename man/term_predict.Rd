@@ -8,15 +8,19 @@ term_predict(term, newdata, ...)
 }
 \arguments{
 \item{term}{A built additive term (see \code{\link[=term_build]{term_build()}}). A specification
-throws
+signals the error
 \code{"the term has not been built; call term_build(term, data) first."}.}
 
 \item{newdata}{A data frame carrying every variable the term names, with any
-number of rows. Anything else throws \code{"'newdata' must be a data frame."}
-from the generic, before dispatch. A factor here need carry only the
-levels its own rows use; the rest come from the blueprint.}
+number of rows. Any other object is rejected by the generic, before
+dispatch, with the error \code{"'newdata' must be a data frame."}. A factor here
+need carry only the levels that its own rows use; the rest come from the
+blueprint.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The method for \code{\link[=random]{random()}} reads \code{unseen},
+which is \code{"error"} by default and rejects a grouping level that was absent
+at the build and a missing grouping value; with \code{unseen = "zero"} such a
+row receives a row of zeros. The other shipped methods do not use it.}
 }
 \value{
 A block of \code{nrow(newdata)} rows and \code{\link[=term_npar]{term_npar()}} columns, in the
@@ -25,10 +29,11 @@ where the block is sparse.
 }
 \description{
 Applies a built term's recorded mapping to new rows, returning the block the
-term would have produced had those rows been in the data it was built on.
-Factor levels, contrasts, spline knots, a Demmler-Reinsch reparametrization
-and the spreads a standardization used all come from the blueprint and are
-reused. A factor level the blueprint does not know is rejected.
+term would have produced had those rows been in the data on which it was built.
+Factor levels, contrasts, spline knots and a Demmler-Reinsch
+reparametrization come from the blueprint and are reused; the spreads of a
+standardization enter the penalty only and are not applied to the block. A factor level that the blueprint does not contain is rejected,
+except for the grouping levels of a \code{\link[=random]{random()}} term with \code{unseen = "zero"}.
 }
 \section{The identity that makes it useful}{
 The block returned is \eqn{\tilde{X}_t} such that
@@ -39,20 +44,21 @@ of the same shape multiplying the same coefficients and meaning something
 else: a factor whose new rows omit a level loses a column, and a basis
 rebuilt on a narrower range is a different set of functions.
 
-The difference is not small. On a smooth of 60 points over \eqn{[0, 1]},
-predicting on the first 20 rows agrees with those rows of the original block
-exactly, while rebuilding the term on them differs by 2.33 in the same
-units. \code{\link[=check_term]{check_term()}}'s subset check is exactly this comparison.
+For a smooth, predicting on a subset of the fitting rows reproduces the
+corresponding rows of the original block exactly, whereas rebuilding the term
+on the subset gives a block that multiplies the coefficients by different
+functions. The subset check of \code{\link[=check_term]{check_term()}} makes this comparison.
 
 Predicting on the fitting data returns the block itself, so
 \code{term_predict(b, data)} and \code{term_matrix(b)} agree to the last bit.
 }
 
 \section{Which terms have a method}{
-Six do: \code{\link[=linpar]{linpar()}}, the penalized terms, \code{\link[=random]{random()}}, the smooths, \code{\link[=nl]{nl()}} and
-the break-point terms. A structural term contributes no block and has no
-method, so \code{term_predict()} on one stops with S7's method-not-found error;
-\code{\link[=term_continue]{term_continue()}} is the corresponding operation there.
+The methods are registered for \code{\link[=linpar]{linpar()}}, the penalized terms, \code{\link[=random]{random()}},
+the smooths, \code{\link[=nl]{nl()}} and the break-point terms. A structural term contributes
+no block and has no method, so \code{term_predict()} on one signals S7's
+method-not-found error; \code{\link[=term_continue]{term_continue()}} is the corresponding operation
+there.
 }
 
 \examples{

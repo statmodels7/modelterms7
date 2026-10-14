@@ -3,37 +3,47 @@
 \name{term_grid}
 \alias{term_grid}
 \alias{term_grid.model_term}
-\title{The Grid a Term Asks For}
+\title{The Grid Sizes of a Term}
 \usage{
 term_grid(term, ...)
 }
 \arguments{
 \item{term}{A term, built or not.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A named list, one entry per penalty of the term, each a named list
-of single whole numbers keyed by hyperparameter. Empty where the term
-names no grid at all.
+of single whole numbers keyed by hyperparameter. Empty where no
+hyperparameter of the term has a recorded grid size.
 }
 \description{
-Reports how many values a path visits for each of the term's
-hyperparameters, one entry per penalty. A hyperparameter the term names
-nothing for is swept at the fitting layer's own default.
+Reports the number of values that a path visits for each hyperparameter of
+the term that is swept, one entry per penalty. A hyperparameter that the
+term holds has no grid and is not reported. A swept hyperparameter for
+which the term records no size is covered at the default size of the fitting
+layer.
 }
 \details{
 How finely a hyperparameter is swept belongs to the term because the term is
 where the penalty is named: a block of four columns and one of four hundred
-want different grids, and an outer criterion, which is put to every
-hyperparameter of the model, does not know which it is looking at.
+want different grids, and an outer criterion applies to every
+hyperparameter of the model alike, so a size set there could not
+distinguish between them.
 
-Only a hyperparameter with a \strong{path} has a grid. \code{\link[=ridge]{ridge()}}, \code{\link[=s]{s()}}, \code{\link[=te]{te()}}
-and \code{\link[=random]{random()}} report nothing, their hyperparameters being estimated at the
-mode by a marginal criterion; \code{\link[=lasso]{lasso()}} reports its \code{n_lambda}, and
-\code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}} and \code{\link[=mcp]{mcp()}} report both of theirs. Those constructors
-write their defaults into the term, so \code{lasso(~ x)} reports \code{lambda = 25}
-where an unset argument would give an empty list.
+Only a hyperparameter with a \strong{path} has a grid, and a held
+hyperparameter has none. \code{\link[=ridge]{ridge()}}, \code{\link[=s]{s()}} and \code{\link[=te]{te()}} with their default
+penalty, and \code{\link[=random]{random()}} with its default Gaussian prior, report nothing,
+their hyperparameters being estimated at the mode by a marginal criterion.
+A smoother whose penalty factory has a kink is swept by a path but reports
+nothing either, and the path uses its default size. \code{\link[=lasso]{lasso()}} reports its
+\code{n_lambda}, \code{\link[=enet]{enet()}} reports \code{n_lambda} and \code{n_alpha}, and \code{\link[=scad]{scad()}} and
+\code{\link[=mcp]{mcp()}} report \code{n_lambda} together with \code{n_a} or \code{n_gamma} where the shape
+is estimated, since the shape is held by default. These constructors write
+their sizes into the term, so \code{lasso(~ x)} reports \code{lambda = 25} where an
+unset argument would give an empty list. A hyperparameter written out as a
+vector has no grid to build and is not reported here; the path visits the
+written-out values, which \code{\link[=term_values]{term_values()}} reports.
 
 The keys are \code{\link[=term_penalties]{term_penalties()}}'s entry names, \code{""} for a penalty over the
 whole term.
@@ -43,8 +53,13 @@ whole term.
 term_grid(lasso(~ x))
 term_grid(lasso(~ x, n_lambda = 50))
 
-# Two axes, and their two sizes: the kink axis is swept far more finely.
+# Two axes, and their two sizes: the kink axis is swept more finely.
 term_grid(enet(~ x))
+
+# A held hyperparameter has no grid, and neither has the held shape of SCAD.
+term_grid(enet(~ x, alpha = 0.5))
+term_grid(scad(~ x))
+term_grid(scad(~ x, a = NULL))
 
 # A penalty with no kink has no path, so nothing to count.
 term_grid(ridge(~ x))

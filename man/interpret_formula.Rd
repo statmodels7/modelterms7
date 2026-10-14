@@ -7,23 +7,23 @@
 interpret_formula(formula, data, linpar = list())
 }
 \arguments{
-\item{formula}{A two-sided or one-sided model formula. Anything else throws
-\code{"'formula' must be a formula."}. Its environment is where a term call's
+\item{formula}{A two-sided or one-sided model formula. Anything else signals
+the error \code{"'formula' must be a formula."}. Its environment is where a term call's
 symbols are looked up when \code{data} does not carry them, and it is carried
 onto the formula of the implicit \code{linpar} block.}
 
 \item{data}{A data frame in which the formula's symbols are evaluated.
-Anything else throws \code{"'data' must be a data frame."}.}
+Anything else signals the error \code{"'data' must be a data frame."}.}
 
 \item{linpar}{A named list of arguments for the \strong{implicit} \code{\link[=linpar]{linpar()}}
 term, the one the bare covariates collapse into: \code{sparse} and \code{contrasts}.
 This is the only place they can be given, that term never being written by
 the caller. Empty by default, which leaves \code{\link[=linpar]{linpar()}}'s own defaults. A
 \code{linpar()} term the caller writes out takes its own arguments and ignores
-this one. Anything that is not a list throws.}
+this one. Anything that is not a list signals an error.}
 }
 \value{
-A list of four elements:
+A list with the elements:
 \describe{
 \item{\code{response}}{The evaluated left-hand side: a numeric vector, a
 \code{\link[=censored_response]{censored_response()}}, or \code{NULL} for a one-sided formula.}
@@ -31,7 +31,7 @@ A list of four elements:
 collected parametric block comes first under the name \code{"linpar"} and
 is absent when the formula has no bare covariates and no intercept.
 Every other name is the term's label as it appears in the formula,
-deparsed, such as \code{"s(x2, bspline_smooth(k = 5))"}.}
+deparsed, such as \code{"s(x2, basis7::bspline_smooth(k = 5))"}.}
 \item{\code{intercept}}{\code{TRUE} unless the formula removes the intercept.}
 \item{\code{formula}}{The input, unchanged.}
 }
@@ -42,15 +42,21 @@ specifications. A call on the right-hand side is evaluated, and if its value
 inherits from \code{\link[=model_term]{model_term()}} it becomes a term of its own; everything else,
 meaning bare covariates, transformations such as \code{log(x)} and interactions,
 is collected into a single \code{\link[=linpar]{linpar()}} block with the usual
-\code{\link[stats:model.matrix]{stats::model.matrix()}} conventions. The terms come back unbuilt, so the
-caller decides which data each is built against.
+\code{\link[stats:model.matrix]{stats::model.matrix()}} conventions. An \code{offset()} term is not among the
+labels that \code{\link[stats:terms]{stats::terms()}} returns, so it is dropped without a message;
+\code{statmodels7::statmod()} separates offsets before calling this function.
+The terms come back unbuilt, so the caller decides which data each is built
+against.
 }
 \section{Recognition by evaluation}{
 A term constructor is identified by what its call returns, so a term class
-defined outside the package works in a formula the day it is written, with
-no list of special names to amend. \code{log(x)} evaluates to a numeric vector
-and stays a covariate; \code{s(x, bspline_smooth(k = 5))} evaluates to a \code{SmoothTerm} and is
-routed as a term.
+defined outside the package works in a formula without a list of special
+names to amend. \code{log(x)} evaluates to a numeric vector and stays a
+covariate; \code{s(x, basis7::bspline_smooth(k = 5))} evaluates to a \code{SmoothTerm}
+and is routed as a term. A call whose evaluation signals an error, such as a
+term constructor called with an argument it does not have, signals the error
+\code{"evaluating '<label>' failed: <message>"}, so the call is not treated as a
+covariate.
 
 Some labels are never evaluated: \code{:}, \code{*}, \code{^}, \code{\%in\%}, \code{+}, \code{-}, \code{(} and
 \code{I}. A bare interaction \code{x1:x2} parses as a call to \code{:}, which on numeric
@@ -59,11 +65,11 @@ column \code{\link[stats:model.matrix]{stats::model.matrix()}} builds. Those lab
 parametric block.
 
 A call whose value is neither a term nor something a model matrix can hold
-throws, naming the label and the class it produced. The commonest way to
-arrive there is a masked name. \code{mgcv} also exports \code{s()} and \code{te()} and
-\code{segmented} exports \code{seg()}, so where the package exports a term of that
-name and the name resolves elsewhere, the message says where it was found
-and suggests \verb{modelterms7::}.
+signals an error that names the label and the class of the value. The
+commonest cause is a masked name. The package \code{mgcv} also exports \code{s()} and
+\code{te()}, and \code{segmented} exports \code{seg()}, so where this package exports a
+term of that name and the name resolves elsewhere, the message states where
+the function was found and suggests \verb{modelterms7::}.
 }
 
 \section{The response and the intercept}{
@@ -83,9 +89,10 @@ columns of \code{lm(y ~ x + g)}. Under \verb{0 +} it keeps the column.
 
 \section{One covariate is removed}{
 A \code{\link[=seg]{seg()}} or \code{\link[=jseg]{jseg()}} term built with \code{linear = TRUE}, which is the default,
-contributes the same column the bare covariate would, so \code{y ~ x + seg(x)} is
-rank deficient by one. The term owns that effect, so the covariate is
-dropped from the parametric block and a warning names both. Writing
+contributes the same column as the bare covariate, so \code{y ~ x + seg(x)} is
+rank deficient by one. The term carries that effect, so the covariate is
+dropped from the parametric block and a warning names both. The same holds
+for a marginal \code{seg()} or \code{jseg()} built with \code{marginal = TRUE}. Writing
 \code{seg(x, linear = FALSE)} keeps the linear effect outside the term.
 
 Only the bare main effect is removed, matched on the deparsed expression: an
@@ -93,8 +100,8 @@ interaction spans no main effect and is left alone. A term that spans the
 same direction without being that one column is reported by a warning and
 left unmodified. A spline basis is the case: it contains the line, and its
 penalty leaves the line unpenalized, so \code{s(x) + seg(x)} is confounded too.
-There is no single column to remove there, and reshaping another term is
-not this function's business.
+There is no single column to remove there, and this function does not
+modify another term.
 }
 
 \section{What it does not do}{
@@ -147,7 +154,7 @@ interpret_formula(y ~ x1 + seg(x1, linear = FALSE), dd)$terms$linpar@formula
 sp <- interpret_formula(y ~ g, dd, linpar = list(sparse = TRUE))
 class(term_matrix(term_build(sp$terms$linpar, dd)))
 
-# A call that returns neither a term nor a covariate is refused by name.
+# A call that returns neither a term nor a covariate is rejected by name.
 e <- new.env(parent = globalenv())
 assign("s", function(x, ...) structure(list(), class = "gamObject"), envir = e)
 f <- y ~ s(x1)

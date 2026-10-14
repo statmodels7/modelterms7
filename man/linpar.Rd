@@ -7,25 +7,26 @@
 linpar(formula, label = "", sparse = NULL, contrasts = NULL)
 }
 \arguments{
-\item{formula}{A one-sided formula, \code{~ x1 + x2}. A two-sided formula throws
-\code{"'formula' must be one-sided, e.g. ~ x1 + x2."}, and anything that is not
-a formula throws. Its environment is kept and used for symbols the data do
-not carry. A formula with no columns at all, \code{~ 0}, fails in the class
-validator at build time.}
+\item{formula}{A one-sided formula, \code{~ x1 + x2}. A two-sided formula is
+rejected with the error \code{"'formula' must be one-sided, e.g. ~ x1 + x2."},
+and so is any object that is not a formula. Its environment is kept and
+used for symbols that the data do not carry. A formula with no columns at
+all, \code{~ 0}, is rejected at build, when the empty set of column names is
+assigned to the \code{coef_names} property.}
 
 \item{label}{A single character string, \code{""} by default. When non-empty it
 is prefixed to every coefficient name as \code{label.name}, and it is the title
-\code{\link[=plot]{plot()}} uses. Anything that is not one string throws.}
+\code{\link[=plot]{plot()}} uses. Any other value is rejected.}
 
 \item{sparse}{\code{TRUE} to build a \code{dgCMatrix}, \code{FALSE} for a base matrix, or
-\code{NULL}, the default, to settle it from the design by the rule above.
-Anything else throws
+\code{NULL}, the default, to settle it from the design by the rule above. Any
+other value signals the error
 \code{"'sparse' in 'linpar' must be TRUE, FALSE, or NULL to settle it from the design."}.}
 
 \item{contrasts}{A named list of contrasts for the formula's factors, of the
 kind \code{\link[stats:model.matrix]{stats::model.matrix()}}'s \code{contrasts.arg} takes, or \code{NULL}, the
-default, for the session's \code{options("contrasts")}. Anything that is not a
-list throws.}
+default, for the session's \code{options("contrasts")}. A value that is not a
+list is rejected.}
 }
 \value{
 An unbuilt \code{\link[=LinparTerm]{LinparTerm()}}: a specification, with \code{X}, \code{coef_names}
@@ -50,48 +51,44 @@ place and the block stays aligned with the response, and a factor level
 present in the data but used by no row still gets its column.
 
 The blueprint records the terms object, the factor levels
-(\code{\link[stats:checkMFClasses]{stats::.getXlevels()}}), the contrasts actually used and the storage
-settled on. \code{\link[=term_predict]{term_predict()}} reapplies all four, so a factor column at new
-rows is encoded against the levels seen at build time. A level the blueprint
-does not know is rejected by \code{\link[stats:model.frame]{stats::model.frame()}} with
-\code{"factor g has new levels zz"}.
+(\code{\link[stats:checkMFClasses]{stats::.getXlevels()}}), the contrasts actually used, the storage settled
+on and the \code{drop_intercept} setting. \code{\link[=term_predict]{term_predict()}} reapplies each of
+them, so a factor column at new rows is encoded against the levels seen at
+build time. A level the blueprint does not know is rejected by
+\code{\link[stats:model.frame]{stats::model.frame()}} with \code{"factor g has new levels zz"}.
 }
 
 \section{Several parametric blocks}{
-\code{y ~ x1 + x2} and \code{y ~ linpar(~ x1 + x2)} produce the same block, so the
-explicit constructor is for callers wanting more than one parametric block
-with distinct labels, or wanting to set \code{sparse} or \code{contrasts} on it.
-Arguments for the block \code{\link[=interpret_formula]{interpret_formula()}} builds implicitly go through
-that function's own \code{linpar} argument.
+\code{y ~ x1 + x2} and \code{y ~ linpar(~ x1 + x2)} give the same columns,
+\code{(Intercept)}, \code{x1} and \code{x2}, but the second splits them into two blocks:
+the block that \code{\link[=interpret_formula]{interpret_formula()}} builds implicitly, which holds the
+intercept, and the block of \code{linpar()}, which holds \code{x1} and \code{x2}. The
+explicit constructor is therefore for callers wanting more than one
+parametric block with distinct labels, or wanting to set \code{sparse} or
+\code{contrasts} on a block. Arguments for the block that \code{\link[=interpret_formula]{interpret_formula()}}
+builds implicitly go through that function's own \code{linpar} argument.
 
 The intercept belongs to the formula. When the formula carries one, a
 \code{linpar()} written in it drops its own column \code{(Intercept)} after the model
-matrix is built, so its factors keep their contrasts and
-\code{y ~ linpar(~ x + g)} gives the columns of \code{lm(y ~ x + g)}. Under \verb{0 +} the
-block keeps its intercept.
+matrix is built, so its factors keep their contrasts and, together with the
+implicit block, \code{y ~ linpar(~ x + g)} gives the columns of
+\code{lm(y ~ x + g)}. Under \verb{0 +} the block keeps its intercept.
 }
 
 \section{Sparse storage}{
 
 \code{sparse = TRUE} builds through \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}}, which builds
-the block sparse. Building a dense matrix and compressing it would cost the
-memory the choice exists to avoid. Measured at 20000 rows and a factor of
-1000 levels, the two routes give identical numbers at 0.007 s and 1.8 MB
-against 0.164 s and 161.3 MB; a design of 20000 by 19014 that would be 3.0
-GB dense builds sparse in 0.3 s and 3.1 MB.
+the block sparse. Building a dense matrix and compressing it would use the
+memory that the sparse route is meant to avoid.
 
-It pays where the formula carries a \strong{factor of many levels}, whose
-indicator columns hold one non-zero per row. On numeric covariates the block
-is dense whatever is asked for, and the sparse storage then costs more than
-it saves.
+Sparse storage pays where the formula carries a \strong{factor of many levels},
+whose indicator columns hold one non-zero per row. On numeric covariates the
+block has few zero entries, and sparse storage then costs more than it saves.
 
-\code{sparse = NULL}, the default, settles it at build from the size of the
-indicator part: \code{n * ncol_ind > 1e5}, where \code{ncol_ind} counts the columns
-coming from factors (\code{\link[=.indicator_cols]{.indicator_cols()}}). Measured over fifteen
-combinations, building the block and forming its crossproduct, the two
-routes cross between \eqn{10^5} and \eqn{3 \times 10^5} cells and the sparse
-route then wins by orders: at 20000 rows it is 1.4 times faster at 15
-levels, 14 times at 60 and 445 times at 400.
+\code{sparse = NULL}, the default, settles the storage at build from the size of
+the indicator part: the block is built sparse when \code{n * ncol_ind > 1e5},
+where \code{ncol_ind} is an upper bound on the number of columns coming from
+factors (\code{\link[=.indicator_cols]{.indicator_cols()}}).
 
 The settled storage is part of the blueprint, so \code{\link[=term_predict]{term_predict()}} returns
 the same kind of block at new rows.

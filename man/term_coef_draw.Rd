@@ -16,62 +16,65 @@ block's column order.}
 \item{sd}{The width of the draw, \code{1} by default, multiplying the derived
 width above.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A list with \code{coef}, the coefficients with the term's own replaced;
-\code{index}, the positions it replaced, empty where it replaced none; and
-\code{scale}, one width per replaced position. A caller reporting the truth
-of a prior over those coordinates reads \code{scale}, the values there no
-longer being that prior's draw.
+\code{index}, the positions that were replaced, empty where none were; and
+\code{scale}, one width per replaced position. A caller that reports the truth
+of a prior over those coordinates reads \code{scale}, since the values there
+are no longer a draw from that prior.
 }
 \description{
-A simulation's draw of the term's block coefficients, with the ones whose
-meaning only the term knows replaced. Every other coefficient is left as it
-arrived, so a caller drawing a truth passes what it has drawn and takes
-back a vector it can use.
+Replaces, in a draw of the term's block coefficients, the coefficients whose
+scale the term determines. Every other coefficient is left as it arrived, so
+a caller drawing a truth passes what it has drawn and receives a vector that
+it can use.
 }
 \section{Why a term draws at all}{
-A coefficient of a design column is drawn from a normal of the width its
-caller chose, and for almost every term that is the whole story: a slope
-is measured in the response's units against the covariate's, and the term
-knows neither. A break-point is not such a quantity. It is a position on
-the covariate's own axis, so a draw made without reading the covariate
-lands outside the data most of the time, and the confinement then pins it
-to the interval's edge, where one of the two segments holds a twentieth of
-the rows and no break is visible.
-
-Measured on a panel of fifty groups with the covariate uniform on
-\eqn{(0, 1)}: drawn from a standard normal the break-points run from
-\eqn{-2.02} to \eqn{1.65}, and thirty-eight of the fifty end pinned
-against a confinement limit with twelve strictly interior. This is the
-rule \code{\link[=term_draw]{term_draw()}} states for a structural term's own parameters, read one
-level down: whoever knows what a quantity means draws it.
+A coefficient of a design column is drawn from a normal of the width that
+its caller chose, and for almost every term this is sufficient: a slope is
+measured in the response's units against the covariate's, and the term does
+not change that. A break-point is a position on the covariate's own axis,
+so a draw made without reading the covariate has no reason to fall inside
+the data. A draw from a standard normal falls outside the range of a
+covariate that is measured on another scale, and the confinement then moves
+the position to the edge of the interval, where one of the two segments
+holds a twentieth of the rows and no break is visible. The break-point
+terms therefore draw their own positions on the covariate's axis.
+\code{\link[=term_draw]{term_draw()}} applies the same division to the own parameters of a
+structural term: the term that defines a quantity draws it.
 }
 
 \section{The width}{
-Derived rather than chosen. Writing \eqn{w} for the width of the
-confinement interval and \eqn{K} for the number of break-points, the
-starting positions sit at the \eqn{j/(K+1)} quantiles of it, so
-consecutive ones are \eqn{w/(K+1)} apart. Requiring three standard
-deviations to stay within half of that spacing, so that two neighbours
-cross only if both travel further than a draw usually goes, gives
+The width follows from the spacing of the positions that the draw spreads
+from. Writing \eqn{w} for the width of the confinement interval (from the
+5th to the 95th percentile of the covariate) and \eqn{K} for the number of
+break-points, those positions are the \eqn{j/(K+1)} quantiles of the
+covariate. For a covariate spread evenly over the interval, consecutive
+positions are \eqn{w/(K+1)} apart. Requiring three standard deviations to
+stay within half of that spacing, so that two neighbors cross only if both
+travel further than a draw usually goes, gives
 
 \deqn{\sigma = \frac{sd \cdot w}{6(K+1)},}
 
-which at one break-point is \eqn{w/12} and keeps the draw inside
-\eqn{[0.25w, 0.75w]} of the interval at three standard deviations.
+which at one break-point is \eqn{w/12} and, for a covariate spread evenly
+over the interval, keeps the draw inside \eqn{[0.25w, 0.75w]} of the
+interval at three standard deviations. For another distribution of the
+covariate the spacing is a rule of thumb, and the width is still computed
+from \eqn{w}.
 }
 
 \section{Where the coefficients go}{
 A continuous or smoothed construction holds the break-point directly, so
 the drawn position is written where it stands. A discontinuous one does
-not hold it at all: it reads it off \eqn{\psi_k = -g_k/\delta_k}, so the
-coefficient written is \eqn{-\delta_k \psi_k} at the change of level the
-rest of the draw supplies. That is why the whole vector is passed in and
-not only the term's own slice, and why a ratio of two independently drawn
-normals -- which has no mean and puts the position anywhere -- is not what
-comes out.
+not hold it: it reads it off \eqn{\psi_k = -g_k/\delta_k}, so the
+coefficient written is \eqn{-\delta_k \psi_k} at the change of level that
+the rest of the draw supplies. That is why the whole vector is passed in
+and not only the term's own slice, and why the position is not the ratio of
+two independently drawn normals, which has no mean and may fall anywhere.
+For \code{\link[=jseg]{jseg()}} the position read from the written coefficient is near the
+drawn one and not equal to it.
 
 Where the break-point carries a development the drawn positions are
 projected onto that development's own design by least squares, so any
@@ -83,12 +86,12 @@ actually gets.
 set.seed(1)
 dd <- data.frame(x = sort(runif(200, 0, 10)))
 
-# An ordinary term has no opinion and hands the draw back.
+# For an ordinary term the draw is returned unchanged.
 lb <- term_build(linpar(~ x), dd)
 identical(term_coef_draw(lb, c(1, 2))$coef, c(1, 2))
 
 # A break-point term places its own on the covariate's scale, where a
-# standard normal would have put it outside the data altogether.
+# draw from a standard normal would often fall outside the data.
 sb <- term_build(seg(x, npsi = 1), dd)
 d <- term_coef_draw(sb, stats::rnorm(term_npar(sb)))
 setNames(d$coef, term_coef_names(sb))
@@ -98,5 +101,5 @@ range(dd$x)
 \seealso{
 \code{\link[=term_draw]{term_draw()}} for a structural term's own parameters,
 \code{\link[=term_coef_start]{term_coef_start()}} for the point this spreads from, \code{\link[=seg_psi]{seg_psi()}} for the
-positions it produces.
+positions that it produces.
 }

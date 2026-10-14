@@ -20,11 +20,14 @@ Accepts a named vector or a named list and returns a named list, checking
 only what can be checked before the penalty exists.
 }
 \details{
-\code{\link[=random]{random()}} builds one of three penalties depending on what it was given: a
-ridge, a structured prior over a \pkg{parameters7} matrix, or a
-\pkg{distributions7} family used coordinatewise. Which names there are is
-therefore not known until the term is built. The shape is checked here and the
-names against the penalty by \code{\link[=check_hyper]{check_hyper()}} at that point.
+\code{\link[=random]{random()}} builds its penalty from the distribution of the effects with
+\code{\link[penalties7:distrib_penalty]{penalties7::distrib_penalty()}}: a centered Gaussian by default, a
+multivariate \pkg{distributions7} family for correlated effects, or a
+univariate family used once for each within-group column. A smooth whose
+penalty comes from a factory, or that has one smoothing parameter per level
+of a factor, is read in the same way. The names of the hyperparameters are
+therefore known only when the term is built. The shape is checked here and
+the names against the penalty by \code{\link[=check_hyper]{check_hyper()}} at that point.
 
 A vector entry is a written-out grid, exactly as it is in the constructors
 that name their hyperparameters, so the length is not

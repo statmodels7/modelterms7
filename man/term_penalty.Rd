@@ -10,7 +10,7 @@ term_penalty(term, ...)
 \arguments{
 \item{term}{An object inheriting from \code{\link[=additive_term]{additive_term()}}, built or not.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A \pkg{penalties7} penalty object, or \code{NULL} when the term is
@@ -23,17 +23,20 @@ coefficients, or \code{NULL} where there is none. The hyperparameters, their
 bounds and links, and every derivative in the coefficients and in the
 hyperparameters belong to the penalty object; the term only carries it.
 }
-\section{It answers only for a penalty over the whole block}{
+\section{A penalty over the whole block}{
 A term whose penalty reaches part of its parameters returns \code{NULL} here and
 declares that penalty through \code{\link[=term_penalties]{term_penalties()}}, which names the parameters
-it covers. \code{\link[=seg]{seg()}} penalizes its changes of slope and leaves the linear
-effect and the break-points free; \code{\link[=nl]{nl()}} and \code{\link[=gas]{gas()}} carry the penalties of
-whatever sub-terms develop their own parameters. Reporting one of those here
-would say it covers the block, so this generic answers only where that is
-true.
+it covers. A \code{\link[=seg]{seg()}} term and an \code{\link[=nl]{nl()}} term carry a penalty only where a
+subformula on one of their parameters declares one, as in
+\code{gamma ~ 0 + lasso(~ 1)} over the changes of slope of a \code{\link[=seg]{seg()}}, and their
+other parameters stay free; \code{\link[=gas]{gas()}} declares its penalties through
+\code{\link[=term_penalties]{term_penalties()}} in the same way. Reporting one of those penalties here
+would state that it covers the whole block, so this generic answers only
+where that holds.
 
-\code{\link[=term_penalties]{term_penalties()}} is therefore the general question, and it is the one a
-fitting layer asks. This one is the convenience for the common case.
+\code{\link[=term_penalties]{term_penalties()}} is therefore the general function, and a fitting layer
+enumerates penalties through it. This one is the shortcut for the common
+case.
 }
 
 \section{A specification carries no penalty}{
@@ -44,7 +47,7 @@ holds for \code{\link[=term_penalties]{term_penalties()}} and, through it, for \
 
 The one method is registered on \code{\link[=additive_term]{additive_term()}} and reads the \code{penalty}
 property. A structural term has no such property, so \code{term_penalty()} on one
-stops with S7's method-not-found error.
+signals S7's method-not-found error.
 }
 
 \examples{
@@ -59,9 +62,12 @@ p <- term_penalty(term_build(ridge(~ x), d))
 c(name = p@penalty_name, params = p@params, n_coef = p@n_coef)
 
 # A term whose penalty covers part of its parameters answers NULL here
-# and declares it through term_penalties() instead.
-sb <- term_build(seg(x, npsi = 1), data.frame(x = sort(runif(50, 0, 10))))
+# and declares it through term_penalties() instead: a lasso on the
+# change of slope of a break-point term.
+sb <- term_build(seg(x, npsi = 1, gamma ~ 0 + lasso(~ 1)),
+                 data.frame(x = sort(runif(50, 0, 10))))
 term_penalty(sb)
+vapply(term_penalties(sb), function(z) z$name, character(1))
 
 }
 \seealso{

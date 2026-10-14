@@ -9,10 +9,10 @@ term_matrix(term, ...)
 }
 \arguments{
 \item{term}{A built additive term (see \code{\link[=term_build]{term_build()}}). A specification
-throws
+signals the error
 \code{"the term has not been built; call term_build(term, data) first."}.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 The design block: a numeric matrix, or a two-dimensional
@@ -22,25 +22,26 @@ observations the term was built on and \code{ncol} equal to \code{\link[=term_np
 \description{
 Returns the \eqn{n \times k} block a built additive term contributes to the
 linear predictor, with the term's coefficient names as column names and one
-row per observation of the data it was built on. The block is the term's \code{X}
+row per observation of the data on which it was built. The block is the term's \code{X}
 property, returned as it is stored.
 }
 \details{
 The block is \strong{not necessarily a base matrix}. \code{\link[=random]{random()}} builds a grouping
-indicator as a \code{dgCMatrix}, since a row belongs to one group and the density
-is \eqn{1/m}, and \code{\link[=linpar]{linpar()}}, the penalized terms and a smooth with a factor
-\code{by} build sparse when asked. Code that reads a block therefore tests
-\code{is.matrix(x) && is.numeric(x)} or a two-dimensional S4 object;
+indicator as a \code{dgCMatrix}, since a row belongs to one group and the
+fraction of nonzero entries is \eqn{1/m} for \eqn{m} groups, and \code{\link[=linpar]{linpar()}},
+the penalized terms and a smooth with a factor \code{by} build a sparse block
+where their \code{sparse} argument selects it. Code that reads a block therefore
+tests \code{is.matrix(x) && is.numeric(x)} or a two-dimensional S4 object;
 \code{is.matrix()} alone is \code{FALSE} for every \pkg{Matrix} class and would reject
-a block for being economical.
+a block merely for being stored sparsely.
 
 For a term whose block moves with its own coefficients, \code{\link[=nl]{nl()}} and \code{\link[=seg]{seg()}},
 this returns the block at the coefficients last committed by
-\code{\link[=term_refresh]{term_refresh()}}. \code{\link[=term_jacobian_block]{term_jacobian_block()}} says whether that block is a
+\code{\link[=term_refresh]{term_refresh()}}. \code{\link[=term_jacobian_block]{term_jacobian_block()}} reports whether that block is a
 Jacobian or a frozen working linearization.
 
 A structural term contributes no block and registers no method, so
-\code{term_matrix()} on one stops with S7's method-not-found error.
+\code{term_matrix()} on one signals S7's method-not-found error.
 }
 \examples{
 d <- data.frame(x = 1:4, g = factor(c("a", "b", "a", "b")))

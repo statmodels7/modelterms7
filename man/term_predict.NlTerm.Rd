@@ -4,7 +4,7 @@
 \alias{term_predict.NlTerm}
 \title{A Nonlinear Term's Block at New Rows}
 \arguments{
-\item{term}{A built \code{\link[=NlTerm]{NlTerm()}}. An unbuilt one throws
+\item{term}{A built \code{\link[=NlTerm]{NlTerm()}}. An unbuilt one is rejected with the error
 \code{"the term has not been built; call term_build(term, data) first."}.}
 
 \item{newdata}{A data frame carrying the covariates the function names and
@@ -30,7 +30,9 @@ the fit reached, or \eqn{\tilde{X}\beta} is not the fitted contribution.
 
 Reading the block on its own is rarely what a caller wants for a nonlinear
 term. \eqn{\tilde{X}\beta} is the \strong{linearization} of \eqn{f}: the two
-agree in the increment a Gauss-Newton step takes, never in the value. \code{term_value(term, newdata = ...)} gives the contribution.
+agree in the increment that a Gauss-Newton step takes, and in general they
+differ in value. \code{term_value(term, newdata = ...)} returns the
+contribution.
 }
 \examples{
 set.seed(1)

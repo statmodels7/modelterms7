@@ -22,15 +22,14 @@ factor of the product \code{\link[=.resolve_sparse]{.resolve_sparse()}} compares
 \details{
 A term contributes the product of its variables' level counts, a numeric
 variable counting one, and a term carrying no factor at all is skipped: its
-columns are dense whatever the storage, so they say nothing about the
-choice. Character and logical columns are counted by their number of
-distinct values, since \code{\link[stats:model.matrix]{stats::model.matrix()}} will code them as factors.
+columns have few zero entries for sparse storage to exploit, so they do not
+enter the choice. Character and logical columns are counted by their number
+of distinct values, since \code{\link[stats:model.matrix]{stats::model.matrix()}} codes them as factors.
 
 The count is an \strong{upper bound}: contrasts drop one level per factor, and an
 interaction of two factors is counted at the product of their full level
-counts. That is the right side to err on, the number being read against a
-threshold below which the sparse route loses little and above which it wins
-by orders.
+counts. The count is read against a threshold on \code{n * ncol_ind}, so it
+overestimates the number of indicator columns of the built block.
 }
 \seealso{
 \code{\link[=.resolve_sparse]{.resolve_sparse()}}, which reads it; \code{\link[=linpar]{linpar()}}.

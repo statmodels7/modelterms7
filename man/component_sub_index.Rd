@@ -30,11 +30,11 @@ cumulated: with counts \eqn{k_1, \dots, k_m} the \eqn{i}-th sub-term takes
 \eqn{k_1 + \dots + k_i}. The counts come from \code{\link[=term_npar]{term_npar()}}, so every
 sub-term must be built.
 
-The term computes this rather than a consumer, because it rests on how the
-block was assembled.
+The term computes this division, and a consumer does not, because it rests
+on how the block was assembled.
 }
 \seealso{
-\code{\link[=term_components]{term_components()}}, the only caller; \code{\link[=term_npar]{term_npar()}} for the counts
-it divides by.
+\code{\link[=term_components]{term_components()}}, whose methods are its only callers;
+\code{\link[=term_npar]{term_npar()}} for the counts it divides by.
 }
 \keyword{internal}

@@ -25,11 +25,11 @@ GasTerm(
 \arguments{
 \item{label}{A character string prefixed to the term's coefficient names
 when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag of
-\code{\link[=print]{print()}}. \code{character(0)} and \code{""} both mean no label.}
+\code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
-\item{hyper}{The hyperparameters of the term's penalty the caller \strong{held},
-as a named list keyed by the penalty's names. Empty, the default, means
-every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
+\item{hyper}{The hyperparameters of the term's penalty that the caller
+\strong{held}, as a named list keyed by the penalty's names. Empty, the
+default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the

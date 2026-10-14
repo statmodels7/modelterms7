@@ -2,7 +2,7 @@
 % Please edit documentation in R/random.R
 \name{.random_retired}
 \alias{.random_retired}
-\title{The Arguments random() No Longer Takes}
+\title{Removed Arguments of random()}
 \usage{
 .random_retired(...)
 }
@@ -13,15 +13,12 @@
 Invisibly \code{NULL}; called for its error.
 }
 \description{
-Signals an error naming a removed argument, which the dots would otherwise
-swallow in silence.
+Signals an error for any argument passed in the dots of \code{\link[=random]{random()}}, naming
+a removed argument where there is one.
 }
 \details{
-\code{precision} was a second spelling of a multivariate Gaussian whose
-matrix parameter is a precision, and the first spelling did not say which
-matrix the structure was. \code{kinks} was derived from the effects'
-distribution by \pkg{penalties7} all along, and the default here overrode
-that derivation, so a Laplace prior declared none and a fitting layer sent
-its block to the scheme that cannot solve it.
+\code{precision} and \code{kinks} are no longer accepted. A structured precision is
+the matrix parameter of \code{mvgaussian2_distrib()}, and the kinks of a prior
+are derived from its log-density by \pkg{penalties7}.
 }
 \keyword{internal}

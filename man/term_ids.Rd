@@ -10,7 +10,7 @@ term_ids(term, ...)
 \arguments{
 \item{term}{A term, built or not.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A list, one named character vector per penalty entry that shares
@@ -18,38 +18,41 @@ anything, keyed by that entry's name. Empty where the term shares
 nothing.
 }
 \description{
-The sharing labels a term carries: a named character vector whose names are
-its own hyperparameters and whose values are the labels. The terms carrying
-the same label for the same hyperparameter estimate \strong{one} value.
+The sharing labels a term carries. Each element of the answer is a named
+character vector whose names are the hyperparameters of one penalty entry and
+whose values are the labels. The terms carrying the same label for the same
+hyperparameter estimate \strong{one} value.
 }
 \section{What sharing is, and what it is not}{
-It does not merge the penalties. They stay two objects with the same number
-in them, so each keeps its own block, its own coefficients and its own
-effective degrees of freedom; what is shared is the value a criterion
+Sharing does not merge the penalties. They stay two objects with the same
+number in them, so each keeps its own block, its own coefficients and its own
+effective degrees of freedom; what is shared is the value that a criterion
 estimates. Two smooths with one label are one smoothing parameter over two
 curves, which is \pkg{mgcv}'s \code{id}, and two lassos with one label are one
 threshold swept along one path.
 }
 
-\section{Care}{
-Nothing checks whether two penalties are comparable, deliberately. A shared
-value multiplies each penalty as it is, so it means what one expects between
-penalties of the same shape over covariates of comparable scale, and
-something the caller had better intend otherwise. Two smooths of the same
-basis and dimension are the case it is for.
+\section{Comparability of the penalties}{
+The comparability of two penalties is not checked, deliberately. A shared
+value multiplies each penalty as it is, so it has the usual meaning for
+penalties of the same shape over covariates of comparable scale, and the
+caller is responsible for the comparison in other cases. The intended case
+is two smooths of the same basis and dimension.
 }
 
 \section{Where it may be written}{
 On any term that carries a penalty, including one written inside a
-subformula: a \code{seg()} developing its slope change, its level change and its
-break-point over three ridges may give the three one label and estimate one
-shrinkage for them.
+subformula: a \code{seg()} developing its slope change and its break-point over
+two ridges may give the two one label and estimate one shrinkage for them,
+and a \code{jseg()} developing its slope change and its level change may do the
+same.
 
-The shape is \code{\link[=term_hyper]{term_hyper()}}'s, one entry of the answer per entry of
-\code{\link[=term_penalties]{term_penalties()}}, so the two reporters read alike: a built term answers
-from its entries, which is what lets a structural term report what its
-subformulas' terms share without a method of its own, and an unbuilt one
-answers from its own property.
+The shape is that of \code{\link[=term_hyper]{term_hyper()}}: one element of the answer for each entry
+of \code{\link[=term_penalties]{term_penalties()}} that shares anything, keyed by the name of the entry,
+so the two functions read alike. A built term answers from its entries,
+which allows a structural term to report what the terms of its subformulas
+share without a method of its own, and an unbuilt term answers from its own
+property.
 }
 
 \examples{

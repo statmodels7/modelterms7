@@ -11,7 +11,7 @@ term_jacobian_block(term, ...)
 \item{term}{A term, built or not: the answer is a property of the
 construction.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A single logical.
@@ -21,8 +21,8 @@ A single logical.
 contribution in its own coefficients, \code{FALSE} when it is a working
 linearization with quantities frozen at the previous iterate. The base
 method returns \code{TRUE}, which a fixed design satisfies trivially and which
-\code{\link[=nl]{nl()}} and \code{\link[=seg]{seg()}} satisfy by construction; \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}} answer
-\code{FALSE}.
+\code{\link[=nl]{nl()}} and \code{\link[=seg]{seg()}} satisfy by construction. A sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}}
+answers \code{FALSE} unless it is smoothed or held by \code{\link[=seg_hold]{seg_hold()}}.
 }
 \section{What the answer decides}{
 Where the block is a Jacobian, a scoring step on it is a Gauss-Newton step,
@@ -37,22 +37,25 @@ Such a term is fitted by alternating exact working fits at the frozen block
 with \code{\link[=term_refresh]{term_refresh()}}, and its convergence is what \code{\link[=term_converged]{term_converged()}}
 answers instead of a score.
 
-The two discontinuous constructions are the ones that answer \code{FALSE}. Their
-weight \eqn{W = 1/(2\lvert\tilde x - \psi\rvert)} is held at the previous
-break-point, and the position is read off two coefficients rather than being
-one.
+The two discontinuous constructions, when sharp and not held, are the ones
+that answer \code{FALSE}. Their weight
+\eqn{W = 1/(2\lvert\tilde x - \psi\rvert)} is held at the previous
+break-point, and the position is read off two coefficients and is not one
+itself.
 }
 
-\section{Smoothing changes the answer}{
+\section{Smoothing and holding change the answer}{
 \code{jump(x, smoothed = ...)} replaces the step by a smooth surrogate, and the
 break-point becomes an ordinary parameter with a true Jacobian, so a
-smoothed break-point term answers \code{TRUE}. That is how a fitting layer routes
-it without a special case.
+smoothed break-point term answers \code{TRUE}. A term put in its held state by
+\code{\link[=seg_hold]{seg_hold()}} also answers \code{TRUE}, because its positions are fixed and its
+block is the exact design at them. A fitting layer therefore routes these
+terms without a special case.
 }
 
 \examples{
-# The continuous construction differentiates; the two discontinuous
-# ones report a working linearization.
+# The continuous construction has a Jacobian block; the two sharp
+# discontinuous ones report a working linearization.
 vapply(list(seg = seg(x), jump = jump(x), jseg = jseg(x)),
        term_jacobian_block, logical(1))
 

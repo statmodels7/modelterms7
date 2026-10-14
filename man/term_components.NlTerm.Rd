@@ -21,9 +21,9 @@ has.
 }
 \details{
 A consumer reads it to report a fitted nonlinear term parameter by
-parameter, and \code{\link[=edf]{edf()}} counts over it. A coefficient name is built for a
-reader, so the division cannot be recovered by parsing one back; the term
-has to say it.
+parameter and to place the coordinates of each sub-term. A coefficient name
+is meant for display, so the division of the columns cannot be recovered by
+parsing the names; the term records it in its blueprint.
 }
 \examples{
 set.seed(1)
@@ -39,7 +39,7 @@ lapply(term_components(b), function(z) z$index)
 
 }
 \seealso{
-\code{\link[=term_components]{term_components()}} for the contract, \code{\link[=term_penalties]{term_penalties()}} for the
-penalties those sub-terms bring.
+\code{\link[=term_components]{term_components()}} for the structure of an entry,
+\code{\link[=term_penalties]{term_penalties()}} for the penalties those sub-terms bring.
 }
 \keyword{internal}

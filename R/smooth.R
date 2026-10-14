@@ -16,15 +16,16 @@ NULL
 #'
 #' `vars` holds the covariate expressions, one for [s()] and two or more for
 #' [te()], kept unevaluated so that a build reads them in whatever data it is
-#' given. `by` is the expression the smooth varies with, or `NULL`.
+#' given. `by` is the expression of the variable over which the smooth varies,
+#' or `NULL`.
 #'
 #' `spec` carries what the build reads: the \pkg{basis7} smoothers, one per
 #' covariate, which hold the whole construction; `by_hyper`, saying whether
 #' the levels of a factor `by` share a smoothing parameter or carry one each;
-#' and for [te()] whether the penalty is anisotropic. What a build then
-#' computes from the data goes into the blueprint instead: the
-#' Demmler-Reinsch transform, the centering constraint, the `by` levels and
-#' the penalties the term declares.
+#' `default_label`, saying whether the label was built from the call; and for
+#' [te()] whether the penalty is anisotropic. What a build then computes from
+#' the data goes into the blueprint instead: the Demmler-Reinsch transform, the
+#' centering constraint, the `by` levels and the penalties the term declares.
 #'
 #' `sparse` is `NULL` until the build settles it. A smooth's block is sparse
 #' only under a **factor** `by`, where each row sits in the block of its own
@@ -34,16 +35,18 @@ NULL
 #' @inheritParams additive_term
 #' @inheritParams model_term
 #' @param vars A list of the covariate expressions being smoothed.
-#' @param by The expression the smooth varies with, or `NULL`.
+#' @param by The expression of the variable over which the smooth varies, or
+#'   `NULL`.
 #' @param spec A named list of what the build reads: `smoothers`, one
-#'   \pkg{basis7} smoother per covariate; `by_hyper`; and for [te()] the
+#'   \pkg{basis7} smoother per covariate; `by_hyper`; `default_label`, saying
+#'   whether the label was built from the call; and for [te()] the
 #'   `anisotropic` flag.
 #' @param sparse `TRUE`, `FALSE` or `NULL` for the block's storage; only a
 #'   factor `by` admits `TRUE`. See [s()].
 #'
 #' @return An S7 object of class `SmoothTerm`, inheriting from
 #'   [additive_term()] and [model_term()], with the four properties above
-#'   beside the ten they supply.
+#'   beside those of the two parent classes.
 #'
 #' @seealso [s()] and [te()], the two constructors; [term_penalty()] for the
 #'   roughness penalty; [edf()] for what a fitted smooth spends.
@@ -87,24 +90,23 @@ SmoothTerm <- S7::new_class(
 #' the nonlinear deviation and turns the roughness penalty into the identity on
 #' the deviation.
 #'
-#' As the smoothing parameter grows the fit approaches a straight line, and
-#' [edf()] falls to exactly one.
+#' With the default smoother the fit approaches a straight line as the
+#' smoothing parameter grows, and [edf()] falls to one.
 #'
 #' @details
 #' # The block and its penalty
 #'
 #' The block has one column for the linear effect, centered and scaled,
-#' followed by the reparametrized basis, so `s(x, bspline_smooth(k = 8))` gives seven columns
-#' named `s(x).lin`, `s(x).z1` ... `s(x).z6`. That ordering is what the penalty
-#' reads: it is the quadratic penalty of \eqn{\mathrm{diag}(0, 1, \dots, 1)},
-#' rank deficient by exactly one, so the linear effect is unpenalized and the
-#' deviation is shrunk toward zero.
+#' followed by the reparametrized basis, so `s(x, bspline_smooth(k = 8))` gives
+#' seven columns named `s(x).lin`, `s(x).z1` ... `s(x).z6`. That ordering is
+#' what the penalty reads: it is the quadratic penalty of
+#' \eqn{\mathrm{diag}(0, 1, \dots, 1)}, rank deficient by exactly one, so the
+#' linear effect is unpenalized and the deviation is shrunk toward zero.
 #'
-#' Two consequences a reader of a fit needs. At a large smoothing parameter the
-#' fit tends to a straight line, so `edf()` runs from `k - 1` down to 1 and
-#' never to 0. And the linear column is orthogonal to the rest over the
-#' observed covariate, so the linear and the nonlinear parts of a fitted smooth
-#' are separately readable.
+#' At a large smoothing parameter the fit tends to a straight line, so `edf()`
+#' runs from `k - 1` down to 1 and not to 0. The linear column is orthogonal to
+#' the rest over the observed covariate, so the linear and the nonlinear parts
+#' of a fitted smooth can be read separately.
 #'
 #' `bspline_smooth(null_space = "drop")` drops that first column, and the
 #' penalty is then the identity over the whole block, of full rank.
@@ -117,28 +119,23 @@ SmoothTerm <- S7::new_class(
 #' penalties7::lasso_penalty))`. A \pkg{penalties7} constructor passes bare,
 #' and anything else is a function of the count.
 #'
-#' What it buys is that the Demmler-Reinsch coordinates are ordered from the
-#' smoothest to the most wiggly and the roughness penalty on them is the
-#' identity, so an \eqn{\ell_1} penalty takes whole directions of wiggliness
-#' to exactly zero and chooses the smooth's effective dimension. Measured at
-#' \eqn{n = 300} with \eqn{k = 20}, the coordinates surviving as the
-#' smoothing parameter grows are 15, 10, 4, 2, 1 and 0 of 18, and the fit at
-#' FOUR of them is the closest to the truth: the root mean square errors at
-#' those six counts are 0.2453, 0.2427, 0.2412, 0.2425, 0.2709 and 0.4967. So
-#' the \eqn{\ell_1} buys a smaller smooth and a slightly better one at once.
-#' A heavy-tailed penalty is the robust reading of the same block, and a
-#' structured one estimates the correlation of the coefficients rather than
+#' The Demmler-Reinsch coordinates are ordered from the smoothest to the most
+#' wiggly, and the roughness penalty on them is the identity. An
+#' \eqn{\ell_1} penalty on them therefore takes whole directions of wiggliness
+#' to exactly zero, so that the penalty chooses the effective dimension of the
+#' smooth. A heavy-tailed penalty gives a robust reading of the same block, and
+#' a structured one estimates the correlation of the coefficients instead of
 #' fixing it.
 #'
-#' Two things follow, and neither is a detail. The penalty covers **the
-#' penalized coordinates alone**: a roughness matrix carries a zero row for
-#' the linear column and leaves it free by its own arithmetic, where a
-#' separable penalty has no such row and would shrink it, so the free columns
-#' are outside the entry it declares. And a penalty **with a kink** has no
-#' second derivative at zero, which a marginal criterion needs, so its
-#' smoothing parameter is chosen by a path over `sparse_criterion` -- BIC by
-#' default -- and not by REML, whatever `outer_criterion` says. That is a
-#' change in what the number means and not only in how it is computed.
+#' Two properties of the fit follow. The penalty covers **the penalized
+#' coordinates alone**: a roughness matrix carries a zero row for the linear
+#' column and leaves it free by its own arithmetic, whereas a separable penalty
+#' has no such row and would shrink it, so the free columns are outside the
+#' entry that the term declares. A penalty **with a kink** has no second
+#' derivative at zero, which a marginal criterion needs, so its smoothing
+#' parameter is chosen by a path over `sparse_criterion` (BIC by default) and
+#' not by REML, whatever `outer_criterion` is. The selection criterion for that
+#' parameter is therefore BIC, and not the marginal likelihood.
 #'
 #' # The construction is empirical
 #'
@@ -150,9 +147,10 @@ SmoothTerm <- S7::new_class(
 #' the nonlinear part holds at new rows as it does at old.
 #'
 #' Rebuilding on other rows instead would place the knots on their range and
-#' compute another transform. Measured on 80 points, predicting on the first
-#' ten agrees with those rows of the original block exactly and rebuilding
-#' differs by 2.85.
+#' compute another transform, so the columns would be different functions of
+#' the covariate. Predicting on the first rows of the data reproduces those rows
+#' of the block exactly, and rebuilding on them gives a different block (see the
+#' examples).
 #'
 #' @section Varying the smooth by another variable:
 #' A **factor** `by` gives one smooth per level: the block is the smooth
@@ -160,18 +158,14 @@ SmoothTerm <- S7::new_class(
 #' repeated blockwise.
 #' `s(x, bspline_smooth(k = 5), by = g)` over a four-level factor has 16 columns.
 #'
-#' `by_hyper` says whether the levels are smoothed **together or apart**.
-#' `"shared"`, the default, estimates one smoothing parameter for all of them,
-#' which is what this package has always done. `"level"` declares one penalty
-#' per level through [term_penalties()], so each is estimated on its own; it
-#' is what \pkg{mgcv} does by default, and what `id` there undoes. Which to
-#' want is a question about the data rather than about the code: levels that
-#' differ in how wiggly they are, or in how much of them there is, ask for
-#' different amounts of smoothing. Measured on three levels of one curve at
-#' amplitudes 1, 0.15 and 2.5, the separately estimated smoothing parameters
-#' are 2.03, 111.9 and 0.468 -- a factor of 239 apart -- and the effective
-#' degrees of freedom fall from 25.5 to 21.7 as the flattest level is smoothed
-#' away.
+#' `by_hyper` determines whether the levels are smoothed **together or apart**.
+#' `"shared"`, the default, estimates one smoothing parameter for all of the
+#' levels. `"level"` declares one penalty per level through
+#' [term_penalties()], so each is estimated on its own; it is what \pkg{mgcv}
+#' does by default, and what `id` there undoes. The choice depends on the data:
+#' levels that differ in how wiggly they are, or in how many observations they
+#' hold, need different amounts of smoothing, and `"level"` lets each level
+#' take its own.
 #'
 #' Under `"level"` a held hyperparameter is qualified by the level it belongs
 #' to, `hyper = c(lambda.a = 2)`, and so is an `id`.
@@ -180,41 +174,42 @@ SmoothTerm <- S7::new_class(
 #' that variable, and the fitted function is the coefficient of `by` as it
 #' changes with the covariate. The term is not centered: its first column is
 #' the constant times `by`, unpenalized and named `const`, because the
-#' constant of the coefficient is the main effect of `by`, which no other term
-#' carries (this is also what \pkg{mgcv} does). Writing `by` in the formula as
-#' well makes that column aliased. The default label is `s(x):z` for a `by`
-#' called `z`, so a formula may carry `s(x)` and `s(x, by = z)` together. A
-#' numeric `by` has no levels, so `by_hyper = "level"` is rejected rather than
-#' read as `"shared"`.
+#' constant of the coefficient is the main effect of `by`, a coefficient that
+#' only this column carries (this is also what \pkg{mgcv} does). Writing `by` in
+#' the formula as well makes that column aliased. The default label is `s(x):z`
+#' for a `by` called `z`, so a formula may carry `s(x)` and `s(x, by = z)`
+#' together. A numeric `by` has no levels, so `by_hyper = "level"` is rejected
+#' and is not read as `"shared"`.
 #'
 #' @section Sparse storage:
 #' A factor `by` is the one place a smooth's block can be sparse, each row
 #' sitting in the block of its own level and nowhere else, a density of
 #' \eqn{1/m}. `sparse = TRUE` builds it that way instead of building the dense
-#' matrix and compressing it: measured at 2000 rows, \eqn{k = 10} and 200
-#' levels, 0.35 MB against 28.93 MB with the numbers identical.
+#' matrix and compressing it. The sparse block needs far less storage than the
+#' dense one, and the two hold the same numbers.
 #'
-#' `sparse = NULL`, the default, settles it at build from the size of the
-#' block through [.resolve_sparse()], the dense form holding \eqn{n m k} cells
-#' against \eqn{n k} non-zeros.
+#' `sparse = NULL`, the default, settles the storage at build: the block is
+#' stored as sparse when its dense form would hold more than \eqn{10^5} cells,
+#' that is when \eqn{n m k > 10^5}, with \eqn{m} levels and \eqn{k} columns per
+#' level (see [.resolve_sparse()]).
 #'
-#' An explicit `TRUE` is **refused** without a factor `by`, and the message
-#' says why: the basis is dense by construction and a numeric `by` merely
-#' multiplies it, so there would be nothing to build on.
+#' An explicit `TRUE` without a factor `by` is rejected, and the error message
+#' gives the reason: the basis is dense by construction and a numeric `by`
+#' multiplies it, so there is nothing to build on.
 #'
-#' The block alone is sparse. The penalty of a factor `by` is the same matrix
-#' repeated blockwise and \pkg{penalties7} returns it dense, 25.92 MB at those
-#' sizes; that is a property of that package's contract.
+#' The penalty of a factor `by` is the same matrix repeated blockwise. In [s()]
+#' and in a [te()] with `anisotropic = FALSE` it is stored as one block, and
+#' [penalties7::penalty_matrix()] returns it as a sparse matrix.
 #'
 #' @param x The covariate, an expression evaluated in the data.
 #' @param smoother How the smooth is built: a \pkg{basis7} smoother, which
 #'   carries the basis, the roughness penalty, the null space and the
-#'   reparametrization together. [basis7::bspline_smooth()] is the default
-#'   and is the construction this term has always used;
+#'   reparametrization together. [basis7::bspline_smooth()] is the default;
 #'   [basis7::fourier_smooth()] is the periodic one and
 #'   [basis7::legendre_smooth()] the global polynomial one.
 #' @param by An optional factor or numeric variable, given as a bare
-#'   expression; `NULL` by default. See the section above.
+#'   expression; `NULL` by default. A character or logical variable is treated
+#'   as a factor. See the section above.
 #' @param by_hyper With a factor `by`, whether the levels share one smoothing
 #'   parameter (`"shared"`, the default) or carry one each (`"level"`). See
 #'   the section above. Rejected without a factor `by`, which has no levels
@@ -222,8 +217,8 @@ SmoothTerm <- S7::new_class(
 #' @param hyper The hyperparameters of the smoother's penalty to hold, as a
 #'   named numeric vector such as `c(lambda = 2)`. What names there are
 #'   depends on the penalty; anything left out is **estimated**, which is
-#'   the default. Under `by_hyper = "level"` a name is qualified by the
-#'   level, `c(lambda.a = 2)`.
+#'   the default. A held value must be finite. Under `by_hyper = "level"` a
+#'   name is qualified by the level, `c(lambda.a = 2)`.
 #' @param label A single non-empty string prefixed to the coefficient names.
 #'   `NULL`, the default, builds one from the covariate: `s(x)`.
 #' @param id A label sharing this smooth's smoothing parameter with those
@@ -233,7 +228,7 @@ SmoothTerm <- S7::new_class(
 #'   the same basis and dimension. `NULL`, the default, shares nothing.
 #'   See [term_ids()].
 #' @param sparse `TRUE`, `FALSE`, or `NULL` to settle it at build. Only a
-#'   factor `by` admits `TRUE`; without one it is refused rather than ignored.
+#'   factor `by` admits `TRUE`; without one it is rejected and not ignored.
 #'   See the section above.
 #' @param ... Not used, and accepted only so that an argument `s()` no
 #'   longer takes is reported with its replacement rather than as R's own
@@ -302,7 +297,7 @@ SmoothTerm <- S7::new_class(
 #' max(abs(term_predict(b, dd[1:10, ]) - X[1:10, ]))
 #' max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 8)), dd[1:10, ])) - X[1:10, ]))
 #'
-#' # Sparsity needs a factor `by`, and says so when there is none.
+#' # Sparsity needs a factor `by`; without one the build signals an error.
 #' try(term_build(s(x, basis7::bspline_smooth(k = 5), sparse = TRUE), dd))
 #'
 #'
@@ -339,12 +334,14 @@ s <- function(x, smoother = basis7::bspline_smooth(), by = NULL,
 #' and not what to write instead.
 #'
 #' @details
-#' The four decisions a smooth is made of -- the basis, the penalty, the
-#' null space and the reparametrization -- now travel together on a
-#' \pkg{basis7} smoother, so the settings that described the first two
-#' belong there. `k` and `degree` are a B-spline's and were never general;
-#' `linear` named the null space as "linear", which it is only when the
-#' penalty is of order 2.
+#' The four decisions a smooth is made of (the basis, the penalty, the
+#' null space and the reparametrization) travel together on a \pkg{basis7}
+#' smoother, so the settings that described the first two belong there. `k` and
+#' `degree` belong to a B-spline and not to smoothers in general; `linear`
+#' named the null space as "linear", which it is only when the penalty is of
+#' order 2. The smoothing parameter `lambda` is now a hyperparameter of the
+#' term, held through `hyper`. An argument that is not one of these is reported
+#' as having no such argument.
 #'
 #' @param dots The `...` of the constructor.
 #' @param fn `"s"` or `"te"`, for the message.
@@ -408,24 +405,23 @@ retired_smooth_args <- function(dots, fn) {
 #'
 #' Each component is normalized to a largest entry of one before either of
 #' those happens, since a roughness matrix carries the units of its own
-#' covariate: measured at `k = 4` over 300 observations, the
-#' second-derivative Gram of a covariate on \eqn{[0, 365]} has a largest
-#' entry of 7.455e-07 against 3.652e+01 for one on \eqn{[0, 1]}, a factor of
-#' 4.9e+07. The size also falls with the number of knots, a coarser basis
-#' being flatter, so the quantity that decides is the matrix and not the
-#' range. Under
-#' `anisotropic = TRUE` that is a reparametrization and nothing about the fit
-#' moves: the component's own `lambda` absorbs the factor, so what the
-#' normalization buys there is that the reported parameters of two margins are
-#' comparable with each other. Under `anisotropic = FALSE` it is part of the
-#' model, one `lambda` weighting a sum whose terms it fixes, and margins on
-#' very different ranges then contribute comparably where otherwise the widest
-#' would contribute almost nothing.
+#' covariate: the second-derivative Gram of a covariate on \eqn{[0, 365]} has
+#' a largest entry many orders of magnitude smaller than that of a covariate on
+#' \eqn{[0, 1]}, and its size also depends on the number of knots. Under
+#' `anisotropic = TRUE` the normalization is a reparametrization and the fit is
+#' the same: the component's own `lambda` absorbs the factor, so the
+#' normalization makes the reported parameters of two margins comparable with
+#' each other. Under `anisotropic = FALSE` it is part of the model, since one
+#' `lambda` weights a sum whose terms it fixes, and margins on very different
+#' ranges then contribute comparably, where otherwise the margin on the widest
+#' range would contribute almost nothing.
 #'
 #' The marginal bases are **not** reparametrized, so the marginal linear
-#' effects are not separated out as [s()] separates its one. They lie in the
-#' null space of the tensor penalty, and a strongly penalized fit is shrunk
-#' toward no surface at all rather than toward a plane.
+#' effects are not separated out as [s()] separates its one. With the default
+#' second-derivative roughness they lie in the null space of the tensor
+#' penalty, together with their product, so a strongly penalized fit is shrunk
+#' toward the bilinear surface (the centered columns for \eqn{x}, \eqn{z} and \eqn{xz})
+#' and not toward zero.
 #'
 #' @section Centering:
 #' The tensor product of the marginal bases contains the constant, which the
@@ -450,8 +446,8 @@ retired_smooth_args <- function(dots, fn) {
 #' over the data.
 #'
 #' @param ... The covariates, bare expressions evaluated in the data, at least
-#'   two of them. One throws `"'te' needs at least two covariates; use s() for
-#'   one."`.
+#'   two of them. A single covariate signals the error `"'te' needs at least two
+#'   covariates; use s() for one."`.
 #' @param by An optional factor or numeric variable, as in [s()], with the same
 #'   two readings and the same sparsity rule.
 #' @param by_hyper With a factor `by`, whether the levels share the term's
@@ -462,7 +458,7 @@ retired_smooth_args <- function(dots, fn) {
 #'   for every covariate, or a list of one per covariate.
 #'   `bspline_smooth(k = 5)` is the default. A margin carrying a `penalty`
 #'   factory is rejected: a tensor product's penalty is the sum of the
-#'   marginal roughnesses, and a factory does not say how it composes with
+#'   marginal roughnesses, and a factory does not specify how it composes with
 #'   that sum.
 #'
 #'   What the product reads from a margin is its **basis** and its
@@ -470,17 +466,17 @@ retired_smooth_args <- function(dots, fn) {
 #'   `upper` all act. The constraint, the null space and the
 #'   reparametrization are the product's own and not a margin's: the tensor
 #'   contains the constant whatever its margins do, and it is the product
-#'   that is centered. A margin asking for one of those is rejected rather
-#'   than ignored.
+#'   that is centered. A margin that sets one of those is rejected and not
+#'   ignored.
 #' @param anisotropic `TRUE`, the default, for one smoothing parameter per
-#'   margin; `FALSE` for one over their sum. Anything that is not a single
-#'   logical throws.
+#'   margin; `FALSE` for one over their sum. An argument that is not a single
+#'   non-missing logical signals an error.
 #' @param label A single non-empty string prefixed to the coefficient names.
 #'   `NULL`, the default, builds one from the covariates: `te(x,z)`.
 #' @param hyper The hyperparameters to hold, as a named numeric vector, with
 #'   anything left out **estimated**. An anisotropic product carries one per
 #'   margin, so a vector of that length, or a named one holding some of
-#'   them.
+#'   them. A held value must be finite.
 #' @param id Labels sharing this term's smoothing parameters with those of
 #'   other terms carrying the same ones. An anisotropic product carries
 #'   one per margin, so the labels are named after them,
@@ -573,7 +569,7 @@ te <- function(..., smooths = basis7::bspline_smooth(k = 5), by = NULL,
     stop(paste0(
       "a margin's 'penalty' factory is not read by te(): a tensor",
       " product's penalty\n  is the sum of the marginal roughnesses, and a",
-      " factory does not say how it\n  composes with that sum. Use s() for",
+      " factory does not specify how it\n  composes with that sum. Use s() for",
       " a penalty of your own over one covariate."), call. = FALSE)
   }
   # ANISOTROPIC is one smoothing parameter per margin, so that is how many
@@ -596,20 +592,20 @@ te <- function(..., smooths = basis7::bspline_smooth(k = 5), by = NULL,
 #'
 #' @description
 #' Resolves the `smooths` argument of [te()] into one smoother per covariate,
-#' and rejects a margin asking for what the product does not read from it.
+#' and rejects a margin that sets what the product does not read from it.
 #'
 #' @details
 #' The product reads a margin's basis and its roughness matrix, so `k`,
 #' `degree`, `order`, `measure` and the interval all act. The constraint, the
 #' null space and the reparametrization are the **product's**: the tensor
 #' basis contains the constant whatever its margins do, so the block carries
-#' the sum-to-zero constraint over the observed covariates rather than a
+#' the sum-to-zero constraint over the observed covariates instead of a
 #' marginal one, and the marginal linear effects are not separated out as
 #' [s()] separates its one.
 #'
-#' Those three are therefore rejected at a non-default value rather than
-#' accepted and ignored, which would report a fit of a model the caller did
-#' not ask for.
+#' Those three are therefore rejected at a non-default value. Accepting and
+#' ignoring them would report the fit of a model different from the one
+#' written.
 #'
 #' @param smooths One smoother, or a list of one per covariate.
 #' @param nv How many covariates.
@@ -787,26 +783,27 @@ te_smoothers <- function(smooths, nv) {
 #' @details
 #' # The default basis
 #'
-#' Where no basis was supplied, each margin gets a
-#' [basis7::bspline_basis()] over the observed range of its covariate, padded
-#' by a thousandth of that range at each end so that the extreme observations
-#' are strictly inside. A basis given through `basis` or `bases` is used with
-#' its own range, untouched.
+#' Each margin is built by its smoother, [basis7::bspline_smooth()] by default.
+#' Unless the smoother sets `lower` and `upper`, the basis is placed on the
+#' observed range of the covariate, padded by a thousandth of that range at each
+#' end so that the extreme observations are strictly inside.
 #'
 #' # One covariate
 #'
-#' [basis7::dr_basis()] takes the inner product at the observed values, and the
-#' block is that basis evaluated there. With `linear = TRUE` a column
-#' \eqn{(x - \bar{x})/s_x} is prepended and the penalty is
-#' \eqn{\mathrm{diag}(0, 1, \dots, 1)}; the center and the scale go into the
-#' blueprint with the transform. Without it the penalty is the identity.
+#' The block is built by [basis7::smoother_build()], which takes the
+#' Demmler-Reinsch inner product at the observed values. With the default
+#' [basis7::bspline_smooth()] (`null_space = "keep"`) a column \eqn{(x - \bar{x})/s_x} is prepended and the
+#' penalty is \eqn{\mathrm{diag}(0, 1, \dots, 1)}; the center and the scale go
+#' into the blueprint with the transform. With `null_space = "drop"` that
+#' column is absent and the penalty is the identity.
 #'
 #' # Several covariates
 #'
 #' [basis7::tensor_basis()] combines the margins, and one penalty component per
 #' margin is carried into the product as \eqn{I \otimes \cdots \otimes P_v
-#' \otimes \cdots \otimes I}, each \eqn{P_v} the margin's second-derivative
-#' Gram normalized to a maximum entry of one.
+#' \otimes \cdots \otimes I}, each \eqn{P_v} the margin's roughness matrix at
+#' the order and the measure that its smoother carries (the second-derivative
+#' Gram at the defaults), normalized to a maximum entry of one.
 #'
 #' The Kronecker product is taken over the **reversed** blocks, because
 #' [basis7::tensor_basis()] varies the first margin fastest. The block is then
@@ -818,14 +815,19 @@ te_smoothers <- function(smooths, nv) {
 #' A factor `by` interacts the basis with the level indicators, giving `m`
 #' copies of the block and a penalty repeated blockwise; the levels are
 #' recorded so a prediction uses the same set. A numeric `by` multiplies the
-#' basis. The storage is settled here and recorded, an explicit `sparse = TRUE`
-#' being refused where there is no factor `by`.
+#' basis after an unpenalized constant column, named `const`, has been put in
+#' front of it, and the block is not centered. The storage is settled here and
+#' recorded, an explicit `sparse = TRUE` being rejected where there is no factor
+#' `by`.
 #'
 #' @param term An unbuilt or built [SmoothTerm()].
 #' @param data A data frame carrying the covariates and the `by` variable.
 #' @param ... Unused.
 #'
-#' @return The term with `X`, `coef_names`, `blueprint` and `penalty` filled.
+#' @return The term with `X`, `coef_names` and `blueprint` filled, and with
+#'   `penalty` filled except where the term declares penalties of its own (a
+#'   penalty factory on the smoother, or `by_hyper = "level"`), in which case
+#'   `penalty` is `NULL` and [term_penalties()] returns them.
 #'
 #' @seealso [s()] and [te()] for the two constructions,
 #'   [term_predict.SmoothTerm()] for the block at new rows.
@@ -1051,7 +1053,7 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
   m <- if (is.null(lev)) 1L else length(lev)
   if (per_level && is.null(lev)) {
     stop(sprintf(paste0(
-      "'%s' asks for by_hyper = \"level\" and has no factor 'by'. One",
+      "'%s' sets by_hyper = \"level\" and has no factor 'by'. One",
       " smoothing\n  parameter per level needs levels to have one each;",
       " give a factor 'by', or\n  leave by_hyper at \"shared\"."), label),
       call. = FALSE)
@@ -1070,12 +1072,10 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
          call. = FALSE)
   }
 
-  # the fields an entry carries beyond its own three, filled in by
-  # .entry_hyper() from what the caller held
+  # an entry carries the nine fields of .penalty_entry(); .entry_hyper()
+  # fills the hyperparameter fields from what the caller held
   entry <- function(name, index, penalty) {
-    list(name = name, index = index, penalty = penalty,
-         fixed = list(), n_values = list(), values = list(),
-         min_ratio = numeric(0), ids = character(0))
+    .penalty_entry(name, index, penalty)
   }
 
   if (!per_level) {
@@ -1105,8 +1105,9 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
 #' `by_hyper = "level"`; and one over the penalized coordinates alone where
 #' the smoother carries a penalty factory.
 #' @details
-#' The default answer is the base reading of [term_penalties()], returned by
-#' calling that method rather than by repeating it, so the two cannot drift.
+#' The default answer is the base reading of [term_penalties()], obtained by
+#' calling the method on [model_term()]. Every entry carries the fields that
+#' [term_penalties()] documents.
 #' @param term A built [SmoothTerm].
 #' @param ... Unused.
 #' @return A list of entries, as [term_penalties()] documents.
@@ -1130,22 +1131,25 @@ S7::method(term_penalties, SmoothTerm) <- function(term, ...) {
 #' @details
 #' The basis object in `blueprint$core` carries the knots and the transform, so
 #' the columns at new rows are the same functions of the covariate as the
-#' fitted ones, so \eqn{\tilde{X}\beta} is the fitted smooth evaluated
-#' there. Rebuilding instead would place the knots on the new range
-#' and compute another transform: measured on 80 points, predicting on the
-#' first ten agrees with those rows of the block exactly and rebuilding differs
-#' by 2.85.
+#' fitted ones, and \eqn{\tilde{X}\beta} is the fitted smooth evaluated
+#' there. Rebuilding on the new rows would place the knots on their range and
+#' compute another transform. Predicting on the first rows of the data
+#' reproduces those rows of the block exactly, and rebuilding on them gives a
+#' different block (see the examples).
 #'
 #' A factor `by` is expanded against `blueprint$by_levels`, so `newdata` need
 #' carry only the levels its own rows use and still gets every column, and the
-#' block is built in the storage the build settled on.
+#' block is built in the storage the build settled on. A level that was not
+#' present at build signals an error.
 #'
-#' New covariate values outside the range the basis was placed on are
-#' evaluated, not refused. A B-spline is zero beyond its knots, so the fitted
-#' function flattens rather than extrapolating a trend; read a prediction far
-#' outside the fitting range with that in mind.
+#' Covariate values outside the interval on which the basis was placed signal
+#' an error that counts the points outside it. For the default smoother this
+#' interval is the observed range of the covariate at build, widened by a
+#' thousandth of that range at each end, and a smoother can set it with `lower`
+#' and `upper`. Inside the interval the columns are evaluated from the
+#' recorded basis.
 #'
-#' @param term A built [SmoothTerm()]. An unbuilt one throws
+#' @param term A built [SmoothTerm()]. An unbuilt term signals the error
 #'   `"the term has not been built; call term_build(term, data) first."`.
 #' @param newdata A data frame carrying the covariates and the `by` variable.
 #' @param ... Unused.

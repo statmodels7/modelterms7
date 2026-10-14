@@ -25,11 +25,11 @@ SmoothTerm(
 \arguments{
 \item{label}{A character string prefixed to the term's coefficient names
 when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag of
-\code{\link[=print]{print()}}. \code{character(0)} and \code{""} both mean no label.}
+\code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
-\item{hyper}{The hyperparameters of the term's penalty the caller \strong{held},
-as a named list keyed by the penalty's names. Empty, the default, means
-every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
+\item{hyper}{The hyperparameters of the term's penalty that the caller
+\strong{held}, as a named list keyed by the penalty's names. Empty, the
+default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
@@ -69,10 +69,12 @@ term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{vars}{A list of the covariate expressions being smoothed.}
 
-\item{by}{The expression the smooth varies with, or \code{NULL}.}
+\item{by}{The expression of the variable over which the smooth varies, or
+\code{NULL}.}
 
 \item{spec}{A named list of what the build reads: \code{smoothers}, one
-\pkg{basis7} smoother per covariate; \code{by_hyper}; and for \code{\link[=te]{te()}} the
+\pkg{basis7} smoother per covariate; \code{by_hyper}; \code{default_label}, saying
+whether the label was built from the call; and for \code{\link[=te]{te()}} the
 \code{anisotropic} flag.}
 
 \item{sparse}{\code{TRUE}, \code{FALSE} or \code{NULL} for the block's storage; only a
@@ -81,7 +83,7 @@ factor \code{by} admits \code{TRUE}. See \code{\link[=s]{s()}}.}
 \value{
 An S7 object of class \code{SmoothTerm}, inheriting from
 \code{\link[=additive_term]{additive_term()}} and \code{\link[=model_term]{model_term()}}, with the four properties above
-beside the ten they supply.
+beside those of the two parent classes.
 }
 \description{
 The subclass of \code{\link[=additive_term]{additive_term()}} for a penalized smooth: a \pkg{basis7}
@@ -93,15 +95,16 @@ in the class.
 \section{The four properties of its own}{
 \code{vars} holds the covariate expressions, one for \code{\link[=s]{s()}} and two or more for
 \code{\link[=te]{te()}}, kept unevaluated so that a build reads them in whatever data it is
-given. \code{by} is the expression the smooth varies with, or \code{NULL}.
+given. \code{by} is the expression of the variable over which the smooth varies,
+or \code{NULL}.
 
 \code{spec} carries what the build reads: the \pkg{basis7} smoothers, one per
 covariate, which hold the whole construction; \code{by_hyper}, saying whether
 the levels of a factor \code{by} share a smoothing parameter or carry one each;
-and for \code{\link[=te]{te()}} whether the penalty is anisotropic. What a build then
-computes from the data goes into the blueprint instead: the
-Demmler-Reinsch transform, the centering constraint, the \code{by} levels and
-the penalties the term declares.
+\code{default_label}, saying whether the label was built from the call; and for
+\code{\link[=te]{te()}} whether the penalty is anisotropic. What a build then computes from
+the data goes into the blueprint instead: the Demmler-Reinsch transform, the
+centering constraint, the \code{by} levels and the penalties the term declares.
 
 \code{sparse} is \code{NULL} until the build settles it. A smooth's block is sparse
 only under a \strong{factor} \code{by}, where each row sits in the block of its own

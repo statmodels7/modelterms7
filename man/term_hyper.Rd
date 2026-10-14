@@ -10,7 +10,7 @@ term_hyper(term, ...)
 \arguments{
 \item{term}{A term, built or not.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A named list, one entry per penalty of the term and named as
@@ -20,30 +20,39 @@ holds nothing.
 }
 \description{
 Reports the hyperparameter values the caller fixed in the constructor, one
-entry per penalty the term carries. A hyperparameter left \code{NULL} is
-\strong{estimated} by whatever criterion the fit runs and does not appear here,
-so an empty result means every one of them is free.
+entry per penalty the term carries. A hyperparameter left \code{NULL}, or
+written out as a grid, is \strong{estimated} by the fit and does not appear
+here, so an empty result means that the term holds none.
 }
 \section{The three states of one argument}{
-A constructor's hyperparameter argument carries three meanings, read per
-hyperparameter at a time. \code{NULL}, the default, has the path build a
-grid or a marginal criterion estimate the value at the mode. \strong{One number}
-holds it, and that is what this reports. \strong{Several numbers} are a grid the
-path visits as they stand, which \code{\link[=term_values]{term_values()}} reports; the
-hyperparameter is still estimated there, the caller having said where to
-look, leaving the answer to the fit.
+A constructor's hyperparameter argument carries three meanings, read for
+one hyperparameter at a time. \code{NULL} leaves the hyperparameter to be
+estimated: a path builds a grid for a penalty with a kink, and a marginal
+criterion estimates the value at the mode for a smooth one. \code{NULL} is the
+default for \code{lambda} and \code{alpha}, whereas the shape of \code{\link[=scad]{scad()}} and \code{\link[=mcp]{mcp()}}
+defaults to a held number, and \code{NULL} there has the shape estimated.
+\strong{One number} holds the hyperparameter, and that is what this function
+reports. \strong{Several numbers} are a grid that the path visits as they stand,
+which \code{\link[=term_values]{term_values()}} reports; the hyperparameter is still estimated, the
+values to search being given and the estimate being left to the fit.
 }
 
 \section{How the entries are keyed}{
 The names are the ones \code{\link[=term_penalties]{term_penalties()}} gives its entries: \code{""} for a
-penalty covering the whole term, and \code{parameter::label} for one a
-subformula brought in. A term whose penalties come from sub-terms, which is
-what a structural term with subformulas is, propagates their held values
-without a method of its own, every entry of that enumeration carrying its
-own in the field \code{fixed}.
+penalty covering the whole term, and \code{parameter::label} for a penalty
+brought in by a subformula. A term whose penalties come from sub-terms, such
+as \code{\link[=nl]{nl()}} or \code{\link[=seg]{seg()}} with subformulas, propagates their held values without
+a method of its own, every entry of that enumeration carrying its own in the
+field \code{fixed}.
 
-A built term answers from those entries and an unbuilt one from its own
-\code{hyper} property, so the answer is the same before and after a build.
+A built term reports those entries, and an unbuilt term reports its own
+\code{hyper} property with the names as written. The two answers are the same
+for the penalized terms, and for \code{\link[=s]{s()}} and \code{\link[=random]{random()}} where the names are
+not qualified. A qualified name, such as \code{lambda.a} for the level \code{a} of a
+factor, is reported as written before the build and under its entry after
+it. For a term whose held values sit in subformulas, such as \code{\link[=nl]{nl()}} and
+\code{\link[=seg]{seg()}}, the sub-terms exist only after the build, so an unbuilt term
+reports an empty list.
 }
 
 \examples{
@@ -58,12 +67,17 @@ term_values(lasso(~ x, lambda = c(0.1, 1, 10)))
 # One of two held, the other estimated.
 term_hyper(enet(~ x, alpha = 0.5))
 
-# A held value on a sub-term is reported under that entry's name.
+# The shape of SCAD is held by default; NULL has it estimated.
+term_hyper(scad(~ x))
+term_hyper(scad(~ x, a = NULL))
+
+# A held value on a sub-term is reported under that entry's name once the
+# term is built.
 set.seed(4)
 d <- data.frame(x = runif(40, 0, 5), g = factor(rep(1:4, 10)))
-nb <- term_build(nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g, lambda = 2),
-                    r ~ 1), d)
-term_hyper(nb)
+nu <- nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g, lambda = 2), r ~ 1)
+term_hyper(nu)
+term_hyper(term_build(nu, d))
 
 }
 \seealso{

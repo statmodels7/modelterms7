@@ -7,10 +7,11 @@ NULL
 #' @description
 #' Holds a response whose observations are not all exact: the values, a lower
 #' and an upper bound for each of them, and a status saying which of the four
-#' cases the observation is. [cens()] is the constructor to call, and it derives
-#' the statuses from the values and the bounds. The raw S7 constructor
-#' documented here takes all four vectors and checks only that they agree, so it
-#' is the form to use when the statuses are already known.
+#' cases the observation is. [cens()] is the usual constructor and derives the
+#' statuses from the values and the bounds. The raw S7 constructor documented
+#' here takes all four vectors and validates them (equal lengths, bounds that
+#' are not missing, each lower bound strictly below its upper bound, and status
+#' names), so it is the form to use when the statuses are already known.
 #'
 #' @details
 #' # The four statuses and what each asserts
@@ -29,36 +30,39 @@ NULL
 #' fitted family. `y` is `NA` for an interval-censored observation, its value
 #' being unknown; every other status carries a number.
 #'
-#' # What reads it today
+#' # Use in fitting
 #'
 #' [interpret_formula()] accepts `cens(...)` on the left of a formula and
-#' returns the object as the `response` element of its result. Nothing then
-#' assembles the four contributions above: `statmodels7::statmod()` stops with
-#' a message naming the gap, and no other function in the toolkit reads the
-#' class. The pieces exist: `distributions7::distrib_grad_cdf()` and
-#' `distrib_hess_cdf()` carry the derivatives of \eqn{F} in the parameters. The
-#' assembler that would use them is not written, so the class records what is
-#' known about each observation and no more.
+#' returns the object as the `response` element of its result. No function
+#' assembles the four contributions above into a likelihood:
+#' `statmodels7::statmod()` and `statmodels7::rstatmod()` reject a censored
+#' response with an error message, and no other function in the toolkit reads
+#' the class. The derivatives of \eqn{F} in the parameters are available from
+#' `distributions7::distrib_grad_cdf()` and `distrib_hess_cdf()`. Without an
+#' assembler the class records what is known about each observation and nothing
+#' more.
 #'
 #' # What the validator enforces
 #'
-#' `y`, `lwr`, `upr` and `status` must be the same length; every lower bound
-#' must be **strictly** below its upper bound, so `lwr = upr` is rejected;
-#' and every status must be one of the four names. A failure throws with the
-#' offending rule quoted.
+#' `y`, `lwr`, `upr` and `status` must be the same length; `lwr` and `upr` must
+#' not be missing; every lower bound must be **strictly** below its upper bound,
+#' so `lwr = upr` is rejected; and every status must be one of the four names.
+#' A failure signals an error that quotes the violated rule. The validator does
+#' not check that a status agrees with the values: a status of `"interval"` with
+#' a non-missing `y` is accepted, and so is a missing `y` with another status.
 #'
 #' @param y A numeric vector of response values, one per observation, `NA`
 #'   where the observation is interval-censored.
 #' @param lwr,upr Numeric vectors of censoring bounds, of the same length as
 #'   `y`. Infinite entries are allowed and mean no censoring on that side. The
-#'   validator rejects any pair with `lwr >= upr`.
+#'   validator rejects a missing entry and any pair with `lwr >= upr`.
 #' @param status A character vector of the same length as `y`, each entry one
 #'   of `"observed"`, `"left"`, `"right"` or `"interval"`. Any other string
-#'   throws, naming the first one it meets.
+#'   signals an error that names the first one found.
 #'
 #' @return An S7 object of class `censored_response` with properties `y`,
 #'   `lwr`, `upr` (numeric, all of one length) and `status` (character, the
-#'   same length). It carries no methods beyond [print()].
+#'   same length). The class has a [print()] method and no other methods.
 #'
 #' @seealso [cens()], which derives the statuses instead of taking them;
 #'   [interpret_formula()], which accepts it on the left of a formula.
@@ -74,7 +78,8 @@ NULL
 #' censored_response(y = c(2, 9), lwr = c(-Inf, -Inf), upr = c(Inf, 9),
 #'                   status = c("observed", "right"))
 #'
-#' # Three ways to fail the validator.
+#' # Four ways to fail the validator.
+#' try(censored_response(y = 1, lwr = NA_real_, upr = 1, status = "observed"))
 #' try(censored_response(y = 1, lwr = 2, upr = 1, status = "observed"))
 #' try(censored_response(y = 1, lwr = 0, upr = 2, status = "cut"))
 #' try(censored_response(y = c(1, 2), lwr = 0, upr = 2, status = "observed"))
@@ -93,6 +98,9 @@ censored_response <- S7::new_class(
     if (length(self@lwr) != n || length(self@upr) != n ||
         length(self@status) != n) {
       return("y, lwr, upr and status must have the same length")
+    }
+    if (anyNA(self@lwr) || anyNA(self@upr)) {
+      return("lwr and upr must not be missing")
     }
     if (any(self@lwr >= self@upr)) {
       return("every lower bound must be strictly below its upper bound")
@@ -130,36 +138,40 @@ censored_response <- S7::new_class(
 #' | `lwr < y < upr` | `"observed"` | \eqn{Y = y} |
 #' | `is.na(y)`, both bounds finite | `"interval"` | \eqn{Y \in [}`lwr`, `upr`\eqn{]} |
 #'
-#' The tests are applied in that order, so a value at or below `lwr` is left-
-#' censored even when it is also at or above `upr`; the validator forbids
-#' `lwr >= upr`, so the two cannot both bind. An `NA` value without two finite
-#' bounds says nothing about \eqn{Y} at all and throws.
+#' The left test is applied first and the right test second, and the later
+#' assignment overrides the earlier one, so a value that met both conditions
+#' would receive the status `"right"`. The class validator rejects
+#' `lwr >= upr`, so no value meets both. An `NA` value without two finite
+#' bounds carries no information about \eqn{Y}, and `cens()` signals an error.
 #'
-#' At the defaults `lwr = -Inf` and `upr = Inf` no value can reach a bound,
-#' every status comes back `"observed"`, and the object carries the same
-#' information the bare vector does.
+#' At the defaults `lwr = -Inf` and `upr = Inf`, every finite value has the
+#' status `"observed"`, and the object then carries the same information as the
+#' bare vector. Because the tests are inclusive, the value `-Inf` receives the
+#' status `"left"` and the value `Inf` the status `"right"`.
 #'
 #' # Where it can be used
 #'
 #' On the left of a formula passed to [interpret_formula()], which returns the
-#' object as its `response` element. `statmodels7::statmod()` refuses that
-#' response with a message naming the gap: the toolkit marks censoring and does
-#' not yet assemble a censored likelihood from it. See [censored_response()]
-#' for the four contributions such an assembler would need.
+#' object as its `response` element. `statmodels7::statmod()` and
+#' `statmodels7::rstatmod()` reject that response with an error message: the
+#' toolkit marks censoring and does not assemble a censored likelihood from it.
+#' See [censored_response()] for the four contributions that such an assembler
+#' would need.
 #'
 #' @param y A numeric vector of responses, `NA` at an interval-censored
-#'   observation. Coerced with [as.numeric()], so an integer vector is accepted
-#'   and a factor is not.
+#'   observation. Coerced with [as.numeric()], so an integer vector is accepted;
+#'   a factor is rejected.
 #' @param lwr A numeric lower bound, of length 1 or `length(y)`, recycled to
-#'   `length(y)`. `-Inf` by default, which is no left censoring. Any other
-#'   length throws `"'lwr' must have length 1 or length(y)."`, and an `NA`
-#'   entry throws `"'lwr' must not contain NA."`.
+#'   `length(y)`. `-Inf` by default, which is no left censoring. A factor is
+#'   rejected. Any other length signals the error
+#'   `"'lwr' must have length 1 or length(y)."`, and an `NA` entry signals
+#'   `"'lwr' must not contain NA."`.
 #' @param upr A numeric upper bound, on the same terms, `Inf` by default. Every
-#'   `upr` must be strictly above its `lwr`; equal bounds throw from the class
-#'   validator.
+#'   `upr` must be strictly above its `lwr`; equal bounds are rejected by the
+#'   class validator.
 #'
-#' @return A [censored_response()] object of length `length(y)`, carrying `y`
-#'   unchanged (`NA` included), the recycled `lwr` and `upr`, and the derived
+#' @return A [censored_response()] object holding `length(y)` observations,
+#'   carrying `y` unchanged (`NA` included), the recycled `lwr` and `upr`, and the derived
 #'   `status`.
 #'
 #' @seealso [censored_response()] for the class and the four likelihood
@@ -193,6 +205,9 @@ censored_response <- S7::new_class(
 #'
 #' @export
 cens <- function(y, lwr = -Inf, upr = Inf) {
+  if (is.factor(y) || is.factor(lwr) || is.factor(upr)) {
+    stop("'y', 'lwr' and 'upr' must be numeric, not a factor.", call. = FALSE)
+  }
   y <- as.numeric(y)
   n <- length(y)
   recycle <- function(v, nm) {
@@ -230,7 +245,7 @@ cens <- function(y, lwr = -Inf, upr = Inf) {
 #' @description
 #' Prints one line giving the number of observations and how many carry each
 #' status, in the fixed order `observed`, `left`, `right`, `interval`. A status
-#' no observation has is left out, so a response with no censoring at all
+#' that no observation has is left out, so a response with no censoring at all
 #' prints as `<censored_response> 20 observations: 20 observed`. The values and
 #' the bounds are not shown; read them from the `y`, `lwr` and `upr`
 #' properties.

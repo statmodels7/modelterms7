@@ -97,8 +97,9 @@ test_that("a term says how fine its own grid is, per hyperparameter", {
   expect_equal(term_grid(lasso(~x, n_lambda = 50))[[1L]], list(lambda = 50L))
   expect_equal(term_grid(enet(~x, n_lambda = 40, n_alpha = 12))[[1L]],
                list(lambda = 40L, alpha = 12L))
-  expect_equal(term_grid(scad(~x, n_a = 6))[[1L]], list(lambda = 25L, a = 6L))
-  expect_equal(term_grid(mcp(~x, n_gamma = 7))[[1L]],
+  expect_equal(term_grid(scad(~x, a = NULL, n_a = 6))[[1L]],
+               list(lambda = 25L, a = 6L))
+  expect_equal(term_grid(mcp(~x, gamma = NULL, n_gamma = 7))[[1L]],
                list(lambda = 25L, gamma = 7L))
   # the two axes differ because what they span differs: lambda descends the
   # size of the kink over four decades, a shape spans its useful range
@@ -107,8 +108,8 @@ test_that("a term says how fine its own grid is, per hyperparameter", {
   # a grid on a hyperparameter the penalty does not carry, and a grid that
   # is not a grid
   expect_error(lasso(~x, n_alpha = 5), "no argument 'n_alpha'")
-  expect_error(mcp(~x, n_gamma = 1), "at least 2")
-  expect_error(mcp(~x, n_gamma = 2.5), "whole number")
+  expect_error(mcp(~x, gamma = NULL, n_gamma = 1), "at least 2")
+  expect_error(mcp(~x, gamma = NULL, n_gamma = 2.5), "whole number")
 
   # and it travels with the entry, as the held values do
   dd <- data.frame(x = stats::rnorm(20), z = stats::rnorm(20))
@@ -192,8 +193,10 @@ test_that("a term says how its own hyperparameters are combined", {
   # those are read at the mode rather than swept.
   expect_equal(term_search(enet(~x))[[1L]], "grid")
   expect_equal(term_search(enet(~x, search = "cyclic"))[[1L]], "cyclic")
-  expect_equal(term_search(scad(~x, search = "grid"))[[1L]], "grid")
-  expect_equal(term_search(mcp(~x, search = "cyclic"))[[1L]], "cyclic")
+  expect_equal(term_search(scad(~x, a = NULL, search = "grid"))[[1L]],
+               "grid")
+  expect_equal(term_search(mcp(~x, gamma = NULL, search = "cyclic"))[[1L]],
+               "cyclic")
 
   expect_error(enet(~x, search = "product"), "must be")
   expect_error(enet(~x, search = c("grid", "cyclic")), "must be")

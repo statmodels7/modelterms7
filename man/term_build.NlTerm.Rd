@@ -12,8 +12,10 @@ whatever the subformulas name.}
 \item{...}{Unused.}
 }
 \value{
-The term with \code{X}, \code{coef_names}, \code{blueprint} and, where a
-subformula brought one, \code{penalty} filled.
+The term with \code{X}, \code{coef_names}, \code{nl_params}, \code{links}, \code{deriv_mode}
+and \code{blueprint} filled. The penalties of the sub-terms are kept in the
+blueprint and reported by \code{\link[=term_penalties]{term_penalties()}}; the \code{penalty} property
+stays \code{NULL}.
 }
 \description{
 Resolves the parameters, their links and their subformulas against the
@@ -24,12 +26,15 @@ the right components.
 }
 \section{What is settled here}{
 On the formula route \code{\link[stats:deriv]{stats::deriv()}} is tried on the expression, and
-\code{deriv_mode} records whether it succeeded. Every function given to
-\code{gradient}, \code{hessian}, \code{deriv3} or \code{deriv4} is called once and its names
-checked against the components of that order: a name that is not one of
-them, a missing component or a repeated one throws here. Falling back to
-the numerical route would leave an exact derivative silently unused, which
-is worse than not having it.
+\code{deriv_mode} records whether it succeeded. The expressions of orders two to
+four are formed with \code{\link[stats:deriv]{stats::D()}} where that succeeds, and the orders that
+are analytic, whether symbolic or supplied, are recorded in the blueprint.
+Every function given to \code{gradient}, \code{hessian}, \code{deriv3} or \code{deriv4} is
+called once and its names and lengths are checked against the components of
+that order: a name that is not one of them, a missing component, a repeated
+one or a component of a length other than 1 or \code{n} is an error here. The term
+does not fall back to the numerical route in these cases. A name in \code{start},
+\code{links} or \code{subformulas} that is not a parameter is an error as well.
 
 Each parameter's subformula goes through \code{\link[=interpret_formula]{interpret_formula()}} and its
 terms are built, so their blueprints are recorded and reapplied at
@@ -41,10 +46,11 @@ are then read at the coefficients rather than stored.
 
 \section{The starting point}{
 The block is the Jacobian \strong{at the starting coefficients}, so it is only
-as good as they are. Where \code{start} names nothing, \code{\link[=term_coef_start]{term_coef_start()}}
-estimates the parameters from the data over a deterministic grid on each
-free parameter's chart; zero is a degenerate point for a nonlinear function,
-not a neutral one.
+as good as they are. A parameter that \code{start} does not name is built at
+coefficient zero. When the fitting layer supplies a response,
+\code{\link[=term_coef_start]{term_coef_start()}} estimates each such parameter over a deterministic grid
+on its chart, because zero can be a degenerate starting point for a
+nonlinear function.
 }
 
 \examples{

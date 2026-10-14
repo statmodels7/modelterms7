@@ -12,7 +12,8 @@ term_block_deriv2(term, coef = NULL, v, u, ...)
 \arguments{
 \item{term}{A built term.}
 
-\item{coef}{The coefficients, or \code{NULL} for the ones it carries.}
+\item{coef}{The coefficients, one per coefficient of the term, or \code{NULL} for
+the ones it carries.}
 
 \item{v, u}{Numeric vectors as long as the term's coefficients.}
 
@@ -74,20 +75,22 @@ delta carries, and the fifth from \eqn{h''_{p_1}}. Exchanging \eqn{p_2} and
 where they are, which is the symmetry in \code{v} and \code{u}.
 
 Nothing new is derived: \eqn{f_{p_1p_2p_3}} is the third order of
-\code{\link[=nl_fderiv]{nl_fderiv()}}, served by the same four-way machinery as the lower
+\code{\link[=nl_fderiv]{nl_fderiv()}}, served by the same routes as the lower
 orders, and \eqn{h'''} is \code{\link[linkfunctions7:d3linkinv]{linkfunctions7::d3linkinv()}}, exact for
 every shipped link and numerical for a user-defined one. The cost is
-\eqn{O(nP^3)} in the term's own parameters, of which there are two to four
-in practice, and the call is made once per pair of hyperparameters rather
-than once per observation.
+\eqn{O(nP^3)} in the number \eqn{P} of the term's own parameters, and the
+call is made once per pair of hyperparameters rather than once per
+observation.
 
 A break-point term answers according to its construction. With
-\code{smoothed} an \code{\link[numericals7:abs_smoother]{numericals7::abs_smoother()}} the block is the
+\code{smoothed} set to an \code{\link[numericals7:abs_smoother]{numericals7::abs_smoother()}} the block is the
 true Jacobian and the closed forms are the smoother's own one order further
 up than \code{\link[=term_block_deriv]{term_block_deriv()}} reads them: with \eqn{u = x - \psi},
 \eqn{P = s''/2}, \eqn{T = s'''/2} and \eqn{Q = s''''/2}, the change columns
-contribute \eqn{P} and \eqn{T} twice in the break-point and the break-point
-column contributes the two mixed pieces and \eqn{-(\gamma T + \delta Q)}.
+carry \eqn{P} (for \eqn{\gamma}) and \eqn{T} (for \eqn{\delta}) times the
+product of the two break-point directions in their own entries, and the
+break-point column carries the two mixed pieces and
+\eqn{-(\gamma T + \delta Q)} times that product.
 The sharp constructions answer zeros: for \code{\link[=seg]{seg()}} the second
 derivative is genuinely zero away from the break-points, the truncated
 line's derivative in the position being an indicator and the position
@@ -96,16 +99,15 @@ column being linear in the change, while for \code{\link[=jump]{jump()}} and
 weight, which is why the first-order generics
 already answer zeros there.
 
-Two properties of the smoothed branch are worth stating because they are
-exact. Where a break-point sits against its
-confinement limit the whole contribution is zero, every addend carrying a
-direction in the break-point, which the first derivative does not, the
-position column moving with the change whatever the position does. And
-under \code{\link[numericals7:smooth_quintic]{numericals7::smooth_quintic()}}, which is exact outside
+Two properties of the smoothed branch are exact. Where a break-point sits
+against its confinement limit the whole contribution is zero, because every
+addend carries a direction in the break-point and the confinement gates
+that direction; \code{\link[=term_block_deriv]{term_block_deriv()}} is zero there for the same reason.
+Under \code{\link[numericals7:smooth_quintic]{numericals7::smooth_quintic()}}, which is exact outside
 \eqn{[-h, h]}, the answer is zero on every observation further than the
-width from a break-point; that smoother is \eqn{C^3}, so its fourth
-derivative jumps at \eqn{\pm h} and the answer is exact away from those two
-points, leaving it exact everywhere else.
+width from a break-point. That smoother is \eqn{C^3}, so its fourth
+derivative jumps at \eqn{\pm h}, and the answer is exact at every
+observation that is not at distance \eqn{h} from a break-point.
 }
 \examples{
 dd <- data.frame(x = seq(0.2, 3, length.out = 20))

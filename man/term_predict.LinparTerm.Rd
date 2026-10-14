@@ -4,7 +4,7 @@
 \alias{term_predict.LinparTerm}
 \title{A Parametric Block at New Rows}
 \arguments{
-\item{term}{A built \code{\link[=LinparTerm]{LinparTerm()}}. An unbuilt one throws
+\item{term}{A built \code{\link[=LinparTerm]{LinparTerm()}}. An unbuilt one signals the error
 \code{"the term has not been built; call term_build(term, data) first."}.}
 
 \item{newdata}{A data frame carrying every variable the formula names.}
@@ -26,12 +26,13 @@ is re-derived from the new rows.
 The levels come from \code{blueprint$xlev}, so a factor in \code{newdata} need carry
 only the levels its own rows use and still gets the full set of columns. A
 level the blueprint does not know is rejected by \code{\link[stats:model.frame]{stats::model.frame()}} with
-\code{"factor g has new levels zz"}, which is the right answer: a coefficient was
-never fitted for it.
+\code{"factor g has new levels zz"}, because no coefficient was fitted for that
+level.
 
 The storage comes from \code{blueprint$sparse} rather than being decided again,
-so a prediction does not spend at new rows what the build was careful not
-to. \code{na.action = na.pass} again keeps every row.
+so a prediction builds the same kind of block as the fit and does not
+densify a sparse block at new rows. \code{na.action = na.pass} again keeps every
+row.
 }
 \examples{
 dd <- data.frame(x = 1:8, g = factor(rep(c("a", "b", "c", "d"), 2)))
@@ -45,7 +46,7 @@ nd <- droplevels(dd[dd$g \%in\% c("a", "b"), ])
 levels(nd$g)
 dim(term_predict(b, nd))
 
-# A level the fit never saw is refused.
+# A level the fit never saw is rejected.
 bad <- dd
 levels(bad$g) <- c("a", "b", "c", "zz")
 try(term_predict(b, bad))

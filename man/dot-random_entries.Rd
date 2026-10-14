@@ -2,7 +2,7 @@
 % Please edit documentation in R/random.R
 \name{.random_entries}
 \alias{.random_entries}
-\title{The Penalty Entries a Random-Effect Term Declares}
+\title{Penalty Entries of a Random-Effect Term}
 \usage{
 .random_entries(prior, d, m, wnames)
 }

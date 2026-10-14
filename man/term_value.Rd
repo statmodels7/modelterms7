@@ -12,7 +12,8 @@ term_value(term, coef = NULL, newdata = NULL, ...)
 \item{term}{A built term.}
 
 \item{coef}{The coefficients. Optional for a nonlinear term, which
-carries the ones it was last refreshed at.}
+carries the ones it was last refreshed at, and which rejects a vector
+with a length other than its number of coefficients.}
 
 \item{newdata}{An optional data frame; the contribution is returned on
 its rows instead of on the ones the term was built from.}
@@ -32,8 +33,8 @@ Jacobian alone does not give and which a Gauss-Newton step needs beside
 it.
 }
 \details{
-\code{newdata} asks for the same contribution on other rows, and is what
-a predictor needs where the block is a Jacobian: there
+With \code{newdata} the same contribution is returned on other rows, which is
+what a predictor needs where the block is a Jacobian: there
 \code{term_predict()} times the coefficients is the linearization and
 not the contribution, and the two differ by whatever the linearization
 drops. For \code{\link[=seg]{seg()}} that difference is a step at the

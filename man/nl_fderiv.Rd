@@ -7,14 +7,15 @@
 nl_fderiv(term, coef = NULL, order = 1L)
 }
 \arguments{
-\item{term}{A built \code{\link[=NlTerm]{NlTerm()}}. Anything else throws
-\code{"'term' must be a built nl() term."}, and an unbuilt one
+\item{term}{A built \code{\link[=NlTerm]{NlTerm()}}. Any other object is rejected with the
+error \code{"'term' must be a built nl() term."}, and an unbuilt term with
 \code{"the term is not built."}.}
 
-\item{coef}{The coefficients to read at, or \code{NULL} for the ones the term
-currently carries, which \code{\link[=term_refresh]{term_refresh()}} last committed.}
+\item{coef}{The coefficients to read at, one per coefficient of the term, or
+\code{NULL} for the ones the term currently carries, which \code{\link[=term_refresh]{term_refresh()}}
+last committed. A vector of another length is rejected.}
 
-\item{order}{1, 2, 3 or 4. Anything else throws.}
+\item{order}{1, 2, 3 or 4. Any other value is rejected.}
 }
 \value{
 A named list of numeric vectors of length \code{n}, one per component of
@@ -28,20 +29,21 @@ component per index multiset, keyed as \pkg{distributions7} keys its own
 derivative surfaces.
 }
 \details{
-The route is chosen per order, in this priority: a function supplied to
-\code{\link[=nl]{nl()}} where there is one, then the symbolic route where the expression
-can be differentiated, and otherwise one stencil applied to the highest
-order that is analytic, a supplied one included. That is why writing out a
-Hessian pays twice: the third and fourth orders are then one difference
-away from an exact second instead of from the function.
+The route is chosen for each order separately, in this priority: a function
+supplied to \code{\link[=nl]{nl()}} where there is one, then the symbolic route where the
+expression can be differentiated, and otherwise one stencil applied to the
+highest analytic order below the one wanted (a supplied one included), or
+to the value of \eqn{f} where no lower order is analytic. A supplied Hessian
+therefore serves the third and fourth orders, which are then one difference
+away from an exact second order.
 
-Only \strong{one} stencil is applied, never a chain of them. A fourth
-derivative built from four nested first differences is noise; the same
-discipline holds everywhere in the toolkit.
+In each parameter the difference is a single stencil of the order required,
+so a derivative of order four in one parameter is never built from nested
+first differences. Stencils in different parameters are composed.
 
 The components are in the term's own parameters, not in its coefficients.
-The chain rule onto the coefficients, the links and a subformula's design,
-belongs to the term, which is the only thing that knows them.
+The chain rule onto the coefficients, through the links and the design of a
+subformula, is applied by the term.
 }
 \examples{
 dd <- data.frame(x = seq(0.2, 3, length.out = 20))

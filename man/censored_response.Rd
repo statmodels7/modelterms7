@@ -17,24 +17,25 @@ where the observation is interval-censored.}
 
 \item{lwr, upr}{Numeric vectors of censoring bounds, of the same length as
 \code{y}. Infinite entries are allowed and mean no censoring on that side. The
-validator rejects any pair with \code{lwr >= upr}.}
+validator rejects a missing entry and any pair with \code{lwr >= upr}.}
 
 \item{status}{A character vector of the same length as \code{y}, each entry one
 of \code{"observed"}, \code{"left"}, \code{"right"} or \code{"interval"}. Any other string
-throws, naming the first one it meets.}
+signals an error that names the first one found.}
 }
 \value{
 An S7 object of class \code{censored_response} with properties \code{y},
 \code{lwr}, \code{upr} (numeric, all of one length) and \code{status} (character, the
-same length). It carries no methods beyond \code{\link[=print]{print()}}.
+same length). The class has a \code{\link[=print]{print()}} method and no other methods.
 }
 \description{
 Holds a response whose observations are not all exact: the values, a lower
 and an upper bound for each of them, and a status saying which of the four
-cases the observation is. \code{\link[=cens]{cens()}} is the constructor to call, and it derives
-the statuses from the values and the bounds. The raw S7 constructor
-documented here takes all four vectors and checks only that they agree, so it
-is the form to use when the statuses are already known.
+cases the observation is. \code{\link[=cens]{cens()}} is the usual constructor and derives the
+statuses from the values and the bounds. The raw S7 constructor documented
+here takes all four vectors and validates them (equal lengths, bounds that
+are not missing, each lower bound strictly below its upper bound, and status
+names), so it is the form to use when the statuses are already known.
 }
 \section{The four statuses and what each asserts}{
 Writing \eqn{Y} for the unobserved response, \eqn{L} for \code{lwr} and \eqn{U}
@@ -52,22 +53,25 @@ fitted family. \code{y} is \code{NA} for an interval-censored observation, its v
 being unknown; every other status carries a number.
 }
 
-\section{What reads it today}{
+\section{Use in fitting}{
 \code{\link[=interpret_formula]{interpret_formula()}} accepts \code{cens(...)} on the left of a formula and
-returns the object as the \code{response} element of its result. Nothing then
-assembles the four contributions above: \code{statmodels7::statmod()} stops with
-a message naming the gap, and no other function in the toolkit reads the
-class. The pieces exist: \code{distributions7::distrib_grad_cdf()} and
-\code{distrib_hess_cdf()} carry the derivatives of \eqn{F} in the parameters. The
-assembler that would use them is not written, so the class records what is
-known about each observation and no more.
+returns the object as the \code{response} element of its result. No function
+assembles the four contributions above into a likelihood:
+\code{statmodels7::statmod()} and \code{statmodels7::rstatmod()} reject a censored
+response with an error message, and no other function in the toolkit reads
+the class. The derivatives of \eqn{F} in the parameters are available from
+\code{distributions7::distrib_grad_cdf()} and \code{distrib_hess_cdf()}. Without an
+assembler the class records what is known about each observation and nothing
+more.
 }
 
 \section{What the validator enforces}{
-\code{y}, \code{lwr}, \code{upr} and \code{status} must be the same length; every lower bound
-must be \strong{strictly} below its upper bound, so \code{lwr = upr} is rejected;
-and every status must be one of the four names. A failure throws with the
-offending rule quoted.
+\code{y}, \code{lwr}, \code{upr} and \code{status} must be the same length; \code{lwr} and \code{upr} must
+not be missing; every lower bound must be \strong{strictly} below its upper bound,
+so \code{lwr = upr} is rejected; and every status must be one of the four names.
+A failure signals an error that quotes the violated rule. The validator does
+not check that a status agrees with the values: a status of \code{"interval"} with
+a non-missing \code{y} is accepted, and so is a missing \code{y} with another status.
 }
 
 \examples{
@@ -81,7 +85,8 @@ cbind(lwr = r@lwr, upr = r@upr)
 censored_response(y = c(2, 9), lwr = c(-Inf, -Inf), upr = c(Inf, 9),
                   status = c("observed", "right"))
 
-# Three ways to fail the validator.
+# Four ways to fail the validator.
+try(censored_response(y = 1, lwr = NA_real_, upr = 1, status = "observed"))
 try(censored_response(y = 1, lwr = 2, upr = 1, status = "observed"))
 try(censored_response(y = 1, lwr = 0, upr = 2, status = "cut"))
 try(censored_response(y = c(1, 2), lwr = 0, upr = 2, status = "observed"))

@@ -20,18 +20,17 @@
 #' [additive_term()] contributes a block of design columns \eqn{X_j\beta_j} to
 #' a linear predictor. [structural_term()] rewrites the likelihood instead:
 #' [gas()]'s predictor is a recursion, [regime()]'s contribution is a
-#' likelihood mixed over latent states. The branch decides which generics a
+#' likelihood mixed over latent states. The branch determines which generics a
 #' consumer may call, so [statmodels7::statmod()] routes on it.
 #'
-#' # What the root carries, and why
+#' # The properties of the root
 #'
-#' Beyond `label` the properties are all about a hyperparameter path.
-#' **Which hyperparameters are estimated is said by the term and by nothing
-#' else**: the term is where the penalty is named, so it is where a held value,
-#' a grid size, a written-out set of values, the depth of the path and the way
-#' several hyperparameters are combined all belong. An outer criterion is put
-#' to every hyperparameter of a model, smooth ones included, and carries none
-#' of this.
+#' Beyond `label` the properties all describe a hyperparameter path. The term
+#' alone determines which hyperparameters are estimated: the term is where the
+#' penalty is named, so a held value, a grid size, a written-out set of values,
+#' the depth of the path and the way several hyperparameters are combined all
+#' belong to it. An outer criterion applies to every hyperparameter of a model,
+#' smooth ones included, and records none of this.
 #'
 #' Each of `hyper`, `grid` and `values` is a named list keyed by the penalty's
 #' own hyperparameter names, and each is empty by default. `min_ratio` and
@@ -40,25 +39,25 @@
 #' swept over its own interval and a shape over a geometric grid above its
 #' lower bound.
 #'
-#' # It cannot be constructed
+#' # Abstract classes
 #'
 #' `model_term` is abstract, as are `additive_term` and `structural_term`.
-#' `model_term()` throws
-#' `"Can't construct an object from abstract class <model_term>"`. Use it as a
-#' parent when writing a term class, and as the test
-#' `S7::S7_inherits(x, model_term)` when asking whether an object is a term.
+#' Calling `model_term()` signals the error
+#' `"Can't construct an object from abstract class <model_term>"`. The class
+#' serves as a parent when writing a term class, and as the test
+#' `S7::S7_inherits(x, model_term)` when testing whether an object is a term.
 #'
 #' A class inheriting from it supplies [term_build()] at the very least: the
-#' method registered here throws, naming the class that did not implement it.
-#' Most other generics carry a usable default, so a new term class starts from
-#' a working object and overrides what it has reason to.
+#' method registered here signals an error that names the class that did not
+#' implement it. Most other generics have a usable default, so a new term class
+#' starts from a working object and overrides what it has reason to.
 #'
 #' @param label A character string prefixed to the term's coefficient names
 #'   when non-empty, and used as the title of [plot()] and the tag of
-#'   [print()]. `character(0)` and `""` both mean no label.
-#' @param hyper The hyperparameters of the term's penalty the caller **held**,
-#'   as a named list keyed by the penalty's names. Empty, the default, means
-#'   every one of them is estimated. See [term_hyper()].
+#'   [print()]. The empty string `""` means no label.
+#' @param hyper The hyperparameters of the term's penalty that the caller
+#'   **held**, as a named list keyed by the penalty's names. Empty, the
+#'   default, means every one of them is estimated. See [term_hyper()].
 #' @param grid How many values a path visits for each of the term's
 #'   hyperparameters, as a named list of single whole numbers. Empty, the
 #'   default, leaves the number to the fitting layer. See [term_grid()].
@@ -79,7 +78,7 @@
 #'   See [term_ids()].
 #'
 #' @return Nothing: the class is abstract and cannot be instantiated. As a type
-#'   it is the parent of every term, with the seven properties above.
+#'   it is the parent of every term, with the properties above.
 #'
 #' @seealso [additive_term()] and [structural_term()] for the two branches,
 #'   [term_build()] for turning a specification into a built term,
@@ -173,47 +172,52 @@ model_term <- S7::new_class(
 #' columns \eqn{X_j \beta_j} to the linear predictor of one distribution
 #' parameter. Everything a formula can write that is not a filter or a latent
 #' mixture is on this branch: [linpar()], the five penalized terms, [random()],
-#' [s()] and [te()], [nl()] and the break-point terms.
+#' [s()] and [te()], [nl()] and the break-point terms [seg()], [jump()] and
+#' [jseg()]. With `marginal = TRUE` the break-point terms are structural
+#' terms instead.
 #'
 #' A built term on this branch carries four things beyond the root's
 #' properties: the block itself, the coefficient names, the blueprint that
 #' reproduces the block on new rows, and the penalty on its coefficients.
 #'
 #' @details
-#' # What a build fills, and what stays empty
+#' # The build
 #'
 #' A specification has `X` empty and `blueprint` an empty list; [term_build()]
-#' fills all four. The blueprint is the reason [term_predict()] can **reapply**
-#' the mapping instead of rebuilding it: the factor levels, the contrasts, the
-#' knots a basis was placed on and the spreads a standardization used are
-#' recorded there at build time. [check_term()]'s subset check is what tests
-#' that they really are.
+#' fills `X`, `coef_names` and `blueprint`, and `penalty` as well for a term
+#' that carries a penalty. The blueprint is the reason [term_predict()] can
+#' **reapply** the mapping instead of rebuilding it: the factor levels, the
+#' contrasts, the knots on which a basis was placed and the spreads that a
+#' standardization used are recorded there at build time. [check_term()]'s
+#' subset check tests that they are.
 #'
-#' `penalty` is `NULL` for an unpenalized term. Reading it directly answers for
-#' a term carrying one penalty over its whole block; [term_penalties()] is the
-#' general form and covers a term whose penalty reaches part of its parameters
-#' or which carries several.
+#' `penalty` is `NULL` for an unpenalized term. Reading it directly gives the
+#' penalty of a term that carries one penalty over its whole block;
+#' [term_penalties()] is the general form and covers a term whose penalty
+#' reaches part of its parameters or which carries several.
 #'
-#' # The contract on this branch
+#' # The methods of this branch
 #'
 #' [term_matrix()] returns `X`, [term_coef_names()] returns `coef_names`,
 #' [term_npar()] counts the columns and [term_penalty()] returns `penalty`, all
-#' from the properties, so a subclass gets them without writing anything. What
-#' a subclass owes is [term_build()] and [term_predict()].
+#' from the properties, so a subclass gets them without writing anything. A
+#' subclass must supply [term_build()] and [term_predict()].
 #'
 #' A term whose block moves with its own coefficients, as [nl()] and [seg()]
-#' do, also implements [term_refresh()] and [term_value()], and answers
-#' [term_jacobian_block()] to say whether the block it returns is a Jacobian or
-#' a frozen working linearization.
+#' do, also implements [term_refresh()] and [term_value()].
+#' [term_jacobian_block()] reports whether the block is a Jacobian or a frozen
+#' working linearization; it is `TRUE` by default, and a term whose block is
+#' the latter overrides it.
 #'
 #' # The block need not be dense
 #'
 #' `X` is `class_any`, so a block may be a base matrix or any \pkg{Matrix}
 #' class. A grouping indicator has one non-zero per row, and [random()] builds
-#' it sparse; [linpar()] and the penalized terms build sparse when asked. Code
-#' reading a block tests `is.matrix(x) && is.numeric(x)` or a two-dimensional
-#' S4 object, since `is.matrix()` alone is `FALSE` for every \pkg{Matrix}
-#' class.
+#' it sparse; [linpar()] and the penalized terms build sparse where their
+#' `sparse` argument is `TRUE`, or, when it is `NULL`, where the factor part of
+#' the design is large. Code reading a block tests
+#' `is.matrix(x) && is.numeric(x)` or a two-dimensional S4 object, since
+#' `is.matrix()` alone is `FALSE` for every \pkg{Matrix} class.
 #'
 #' @inheritParams model_term
 #' @param X The design block, one row per observation: a numeric matrix or a
@@ -227,18 +231,19 @@ model_term <- S7::new_class(
 #'   `NULL` when the term is unpenalized.
 #'
 #' @return Nothing: the class is abstract and cannot be instantiated.
-#'   `additive_term()` throws. As a type it is the parent of every term that
-#'   contributes design columns, carrying the four properties above beside
-#'   [model_term()]'s six.
+#'   Calling `additive_term()` signals an error. As a type it is the parent of
+#'   every term that contributes design columns, carrying the four properties
+#'   above beside those of [model_term()].
 #'
 #' @seealso [structural_term()] for the other branch, [term_build()],
-#'   [term_predict()] and [term_matrix()] for the contract, and [linpar()] for
-#'   the simplest term on this branch.
+#'   [term_predict()] and [term_matrix()] for the methods of the branch, and
+#'   [linpar()] for the simplest term on this branch.
 #'
 #' @examples
 #' d <- data.frame(x = rnorm(20), g = factor(rep(letters[1:4], 5)))
 #'
-#' # A specification carries no block; a build fills all four properties.
+#' # A specification carries no block; a build fills the block, the names and
+#' # the blueprint, and the penalty where the term has one.
 #' spec <- ridge(~ x + g)
 #' c(X = length(spec@X), blueprint = length(spec@blueprint))
 #' b <- term_build(spec, d)
@@ -281,48 +286,51 @@ additive_term <- S7::new_class(
 #' [term_matrix()] method.
 #'
 #' @details
-#' # Parameters, not coefficients
+#' # The parameters of a structural term
 #'
 #' What such a term estimates are its **own parameters**, named by
 #' [term_params()] and each riding a chart named by [term_links()], so a
 #' persistence stays inside \eqn{(-1, 1)} and a loading stays positive whatever
 #' an optimizer proposes. [term_npar()] counts those parameters,
-#' [term_start()] says where they start, and a [term_penalties()] entry indexes
-#' into them, where an additive term's entry indexes into columns.
+#' [term_start()] gives their starting values, and a [term_penalties()] entry
+#' indexes into them, where an additive term's entry indexes into columns.
 #'
-#' The class adds no properties of its own: everything a built structural term
-#' records goes in the root's `label` and in the subclass's own slots.
+#' The class adds one property of its own, `blueprint`, which records that the
+#' term has been built. Everything else that a built structural term records is
+#' held in the root's properties and in the subclass's own slots.
 #'
 #' # The two shapes
 #'
 #' A **filter** reports a predictor and its exact derivative: [term_filter()]
 #' returns the level at each observation together with the Jacobian in the
 #' term's parameters, propagated beside the state because the recursion is the
-#' only place it can be computed. [term_adjoint()], [term_curvature()] and
-#' [term_third()] carry the first three orders through the same recursion.
-#' [gas()] has this shape.
+#' only place it can be computed. [term_adjoint()], [term_curvature()],
+#' [term_third()] and [term_fourth()] carry the derivatives of the first to
+#' the fourth order through the same recursion. [gas()] has this shape.
 #'
 #' A **likelihood** term reports no predictor at all. [term_loglik()] returns
 #' its own contribution, [term_posterior()] the smoothed latent states and
 #' [term_hessian()] the observed information of the mixture. [regime()] and the
 #' marginal break-point terms have this shape.
 #'
-#' A fitting layer tells them apart by which of the two generics answers, and
-#' at most one structural term is allowed per model formula.
+#' The fitting layer distinguishes the two shapes by which of the two generics
+#' [term_filter()] and [term_loglik()] has a method for the term's class.
+#' [statmodels7::statmod()] admits at most one structural term per model
+#' formula.
 #'
 #' @inheritParams model_term
 #' @param blueprint A named list of everything needed to reproduce the term
 #'   on new rows: the design's state, the levels a factor had, whatever the
 #'   subclass's own filter or recursion needs. Its contents are that
 #'   subclass's business and nothing outside the term reads them. Empty in a
-#'   specification and filled by [term_build()], which is what
-#'   [term_is_built()] reads on this branch, a structural term having no
-#'   coefficient names to record being built in.
+#'   specification and filled by [term_build()]. [term_is_built()] reads it on
+#'   this branch, because a structural term has no coefficient names from
+#'   which to tell.
 #'
 #' @return Nothing: the class is abstract and cannot be instantiated.
-#'   `structural_term()` throws. As a type it is the parent of [gas()],
-#'   [regime()] and the marginal break-point terms, and carries
-#'   [model_term()]'s six properties together with `blueprint`, the branch's
+#'   Calling `structural_term()` signals an error. As a type it is the parent
+#'   of [gas()], [regime()] and the marginal break-point terms, and carries
+#'   the properties of [model_term()] together with `blueprint`, the branch's
 #'   record of having been built, empty in a specification.
 #'
 #' @seealso [additive_term()] for the other branch, [gas()] and [regime()] for
@@ -372,25 +380,30 @@ structural_term <- S7::new_class(
 #' wrote it.
 #'
 #' Beyond the additive branch's four properties it records the formula, whether
-#' the block is sparse, and the contrasts used for the formula's factors.
+#' the block is sparse, the contrasts used for the formula's factors, and
+#' whether the column `(Intercept)` is dropped after the coding.
 #'
 #' @details
-#' # The three properties of its own
+#' # The properties of its own
 #'
 #' `formula` is the one-sided formula, kept with its environment, so a symbol
 #' the data do not carry is still found where the formula was written.
 #'
-#' `sparse` holds what the caller asked for and `NULL` where nothing was asked.
+#' `sparse` holds the value the caller gave, and `NULL` where none was given.
 #' The build leaves it alone and records the storage it settled on in
 #' `blueprint$sparse`, which is the value [term_predict()] reads, so the block
 #' and a prediction from it never differ in storage. A formula naming a factor
-#' of many levels has one non-zero per row, and the dense model matrix of it is
-#' the memory the choice exists to avoid.
+#' of many levels has one non-zero per row, and building the dense model matrix
+#' of it is the memory use that sparse storage avoids.
 #'
 #' `contrasts` is a named list, one entry per factor, or empty for the
 #' session's own `options("contrasts")`. Whatever is used is recorded in the
 #' blueprint and reapplied, so a fit and a prediction never disagree about the
 #' coding.
+#'
+#' `drop_intercept` is `FALSE` by default. When it is `TRUE`, the build removes
+#' the column `(Intercept)` after the coding, and the blueprint records the
+#' setting so that a prediction applies it again.
 #'
 #' The class carries no penalty: `penalty` is `NULL` on every `LinparTerm`, and
 #' [term_penalties()] returns an empty list, so [edf()] counts its columns
@@ -415,7 +428,7 @@ structural_term <- S7::new_class(
 #'
 #' @return An S7 object of class `LinparTerm`, inheriting from
 #'   [additive_term()] and [model_term()], with the four properties above
-#'   beside the ten they supply.
+#'   beside the properties it inherits.
 #'
 #' @seealso [linpar()], the constructor to use; [interpret_formula()], which
 #'   builds one implicitly; [term_build()] and [term_predict()].
@@ -428,10 +441,10 @@ structural_term <- S7::new_class(
 #' S7::S7_inherits(tm, LinparTerm)
 #' tm@formula
 #'
-#' # The property keeps what was asked for; the blueprint records what the
+#' # The property keeps the value given; the blueprint records what the
 #' # build settled on, and that is what a prediction reads.
 #' bt <- term_build(tm, d)
-#' c(asked = is.null(bt@sparse), settled = bt@blueprint$sparse)
+#' c(sparse_is_null = is.null(bt@sparse), settled = bt@blueprint$sparse)
 #' term_build(linpar(~ g, sparse = TRUE), d)@blueprint$sparse
 #'
 #' # The contrasts are recorded and reapplied, so the coding cannot drift.

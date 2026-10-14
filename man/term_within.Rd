@@ -12,7 +12,7 @@ term_within(term, newdata, ...)
 
 \item{newdata}{A data frame.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 A numeric matrix of \code{nrow(newdata)} rows, or \code{NULL}.

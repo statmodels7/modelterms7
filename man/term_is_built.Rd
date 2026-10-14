@@ -7,8 +7,8 @@
 term_is_built(term)
 }
 \arguments{
-\item{term}{An object inheriting from \code{\link[=model_term]{model_term()}}. Anything else throws
-\code{"'term' must inherit from 'model_term'."}.}
+\item{term}{An object inheriting from \code{\link[=model_term]{model_term()}}. Any other object is
+rejected with the error \code{"'term' must inherit from 'model_term'."}.}
 }
 \value{
 A single logical, never \code{NA}.
@@ -21,21 +21,21 @@ design block, so it decides which error a caller gets from those.
 }
 \details{
 The two branches record being built in different places, so the predicate
-asks each about its own. An additive term is built when it has coefficient
-names, \code{length(term@coef_names) > 0L}; a structural term contributes no
-design columns and so has none to count, and is built when its blueprint is
-filled, \code{length(term@blueprint) > 0L}.
+reads the record of each branch. An additive term is built when it has
+coefficient names, \code{length(term@coef_names) > 0L}; a structural term
+contributes no design columns and so has none to count, and is built when
+its blueprint is filled, \code{length(term@blueprint) > 0L}.
 
-\strong{A built additive term with no columns would answer \code{FALSE}.} No shipped
-constructor produces one: \code{\link[=linpar]{linpar()}} with an empty formula fails in the
-class validator before it gets here.
+\strong{A built additive term with no columns would give \code{FALSE}.} The shipped
+constructors do not produce one: a formula that gives no columns, such as
+\code{~ 0}, is rejected when \code{\link[=term_build]{term_build()}} runs.
 
-\strong{\code{blueprint} is asked for rather than assumed.} It is declared on
-\code{\link[=additive_term]{additive_term()}} and on each of the three shipped structural classes, and
-not on the abstract \code{\link[=structural_term]{structural_term()}}, so a structural class written
-outside the package need not carry one. Where it does not, the answer is
-\code{FALSE} rather than an error, this predicate promising a logical for
-anything inheriting from \code{\link[=model_term]{model_term()}}.
+\strong{\code{blueprint} is read directly.} It is declared on \code{\link[=additive_term]{additive_term()}} and on
+the abstract \code{\link[=structural_term]{structural_term()}}, which the three shipped structural classes
+inherit, so every term inheriting from \code{\link[=model_term]{model_term()}} has one. A structural
+class written outside the package inherits an empty blueprint, which reads
+as not built until \code{\link[=term_build]{term_build()}} fills it, and the predicate returns a
+logical for such a term as well.
 }
 \examples{
 d <- data.frame(x = 1:4)
@@ -45,8 +45,8 @@ term_is_built(term_build(linpar(~ x), d))
 # It is what the accessors test, so it predicts the error.
 try(term_matrix(linpar(~ x)))
 
-# A structural term carries no design block, so it is asked about the
-# blueprint instead, and the answer is the same question either way.
+# A structural term carries no design block, so the predicate reads its
+# blueprint instead.
 gs <- gas(p = 1, q = 1)
 gb <- term_build(gs, data.frame(y = rnorm(20)))
 c(spec = term_is_built(gs), built = term_is_built(gb))

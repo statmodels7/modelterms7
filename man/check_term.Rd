@@ -8,19 +8,19 @@ check_term(term, data, verbose = TRUE)
 }
 \arguments{
 \item{term}{A term specification: any object inheriting from
-\code{\link[=additive_term]{additive_term()}}, built or unbuilt. Anything that is not a
-\code{\link[=model_term]{model_term()}} throws \code{"'term' must inherit from 'model_term'."}, and a
-\code{\link[=structural_term]{structural_term()}} is rejected by name. An already-built term is accepted
-and is rebuilt against \code{data}.}
+\code{\link[=additive_term]{additive_term()}}, built or unbuilt. An object that is not a
+\code{\link[=model_term]{model_term()}} signals the error \code{"'term' must inherit from 'model_term'."},
+and a \code{\link[=structural_term]{structural_term()}} is rejected by name. An already-built term is
+accepted and is rebuilt against \code{data}.}
 
-\item{data}{A data frame carrying every variable the term names. Anything
-else throws \code{"'data' must be a data frame."}. Any number of rows is
-accepted; with one row the subset check compares the block against itself
-and is uninformative.}
+\item{data}{A data frame carrying every variable the term names. Any other
+object signals the error \code{"'data' must be a data frame."}, and a data frame
+without rows signals \code{"'data' has no rows."}. With one row the subset check
+compares the block against itself and is uninformative.}
 
-\item{verbose}{Print one line per check as it completes, \code{TRUE} by default,
-in the form \verb{  [OK] subset -- 4 rows}. The rows are returned either way, so
-\code{verbose = FALSE} is the form to use inside a test.}
+\item{verbose}{Print one line per check once all the checks have run, \code{TRUE}
+by default, in the form \verb{  [OK] subset -- 4 rows}. The rows are returned
+either way, so \code{verbose = FALSE} is the form to use inside a test.}
 }
 \value{
 Invisibly, a data frame of \code{check}, \code{status} and \code{info}, all
@@ -29,12 +29,13 @@ character, one row per check:
 \item{\code{check}}{\code{"build"}, \code{"names"}, \code{"npar"}, \code{"smooth"},
 \code{"reproduce"} and \code{"subset"}, in that order.}
 \item{\code{status}}{\code{"OK"} or \code{"FAILED"}.}
-\item{\code{info}}{The block's dimensions for \code{build}, with \code{", sparse"}
-appended when it is an S4 matrix; \code{"smooth"} or \code{"non-smooth"} for
-\code{smooth}; the number of rows kept for \code{subset}; the condition message
-where a check threw; and \code{""} otherwise.}
+\item{\code{info}}{The block's dimensions for \code{build}, in the form
+\code{"6 x 4 block"} with \code{", sparse"} appended when it is an S4 matrix;
+\code{"smooth"} or \code{"non-smooth"} for \code{smooth}; the number of rows kept for
+\code{subset}; the condition message of a check that signaled an error; and
+\code{""} otherwise.}
 }
-A build that throws gives a single row, \code{check = "build"} and
+A build that signals an error gives a single row, \code{check = "build"} and
 \code{status = "FAILED"}, with the message in \code{info}; no later check is
 attempted.
 }
@@ -45,12 +46,14 @@ observation, that the coefficient names are unique and as numerous as the
 columns, that \code{\link[=term_npar]{term_npar()}} agrees with that count, that \code{\link[=term_smooth]{term_smooth()}}
 answers with a single non-missing logical, that \code{\link[=term_predict]{term_predict()}} on the same
 data reproduces the block, and that \code{\link[=term_predict]{term_predict()}} on a subset of rows
-returns the corresponding rows of it. One row of the result per check,
-printed as it goes and returned invisibly.
+returns the corresponding rows of it. The result has one row per check; the
+rows are printed after all the checks have run, when \code{verbose} is \code{TRUE}, and
+returned invisibly.
 
-The last check is the one worth running. A term is supposed to record its
-encoding at build time and reapply it; a term that re-derives the encoding
-from whatever rows it is handed passes every other check and fails this one.
+The last check detects a term that rebuilds its encoding. A term is supposed
+to record its encoding at build time and reapply it; a term that re-derives
+the encoding from whatever rows it is handed passes every other check and
+fails this one.
 }
 \section{The two identities}{
 Write \eqn{X} for \code{term_matrix(term_build(term, data))} and \eqn{S} for a
@@ -58,7 +61,8 @@ subset of the row indices. The last two checks are
 
 \deqn{\mathrm{predict}(\mathrm{term}, \mathrm{data}) = X,
   \qquad
-  \mathrm{predict}(\mathrm{term}, \mathrm{data}[S, ]) = X[S, ],}
+  \mathrm{predict}(\mathrm{term}, \mathrm{droplevels}(\mathrm{data}[S, ]))
+  = X[S, ],}
 
 both compared by \code{\link[=all.equal]{all.equal()}} at a relative tolerance of \code{1e-12}. The second
 does not follow from the first: a term that rebuilds its encoding satisfies
@@ -67,17 +71,18 @@ the first, the rows being the same ones, and fails the second as soon as
 }
 
 \section{Which rows the subset takes}{
-The subset is chosen to make that failure reachable. If any column of \code{data}
-is a factor with two or more levels, every row of its last level is dropped,
-so a rebuilt encoding is one column short. Failing that, the first
-\code{nrow(data) \%/\% 2} rows are taken, which still narrows the range of a numeric
-covariate.
+The subset is chosen to make that failure reachable. If a column of \code{data} is
+a factor with two or more levels whose last level occurs in some but not all
+of the rows, every row of that level is dropped, so a rebuilt encoding is
+one column short. Failing that, the first \code{max(1, nrow(data) \%/\% 2)} rows are
+taken, which still narrows the range of a numeric covariate. Character
+columns are not examined.
 
 \code{\link[=droplevels]{droplevels()}} is applied to the subset before it is passed on, because that
-is how new data really reach \code{\link[=term_predict]{term_predict()}}: a factor column there carries
-only the levels its own rows use, and the rest are known to the blueprint
-alone. Without the call a plain row subset carries the original level set
-along with it and the check cannot fail.
+is how new data reach \code{\link[=term_predict]{term_predict()}}: a factor column there carries only
+the levels its own rows use, and the remaining levels are recorded only in
+the blueprint. Without the call a plain row subset carries the original level
+set along with it and the check cannot fail.
 }
 
 \section{What is not checked}{
@@ -88,8 +93,9 @@ penalized term attaches nor the hyperparameters it declares, so
 \code{check_term()} applies to an additive term and rejects a structural one by
 name. A structural term (\code{\link[=gas]{gas()}}, \code{\link[=regime]{regime()}}, and the marginal break-point
 terms) contributes no design columns and registers no \code{\link[=term_matrix]{term_matrix()}}
-method, so there is nothing for the six checks to read; the message says so
-and names what such a term supplies instead, which is \code{\link[=term_params]{term_params()}},
+method, so there is nothing for the six checks to read; the error message
+gives this reason and lists what such a term supplies instead, which is
+\code{\link[=term_params]{term_params()}},
 \code{\link[=term_links]{term_links()}}, \code{\link[=term_npar]{term_npar()}} and one of \code{\link[=term_filter]{term_filter()}} or
 \code{\link[=term_loglik]{term_loglik()}}. No validator covers those.
 }
@@ -122,7 +128,7 @@ max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 6)), d2[sub, , dr
 # A sparse block is accepted, and the info column says it is sparse.
 check_term(random(~ 1 | g), dd)
 
-# A build that throws gives one row and stops there.
+# A build that fails gives one row and stops there.
 print(check_term(linpar(~ x + nonexistent), dd, verbose = FALSE))
 
 }

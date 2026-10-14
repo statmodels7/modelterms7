@@ -8,7 +8,7 @@ check_grid(values, penalty, what = "this term")
 }
 \arguments{
 \item{values}{A named list of the constructor's arguments, \code{NULL}
-where the criterion's default is wanted.}
+where the path's default size is wanted.}
 
 \item{penalty}{A \pkg{penalties7} penalty, or a function returning one,
 used only to read the names.}
@@ -26,13 +26,13 @@ entries dropped.
 \details{
 How finely a hyperparameter is swept belongs to the term for the same
 reason as whether it is swept at all: a penalized block of four columns
-and one of four hundred want different grids, and a criterion applies to
-every term of the model at once and cannot know which it is looking at.
-Where a term says nothing the criterion's own default is used.
+and one of four hundred want different grids, and a criterion is applied to
+every term of the model at once. Where a term gives no size, the path of the
+fitting layer uses its own default.
 
-Two values is the smallest grid that is a grid. There is no upper limit
-beyond the caller's patience: each point of a path is a whole fit, so the
-cost is linear in the number asked for.
+The smallest grid has two values. There is no upper limit; each point of a
+path is a whole fit, so the cost grows linearly in the number of values on
+one axis.
 }
 \seealso{
 \code{\link[=check_hyper]{check_hyper()}}, \code{\link[=term_grid]{term_grid()}}

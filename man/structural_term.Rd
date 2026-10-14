@@ -18,11 +18,11 @@ structural_term(
 \arguments{
 \item{label}{A character string prefixed to the term's coefficient names
 when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag of
-\code{\link[=print]{print()}}. \code{character(0)} and \code{""} both mean no label.}
+\code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
-\item{hyper}{The hyperparameters of the term's penalty the caller \strong{held},
-as a named list keyed by the penalty's names. Empty, the default, means
-every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
+\item{hyper}{The hyperparameters of the term's penalty that the caller
+\strong{held}, as a named list keyed by the penalty's names. Empty, the
+default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
@@ -51,15 +51,15 @@ See \code{\link[=term_ids]{term_ids()}}.}
 on new rows: the design's state, the levels a factor had, whatever the
 subclass's own filter or recursion needs. Its contents are that
 subclass's business and nothing outside the term reads them. Empty in a
-specification and filled by \code{\link[=term_build]{term_build()}}, which is what
-\code{\link[=term_is_built]{term_is_built()}} reads on this branch, a structural term having no
-coefficient names to record being built in.}
+specification and filled by \code{\link[=term_build]{term_build()}}. \code{\link[=term_is_built]{term_is_built()}} reads it on
+this branch, because a structural term has no coefficient names from
+which to tell.}
 }
 \value{
 Nothing: the class is abstract and cannot be instantiated.
-\code{structural_term()} throws. As a type it is the parent of \code{\link[=gas]{gas()}},
-\code{\link[=regime]{regime()}} and the marginal break-point terms, and carries
-\code{\link[=model_term]{model_term()}}'s six properties together with \code{blueprint}, the branch's
+Calling \code{structural_term()} signals an error. As a type it is the parent
+of \code{\link[=gas]{gas()}}, \code{\link[=regime]{regime()}} and the marginal break-point terms, and carries
+the properties of \code{\link[=model_term]{model_term()}} together with \code{blueprint}, the branch's
 record of having been built, empty in a specification.
 }
 \description{
@@ -71,33 +71,36 @@ terms replace the log-likelihood outright with one mixed over latent states.
 A term on this branch has no block, no coefficients and no
 \code{\link[=term_matrix]{term_matrix()}} method.
 }
-\section{Parameters, not coefficients}{
+\section{The parameters of a structural term}{
 What such a term estimates are its \strong{own parameters}, named by
 \code{\link[=term_params]{term_params()}} and each riding a chart named by \code{\link[=term_links]{term_links()}}, so a
 persistence stays inside \eqn{(-1, 1)} and a loading stays positive whatever
 an optimizer proposes. \code{\link[=term_npar]{term_npar()}} counts those parameters,
-\code{\link[=term_start]{term_start()}} says where they start, and a \code{\link[=term_penalties]{term_penalties()}} entry indexes
-into them, where an additive term's entry indexes into columns.
+\code{\link[=term_start]{term_start()}} gives their starting values, and a \code{\link[=term_penalties]{term_penalties()}} entry
+indexes into them, where an additive term's entry indexes into columns.
 
-The class adds no properties of its own: everything a built structural term
-records goes in the root's \code{label} and in the subclass's own slots.
+The class adds one property of its own, \code{blueprint}, which records that the
+term has been built. Everything else that a built structural term records is
+held in the root's properties and in the subclass's own slots.
 }
 
 \section{The two shapes}{
 A \strong{filter} reports a predictor and its exact derivative: \code{\link[=term_filter]{term_filter()}}
 returns the level at each observation together with the Jacobian in the
 term's parameters, propagated beside the state because the recursion is the
-only place it can be computed. \code{\link[=term_adjoint]{term_adjoint()}}, \code{\link[=term_curvature]{term_curvature()}} and
-\code{\link[=term_third]{term_third()}} carry the first three orders through the same recursion.
-\code{\link[=gas]{gas()}} has this shape.
+only place it can be computed. \code{\link[=term_adjoint]{term_adjoint()}}, \code{\link[=term_curvature]{term_curvature()}},
+\code{\link[=term_third]{term_third()}} and \code{\link[=term_fourth]{term_fourth()}} carry the derivatives of the first to
+the fourth order through the same recursion. \code{\link[=gas]{gas()}} has this shape.
 
 A \strong{likelihood} term reports no predictor at all. \code{\link[=term_loglik]{term_loglik()}} returns
 its own contribution, \code{\link[=term_posterior]{term_posterior()}} the smoothed latent states and
 \code{\link[=term_hessian]{term_hessian()}} the observed information of the mixture. \code{\link[=regime]{regime()}} and the
 marginal break-point terms have this shape.
 
-A fitting layer tells them apart by which of the two generics answers, and
-at most one structural term is allowed per model formula.
+The fitting layer distinguishes the two shapes by which of the two generics
+\code{\link[=term_filter]{term_filter()}} and \code{\link[=term_loglik]{term_loglik()}} has a method for the term's class.
+\code{\link[statmodels7:statmod]{statmodels7::statmod()}} admits at most one structural term per model
+formula.
 }
 
 \examples{

@@ -41,12 +41,14 @@ NULL
 #' columns, that [term_npar()] agrees with that count, that [term_smooth()]
 #' answers with a single non-missing logical, that [term_predict()] on the same
 #' data reproduces the block, and that [term_predict()] on a subset of rows
-#' returns the corresponding rows of it. One row of the result per check,
-#' printed as it goes and returned invisibly.
+#' returns the corresponding rows of it. The result has one row per check; the
+#' rows are printed after all the checks have run, when `verbose` is `TRUE`, and
+#' returned invisibly.
 #'
-#' The last check is the one worth running. A term is supposed to record its
-#' encoding at build time and reapply it; a term that re-derives the encoding
-#' from whatever rows it is handed passes every other check and fails this one.
+#' The last check detects a term that rebuilds its encoding. A term is supposed
+#' to record its encoding at build time and reapply it; a term that re-derives
+#' the encoding from whatever rows it is handed passes every other check and
+#' fails this one.
 #'
 #' @details
 #' # The two identities
@@ -56,7 +58,8 @@ NULL
 #'
 #' \deqn{\mathrm{predict}(\mathrm{term}, \mathrm{data}) = X,
 #'   \qquad
-#'   \mathrm{predict}(\mathrm{term}, \mathrm{data}[S, ]) = X[S, ],}
+#'   \mathrm{predict}(\mathrm{term}, \mathrm{droplevels}(\mathrm{data}[S, ]))
+#'   = X[S, ],}
 #'
 #' both compared by [all.equal()] at a relative tolerance of `1e-12`. The second
 #' does not follow from the first: a term that rebuilds its encoding satisfies
@@ -65,17 +68,18 @@ NULL
 #'
 #' # Which rows the subset takes
 #'
-#' The subset is chosen to make that failure reachable. If any column of `data`
-#' is a factor with two or more levels, every row of its last level is dropped,
-#' so a rebuilt encoding is one column short. Failing that, the first
-#' `nrow(data) %/% 2` rows are taken, which still narrows the range of a numeric
-#' covariate.
+#' The subset is chosen to make that failure reachable. If a column of `data` is
+#' a factor with two or more levels whose last level occurs in some but not all
+#' of the rows, every row of that level is dropped, so a rebuilt encoding is
+#' one column short. Failing that, the first `max(1, nrow(data) %/% 2)` rows are
+#' taken, which still narrows the range of a numeric covariate. Character
+#' columns are not examined.
 #'
 #' [droplevels()] is applied to the subset before it is passed on, because that
-#' is how new data really reach [term_predict()]: a factor column there carries
-#' only the levels its own rows use, and the rest are known to the blueprint
-#' alone. Without the call a plain row subset carries the original level set
-#' along with it and the check cannot fail.
+#' is how new data reach [term_predict()]: a factor column there carries only
+#' the levels its own rows use, and the remaining levels are recorded only in
+#' the blueprint. Without the call a plain row subset carries the original level
+#' set along with it and the check cannot fail.
 #'
 #' # What is not checked
 #'
@@ -86,23 +90,24 @@ NULL
 #' `check_term()` applies to an additive term and rejects a structural one by
 #' name. A structural term ([gas()], [regime()], and the marginal break-point
 #' terms) contributes no design columns and registers no [term_matrix()]
-#' method, so there is nothing for the six checks to read; the message says so
-#' and names what such a term supplies instead, which is [term_params()],
+#' method, so there is nothing for the six checks to read; the error message
+#' gives this reason and lists what such a term supplies instead, which is
+#' [term_params()],
 #' [term_links()], [term_npar()] and one of [term_filter()] or
 #' [term_loglik()]. No validator covers those.
 #'
 #' @param term A term specification: any object inheriting from
-#'   [additive_term()], built or unbuilt. Anything that is not a
-#'   [model_term()] throws `"'term' must inherit from 'model_term'."`, and a
-#'   [structural_term()] is rejected by name. An already-built term is accepted
-#'   and is rebuilt against `data`.
-#' @param data A data frame carrying every variable the term names. Anything
-#'   else throws `"'data' must be a data frame."`. Any number of rows is
-#'   accepted; with one row the subset check compares the block against itself
-#'   and is uninformative.
-#' @param verbose Print one line per check as it completes, `TRUE` by default,
-#'   in the form `  [OK] subset -- 4 rows`. The rows are returned either way, so
-#'   `verbose = FALSE` is the form to use inside a test.
+#'   [additive_term()], built or unbuilt. An object that is not a
+#'   [model_term()] signals the error `"'term' must inherit from 'model_term'."`,
+#'   and a [structural_term()] is rejected by name. An already-built term is
+#'   accepted and is rebuilt against `data`.
+#' @param data A data frame carrying every variable the term names. Any other
+#'   object signals the error `"'data' must be a data frame."`, and a data frame
+#'   without rows signals `"'data' has no rows."`. With one row the subset check
+#'   compares the block against itself and is uninformative.
+#' @param verbose Print one line per check once all the checks have run, `TRUE`
+#'   by default, in the form `  [OK] subset -- 4 rows`. The rows are returned
+#'   either way, so `verbose = FALSE` is the form to use inside a test.
 #'
 #' @return Invisibly, a data frame of `check`, `status` and `info`, all
 #'   character, one row per check:
@@ -110,12 +115,13 @@ NULL
 #'     \item{`check`}{`"build"`, `"names"`, `"npar"`, `"smooth"`,
 #'       `"reproduce"` and `"subset"`, in that order.}
 #'     \item{`status`}{`"OK"` or `"FAILED"`.}
-#'     \item{`info`}{The block's dimensions for `build`, with `", sparse"`
-#'       appended when it is an S4 matrix; `"smooth"` or `"non-smooth"` for
-#'       `smooth`; the number of rows kept for `subset`; the condition message
-#'       where a check threw; and `""` otherwise.}
+#'     \item{`info`}{The block's dimensions for `build`, in the form
+#'       `"6 x 4 block"` with `", sparse"` appended when it is an S4 matrix;
+#'       `"smooth"` or `"non-smooth"` for `smooth`; the number of rows kept for
+#'       `subset`; the condition message of a check that signaled an error; and
+#'       `""` otherwise.}
 #'   }
-#'   A build that throws gives a single row, `check = "build"` and
+#'   A build that signals an error gives a single row, `check = "build"` and
 #'   `status = "FAILED"`, with the message in `info`; no later check is
 #'   attempted.
 #'
@@ -151,7 +157,7 @@ NULL
 #' # A sparse block is accepted, and the info column says it is sparse.
 #' check_term(random(~ 1 | g), dd)
 #'
-#' # A build that throws gives one row and stops there.
+#' # A build that fails gives one row and stops there.
 #' print(check_term(linpar(~ x + nonexistent), dd, verbose = FALSE))
 #'
 #' @export
@@ -173,6 +179,9 @@ check_term <- function(term, data, verbose = TRUE) {
   }
   if (!is.data.frame(data)) {
     stop("'data' must be a data frame.", call. = FALSE)
+  }
+  if (!nrow(data)) {
+    stop("'data' has no rows.", call. = FALSE)
   }
 
   rows <- list()

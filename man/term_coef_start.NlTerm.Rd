@@ -18,36 +18,34 @@ A numeric vector, one value per column of the block.
 \description{
 The coefficients \code{\link[=term_build]{term_build()}} built the block at: the
 starting value of each of the term's own parameters carried through its
-link, from \code{start} where the caller gave one. The block is the
-Jacobian at those values, so it is not the same block at any other
-point, and a fitting layer that started at zero would linearize where
-the term was never meant to be evaluated.
-Where \code{target} is given, meaning the response on the scale of the
-predictor, which the fitting layer supplies, the parameters the caller
-did NOT pin with \code{start} are estimated from it by least squares,
-because for a nonlinear term zero is a degenerate point, never a
-neutral one: it linearizes where the function was never meant to be
-evaluated, and every quantity read at those coefficients inherits it,
-the top of a kinked penalty's path among them.
+link, from \code{start} where the caller gave one, and coefficient zero for a
+parameter that \code{start} does not name. The block is the Jacobian at those
+values, so it is a different block at any other point.
+Where \code{target} is given (the response on the scale of the predictor, which
+the fitting layer supplies), the parameters that \code{start} does not fix are
+estimated from it by least squares. Zero coefficients are a poor start for
+a nonlinear term, since the block is then linearized at a point where the
+function was not meant to be evaluated, and every quantity read at those
+coefficients, such as the top of the path of a kinked penalty, depends on
+that point.
 
 The search is a deterministic grid on each free parameter's own chart,
-polished by a derivative-free step. Two things make it work. The grid is
-deterministic, so a start does not depend on the caller's random seed and
-the same data give the same fit; a Latin hypercube of the same size, tried
-first, put the logistic's scale anywhere between 4.9e-06 and 2.07 across
-twenty seeds. And the parameters the function is jointly affine in are
-separated out and solved by least squares at each point of the grid rather
-than searched over, which is read off \code{\link[stats:deriv]{stats::D()}} as the fixed
-point of "the derivative in \eqn{p} names no member of the set". On a
-four-parameter logistic that is the difference between recovering the
-truth on 13 of 15 samples and on all 15, with the worst relative error
-falling from 6.36 to 0.076.
+polished from the best grid points by \code{\link[stats:optimize]{stats::optimize()}} for one
+parameter and by Nelder-Mead for several, so that a start does not depend
+on the random seed. The parameters in which the function is jointly affine
+are solved by least squares at each point of the grid instead of being
+searched over. They are found with \code{\link[stats:deriv]{stats::D()}} by removing repeatedly from
+the set of parameters every one whose derivative names a member of the set
+(itself included);
+for a function given as an opaque \code{fn} the set is empty. Where a parameter
+is developed over a break-point term, each break-point is then started as
+described in \code{\link[=nl]{nl()}}.
 
 The box each grid spans comes from the data: the quantiles, the standard
 deviation and the range of the response and of every covariate the formula
-names, carried through the parameter's own link and widened, since a term
-cannot know whether a parameter is measured in the units of the response
-or of a covariate and the box has to cover both.
+names, carried through the parameter's own link and widened, because a
+parameter may be measured in the units of the response or of a covariate
+and the box has to cover both.
 
 It is a starting value and is allowed to be approximate; anything that
 fails leaves the coefficients \code{\link[=term_build]{term_build()}} computed.

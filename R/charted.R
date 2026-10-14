@@ -1,15 +1,17 @@
 #' @include structural.R regime.R nonlinear.R
 NULL
 
-#' The Coordinates of a Term That Ride a Chart With an Edge
+#' Charted Coordinates of a Term
 #'
 #' @description
-#' Names the free values of a term that are coordinates of a chart mapping
-#' onto a bounded set, where a coordinate running to infinity reaches the
-#' boundary of the quantity it describes. A statistic read at such a point
-#' needs a check the free scale cannot give: the derivative on the free
-#' scale is the derivative on the bounded scale times the chart's own
-#' derivative, and the second vanishes at the edge whatever the first says.
+#' Names the free values of a term that are coordinates of a chart onto a
+#' bounded set, so that a coordinate running to infinity reaches the boundary of
+#' the quantity that it describes. A statistic read at such a point requires a
+#' check that the free scale cannot provide: the derivative on the free scale
+#' equals the derivative on the bounded scale multiplied by the derivative of
+#' the chart, and the derivative of the chart tends to zero at the edge, so the
+#' derivative on the free scale vanishes there whatever the derivative on the
+#' bounded scale is.
 #'
 #' @details
 #' For a structural term the answer is a character vector of names from
@@ -25,8 +27,9 @@ NULL
 #' @param term A model term. For [nl()] it must have been built.
 #' @param ... Unused.
 #'
-#' @return A character vector for a structural term, a named integer vector
-#'   for [nl()], and `character(0)` otherwise.
+#' @return A character vector for a structural term, an integer vector for
+#'   [nl()] named by parameter (`integer(0)` when no parameter is charted), and
+#'   `character(0)` otherwise.
 #'
 #' @seealso [term_links()] for the charts, [statmodels7::statmod_certificate()]
 #'   for the check that reads this.
@@ -34,6 +37,13 @@ NULL
 #' @examples
 #' term_charted(regime(2))
 #' term_charted(gas(p = 1, q = 1))
+#'
+#' # A scalar parameter of nl() on a log link is charted; the position is
+#' # its column in the term's block.
+#' nb <- term_build(nl(~ a * exp(-r * x), start = list(a = 1, r = 1),
+#'                     links = list(r = linkfunctions7::log_link())),
+#'                  data.frame(x = seq(0.1, 2, length.out = 10)))
+#' term_charted(nb)
 #' @export
 #' @aliases term_charted.model_term term_charted.structural_term
 #'   term_charted.RegimeTerm term_charted.NlTerm

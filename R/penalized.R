@@ -7,27 +7,31 @@ NULL
 #' @description
 #' The subclass of [additive_term()] for a parametric block whose coefficients
 #' carry a \pkg{penalties7} penalty. [ridge()], [lasso()], [enet()], [scad()]
-#' and [mcp()] all construct it; the five differ only in the penalty their
-#' factory attaches at build time, so every derivative, hyperparameter, bound,
-#' link and kink belongs to the penalty object and none of it is restated here.
+#' and [mcp()] all construct it. The five differ in the penalty that their
+#' factory attaches at build time and in the hyperparameter arguments that
+#' their constructors take, so every derivative, hyperparameter, bound, link
+#' and kink belongs to the penalty object and none of it is restated here.
 #'
 #' @details
 #' # The five properties of its own
 #'
 #' `input` is the block as it was given, a one-sided formula or a matrix.
-#' `input_expr` is the expression that produced a matrix input, kept so that
+#' `input_expr` is the expression that produced the input. It is recorded for a
+#' formula input as well, and it is read only for a matrix input, so that
 #' [term_predict()] can re-evaluate it in new data.
 #'
 #' `factory` maps a coefficient count to the penalty. It is called at build,
-#' when the count is finally known, and with the diagonal map as a second
-#' argument when `standardize` asks for one, so a factory that will never be
-#' standardized may take the count alone.
+#' when the count is known, and with the diagonal map as a second argument when
+#' `standardize = TRUE`, so a factory that is never used with standardization
+#' may take the count alone.
 #'
 #' `standardize` is a single logical on the specification; after a build the
 #' spreads themselves are in `blueprint$standardize`, one per column.
 #'
 #' `sparse` governs the formula route only, a matrix input being kept in
-#' whatever storage it arrives in. `NULL` until the build settles it.
+#' whatever storage it arrives in. The property stays as the caller wrote it,
+#' `NULL` by default, and the storage that the build settles on is recorded in
+#' `blueprint$sparse`.
 #'
 #' # What the class does not decide
 #'
@@ -39,21 +43,22 @@ NULL
 #'
 #' @inheritParams additive_term
 #' @param input The block as given: a one-sided formula or a numeric matrix.
-#' @param input_expr The expression that produced a matrix input, kept so that
-#'   [term_predict()] can re-evaluate it in new data. `NULL` on the formula
-#'   route.
+#' @param input_expr The expression that produced the input, kept so that
+#'   [term_predict()] can re-evaluate a matrix input in new data. It is
+#'   recorded on the formula route as well, where it is not read.
 #' @param factory A function of the coefficient count, returning the
 #'   \pkg{penalties7} penalty over that many coefficients, and taking the
-#'   diagonal map as a second argument where `standardize` asks for one.
+#'   diagonal map as a second argument when `standardize = TRUE`.
 #' @param sparse `TRUE`, `FALSE` or `NULL` for the formula route's storage;
-#'   see [linpar()] for the rule `NULL` is settled by. A matrix input needs no
-#'   such argument.
-#' @param standardize A single logical: whether the block's columns are put on
-#'   a common scale by the penalty's diagonal map. `FALSE` by default.
+#'   see [linpar()] for the rule by which `NULL` is settled. A matrix input
+#'   needs no such argument.
+#' @param standardize A single logical: whether each coefficient is penalized
+#'   on the scale of its own column, through the penalty's diagonal map.
+#'   `FALSE` by default.
 #'
 #' @return An S7 object of class `PenalizedTerm`, inheriting from
 #'   [additive_term()] and [model_term()], with the five properties above
-#'   beside the ten they supply.
+#'   beside those that the two parent classes supply.
 #'
 #' @seealso [penalized_terms()] for what the five constructors share,
 #'   [ridge()] and its four siblings for their own hyperparameters,
@@ -99,7 +104,7 @@ PenalizedTerm <- S7::new_class(
 .penalized_spec <- function(x, expr, label, standardize, factory,
                             hyper = list(), extra = list(), grid = list(),
                             min_ratio = NULL, search = NULL, sparse = NULL,
-                            ids = NULL) {
+                            ids = NULL, given = list()) {
   # An argument named after ANOTHER penalty's hyperparameter is the mistake
   # this catches: `mcp(x, a = 3)` writes SCAD's shape on an MCP, whose own
   # is gamma, and reaches nothing. R would report it as an unused argument,
@@ -154,13 +159,15 @@ PenalizedTerm <- S7::new_class(
   vals <- check_values(hyper, factory, label)
   reject_pathless_values(vals, tryCatch(factory(1L), error = function(e) NULL),
                          label)
+  held <- check_hyper(hyper, factory, label)
+  .reject_unswept_args(given, names(held), names(vals), names(grid), label)
   # a MATRIX input is kept in whatever storage it arrives in, so `sparse`
   # governs the FORMULA route, where the model matrix would otherwise be
   # built dense whatever the caller passed
   PenalizedTerm(label = label, input = x, input_expr = expr,
                 factory = factory, standardize = standardize,
                 sparse = .check_design_opts(sparse, NULL, label)$sparse,
-                hyper = check_hyper(hyper, factory, label),
+                hyper = held,
                 values = vals,
                 grid = check_grid(grid, factory, label),
                 min_ratio = check_min_ratio(min_ratio, label),
@@ -168,6 +175,41 @@ PenalizedTerm <- S7::new_class(
                 ids = check_ids(ids, .factory_params(factory), label),
                 X = NULL, coef_names = character(0),
                 blueprint = list(), penalty = NULL)
+}
+
+# A path argument given for a hyperparameter that no path sweeps -- held at
+# one number, or written out as the grid itself -- would be accepted and
+# have no effect, so it is rejected by name. `given` records which of the
+# constructor's path arguments the caller wrote: the grid sizes keyed by
+# hyperparameter, `min_ratio` (the depth of the path over lambda, the size
+# of the kink) and `search` (how two or more swept hyperparameters are
+# combined).
+.reject_unswept_args <- function(given, held, written, hypers, label) {
+  fixed <- c(held, written)
+  state <- function(h) if (h %in% held) "held" else "written out"
+  g <- given$grid
+  for (h in intersect(names(g)[g], fixed)) {
+    stop(sprintf(paste0("'n_%s' in '%s' has no effect, because '%s' is %s.",
+                        "
+  Remove 'n_%s', or set %s = NULL to estimate",
+                        " '%s' along a path."),
+                 h, label, h, state(h), h, h, h), call. = FALSE)
+  }
+  if (isTRUE(given$min_ratio) && "lambda" %in% fixed) {
+    stop(sprintf(paste0("'min_ratio' in '%s' has no effect, because 'lambda'",
+                        " is %s.
+  Remove 'min_ratio', or set lambda = NULL",
+                        " to build its path."),
+                 label, state("lambda")), call. = FALSE)
+  }
+  if (isTRUE(given$search) && length(setdiff(hypers, held)) < 2L) {
+    stop(sprintf(paste0("'search' in '%s' has no effect, because fewer than",
+                        " two of its hyperparameters are swept.
+  Remove",
+                        " 'search', or set more of them to NULL."),
+                 label), call. = FALSE)
+  }
+  invisible(NULL)
 }
 
 # The spread of each column, read without densifying: for a sparse block
@@ -178,8 +220,9 @@ PenalizedTerm <- S7::new_class(
 #'
 #' @description
 #' The standard deviation of each column of a design block, computed without
-#' densifying a \pkg{Matrix}. It is the spread `standardize = TRUE` divides
-#' each coefficient by.
+#' densifying a \pkg{Matrix}. It is the spread that `standardize = TRUE` puts
+#' in the penalty's diagonal map, so that each coefficient is penalized as
+#' \eqn{s_j\beta_j}.
 #'
 #' @details
 #' On a base matrix it is [stats::sd()] column by column. On a \pkg{Matrix} it
@@ -244,8 +287,10 @@ PenalizedTerm <- S7::new_class(
 #' The exception is a formula whose intercept is all it has. `ridge(~ 1)` is a
 #' block of that one column under the penalty, removing it leaving no block at
 #' all. That is the form a subformula on another term's parameter uses:
-#' `gamma ~ 0 + lasso(~ 1)` says the parameter itself carries a lasso, there
-#' being no parametric block of its own to hold an unpenalized intercept.
+#' `gamma ~ 0 + lasso(~ 1)` means that the parameter itself carries a lasso,
+#' there being no parametric block of its own to hold an unpenalized intercept.
+#' A formula with neither an intercept nor a term, such as `ridge(~ 0)`, has no
+#' columns, and the term is rejected when it is built.
 #'
 #' A **matrix** is used as given, and its columns are named after its own
 #' column names, or numbered `1`, `2`, ... when it has none.
@@ -262,10 +307,10 @@ PenalizedTerm <- S7::new_class(
 #' ```
 #'
 #' A subset of `dd` then carries the matching rows of `R`. A free-standing
-#' matrix from the calling environment builds, its value having been captured,
-#' and prediction is refused with a message naming the expression: resolving it
-#' outside the new data would silently reuse the build-time rows whenever the
-#' counts happened to agree.
+#' matrix from the calling environment can be used to build the term, its value
+#' being captured, but prediction signals an error that names the expression.
+#' Resolving the name outside the new data would reuse the build-time rows
+#' whenever the row counts agree.
 #'
 #' @section Sparse storage:
 #' A **matrix** input is kept in whatever storage it arrives in, so a
@@ -280,8 +325,8 @@ PenalizedTerm <- S7::new_class(
 #'
 #' It pays where the formula carries a factor of many levels, whose indicator
 #' columns hold one non-zero per row, and `lasso(~ 0 + g)` over hundreds of
-#' groups is the case. On numeric covariates the block is dense whatever is
-#' asked for, and the sparse storage then costs more than it saves. Left
+#' groups is the case. On numeric covariates the block has no zeros to exploit,
+#' and the sparse storage then costs more than it saves. Left
 #' `NULL`, the default, the storage is settled at build by [.resolve_sparse()]:
 #' the dense indicator part holds `n` times its column count in cells against
 #' one non-zero per row, and the two routes cross at about \eqn{10^5} of those
@@ -294,11 +339,13 @@ PenalizedTerm <- S7::new_class(
 #' @section Standardization:
 #' A hyperparameter is comparable across coordinates only where the coordinates
 #' share a scale. Without `standardize` a lasso penalizes a column measured in
-#' meters more than the same column measured in kilometers, and a reader of
-#' \eqn{\lambda} has no way to tell.
+#' kilometers more heavily than the same column measured in meters, because for
+#' the same fitted effect the coefficient per kilometer is 1000 times the
+#' coefficient per meter, and a reader of \eqn{\lambda} has no way to tell.
 #'
-#' `standardize = TRUE` divides each coefficient by the standard deviation of
-#' its own column, through the penalty's diagonal map. With \eqn{z_j = x_j/s_j}
+#' `standardize = TRUE` penalizes each coefficient multiplied by the standard
+#' deviation of its own column, \eqn{s_j\beta_j}, through the penalty's
+#' diagonal map. With \eqn{z_j = x_j/s_j}
 #' the coefficients satisfy \eqn{\beta_{z,j} = s_j\beta_{x,j}}, so
 #'
 #' \deqn{\lambda\sum_j \lvert\beta_{z,j}\rvert
@@ -316,21 +363,29 @@ PenalizedTerm <- S7::new_class(
 #' `blueprint$standardize`, so the same term standardizes identically in every
 #' equation of a distributional model and does not move with the working
 #' weights of a fit. A constant column takes \eqn{s_j = 1}. [print()] shows the
-#' values, a number that changes the meaning of \eqn{\lambda} having to be
-#' legible.
+#' values, because a change of scale changes the meaning of \eqn{\lambda}.
 #'
-#' For SCAD and MCP the map is not a rescaling of \eqn{\lambda} alone.
-#' Substituting \eqn{s_j\beta_j} gives \eqn{\lambda_j = \lambda s_j} **and**
-#' \eqn{a_j = a/s_j} (or \eqn{\gamma_j = \gamma/s_j}), a composition of both
-#' hyperparameters per coordinate, which the map expresses exactly.
+#' For SCAD and MCP the map is not a rescaling of \eqn{\lambda} alone. The
+#' penalty of the \eqn{j}-th coefficient is the original penalty evaluated at
+#' \eqn{s_j\lvert\beta_j\rvert}, with the same \eqn{\lambda} and \eqn{a} (or
+#' \eqn{\gamma}) for every coordinate, so that the map acts on the argument of
+#' the penalty and leaves the hyperparameters unchanged. The penalty of
+#' coordinate \eqn{j} becomes flat at \eqn{\lvert\beta_j\rvert = a\lambda/s_j}
+#' (at \eqn{\gamma\lambda/s_j} for MCP). For MCP this equals an MCP on
+#' \eqn{\beta_j} with \eqn{\lambda_j = \lambda s_j} and
+#' \eqn{\gamma_j = \gamma/s_j^2}. For SCAD no pair \eqn{(\lambda_j, a_j)}
+#' reproduces it, because the slope at the origin, \eqn{s_j\lambda}, and the
+#' end of the first segment, \eqn{\lambda/s_j}, would both have to equal
+#' \eqn{\lambda_j}.
 #'
 #' [random()] does not standardize and takes no such argument. Its columns are
-#' grouping indicators and its penalty is a variance component with a meaning
-#' of its own; weighting it by the size of the groups would change the model.
+#' the grouping indicators, multiplied by the covariate of a random slope, and
+#' its penalty is a variance component with a meaning of its own; weighting it
+#' by the size of the groups would change the model.
 #'
 #' @param x A one-sided formula, such as `~ x1 + x2` or `~ 0 + g`, or a numeric
 #'   matrix, ideally a matrix column of the model data frame. A two-sided
-#'   formula throws.
+#'   formula is rejected with an error.
 #' @param label A single non-empty character string prefixed to the coefficient
 #'   names as `label.name`. Each constructor defaults it to its own name, so a
 #'   ridge over `x1` reads `ridge.x1`, and two penalized terms in one formula
@@ -341,9 +396,10 @@ PenalizedTerm <- S7::new_class(
 #'   [Matrix::sparse.model.matrix()], `FALSE` a dense model matrix, and `NULL`,
 #'   the default, settles it at build from the size of the design. A matrix
 #'   input needs no such argument. See the section above.
-#' @param ... Not used, and reported. An argument named after another penalty's
-#'   hyperparameter is the mistake this catches: `scad(~ x, gamma = 1)` throws
-#'   `"'scad' has no argument 'gamma'."` and lists the ones it does have.
+#' @param ... Not used. Any argument supplied here is rejected with an error
+#'   that names it and lists the penalty's hyperparameters. The typical case is
+#'   an argument named after another penalty's hyperparameter:
+#'   `scad(~ x, gamma = 1)` signals `"'scad' has no argument 'gamma'."`.
 #'
 #' @return An unbuilt [PenalizedTerm()]: a specification, with `X`,
 #'   `coef_names`, `blueprint` and `penalty` all empty until [term_build()]
@@ -385,7 +441,7 @@ PenalizedTerm <- S7::new_class(
 #' term_penalty(bs)@map
 #' apply(term_matrix(bs), 2, sd)
 #'
-#' # An argument named after another penalty's hyperparameter is reported.
+#' # An argument named after another penalty's hyperparameter is rejected.
 #' try(scad(~ x1, gamma = 1))
 #'
 #' @name penalized_terms
@@ -414,13 +470,14 @@ NULL
 #' settled storage.
 #'
 #' A **matrix** is used as it stands, and its row count must equal
-#' `nrow(data)`; anything else throws with both numbers. Its columns take the
-#' matrix's own names, or `1`, `2`, ... where it has none. The blueprint
-#' records `kind = "matrix"`, the expression that produced it and those base
-#' names.
+#' `nrow(data)`; any other row count is an error that gives both numbers. Its
+#' columns take the matrix's own names, or `1`, `2`, ... where it has none. The
+#' blueprint records `kind = "matrix"`, the expression that produced it and
+#' those base names.
 #'
 #' Either way every column name is prefixed with the term's label, and the
-#' block's row names are dropped.
+#' block's row names are dropped. A block without columns, as in `ridge(~ 0)`,
+#' is rejected.
 #'
 #' # Standardization is applied to the penalty
 #'
@@ -455,6 +512,9 @@ NULL
 #' # A matrix input must have as many rows as the data.
 #' M <- matrix(rnorm(30), 10, 3)
 #' try(term_build(ridge(M), dd))
+#'
+#' # A formula with neither an intercept nor a term has no columns.
+#' try(term_build(ridge(~ 0), dd))
 #'
 #' @keywords internal
 S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
@@ -500,6 +560,10 @@ S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
       base_names = base_names
     )
   }
+  if (!ncol(X)) {
+    stop(sprintf("the block of '%s' has no columns.", term@label),
+         call. = FALSE)
+  }
   cn <- paste(term@label, base_names, sep = ".")
   colnames(X) <- cn
   rownames(X) <- NULL
@@ -527,8 +591,8 @@ S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
 
 # Whether a formula carries an intercept and nothing else, which is the one
 # case where removing the intercept would leave no block. `~1` and `~+1`
-# reach here; `~0` and `~-1` do not, having neither an intercept nor a term
-# and being an empty block whichever rule is applied.
+# reach here; `~0` and `~-1` do not, having neither an intercept nor a term,
+# and term_build() rejects them.
 .intercept_only <- function(f) {
   tt <- stats::terms(f)
   attr(tt, "intercept") == 1L && length(attr(tt, "term.labels")) == 0L
@@ -548,17 +612,17 @@ S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
 #' The matrix branch evaluates `blueprint$expr` with `newdata` as the data and
 #' [baseenv()] as the enclosure, so the calling environment is not on the
 #' search path. A free-standing matrix therefore cannot be found, and the error
-#' names the expression and says to supply it as a column of the data. That is
-#' deliberate: resolving the name outside `newdata` would silently return the
-#' build-time rows whenever the row counts happened to agree, which is a wrong
-#' answer rather than an error.
+#' names the expression and advises supplying it as a column of the data. That
+#' is deliberate: resolving the name outside `newdata` would return the
+#' build-time rows whenever the row counts agreed, and the result would then be
+#' wrong without any error.
 #'
 #' Two shape checks follow the evaluation, because an expression that resolves
 #' in `newdata` may still give the wrong block: a row count differing from
-#' `nrow(newdata)` and a column count differing from the build's each throw
-#' with both numbers.
+#' `nrow(newdata)` and a column count differing from the build's each signal
+#' an error that reports both numbers.
 #'
-#' @param term A built [PenalizedTerm()]. An unbuilt one throws
+#' @param term A built [PenalizedTerm()]. An unbuilt one signals the error
 #'   `"the term has not been built; call term_build(term, data) first."`.
 #' @param newdata A data frame. For a matrix input it must carry the matrix as
 #'   a column of the same name the term was written with.

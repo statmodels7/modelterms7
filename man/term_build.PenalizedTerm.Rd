@@ -32,13 +32,14 @@ which case it is kept and is the block. The blueprint records
 settled storage.
 
 A \strong{matrix} is used as it stands, and its row count must equal
-\code{nrow(data)}; anything else throws with both numbers. Its columns take the
-matrix's own names, or \code{1}, \code{2}, ... where it has none. The blueprint
-records \code{kind = "matrix"}, the expression that produced it and those base
-names.
+\code{nrow(data)}; any other row count is an error that gives both numbers. Its
+columns take the matrix's own names, or \code{1}, \code{2}, ... where it has none. The
+blueprint records \code{kind = "matrix"}, the expression that produced it and
+those base names.
 
 Either way every column name is prefixed with the term's label, and the
-block's row names are dropped.
+block's row names are dropped. A block without columns, as in \code{ridge(~ 0)},
+is rejected.
 }
 
 \section{Standardization is applied to the penalty}{
@@ -62,6 +63,9 @@ c(cols = ncol(term_matrix(b)), n_coef = b@penalty@n_coef)
 # A matrix input must have as many rows as the data.
 M <- matrix(rnorm(30), 10, 3)
 try(term_build(ridge(M), dd))
+
+# A formula with neither an intercept nor a term has no columns.
+try(term_build(ridge(~ 0), dd))
 
 }
 \seealso{

@@ -4,7 +4,7 @@
 \alias{term_predict.PenalizedTerm}
 \title{A Penalized Block at New Rows}
 \arguments{
-\item{term}{A built \code{\link[=PenalizedTerm]{PenalizedTerm()}}. An unbuilt one throws
+\item{term}{A built \code{\link[=PenalizedTerm]{PenalizedTerm()}}. An unbuilt one signals the error
 \code{"the term has not been built; call term_build(term, data) first."}.}
 
 \item{newdata}{A data frame. For a matrix input it must carry the matrix as
@@ -28,15 +28,15 @@ rows and columns before it is returned.
 The matrix branch evaluates \code{blueprint$expr} with \code{newdata} as the data and
 \code{\link[=baseenv]{baseenv()}} as the enclosure, so the calling environment is not on the
 search path. A free-standing matrix therefore cannot be found, and the error
-names the expression and says to supply it as a column of the data. That is
-deliberate: resolving the name outside \code{newdata} would silently return the
-build-time rows whenever the row counts happened to agree, which is a wrong
-answer rather than an error.
+names the expression and advises supplying it as a column of the data. That
+is deliberate: resolving the name outside \code{newdata} would return the
+build-time rows whenever the row counts agreed, and the result would then be
+wrong without any error.
 
 Two shape checks follow the evaluation, because an expression that resolves
 in \code{newdata} may still give the wrong block: a row count differing from
-\code{nrow(newdata)} and a column count differing from the build's each throw
-with both numbers.
+\code{nrow(newdata)} and a column count differing from the build's each signal
+an error that reports both numbers.
 }
 \examples{
 set.seed(3)

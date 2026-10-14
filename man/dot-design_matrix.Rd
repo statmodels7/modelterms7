@@ -19,8 +19,8 @@ levels.}
 }
 \value{
 A list of two: \code{X}, the block, and \code{contrasts}, the named list
-\code{\link[stats:model.matrix]{stats::model.matrix()}} recorded, which is \code{NULL} when no factor was
-coded.
+\code{\link[stats:model.matrix]{stats::model.matrix()}} recorded. On the dense route it is \code{NULL} when no
+factor was coded, and on the sparse route it is an empty named list.
 }
 \description{
 Runs \code{\link[stats:model.matrix]{stats::model.matrix()}} or \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}} on the same
@@ -30,8 +30,7 @@ attributes, and returns the block beside the contrasts that were used.
 \details{
 The two routes give identical numbers; what differs is the storage and the
 cost of producing it. The sparse route builds the matrix sparse and never
-forms a dense intermediate: at 20000 rows and a factor of 1000 levels,
-0.007 s and 1.8 MB against 0.164 s and 161.3 MB.
+forms a dense intermediate.
 
 The contrasts come back beside the block instead of staying on it: the block
 is what a consumer reads, and the contrasts are what the blueprint records.

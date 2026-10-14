@@ -12,23 +12,23 @@ NULL
 #' constructs it.
 #'
 #' @details
-#' # The three properties of its own
+#' # The properties of its own
 #'
 #' `formula` is the bar formula as given, `~ 1 | g` or `~ x | g`, kept with its
-#' environment. `correlated` says whether the **default** Gaussian lets the
-#' within-group effects depend on each other; it is read only where `distrib`
-#' is `NULL`, the two saying the same thing.
+#' environment. `correlated` states whether the **default** Gaussian lets the
+#' within-group effects depend on each other. It is read only where `distrib`
+#' is `NULL`, since a distribution given in `distrib` determines the same
+#' thing.
 #'
 #' `tag` is the covariance label written between two bars, `~ 1 | u | g`, or
 #' `NA_character_` where the formula carries one bar. It is reported by
-#' [term_tag()]. The two say different things and the difference is the scope:
-#' `correlated` is about the columns of this term, `tag` about the columns of
-#' other terms.
+#' [term_tag()]. The `tag` and `correlated` differ in scope: `correlated`
+#' concerns the columns of this term, and `tag` the columns of other terms.
 #'
 #' `distrib` is the effects' distribution as supplied, or `NULL` for the
-#' default. What the build turns it into is a \pkg{penalties7} penalty, read
-#' through [term_penalty()] or [term_penalties()], so the hyperparameter names
-#' and their bounds all come from the distribution.
+#' default. The build turns it into a \pkg{penalties7} penalty, read through
+#' [term_penalty()] or [term_penalties()], so the hyperparameter names and
+#' their bounds all come from the distribution.
 #'
 #' # The block is sparse by construction
 #'
@@ -49,11 +49,12 @@ NULL
 #'   `NA_character_`.
 #'
 #' @return An S7 object of class `RandomTerm`, inheriting from
-#'   [additive_term()] and [model_term()], with the four properties above
-#'   beside the ten they supply.
+#'   [additive_term()] and [model_term()], with the four properties above in
+#'   addition to those of the two parent classes.
 #'
 #' @seealso [random()], the constructor; [term_penalties()] for the entries a
-#'   built one declares; [edf()] for what a fitted random effect spends.
+#'   built one declares; [edf()] for the effective degrees of freedom of a
+#'   fitted random effect.
 #'
 #' @examples
 #' set.seed(1)
@@ -91,7 +92,7 @@ RandomTerm <- S7::new_class(
 #' `random(~ 1 | g)` builds one coefficient per level of `g`,
 #' and `random(~ x | g)` one intercept and one slope per level, with
 #' the distribution of the effects attached as the penalty on those
-#' coefficients. That is what a random effect is under penalized likelihood.
+#' coefficients, which is how a random effect enters a penalized likelihood.
 #'
 #' @details
 #' The left side of the bar is an ordinary one-sided formula for the
@@ -101,37 +102,37 @@ RandomTerm <- S7::new_class(
 #' with the group indicators, ordered group by group, so the coefficients
 #' of one group are adjacent.
 #'
-#' The constructor asks for two things: the formula and the distribution of
-#' the effects. Which chart the hyperparameters ride, what they are called,
-#' how many there are and where the log-density has a kink are all properties
-#' of that distribution, read off it at build time.
+#' The formula and the distribution of the effects determine the term. The
+#' parametrization in which the hyperparameters are estimated, their names,
+#' their number and the points where the log-density has a kink are all
+#' properties of that distribution, read from it at build time.
 #'
 #' @section The covariance label, and the second bar:
 #' A formula may carry two bars, `~ 1 + x | u | g`, following \pkg{brms}. The
 #' last position is the grouping variable and the middle one is a label: terms
 #' carrying the same label and the same grouping describe effects that are
 #' correlated with each other, so an intercept in one equation and a slope in
-#' another can share one covariance block. R nests bars to the left, so that
-#' reading comes out of the parser rather than being imposed.
+#' another can share one covariance block. R nests bars to the left, so the
+#' parser itself yields that reading.
 #'
 #' The label is a **name and not data**. It is read as a symbol and never
 #' evaluated, and a column of the data carrying the same name is not looked at,
-#' so `~ 1 | u | g` builds exactly the block `~ 1 | g` builds whatever `u`
-#' happens to be.
+#' so `~ 1 | u | g` builds the same block as `~ 1 | g`, whatever `u` is.
 #'
-#' **A labelled term declares no penalty of its own**, and that is the answer
-#' rather than a gap: the covariance block spans columns the term cannot see,
-#' possibly in another equation, so the prior over it belongs to the class and
-#' is built by the fitting layer. [term_penalties()] returns an empty list and
-#' [term_penalty()] is `NULL`. What follows from it is that `hyper` is refused
-#' here, the hyperparameters being the class's, and that a `distrib` given on a
-#' labelled term names the **class's** joint prior: it must be multivariate,
-#' and its dimension is checked where the class is known.
+#' **A labelled term declares no penalty of its own.** The covariance block
+#' spans columns that the term cannot see, possibly in another equation, so the
+#' prior over it belongs to the class and is built by the fitting layer.
+#' [term_penalties()] returns an empty list and [term_penalty()] is `NULL`.
+#' Consequently `hyper` and `id` are rejected when the term is built, the
+#' hyperparameters being those of the class, and a `distrib` given on a
+#' labelled term is the **class's** joint prior: it must be multivariate, and
+#' its dimension is checked where the class is known.
 #'
-#' The two scopes are different and stay two arguments. `correlated` says
-#' whether the columns of **this** term may depend on each other; the label
-#' says that its columns depend on those of **other** terms. Asking for
-#' `correlated = FALSE` beside a label asks for both at once and is refused.
+#' The two arguments have different scopes. `correlated` states whether the
+#' columns of **this** term may depend on each other, and the label states
+#' that its columns depend on those of **other** terms. The combination of
+#' `correlated = FALSE` with a label is contradictory and is rejected when the
+#' term is built.
 #'
 #' @section The distribution of the effects:
 #' `distrib` is `NULL`, a \pkg{distributions7} object, or a list of
@@ -141,10 +142,12 @@ RandomTerm <- S7::new_class(
 #' of one group depend on each other, its matrix parameter carrying the
 #' dependence: `mvgaussian2_distrib(2, ar1(2))` is a prior whose
 #' precision is autoregressive, `mvstudent_t1_distrib(2)` a heavy-tailed
-#' one. Correlation is available exactly for the families that carry a matrix
-#' parameter: a location block as long as the dimension, together with a
-#' covariance, precision or scale matrix. The term reads that property off the
-#' family, so a family added later is covered without an edit here.
+#' one. Correlated effects require a family that carries a matrix parameter,
+#' that is, a location block as long as the dimension together with a
+#' covariance, precision or scale matrix, and that defines the mixed
+#' response-parameter derivative block read by a marginal criterion. The term
+#' reads these properties from the family, so a family added later is covered
+#' without an edit here.
 #'
 #' A univariate distribution makes the effects independent, the penalty being
 #' the product of the densities. With more than one within-group column it is
@@ -154,28 +157,31 @@ RandomTerm <- S7::new_class(
 #' one per column explicitly, when the columns want different priors.
 #'
 #' The default is Gaussian: `gaussian1_distrib` at one column, so the
-#' hyperparameter IS the standard deviation of the effects; the multivariate
-#' Gaussian on an unstructured covariance when there are several and
-#' `correlated = TRUE`; the template of the first when
-#' `correlated = FALSE`, one standard deviation per column.
+#' hyperparameter is the standard deviation of the effects; the multivariate
+#' Gaussian on an unstructured covariance when there are several columns and
+#' `correlated = TRUE`; and the template of the first when
+#' `correlated = FALSE`, with one standard deviation per column. The default
+#' has its location parameters held at zero.
 #'
-#' Whatever it is, the distribution is centered, its location parameters held
-#' with [distributions7::fixed()]. A free mean in the effects is
-#' confounded with the intercept of the equation the term sits in, so a free
-#' location is rejected at build time with a message naming it. The value it
-#' is held at is usually zero and is not policed: the model is identified
-#' whatever it is. Where the prior is a transformation of another family the
-#' parameter is the mean on the original scale, so
+#' A distribution supplied in `distrib` must have its location parameters held
+#' with [distributions7::fixed()]. A free location in the effects is
+#' confounded with the intercept of the equation in which the term sits, so a
+#' free location is rejected at build time with a message naming it. The value
+#' at which it is held is usually zero and is not checked, since the model is
+#' identified whatever the value is. Where the prior is a transformation of
+#' another family, the parameter is the mean on the original scale, so
 #' `fixed(transformation(gamma2_distrib(), log_transform()), mu = 1)` is a
-#' log-gamma prior whose own mean is \eqn{\psi(a) - \log a}, within
-#' \eqn{\sigma^2/2} of zero and exactly zero in the limit.
+#' log-gamma prior with shape \eqn{a = 1/\sigma^2}, where \eqn{\sigma^2} is the
+#' parameter `sigma2` of the gamma. The mean of that prior,
+#' \eqn{\psi(a) - \log a}, lies between \eqn{-\sigma^2} and
+#' \eqn{-\sigma^2/2} and tends to zero as \eqn{\sigma^2} tends to zero.
 #'
 #' A distribution used as a penalty gives joint-mode (penalized likelihood)
 #' estimation of the effects. With Gaussian effects and a Gaussian response
 #' the Laplace approximation behind a marginal criterion is exact, so the
-#' variance component it returns is the marginal estimate; with any other
-#' prior it is an approximation, and the marginal likelihood is not computed
-#' here.
+#' variance component that the criterion returns is the marginal estimate.
+#' With any other prior the Laplace approximation is not exact, and
+#' \pkg{modelterms7} does not compute the marginal likelihood.
 #'
 #' @section The hyperparameters:
 #' They are the distribution's own free parameters, and every one of them is
@@ -186,73 +192,63 @@ RandomTerm <- S7::new_class(
 #' model's hyperparameters. Naming it in `hyper` keeps it, reported as held at
 #' the value given, as a penalized term's own hyperparameter argument does.
 #'
-#' A smooth prior's hyperparameters are estimated by a marginal criterion. A
-#' prior whose log-density has a kink, a Laplace or an elastic net, has none a
-#' marginal criterion can reach, and its hyperparameter is chosen by a path on
-#' a prediction criterion instead.
+#' The hyperparameters of a prior with a smooth log-density are estimated by
+#' the outer criterion. A prior whose log-density has a kink, a Laplace or an
+#' elastic net, has none that a marginal criterion can reach, and its
+#' hyperparameter is chosen by a path over the sparse criterion of
+#' [statmodels7::statmod()], [statmodels7::bic()] by default.
 #'
-#' Every estimated hyperparameter is reported with a standard error and an
-#' interval, shape parameters included. Where one is absent the cause is the
-#' point the run ended at: a criterion with no maximum there leaves a
-#' curvature of the wrong sign, and no interval follows from it. A shape
-#' escaping toward a limit is the common case.
+#' An estimated hyperparameter is reported with a standard error and an
+#' interval, a shape parameter included. The standard error is absent where
+#' the criterion at the point at which the run ended has a curvature of the
+#' wrong sign, since no interval follows from such a point. A shape parameter
+#' that moves toward a limit is the common case.
 #'
-#' Which parametrization of a family is used matters here in a way it does
-#' not elsewhere. The centered skew normal
-#' ([distributions7::skewnormal2_distrib()]) carries the skewness
-#' itself, and its map to the direct parametrization is not twice
-#' differentiable at zero skewness: the first derivatives have a finite limit
-#' there and the second ones grow like \eqn{\gamma_1^{-2/3}}. A marginal
-#' criterion reads the second, and the symmetric bounds put the starting
-#' value at exactly that point, so the direct parametrization
-#' ([distributions7::skewnormal1_distrib()]) is the one to use as a
-#' prior; its derivatives at \eqn{\alpha = 0} are ordinary numbers.
+#' The parametrization of a family that is used as a prior matters. The
+#' centered skew normal ([distributions7::skewnormal2_distrib()]) carries the
+#' skewness itself, and its map to the direct parametrization is not twice
+#' differentiable at zero skewness. The derivatives of the log-density with
+#' respect to the skewness have a finite first-order limit there, and the
+#' second-order ones grow like \eqn{\gamma_1^{-2/3}}. A marginal criterion
+#' reads the second-order ones, and the symmetric bounds place the starting
+#' value at that point, so the direct parametrization
+#' ([distributions7::skewnormal1_distrib()]) is the one to use as a prior; its
+#' derivatives at \eqn{\alpha = 0} are finite.
 #'
-#' How well a shape parameter is estimated depends on how many groups there
-#' are, since it is read off that many latent values and the prior shrinks
-#' them. Measured on effects drawn from a standard Student t with four
-#' degrees of freedom, twelve observations per group and unit residual
-#' standard deviation, the prior being a Student t with \eqn{\nu} free and
-#' the criterion [statmodels7::reml()]:
+#' How well a shape parameter is estimated depends on the number of groups,
+#' since the parameter is read from that many latent values, which the prior
+#' shrinks. With few groups the estimate of a shape parameter can move to the
+#' Gaussian limit, and then only the scale is estimated. With more groups the
+#' estimate stays finite, but the criterion is flat over the small values, so
+#' the estimate locates the shape only to its order of magnitude. A shape
+#' parameter can be held with [distributions7::fixed()] when the number of
+#' groups is small, and an estimate from a moderate number of groups describes
+#' the weight of the tail without fixing its value. The \eqn{\nu} of a
+#' pseudo-Huber prior, the point at which the loss stops being quadratic, is
+#' subject to the same limitation.
 #'
-#' | groups | \eqn{\hat\nu} | \eqn{\hat\sigma} |
-#' | --- | --- | --- |
-#' | 20 | 5.97e+04 | 0.769 |
-#' | 100 | 1.98 | 0.817 |
-#' | 500 | 2.65 | 0.923 |
+#' Prediction maps new data onto the levels seen at build time. A level that
+#' the term has not seen, or a missing grouping value, is rejected by
+#' [term_predict()] unless `unseen = "zero"` is given, in which case the rows
+#' get no effect of their own.
 #'
-#' At twenty groups the shape escapes to the Gaussian limit and only the
-#' scale is really being fitted. From a hundred it stays finite, and the
-#' profile is decisive about that much: with \eqn{\nu} held, the criterion is
-#' -1922.4 at 3, -1923.7 at 4, -1924.9 at 5 and -1936.1 in the Gaussian
-#' limit. What it is not decisive about is the value, the profile being flat
-#' enough over the small integers that a single sample locates \eqn{\nu} to
-#' little better than its order of magnitude. Estimate a shape from a hundred
-#' groups or so, hold it below that, and read the estimate as a statement
-#' about the tail rather than a measurement of it.
-#'
-#' A pseudo-Huber's \eqn{\nu} is the weaker case, being the point at which
-#' the loss stops being quadratic; at 40 groups it escapes.
-#'
-#' Prediction maps new data onto the levels seen at build time; a level
-#' the term has not seen is rejected.
-#'
-#' A random effect is not standardized, and there is no `standardize`
-#' argument to ask for it with; passing one is an error. Its columns are
-#' grouping indicators and its hyperparameter is a variance component with a
-#' meaning of its own. Dividing each coefficient by the spread of its
-#' indicator would weight the effects by the sizes of the groups, which
-#' changes the model itself.
+#' A random effect is not standardized, and `random()` has no `standardize`
+#' argument; passing one is an error. Its columns are grouping indicators and
+#' its hyperparameter is a variance component with a meaning of its own.
+#' Dividing each coefficient by the spread of its indicator would weight the
+#' effects by the sizes of the groups, which changes the model itself.
 #'
 #' @section The block and its penalty:
 #' With \eqn{m} levels and a within-group design \eqn{Z_i} of \eqn{d}
 #' columns, the block is the interaction of that design with the group
-#' indicators, ordered group by group,
+#' indicators, ordered group by group. When the rows of the data are ordered by
+#' group, the block and the coefficient vector are
 #'
 #' \deqn{Z = \operatorname{diag}(Z_1, \dots, Z_m),
 #'   \qquad b = (b_1', \dots, b_m')',}
 #'
-#' so the \eqn{d} coefficients of one group occupy adjacent positions and the
+#' and otherwise the rows of this matrix are permuted to follow the data. The
+#' \eqn{d} coefficients of one group occupy adjacent positions and the
 #' penalty reads them one block at a time,
 #'
 #' \deqn{\rho(b; \theta) = -\sum_{i=1}^m \log f(b_i; \theta),}
@@ -264,7 +260,7 @@ RandomTerm <- S7::new_class(
 #'   + \tfrac{md}{2}\log(2\pi),}
 #'
 #' and minimizing the penalized least squares in \eqn{(\beta, b)} is the
-#' mixed-model equation at the variance ratio \eqn{\Sigma} encodes, so the
+#' mixed-model equation at the variance ratio that \eqn{\Sigma} encodes, so the
 #' minimizer is the best linear unbiased predictor. At \eqn{d = 1} and
 #' \eqn{\Sigma = \sigma_b^2} it is the ridge, up to the constant that makes
 #' \eqn{\sigma_b} estimable.
@@ -278,24 +274,28 @@ RandomTerm <- S7::new_class(
 #'   Gaussian), a \pkg{distributions7} object, or a list of them with one per
 #'   within-group column.
 #' @param correlated Logical; whether the default Gaussian lets the
-#'   within-group effects correlate. It is an error together with
-#'   `distrib`, which says the same thing and more.
+#'   within-group effects correlate. Giving it together with `distrib` is an
+#'   error, since `distrib` determines the same thing.
 #' @param label A single non-empty string prefixed to the coefficient
 #'   names.
 #' @param hyper The hyperparameters of the effects' distribution to hold, as
-#'   a named vector or list; those not named are estimated. The names are the
-#'   distribution's own parameters, with the within-group column appended
-#'   where there is one copy per column. A name the penalty does not carry is
-#'   reported when the term is built, which is where the penalty first exists.
-#' @param id Labels sharing the effects' hyperparameters with those of
-#'   other terms carrying the same ones, so that two random effects may
-#'   be given one variance component. The names are `hyper`'s, checked at
-#'   the same point and for the same reason; a single unnamed string will
-#'   do where the effects' distribution carries one hyperparameter.
-#'   `NULL`, the default, shares nothing. See [term_ids()].
-#' @param ... Unused. A named argument here is reported by name, so a removed
-#'   one such as `precision` or `kinks` gets a message saying what replaced
-#'   it.
+#'   a named vector or list; those not named are estimated. For a distribution
+#'   whose log-density has a kink, several values for one name are the grid
+#'   that the path visits, and for any other distribution they are rejected.
+#'   The names are the distribution's own parameters, with the within-group
+#'   column appended where there is one copy per column. A name that the
+#'   penalty does not carry is rejected when the term is built, which is where
+#'   the penalty first exists.
+#' @param id Labels under which the effects' hyperparameters are shared with
+#'   the hyperparameters of other terms carrying the same labels, so that two
+#'   random effects may be given one variance component. The names are
+#'   `hyper`'s, checked at the same point and for the same reason; a single
+#'   unnamed string is accepted where the effects' distribution carries one
+#'   hyperparameter. `NULL`, the default, shares nothing. See [term_ids()].
+#' @param ... Not used. A named argument is rejected with an error naming it,
+#'   and the removed arguments `precision` and `kinks` are rejected with a
+#'   message giving the replacement. An unnamed argument beyond those of the
+#'   signature is rejected as well.
 #'
 #' @return An object of class [RandomTerm()] (a specification;
 #'   see [term_build()]).
@@ -389,27 +389,22 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' R nests the bars to the left, so in `~ 1 + x | u | id` the outer bar has
 #' `id` on its right and `1 + x | u` on its left. The last position is
 #' therefore the grouping variable and the middle one the label, which is
-#' \pkg{brms}'s convention and comes out of the parser rather than being
-#' imposed.
+#' \pkg{brms}'s convention and is the reading that the parser itself yields.
 #'
 #' The label is taken with `as.character()` on the symbol and **never
 #' evaluated**, so a column of the data carrying that name is not read. It is
-#' the one thing in a formula that does not refer to the data, and reading it
-#' as data is what the two-bar form did before: with no such column it stopped
-#' with `object 'u' not found`, with a factor column it built twice the columns
-#' and a warning about `'|'` applied to factors, and with a numeric column it
-#' built twice the columns and said nothing at all.
+#' the one element of the formula that does not refer to the data.
 #'
-#' Two bars are the most that carry a meaning, so a third is rejected rather
-#' than read.
+#' Two bars are the most that carry a meaning, so a third is rejected.
 #'
-#' Written once because the constructor and [term_build()] both need the split
-#' and two copies of it would agree only by accident.
+#' The constructor and [term_build()] both call this function, so that the
+#' split is defined in one place.
 #'
 #' @param formula The bar formula as given.
 #'
-#' @return A list with `within` and `group`, both language objects, and `tag`,
-#'   a single string or `NA_character_`.
+#' @return A list with `within`, the left side of the bar (a call, a symbol or
+#'   the constant `1`), `group`, a symbol or a call, and `tag`, a single string
+#'   or `NA_character_`.
 #'
 #' @seealso [random()] and [term_build.RandomTerm()], its two callers;
 #'   [term_tag()] for what reports the label afterwards.
@@ -449,19 +444,16 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
   list(within = within, group = e[[3L]], tag = tag)
 }
 
-#' The Arguments random() No Longer Takes
+#' Removed Arguments of random()
 #'
 #' @description
-#' Signals an error naming a removed argument, which the dots would otherwise
-#' swallow in silence.
+#' Signals an error for any argument passed in the dots of [random()], naming
+#' a removed argument where there is one.
 #'
 #' @details
-#' `precision` was a second spelling of a multivariate Gaussian whose
-#' matrix parameter is a precision, and the first spelling did not say which
-#' matrix the structure was. `kinks` was derived from the effects'
-#' distribution by \pkg{penalties7} all along, and the default here overrode
-#' that derivation, so a Laplace prior declared none and a fitting layer sent
-#' its block to the scheme that cannot solve it.
+#' `precision` and `kinks` are no longer accepted. A structured precision is
+#' the matrix parameter of `mvgaussian2_distrib()`, and the kinks of a prior
+#' are derived from its log-density by \pkg{penalties7}.
 #'
 #' @param ... The dots of [random()].
 #'
@@ -473,7 +465,8 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
   if (!length(dots)) return(invisible(NULL))
   nm <- names(dots)
   if (is.null(nm) || !any(nzchar(nm))) {
-    stop("random() takes no unnamed arguments beyond 'formula'.",
+    stop(paste0("random() takes no unnamed arguments beyond 'formula',\n",
+                "  'distrib', 'correlated', 'label', 'hyper' and 'id'."),
          call. = FALSE)
   }
   if ("precision" %in% nm) {
@@ -504,20 +497,17 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' @details
 #' A grouping variable's values are labels, and `factor()` turns any vector
 #' into one by formatting its values, so a continuous covariate in that
-#' position gives one level per distinct value and a random effect with as many
-#' coefficients as there are rows. Measured before the check existed,
-#' `random(~ 1 | x)` with a standard normal `x` at 60 observations built 60
-#' columns and reported nothing.
+#' position would give one level per distinct value and a random effect with as
+#' many coefficients as there are rows.
 #'
-#' What is rejected is a **double carrying a value that is not a whole
-#' number**, which is narrow on purpose. Integer codes are the ordinary way to
-#' write a grouping variable and stay legal, and a caller who means the levels
-#' of a non-integer vector writes `factor()` around it, which arrives here as a
-#' factor and passes.
+#' Only a **double carrying a value that is not a whole number** is rejected.
+#' Integer codes are the ordinary way to write a grouping variable and are
+#' accepted, and a caller who means the levels of a non-integer vector writes
+#' `factor()` around it, which arrives here as a factor and passes.
 #'
-#' The check also does the work the two-bar form needs: `~ 1 | u | id` and
-#' `~ 1 | id | u` are syntactically the same shape and differ only in which
-#' position holds what, so the defence is that the last position must be usable
+#' The check also applies to the two-bar form: `~ 1 | u | id` and
+#' `~ 1 | id | u` have the same syntactic shape and differ only in which
+#' position holds which element, so the last position is required to be usable
 #' as a grouping variable.
 #'
 #' @param v The value of the grouping expression.
@@ -546,6 +536,11 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
   v <- eval(expr, data, baseenv())
   if (is.null(levels)) return(factor(.random_check_group(v, expr)))
   f <- factor(v, levels = levels)
+  if (identical(unseen, "error") && anyNA(v)) {
+    stop(sprintf(paste("the grouping value is missing at row %d; use",
+                       "unseen = \"zero\" for a row of zeros."),
+                 which(is.na(v))[1L]), call. = FALSE)
+  }
   if (identical(unseen, "error") && any(is.na(f) & !is.na(v))) {
     bad <- unique(as.character(v)[is.na(f) & !is.na(v)])
     stop(sprintf("grouping level '%s' was not present at build time.",
@@ -593,11 +588,11 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' The Family Under Any Wrappers
 #'
 #' @description
-#' Follows `parent_distrib` to the distribution a wrapper wraps, so that
-#' a question about the family is asked of the family.
+#' Follows `parent_distrib` to the distribution that a wrapper wraps, so that
+#' a property of the family is read from the family.
 #'
 #' @details
-#' The property is asked for with `S7::prop_names()` instead of testing the
+#' The property is detected with `S7::prop_names()` instead of testing the
 #' class, so a wrapper written later is followed without an edit here.
 #'
 #' @param d A \pkg{distributions7} object.
@@ -618,10 +613,10 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' needs.
 #'
 #' @details
-#' The question is a property of the family, so a multivariate family added
-#' later is covered without an edit here. It is
-#' read off `params_interpretation`, the same declaration a data-based
-#' starting value is built from. It excludes the simplex-valued families,
+#' This is a property of the family, so a multivariate family added later is
+#' covered without an edit here. It is read from `params_interpretation`, the
+#' same declaration from which a data-based starting value is built. The
+#' condition excludes the simplex-valued families,
 #' whose mean coordinates are one fewer than the dimension and which carry no
 #' matrix parameter at all.
 #'
@@ -636,20 +631,19 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
     any(interp %in% c("covariance", "precision", "scale"))
 }
 
-#' Whether a Multivariate Family Answers Its Mixed Block
+#' Whether a Multivariate Family Defines Its Mixed Block
 #'
 #' @description
 #' `TRUE` when `distrib_cross_y` comes from the family itself. The
-#' multivariate base class rejects that generic, so a family that has not
-#' overridden it answers `FALSE`.
+#' multivariate base class rejects that generic, so the function returns
+#' `FALSE` for a family that has not overridden it.
 #'
 #' @details
 #' A marginal criterion reads that block to estimate the covariance of the
-#' effects, so a family without one can be fitted at held hyperparameters and
-#' not at estimated ones. The owning class of a method is read through its
-#' signature and compared by name, never with `identical()`, which is
-#' object identity and fails whenever a package's code is re-evaluated rather
-#' than loaded.
+#' effects, so a family without one is rejected when the term is built. The
+#' class that owns the method is read from its
+#' signature and compared by name, since `identical()` compares object
+#' identity and fails when a package's code is re-evaluated instead of loaded.
 #'
 #' @param d A \pkg{distributions7} object, under any wrappers.
 #'
@@ -671,8 +665,8 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #'
 #' @details
 #' What is rejected is a free location. It is confounded with the intercept of
-#' the equation the term sits in, leaving a flat direction along which the fit
-#' has no answer.
+#' the equation in which the term sits, leaving a flat direction in the
+#' objective.
 #'
 #' A location held at a value is identified whatever that value is, and it is
 #' not policed: it shrinks the effects toward that value, which is a modeling
@@ -715,7 +709,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
     if (d@n_dim != dim_needed) {
       stop(sprintf(paste0(
         "%s is %d-variate and the bar's left side has %d columns; a\n",
-        "  multivariate prior describes the effects of ONE group."),
+        "  multivariate prior describes the effects of one group."),
         what, d@n_dim, dim_needed), call. = FALSE)
     }
     if (!.random_has_cross(base)) {
@@ -733,7 +727,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
   if (length(free)) {
     stop(sprintf(paste0(
       "%s has a free location ('%s'), which is confounded with the\n",
-      "  intercept of the equation the term sits in. Hold it with\n",
+      "  intercept of the equation in which the term sits. Hold it with\n",
       "  distributions7::fixed(): at zero for a family on the line, and at\n",
       "  whatever centers the effects where the prior is a transformation of\n",
       "  another family, the parameter being the mean on the original scale."),
@@ -746,16 +740,17 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #'
 #' @description
 #' `gaussian1_distrib` at one within-group column, so the hyperparameter
-#' IS the standard deviation of the effects, and the multivariate Gaussian on
+#' is the standard deviation of the effects, and the multivariate Gaussian on
 #' an unstructured covariance for several correlated ones.
 #'
 #' @details
-#' The side is the family's, and the family built here is
+#' The matrix parametrization is the family's, and the family built here is
 #' `mvgaussian1_distrib()`, so the structure is the effects' **covariance**
-#' and its hyperparameters are read as standard deviations and correlations.
-#' The precision reading is a different prior -- the two differ in the sign of
-#' the log-determinant term -- and is written by passing
-#' `mvgaussian2_distrib()` to `distrib` instead.
+#' and its hyperparameters are the log-Cholesky coordinates of that covariance:
+#' the logarithms of the diagonal entries of its Cholesky factor, and the
+#' off-diagonal entries of that factor. The precision reading is a different
+#' prior, the two differing in the sign of the log-determinant term, and is
+#' written by passing `mvgaussian2_distrib()` to `distrib` instead.
 #'
 #' @param d The number of within-group columns.
 #' @param correlated Whether the effects may correlate.
@@ -774,7 +769,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
                                       paste0("mu", seq_len(d)))))
 }
 
-#' The Penalty Entries a Random-Effect Term Declares
+#' Penalty Entries of a Random-Effect Term
 #'
 #' @description
 #' One entry over the whole block when the prior reads a group's effects
@@ -799,17 +794,13 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
   if (!is.list(prior)) {
     if (identical(prior@dimension, "multivariate") || d == 1L) {
       pen <- penalties7::distrib_penalty(prior, n_coef = m * d)
-      return(list(list(name = "", index = seq_len(m * d), penalty = pen,
-                       fixed = list(), n_values = list(), values = list(),
-                       min_ratio = numeric(0), ids = character(0))))
+      return(list(.penalty_entry("", seq_len(m * d), pen)))
     }
     prior <- rep(list(prior), d)
   }
   lapply(seq_len(d), function(j) {
-    list(name = wnames[j], index = seq(j, by = d, length.out = m),
-         penalty = penalties7::distrib_penalty(prior[[j]], n_coef = m),
-         fixed = list(), n_values = list(), values = list(),
-         min_ratio = numeric(0), ids = character(0))
+    .penalty_entry(wnames[j], seq(j, by = d, length.out = m),
+                   penalties7::distrib_penalty(prior[[j]], n_coef = m))
   })
 }
 
@@ -826,13 +817,20 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' # The block
 #'
 #' With \eqn{m} levels and a within-group design \eqn{Z_i} of \eqn{d} columns,
-#' the block is \eqn{\mathrm{diag}(Z_1, \dots, Z_m)}, ordered **group-major**,
-#' so the \eqn{d} coefficients of one group are adjacent. It is built as a
+#' the block is \eqn{\mathrm{diag}(Z_1, \dots, Z_m)} for data ordered by group,
+#' with the columns ordered **group-major**, so the \eqn{d} coefficients of one
+#' group are adjacent. It is built as a
 #' `dgCMatrix`: a row belongs to one group, so the density is \eqn{1/m}.
 #'
-#' The coefficient names are `label.level.column`, so `random(~ x | g)` over
+#' The coefficient names are `label.level.column`, or `label.level` when the
+#' within-group design is the intercept alone. The term `random(~ x | g)` over
 #' three levels gives `random.a.(Intercept)`, `random.a.x`,
-#' `random.b.(Intercept)` and so on, which is the group-major order read off.
+#' `random.b.(Intercept)` and so on, which is the group-major order, and
+#' `random(~ 1 | g)` gives `random.a`, `random.b` and `random.c`. When the
+#' rows of the data are not ordered by group, the rows of the block follow the
+#' data and its columns keep this order.
+#'
+#' A grouping variable with fewer than two levels is rejected.
 #'
 #' # The penalty, and what the build checks
 #'
@@ -842,14 +840,19 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' correlated ones.
 #'
 #' Whatever the distribution, its location parameters must be **held**. A free
-#' location is confounded with the intercept of the equation the term sits in,
-#' and the build rejects it with a message naming the parameter and the fix. A
-#' multivariate distribution must also match the within-group dimension, and
-#' one that carries no matrix parameter cannot express correlated effects at
-#' all.
+#' location is confounded with the intercept of the equation in which the term
+#' sits, and the build rejects it with a message naming the parameter and the
+#' remedy. A multivariate distribution must also match the within-group
+#' dimension, and one that carries no matrix parameter cannot express
+#' correlated effects at all.
 #'
 #' Any value named in `hyper` is checked here too, against the penalty's own
 #' names, this being the first point at which the penalty exists.
+#'
+#' A term carrying a covariance label is finished differently: its block and
+#' coefficient names are built as above, and it declares no penalty.
+#' `hyper`, `id`, `correlated = FALSE` and a `distrib` that is a list or is
+#' univariate are rejected for such a term.
 #'
 #' @param term An unbuilt or built [RandomTerm()].
 #' @param data A data frame carrying the grouping variable and the
@@ -870,7 +873,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' term_coef_names(b)
 #' as.matrix(term_matrix(b))
 #'
-#' # A free location is refused, naming the parameter.
+#' # A free location is rejected, naming the parameter.
 #' try(term_build(random(~ 1 | g,
 #'                       distrib = distributions7::gaussian1_distrib()), dd))
 #'
@@ -925,7 +928,7 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
       .random_check_prior(prior[[j]], d, sprintf("'distrib[[%d]]'", j))
       if (identical(prior[[j]]@dimension, "multivariate")) {
         stop(sprintf(paste0(
-          "'distrib[[%d]]' is multivariate. A list gives ONE distribution\n",
+          "'distrib[[%d]]' is multivariate. A list gives one distribution\n",
           "  per within-group column, so each is univariate; pass a single\n",
           "  multivariate distribution to correlate the columns instead."),
           j), call. = FALSE)
@@ -969,7 +972,8 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
 #' @name term_penalties.RandomTerm
 #' @description
 #' One entry over the whole block where the effects of a group are read
-#' together, and one per within-group column where they are independent.
+#' together, and one per within-group column where they are independent. A
+#' term carrying a covariance label returns an empty list.
 #' @param term A built [RandomTerm()].
 #' @param ... Unused.
 #' @return A list of entries, as [term_penalties()] documents.
@@ -998,13 +1002,14 @@ S7::method(term_tag, RandomTerm) <- function(term, ...) .random_tag(term)
 #' @title The Grouping of a Random-Effect Term
 #' @name term_group.RandomTerm
 #' @description
-#' The grouping expression, its levels and the number of within-group columns,
-#' or `NULL` on an unbuilt term.
+#' The grouping expression, its levels, the number of within-group columns and
+#' their names, or `NULL` on an unbuilt term.
 #' @details
-#' The three come from the blueprint, where the build recorded them. `dim` is
+#' These come from the blueprint, where the build recorded them. `dim` is
 #' the within-group column count, so the block's level \eqn{i} occupies
 #' positions \eqn{(i-1)d + 1} to \eqn{id}, which is the group-major order the
-#' blockwise penalty reads.
+#' blockwise penalty reads. `names` holds the column names of the within-group
+#' design.
 #' @param term A built [RandomTerm()].
 #' @param ... Unused.
 #' @return A list with `expr`, `levels`, `dim` and `names`, or `NULL`.
@@ -1032,8 +1037,7 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
 #'
 #' @details
 #' The property is a character vector and is empty on a term built before the
-#' label existed, so the two spellings of "no label" are read in one place
-#' rather than at each caller.
+#' label existed, so the two spellings of "no label" are read in one place.
 #'
 #' @param term A [RandomTerm()].
 #'
@@ -1056,21 +1060,23 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
 #' The coefficients of a labelled term share a covariance block with those of
 #' every other term carrying the same label and the same grouping, and that
 #' block may span another equation entirely. The prior over it is therefore a
-#' property of the class and not of any of its members, and building one here
-#' would leave two answers to the same question with nothing to say which the
-#' fit should read. [term_penalties()] returns an empty list, which is the
-#' right answer rather than a gap, and the fitting layer collects the labelled
-#' terms and declares one entry over their stacked columns.
+#' property of the class and not of any of its members, and a penalty built
+#' here would give two priors for the same block, with no rule for which the
+#' fit should read. [term_penalties()] returns an empty list, and the fitting
+#' layer collects the labelled terms and declares one entry over their stacked
+#' columns.
 #'
-#' What the blueprint records is what the layer needs to do that: the
-#' within-group dimension and the grouping's levels, beside the pieces
+#' The blueprint records what the layer needs for that: the within-group
+#' dimension and the grouping's levels, beside the pieces
 #' [term_predict.RandomTerm()] already reads.
 #'
-#' A `distrib` given here names the **class's** joint prior. Its dimension is
-#' the total over the class and cannot be checked from one term, so that one
-#' check is left to the layer; the rest -- that it is a continuous
-#' distributions7 object with its location held -- is asked here, where the
-#' message can name the argument.
+#' The function rejects `hyper`, `id` and `correlated = FALSE` on a labelled
+#' term, and a `distrib` that is a list or is univariate. A `distrib` given
+#' here is the **class's** joint prior. Its dimension is the total over the
+#' class and cannot be checked from one term, so that check is left to the
+#' layer. The remaining checks, that it is a continuous \pkg{distributions7}
+#' object with its location held, are made here, where the message can name the
+#' argument.
 #'
 #' @param term The term being built.
 #' @param Z The block.
@@ -1107,7 +1113,7 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
   }
   if (!isTRUE(term@correlated)) {
     stop(sprintf(paste0(
-      "'correlated = FALSE' and the label '%s' ask for two things at once:\n",
+      "'correlated = FALSE' and the label '%s' specify two things at once:\n",
       "  the columns of this term independent of each other, and correlated\n",
       "  with the columns of another term. The label puts every column of the\n",
       "  term into the shared block."), .random_tag(term)), call. = FALSE)
@@ -1125,7 +1131,7 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
         "'distrib' is univariate, and the prior of a labelled term is the\n",
         "  joint one of its class: it describes the effects of one group over\n",
         "  every column the label collects, so it is multivariate.\n",
-        "  A joint law whose coordinates are of DIFFERENT families -- a\n",
+        "  A joint law whose coordinates are of different families -- a\n",
         "  gaussian intercept correlated with a Student t slope -- is a\n",
         "  copula, which this toolkit does not have; no elliptical family\n",
         "  gives it, a multivariate gaussian having gaussian margins and a\n",
@@ -1155,27 +1161,27 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
 #' Rebuilds the within-group design at `newdata` and interacts it with the
 #' group indicators **of the levels recorded at build time**, so the block has
 #' the same columns in the same order however few levels the new rows happen to
-#' use. A level the term never saw is refused.
+#' use. By default, a level that the term never saw is rejected.
 #'
 #' @details
-#' The refusal is the right answer rather than a limitation: a coefficient was
-#' never fitted for an unseen group, so there is nothing to predict with. The
-#' message names the level. Predicting a new group's response means predicting
+#' No coefficient was fitted for an unseen group, so there is nothing to
+#' predict with. The message names the level. A missing grouping value is
+#' rejected in the same way. Predicting a new group's response means predicting
 #' at the population value, which is the model without this term's
 #' contribution.
 #'
 #' The block comes back sparse, as the fitted one is.
 #'
-#' @param term A built [RandomTerm()]. An unbuilt one throws
+#' @param term A built [RandomTerm()]. An unbuilt one signals the error
 #'   `"the term has not been built; call term_build(term, data) first."`.
 #' @param newdata A data frame carrying the grouping variable and the
 #'   within-group covariates. Its grouping factor need carry only the levels
 #'   its own rows use.
-#' @param unseen What a row of a level the term never saw gets: `"error"`
-#'   (the default) signals the error described above, `"zero"` gives it a row
-#'   of zeros, which is the prediction with that group's effect at zero. It
-#'   is what `statmodels7`'s `predict(random = "zero")` and
-#'   `predict(random = "marginal")` ask for.
+#' @param unseen What a row of a level the term never saw, or of a missing
+#'   grouping value, gets: `"error"` (the default) signals the error described
+#'   above, and `"zero"` gives the row zeros, which is the prediction with that
+#'   group's effect at zero. It is the value that `statmodels7`'s
+#'   `predict(random = "zero")` and `predict(random = "marginal")` pass.
 #' @param ... Unused.
 #'
 #' @return A `dgCMatrix` of `nrow(newdata)` rows and [term_npar()] columns,
@@ -1196,12 +1202,12 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
 #' # On the fitting data it returns the block itself.
 #' all.equal(term_predict(b, dd), term_matrix(b))
 #'
-#' # A level the fit never saw has no coefficient, so it is refused.
+#' # A level the fit never saw has no coefficient, so it is rejected.
 #' bad <- dd
 #' levels(bad$g) <- c("a", "b", "zz")
 #' try(term_predict(b, bad))
 #'
-#' # Unless it is asked to give such a row no effect of its own.
+#' # With unseen = "zero", such a row gets no effect of its own.
 #' as.matrix(term_predict(b, bad, unseen = "zero"))[bad$g == "zz", ]
 #'
 #' @keywords internal

@@ -17,7 +17,7 @@ ridge(
 \arguments{
 \item{x}{A one-sided formula, such as \code{~ x1 + x2} or \code{~ 0 + g}, or a numeric
 matrix, ideally a matrix column of the model data frame. A two-sided
-formula throws.}
+formula is rejected with an error.}
 
 \item{label}{A single non-empty character string prefixed to the
 coefficient names as \code{label.name}, \code{"ridge"} by default, so a block
@@ -29,47 +29,48 @@ each coefficient on the scale of its own column. See the section above.}
 
 \item{lambda}{The precision of the prior. One number holds it and
 \code{NULL}, the default, has it estimated. A ridge has no kink and no
-path, so several numbers are not a grid it could visit. Must lie in
-\eqn{(0, \infty)}.}
+path, so several numbers are rejected: they would form a grid that
+nothing visits. Must lie in \eqn{(0, \infty)}.}
 
 \item{id}{A label sharing this term's hyperparameter with those of
 other terms carrying the same one: they are then estimated at a
 single value, wherever in the formula they sit. \code{NULL}, the
-default, shares nothing. See \code{\link[=term_ids]{term_ids()}}, whose page says what
-the labels mean and what care they want.}
+default, shares nothing. See \code{\link[=term_ids]{term_ids()}} for the meaning of the labels
+and the restrictions on their use.}
 
 \item{sparse}{Governs the formula route: \code{TRUE} builds a \code{dgCMatrix} through
 \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}}, \code{FALSE} a dense model matrix, and \code{NULL},
 the default, settles it at build from the size of the design. A matrix
 input needs no such argument. See the section above.}
 
-\item{...}{Not used, and reported. An argument named after another penalty's
-hyperparameter is the mistake this catches: \code{scad(~ x, gamma = 1)} throws
-\code{"'scad' has no argument 'gamma'."} and lists the ones it does have.}
+\item{...}{Not used. Any argument supplied here is rejected with an error
+that names it and lists the penalty's hyperparameters. The typical case is
+an argument named after another penalty's hyperparameter:
+\code{scad(~ x, gamma = 1)} signals \code{"'scad' has no argument 'gamma'."}.}
 }
 \value{
 An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification, with \code{X},
 \code{coef_names}, \code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}}
-fills them, and the penalty attached there over as many coefficients
-as the block turns out to have.
+fills them. The build attaches the penalty over the block's columns.
 }
 \description{
-A block of coefficients under a Gaussian prior at zero: every one of them
-shrunk towards zero, none of them set to it.
+A block of coefficients under a Gaussian prior at zero. Each coefficient of
+the block is shrunk towards zero, and none is set exactly to zero.
 }
 \details{
 Writing \eqn{\beta} for the block's coefficients and \eqn{p} for their
 number,
 \deqn{\rho(\beta) = \frac{\lambda\lVert\beta\rVert_2^2}{2}
   - \frac{p}{2}\log\!\left(\frac{\lambda}{2\pi}\right).}
-The constant is kept, and that is what a marginal criterion needs to
-estimate \eqn{\lambda}: the value is minus the log density of
+The constant is kept because a marginal criterion needs it to estimate
+\eqn{\lambda}. The value is minus the log density of
 \eqn{N(0, \lambda^{-1}I)}, so \eqn{\lambda} is the precision of that
 prior and a larger value shrinks harder.
 
-The penalty is twice differentiable everywhere, so the block is fitted in
-the same system as the unpenalized terms and \eqn{\lambda} is estimated by
-\code{\link[statmodels7:reml]{statmodels7::reml()}} rather than swept along a path.
+The penalty is twice differentiable everywhere. The block is therefore
+fitted in the same system as the unpenalized terms, and \eqn{\lambda} is
+estimated by \code{\link[statmodels7:reml]{statmodels7::reml()}} or by another marginal criterion instead
+of being swept along a path.
 
 \strong{Hyperparameter.} \code{lambda}, admissible on \eqn{(0, \infty)}.
 }
@@ -92,7 +93,7 @@ all.equal(penalties7::penalty_value(p, beta, list(lambda = 2.5)),
 c(smooth = term_smooth(b),
   kinks = length(penalties7::penalty_kinks(p, list(lambda = 1))))
 
-# Holding it, and the refusal of a grid it has no path to visit.
+# Holding it, and the rejection of a grid it has no path to visit.
 term_hyper(ridge(~ x1 + x2, lambda = 2))
 try(ridge(~ x1 + x2, lambda = c(1, 2)))
 

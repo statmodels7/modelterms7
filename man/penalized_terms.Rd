@@ -6,7 +6,7 @@
 \arguments{
 \item{x}{A one-sided formula, such as \code{~ x1 + x2} or \code{~ 0 + g}, or a numeric
 matrix, ideally a matrix column of the model data frame. A two-sided
-formula throws.}
+formula is rejected with an error.}
 
 \item{label}{A single non-empty character string prefixed to the coefficient
 names as \code{label.name}. Each constructor defaults it to its own name, so a
@@ -21,9 +21,10 @@ each coefficient on the scale of its own column. See the section above.}
 the default, settles it at build from the size of the design. A matrix
 input needs no such argument. See the section above.}
 
-\item{...}{Not used, and reported. An argument named after another penalty's
-hyperparameter is the mistake this catches: \code{scad(~ x, gamma = 1)} throws
-\code{"'scad' has no argument 'gamma'."} and lists the ones it does have.}
+\item{...}{Not used. Any argument supplied here is rejected with an error
+that names it and lists the penalty's hyperparameters. The typical case is
+an argument named after another penalty's hyperparameter:
+\code{scad(~ x, gamma = 1)} signals \code{"'scad' has no argument 'gamma'."}.}
 }
 \value{
 An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification, with \code{X},
@@ -52,8 +53,10 @@ terms, the factor levels and the contrasts, exactly as \code{\link[=linpar]{linp
 The exception is a formula whose intercept is all it has. \code{ridge(~ 1)} is a
 block of that one column under the penalty, removing it leaving no block at
 all. That is the form a subformula on another term's parameter uses:
-\code{gamma ~ 0 + lasso(~ 1)} says the parameter itself carries a lasso, there
-being no parametric block of its own to hold an unpenalized intercept.
+\code{gamma ~ 0 + lasso(~ 1)} means that the parameter itself carries a lasso,
+there being no parametric block of its own to hold an unpenalized intercept.
+A formula with neither an intercept nor a term, such as \code{ridge(~ 0)}, has no
+columns, and the term is rejected when it is built.
 
 A \strong{matrix} is used as given, and its columns are named after its own
 column names, or numbered \code{1}, \code{2}, ... when it has none.
@@ -69,10 +72,10 @@ ridge(R)      # in the formula
 }\if{html}{\out{</div>}}
 
 A subset of \code{dd} then carries the matching rows of \code{R}. A free-standing
-matrix from the calling environment builds, its value having been captured,
-and prediction is refused with a message naming the expression: resolving it
-outside the new data would silently reuse the build-time rows whenever the
-counts happened to agree.
+matrix from the calling environment can be used to build the term, its value
+being captured, but prediction signals an error that names the expression.
+Resolving the name outside the new data would reuse the build-time rows
+whenever the row counts agree.
 }
 
 \section{Sparse storage}{
@@ -89,8 +92,8 @@ avoid.
 
 It pays where the formula carries a factor of many levels, whose indicator
 columns hold one non-zero per row, and \code{lasso(~ 0 + g)} over hundreds of
-groups is the case. On numeric covariates the block is dense whatever is
-asked for, and the sparse storage then costs more than it saves. Left
+groups is the case. On numeric covariates the block has no zeros to exploit,
+and the sparse storage then costs more than it saves. Left
 \code{NULL}, the default, the storage is settled at build by \code{\link[=.resolve_sparse]{.resolve_sparse()}}:
 the dense indicator part holds \code{n} times its column count in cells against
 one non-zero per row, and the two routes cross at about \eqn{10^5} of those
@@ -105,11 +108,13 @@ it.
 
 A hyperparameter is comparable across coordinates only where the coordinates
 share a scale. Without \code{standardize} a lasso penalizes a column measured in
-meters more than the same column measured in kilometers, and a reader of
-\eqn{\lambda} has no way to tell.
+kilometers more heavily than the same column measured in meters, because for
+the same fitted effect the coefficient per kilometer is 1000 times the
+coefficient per meter, and a reader of \eqn{\lambda} has no way to tell.
 
-\code{standardize = TRUE} divides each coefficient by the standard deviation of
-its own column, through the penalty's diagonal map. With \eqn{z_j = x_j/s_j}
+\code{standardize = TRUE} penalizes each coefficient multiplied by the standard
+deviation of its own column, \eqn{s_j\beta_j}, through the penalty's
+diagonal map. With \eqn{z_j = x_j/s_j}
 the coefficients satisfy \eqn{\beta_{z,j} = s_j\beta_{x,j}}, so
 
 \deqn{\lambda\sum_j \lvert\beta_{z,j}\rvert
@@ -127,17 +132,25 @@ The spread is computed from the built block by \code{\link[=.block_sd]{.block_sd
 \code{blueprint$standardize}, so the same term standardizes identically in every
 equation of a distributional model and does not move with the working
 weights of a fit. A constant column takes \eqn{s_j = 1}. \code{\link[=print]{print()}} shows the
-values, a number that changes the meaning of \eqn{\lambda} having to be
-legible.
+values, because a change of scale changes the meaning of \eqn{\lambda}.
 
-For SCAD and MCP the map is not a rescaling of \eqn{\lambda} alone.
-Substituting \eqn{s_j\beta_j} gives \eqn{\lambda_j = \lambda s_j} \strong{and}
-\eqn{a_j = a/s_j} (or \eqn{\gamma_j = \gamma/s_j}), a composition of both
-hyperparameters per coordinate, which the map expresses exactly.
+For SCAD and MCP the map is not a rescaling of \eqn{\lambda} alone. The
+penalty of the \eqn{j}-th coefficient is the original penalty evaluated at
+\eqn{s_j\lvert\beta_j\rvert}, with the same \eqn{\lambda} and \eqn{a} (or
+\eqn{\gamma}) for every coordinate, so that the map acts on the argument of
+the penalty and leaves the hyperparameters unchanged. The penalty of
+coordinate \eqn{j} becomes flat at \eqn{\lvert\beta_j\rvert = a\lambda/s_j}
+(at \eqn{\gamma\lambda/s_j} for MCP). For MCP this equals an MCP on
+\eqn{\beta_j} with \eqn{\lambda_j = \lambda s_j} and
+\eqn{\gamma_j = \gamma/s_j^2}. For SCAD no pair \eqn{(\lambda_j, a_j)}
+reproduces it, because the slope at the origin, \eqn{s_j\lambda}, and the
+end of the first segment, \eqn{\lambda/s_j}, would both have to equal
+\eqn{\lambda_j}.
 
 \code{\link[=random]{random()}} does not standardize and takes no such argument. Its columns are
-grouping indicators and its penalty is a variance component with a meaning
-of its own; weighting it by the size of the groups would change the model.
+the grouping indicators, multiplied by the covariate of a random slope, and
+its penalty is a variance component with a meaning of its own; weighting it
+by the size of the groups would change the model.
 }
 
 \examples{
@@ -171,7 +184,7 @@ bs <- term_build(lasso(~ x1 + x3, standardize = TRUE), dd)
 term_penalty(bs)@map
 apply(term_matrix(bs), 2, sd)
 
-# An argument named after another penalty's hyperparameter is reported.
+# An argument named after another penalty's hyperparameter is rejected.
 try(scad(~ x1, gamma = 1))
 
 }

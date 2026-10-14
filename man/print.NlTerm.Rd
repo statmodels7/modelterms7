@@ -23,10 +23,12 @@ The built form is
   parameters: a, r
 }\if{html}{\out{</div>}}
 
-\code{symbolic} means \code{\link[stats:deriv]{stats::deriv()}} could read the expression, and \code{numeric}
-that the derivatives are differenced. That is worth seeing at a glance: the
-two routes differ by six orders of magnitude at the higher orders, which
-\code{\link[=nl]{nl()}} tabulates.
+The route is the term's \code{deriv_mode}. \code{symbolic} means that
+\code{\link[stats:deriv]{stats::deriv()}} could read the expression. \code{formula_fd} means that it could
+not, and the first derivatives of the formula are differenced. \code{numeric}
+means that the term wraps a function, whose derivatives are differenced
+unless supplied. A differenced derivative loses accuracy as its order
+grows.
 
 The coefficient count is the block's width, so a developed parameter makes
 it larger than the number of parameters printed on the second line.
@@ -41,7 +43,7 @@ dd$y <- 2 * exp(-1.3 * dd$x) + rnorm(60, sd = 0.05)
 nl(~ a * exp(-r * x), start = list(a = 1, r = 1))
 term_build(nl(~ a * exp(-r * x), start = list(a = 1, r = 1)), dd)
 
-# An opaque function differences its derivatives, and says so.
+# An opaque function is differenced, and the route is printed as numeric.
 term_build(nl(function(x, theta) theta$a * exp(-theta$r * x),
               params = c("a", "r"), x = x, start = list(a = 1, r = 1)), dd)
 

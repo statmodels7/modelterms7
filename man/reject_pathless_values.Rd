@@ -23,12 +23,12 @@ whose penalty has no kink.
 }
 \details{
 Several values are a grid for a path to visit, and only a penalty with a
-kink is swept along one: everything else has its hyperparameter read at the
-mode by a marginal criterion, which would take the vector and do nothing
-with it. The question is put to the penalty at a probe value of its own
-hyperparameters, the kink set being structural, so a ridge and a random
-effect under a Gaussian prior are covered by the same line as a family
-added later.
+kink is swept along one. For any other penalty the hyperparameter is
+estimated at the mode by a marginal criterion, and a vector given there
+would have no effect. Whether the penalty has a kink is read from the
+penalty at a probe value of its own hyperparameters, the kink set being
+structural, so a ridge and a random effect under a Gaussian prior are
+covered by the same test as a family added later.
 }
 \seealso{
 \code{\link[=check_values]{check_values()}}, \code{\link[=term_values]{term_values()}}

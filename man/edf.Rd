@@ -8,28 +8,30 @@
 edf(term, coef = NULL, hessian = NULL, theta = NULL, tol = 1e-08, ...)
 }
 \arguments{
-\item{term}{A built term (see \code{\link[=term_build]{term_build()}}). An unbuilt one throws.}
+\item{term}{A built term (see \code{\link[=term_build]{term_build()}}). An unbuilt term signals an
+error.}
 
 \item{coef}{The fitted coefficients of the term's block, a numeric vector of
-length \code{term_npar(term)}. Any other length throws with the required length
-named. \code{NULL} is allowed for an unpenalized term.}
+length \code{term_npar(term)}. A vector of any other length signals an error
+that gives the required length. \code{NULL} is allowed for an unpenalized term.}
 
 \item{hessian}{The unpenalized curvature of the fit restricted to the term's
 own block, a \eqn{k \times k} matrix with \eqn{k} = \code{term_npar(term)},
 typically the weighted crossproduct of the block at the fitted weights.
-Any other shape throws. \code{NULL} is allowed unless the trace runs.}
+When the trace runs, a matrix of any other shape signals an error. \code{NULL}
+is allowed unless the trace runs.}
 
 \item{theta}{The estimated hyperparameters. A term carrying one penalty
 takes that penalty's own named list, \code{list(lambda = 0.25)}. A term
 carrying several takes a list of such lists, keyed by the names
-\code{\link[=term_penalties]{term_penalties()}} gives; an unkeyed list throws, naming them. The two
-spellings are told apart by the value being a list, a hyperparameter never
-being one.}
+\code{\link[=term_penalties]{term_penalties()}} gives; an unkeyed list signals an error that lists the
+names. The two spellings are distinguished by the value being a list, since
+a hyperparameter is never a list.}
 
 \item{tol}{The magnitude below which a coefficient counts as zero under a
 non-smooth penalty, \code{1e-8} by default. A proximal step returns exact
-zeros, so the threshold matters only for coefficients a different route
-left small.}
+zeros, so the threshold matters only for coefficients that a different
+route left small.}
 
 \item{...}{Passed to methods.}
 }
@@ -38,19 +40,20 @@ A single number, between 0 and \code{term_npar(term)}. Not an integer in
 general: only the unpenalized and the non-smooth rules give whole numbers.
 }
 \description{
-Counts what a built term spends, given the coefficients a fit reached, the
-curvature at that fit and the hyperparameters that were estimated. An
-unpenalized parameter costs one; a parameter under a penalty costs less, and
-how much less depends on the kind of penalty. The three rules partition the
-term's parameters, so a term carrying several penalties is counted piece by
-piece and the pieces add.
+Computes the effective degrees of freedom of a built term from the
+coefficients of a fit, the curvature at that fit and the estimated
+hyperparameters. An unpenalized parameter counts one. A parameter under a
+non-smooth penalty counts one when it is nonzero and zero otherwise. The
+parameters unpenalized or under a smooth penalty are counted together by a
+single trace, which is less than their number when a penalty acts on them.
+The three rules partition the term's parameters, and the counts add.
 
-The one method is registered on \code{\link[=model_term]{model_term()}} and reads the penalties the
-term declares through \code{\link[=term_penalties]{term_penalties()}}, so a term class written outside
-the package is counted by the same rule with nothing to register.
+The method is registered on \code{\link[=model_term]{model_term()}} and reads the penalties that the
+term declares through \code{\link[=term_penalties]{term_penalties()}}, so a term class defined outside
+the package is counted by the same rules without registering a method.
 }
 \section{The three rules}{
-\strong{A parameter no penalty reaches counts one}, exactly. A term with no
+\strong{A parameter outside every penalty counts one}, exactly. A term with no
 penalties at all therefore returns \code{term_npar(term)} and reads none of the
 other arguments.
 
@@ -58,11 +61,11 @@ other arguments.
 zero and nothing when it is at it.} For the lasso that count is an unbiased
 estimator of the degrees of freedom (Zou, Hastie and Tibshirani, 2007). A
 penalty is treated as non-smooth when \code{\link[penalties7:penalty_kinks]{penalties7::penalty_kinks()}} reports
-any point at a probe value of its hyperparameters, so lasso, SCAD, MCP and
-the elastic net go here and ridge does not.
+any point at a probe value of its hyperparameters. The lasso, SCAD, MCP and
+the elastic net are therefore counted by this rule, and the ridge is not.
 
 \strong{Everything else is counted together by one trace.} Over the parameters
-left, meaning those unpenalized and those under a smooth penalty,
+that remain, meaning those unpenalized and those under a smooth penalty,
 
 \deqn{\mathrm{edf} = \mathrm{tr}\{(H + S)^{-1} H\},}
 
@@ -71,22 +74,24 @@ carries each smooth penalty's Hessian in the coefficients, evaluated at
 \code{coef} and at the estimated hyperparameters and placed at the parameters
 that penalty covers. An unpenalized parameter contributes a zero row and
 column to \eqn{S}, so the trace returns its one. As a smoothing parameter
-grows the trace falls toward the dimension of the penalty's null space: for
-\code{\link[=s]{s()}} that limit is 1, the straight line the Demmler-Reinsch penalty leaves
-free.
+grows, the trace falls toward the dimension of the penalty's null space.
+For \code{\link[=s]{s()}} with the B-spline, P-spline or Legendre smoother that limit is 1,
+the straight line that the Demmler-Reinsch penalty leaves free; for the
+first-order B-spline, the cyclic and the Fourier smoothers it is 0.
 
-Each rule reduces to what a term reported before it carried more than one
-penalty: the trace over every column for a single smooth penalty, the
-nonzero count for a single kinked one, the coefficient count for none.
+When one penalty covers the whole block, the result is the trace over every
+column if the penalty is smooth, the number of nonzero coefficients if it is
+non-smooth, and the number of coefficients if there is no penalty.
 }
 
 \section{Which arguments are needed when}{
-\code{hessian} is asked for over the whole block and read at the rows and columns
-the trace runs over. It is never needed when every parameter sits under a
-kinked penalty, the count being read from \code{coef} alone, and \code{coef} is never
-needed when the term carries no penalty. Everything the rule in force does
-not reach may be left \code{NULL}; leaving out something it does reach throws
-with the missing arguments named.
+\code{hessian} is supplied for the whole block and read at the rows and columns
+over which the trace runs. It is not needed when every penalty of the term
+is non-smooth, since the count is then read from \code{coef} alone, and \code{coef} is
+not needed when the term carries no penalty. An argument that the rule in
+force does not read may be left \code{NULL}. An argument that the rule reads and
+that is missing signals an error, and the message names the arguments the
+rule needs.
 }
 
 \examples{
@@ -96,7 +101,7 @@ dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20), x3 = rnorm(20))
 # No penalty: the coefficient count, and nothing else is read.
 edf(term_build(linpar(~ x1 + x2), dd))
 
-# A ridge spends between 2 and 0 as lambda grows.
+# For a ridge the count falls from 2 toward 0 as lambda grows.
 b <- term_build(ridge(~ x1 + x2), dd)
 H <- crossprod(term_matrix(b))
 vapply(c(1e-6, 0.25, 10, 1e6),
@@ -111,8 +116,8 @@ all.equal(edf(b, coef = c(0.5, -0.2), hessian = H, theta = list(lambda = 0.25)),
 bl <- term_build(lasso(~ x1 + x2 + x3), dd)
 edf(bl, coef = c(1, 0, -2), theta = list(lambda = 1))
 
-# A smooth falls from k toward the dimension of its null space, which
-# for s() is the one straight line the penalty leaves free.
+# For a smooth the count falls from k toward the dimension of the penalty's
+# null space, which for this smoother is the straight line.
 d2 <- data.frame(x = seq(0, 1, length.out = 60))
 bs <- term_build(s(x, basis7::bspline_smooth(k = 8)), d2)
 Hs <- crossprod(term_matrix(bs))

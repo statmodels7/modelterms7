@@ -16,24 +16,26 @@ term_converged(term, ...)
 A single logical.
 }
 \description{
-\code{TRUE} when a term whose block is refreshed has nothing further to
-say about where its own parameters are. A term whose block does not move
-answers \code{TRUE}, having no iteration of its own.
+\code{TRUE} when the iteration that a term carries on its own account has
+settled, that is, when its own parameters no longer move. A term with no
+such iteration, including every term whose block does not move and \code{\link[=nl]{nl()}},
+answers \code{TRUE} through the base method.
 }
 \details{
 It exists because a score cannot always answer the question. Where the
 block is the Jacobian of the contribution, as it is for \code{\link[=nl]{nl()}} and
-\code{\link[=seg]{seg()}}, the gradient of the model's objective is the block times the
-derivative of the log-likelihood in the predictor, and its vanishing is
-the test.
+\code{\link[=seg]{seg()}}, the gradient of the model's objective is the transpose of the block
+applied to the derivative of the log-likelihood in the predictor, and the
+fitting layer tests its vanishing; the term itself has no verdict to add.
 
 Where the block is a working linearization with a frozen weight, as it is
-for \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}}, there is no such gradient: the profile
+for a sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}}, there is no such gradient: the profile
 objective of a discontinuous term is a step function in the break-point.
 What the iteration drives to zero there is the movement of the break-point
 itself.
-That movement is what \code{\link[=seg_converged]{seg_converged()}} reads, and a fitting
-layer asks for it here without knowing which construction it holds.
+A break-point term of any construction answers through \code{\link[=seg_converged]{seg_converged()}},
+which reads that movement, and a held term answers \code{TRUE}. A fitting layer
+calls this generic for each refreshed term, whatever its construction.
 }
 \examples{
 dd <- data.frame(x = seq(0, 2, length.out = 20))

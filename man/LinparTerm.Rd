@@ -25,11 +25,11 @@ LinparTerm(
 \arguments{
 \item{label}{A character string prefixed to the term's coefficient names
 when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag of
-\code{\link[=print]{print()}}. \code{character(0)} and \code{""} both mean no label.}
+\code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
-\item{hyper}{The hyperparameters of the term's penalty the caller \strong{held},
-as a named list keyed by the penalty's names. Empty, the default, means
-every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
+\item{hyper}{The hyperparameters of the term's penalty that the caller
+\strong{held}, as a named list keyed by the penalty's names. Empty, the
+default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
@@ -89,7 +89,7 @@ default.}
 \value{
 An S7 object of class \code{LinparTerm}, inheriting from
 \code{\link[=additive_term]{additive_term()}} and \code{\link[=model_term]{model_term()}}, with the four properties above
-beside the ten they supply.
+beside the properties it inherits.
 }
 \description{
 The subclass of \code{\link[=additive_term]{additive_term()}} holding an unpenalized parametric block
@@ -99,23 +99,28 @@ bare covariates into, so most models carry one whether or not the caller
 wrote it.
 
 Beyond the additive branch's four properties it records the formula, whether
-the block is sparse, and the contrasts used for the formula's factors.
+the block is sparse, the contrasts used for the formula's factors, and
+whether the column \code{(Intercept)} is dropped after the coding.
 }
-\section{The three properties of its own}{
+\section{The properties of its own}{
 \code{formula} is the one-sided formula, kept with its environment, so a symbol
 the data do not carry is still found where the formula was written.
 
-\code{sparse} holds what the caller asked for and \code{NULL} where nothing was asked.
+\code{sparse} holds the value the caller gave, and \code{NULL} where none was given.
 The build leaves it alone and records the storage it settled on in
 \code{blueprint$sparse}, which is the value \code{\link[=term_predict]{term_predict()}} reads, so the block
 and a prediction from it never differ in storage. A formula naming a factor
-of many levels has one non-zero per row, and the dense model matrix of it is
-the memory the choice exists to avoid.
+of many levels has one non-zero per row, and building the dense model matrix
+of it is the memory use that sparse storage avoids.
 
 \code{contrasts} is a named list, one entry per factor, or empty for the
 session's own \code{options("contrasts")}. Whatever is used is recorded in the
 blueprint and reapplied, so a fit and a prediction never disagree about the
 coding.
+
+\code{drop_intercept} is \code{FALSE} by default. When it is \code{TRUE}, the build removes
+the column \code{(Intercept)} after the coding, and the blueprint records the
+setting so that a prediction applies it again.
 
 The class carries no penalty: \code{penalty} is \code{NULL} on every \code{LinparTerm}, and
 \code{\link[=term_penalties]{term_penalties()}} returns an empty list, so \code{\link[=edf]{edf()}} counts its columns
@@ -130,10 +135,10 @@ tm <- linpar(~ x + g)
 S7::S7_inherits(tm, LinparTerm)
 tm@formula
 
-# The property keeps what was asked for; the blueprint records what the
+# The property keeps the value given; the blueprint records what the
 # build settled on, and that is what a prediction reads.
 bt <- term_build(tm, d)
-c(asked = is.null(bt@sparse), settled = bt@blueprint$sparse)
+c(sparse_is_null = is.null(bt@sparse), settled = bt@blueprint$sparse)
 term_build(linpar(~ g, sparse = TRUE), d)@blueprint$sparse
 
 # The contrasts are recorded and reapplied, so the coding cannot drift.

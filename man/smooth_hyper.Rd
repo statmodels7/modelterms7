@@ -17,9 +17,9 @@ smooth_hyper(hyper, names, what = "this smooth")
 A named list of held values.
 }
 \description{
-Carries the \code{lambda} a smooth's constructor was given onto the names
-its penalty uses, and checks it against the positivity every smoothing
-parameter obeys.
+Carries the \code{hyper} argument of \code{\link[=s]{s()}} or \code{\link[=te]{te()}} onto the names its penalty
+uses, and checks that every held smoothing parameter is finite and strictly
+positive.
 }
 \details{
 A one-dimensional smooth and an isotropic tensor product carry one

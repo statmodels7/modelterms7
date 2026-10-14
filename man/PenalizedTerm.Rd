@@ -26,11 +26,11 @@ PenalizedTerm(
 \arguments{
 \item{label}{A character string prefixed to the term's coefficient names
 when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag of
-\code{\link[=print]{print()}}. \code{character(0)} and \code{""} both mean no label.}
+\code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
-\item{hyper}{The hyperparameters of the term's penalty the caller \strong{held},
-as a named list keyed by the penalty's names. Empty, the default, means
-every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
+\item{hyper}{The hyperparameters of the term's penalty that the caller
+\strong{held}, as a named list keyed by the penalty's names. Empty, the
+default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
@@ -70,48 +70,53 @@ term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{input}{The block as given: a one-sided formula or a numeric matrix.}
 
-\item{input_expr}{The expression that produced a matrix input, kept so that
-\code{\link[=term_predict]{term_predict()}} can re-evaluate it in new data. \code{NULL} on the formula
-route.}
+\item{input_expr}{The expression that produced the input, kept so that
+\code{\link[=term_predict]{term_predict()}} can re-evaluate a matrix input in new data. It is
+recorded on the formula route as well, where it is not read.}
 
 \item{factory}{A function of the coefficient count, returning the
 \pkg{penalties7} penalty over that many coefficients, and taking the
-diagonal map as a second argument where \code{standardize} asks for one.}
+diagonal map as a second argument when \code{standardize = TRUE}.}
 
-\item{standardize}{A single logical: whether the block's columns are put on
-a common scale by the penalty's diagonal map. \code{FALSE} by default.}
+\item{standardize}{A single logical: whether each coefficient is penalized
+on the scale of its own column, through the penalty's diagonal map.
+\code{FALSE} by default.}
 
 \item{sparse}{\code{TRUE}, \code{FALSE} or \code{NULL} for the formula route's storage;
-see \code{\link[=linpar]{linpar()}} for the rule \code{NULL} is settled by. A matrix input needs no
-such argument.}
+see \code{\link[=linpar]{linpar()}} for the rule by which \code{NULL} is settled. A matrix input
+needs no such argument.}
 }
 \value{
 An S7 object of class \code{PenalizedTerm}, inheriting from
 \code{\link[=additive_term]{additive_term()}} and \code{\link[=model_term]{model_term()}}, with the five properties above
-beside the ten they supply.
+beside those that the two parent classes supply.
 }
 \description{
 The subclass of \code{\link[=additive_term]{additive_term()}} for a parametric block whose coefficients
 carry a \pkg{penalties7} penalty. \code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}}, \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}}
-and \code{\link[=mcp]{mcp()}} all construct it; the five differ only in the penalty their
-factory attaches at build time, so every derivative, hyperparameter, bound,
-link and kink belongs to the penalty object and none of it is restated here.
+and \code{\link[=mcp]{mcp()}} all construct it. The five differ in the penalty that their
+factory attaches at build time and in the hyperparameter arguments that
+their constructors take, so every derivative, hyperparameter, bound, link
+and kink belongs to the penalty object and none of it is restated here.
 }
 \section{The five properties of its own}{
 \code{input} is the block as it was given, a one-sided formula or a matrix.
-\code{input_expr} is the expression that produced a matrix input, kept so that
+\code{input_expr} is the expression that produced the input. It is recorded for a
+formula input as well, and it is read only for a matrix input, so that
 \code{\link[=term_predict]{term_predict()}} can re-evaluate it in new data.
 
 \code{factory} maps a coefficient count to the penalty. It is called at build,
-when the count is finally known, and with the diagonal map as a second
-argument when \code{standardize} asks for one, so a factory that will never be
-standardized may take the count alone.
+when the count is known, and with the diagonal map as a second argument when
+\code{standardize = TRUE}, so a factory that is never used with standardization
+may take the count alone.
 
 \code{standardize} is a single logical on the specification; after a build the
 spreads themselves are in \code{blueprint$standardize}, one per column.
 
 \code{sparse} governs the formula route only, a matrix input being kept in
-whatever storage it arrives in. \code{NULL} until the build settles it.
+whatever storage it arrives in. The property stays as the caller wrote it,
+\code{NULL} by default, and the storage that the build settles on is recorded in
+\code{blueprint$sparse}.
 }
 
 \section{What the class does not decide}{

@@ -22,7 +22,7 @@ scad(
 \arguments{
 \item{x}{A one-sided formula, such as \code{~ x1 + x2} or \code{~ 0 + g}, or a numeric
 matrix, ideally a matrix column of the model data frame. A two-sided
-formula throws.}
+formula is rejected with an error.}
 
 \item{label}{A single non-empty character string prefixed to the
 coefficient names as \code{label.name}, \code{"scad"} by default, so a block
@@ -45,39 +45,44 @@ they stand, and \code{NULL} has the path build one. Must lie in
 \item{id}{Labels sharing this term's hyperparameters with those of
 other terms carrying the same ones: each is then estimated at a
 single value, wherever in the formula they sit. A named vector,
-\code{c(a = "A")}, since the penalty carries several and which was
-meant is not a guess; \code{NULL}, the default, shares nothing. See
-\code{\link[=term_ids]{term_ids()}}, whose page says what the labels mean and what care
-they want.}
+\code{c(a = "A")}, because the penalty has several hyperparameters and the
+name says which one is shared; \code{NULL}, the default, shares nothing. See
+\code{\link[=term_ids]{term_ids()}} for the meaning of the labels and the restrictions on their
+use.}
 
 \item{n_lambda, n_a}{How many values the path visits for each, at least 2.
-They differ because the axes do: \eqn{\lambda} descends the size of the
-kink over four decades and wants that many points, while \eqn{a} spans
-the shape's useful range and does not.}
+The two are separate arguments because the axes differ: \eqn{\lambda}
+descends from the kink size that empties the block to \code{min_ratio} times
+that size (four decades at the default \code{min_ratio}), which takes more
+points than \eqn{a}, which spans the shape's useful range. Each signals
+an error when given explicitly for a hyperparameter that is held or
+written out, so \code{n_a} requires \code{a = NULL}.}
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
 stops sooner. A single number in \eqn{(0, 1)}, \code{1e-4} by default.
-Only the sweep by kink size reads it.}
+Only the sweep by kink size reads it, and it signals an error when given
+explicitly while \code{lambda} is held or written out.}
 
 \item{search}{\code{"grid"} to visit every combination of \eqn{\lambda}
 and \eqn{a}, \code{"cyclic"} to sweep one at a time with the other held.
-See \code{\link[=term_search]{term_search()}}.}
+See \code{\link[=term_search]{term_search()}}. Given explicitly while fewer than two hyperparameters
+are swept, it signals an error.}
 
 \item{sparse}{Governs the formula route: \code{TRUE} builds a \code{dgCMatrix} through
 \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}}, \code{FALSE} a dense model matrix, and \code{NULL},
 the default, settles it at build from the size of the design. A matrix
 input needs no such argument. See the section above.}
 
-\item{...}{Not used, and reported. An argument named after another penalty's
-hyperparameter is the mistake this catches: \code{scad(~ x, gamma = 1)} throws
-\code{"'scad' has no argument 'gamma'."} and lists the ones it does have.}
+\item{...}{Not used. Any argument supplied here is rejected with an error
+that names it and lists the penalty's hyperparameters. The typical case is
+an argument named after another penalty's hyperparameter:
+\code{scad(~ x, gamma = 1)} signals \code{"'scad' has no argument 'gamma'."}.}
 }
 \value{
 An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification, with \code{X},
 \code{coef_names}, \code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}}
-fills them, and the penalty attached there over as many coefficients
-as the block turns out to have.
+fills them. The build attaches the penalty over the block's columns.
 }
 \description{
 Smoothly clipped absolute deviation: the lasso's kink at zero, so the
@@ -94,23 +99,27 @@ the bias the lasso puts on a large coefficient. Being improper it
 carries no normalizing constant, and is therefore not a log prior and not
 reachable by a marginal criterion.
 
+The formula above is the penalty for a loss of unit curvature. In a
+\code{\link[statmodels7:statmod]{statmodels7::statmod()}} fit the penalty on coordinate \eqn{j} is scaled by
+the curvature \eqn{c_j} of the likelihood in that coordinate: the slope at
+zero remains \eqn{\lambda}, the penalty bends from \eqn{\lambda/c_j} and is
+flat past \eqn{a\lambda/c_j}, so the shape keeps its meaning whatever the
+scale of the response. Rescaling a Gaussian response by \eqn{k} and
+dividing \eqn{\lambda} by \eqn{k} reproduces the fit with \eqn{a}
+unchanged. The scaling is applied by \pkg{statmodels7}; the penalty that
+this term builds is the unscaled one.
+
 \strong{Hyperparameters.} \code{lambda} on \eqn{(0, \infty)}, swept over
-\code{n_lambda} values by kink size; \code{a} on \eqn{(2, \infty)}, below which the
-penalty is not what its definition intends, swept over
-\code{n_a} values on a geometric grid above that bound, since the shape
-leaves the kink at zero unchanged and no kink-size path can reach it.
+\code{n_lambda} values by kink size; \code{a} on \eqn{(2, \infty)}, the range over
+which the proximal operator at unit curvature is single valued. The shape
+leaves the kink at zero unchanged, so a path over the kink size cannot
+reach it. It is swept over \code{n_a} values on a geometric grid that starts just
+above the smallest shape at which the block can be fitted.
 
-\strong{The shape is HELD at \eqn{a = 3.7} by default}, the value of Fan and
-Li and the one \pkg{ncvreg} holds, so only \eqn{\lambda} is searched.
-\code{a = NULL} estimates it over the grid instead, and \code{n_a} sizes that
-grid. Measured over eight data configurations, estimating it chose the
-grid's LOWER ENDPOINT every time and changed no model: the columns kept
-were identical and the error against the truth agreed to four decimals.
-
-⚠️ \strong{The shape is not scale free}, which is why the literature's
-value belongs to standardized data. See \code{\link[=mcp]{mcp()}}, whose page carries the
-measurement: rescaling the response reproduces the fit only when the
-shape moves with the square of the scale.
+The shape is held at \eqn{a = 3.7} by default, the value of Fan and Li and
+the value that \pkg{ncvreg} holds, so only \eqn{\lambda} is searched.
+\code{a = NULL} estimates it over the grid instead, and \code{n_a} sizes that grid.
+The grid runs from 0.25 to 25 above the smallest admissible shape.
 }
 \examples{
 set.seed(3)
@@ -130,10 +139,13 @@ rho1(c(0.5, 1.5, 4), lambda = 1, a = 3.7)
 # branch, at plus and minus lambda and a * lambda.
 penalties7::penalty_kinks(p, list(lambda = 1, a = 3))
 
-# The literature's shape, held.
-term_hyper(scad(~ x1 + x2, a = 3.7))
+# The literature's shape is held by default, and `a = NULL` estimates it
+# over a grid.
+term_hyper(scad(~ x1 + x2))
+term_hyper(scad(~ x1 + x2, a = NULL))
+term_grid(scad(~ x1 + x2, a = NULL))
 
-# Below 2 the shape is refused.
+# At or below 2 the shape is rejected, the bound being open.
 try(scad(~ x1 + x2, a = 2))
 
 

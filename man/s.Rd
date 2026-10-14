@@ -21,13 +21,13 @@ s(
 
 \item{smoother}{How the smooth is built: a \pkg{basis7} smoother, which
 carries the basis, the roughness penalty, the null space and the
-reparametrization together. \code{\link[basis7:bspline_smooth]{basis7::bspline_smooth()}} is the default
-and is the construction this term has always used;
+reparametrization together. \code{\link[basis7:bspline_smooth]{basis7::bspline_smooth()}} is the default;
 \code{\link[basis7:fourier_smooth]{basis7::fourier_smooth()}} is the periodic one and
 \code{\link[basis7:legendre_smooth]{basis7::legendre_smooth()}} the global polynomial one.}
 
 \item{by}{An optional factor or numeric variable, given as a bare
-expression; \code{NULL} by default. See the section above.}
+expression; \code{NULL} by default. A character or logical variable is treated
+as a factor. See the section above.}
 
 \item{by_hyper}{With a factor \code{by}, whether the levels share one smoothing
 parameter (\code{"shared"}, the default) or carry one each (\code{"level"}). See
@@ -37,8 +37,8 @@ to give one each.}
 \item{hyper}{The hyperparameters of the smoother's penalty to hold, as a
 named numeric vector such as \code{c(lambda = 2)}. What names there are
 depends on the penalty; anything left out is \strong{estimated}, which is
-the default. Under \code{by_hyper = "level"} a name is qualified by the
-level, \code{c(lambda.a = 2)}.}
+the default. A held value must be finite. Under \code{by_hyper = "level"} a
+name is qualified by the level, \code{c(lambda.a = 2)}.}
 
 \item{id}{A label sharing this smooth's smoothing parameter with those
 of other terms carrying the same one: they are then estimated at a
@@ -51,7 +51,7 @@ See \code{\link[=term_ids]{term_ids()}}.}
 \code{NULL}, the default, builds one from the covariate: \code{s(x)}.}
 
 \item{sparse}{\code{TRUE}, \code{FALSE}, or \code{NULL} to settle it at build. Only a
-factor \code{by} admits \code{TRUE}; without one it is refused rather than ignored.
+factor \code{by} admits \code{TRUE}; without one it is rejected and not ignored.
 See the section above.}
 
 \item{...}{Not used, and accepted only so that an argument \code{s()} no
@@ -69,22 +69,21 @@ Demmler-Reinsch reparametrization, which separates the linear effect from
 the nonlinear deviation and turns the roughness penalty into the identity on
 the deviation.
 
-As the smoothing parameter grows the fit approaches a straight line, and
-\code{\link[=edf]{edf()}} falls to exactly one.
+With the default smoother the fit approaches a straight line as the
+smoothing parameter grows, and \code{\link[=edf]{edf()}} falls to one.
 }
 \section{The block and its penalty}{
 The block has one column for the linear effect, centered and scaled,
-followed by the reparametrized basis, so \code{s(x, bspline_smooth(k = 8))} gives seven columns
-named \verb{s(x).lin}, \verb{s(x).z1} ... \verb{s(x).z6}. That ordering is what the penalty
-reads: it is the quadratic penalty of \eqn{\mathrm{diag}(0, 1, \dots, 1)},
-rank deficient by exactly one, so the linear effect is unpenalized and the
-deviation is shrunk toward zero.
+followed by the reparametrized basis, so \code{s(x, bspline_smooth(k = 8))} gives
+seven columns named \verb{s(x).lin}, \verb{s(x).z1} ... \verb{s(x).z6}. That ordering is
+what the penalty reads: it is the quadratic penalty of
+\eqn{\mathrm{diag}(0, 1, \dots, 1)}, rank deficient by exactly one, so the
+linear effect is unpenalized and the deviation is shrunk toward zero.
 
-Two consequences a reader of a fit needs. At a large smoothing parameter the
-fit tends to a straight line, so \code{edf()} runs from \code{k - 1} down to 1 and
-never to 0. And the linear column is orthogonal to the rest over the
-observed covariate, so the linear and the nonlinear parts of a fitted smooth
-are separately readable.
+At a large smoothing parameter the fit tends to a straight line, so \code{edf()}
+runs from \code{k - 1} down to 1 and not to 0. The linear column is orthogonal to
+the rest over the observed covariate, so the linear and the nonlinear parts
+of a fitted smooth can be read separately.
 
 \code{bspline_smooth(null_space = "drop")} drops that first column, and the
 penalty is then the identity over the whole block, of full rank.
@@ -96,28 +95,23 @@ The smoother's \code{penalty} argument replaces the roughness matrix with a
 the data settle: \code{s(x, bspline_smooth(k = 20, penalty = penalties7::lasso_penalty))}. A \pkg{penalties7} constructor passes bare,
 and anything else is a function of the count.
 
-What it buys is that the Demmler-Reinsch coordinates are ordered from the
-smoothest to the most wiggly and the roughness penalty on them is the
-identity, so an \eqn{\ell_1} penalty takes whole directions of wiggliness
-to exactly zero and chooses the smooth's effective dimension. Measured at
-\eqn{n = 300} with \eqn{k = 20}, the coordinates surviving as the
-smoothing parameter grows are 15, 10, 4, 2, 1 and 0 of 18, and the fit at
-FOUR of them is the closest to the truth: the root mean square errors at
-those six counts are 0.2453, 0.2427, 0.2412, 0.2425, 0.2709 and 0.4967. So
-the \eqn{\ell_1} buys a smaller smooth and a slightly better one at once.
-A heavy-tailed penalty is the robust reading of the same block, and a
-structured one estimates the correlation of the coefficients rather than
+The Demmler-Reinsch coordinates are ordered from the smoothest to the most
+wiggly, and the roughness penalty on them is the identity. An
+\eqn{\ell_1} penalty on them therefore takes whole directions of wiggliness
+to exactly zero, so that the penalty chooses the effective dimension of the
+smooth. A heavy-tailed penalty gives a robust reading of the same block, and
+a structured one estimates the correlation of the coefficients instead of
 fixing it.
 
-Two things follow, and neither is a detail. The penalty covers \strong{the
-penalized coordinates alone}: a roughness matrix carries a zero row for
-the linear column and leaves it free by its own arithmetic, where a
-separable penalty has no such row and would shrink it, so the free columns
-are outside the entry it declares. And a penalty \strong{with a kink} has no
-second derivative at zero, which a marginal criterion needs, so its
-smoothing parameter is chosen by a path over \code{sparse_criterion} -- BIC by
-default -- and not by REML, whatever \code{outer_criterion} says. That is a
-change in what the number means and not only in how it is computed.
+Two properties of the fit follow. The penalty covers \strong{the penalized
+coordinates alone}: a roughness matrix carries a zero row for the linear
+column and leaves it free by its own arithmetic, whereas a separable penalty
+has no such row and would shrink it, so the free columns are outside the
+entry that the term declares. A penalty \strong{with a kink} has no second
+derivative at zero, which a marginal criterion needs, so its smoothing
+parameter is chosen by a path over \code{sparse_criterion} (BIC by default) and
+not by REML, whatever \code{outer_criterion} is. The selection criterion for that
+parameter is therefore BIC, and not the marginal likelihood.
 }
 
 \section{The construction is empirical}{
@@ -129,9 +123,10 @@ and multiplied by that same transform, so the separation of the linear from
 the nonlinear part holds at new rows as it does at old.
 
 Rebuilding on other rows instead would place the knots on their range and
-compute another transform. Measured on 80 points, predicting on the first
-ten agrees with those rows of the original block exactly and rebuilding
-differs by 2.85.
+compute another transform, so the columns would be different functions of
+the covariate. Predicting on the first rows of the data reproduces those rows
+of the block exactly, and rebuilding on them gives a different block (see the
+examples).
 }
 
 \section{Varying the smooth by another variable}{
@@ -141,18 +136,14 @@ multiplied by each level's indicator, and the penalty is the same matrix
 repeated blockwise.
 \code{s(x, bspline_smooth(k = 5), by = g)} over a four-level factor has 16 columns.
 
-\code{by_hyper} says whether the levels are smoothed \strong{together or apart}.
-\code{"shared"}, the default, estimates one smoothing parameter for all of them,
-which is what this package has always done. \code{"level"} declares one penalty
-per level through \code{\link[=term_penalties]{term_penalties()}}, so each is estimated on its own; it
-is what \pkg{mgcv} does by default, and what \code{id} there undoes. Which to
-want is a question about the data rather than about the code: levels that
-differ in how wiggly they are, or in how much of them there is, ask for
-different amounts of smoothing. Measured on three levels of one curve at
-amplitudes 1, 0.15 and 2.5, the separately estimated smoothing parameters
-are 2.03, 111.9 and 0.468 -- a factor of 239 apart -- and the effective
-degrees of freedom fall from 25.5 to 21.7 as the flattest level is smoothed
-away.
+\code{by_hyper} determines whether the levels are smoothed \strong{together or apart}.
+\code{"shared"}, the default, estimates one smoothing parameter for all of the
+levels. \code{"level"} declares one penalty per level through
+\code{\link[=term_penalties]{term_penalties()}}, so each is estimated on its own; it is what \pkg{mgcv}
+does by default, and what \code{id} there undoes. The choice depends on the data:
+levels that differ in how wiggly they are, or in how many observations they
+hold, need different amounts of smoothing, and \code{"level"} lets each level
+take its own.
 
 Under \code{"level"} a held hyperparameter is qualified by the level it belongs
 to, \code{hyper = c(lambda.a = 2)}, and so is an \code{id}.
@@ -161,12 +152,12 @@ A \strong{numeric} \code{by} gives a varying-coefficient term: the smooth multip
 that variable, and the fitted function is the coefficient of \code{by} as it
 changes with the covariate. The term is not centered: its first column is
 the constant times \code{by}, unpenalized and named \code{const}, because the
-constant of the coefficient is the main effect of \code{by}, which no other term
-carries (this is also what \pkg{mgcv} does). Writing \code{by} in the formula as
-well makes that column aliased. The default label is \code{s(x):z} for a \code{by}
-called \code{z}, so a formula may carry \code{s(x)} and \code{s(x, by = z)} together. A
-numeric \code{by} has no levels, so \code{by_hyper = "level"} is rejected rather than
-read as \code{"shared"}.
+constant of the coefficient is the main effect of \code{by}, a coefficient that
+only this column carries (this is also what \pkg{mgcv} does). Writing \code{by} in
+the formula as well makes that column aliased. The default label is \code{s(x):z}
+for a \code{by} called \code{z}, so a formula may carry \code{s(x)} and \code{s(x, by = z)}
+together. A numeric \code{by} has no levels, so \code{by_hyper = "level"} is rejected
+and is not read as \code{"shared"}.
 }
 
 \section{Sparse storage}{
@@ -174,20 +165,21 @@ read as \code{"shared"}.
 A factor \code{by} is the one place a smooth's block can be sparse, each row
 sitting in the block of its own level and nowhere else, a density of
 \eqn{1/m}. \code{sparse = TRUE} builds it that way instead of building the dense
-matrix and compressing it: measured at 2000 rows, \eqn{k = 10} and 200
-levels, 0.35 MB against 28.93 MB with the numbers identical.
+matrix and compressing it. The sparse block needs far less storage than the
+dense one, and the two hold the same numbers.
 
-\code{sparse = NULL}, the default, settles it at build from the size of the
-block through \code{\link[=.resolve_sparse]{.resolve_sparse()}}, the dense form holding \eqn{n m k} cells
-against \eqn{n k} non-zeros.
+\code{sparse = NULL}, the default, settles the storage at build: the block is
+stored as sparse when its dense form would hold more than \eqn{10^5} cells,
+that is when \eqn{n m k > 10^5}, with \eqn{m} levels and \eqn{k} columns per
+level (see \code{\link[=.resolve_sparse]{.resolve_sparse()}}).
 
-An explicit \code{TRUE} is \strong{refused} without a factor \code{by}, and the message
-says why: the basis is dense by construction and a numeric \code{by} merely
-multiplies it, so there would be nothing to build on.
+An explicit \code{TRUE} without a factor \code{by} is rejected, and the error message
+gives the reason: the basis is dense by construction and a numeric \code{by}
+multiplies it, so there is nothing to build on.
 
-The block alone is sparse. The penalty of a factor \code{by} is the same matrix
-repeated blockwise and \pkg{penalties7} returns it dense, 25.92 MB at those
-sizes; that is a property of that package's contract.
+The penalty of a factor \code{by} is the same matrix repeated blockwise. In \code{\link[=s]{s()}}
+and in a \code{\link[=te]{te()}} with \code{anisotropic = FALSE} it is stored as one block, and
+\code{\link[penalties7:penalty_matrix]{penalties7::penalty_matrix()}} returns it as a sparse matrix.
 }
 
 \examples{
@@ -239,7 +231,7 @@ term_penalties(bp)[[1]]$penalty@params
 max(abs(term_predict(b, dd[1:10, ]) - X[1:10, ]))
 max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 8)), dd[1:10, ])) - X[1:10, ]))
 
-# Sparsity needs a factor `by`, and says so when there is none.
+# Sparsity needs a factor `by`; without one the build signals an error.
 try(term_build(s(x, basis7::bspline_smooth(k = 5), sparse = TRUE), dd))
 
 
