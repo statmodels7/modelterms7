@@ -57,7 +57,7 @@ See \code{\link[=term_ids]{term_ids()}}.}
 \item{blueprint}{A named list of the resolved ordering, grouping and
 sub-term designs, empty until \code{\link[=term_build]{term_build()}} fills it.}
 
-\item{p}{The number of score lags, an integer of at least 0.}
+\item{p}{The number of score lags, an integer of at least 1.}
 
 \item{q}{The number of autoregressive lags, an integer of at least 0.}
 
@@ -72,13 +72,13 @@ defaults, empty where none was given.}
 \item{submodels}{A named list of one-sided formulas, one per parameter
 developed over covariates. Empty where none is.}
 
-\item{scaling}{The power \eqn{d} of the expected information the score is
-multiplied by, \eqn{\mathcal{I}^{-d}}; zero for the score as it is.}
+\item{scaling}{The power \eqn{d} of the expected information, the score
+being multiplied by \eqn{\mathcal{I}^{-d}}; zero for the score as it is.}
 }
 \value{
 An S7 object of class \code{GasTerm}, inheriting from
-\code{\link[=structural_term]{structural_term()}} and \code{\link[=model_term]{model_term()}}, with the seven properties above
-beside \code{\link[=model_term]{model_term()}}'s six.
+\code{\link[=structural_term]{structural_term()}} and \code{\link[=model_term]{model_term()}}, with the properties described
+above beside those that \code{\link[=structural_term]{structural_term()}} supplies.
 }
 \description{
 The subclass of \code{\link[=structural_term]{structural_term()}} holding a generalized autoregressive
@@ -87,7 +87,7 @@ observation density, added to the predictor of one distribution parameter.
 \code{\link[=gas]{gas()}} constructs it. Its contribution is a state, so it implements
 \code{\link[=term_filter]{term_filter()}} and has no \code{\link[=term_matrix]{term_matrix()}} method at all.
 }
-\section{The seven properties of its own}{
+\section{The properties of the class}{
 \code{p} is the number of score lags and \code{q} the number of autoregressive ones,
 which together fix the parameter count at \eqn{1 + p + q} before any
 subformula.
@@ -95,22 +95,26 @@ subformula.
 \code{by} and \code{time} are the grouping and ordering expressions as written, kept
 unevaluated; \code{NULL} means one series in row order.
 
-\code{links} holds whatever the caller overrode, empty where the defaults stand:
-the identity on the level, the log on each loading, the rhobit on each
-partial autocorrelation. \code{submodels} holds one right-hand side per
-parameter developed over covariates.
+\code{links} holds the links that the caller overrode, and is empty where the
+defaults stand: the identity on the level, the log on each loading, the
+rhobit on each partial autocorrelation. \code{submodels} holds one right-hand
+side per parameter developed over covariates.
 
-\code{blueprint} is filled by \code{\link[=term_build]{term_build()}} and carries the row order within
-each group, the built sub-terms of each subformula and their designs. The
-class overrides the branch's \code{blueprint} property because a structural term
-has no design block to hang one on.
+\code{scaling} is the power \eqn{d} of the expected information that multiplies
+the score; zero leaves the score as it is.
+
+The \code{blueprint} property is inherited from \code{\link[=structural_term]{structural_term()}} and is not
+redeclared by this class. \code{\link[=term_build]{term_build()}} fills it with the row order within
+each group, the built sub-terms of each subformula and their designs.
 }
 
 \section{What the class is for}{
-The recursion, its exact Jacobian, the reverse pass, the curvature and the
-contracted third derivative are all methods on it, so a fitting layer can
-estimate the term's parameters beside the coefficients of every equation
-and read the joint observed information.
+The recursion with its exact Jacobian, the reverse pass, the curvature, the
+contracted third and fourth derivatives, the static derivative, the
+continuation past the observed series and the simulation are among the
+methods on the class, so a fitting layer can estimate the term's
+parameters beside the coefficients of every equation and read the joint
+observed information.
 }
 
 \examples{

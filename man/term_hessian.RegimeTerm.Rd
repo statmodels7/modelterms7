@@ -11,9 +11,9 @@
 \item{y}{The response.}
 
 \item{logdens, grad, hess}{The log-density and its first two derivatives in
-the predictors.}
+the predictors. The last returns an array of dimension \code{c(n, p, p)}.}
 
-\item{psi}{The term's parameters.}
+\item{psi}{The term's parameters on the parameter scale.}
 
 \item{seed}{The derivative of each predictor in the caller's unknowns.}
 
@@ -21,7 +21,8 @@ the predictors.}
 
 \item{level}{The distribution parameter the regimes shift.}
 
-\item{weights}{Observation weights.}
+\item{weights}{Observation weights: one number or one per observation,
+none missing.}
 
 \item{...}{Unused.}
 }
@@ -31,5 +32,13 @@ A list with \code{loglik}, \code{gradient} and \code{hessian}.
 \description{
 Forward-mode second-order propagation through the scaled forward
 recursion, giving the exact Hessian of the mixed log-likelihood.
+}
+\details{
+The recursion runs in R over each group in time order. The derivatives in
+the term's own parameters are taken on the unconstrained scale: the first
+level and the log-ratios as they are, and each gap through its logarithm.
+The callbacks \code{logdens}, \code{grad} and \code{hess} are called once per regime with
+the whole index vector, and a result of the wrong length or shape signals an
+error.
 }
 \keyword{internal}

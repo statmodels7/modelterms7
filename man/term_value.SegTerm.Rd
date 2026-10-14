@@ -18,21 +18,24 @@ rows instead of the fitting ones.}
 A numeric vector of one value per observation.
 }
 \description{
-The values the term contributes to the linear predictor at its current
+The values that the term contributes to the linear predictor at its current
 break-points: the broken line for \code{\link[=seg]{seg()}}, the step for \code{\link[=jump]{jump()}}, both for
 \code{\link[=jseg]{jseg()}}. It is what a Gauss-Newton step needs beside the block, and for
-the continuous construction it is \strong{not} the block times the coefficients.
+\code{\link[=seg]{seg()}} and for a smoothed term it is \strong{not} the block times the
+coefficients.
 }
 \details{
 For \code{seg} the block is the Jacobian, so \eqn{X\beta} is the linearization
 and the two differ by whatever that drops: a step at the break-point, in a
-construction that is continuous. For \code{jump} the columns satisfy
-\eqn{X\beta = } the contribution exactly, the identity behind the read-off
-making them so, and the two agree to the last bit.
+construction that is continuous. The same holds for a smoothed term. For a
+sharp \code{jump} the columns satisfy \eqn{X\beta = } the contribution, the
+identity behind the read-off making them so, and the two agree to rounding
+error.
 
 With \code{newdata} the contribution is returned on those rows, at the
-break-points the term \strong{carries}. They are not re-derived from the new
-rows, exactly as \code{\link[=term_predict]{term_predict()}} reapplies rather than rebuilds.
+break-points that the term carries. They are not re-derived from the new
+rows, in the same way as \code{\link[=term_predict]{term_predict()}} reapplies a term and does not
+rebuild it.
 }
 \examples{
 set.seed(1)
@@ -44,7 +47,7 @@ d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0) + rnorm(120, sd = 0.4)
 b <- term_refresh(term_build(seg(x, npsi = 1), d), c(0.5, 2, 6))
 max(abs(as.numeric(term_matrix(b) \%*\% b@blueprint$coef) - term_value(b)))
 
-# jump: the columns reproduce the contribution exactly.
+# jump: the columns reproduce the contribution to rounding error.
 bj <- term_build(jump(x, npsi = 1), d)
 max(abs(as.numeric(term_matrix(bj) \%*\% bj@blueprint$coef) - term_value(bj)))
 

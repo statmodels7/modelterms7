@@ -16,7 +16,7 @@ term_level_design(term, ...)
 A numeric matrix with named columns, or \code{NULL}.
 }
 \description{
-Where the parameter \code{\link[=term_level_param]{term_level_param()}} names is developed
+Where the parameter that \code{\link[=term_level_param]{term_level_param()}} names is developed
 with covariates, the design of that development, with one column per
 coordinate named as \code{\link[=term_params]{term_params()}} names it. \code{NULL}
 for a scalar level and for every other term.
@@ -27,9 +27,9 @@ It exists for the subspace form of the confounding question.
 column is constant shifts the equation's predictor exactly as an
 intercept does. With the level developed, a direction of the
 development's span that also lies in the span of the equation's design
-raises the same question for that direction, and only a fitting layer,
-which holds both designs, can ask it. This generic hands it the one
-half it cannot see.
+raises the same question for that direction. Only a fitting layer, which
+holds both designs, can answer it, and this generic supplies the design of
+the development, which the layer cannot compute from the term alone.
 }
 \examples{
 is.null(term_level_design(linpar(~x)))

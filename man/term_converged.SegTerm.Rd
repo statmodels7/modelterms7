@@ -12,9 +12,10 @@
 A single logical.
 }
 \description{
-\code{\link[=seg_converged]{seg_converged()}}, so that a fitting layer reads the rule the
-construction is stopped on without knowing it is holding a break-point
-term. A term that has not been refreshed has not moved and reports
-\code{FALSE}, the first refresh being the one that measures nothing.
+Applies \code{\link[=seg_converged]{seg_converged()}} through the generic, so that a fitting layer can
+test the stopping rule of the iteration without inspecting the class of the
+term. A term that has not been refreshed has not moved and reports \code{FALSE},
+the first refresh being the one that measures nothing. A term held by
+\code{\link[=seg_hold]{seg_hold()}} reports \code{TRUE}, its positions being fixed.
 }
 \keyword{internal}

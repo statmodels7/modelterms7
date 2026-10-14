@@ -16,28 +16,29 @@
 }
 \value{
 A list with \code{eta}, \code{y} (\code{NULL}) and
-\code{latent}, a data frame of the drawn positions by group.
+\code{latent}, a data frame of the drawn positions with the columns \code{group},
+\code{psi} (the break-point) and \code{value}.
 }
 \description{
-One set of latent positions per group, drawn from the prior the term
-declares, and the predictor each observation gets from them.
+One set of latent positions per group, drawn from the prior that the term
+declares, and the predictor that each observation receives from them.
 }
 \details{
-The latent positions \strong{are} the model here, integrated out of the likelihood
-and never estimated, so simulating from the model means
-drawing them, once per group, and then evaluating the term at what was
-drawn. Under the gaussian prior that is \eqn{N(m_k, \tau_k)}; under an
-explicit prior it is a draw from that family with its location fixed at
-zero, shifted by \eqn{m_1}, which is the same convention the likelihood
-is written with.
+The latent positions are integrated out of the likelihood and never
+estimated, so simulating from the model consists of drawing them, once per
+group, and then evaluating the term at the drawn positions. Under the
+gaussian prior the draw is \eqn{N(m_k, \tau_k^2)}, where \eqn{m_k} is
+\code{psik.mean} and \eqn{\tau_k} is \code{psik.sd}. Under an explicit prior it is a
+draw from that family with its location fixed at zero, shifted by
+\code{psi1.mean}, which is the convention of the likelihood.
 
-The shift is the term's own construction read at the drawn positions: a
+The shift is the term's own construction evaluated at the drawn positions: a
 change of level at each break-point for the step kind, a change of slope
-for the continuous one, both for the joint one, and the linear term
+for the continuous kind, both for the joint kind, and the linear term
 beside them where the term carries it.
 
-The response is not drawn, the positions not reading it, so the
-caller draws at the returned predictor.
+The response is not drawn, because the positions do not depend on it, so
+the caller draws the response at the returned predictor.
 }
 \seealso{
 \code{\link[=term_simulate]{term_simulate()}}, \code{\link[=seg]{seg()}}

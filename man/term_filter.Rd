@@ -15,11 +15,15 @@ observation.}
 
 \item{y}{The response.}
 
-\item{score}{A function of the predictor returning the derivative of
-the log-likelihood with respect to it, one value per observation.}
+\item{score}{A function \verb{function(e, i)} of a predictor value \code{e} and an
+observation index \code{i}, returning the single value that drives the
+recursion at that observation: the derivative of the log-likelihood with
+respect to the predictor, multiplied by the information scaling when the
+\code{scaling} of \code{\link[=gas]{gas()}} is not zero.}
 
-\item{curvature}{A function of the predictor returning the second
-derivative of the log-likelihood with respect to it.}
+\item{curvature}{A function \verb{function(e, i)} returning the derivative of
+that driving value with respect to \code{e}, which is the second derivative of
+the log-likelihood when the scaling is zero.}
 
 \item{psi}{The term's parameters, on the parameter scale, named as
 \code{\link[=term_params]{term_params()}}.}
@@ -38,9 +42,12 @@ evaluating the callback again.
 \description{
 Runs the term's recursion over the data and returns the predictor it
 produces, together with the derivative of that predictor with respect
-to the term's own parameters. This is the operation that makes a
-structural term structural: the predictor at one observation depends on
-the others, so it cannot be written as a block of columns.
+to the term's own parameters. This is the operation that defines a
+filter-shaped structural term such as \code{\link[=gas]{gas()}}: the predictor at one
+observation depends on the others, so it cannot be written as a block of
+columns. The structural terms of the likelihood shape, \code{\link[=regime]{regime()}} and the
+marginal break-point term, have no filter and implement \code{\link[=term_loglik]{term_loglik()}}
+instead.
 }
 \details{
 Writing \eqn{\eta_t^{0}} for the static predictor supplied in \code{eta}
@@ -53,9 +60,15 @@ where \eqn{f_t} is the term's own recursion, driven by
 \code{score} and \code{curvature} evaluated at the predictor already
 produced. Both are read at \eqn{\eta_t}, so \code{curvature} is the second
 derivative \eqn{\partial^{2} \ell_t / \partial \eta^{2}} and is negative at
-an ordinary observation. \strong{Its sign is load-bearing}: passing the
-information, which is its negative, returns a predictor and a Jacobian
-that are internally consistent and wrong, with no error to say so.
+an ordinary observation. Its sign matters: the predictor does not depend
+on \code{curvature}, but the Jacobian does, so passing the information, which is
+the negative of the curvature, returns the correct predictor together with a
+Jacobian that is not its derivative, and no error is signaled.
+
+The filter applies no scaling of its own. The callbacks supplied are the
+driving sequence of the recursion, and a fitting layer that uses the
+\code{scaling} of \code{\link[=gas]{gas()}} builds callbacks that return the scaled score and its
+derivative.
 
 The derivative is returned because the recursion is the only place it can
 be computed. Propagating it beside the state costs one extra vector per
@@ -77,7 +90,8 @@ dim(out$jacobian)
 
 }
 \seealso{
-\code{\link[=gas]{gas()}} and \code{\link[=regime]{regime()}} for the two structural shapes,
+\code{\link[=gas]{gas()}} for the filter shape and \code{\link[=regime]{regime()}} for the likelihood
+shape,
 \code{\link[=term_static_deriv]{term_static_deriv()}} for the same recursion in the static predictor,
 \code{\link[=term_adjoint]{term_adjoint()}} for the reverse pass, \code{\link[=term_continue]{term_continue()}} for the
 recursion past the series.

@@ -26,14 +26,16 @@ the unconstrained scale, so that a caller holding their variance matrix
 can carry it across by the delta method.
 }
 \details{
-A term's parameters are the coordinates it is estimated on, chosen so
+A term's parameters are the coordinates on which it is estimated, chosen so
 that a search runs unconstrained, and they are not always the quantities
 the model is about. The clearest case is a score-driven persistence,
 which rides a partial autocorrelation because the stationary region is
-not a box: what the literature writes as \eqn{\beta_1} is the
-autoregressive coefficient, which is a function of the whole chart and
-coincides with it only at \eqn{q = 1}. Reporting the coordinate under the
-coefficient's name would promise one quantity and print another.
+not a box: the autoregressive coefficient \eqn{\xi_1} is a function of the
+whole chart and coincides with the coordinate only at \eqn{q = 1}.
+Reporting the coordinate under the coefficient's name would promise one
+quantity and print another. \code{\link[=gas]{gas()}} therefore reports \code{xi1}, ..., and
+\code{\link[=regime]{regime()}} reports the transition probabilities \code{p1.1}, \code{p1.2}, ... row by
+row.
 
 Each row gives a value and the row of \eqn{\partial(\text{value}) /
 \partial\zeta} at the current parameters, so a standard error is
@@ -42,8 +44,8 @@ the quantity in its own set, exactly as \pkg{parameters7}'s
 \code{param_readable()} does for a matrix parameter.
 
 The base method reports the parameters themselves on the parameter scale,
-with the diagonal Jacobian of their links. That is the right answer for
-every term whose coordinates are already its quantities.
+with the diagonal Jacobian of their links. That is appropriate for every
+term whose coordinates are already its quantities.
 }
 \examples{
 term_readable(gas(p = 1, q = 1), c(omega = 0.3, kappa1 = 0.4, pacf1 = 0.8))

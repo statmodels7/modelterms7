@@ -54,8 +54,9 @@ term's own hyperparameters, or \code{character(0)} for none. The terms
 carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
-\item{blueprint}{A named list of the resolved grouping and interval
-structure, empty until \code{\link[=term_build]{term_build()}} fills it.}
+\item{blueprint}{A named list recording the number of rows, the covariate,
+the rows of each group and the group labels, empty until \code{\link[=term_build]{term_build()}}
+fills it.}
 
 \item{kind}{One of \code{"jump"}, \code{"seg"} or \code{"jseg"}.}
 
@@ -65,7 +66,7 @@ structure, empty until \code{\link[=term_build]{term_build()}} fills it.}
 8 for \code{"jump"} and exactly 1 for the other two.}
 
 \item{linear}{Whether the term carries the linear effect as its own
-parameter, \code{TRUE} for \code{"seg"} and \code{"jseg"}.}
+parameter, \code{beta}. It is \code{FALSE} for \code{"jump"}.}
 
 \item{group}{The grouping expression, from the break-point's \code{random()}
 subformula.}
@@ -77,8 +78,8 @@ subformula.}
 }
 \value{
 An S7 object of class \code{MarginalBreakTerm}, inheriting from
-\code{\link[=structural_term]{structural_term()}} and \code{\link[=model_term]{model_term()}}, with the eight properties above
-beside \code{\link[=model_term]{model_term()}}'s six.
+\code{\link[=structural_term]{structural_term()}} and \code{\link[=model_term]{model_term()}}, with the properties listed above
+beside the inherited ones.
 }
 \description{
 The subclass of \code{\link[=structural_term]{structural_term()}} holding break-points that vary by group
@@ -91,35 +92,46 @@ Its contribution is a likelihood, not a predictor, so it implements
 itself. \code{\link[=term_penalties]{term_penalties()}} declares nothing, and the prior's parameters
 are estimated by plain maximum likelihood.
 }
-\section{The eight properties of its own}{
-\code{kind} is \code{"jump"}, \code{"seg"} or \code{"jseg"}; \code{var} the covariate expression;
-\code{npsi} the number of break-points per group; \code{linear} whether the term
-carries the linear effect as a parameter of its own, which \code{seg} and \code{jseg}
-do.
+\section{Properties}{
+The class defines the properties \code{kind}, \code{var}, \code{npsi}, \code{linear}, \code{group},
+\code{prior} and \code{spec}, and inherits the others from \code{\link[=structural_term]{structural_term()}} and
+\code{\link[=model_term]{model_term()}}, among them \code{blueprint}.
+
+\code{kind} is \code{"jump"}, \code{"seg"} or \code{"jseg"}; \code{var} is the covariate expression;
+\code{npsi} is the number of break-points per group; \code{linear} records whether
+the term carries the linear effect as a parameter of its own. It is \code{TRUE}
+for \code{\link[=seg]{seg()}} and \code{\link[=jseg]{jseg()}} unless \code{linear = FALSE} was given, and \code{FALSE} for
+\code{\link[=jump]{jump()}}.
 
 \code{group} is the grouping expression, taken from the break-point's \code{random()}
-subformula. \code{prior} is the latent's distribution: \code{NULL} for the Gaussian,
-or a \pkg{distributions7} object where \code{random(distrib = )} named one, and
-its location must be fixed at zero, \code{psi1.mean} carrying the position.
+subformula. \code{prior} is the distribution of the latent positions: \code{NULL} for
+the Gaussian, or a \pkg{distributions7} object where \code{random(distrib = )}
+names one. The location of that distribution must be fixed at zero, since
+\code{psi1.mean} carries the position.
 
-\code{spec} holds the resolved construction settings and \code{blueprint} the
-grouping and the interval structure \code{\link[=term_build]{term_build()}} worked out.
+\code{spec} holds the resolved construction settings. \code{blueprint} is inherited
+from \code{\link[=structural_term]{structural_term()}} and holds the grouping and the covariate that
+\code{\link[=term_build]{term_build()}} records.
 }
 
-\section{The parameters}{
-They are numbered, one set per break-point: \code{psi1.mean}, \code{psi1.sd},
-\code{delta1} for a one-break-point step term, with \code{psi1.mean} the mean of the
-positions in the population, \code{psi1.sd} their standard deviation between
-groups on a log chart, and \code{delta1} the change of level. A continuous kind adds \code{beta}
-for the linear effect and \code{gamma1} for the change of slope.
+\section{Parameters}{
+The parameters are numbered, one set per break-point. A step term with one
+break-point has \code{psi1.mean}, \code{psi1.sd} and \code{delta1}, where \code{psi1.mean} is
+the mean of the positions in the population, \code{psi1.sd} is their standard
+deviation between groups (estimated through a log link) and \code{delta1} is the
+change of level. A \code{\link[=seg]{seg()}} term has \code{beta} for the linear effect, \code{psi1.mean},
+\code{psi1.sd} and \code{gamma1} for the change of slope. A \code{\link[=jseg]{jseg()}} term has
+\code{beta}, \code{psi1.mean}, \code{psi1.sd}, \code{gamma1} and \code{delta1}.
 }
 
-\section{What it costs}{
-At most \strong{eight} break-points. The forward recursion of the step kind costs
-\eqn{n K 2^K} and stays cheap well past that; what does not is the fitting
-layer, which reads a posterior over the \eqn{2^K} side patterns and
-evaluates the family once per pattern. The continuous kinds stay at one
-break-point, a product quadrature over more being far dearer still.
+\section{Number of break-points}{
+A step term takes at most eight break-points per group. The forward
+recursion of the step kind costs \eqn{n K 2^K} operations for \eqn{n}
+observations and \eqn{K} break-points. The fitting layer reads a posterior
+over the \eqn{2^K} side patterns and evaluates the family once per pattern,
+and the number of patterns therefore limits \eqn{K}. The continuous kinds take one break-point, because
+a product quadrature over several would need a node set whose size grows as
+a power of their number.
 }
 
 \examples{
@@ -145,5 +157,5 @@ term_params(term_build(seg(x, psi ~ random(~ 1 | id), marginal = TRUE), dd))
 \seealso{
 \code{\link[=jump]{jump()}}, \code{\link[=seg]{seg()}} and \code{\link[=jseg]{jseg()}} for the constructors;
 \code{\link[=term_loglik]{term_loglik()}} for the likelihood; \code{\link[=term_latent]{term_latent()}} for the posterior
-positions a reader wants.
+positions.
 }

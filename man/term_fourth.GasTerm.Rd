@@ -14,7 +14,7 @@
 
 \item{psi}{The parameters on the parameter scale.}
 
-\item{g}{The weights the fourth derivative is contracted against.}
+\item{g}{The weights against which the fourth derivative is contracted.}
 
 \item{seed}{The derivative of the static predictor in the unknowns.}
 
@@ -41,15 +41,16 @@ contracted against the caller's weights and against two directions, and
 the lower orders' contractions beside it.
 }
 \details{
-The recursion carries five states -- \eqn{F_t}, \eqn{\Phi_t}, the two
+The recursion carries five states, \eqn{F_t}, \eqn{\Phi_t}, the two
 third derivatives \eqn{\Psi^{(v)}_t} and \eqn{\Psi^{(w)}_t}, and
-\eqn{\Omega_t} -- and each of the recursion's products is differentiated
+\eqn{\Omega_t}, and each of the recursion's products is differentiated
 by \code{\link[=.gas_prod4]{.gas_prod4()}}, the sixteen-term rule written once. The
 persistence's own fourth derivative comes from \code{\link[=gas_levinson4]{gas_levinson4()}}
 through \code{\link[=.gas_chart_derivs4]{.gas_chart_derivs4()}}, and the starting level's is read off
 the fixed point \eqn{f_0 = \omega + Sf_0}.
 
-Both third derivatives are needed and not one: the product rule at this
-order pairs each direction's third derivative with the other direction.
+Both third derivatives are carried, because the product rule at this
+order pairs the third derivative along each direction with the other
+direction.
 }
 \keyword{internal}

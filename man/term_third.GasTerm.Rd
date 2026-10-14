@@ -14,7 +14,7 @@
 
 \item{psi}{The parameters on the parameter scale.}
 
-\item{g}{The weights the third derivative is contracted against.}
+\item{g}{The weights against which the third derivative is contracted.}
 
 \item{seed}{The derivative of the static predictor in the unknowns.}
 
@@ -44,8 +44,9 @@ The recursion gains one state, \eqn{\Psi_t = \partial^3f_t/\partial u^3[v]},
 seeded by the third derivative of the score in the same way \eqn{\Phi} is
 seeded by its second. Everything else it needs, meaning the directional
 derivatives of \eqn{F}, \eqn{\Phi}, \eqn{\dot S} and \eqn{\ddot S}, is a
-contraction of a quantity the second-order recursion already carries, so
-no second recursion is run and no three-index array is formed.
+contraction of a quantity that the second-order recursion already
+carries. The third order therefore needs no second recursion and forms no
+three-index array.
 
 The chart contributes its own third derivatives: the level and the
 loadings through their scalar links, the persistence through

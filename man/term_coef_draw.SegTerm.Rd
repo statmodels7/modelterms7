@@ -2,9 +2,9 @@
 % Please edit documentation in R/segmented.R
 \name{term_coef_draw.SegTerm}
 \alias{term_coef_draw.SegTerm}
-\title{A Break-Point Term's Own Coefficients, Drawn}
+\title{Drawing the Coefficients of a Break-Point Term}
 \arguments{
-\item{term}{A built \code{\link[=SegTerm]{SegTerm()}}. An unbuilt one throws
+\item{term}{A built \code{\link[=SegTerm]{SegTerm()}}. An unbuilt one signals the error
 \code{"the term has not been built; call term_build(term, data) first."}.}
 
 \item{coef}{The coefficients drawn so far, one per column of the block.}
@@ -16,37 +16,42 @@
 \value{
 A list with \code{coef}, \code{index} and \code{scale}, as \code{\link[=term_coef_draw]{term_coef_draw()}}
 documents. \code{index} is every coordinate of every break-point and \code{scale}
-the width each was drawn at, carrying the change of level as a factor
-where the construction reads its position off one.
+the width at which each was drawn, carrying the change of level as a factor
+where the construction reads its position off one. For a held term
+\code{coef} is the argument unchanged, and \code{index} and \code{scale} are empty.
 }
 \description{
 The break-points drawn on the covariate's own axis and written back
 through whichever route the construction reads them by, with every other
-coefficient left as it arrived.
+coefficient left as it arrived. A term held by \code{\link[=seg_hold]{seg_hold()}} draws nothing:
+the coefficients are returned unchanged, with an empty \code{index} and an
+empty \code{scale}, the positions being held.
 }
 \details{
-A break-point is a position on the covariate and nothing else in the model
-is measured in those units, so it is the one coefficient here a caller
-cannot draw. The positions are the covariate's own interior quantiles plus
-a normal of the width \code{\link[=term_coef_draw]{term_coef_draw()}} derives, confined to the interval
-between the 5th and the 95th percentile.
+A break-point is a position on the covariate and is the only coefficient
+of the term measured in those units, so a draw from a standard normal does
+not apply to it. The positions are the covariate's own interior quantiles
+plus a normal of the width that \code{\link[=term_coef_draw]{term_coef_draw()}} derives, confined to the
+interval between the 5th and the 95th percentile.
 
-Those quantiles and not the positions the term is carrying: they are where
-\code{\link[=term_build]{term_build()}} places a break-point nobody named, and they depend on the
-covariate alone. A term handed over by a caller may sit somewhere else --
-a simulation builds its specification against a placeholder response, and
-a break-point chosen on a least-squares profile of noise lands against a
-confinement limit as readily as anywhere -- and a draw spreading from
-there would inherit that.
+The draw spreads from these quantiles and not from the positions that the
+term currently holds. The quantiles are where \code{\link[=term_build]{term_build()}} places a
+break-point that has not been named, and they depend on the covariate
+alone. A term handed over by a caller may hold positions chosen elsewhere:
+a simulation builds its specification against a placeholder response, and a
+break-point chosen on a least-squares profile of noise lands against a
+confinement limit as readily as anywhere, so a draw spreading from there
+would inherit that position.
 
 A continuous or smoothed construction holds the position, so it is written
-where it stands. A discontinuous one reads it off \eqn{-g_k/\delta_k}, so
-what is written is \eqn{-\delta_k \psi_k} at the change of level the rest
-of the draw carries, which is \code{\link[=seg_relocate]{seg_relocate()}}'s rule and is exact for a
+where it stands. A sharp discontinuous one reads it off
+\eqn{-g_k/\delta_k}, so what is written is \eqn{-\delta_k \psi_k}, with
+\eqn{\delta_k} taken from the rest of the draw, which is the rule of
+\code{\link[=seg_relocate]{seg_relocate()}} and is exact for a
 pure step, its read-off being memoryless. The joint construction reads a
 quadratic that also carries the change of slope and the increment left by
 the previous position, so there the placement is the linear reading of it
-and the realized position is near the drawn one rather than equal to it.
+and the realized position is near the drawn one and not equal to it.
 
 Where the break-point carries a development, the drawn positions are
 projected onto that development's design, and the draw is made on its

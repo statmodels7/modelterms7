@@ -13,7 +13,10 @@ term_level_param(term, ...)
 \item{...}{Passed to methods.}
 }
 \value{
-A single string, or \code{character(0)}.
+A character vector: \code{character(0)} for a term that shifts nothing
+by a constant, \code{"level1"} for a regime, \code{"omega"} for an undeveloped
+\code{\link[=gas]{gas()}} level, and otherwise the names of the level's coordinates whose
+design column is constant.
 }
 \description{
 The name of the parameter, if any, that shifts the term's contribution by
@@ -22,23 +25,27 @@ equation the term sits in.
 }
 \details{
 It exists so that a fitting layer can resolve the confounding instead of
-refusing the model. A score-driven level \eqn{\omega} and a regime's first
+rejecting the model. A score-driven level \eqn{\omega} and a regime's first
 level both add a constant to their equation's predictor: with an
 intercept there too, adding \eqn{c} to one and subtracting the matching
 amount from the other leaves every predictor unchanged, and the
-likelihood is flat along that direction. Which of the two is dropped is
-the layer's decision and not the term's, since only the layer knows what
-else the equation carries.
+likelihood is flat along that direction. The layer decides which of the two
+is dropped, because only the layer has the full list of terms in the
+equation.
 
 The base method returns \code{character(0)}, meaning the term shifts
-nothing by a constant and no such question arises.
+nothing by a constant and no such question arises. The method for \code{\link[=regime]{regime()}}
+returns \code{"level1"}. The method for \code{\link[=gas]{gas()}} returns \code{"omega"} when the level
+is not developed and otherwise every coordinate of the development whose
+design column is constant, which can be more than one.
 }
 \examples{
 term_level_param(gas(p = 1, q = 1))
+term_level_param(regime(k = 2))
 term_level_param(linpar(~x))
 
 }
 \seealso{
 \code{\link[=term_level_design]{term_level_design()}} for the same question with the level
-developed, \code{\link[=term_params]{term_params()}} for the names it answers among.
+developed, \code{\link[=term_params]{term_params()}} for the names from which the answer is taken.
 }

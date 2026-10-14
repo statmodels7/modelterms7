@@ -9,8 +9,8 @@ seg_profile_intervals(term, y, k = 1L, weights = NULL)
 \arguments{
 \item{term}{A built break-point term (see \code{\link[=term_build]{term_build()}}).}
 
-\item{y}{A numeric vector, one value per observation of the build data:
-the response, net of whatever the caller wants held.}
+\item{y}{A numeric vector of finite values, one per observation of the
+build data: the response, net of whatever the caller wants held.}
 
 \item{k}{Which break-point, an integer.}
 
@@ -19,17 +19,20 @@ profile is then weighted least squares.}
 }
 \value{
 A data frame with columns \code{psi}, the position in each interval,
-and \code{rss}, the profile there (\code{Inf} where the design is singular).
+and \code{rss}, the profile there (\code{Inf} where the design is singular). The
+data frame has no rows when no interval lies inside the confinement
+limits.
 }
 \description{
-The least-squares profile of a sharp \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} term in
-one of its break-points, the others held where they are: the residual sum
-of squares in every interval between consecutive distinct values of the
-covariate inside the confinement limits, at the midpoint for a change of
-level and at the minimizing position for a change of slope. It is the quantity
-\code{\link[=seg_polish_exact]{seg_polish_exact()}} minimizes, returned whole so that a caller whose
-objective the profile only approximates can take several candidates from
-it.
+Returns the least-squares profile of a sharp \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}}
+term in one of its break-points, the others held at their current
+positions. The profile is the residual sum of squares in every interval
+between consecutive distinct values of the covariate inside the confinement
+limits, evaluated at the midpoint of the interval for a \code{\link[=jump]{jump()}} or a
+\code{\link[=jseg]{jseg()}} and at the minimizing position inside the interval for a \code{\link[=seg]{seg()}}.
+This is the quantity that \code{\link[=seg_polish_exact]{seg_polish_exact()}} minimizes. It is returned
+whole so that a caller whose objective the profile only approximates can
+take several candidates from it.
 }
 \examples{
 set.seed(1)

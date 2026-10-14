@@ -23,10 +23,10 @@ and contracted against a single direction, one matrix per coefficient.
 The exact gradient of a marginal criterion over a penalty on this term's
 own parameters needs the third derivative of the predictor, and the
 persistence reaches the predictor through this map. It is needed only
-contracted: the criterion asks for \eqn{\mathrm{tr}(M\,\partial K/\partial
-u[v])}, a derivative along the single direction the penalized mode moves
-in, so what is propagated is a matrix per coefficient and never a
-three-index array.
+contracted: the criterion needs \eqn{\mathrm{tr}(M\,\partial K/\partial
+u[v])}, a derivative along the single direction in which the penalized
+mode moves, so that a matrix per coefficient is propagated and no
+three-index array is formed.
 
 Differentiating the hessian recursion of \code{\link[=gas_levinson2]{gas_levinson2()}} once
 more along \eqn{w} adds no new kind of term, the map being bilinear:
@@ -37,12 +37,12 @@ more along \eqn{w} adds no new kind of term, the map being bilinear:
 and the last coefficient's third derivative is zero at every order, it
 being \eqn{\rho_k} itself.
 
-The map is multilinear of degree \eqn{k} in the first \eqn{k} partial
-autocorrelations, so the result is identically zero for \eqn{q \le 2}:
-at \eqn{q = 2} the only non-trivial coefficient is
-\eqn{\xi_1 = \rho_1(1-\rho_2)}, which is bilinear. A check of this
-function that stops at \eqn{q = 2} compares zero with zero and asserts
-nothing.
+Each coefficient \eqn{\xi^{(k)}_i} is a polynomial of degree at most
+\eqn{k} in the first \eqn{k} partial autocorrelations, multilinear in
+them, so the result is identically zero for \eqn{q \le 2}: at
+\eqn{q = 2} the only non-trivial coefficient is
+\eqn{\xi_1 = \rho_1(1-\rho_2)}, which is bilinear. A comparison with a
+reference therefore needs \eqn{q \ge 3}.
 }
 \seealso{
 \code{\link[=gas_levinson2]{gas_levinson2()}}

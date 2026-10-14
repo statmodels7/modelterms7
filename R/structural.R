@@ -4,40 +4,44 @@ NULL
 #' @title Parameters of a Structural Term
 #'
 #' @description
-#' The names of a structural term's own parameters, in the order its filter
-#' and its derivative recursions expect them. A structural term contributes no
-#' design block, so these are not coefficients: they are estimated beside the
+#' The names of a structural term's own parameters, in the order that its
+#' filter, its likelihood and their derivatives expect. A structural term
+#' contributes no design block, so these are not coefficients: they are
+#' estimated beside the
 #' distribution's, on the unconstrained scale [term_links()] defines, and
 #' [term_npar()] counts them.
 #'
 #' @details
-#' The names are the term's own vocabulary. [gas()] answers `omega` for the
+#' The names are the term's own vocabulary. [gas()] gives `omega` for the
 #' level, `kappa1` ... `kappap` for the score loadings and `pacf1` ... `pacfq`
-#' for the persistence; [regime()] answers its levels and the free entries of
-#' its transition matrix. They are what indexes everything else about the
-#' term: [term_start()] returns one value per name, [term_readable()] carries
-#' them onto the quantities a reader reads, and a [term_penalties()] entry's
-#' `index` gives positions in this vector.
+#' for the persistence. [regime()] gives `level1`, the gaps `gap2` ...
+#' `gapk` between consecutive levels, and the free entries `alr*.*` of its
+#' transition matrix. A marginal break-point term gives the names listed in
+#' [MarginalBreakTerm()]. The names index everything else about the
+#' term: [term_start()] returns one value per name, [term_readable()] maps
+#' them onto the quantities a reader reads, and the `index` of a
+#' [term_penalties()] entry gives positions in this vector.
 #'
-#' A **subformula** expands the parameter it develops in place, so
+#' A **subformula** expands in place the parameter that it develops, so
 #' `gas(p = 1, q = 1)` has three parameters and
 #' `gas(p = 1, q = 1, omega ~ z)` has four: `omega.(Intercept)` and `omega.z`
 #' where the level was.
 #'
-#' The method on [structural_term()] throws, naming the class: a structural
-#' class supplies this itself.
+#' The method on [structural_term()] signals an error that names the class.
+#' A structural class supplies its own method.
 #'
 #' @param term An object inheriting from [structural_term()]. A class that
-#'   does not implement the generic throws
+#'   does not implement the generic signals the error
 #'   `"the term class 'X' does not implement term_params()."`.
 #' @param ... Passed to methods. No shipped method reads anything here.
 #'
 #' @return A character vector, one name per parameter, of length
 #'   [term_npar()].
 #'
-#' @seealso [term_links()] for the chart each rides, [term_start()] for where
-#'   they begin, [term_readable()] for the quantities they map to,
-#'   [term_coef_names()] for the additive branch's equivalent.
+#' @seealso [term_links()] for the chart on which each parameter is carried,
+#'   [term_start()] for where the parameters begin, [term_readable()] for the
+#'   quantities to which they map, [term_coef_names()] for the additive
+#'   branch's equivalent.
 #'
 #' @examples
 #' # The score-driven vocabulary: a level, a loading, a persistence.
@@ -71,10 +75,13 @@ term_params <- S7::new_generic("term_params", "term",
 #' admissible. [gas()] puts its level on the identity, its score loadings on
 #' the **log** so a loading stays positive, and its persistence coordinates on
 #' the **rhobit** so each partial autocorrelation stays inside \eqn{(-1, 1)}
-#' and the filter stays stationary. The `links` argument of a constructor
-#' overrides them per parameter.
+#' and the filter stays stationary. [regime()] puts its first level and the
+#' free entries of its transition matrix on the identity and the gaps between
+#' levels on the log, so the levels are ordered by construction. The `links`
+#' argument of [gas()] overrides the links per parameter.
 #'
-#' The persistence is the case worth understanding. The stationary region in
+#' The persistence uses a different kind of chart from the other parameters.
+#' The stationary region in
 #' the autoregressive coefficients is not a box, so no collection of scalar
 #' links covers it; the partial autocorrelations are each in \eqn{(-1, 1)}
 #' independently, and Levinson-Durbin carries them onto the coefficients.
@@ -86,10 +93,10 @@ term_params <- S7::new_generic("term_params", "term",
 #' stays admissible at every observation and the coefficients \eqn{\gamma_j}
 #' are unconstrained.
 #'
-#' The method on [structural_term()] throws, naming the class.
+#' The method on [structural_term()] signals an error that names the class.
 #'
 #' @param term An object inheriting from [structural_term()]. A class that
-#'   does not implement the generic throws
+#'   does not implement the generic signals the error
 #'   `"the term class 'X' does not implement term_links()."`.
 #' @param ... Passed to methods. No shipped method reads anything here.
 #'
@@ -97,8 +104,8 @@ term_params <- S7::new_generic("term_params", "term",
 #'   [term_params()] and named by it.
 #'
 #' @seealso [term_params()] for the names, [term_start()] for the point on
-#'   this scale a fit begins at, [term_readable()] for the quantities the
-#'   coordinates map to.
+#'   this scale at which a fit begins, [term_readable()] for the quantities
+#'   to which the coordinates map.
 #'
 #' @examples
 #' # Identity for the level, log for the loading, rhobit for the persistence.
@@ -129,21 +136,29 @@ term_links <- S7::new_generic("term_links", "term",
 #' layer reads it to begin a search.
 #'
 #' @details
-#' The start belongs to the term because only the term knows what a coordinate
-#' of zero means on each of its charts. The base method returns zero
-#' everywhere, which is each link's own natural point, and that is right
-#' wherever zero means "the model without this term".
+#' The start is supplied by the term because the meaning of a coordinate of
+#' zero depends on the chart that the term uses for each parameter. The base
+#' method returns zero everywhere, which is each link's own natural point, and
+#' that is appropriate wherever zero means "the model without this term".
 #'
-#' It does not always. [gas()] overrides it: its score loadings ride a log
-#' chart, so a coordinate of zero is a loading of **one**, which is a strongly
-#' driven filter and a poor place to begin. It starts them at 0.1 through the
-#' chart, \eqn{\log 0.1 = -2.303}, and leaves every other coordinate at zero.
+#' Zero does not always have that meaning. [gas()] overrides the base method:
+#' its score loadings ride a log chart, so a coordinate of zero is a loading of
+#' **one**, which is a strongly driven filter and a poor place to begin. The
+#' method places each loading at 0.1 through the chart, \eqn{\log 0.1 = -2.303},
+#' and leaves every other coordinate at zero. When a loading is developed by a
+#' subformula, the constant start is projected onto the design of the
+#' development.
 #'
-#' A term that needs the data to place its start, as a marginal break-point
-#' term does, computes it at [term_build()] and returns it from here.
+#' A term that needs the response to place its start reads it from `target`,
+#' which reaches the method through the dots. [regime()] places its levels at
+#' quantiles of `target`, and a marginal break-point term computes the profile
+#' of its break-points from `target` and otherwise uses quantiles of the
+#' covariate. Both are computed when the generic is called.
 #'
 #' @param term A built structural term.
-#' @param ... Passed to methods. No shipped method reads anything here.
+#' @param ... Passed to methods. The methods for [regime()] and for a marginal
+#'   break-point term read `target` here, the response on the scale of the
+#'   predictor.
 #'
 #' @return A named numeric vector on the unconstrained scale, of length
 #'   [term_npar()] and named as [term_params()].
@@ -180,45 +195,42 @@ S7::method(term_start, structural_term) <- function(term, ...) {
 #' unconstrained scale [term_links()] defines.
 #'
 #' @details
-#' Simulating from a model that carries state means choosing values for the
-#' term's own parameters, and in quantity they cannot be chosen by hand: a
-#' score-driven filter whose level is developed over a hundred groups carries
-#' a hundred and one of them, and a caller made to name each one names none
-#' and simulates a model with no dynamics and no heterogeneity at all.
+#' Simulating from a model that carries state requires values for the term's
+#' own parameters. A score-driven filter whose level is developed over a
+#' hundred groups has a hundred level coordinates in addition to its loading
+#' and persistence coordinates, and choosing each of them by hand is
+#' impractical.
 #'
-#' The rule is the start plus noise, and the start rather than zero because
-#' the term already knows where the sensible region of its own charts is. A
-#' score loading rides a log chart, so zero there is a loading of one and a
-#' filter strong enough to destabilize its own recursion; [term_start()]
-#' places it at 0.1 and the draw spreads from that. A constraint a chart
-#' carries is then respected for free: [regime()] writes its levels as a
-#' first level and positive gaps, so any draw on the unconstrained scale is
-#' ordered by construction, and a persistence on a partial-autocorrelation
-#' chart is stationary at any coordinate whatever.
+#' The rule is the start plus noise. The start is used instead of zero because
+#' it lies in the region of the term's own charts where the term is well
+#' behaved. A score loading rides a log chart, so zero there is a loading of
+#' one and a filter strong enough to destabilize its own recursion;
+#' [term_start()] places it at 0.1 and the draw spreads from that. A
+#' constraint that a chart carries is respected by every draw: [regime()]
+#' writes its levels as a first level and positive gaps, so any draw on the
+#' unconstrained scale is ordered by construction, and a persistence on a
+#' partial-autocorrelation chart is stationary at any coordinate.
 #'
 #' # The width
 #'
-#' Half of `sd`, and the half is measured rather than chosen. Sixty draws per
-#' family of a `gas(1, 1)` over sixty times, at widths 0.3, 0.5 and 1: at a
-#' width of 1 two Poisson series of sixty are not finite and the level of
-#' another spans 859, where at 0.5 none of a hundred and eighty fails and the
-#' widest level spans 2.04. Read on the charts the same number is a
-#' persistence between -0.27 and 0.88 at the fifth and ninety-fifth
-#' percentiles, against -0.80 to 0.98 at a width of 1, which is the whole
-#' stationary region and describes noise rather than a random effect.
+#' The standard deviation of the draw is `sd / 2`. At the full width of `sd`
+#' a score-driven filter with a Poisson response can produce non-finite
+#' series, and a persistence on the partial-autocorrelation chart covers
+#' nearly the whole stationary region, which describes noise and not a random
+#' effect.
 #'
-#' # Coordinates a penalty covers
+#' # Coordinates covered by a penalty
 #'
-#' They are drawn here too, and a caller that can see the penalty is expected
-#' to overwrite them. What a development's deviation is drawn from is the
-#' prior its sub-term declares -- a Gaussian random effect, a Laplace one --
-#' and this method cannot see it: the prior's own scale is a hyperparameter
-#' and choosing one is the caller's business. [term_penalties()] says which
-#' coordinates those are, and \pkg{penalties7}'s `penalty_draw()` draws them.
+#' These coordinates are drawn as well, and a caller that has access to the
+#' penalty is expected to overwrite them. The deviation of a development
+#' follows the prior that its sub-term declares (a Gaussian random effect or a
+#' Laplace one). This method does not receive that prior, because its scale is
+#' a hyperparameter that the caller chooses. [term_penalties()] identifies
+#' those coordinates, and \pkg{penalties7}'s `penalty_draw()` draws them.
 #'
 #' @param term A built structural term.
-#' @param sd The width of the draw, `1` by default, halved before it is
-#'   applied for the reason measured above.
+#' @param sd The width of the draw, `1` by default. The standard deviation
+#'   applied is `sd / 2`, for the reason given in the details.
 #' @param ... Passed to methods. No shipped method reads anything here.
 #'
 #' @return A named numeric vector on the unconstrained scale, of length
@@ -270,10 +282,14 @@ S7::method(term_draw, structural_term) <- function(term, sd = 1, ...) {
 #' layer fits from each and keeps the best.
 #'
 #' @details
-#' The base method returns one start, [term_start()]'s, so a term that says
-#' nothing is fitted once, as before. [regime()] returns `n_start` of them:
-#' its likelihood has several maxima and the term can say which region of
-#' its parameters is worth covering.
+#' The base method returns the single start that [term_start()] gives, so a
+#' term without a method of its own is fitted once. [regime()] returns
+#' `n_start` starts, because its likelihood has several maxima and the starts
+#' cover different regions of its parameters. In each start after the first,
+#' the free entries of the transition matrix are drawn from a normal
+#' distribution of standard deviation 2 and normal draws of standard deviation
+#' 0.7 are added to the log gaps. The seed of the start is fixed, and the state
+#' of the random number generator of the caller is restored.
 #'
 #' The first element is always [term_start()]'s, so a fit with one start is
 #' the fit without this generic.
@@ -311,9 +327,12 @@ S7::method(term_starts, structural_term) <- function(term, ...,
 #' @description
 #' Runs the term's recursion over the data and returns the predictor it
 #' produces, together with the derivative of that predictor with respect
-#' to the term's own parameters. This is the operation that makes a
-#' structural term structural: the predictor at one observation depends on
-#' the others, so it cannot be written as a block of columns.
+#' to the term's own parameters. This is the operation that defines a
+#' filter-shaped structural term such as [gas()]: the predictor at one
+#' observation depends on the others, so it cannot be written as a block of
+#' columns. The structural terms of the likelihood shape, [regime()] and the
+#' marginal break-point term, have no filter and implement [term_loglik()]
+#' instead.
 #'
 #' @details
 #' Writing \eqn{\eta_t^{0}} for the static predictor supplied in `eta`
@@ -326,9 +345,15 @@ S7::method(term_starts, structural_term) <- function(term, ...,
 #' `score` and `curvature` evaluated at the predictor already
 #' produced. Both are read at \eqn{\eta_t}, so `curvature` is the second
 #' derivative \eqn{\partial^{2} \ell_t / \partial \eta^{2}} and is negative at
-#' an ordinary observation. **Its sign is load-bearing**: passing the
-#' information, which is its negative, returns a predictor and a Jacobian
-#' that are internally consistent and wrong, with no error to say so.
+#' an ordinary observation. Its sign matters: the predictor does not depend
+#' on `curvature`, but the Jacobian does, so passing the information, which is
+#' the negative of the curvature, returns the correct predictor together with a
+#' Jacobian that is not its derivative, and no error is signaled.
+#'
+#' The filter applies no scaling of its own. The callbacks supplied are the
+#' driving sequence of the recursion, and a fitting layer that uses the
+#' `scaling` of [gas()] builds callbacks that return the scaled score and its
+#' derivative.
 #'
 #' The derivative is returned because the recursion is the only place it can
 #' be computed. Propagating it beside the state costs one extra vector per
@@ -339,10 +364,14 @@ S7::method(term_starts, structural_term) <- function(term, ...,
 #' @param eta The static part of the linear predictor, one value per
 #'   observation.
 #' @param y The response.
-#' @param score A function of the predictor returning the derivative of
-#'   the log-likelihood with respect to it, one value per observation.
-#' @param curvature A function of the predictor returning the second
-#'   derivative of the log-likelihood with respect to it.
+#' @param score A function `function(e, i)` of a predictor value `e` and an
+#'   observation index `i`, returning the single value that drives the
+#'   recursion at that observation: the derivative of the log-likelihood with
+#'   respect to the predictor, multiplied by the information scaling when the
+#'   `scaling` of [gas()] is not zero.
+#' @param curvature A function `function(e, i)` returning the derivative of
+#'   that driving value with respect to `e`, which is the second derivative of
+#'   the log-likelihood when the scaling is zero.
 #' @param psi The term's parameters, on the parameter scale, named as
 #'   [term_params()].
 #' @param ... Passed to methods.
@@ -368,7 +397,8 @@ S7::method(term_starts, structural_term) <- function(term, ...,
 #' head(out$eta, 3)
 #' dim(out$jacobian)
 #'
-#' @seealso [gas()] and [regime()] for the two structural shapes,
+#' @seealso [gas()] for the filter shape and [regime()] for the likelihood
+#'   shape,
 #'   [term_static_deriv()] for the same recursion in the static predictor,
 #'   [term_adjoint()] for the reverse pass, [term_continue()] for the
 #'   recursion past the series.
@@ -385,23 +415,24 @@ term_filter <- S7::new_generic("term_filter", "term",
 #' direction the caller supplies.
 #'
 #' @details
-#' A score-driven term's level is driven by scores read AT the predictor the
-#' recursion is producing, so a coefficient in the same equation reaches the
-#' level as well as the static part: writing \eqn{f_t} for the level and
+#' A score-driven term's level is driven by scores read at the predictor that
+#' the recursion is producing, so a coefficient in the same equation reaches
+#' the level as well as the static part: writing \eqn{f_t} for the level and
 #' \eqn{x_t} for a row of the design,
 #' \deqn{\frac{\partial \eta_t}{\partial \beta} = x_t +
 #'   \frac{\partial f_t}{\partial \beta},}
-#' and the second piece obeys the recursion the filter already runs,
+#' and the second piece obeys the recursion that the filter already runs,
 #' \deqn{\frac{\partial f_t}{\partial \beta} =
-#'   \sum_i \alpha_i \, \ell''_{t-i}
+#'   \sum_i \kappa_i \, \ell''_{t-i}
 #'     \frac{\partial \eta_{t-i}}{\partial \beta} +
-#'   \sum_j \beta_j \frac{\partial f_{t-j}}{\partial \beta}.}
-#' The curvature it needs is the one [term_filter()] returns, so
-#' no callback is evaluated here and the pass is arithmetic alone.
+#'   \sum_j \xi_j \frac{\partial f_{t-j}}{\partial \beta},}
+#' with \eqn{\kappa_i} the score loadings, \eqn{\xi_j} the autoregressive
+#' coefficients and \eqn{\ell''_t} the curvature. The curvature is the one
+#' that [term_filter()] returns, so no callback is evaluated here and the pass
+#' is arithmetic alone.
 #'
-#' Without it a standard error of the predictor counts the static part only.
-#' Measured on a score-driven mean with one covariate beside it, that
-#' understates the standard error by about a quarter.
+#' Without this derivative, the standard error of the predictor accounts for
+#' the static part only and leaves out the part that runs through the filter.
 #'
 #' The base method returns `NULL`. A term that is not a filter carries no
 #' state, so the derivative is the design row itself and the caller needs
@@ -417,9 +448,10 @@ term_filter <- S7::new_generic("term_filter", "term",
 #'   [term_params()].
 #' @param ... Passed to methods.
 #'
-#' @return A matrix of `X`'s dimensions, holding \eqn{\partial f_t/\partial
-#'   \beta} for each column of `X`, so the full derivative of the predictor
-#'   is `X + result`. `NULL` for a term that carries no state.
+#' @return A matrix of `X`'s dimensions, holding the full derivative
+#'   \eqn{\partial \eta_t/\partial \beta = x_t + \partial f_t/\partial \beta}
+#'   for each column of `X`, so that the design is already included. `NULL` for
+#'   a term that carries no state.
 #'
 #' @examples
 #' set.seed(1)
@@ -451,8 +483,14 @@ term_static_deriv <- S7::new_generic("term_static_deriv", "term",
 #' conditional mean, the score itself for a score-driven term, so beyond the
 #' data the recursion is deterministic.
 #'
-#' The base method signals an error. A term with state that cannot say what
-#' its state does next has nothing to offer a prediction, and returning zero
+#' Among the shipped classes, [gas()] implements the generic. Its method needs
+#' `time`, rejects rows that fall inside the observed series and rows of a
+#' group that the sample does not contain, and counts a gap between two times
+#' as one step. A lag that falls before the observed series takes the starting
+#' level of the recursion.
+#'
+#' The base method signals an error. A term with state whose next value is
+#' undefined cannot give a prediction past the series, and returning zero
 #' there would read as a term with no effect at all.
 #'
 #' @param term A built structural term.
@@ -488,20 +526,22 @@ term_continue <- S7::new_generic("term_continue", "term",
 #' term drew on the way.
 #'
 #' @details
-#' Simulating from a model that carries state is not the same operation as
-#' fitting one, and the difference is which direction the response moves in.
-#' A term whose contribution does not read the response can report that
-#' contribution and leave the drawing to the caller: a latent chain's levels
-#' and a group's break-point drawn from its prior are both like that. A
-#' score-driven term cannot. Its level at one time is driven by the score of
-#' the response at the time before, so the response has to be drawn AS the
-#' recursion runs.
+#' Simulating from a model that carries state differs from fitting one in the
+#' direction in which the response moves. A term whose contribution does not
+#' read the response can report that contribution and leave the drawing to the
+#' caller: the levels of a latent chain ([regime()]) and the break-point of a
+#' group drawn from its prior (a marginal break-point term) are both of this
+#' kind. A score-driven term cannot do so. Its level at one time is driven by
+#' the score of the response at the time before, so the response has to be
+#' drawn as the recursion runs.
 #'
-#' One contract covers both. The caller supplies `draw`, a function of
-#' a predictor and a row index returning one response value, and the method
-#' returns the predictor it produced; a method that drew returns the
-#' responses as well and one that did not returns `NULL` there, leaving
-#' the caller to draw at the predictor.
+#' The same calling convention covers both. The caller supplies `draw`, a
+#' function of a predictor and a row index returning one response value, and
+#' the method returns the predictor it produced. A method that drew returns
+#' the responses as well, and a method that did not returns `NULL` there,
+#' leaving the caller to draw at the predictor. [regime()] draws one chain per
+#' group, in time order and started from the stationary distribution, and
+#' returns the state of each row as `latent`.
 #'
 #' @param term A built structural term.
 #' @param psi The term's parameters, named as [term_params()].
@@ -528,7 +568,7 @@ term_simulate <- S7::new_generic("term_simulate", "term",
   function(term, psi, eta, draw, ...) S7::S7_dispatch())
 
 #' @name term_simulate.model_term
-#' @title A Term Without State Draws Nothing
+#' @title Base Method of term_simulate()
 #' @description
 #' The base method signals an error: an ordinary term contributes its block
 #' times its coefficients and has nothing of its own to draw.
@@ -539,12 +579,12 @@ term_simulate <- S7::new_generic("term_simulate", "term",
 #' @seealso [term_simulate()]
 #' @keywords internal
 S7::method(term_simulate, model_term) <- function(term, psi, eta, draw, ...) {
-  stop(sprintf("'%s' does not say how a response is drawn from it.",
+  stop(sprintf("'%s' does not implement term_simulate().",
                class(term)[[1L]]), call. = FALSE)
 }
 
 #' @name term_continue.model_term
-#' @title A Term Without State Is Not Continued
+#' @title Base Method of term_continue()
 #' @description
 #' The base method signals an error.
 #' @param term A term.
@@ -555,12 +595,12 @@ S7::method(term_simulate, model_term) <- function(term, psi, eta, draw, ...) {
 #' @keywords internal
 S7::method(term_continue, model_term) <- function(term, psi, f_past, s_past,
                                                   newdata, ...) {
-  stop(sprintf("'%s' does not say how its contribution continues past the series.",
+  stop(sprintf("'%s' defines no rule by which its contribution continues past the series.",
                class(term)[[1L]]), call. = FALSE)
 }
 
 #' @name term_static_deriv.model_term
-#' @title No State, No Propagation
+#' @title Base Method of term_static_deriv()
 #' @description
 #' The base method returns `NULL`: an ordinary term's contribution at
 #' one observation reads that observation alone.
@@ -584,28 +624,35 @@ S7::method(term_static_deriv, model_term) <- function(term, curv, X, psi,
 #'
 #' @details
 #' It exists so that a fitting layer can resolve the confounding instead of
-#' refusing the model. A score-driven level \eqn{\omega} and a regime's first
+#' rejecting the model. A score-driven level \eqn{\omega} and a regime's first
 #' level both add a constant to their equation's predictor: with an
 #' intercept there too, adding \eqn{c} to one and subtracting the matching
 #' amount from the other leaves every predictor unchanged, and the
-#' likelihood is flat along that direction. Which of the two is dropped is
-#' the layer's decision and not the term's, since only the layer knows what
-#' else the equation carries.
+#' likelihood is flat along that direction. The layer decides which of the two
+#' is dropped, because only the layer has the full list of terms in the
+#' equation.
 #'
 #' The base method returns `character(0)`, meaning the term shifts
-#' nothing by a constant and no such question arises.
+#' nothing by a constant and no such question arises. The method for [regime()]
+#' returns `"level1"`. The method for [gas()] returns `"omega"` when the level
+#' is not developed and otherwise every coordinate of the development whose
+#' design column is constant, which can be more than one.
 #'
 #' @param term A term.
 #' @param ... Passed to methods.
 #'
-#' @return A single string, or `character(0)`.
+#' @return A character vector: `character(0)` for a term that shifts nothing
+#'   by a constant, `"level1"` for a regime, `"omega"` for an undeveloped
+#'   [gas()] level, and otherwise the names of the level's coordinates whose
+#'   design column is constant.
 #'
 #' @examples
 #' term_level_param(gas(p = 1, q = 1))
+#' term_level_param(regime(k = 2))
 #' term_level_param(linpar(~x))
 #'
 #' @seealso [term_level_design()] for the same question with the level
-#'   developed, [term_params()] for the names it answers among.
+#'   developed, [term_params()] for the names from which the answer is taken.
 #' @export
 #' @aliases term_level_param.model_term
 term_level_param <- S7::new_generic("term_level_param", "term",
@@ -616,7 +663,7 @@ S7::method(term_level_param, model_term) <- function(term, ...) character(0)
 #' @title The Design of a Term's Level Development
 #'
 #' @description
-#' Where the parameter [term_level_param()] names is developed
+#' Where the parameter that [term_level_param()] names is developed
 #' with covariates, the design of that development, with one column per
 #' coordinate named as [term_params()] names it. `NULL`
 #' for a scalar level and for every other term.
@@ -627,9 +674,9 @@ S7::method(term_level_param, model_term) <- function(term, ...) character(0)
 #' column is constant shifts the equation's predictor exactly as an
 #' intercept does. With the level developed, a direction of the
 #' development's span that also lies in the span of the equation's design
-#' raises the same question for that direction, and only a fitting layer,
-#' which holds both designs, can ask it. This generic hands it the one
-#' half it cannot see.
+#' raises the same question for that direction. Only a fitting layer, which
+#' holds both designs, can answer it, and this generic supplies the design of
+#' the development, which the layer cannot compute from the term alone.
 #'
 #' @param term A built term.
 #' @param ... Passed to methods.
@@ -657,14 +704,16 @@ S7::method(term_level_design, model_term) <- function(term, ...) NULL
 #' can carry it across by the delta method.
 #'
 #' @details
-#' A term's parameters are the coordinates it is estimated on, chosen so
+#' A term's parameters are the coordinates on which it is estimated, chosen so
 #' that a search runs unconstrained, and they are not always the quantities
 #' the model is about. The clearest case is a score-driven persistence,
 #' which rides a partial autocorrelation because the stationary region is
-#' not a box: what the literature writes as \eqn{\beta_1} is the
-#' autoregressive coefficient, which is a function of the whole chart and
-#' coincides with it only at \eqn{q = 1}. Reporting the coordinate under the
-#' coefficient's name would promise one quantity and print another.
+#' not a box: the autoregressive coefficient \eqn{\xi_1} is a function of the
+#' whole chart and coincides with the coordinate only at \eqn{q = 1}.
+#' Reporting the coordinate under the coefficient's name would promise one
+#' quantity and print another. [gas()] therefore reports `xi1`, ..., and
+#' [regime()] reports the transition probabilities `p1.1`, `p1.2`, ... row by
+#' row.
 #'
 #' Each row gives a value and the row of \eqn{\partial(\text{value}) /
 #' \partial\zeta} at the current parameters, so a standard error is
@@ -673,8 +722,8 @@ S7::method(term_level_design, model_term) <- function(term, ...) NULL
 #' `param_readable()` does for a matrix parameter.
 #'
 #' The base method reports the parameters themselves on the parameter scale,
-#' with the diagonal Jacobian of their links. That is the right answer for
-#' every term whose coordinates are already its quantities.
+#' with the diagonal Jacobian of their links. That is appropriate for every
+#' term whose coordinates are already its quantities.
 #'
 #' @param term A built term.
 #' @param zeta The term's parameters on the unconstrained scale, named as
@@ -719,16 +768,17 @@ S7::method(term_readable, model_term) <- function(term, zeta, ...) {
 #'
 #' @details
 #' [term_filter()] returns the derivative of the predictor in the
-#' term's own parameters, which is the piece estimating those needs.
-#' Estimating the coefficients of the same equation needs something else: the level at
-#' one time is driven by the scores at earlier ones, which are read at
-#' predictors those coefficients also enter, so the derivative of the
-#' predictor in a coefficient carries a term the block does not. Propagating
-#' that forward would cost one derivative array per coefficient; the reverse
-#' recursion here costs one pass whatever their number, and is exact.
+#' term's own parameters, which is the piece that the estimation of those
+#' parameters needs. Estimating the coefficients of the same equation needs a
+#' different derivative: the level at one time is driven by the scores at
+#' earlier times, which are read at predictors that those coefficients also
+#' enter, so the derivative of the predictor in a coefficient carries a term
+#' that the block does not. Propagating that forward would cost one derivative
+#' array per coefficient; the reverse recursion here costs one pass whatever
+#' their number, and is exact.
 #'
-#' Two derivatives are returned because the score the caller supplies depends
-#' on more than the predictor it is read at. Writing
+#' Two derivatives are returned because the score that the caller supplies
+#' depends on more than the predictor at which it is read. Writing
 #' \eqn{s_t} for that score and \eqn{\bar{s}_t} for
 #' `dscore`, the derivative of the objective in anything the score
 #' depends on is
@@ -790,36 +840,42 @@ S7::method(term_adjoint, structural_term) <- function(term, eta, y, score,
 #' @description
 #' The Jacobian of the predictor the term produces with respect to a
 #' caller's unknowns, and the second derivative of that predictor contracted
-#' against a caller's weights. It is what an observed information needs and
-#' [term_adjoint()] does not give.
+#' against a caller's weights. This second derivative is the piece of the
+#' Hessian of the log-likelihood that [term_adjoint()] does not give.
 #'
 #' @details
 #' The gradient of a model carrying a filter needs no second derivative and
-#' no forward Jacobian: the reverse recursion answers it in one pass. The
-#' curvature needs both. Writing \eqn{u} for the caller's unknowns,
-#' \eqn{D_t = \partial e_t/\partial u} and \eqn{E_t = \partial^2
-#' e_t/\partial u \partial u^\top}, the observed information of the model is
+#' no forward Jacobian: the reverse recursion gives it in one pass. The
+#' curvature needs both. Writing \eqn{u} for the caller's unknowns, \eqn{p}
+#' for the distribution parameter whose predictor carries the filter,
+#' \eqn{D_t = \partial e_t/\partial u} for the derivative of that predictor,
+#' \eqn{V_{q,t}} for the derivative of the predictor of parameter \eqn{q}
+#' (with \eqn{V_{p,t} = D_t}) and \eqn{E_t = \partial^2
+#' e_t/\partial u \partial u^\top}, the Hessian of the log-likelihood in
+#' \eqn{u} is
 #'
 #' \deqn{\sum_t w_t \sum_{q,r} \ell_{qr,t} V_{q,t}^\top V_{r,t}
 #'   + \sum_t w_t \ell_{p,t} E_t,}
 #'
-#' whose first sum is a weighted crossproduct the caller assembles and whose
-#' second is what this returns, the weights \eqn{g_t = w_t\ell_{p,t}} being
-#' supplied.
+#' and the observed information is its negative. The first sum is a weighted
+#' crossproduct that the caller assembles, and the second is what this
+#' returns, the weights \eqn{g_t = w_t\ell_{p,t}} being supplied.
 #'
 #' `seed` is \eqn{\partial \eta^{0}/\partial u}, one row per
-#' observation: the caller says how its unknowns reach the static predictor
-#' and the term knows nothing else about them. `blocks` is where the
-#' model's own derivatives enter, since the score the recursion is driven by
-#' depends on every equation, beyond the predictor it is read at. It
-#' is called once per observation with the predictor there and the Jacobian
-#' the recursion has reached, and returns the two quantities that seed the
-#' first and second derivatives of that score,
+#' observation: the caller supplies how its unknowns reach the static
+#' predictor, and the term holds no other information about them. `blocks` is
+#' where the model's own derivatives enter, since the score that drives the
+#' recursion depends on every equation, beyond the predictor at which it is
+#' read. It is called once per observation, with the predictor there, the
+#' index, the Jacobian row that the recursion has reached (restricted to the
+#' active coordinates of the group) and the indices of those coordinates, and
+#' it returns the two quantities that seed the first and second derivatives of
+#' that score,
 #'
 #' \deqn{\dot S_t = \ell_{pp,t}D_t + \texttt{cross}, \qquad
 #'   \ddot S_t = \ell_{pp,t}E_t + \texttt{M},}
 #'
-#' with `cross` \eqn{= \sum_{q\ne p}\ell_{pq,t}C_{q,t}} and `M`
+#' with `cross` \eqn{= \sum_{q\ne p}\ell_{pq,t}V_{q,t}} and `M`
 #' \eqn{= \sum_{r,r'}\ell_{prr',t}V_{r,t}^\top V_{r',t}}, the third
 #' derivatives of the log-density in the predictors. A model of one equation
 #' has `cross` zero and `M` equal to \eqn{\ell_{ppp}D^\top D}.
@@ -833,8 +889,10 @@ S7::method(term_adjoint, structural_term) <- function(term, eta, y, score,
 #'   observation.
 #' @param seed The derivative of the static predictor in the caller's
 #'   unknowns, one row per observation.
-#' @param blocks A function of the predictor, the index and the current
-#'   Jacobian row, returning `cross` and `M`.
+#' @param blocks A function `function(e, i, D, act)` of the predictor, the
+#'   observation index, the current Jacobian row restricted to the active set
+#'   and that set, returning `cross` and `M` on the active set. A function of
+#'   the first three arguments only is accepted and is given the full row.
 #' @param ... Passed to methods.
 #'
 #' @return A list of two: `jacobian`, an `n` by `ncol(seed)` matrix holding
@@ -887,26 +945,26 @@ S7::method(term_curvature, structural_term) <- function(term, eta, y, score,
 #' @details
 #' A marginal criterion carries \eqn{-\frac{1}{2}\log|K|} at the penalized
 #' mode, so its gradient in a hyperparameter needs \eqn{\mathrm{tr}(M\,\partial
-#' K/\partial u\,[v])}, with \eqn{v} the direction the mode moves in. Where
-#' the predictor is \eqn{X\beta} that contraction is the family's third
+#' K/\partial u\,[v])}, with \eqn{v} the direction in which the mode moves.
+#' Where the predictor is \eqn{X\beta} that contraction is the family's third
 #' derivative against the design and nothing else. Where a filter produces the
 #' predictor, \eqn{K} carries \eqn{\sum_t w_t \ell_{p,t}E_t} as well, and
-#' differentiating it asks for \eqn{\partial^3 e_t/\partial u^3}.
+#' differentiating it requires \eqn{\partial^3 e_t/\partial u^3}.
 #'
-#' **Only contracted.** The full third derivative is an \eqn{m^3} array
-#' per observation and is never formed: the criterion asks for it along the
-#' one direction the mode moves in, so what is propagated is a matrix per
-#' observation, the same size as the curvature and therefore the same
-#' \eqn{O(nm^2)}. A caller wanting several hyperparameters calls this once
-#' per direction, which is cheaper than one \eqn{O(nm^3)} assembly whenever
-#' the hyperparameters are fewer than the unknowns.
+#' The derivative is only ever contracted. The full third derivative is an
+#' \eqn{m^3} array per observation and is never formed: the criterion needs it
+#' only along the one direction in which the mode moves, so what is propagated
+#' is a matrix per observation, the same size as the curvature and therefore
+#' the same \eqn{O(nm^2)}. A caller that needs several hyperparameters calls
+#' this once per direction, which is cheaper than one \eqn{O(nm^3)} assembly
+#' whenever the hyperparameters are fewer than the unknowns.
 #'
-#' **What the model supplies.** Each order of differentiation of the
-#' predictor pulls in one more order of the family, the recursion being driven
-#' by a score read at the predictor it produces: the curvature's `M` is
-#' built from third derivatives, and this needs a fourth. `blocks`
-#' therefore returns two quantities beyond the curvature's, at an observation
-#' with the current Jacobian row \eqn{D} and its directional derivative:
+#' Each order of differentiation of the predictor involves one more order of
+#' the family, the recursion being driven by a score read at the predictor that
+#' it produces: the curvature's `M` is built from third derivatives, and this
+#' method needs a fourth. `blocks` therefore returns two quantities beyond the
+#' curvature's, at an observation, from the current Jacobian row \eqn{D} and
+#' the direction \eqn{v}:
 #'
 #' \deqn{\texttt{dcurv} = \sum_r \ell_{ppr}V_r, \qquad
 #'   \texttt{N} = \sum_{r,r'}\Big(\sum_{r''}\ell_{prr'r''}(V_{r''}\cdot v)\Big)
@@ -916,11 +974,12 @@ S7::method(term_curvature, structural_term) <- function(term, eta, y, score,
 #' which is \eqn{\texttt{dcurv}\cdot v}, and the two terms differentiating
 #' \eqn{M}'s own \eqn{V_p}.
 #'
-#' The base method returns zeros. An additive term's second derivative is
-#' already zero, so it is covered without writing anything, and a term written
-#' later that does not implement this reports no third derivative instead of a
-#' wrong one. A structural term refuses: it has a second derivative, so zero
-#' there would be a false statement rather than a true one.
+#' The base method returns zeros, which is correct for a term whose predictor
+#' is a block of columns times coefficients, since the second derivative of
+#' such a predictor in the coefficients is zero. A term that bends the
+#' predictor has to implement the method itself, because the base method would
+#' report zeros for it. A structural term signals an error instead: it has a
+#' second derivative, so a zero third derivative would misstate it.
 #'
 #' @param term A built term.
 #' @param eta The static part of the predictor.
@@ -947,7 +1006,7 @@ S7::method(term_curvature, structural_term) <- function(term, eta, y, score,
 #' dd <- data.frame(t = 1:20, y = rnorm(20))
 #' term <- term_build(linpar(~t), dd)
 #' # an additive term bends no predictor, so every order above the first is
-#' # zero and the base method says so
+#' # zero, as the base method returns
 #' out <- term_third(term, rep(0, 20), dd$y,
 #'                   score = function(e, i) dd$y[i] - e,
 #'                   curvature = function(e, i) -1, psi = list(),
@@ -958,7 +1017,7 @@ S7::method(term_curvature, structural_term) <- function(term, eta, y, score,
 #'
 #' @seealso [term_curvature()] for the second order this differentiates,
 #'   [term_adjoint()] for the first, [statmodels7::reml()] for the criterion
-#'   whose gradient asks for it.
+#'   whose gradient requires it.
 #' @export
 #' @aliases term_third.model_term term_third.structural_term
 term_third <- S7::new_generic("term_third", "term",
@@ -990,48 +1049,47 @@ S7::method(term_third, structural_term) <- function(term, eta, y, score,
 #'
 #' @description
 #' [term_third()] differentiated once more along a second direction. It
-#' is what the exact HESSIAN of a marginal criterion needs when the model
+#' is what the exact Hessian of a marginal criterion needs when the model
 #' carries a term that bends the predictor.
 #'
 #' @details
 #' A marginal criterion carries \eqn{-\frac{1}{2}\log|K|} at the penalized
 #' mode, so its gradient in one hyperparameter reads \eqn{\partial K/\partial
-#' u} along the direction the mode moves in, which is [term_third()], and
-#' its second derivative in a PAIR reads the same object along two
-#' directions. Where the predictor is \eqn{X\beta} that is the family's
-#' derivatives against the design and nothing else; where a filter produces
-#' it, \eqn{K} carries \eqn{\sum_t w_t \ell_{p,t}E_t} as well, and
-#' differentiating that twice asks for \eqn{\partial^4 e_t/\partial u^4}.
+#' u} along the direction in which the mode moves, which is [term_third()], and
+#' its second derivative in a pair of hyperparameters reads the same object
+#' along two directions. Where the predictor is \eqn{X\beta} that is the
+#' family's derivatives against the design and nothing else; where a filter
+#' produces it, \eqn{K} carries \eqn{\sum_t w_t \ell_{p,t}E_t} as well, and
+#' differentiating that twice requires \eqn{\partial^4 e_t/\partial u^4}.
 #'
-#' **Only contracted, and only twice.** The full fourth derivative is an
-#' \eqn{m^4} array per observation and is never formed: what is propagated is
-#' a matrix per observation, the same size as the curvature and therefore the
-#' same \eqn{O(nm^2)}. A caller wanting a Hessian over \eqn{n_h}
-#' hyperparameters calls this once per pair.
+#' The derivative is contracted in two directions only. The full fourth
+#' derivative is an \eqn{m^4} array per observation and is never formed: what
+#' is propagated is a matrix per observation, the same size as the curvature
+#' and therefore the same \eqn{O(nm^2)}. A caller that needs a Hessian over
+#' \eqn{n_h} hyperparameters calls this once per pair.
 #'
-#' **Five states, not three.** The recursion carries \eqn{F_t}, \eqn{\Phi_t},
-#' \eqn{\Psi^{(v)}_t}, \eqn{\Psi^{(w)}_t} and \eqn{\Omega_t}: BOTH third
-#' derivatives, because the product rule at the fourth order pairs each
-#' direction's third derivative with the other direction, so a recursion
+#' The recursion carries five states, \eqn{F_t}, \eqn{\Phi_t},
+#' \eqn{\Psi^{(v)}_t}, \eqn{\Psi^{(w)}_t} and \eqn{\Omega_t}. Both third
+#' derivatives are carried, because the product rule at the fourth order pairs
+#' each direction's third derivative with the other direction, so a recursion
 #' holding one contraction cannot reach this order.
 #'
-#' **What the model supplies.** Each order of differentiation pulls in one
-#' more order of the family, so beyond the third order's `dcurv` and
-#' `N` the `blocks` callback returns, at an observation,
+#' Each order of differentiation involves one more order of the family, so
+#' beyond the third order's `dcurv` and `N` the `blocks` callback returns, at
+#' an observation,
 #'
 #' \deqn{\texttt{Q} = \sum_{r,r'}\ell_{pprr'}V_r^\top V_{r'}, \qquad
 #'   \texttt{P} = \sum_{r,r'}\Big(\sum_{s,s'}\ell_{prr'ss'}
 #'     (V_s\cdot v)(V_{s'}\cdot w)\Big)V_r^\top V_{r'},}
 #'
 #' with `cppp` \eqn{= \ell_{ppp}} beside them, and `N` a list of
-#' two, one per direction. `P` is the only place the family's FIFTH
-#' derivative enters; `cppp` is a scalar no contraction recovers, the
-#' level's own curvature moving by it.
+#' two, one per direction. `P` is the only place where the family's fifth
+#' derivative enters. The scalar `cppp` is not recovered by any contraction;
+#' it is the amount by which the level's own curvature moves.
 #'
 #' The base method returns zeros, so an additive term is covered without
-#' writing anything. A structural term refuses, for the reason
-#' [term_third()] gives: zero there would be a false statement rather
-#' than a true one.
+#' writing anything. A structural term signals an error, for the reason
+#' that [term_third()] gives: a zero fourth derivative would misstate it.
 #'
 #' @param term A built term.
 #' @param eta The static part of the predictor.
@@ -1062,7 +1120,7 @@ S7::method(term_third, structural_term) <- function(term, eta, y, score,
 #' dd <- data.frame(t = 1:20, y = rnorm(20))
 #' term <- term_build(linpar(~t), dd)
 #' # an additive term bends no predictor, so every order above the first is
-#' # zero and the base method says so
+#' # zero, as the base method returns
 #' out <- term_fourth(term, rep(0, 20), dd$y,
 #'                    score = function(e, i) dd$y[i] - e,
 #'                    curvature = function(e, i) -1, psi = list(),
@@ -1073,7 +1131,7 @@ S7::method(term_third, structural_term) <- function(term, eta, y, score,
 #'
 #' @seealso [term_third()] for the third order this differentiates,
 #'   [term_curvature()] for the second, [statmodels7::reml()] for the
-#'   criterion whose Hessian asks for it.
+#'   criterion whose Hessian requires it.
 #' @export
 #' @aliases term_fourth.model_term term_fourth.structural_term
 term_fourth <- S7::new_generic("term_fourth", "term",
@@ -1111,4 +1169,16 @@ S7::method(term_filter, structural_term) <- function(term, eta, y, score,
                                                      curvature, psi, ...) {
   stop(sprintf("the term class '%s' does not implement term_filter().",
                attr(S7::S7_class(term), "name")), call. = FALSE)
+}
+
+# the observation weights of a likelihood-shape term: one number for every
+# row, or one per row
+.structural_weights <- function(weights, n) {
+  if (is.null(weights)) return(rep(1, n))
+  w <- as.numeric(weights)
+  if (!(length(w) %in% c(1L, n)) || anyNA(w)) {
+    stop(sprintf("'weights' must be one number or %d non-missing numbers.", n),
+         call. = FALSE)
+  }
+  rep_len(w, n)
 }

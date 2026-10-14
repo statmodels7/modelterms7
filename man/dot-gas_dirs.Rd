@@ -2,7 +2,7 @@
 % Please edit documentation in R/gas.R
 \name{.gas_dirs}
 \alias{.gas_dirs}
-\title{One, Two or No Directions}
+\title{The Directions of a Derivative Contraction}
 \usage{
 .gas_dirs(direction)
 }
@@ -14,14 +14,15 @@ numeric vectors.}
 A list of zero, one or two numeric vectors.
 }
 \description{
-Reads the \code{direction} argument of \code{\link[=term_curvature]{term_curvature()}},
-\code{\link[=term_third]{term_third()}} and \code{\link[=term_fourth]{term_fourth()}} into a list: empty for the
-second order, one element for the third, two for the fourth.
+Reads the \code{direction} argument of \code{.gas_curvature_core()} into a list:
+empty for the second order, one element for the third, two for the fourth.
+\code{\link[=term_curvature]{term_curvature()}} sets it to \code{NULL}, \code{\link[=term_third]{term_third()}} to its \code{direction} and
+\code{\link[=term_fourth]{term_fourth()}} to the list of its \code{directions}.
 }
 \details{
 A single numeric vector is one direction, a list is as many as it holds,
-and \code{NULL} is none. The three orders then share one recursion, and a
-caller writes \code{direction = v} at the third order and
-\code{direction = list(v, w)} at the fourth.
+and \code{NULL} is none. The three orders then share one recursion. A caller
+writes \code{direction = v} in \code{\link[=term_third]{term_third()}} and \code{directions = list(v, w)} in
+\code{\link[=term_fourth]{term_fourth()}}.
 }
 \keyword{internal}

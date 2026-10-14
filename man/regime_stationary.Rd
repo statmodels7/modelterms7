@@ -16,9 +16,9 @@ regime_stationary(P, dP, d2P = NULL)
 row's entries, indexed as \code{dP} is.}
 }
 \value{
-A list with \code{delta} and \code{ddelta}, the latter one row
-per element of \code{dP}, and, when \code{d2P} is given,
-\code{d2delta}, one square matrix per state.
+A list with \code{delta}; \code{ddelta}, a list with one numeric vector of
+length \eqn{K} per element of \code{dP}; and, when \code{d2P} is given, \code{d2delta},
+a list with one square matrix per state, each of size \code{length(dP)}.
 }
 \description{
 The row vector \eqn{\delta} solving \eqn{\delta P = \delta} with

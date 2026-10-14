@@ -14,17 +14,17 @@
 
 \item{psi}{The parameters, named as \code{\link[=term_params]{term_params()}}.}
 
-\item{g}{The direct derivative of the objective in the predictor the
-filter produced, one value per observation.}
+\item{g}{The direct derivative of the objective with respect to the
+predictor that the filter produces, one value per observation.}
 
 \item{...}{Unused.}
 
 \item{fast, threads}{The fast context and the thread count of
-\code{\link[=term_filter]{term_filter()}}, passed to the forward pass the adjoint
-re-runs. The reverse pass reads the curvature sequence that pass
-returns, so with a covered context the adjoint evaluates no R
-callback at all; without one the callbacks run in the forward pass
-only, once per observation instead of twice.}
+\code{\link[=term_filter]{term_filter()}}, passed to the forward pass that the adjoint re-runs.
+The reverse pass reads the curvature sequence that this pass returns, so
+with a covered context the adjoint evaluates no R callback; without one
+the callbacks are evaluated in the forward pass only, once per
+observation.}
 }
 \value{
 A list with \code{deta} and \code{dscore}.
@@ -32,6 +32,7 @@ A list with \code{deta} and \code{dscore}.
 \description{
 Runs the recursion of \code{\link[=term_filter]{term_filter()}} in reverse, returning the
 derivative of a caller's objective with respect to the static predictor
-it supplied and with respect to the sequence of scores it returned.
+that the caller supplies and with respect to the sequence of scores that the
+callbacks return.
 }
 \keyword{internal}

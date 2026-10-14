@@ -44,45 +44,46 @@ documented above) or a \pkg{numericals7}
 the hinge by their smooth versions, \eqn{(1 + s'(u))/2} and
 \eqn{(u + s(u))/2}, so every break-point becomes an ordinary
 parameter of a model as smooth as the smoother (\eqn{C^\infty} for
-the probit and the hyperbolic, \eqn{C^3} for the quintic, whose
-page says what that costs under an outer criterion, where the
-probit is the choice): there is no working
+the probit and the hyperbolic, \eqn{C^3} for the quintic; the page of
+the quintic gives its cost under an outer criterion, where the probit
+is the recommended smoother). There is no working
 parametrization, no auxiliary coefficient and no scaling schedule
-(\code{c0} is ignored, with a message), the block is the true Jacobian
-and the term is fitted by Gauss-Newton like \code{\link[=nl]{nl()}}. A
-development of a break-point, \code{psi ~ random(~1 | id)} and penalized
-ones included, is then legal for every kind, the read-off
-that constrained the discontinuous constructions having gone. The
+(for \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}}, a \code{c0} that is passed is ignored with a
+message), the block is the true Jacobian
+and the term is fitted by Gauss-Newton like \code{\link[=nl]{nl()}}. A smoothed term
+accepts a development of any coefficient, including a break-point
+(\code{psi ~ random(~1 | id)}) and penalized developments, for every kind,
+since no read-off constrains the development. The
 smoother's width is resolved at build from the covariate's spacing
 (the median gap between distinct values, within groups where a
 break-point development supplies a partition) unless the object
-carries one; for the quintic, which is exact outside its width, it is
-raised to at least 0.55 times the largest gap over the range a
+carries one. For the quintic, which is exact outside its width, the
+width is raised to at least 0.55 times the largest gap over the range a
 break-point may take, so that a break-point cannot sit in a gap with
-no observation within its width. The width is reported: it is the width of the transition, the
-bent-cable reading, and the smoothing bias it buys is confined to a
-window of that width (probit, quintic) or decays as \eqn{c/(4|u|)}
-(hyperbolic). The objective is still multimodal in the positions --
-smoothing rounds the local optima and does not remove them, so the
-profile start and the \code{n_boot} restarts stay necessary; a
-smoothed fit from a bad start has been measured converging to an
-absurd local optimum while reporting success.}
+no observation within its width. The width is reported: it is the
+width of the transition (the bent-cable reading). The smoothing bias is
+zero outside the transition for the quintic, decays with the Gaussian
+tails for the probit, and decays as \eqn{c/(4|u|)} for the hyperbolic,
+whose parameter \eqn{c} is a squared length. The objective remains
+multimodal in the positions: smoothing rounds the local optima and does
+not remove them, so the profile start and the \code{n_boot} restarts remain
+necessary.}
 
 \item{marginal}{Whether the break-point is a latent variable per group,
 integrated out of the likelihood exactly instead of being an estimated
 position. \code{FALSE}, the default, is the construction documented
 above. \code{TRUE} requires the subformula \code{psi ~ random(~1 | g)}
 and returns a structural term of the likelihood shape
-(\code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}); see the section of
-\code{\link[=jump]{jump()}}, whose step model is where the marginal buys the
-most: for a \code{seg} term the native random-changepoint fit
-(\code{psi ~ random(~1 | g)} without \code{marginal}) is measured
-equivalent and remains the recommended route, the marginal being the
-exact-likelihood alternative. One break-point here: the conditional is
-smooth in the position, so the integral runs on a Gauss-Kronrod panel
-per interval between a group's ordered observations, and several
-latents would need a product quadrature whose component count no
-fitting layer can carry.}
+(\code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}); see the section on the marginal construction in
+\code{\link[=jump]{jump()}}. For a \code{seg} term the native random-changepoint fit
+(\code{psi ~ random(~1 | g)} without \code{marginal}) estimates the break-points
+as the mode of the latent distribution and is the recommended route, the
+marginal being the exact-likelihood alternative. The marginal \code{seg} has
+one break-point: the conditional is smooth in the position, so the
+integral runs on Gauss-Kronrod panels over the intervals between a
+group's ordered observations, and several latent break-points would need
+a product quadrature with a number of components that a fitting layer
+cannot carry.}
 
 \item{n_boot}{How many bootstrap restarts the fitting layer runs after
 the iteration first converges (Wood 2001, the device \code{segmented}
@@ -100,12 +101,13 @@ names.}
 }
 \value{
 An object of class \code{\link[=SegTerm]{SegTerm()}} (a specification; see
-\code{\link[=term_build]{term_build()}}).
+\code{\link[=term_build]{term_build()}}), or of class \code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}} with
+\code{marginal = TRUE}.
 }
 \description{
 A covariate whose slope changes at \eqn{K} break-points estimated with
 everything else, the relationship staying continuous
-(\cite{muggeo2003}). Written in the equation of any parameter of any
+(Muggeo, 2003). Written in the equation of any parameter of any
 distribution, the term contributes
 
 \deqn{\beta x_i + \sum_{k=1}^{K} \gamma_k\,(x_i - \psi_k)_{+},
@@ -122,34 +124,36 @@ to that parameter's linear predictor, so that in a model
 \eqn{\gamma_k} the change of slope at \eqn{\psi_k}, so the slope over
 the \eqn{k}-th segment is \eqn{\beta + \gamma_1 + \cdots + \gamma_k}.
 The gaussian additive model is the case \eqn{g = \mathrm{id}} on the
-mean of a \code{gaussian1_distrib}; nothing here is particular to it.
+mean of a \code{gaussian1_distrib}, and the term applies to any other
+distribution and parameter in the same way.
 }
 \details{
 \subsection{How the break-points are estimated}{
 The contribution is differentiable in \eqn{\psi_k} away from the
 break-point, with
 \eqn{\partial/\partial\psi_k = -\gamma_k\,\mathbb{1}(x>\psi_k)}, so the
-design block is the ordinary Jacobian, the break-point is an ordinary
-coefficient, and the increment a Gauss-Newton step solves for is the
-update of \cite{muggeo2003}: his working variables \eqn{U} and \eqn{V}
-are the block's columns and his \eqn{\psi \leftarrow \psi +
-\gamma/\delta} is that step. Refreshing the term at the current
-coefficients (\code{\link[=term_refresh]{term_refresh()}}) and fitting is one iteration
-of it, which is the same contract \code{\link[=nl]{nl()}} uses.
+design block is the ordinary Jacobian and the break-point is an ordinary
+coefficient. The working variables \eqn{U = (x-\psi)_{+}} and
+\eqn{V = -\mathbb{1}(x>\psi)} of Muggeo (2003) are, up to the factor
+\eqn{\gamma_k} on \eqn{V}, the columns of the block for \eqn{\gamma_k} and
+\eqn{\psi_k}, so a Gauss-Newton step on the block is an iteration of his
+linearization. Refreshing the term at the current coefficients
+(\code{\link[=term_refresh]{term_refresh()}}) and fitting is one such iteration, which is the scheme
+that \code{\link[=nl]{nl()}} uses as well.
 
 The objective has local optima in the break-points and the iteration
 converges from within a basin around where it starts, so
-\code{\link[=seg_start]{seg_start()}} chooses the starting positions on a grid rather
-than at a conventional point. A break-point is confined to the interval
-between the 5th and the 95th percentile of the covariate: outside it
-the indicator is constant, the truncated line and that constant are
-linearly dependent, and the block is exactly singular, not merely
-ill-conditioned. A run ending against the limit has not located a
-break-point, and \code{\link[=seg_psi]{seg_psi()}} then reports the limit itself.
+\code{\link[=seg_start]{seg_start()}} chooses the starting positions on a grid and not at a
+conventional point. A break-point is confined to the interval between the
+5th and the 95th percentile of the covariate, so that both sides of a
+break-point carry observations. A position that reaches a limit is
+clamped there, and the column of a clamped break-point is zero, since the
+contribution no longer moves with it. A run ending against the limit has
+not located a break-point, and \code{\link[=seg_psi]{seg_psi()}} then reports the limit itself.
 
 The iteration can settle into a cycle of period two in the break-point,
 in which case the rule of \code{\link[=seg_converged]{seg_converged()}} is never met while
-the objective has long since stopped moving; a caller that can evaluate
+the objective has long since stopped moving. A caller that can evaluate
 the objective should stop on its relative change, as \code{segmented}
 does.
 }
@@ -157,10 +161,10 @@ does.
 \section{The coefficients}{
 
 \code{beta} (present when \code{linear = TRUE}), \code{gamma1} \ldots
-\code{gammaK} and \code{psi1} \ldots \code{psiK}, in that order. The
-break-points are coefficients of the working block here, which they are
-not in the discontinuous constructions, so \code{\link[=seg_psi]{seg_psi()}} is the
-function that reports them either way.
+\code{gammaK} and \code{psi1} \ldots \code{psiK}, in that order. The break-points are
+coefficients of the working block here, and they are not in the sharp
+discontinuous constructions, so \code{\link[=seg_psi]{seg_psi()}} reports them under every
+construction.
 }
 
 \section{Developing a coefficient with covariates}{
@@ -174,11 +178,12 @@ seg(x, psi ~ random(~1 | id))      the random-changepoint model
 seg(x, gamma1 ~ z)                 a first slope change varying with z
 seg(x, by = ~0 + g)                every coefficient, per level of g}
 
-The right side goes through \code{\link[=interpret_formula]{interpret_formula()}}, so it takes
-\emph{any} term of this package, penalized ones included, and the
-hyperparameters a sub-term declares are reported by
-\code{\link[=term_penalties]{term_penalties()}} and estimated by the fitting layer. The
-left side names either one coefficient (\code{gamma2}) or a whole kind
+The right side goes through \code{\link[=interpret_formula]{interpret_formula()}} and takes any term with
+a fixed design block, penalized ones included. A structural term
+(\code{\link[=gas]{gas()}}, \code{\link[=regime]{regime()}}) and a term whose block moves with its coefficients
+(\code{\link[=seg]{seg()}}, \code{\link[=nl]{nl()}}) are rejected. The hyperparameters that a sub-term
+declares are reported by \code{\link[=term_penalties]{term_penalties()}} and estimated by the fitting
+layer. The left side names either one coefficient (\code{gamma2}) or a whole kind
 (\code{gamma}, meaning every \eqn{\gamma_k}, each with coefficients of
 its own over the shared design). \code{by = ~f} is the shorthand giving
 every coefficient the same development, and does not combine with
@@ -193,16 +198,16 @@ enter the block linearly, the truncated line becoming
 continuous construction accepts a development of any coefficient and any
 combination of them.
 
-A penalty on the changes themselves, the lasso that selects how many
-break-points are really there, is the development on an intercept
+A penalty on the changes themselves, the lasso that selects the number
+of break-points, is the development on an intercept
 alone, \code{seg(x, npsi = 4, gamma ~ 0 + lasso(~1))}: the \eqn{K}
 changes are then one penalized block under one hyperparameter, the
 entries of a subformula shared by every coefficient of a kind being
-pooled into one. The \verb{0 +} is not decoration. A subformula follows
-the intercept convention of a formula, so \code{gamma ~ lasso(~1)}
-carries the subformula's own unpenalized intercept beside the penalized
-column, which for an intercept-only development is the same column
-twice.
+pooled into one. A subformula follows the intercept convention of a
+formula, so \code{gamma ~ lasso(~1)} carries the subformula's own unpenalized
+intercept beside the penalized column, which for an intercept-only
+development repeats the same constant column. That design is rejected when
+the term is built, and the \verb{0 +} removes the subformula's own intercept.
 }
 
 \section{The linear effect}{

@@ -2,7 +2,7 @@
 % Please edit documentation in R/segmented.R
 \name{term_readable.SegTerm}
 \alias{term_readable.SegTerm}
-\title{What a Fitted Break-Point Term Is About}
+\title{The Quantities Reported for a Break-Point Term}
 \arguments{
 \item{term}{A built \code{\link[=SegTerm]{SegTerm()}}.}
 
@@ -16,7 +16,7 @@ A list with \code{name}, \code{value}, \code{jacobian} and
 is reported.
 }
 \description{
-The quantities of the model the term defines, in place of the
+The quantities of the model that the term defines, in place of the
 coefficients of the working block it is fitted through: the linear
 effect \eqn{\beta} where the term carries one, the changes of slope
 \eqn{\gamma_k} and of level \eqn{\delta_k}, and the break-points
@@ -24,11 +24,12 @@ effect \eqn{\beta} where the term carries one, the changes of slope
 holding their variance matrix can carry it across.
 }
 \details{
-A continuous term holds every one of those as a coefficient and the
-Jacobian is a selection. A discontinuous one does not hold the
-break-point at all: it is read off the auxiliary pair as \eqn{\psi_k =
--g_k/\delta_k}, which the joint construction reaches too, its quadratic
-degenerating to that reading once the increment has vanished. The
+A continuous or smoothed term holds every one of those as a coefficient,
+and the Jacobian is a selection, as it is for a held term. A sharp
+discontinuous term does not hold the
+break-point as a coefficient: it is read off the auxiliary pair as
+\eqn{\psi_k = -g_k/\delta_k}, which the joint construction reaches too, its
+quadratic degenerating to that reading once the increment has vanished. The
 Jacobian rows are then
 
 \deqn{\frac{\partial \psi_k}{\partial g_k} = -\frac{1}{\delta_k},
@@ -38,9 +39,9 @@ Jacobian rows are then
 which is the delta method \code{segmented} reports a break-point's
 standard error by. The joint construction reads its position from a
 quadratic that also carries the change of slope, and the two readings
-differ by the increment the iteration has left: the value reported is
-the one the term holds, so that this and \code{\link[=seg_psi]{seg_psi()}} cannot
-give two numbers for one quantity, and the Jacobian is the fixed
+differ by the increment that the iteration has left: the value reported is
+the one that the term holds, so that this and \code{\link[=seg_psi]{seg_psi()}} give the same
+number for one quantity, and the Jacobian is the fixed
 point's, which the quadratic degenerates to once the increment has
 vanished.
 

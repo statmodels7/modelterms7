@@ -17,12 +17,14 @@ loadings, which start at \eqn{0.1} on the parameter scale, through
 whatever link each one carries.
 }
 \details{
-Zero is the natural point of every other chart: a level of zero, no
-persistence, no deviation. The term therefore starts as near the model
-without it as its charts allow. The loadings are the exception because
-zero on the log scale is a loading of one, a response strong enough to
-destabilize the recursion at ordinary curvatures; \eqn{0.1} is a weak
-response, and it is applied on the parameter scale so the start means
-the same thing whatever chart a loading rides.
+Zero is the natural point of every other chart: a level of zero and no
+persistence. The term therefore starts as near the model without it as its
+charts allow. The loadings are the exception because zero on the log scale
+is a loading of one, a response strong enough to destabilize the recursion
+at ordinary curvatures; \eqn{0.1} is a weak response, and it is applied on
+the parameter scale so that the start means the same thing whatever chart
+a loading rides. A parameter developed by a subformula starts at the
+least-squares coefficients of its constant start on the design of the
+development.
 }
 \keyword{internal}

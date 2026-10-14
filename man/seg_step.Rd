@@ -19,9 +19,9 @@ break-point; \code{seg_converged} returns a single logical.
 \description{
 \code{seg_step} returns how far each break-point moved at the last
 call to \code{\link[=term_refresh]{term_refresh()}}, and \code{seg_converged} compares
-the largest of those with the tolerance of \cite{fasola2018}, a
-hundredth of the distance between consecutive distinct observations of
-the covariate. A term that has been built but not yet refreshed has
+the largest of those with a tolerance based on Fasola et al. (2018): a
+hundredth of the median distance between consecutive distinct observations
+of the covariate. A term that has been built but not yet refreshed has
 taken no step, so \code{seg_step} returns \code{NA} and
 \code{seg_converged} returns \code{FALSE}.
 }
@@ -33,21 +33,21 @@ run stops at
   \qquad \Delta = 0.01 \cdot
     \operatorname{median}_{i}\, (x_{(i+1)} - x_{(i)}).}
 
-\cite{fasola2018} take the smallest of those gaps instead of their
+Fasola et al. (2018) take the smallest of those gaps instead of their
 median, which agrees with this on the evenly spaced covariates of their
 examples and is of order \eqn{m^{-2}} on a random one, hence unreachable.
 
 The rule is one of resolution: below that distance the objective of a
-discontinuous term, a step function of the break-point, cannot change.
-It therefore tightens as the sample grows while the precision the
-fixed point is reached at does not, so on a large sample the last
+sharp discontinuous term, a step function of the break-point, cannot
+change. It therefore tightens as the sample grows while the precision at
+which the fixed point is reached does not, so on a large sample the last
 iterations move the break-point by a little more than the rule allows
 and the run continues past the point where the estimate has settled.
 A caller that can evaluate the objective should stop on its relative
-change instead, as \code{segmented} does, at a cost of a
-continuous term nothing: its iteration can settle into a cycle of
-period two in the break-point, in which case this rule is never met
-while the objective has long since stopped moving.
+change instead, as \code{segmented} does. For a continuous term this applies in
+particular, because its iteration can settle into a cycle of period two in
+the break-point, in which case this rule is never met while the objective
+has long since stopped moving.
 }
 \examples{
 set.seed(1)
@@ -65,6 +65,5 @@ c(psi = seg_psi(b, cf), step = seg_step(b))
 
 }
 \seealso{
-\code{\link[=seg]{seg()}}, \code{\link[=seg_psi]{seg_psi()}}, \code{\link[=seg_start]{seg_start()}}
-\code{\link[=seg_start]{seg_start()}}
+\code{\link[=seg]{seg()}}, \code{\link[=seg_psi]{seg_psi()}}, \code{\link[=seg_reheat]{seg_reheat()}}, \code{\link[=seg_start]{seg_start()}}
 }

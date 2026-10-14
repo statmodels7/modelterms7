@@ -29,7 +29,7 @@ The level and the loadings ride scalar links, so each of their fourth
 derivatives is a single diagonal entry, the link's own \eqn{h''''} times
 the two directions' components there. The persistence is a composition,
 the Levinson-Durbin map read at \eqn{\rho = h^{-1}(z)}, whose inner map is
-DIAGONAL: differentiating \eqn{B(z) = \xi(\rho(z))} four times and
+diagonal. Differentiating \eqn{B(z) = \xi(\rho(z))} four times and
 contracting two slots leaves, with \eqn{p_v = h'v} and \eqn{p_w = h'w} the
 directions pushed onto the partial autocorrelations,
 \deqn{Q[p_v,p_w]h'h'^{\top}
@@ -41,8 +41,7 @@ directions pushed onto the partial autocorrelations,
   + \mathrm{diag}\big(h''T[p_v]p_w + h''H(h''vw)
   + h'''w\,Hp_v + h'''v\,Hp_w + h''''vw\,P\big),}
 with \eqn{Q}, \eqn{T}, \eqn{H} and \eqn{P} the map's fourth, third, second
-and first derivatives. The expression is symmetric in \eqn{v} and \eqn{w},
-which a caller can read off it and a test asserts.
+and first derivatives. The expression is symmetric in \eqn{v} and \eqn{w}.
 }
 \seealso{
 \code{\link[=.gas_chart_derivs3]{.gas_chart_derivs3()}}, \code{\link[=gas_levinson4]{gas_levinson4()}}

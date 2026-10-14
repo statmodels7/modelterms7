@@ -21,9 +21,10 @@ Jacobian from the term's own parameters.
 \details{
 The levels and the gaps are reported through their own links, as the base
 method does. The chain is estimated on the additive log-ratios of each row
-of the transition matrix, which are coordinates and not the quantities a
-reader wants, so every entry of the matrix is reported instead, \eqn{k^2}
-of them, row by row and named \code{p1.1}, \code{p1.2}, and so on. Entry
+of the transition matrix. These are coordinates of the chain and not
+quantities that have a direct interpretation, so every entry of the matrix
+is reported in their place, \eqn{k^2} of them, row by row and named \code{p1.1},
+\code{p1.2}, and so on. Entry
 \eqn{p_{ij}} depends on the log-ratios of row \eqn{i} alone, and its row
 of the Jacobian is the derivative of \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}}'s
 value. Each interval is built on the logit scale and mapped back, so it

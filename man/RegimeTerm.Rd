@@ -69,8 +69,9 @@ single whole number of at least 1, as set by \code{\link[=regime]{regime()}}.}
 }
 \value{
 An S7 object of class \code{RegimeTerm}, inheriting from
-\code{\link[=structural_term]{structural_term()}} and \code{\link[=model_term]{model_term()}}, with the six properties above
-beside \code{\link[=model_term]{model_term()}}'s six.
+\code{\link[=structural_term]{structural_term()}} and \code{\link[=model_term]{model_term()}}, with the five properties above in
+addition to the eight that \code{\link[=structural_term]{structural_term()}} supplies (the seven of
+\code{\link[=model_term]{model_term()}} and \code{blueprint}).
 }
 \description{
 The subclass of \code{\link[=structural_term]{structural_term()}} holding a latent Markov chain of
@@ -81,18 +82,21 @@ predictor to report.
 }
 \section{The five properties of its own}{
 \code{k} is the number of regimes. \code{by} and \code{time} are the grouping and ordering
-expressions as written, kept unevaluated; \code{NULL} means one group in row
-order.
+expressions as written, kept unevaluated. A \code{by} of \code{NULL} means one group,
+and a \code{time} of \code{NULL} means that the rows are taken in the order they are
+given.
 
 \code{chain} is the \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}} object, whose free values
 are the additive log-ratios of each row, so every row is a probability
 vector at any coordinate. Its \code{free_names} are the tail of
 \code{\link[=term_params]{term_params()}}.
 
-\code{blueprint} is filled by \code{\link[=term_build]{term_build()}} and holds the row order within each
-group and the observation count. The class overrides the branch's
-\code{blueprint} property because a structural term carries no design block to
-hang one on.
+\code{n_start} is the number of starting points that a fitting layer tries, a
+whole number of at least 1.
+
+The property \code{blueprint} is inherited from \code{\link[=structural_term]{structural_term()}}, which
+declares it. \code{\link[=term_build]{term_build()}} fills it with the row order within each group
+and the observation count.
 }
 
 \examples{

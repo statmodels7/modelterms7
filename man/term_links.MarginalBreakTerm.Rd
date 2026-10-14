@@ -13,16 +13,16 @@ A named list of \pkg{linkfunctions7} links, one per entry of
 \code{\link[=term_params]{term_params()}}.
 }
 \description{
-The \strong{log} link on every \code{psik.sd}, a prior's own link on any parameter it
-contributes, and the identity on everything else. A prior scale must be
-positive; a position, a change of level and a change of slope are already
-unconstrained.
+The \strong{log} link on every \code{psik.sd}, the prior's own link on any parameter
+that the prior contributes, and the identity on everything else. A prior
+scale must be positive; a position, a change of level and a change of slope
+are already unconstrained.
 }
 \details{
-Where \code{random(distrib = )} named a family other than the Gaussian, that
-family's parameters keep the links it declares in \code{link_params}, so a
-Student t prior's degrees of freedom ride whatever chart
-\pkg{distributions7} gives them. Nothing about the chart is restated here.
+Where \code{random(distrib = )} names a family other than the Gaussian, the
+parameters of that family keep the links that are declared in its
+\code{link_params}. The degrees of freedom of a Student t prior therefore use the
+link that \pkg{distributions7} assigns to them.
 }
 \examples{
 set.seed(1)

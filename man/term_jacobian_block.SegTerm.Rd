@@ -4,8 +4,8 @@
 \alias{term_jacobian_block.SegTerm}
 \title{Whether a Break-Point Term's Block Is a Jacobian}
 \arguments{
-\item{term}{A \code{\link[=SegTerm]{SegTerm()}}, built or not: the answer is a property of the
-construction.}
+\item{term}{A \code{\link[=SegTerm]{SegTerm()}}, built or not. The answer depends on the
+construction and, for a built term, on whether it is held.}
 
 \item{...}{Unused.}
 }
@@ -13,24 +13,27 @@ construction.}
 A single logical.
 }
 \description{
-\code{TRUE} for \code{\link[=seg]{seg()}} and for any smoothed construction, \code{FALSE} for the sharp
-\code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}}. It is the predicate a fitting layer routes on: a
-Jacobian licenses a Gauss-Newton step and a line search on the model's own
-objective, and a working linearization does not.
+\code{TRUE} for \code{\link[=seg]{seg()}}, for any smoothed construction and for a term held by
+\code{\link[=seg_hold]{seg_hold()}}; \code{FALSE} for a sharp, unheld \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}}. It is the
+predicate that a fitting layer routes on: a Jacobian licenses a
+Gauss-Newton step and a line search on the model's own objective, and a
+working linearization does not.
 }
 \details{
 \code{\link[=seg]{seg()}} is differentiable in its break-points away from them, so its block
-is the exact derivative. \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}} freeze the weight
-\eqn{W = 1/(2\lvert\tilde{x}-\psi\rvert)} at the previous position and read
-the break-point off two coefficients, so their block is a working
+is the exact derivative. A sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} freezes the weight
+\eqn{W = 1/(2\lvert\tilde{x}-\psi\rvert)} at the previous position and reads
+the break-point off two coefficients, so its block is a working
 linearization: the fixed-point iteration on it is not a descent method on
-the model's objective, its early steps going uphill on purpose under a large
+the model's objective, its early steps can go uphill under a large
 scaling factor, and forcing a sufficient decrease stalls it.
 
 \code{smoothed} changes the answer for all three. Replacing the step and the
-hinge by an \code{\link[numericals7:abs_smoother]{numericals7::abs_smoother()}}'s smooth versions makes every
+hinge by the smooth versions of an \code{\link[numericals7:abs_smoother]{numericals7::abs_smoother()}} makes every
 break-point an ordinary parameter with a true derivative, so a smoothed
-\code{jump} answers \code{TRUE} and is routed like an \code{\link[=nl]{nl()}} term.
+\code{jump} answers \code{TRUE} and is routed like an \code{\link[=nl]{nl()}} term. A term held by
+\code{\link[=seg_hold]{seg_hold()}} answers \code{TRUE} as well, its block being the exact design at
+the held positions.
 }
 \examples{
 # The continuous construction differentiates; the two discontinuous

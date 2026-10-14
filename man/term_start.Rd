@@ -10,7 +10,9 @@ term_start(term, ...)
 \arguments{
 \item{term}{A built structural term.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The methods for \code{\link[=regime]{regime()}} and for a marginal
+break-point term read \code{target} here, the response on the scale of the
+predictor.}
 }
 \value{
 A named numeric vector on the unconstrained scale, of length
@@ -22,18 +24,24 @@ scale \code{\link[=term_links]{term_links()}} defines, one per name \code{\link[
 layer reads it to begin a search.
 }
 \details{
-The start belongs to the term because only the term knows what a coordinate
-of zero means on each of its charts. The base method returns zero
-everywhere, which is each link's own natural point, and that is right
-wherever zero means "the model without this term".
+The start is supplied by the term because the meaning of a coordinate of
+zero depends on the chart that the term uses for each parameter. The base
+method returns zero everywhere, which is each link's own natural point, and
+that is appropriate wherever zero means "the model without this term".
 
-It does not always. \code{\link[=gas]{gas()}} overrides it: its score loadings ride a log
-chart, so a coordinate of zero is a loading of \strong{one}, which is a strongly
-driven filter and a poor place to begin. It starts them at 0.1 through the
-chart, \eqn{\log 0.1 = -2.303}, and leaves every other coordinate at zero.
+Zero does not always have that meaning. \code{\link[=gas]{gas()}} overrides the base method:
+its score loadings ride a log chart, so a coordinate of zero is a loading of
+\strong{one}, which is a strongly driven filter and a poor place to begin. The
+method places each loading at 0.1 through the chart, \eqn{\log 0.1 = -2.303},
+and leaves every other coordinate at zero. When a loading is developed by a
+subformula, the constant start is projected onto the design of the
+development.
 
-A term that needs the data to place its start, as a marginal break-point
-term does, computes it at \code{\link[=term_build]{term_build()}} and returns it from here.
+A term that needs the response to place its start reads it from \code{target},
+which reaches the method through the dots. \code{\link[=regime]{regime()}} places its levels at
+quantiles of \code{target}, and a marginal break-point term computes the profile
+of its break-points from \code{target} and otherwise uses quantiles of the
+covariate. Both are computed when the generic is called.
 }
 \examples{
 # The level and the persistence start at zero; the loading does not.

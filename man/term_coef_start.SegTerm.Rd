@@ -2,7 +2,7 @@
 % Please edit documentation in R/segmented.R
 \name{term_coef_start.SegTerm}
 \alias{term_coef_start.SegTerm}
-\title{Where a Break-Point Term's Coefficients Begin}
+\title{The Starting Coefficients of a Break-Point Term}
 \arguments{
 \item{term}{A built \code{\link[=SegTerm]{SegTerm()}}.}
 
@@ -22,10 +22,10 @@ predictor) and no coefficient carries a development, the slope and the
 changes are instead the least-squares coefficients of \code{target} on an
 intercept and the term's exact columns at the starting positions, which
 puts the starting mean near the data whatever the scale of the covariate.
-Zero is degenerate here, never neutral: a
-discontinuous term reads its break-point off \eqn{-g_k/\delta_k},
-which at zero is the same clamped position for every one of them, and a
-continuous term's Jacobian column vanishes, so a fitting layer that
-starts every coefficient at zero has to be told otherwise.
+A start of zero is degenerate for this term. A sharp discontinuous term
+reads its break-point off \eqn{-g_k/\delta_k} (a sharp jseg off a quadratic
+that reduces to it), which at zero is the same clamped position for every
+break-point, and a continuous term's Jacobian column vanishes, so a fitting
+layer starts the term from this vector and not from zeros.
 }
 \keyword{internal}

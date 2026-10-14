@@ -2,7 +2,7 @@
 % Please edit documentation in R/segmented.R
 \name{term_kinks.SegTerm}
 \alias{term_kinks.SegTerm}
-\title{Where a Break-Point Term's Objective Has a Kink}
+\title{The Kinks of a Break-Point Term's Objective}
 \arguments{
 \item{term}{A built \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} term.}
 
@@ -16,17 +16,19 @@ empty.
 }
 \description{
 The positions, within the term's own coefficient vector, of the
-coefficients that move a break-point sitting on an observation, for the
-continuous construction only. There the truncated line \eqn{(x-\psi)_+}
+coefficients that move a break-point sitting on an observation strictly
+inside the confinement limits, for the continuous construction only. A
+position clamped at a limit does not move with its coefficients and is not
+reported. There the truncated line \eqn{(x-\psi)_+}
 has a derivative in \eqn{\psi} of \eqn{-1} from one side and \eqn{0} from
 the other, so the objective is not differentiable in any coefficient that
 moves \eqn{\psi}: the break-point's own when it carries no development,
 and otherwise every coefficient of its development whose column is not zero
 at the observations concerned. An observation counts as sitting on the
-break-point within the band the block's own column reads its side in.
+break-point within the band in which the block's own column reads its side.
 
-A discontinuous construction answers \code{integer(0)}: its position is read off
-a product of the unknowns and it is fitted by working fits rather than by a
+A sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} answers \code{integer(0)}: its position is read off
+a product of the unknowns and it is fitted by working fits and not by a
 line search on the objective. A smoothed term answers \code{integer(0)}, having
 no kink, and so does a marginal one, which integrates the break-point out.
 }

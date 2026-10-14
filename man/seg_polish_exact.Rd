@@ -9,26 +9,28 @@ seg_polish_exact(term, y, sweeps = 10, weights = NULL)
 \arguments{
 \item{term}{A built break-point term (see \code{\link[=term_build]{term_build()}}).}
 
-\item{y}{A numeric vector, one value per observation of the build data:
-the response, net of whatever the caller wants held.}
+\item{y}{A numeric vector of finite values, one per observation of the
+build data: the response, net of whatever the caller wants held.}
 
 \item{sweeps}{At most how many passes over the positions. Defaults
-to 10; the descent usually stops moving in two or three.}
+to 10. The descent stops once a full pass moves no position.}
 
 \item{weights}{Optional non-negative weights, one per observation; the
 profile is then weighted least squares.}
 }
 \value{
-The term at the polished positions (see \code{\link[=seg_relocate]{seg_relocate()}}).
+The term at the polished positions (see \code{\link[=seg_relocate]{seg_relocate()}}), or the
+term itself when no interval lies inside the confinement limits.
 }
 \description{
-The exact minimum of the least-squares profile of a sharp \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}}
-or \code{\link[=jseg]{jseg()}} term, one break-point at a time with the others held. The
-profile of a change of level is constant between consecutive observations
-of the covariate, and the profile of a change of slope has one stationary
-point inside each such interval, so its minimum over one break-point is
-found interval by interval, and this function does that for every interval
-inside the confinement limits.
+Minimizes the least-squares profile of a sharp \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}} or
+\code{\link[=jseg]{jseg()}} term over the positions of its break-points, one break-point at a
+time with the others held. The profile of a \code{\link[=jump]{jump()}} or a \code{\link[=jseg]{jseg()}} is
+constant between consecutive distinct values of the covariate, and the
+profile of a \code{\link[=seg]{seg()}} has one stationary point inside each such interval.
+The minimum over one break-point is therefore found interval by interval,
+and this function does that for every interval inside the confinement
+limits.
 }
 \details{
 Write \eqn{F} for the columns that do not move with the break-point being
@@ -36,14 +38,16 @@ polished (an intercept, the covariate where the term carries a linear
 part, and the columns of the other break-points), and \eqn{a(q)} for the
 columns that do: the indicator \eqn{1(x > q)}, and for a \code{\link[=jseg]{jseg()}} also the
 truncated line \eqn{(x - q)1(x > q)}. The residual sum of squares at
-\eqn{q} is that of the response on \eqn{F} less the part \eqn{a(q)}
-explains of what \eqn{F} leaves, and every cross product \eqn{a(q)} enters
-is a sum over the observations above \eqn{q} of a fixed quantity, or of
-one fixed quantity minus \eqn{q} times another. Sorted once, those sums
-are cumulative sums, so all the intervals cost \eqn{O(np^2)} together
-rather than one linear fit each. The sweeps over the break-points repeat
-until none moves. Each break-point of a \code{\link[=jump]{jump()}} or a \code{\link[=jseg]{jseg()}} is placed at
-the midpoint of its interval.
+\eqn{q} is that of the response on \eqn{F} less the part of the remainder
+that \eqn{a(q)} explains, and every cross product that involves
+\eqn{a(q)} is a sum over the observations above \eqn{q} of a fixed
+quantity, or of one fixed quantity minus \eqn{q} times another. Sorted once,
+those sums are cumulative sums, so all the intervals cost \eqn{O(np^2)}
+together, where one linear fit per interval would cost more. The sweeps over
+the break-points repeat, at most \code{sweeps} times, until none moves. Inside an
+interval between consecutive distinct values of the covariate, the span of
+the columns of a \code{\link[=jump]{jump()}} or a \code{\link[=jseg]{jseg()}} does not depend on \eqn{q}, so each
+break-point of these terms is placed at the midpoint of its interval.
 
 For a \code{\link[=seg]{seg()}} the column that moves is \eqn{(x - q)_+}. Inside the
 interval between the consecutive values \eqn{u_k < u_{k+1}} it is
@@ -53,34 +57,36 @@ of the residual sum of squares it removes is
 \eqn{c} and \eqn{a} being the cross products of \eqn{t}, \eqn{s} and
 the response after the fixed columns are projected out. Its one
 stationary point is \eqn{q^* = -b/\gamma} of the least-squares fit on
-\eqn{t} and \eqn{s}, so the minimum over the interval is at \eqn{q^*}
-when it falls inside, or at an end, which is an observed value.
+\eqn{t} and \eqn{s}. The minimum over the interval is at \eqn{q^*}, when
+that falls inside the interval, or at one of the two ends, whichever gives
+the smaller residual sum of squares. The ends are consecutive observed
+values of the covariate or confinement limits.
 
-\code{\link[=seg_polish]{seg_polish()}} sweeps a grid of \code{k} points instead, which reaches a
-neighbourhood of the minimum and not the interval: measured on 16 samples
-of 200 observations, a fit polished by the grid reached the interval of
-the global minimum in 11.
+\code{\link[=seg_polish]{seg_polish()}} sweeps instead a grid of \code{k} quantiles of the covariate, so
+that the position it reaches is accurate only to the resolution of the grid.
 
-The profile is least squares of \code{y} on the term's own columns plus an
-intercept, exact for a gaussian response; a fitting layer for any other
-family accepts the positions only where its own objective improves.
+The profile is the least-squares fit of \code{y} on an intercept and the term's
+own columns, which is exact for a gaussian response. For any other family,
+the fitting layer uses the positions that the profile gives only where its
+own objective improves. The response must be finite, and missing values are
+rejected.
 
 A held term whose break-point is developed, \eqn{\psi_i = w_i'p} with
 \eqn{w_i} the row of the sub-design, is polished in the coefficients
 \eqn{p}. Along a line \eqn{p + tv} the position of observation \eqn{i}
 crosses \eqn{x_i} at \eqn{t_i = (x_i - \psi_i)/(w_i'v)}, so the profile
-is evaluated once between each pair of consecutive crossings, and for a
-\code{\link[=jseg]{jseg()}} whose change of slope is not developed like its position it is
-then minimized inside the best interval, where it varies smoothly. Where
-the sub-design partitions the observations into groups (\code{psi ~ g},
-\code{by = ~ 0 + g}) the lines move one group's position at a time, which is a
-search over every interval of that group, and the sweep also starts from
-each group's own minimum, the minimum of the profile on that group's
-observations alone; the better of the two results is kept. With a
-continuous covariate in the sub-design the lines are the coordinate
-directions and eight fixed directions in each plane of two coordinates,
-so the result is the best point found along those lines and not a global
-minimum. A developed term is polished only when held (see \code{\link[=seg_hold]{seg_hold()}}).
+is evaluated once between each pair of consecutive crossings. For a
+\code{\link[=jseg]{jseg()}} the profile is then also minimized inside the best interval, where
+it varies smoothly. Where the sub-design partitions the observations into
+groups (\code{psi ~ g}, \code{by = ~ 0 + g}), the lines move the position of one
+group at a time, which is a search over every interval of that group. The
+sweep is also started from each group's own minimum, which is the minimum
+of the profile on the observations of that group alone, and the better of
+the two results is kept. Otherwise the lines are the coordinate directions
+and, in each plane of two coordinates, six further fixed directions, so
+that the result is the best point found along those lines and not a global
+minimum. A developed \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} is polished only when held (see
+\code{\link[=seg_hold]{seg_hold()}}), and a developed \code{\link[=seg]{seg()}} is rejected.
 }
 \examples{
 set.seed(1)

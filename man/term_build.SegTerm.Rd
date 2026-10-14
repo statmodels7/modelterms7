@@ -12,41 +12,53 @@ subformulas name.}
 \item{...}{Unused.}
 }
 \value{
-The term with \code{X}, \code{coef_names}, \code{blueprint} and, where a
-subformula brought one, \code{penalty} filled.
+The term with \code{X}, \code{coef_names} and \code{blueprint} filled. The slot
+\code{penalty} is \code{NULL}; the penalties of the developments are recorded in the
+blueprint and listed by \code{\link[=term_penalties]{term_penalties()}}.
 }
 \description{
 Evaluates the covariate, resolves any development of the term's own
 coefficients, places the break-points at their starting positions and builds
-the working block there. It also settles the confinement limits, the
+the working block there. It also sets the confinement limits, the
 scaling schedule and, where the term is smoothed, the transition width.
 }
-\section{What is settled here}{
+\section{The quantities set at build}{
 The covariate must vary. The break-points are confined to the interval
-between the 5th and the 95th percentile of it: outside that the indicator is
-constant, the truncated line and that constant are linearly dependent, and
-the block is exactly singular. A run ending against the limit has found no
-break-point, and \code{\link[=seg_psi]{seg_psi()}} then reports the limit itself.
+between the 5th and the 95th percentile of it, so that both sides of a
+break-point carry observations (a break-point beyond the range of the data
+would make the indicator constant, the truncated line and that constant
+linearly dependent, and the block exactly singular). A run ending against
+the limit has found no break-point, and \code{\link[=seg_psi]{seg_psi()}} then reports the limit
+itself.
 
 The starting positions are \code{psi} where it was given and evenly spaced
-quantiles of the covariate otherwise. Zero is degenerate here, so
-\code{\link[=term_coef_start]{term_coef_start()}} returns these rather than a vector of zeros.
+quantiles of the covariate otherwise. A start of zero is degenerate for
+this term, so \code{\link[=term_coef_start]{term_coef_start()}} returns these positions and not a vector
+of zeros.
 
 Each subformula's right-hand side goes through \code{\link[=interpret_formula]{interpret_formula()}} and its
 terms are built, so their blueprints are recorded and reapplied at
-prediction. What a development may carry depends on \code{kind}: the continuous
-construction takes any of them, and the discontinuous ones only a scalar
-change of level or a design that partitions the rows, their read-off being a
-product of two unknowns.
+prediction. What a development may carry depends on \code{kind}. The continuous
+construction takes any of them. A sharp \code{\link[=jump]{jump()}} takes a development of the
+break-point with a scalar change of level on any design, or one development
+shared by the change of level and the break-point on a design that
+partitions the rows; a sharp \code{\link[=jseg]{jseg()}} takes only the shared partition
+development, the read-off being a product of two unknowns. A smoothed term
+takes any development. A design that carries the intercept twice, the
+subformula's own and a constant column of a sub-term, as in
+\code{gamma ~ lasso(~1)}, is rejected, and \code{gamma ~ 0 + lasso(~1)} is the
+spelling of an intercept-only penalized development.
 }
 
 \section{The smoothed form}{
-With \code{smoothed} the step and the hinge are replaced by a
-\code{\link[numericals7:abs_smoother]{numericals7::abs_smoother()}}'s versions, and the transition width is
+With \code{smoothed} the step and the hinge are replaced by the versions of a
+\code{\link[numericals7:abs_smoother]{numericals7::abs_smoother()}}, and the transition width is
 resolved here from the covariate's spacing, within groups where a
 development of the break-point supplies a partition. The width is checked
-against the derived floor \eqn{\sqrt{\epsilon}D} and reported by \code{\link[=print]{print()}},
-a number that changes what the term means having to be legible.
+against the floor \eqn{\sqrt{\epsilon}D}, with \eqn{D} the range of the
+covariate, carried onto the smoother's own width scale by
+\code{\link[numericals7:smoother_width_floor]{numericals7::smoother_width_floor()}}, and a width below it is rejected.
+The width is reported by \code{\link[=print]{print()}}.
 }
 
 \examples{

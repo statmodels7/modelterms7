@@ -25,9 +25,9 @@ The probability of each regime at each observation given the whole series,
 \eqn{P(S_t = j \mid y_1, \dots, y_n)}, as a data frame.
 }
 \details{
-The probabilities are \code{\link[=term_posterior]{term_posterior()}}'s, computed by the forward and
-backward recursions; this method only labels them. The rows are in the
-order of the data the term was built on, whatever \code{by} and \code{time} say, so
-the result can be bound to that data directly.
+The probabilities are those of \code{\link[=term_posterior]{term_posterior()}}, computed by the forward
+and backward recursions, and this method adds the column labels. The rows
+are in the order of the data on which the term was built, whatever \code{by} and
+\code{time} say, so the result can be bound to that data directly.
 }
 \keyword{internal}

@@ -19,9 +19,10 @@ that order the others, and \eqn{K(K-1)} additive log-ratios, \eqn{K-1} per
 row of the matrix.
 }
 \details{
-The order matters: it is the order \code{\link[=term_links]{term_links()}}, \code{\link[=term_start]{term_start()}},
-\code{\link[=term_loglik]{term_loglik()}}'s Jacobian columns and the joint variance matrix are all
-indexed by, and \code{psi} must supply the names whatever order they come in.
+The order is the one that \code{\link[=term_links]{term_links()}}, \code{\link[=term_start]{term_start()}}, the columns of
+\code{\link[=term_loglik]{term_loglik()}}'s Jacobian and the joint variance matrix all follow. The
+argument \code{psi} of the methods is matched by name, so it may list the
+parameters in any order.
 
 The log-ratio names come from \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}}'s own
 \code{free_names}, so the spelling is that package's.

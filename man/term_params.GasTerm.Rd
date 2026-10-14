@@ -19,15 +19,14 @@ autoregressive lag. A parameter carrying a subformula is \strong{expanded in
 place} into its coefficients, named \code{parameter.coefficient}.
 }
 \details{
-The persistence coordinates are named for the chart they live on, never
-for the quantity a reader reads. \code{pacf1} is a partial autocorrelation;
-the autoregressive coefficient \eqn{\xi_1} the literature writes is a
-function of the whole chart through Levinson-Durbin, and coincides with the
-coordinate only at \eqn{q = 1}. \code{\link[=term_readable]{term_readable()}} is what carries the
-coordinates onto the coefficients.
+The persistence coordinates are named after the chart on which they are
+estimated. \code{pacf1} is a partial autocorrelation; the autoregressive
+coefficient \eqn{\xi_1} of the literature is a function of the whole chart
+through Levinson-Durbin, and coincides with the coordinate only at
+\eqn{q = 1}. \code{\link[=term_readable]{term_readable()}} maps the coordinates onto the coefficients.
 
-The order is the one \code{\link[=term_links]{term_links()}}, \code{\link[=term_start]{term_start()}}, \code{\link[=term_filter]{term_filter()}}'s
-Jacobian columns and the joint variance matrix are all indexed by.
+The order is the one by which \code{\link[=term_links]{term_links()}}, \code{\link[=term_start]{term_start()}}, the Jacobian
+columns of \code{\link[=term_filter]{term_filter()}} and the joint variance matrix are indexed.
 }
 \examples{
 term_params(gas(p = 1, q = 1))

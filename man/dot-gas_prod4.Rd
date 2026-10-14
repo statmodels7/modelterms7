@@ -13,18 +13,19 @@
 A matrix, the contracted fourth derivative of the product.
 }
 \description{
-Sixteen terms, one per way of dealing four differentiations between two
-factors, with two of the four slots contracted against the directions.
+Sixteen terms, one per way of distributing four differentiations between
+two factors, with two of the four slots contracted against the directions.
 }
 \details{
-The recursion multiplies a chart quantity by a lagged score or level three
-times over -- \eqn{\kappa_i s_{t-i}}, \eqn{\xi_j f_{t-j}}, and the starting
-level's own fixed point \eqn{f_0 = \omega + Sf_0} -- so the rule is written
+The recursion forms products of three kinds: a loading times a lagged
+score, \eqn{\kappa_i s_{t-i}}, a persistence times a lagged level,
+\eqn{\xi_j f_{t-j}}, and the starting level, which is the fixed point
+\eqn{f_0 = \omega + Sf_0}. The rule is therefore written
 once here. Writing \eqn{S} for the set of slots that go to the first
 factor, the sixteen subsets of \eqn{\{m,n,b,c\}} give, after contracting
 \eqn{m} against \eqn{v} and \eqn{n} against \eqn{w}, the terms this
 returns. The sum is symmetric in the two factors, each term mapping onto
-another under the swap, which is what a test asserts of it.
+another under the swap.
 }
 \seealso{
 \code{\link[=.gas_jet]{.gas_jet()}}

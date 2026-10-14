@@ -7,7 +7,7 @@
 \item{term}{A built \code{\link[=SegTerm]{SegTerm()}}.}
 
 \item{coef}{The coefficients to move to, of length \code{ncol(term@X)}. Any
-other length throws with the required length named.}
+other length signals an error that names the required length.}
 
 \item{...}{Unused.}
 }
@@ -17,21 +17,27 @@ scaling schedule all recomputed at \code{coef}.
 }
 \description{
 Moves the break-points to where the coefficients put them, rebuilds the
-working block there, and advances the scaling schedule. It is one step of
-the iteration that estimates the break-points, and the block it returns is
-what the next linear fit is taken on.
+working block there, and, for a sharp \code{jump} or \code{jseg}, advances the
+scaling schedule. A smoothed term has no schedule, and a term held by
+\code{\link[=seg_hold]{seg_hold()}} keeps its positions and only rebuilds the exact block at the
+new coefficients. It is one step of
+the iteration that estimates the break-points, and the block that it
+returns is what the next linear fit is taken on.
 }
 \section{How the new positions are found}{
-For \code{seg} the break-point is a coefficient, so the new position is read
-straight out of \code{coef}. For \code{jump} and \code{jseg} it is \strong{read off} two of
+For \code{seg}, and for any smoothed term, the break-point is a coefficient, so
+the new position is read straight out of \code{coef}. For a sharp \code{jump} and
+\code{jseg} it is \strong{read off} two of
 them: the identity \eqn{1(x > \psi) = 1/2 + (x-\psi)/(2|x-\psi|)} makes the
 step linear in \eqn{\psi} once the weight is frozen, and
 \eqn{\psi = -g_k/\delta_k} follows. \code{jseg} reads a quadratic instead, its
 truncated line depending on the position as well.
 
-Every new position is clamped into the confinement interval the build
-settled, and crossed break-points are relabeled so that each keeps
-travelling with its own scaling factor and direction.
+Every new position is clamped into the confinement interval that
+\code{\link[=term_build]{term_build()}} set. When the term has more than one break-point and
+none of its per-break-point coefficients carries a development, crossed
+break-points are relabeled so that each keeps traveling with its own
+scaling factor and direction.
 }
 
 \section{The scaling schedule}{
@@ -57,7 +63,7 @@ r <- term_refresh(b, c(cf[1], cf[2], 6))
 c(before = seg_psi(b), after = seg_psi(r))
 max(abs(term_matrix(r) - term_matrix(b))) > 0
 
-# A wrong length is refused.
+# A coefficient vector of the wrong length is an error.
 try(term_refresh(b, c(1, 2)))
 
 }

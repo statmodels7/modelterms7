@@ -25,15 +25,15 @@ A list with \code{v}, \code{d1}, \code{d2}, \code{d3v}, \code{d3w},
 \description{
 Collects a scalar quantity's derivatives through the fourth order,
 together with the contractions of the lower ones against the two
-directions, in the shape \code{\link[=.gas_prod4]{.gas_prod4()}} reads.
+directions, in the shape that \code{\link[=.gas_prod4]{.gas_prod4()}} reads.
 }
 \details{
 The fourth derivative of a product needs, of each factor, its value, its
 first three derivatives and its fourth contracted against both directions,
-and also the contractions the product rule pairs against the other
-factor's. Computing them once per factor rather than at each of the
-sixteen terms is what keeps the recursion's cost the same shape as the
-third order's.
+and also the contractions that the product rule pairs with the other
+factor's derivatives. Computing them once per factor, and not at each of
+the sixteen terms, gives the fourth-order recursion the same cost
+structure as the third.
 }
 \seealso{
 \code{\link[=.gas_prod4]{.gas_prod4()}}

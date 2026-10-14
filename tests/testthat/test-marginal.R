@@ -642,8 +642,11 @@ test_that("the compiled seg quadrature is its R twin", {
     xs <- sort(t[id == 1])
     expect_equal(.marg_nodes(xs, 4.6, 0.7), .marg_nodes_r(xs, 4.6, 0.7)[
       names(.marg_nodes(xs, 4.6, 0.7))], tolerance = 1e-13)
-    # an extreme scale reaches the panel caps
-    expect_equal(.marg_nodes(xs, 4.6, 1e-6), .marg_nodes_r(xs, 4.6, 1e-6)[
-      names(.marg_nodes(xs, 4.6, 1e-6))], tolerance = 1e-13)
+    # a narrow scale splits every interval into many panels
+    expect_equal(.marg_nodes(xs, 4.6, 0.01), .marg_nodes_r(xs, 4.6, 0.01)[
+      names(.marg_nodes(xs, 4.6, 0.01))], tolerance = 1e-13)
+    # an extreme scale exceeds the panel budget
+    expect_error(.marg_nodes(xs, 4.6, 1e-6), "too small against the spacing")
+    expect_error(.marg_nodes_r(xs, 4.6, 1e-6), "too small against the spacing")
   }
 })

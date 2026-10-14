@@ -16,7 +16,7 @@ using namespace Rcpp;
 // go through the Levinson-Durbin map, whose derivatives to the fourth order
 // are written here as gas_levinson2/3/4 write them in R. The model's own
 // pieces (cross, M, dcurv, N, Q, P, cppp) are read from the arrays the
-// caller supplies, as .structural_blocks() reads them.
+// caller supplies, as statmodels7's .structural_blocks() reads them.
 //
 // The lags are held in ring buffers of max(p, q) + 1 slots, so the memory
 // is constant in the length of a group. Groups run over threads with each
@@ -165,8 +165,8 @@ inline void row_of(const Val& V, int t, int m, int mk, double* out) {
 }
 
 // ---- the Levinson-Durbin map's derivatives, as gas_levinson2/3/4 ------------
-// J is q x q (row j = coefficient, column k = pacf), H[j], T[j], Q[j] are
-// q x q, all column-major
+// J is q x q (row j = coefficient, column k = pacf); H, T1, T2 and Qd hold
+// one q x q block per coefficient, all column-major
 struct Lev {
     int q;
     std::vector<double> J, H, T1, T2, Qd;   // H, T1, T2, Qd: q blocks of q x q
@@ -705,7 +705,7 @@ List gas_curvature_gen_cpp(NumericVector eta, List groups, int p, int q,
 
             s[ts] = s_p[r - 1];
             double cv = c_p[r - 1];
-            // the model's pieces, as .structural_blocks()
+            // the model's pieces, as statmodels7's .structural_blocks()
             for (int k = 0; k < mk; ++k) cross[k] = 0.0;
             for (int qq = 0; qq < npar; ++qq) {
                 if (qq == ap - 1) continue;

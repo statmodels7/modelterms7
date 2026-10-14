@@ -19,15 +19,13 @@ the parameters, and a third names the prior where one was given.
 \details{
 The form is
 
-\if{html}{\out{<div class="sourceCode">}}\preformatted{<MarginalBreakTerm> 'jump' (jump): 1 latent break-point per group,
-                    integrated out (3 groups)
+\if{html}{\out{<div class="sourceCode">}}\preformatted{<MarginalBreakTerm> 'jump' (jump): 1 latent break-point per group, integrated out (3 groups)
   parameters: psi1.mean, psi1.sd, delta1
 }\if{html}{\out{</div>}}
 
-The prior line appears only where \code{random(distrib = )} named a family; under
-the default Gaussian there is nothing to name. A built structural term is
-described by its group count rather than by the word "built", the count
-being the more useful line.
+The prior line appears only where \code{random(distrib = )} names a family; under
+the default Gaussian there is nothing to name. A built term is shown with
+its number of groups, and an unbuilt one is marked as a specification.
 }
 \examples{
 set.seed(1)

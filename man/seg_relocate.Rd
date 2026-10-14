@@ -9,7 +9,7 @@ seg_relocate(term, psi)
 \arguments{
 \item{term}{A built break-point term (see \code{\link[=term_build]{term_build()}}).}
 
-\item{psi}{A numeric vector, one position per break-point.}
+\item{psi}{A numeric vector, one finite position per break-point.}
 }
 \value{
 The term at the new positions.
@@ -20,13 +20,16 @@ the scaling schedule fresh and the block rebuilt, ready to iterate
 from there. A restart proposal needs it: a bootstrap resample perturbs
 the objective by \eqn{1/\sqrt{n}} and stops escaping a deep basin as the
 sample grows, so the restarting loop also proposes fresh positions
-outright, which this is the operation behind.
+outright, and this function performs that operation.
 }
 \details{
 The positions are sorted and confined to the term's own interval. For a
-discontinuous construction the auxiliary coefficients are set to
-\eqn{g_k = -\delta_k\psi_k}, a change of level at zero replaced by one,
-so the read-off returns exactly the positions given. A term whose
+sharp \code{jump()} or \code{jseg()} the auxiliary coefficients are set to
+\eqn{g_k = -\delta_k\psi_k}, a change of level smaller than \eqn{10^{-8}}
+in absolute value being replaced by one first, so the read-off returns
+exactly the positions given. A continuous or smoothed term stores the
+positions themselves. On a term held by \code{\link[=seg_hold]{seg_hold()}} it moves the held
+positions. A term whose
 per-break-point coefficients carry a development is rejected: its
 positions are one per observation and a single vector does not place
 them.

@@ -57,55 +57,54 @@ against \code{g} and both directions.
 }
 \description{
 \code{\link[=term_third]{term_third()}} differentiated once more along a second direction. It
-is what the exact HESSIAN of a marginal criterion needs when the model
+is what the exact Hessian of a marginal criterion needs when the model
 carries a term that bends the predictor.
 }
 \details{
 A marginal criterion carries \eqn{-\frac{1}{2}\log|K|} at the penalized
 mode, so its gradient in one hyperparameter reads \eqn{\partial K/\partial
-u} along the direction the mode moves in, which is \code{\link[=term_third]{term_third()}}, and
-its second derivative in a PAIR reads the same object along two
-directions. Where the predictor is \eqn{X\beta} that is the family's
-derivatives against the design and nothing else; where a filter produces
-it, \eqn{K} carries \eqn{\sum_t w_t \ell_{p,t}E_t} as well, and
-differentiating that twice asks for \eqn{\partial^4 e_t/\partial u^4}.
+u} along the direction in which the mode moves, which is \code{\link[=term_third]{term_third()}}, and
+its second derivative in a pair of hyperparameters reads the same object
+along two directions. Where the predictor is \eqn{X\beta} that is the
+family's derivatives against the design and nothing else; where a filter
+produces it, \eqn{K} carries \eqn{\sum_t w_t \ell_{p,t}E_t} as well, and
+differentiating that twice requires \eqn{\partial^4 e_t/\partial u^4}.
 
-\strong{Only contracted, and only twice.} The full fourth derivative is an
-\eqn{m^4} array per observation and is never formed: what is propagated is
-a matrix per observation, the same size as the curvature and therefore the
-same \eqn{O(nm^2)}. A caller wanting a Hessian over \eqn{n_h}
-hyperparameters calls this once per pair.
+The derivative is contracted in two directions only. The full fourth
+derivative is an \eqn{m^4} array per observation and is never formed: what
+is propagated is a matrix per observation, the same size as the curvature
+and therefore the same \eqn{O(nm^2)}. A caller that needs a Hessian over
+\eqn{n_h} hyperparameters calls this once per pair.
 
-\strong{Five states, not three.} The recursion carries \eqn{F_t}, \eqn{\Phi_t},
-\eqn{\Psi^{(v)}_t}, \eqn{\Psi^{(w)}_t} and \eqn{\Omega_t}: BOTH third
-derivatives, because the product rule at the fourth order pairs each
-direction's third derivative with the other direction, so a recursion
+The recursion carries five states, \eqn{F_t}, \eqn{\Phi_t},
+\eqn{\Psi^{(v)}_t}, \eqn{\Psi^{(w)}_t} and \eqn{\Omega_t}. Both third
+derivatives are carried, because the product rule at the fourth order pairs
+each direction's third derivative with the other direction, so a recursion
 holding one contraction cannot reach this order.
 
-\strong{What the model supplies.} Each order of differentiation pulls in one
-more order of the family, so beyond the third order's \code{dcurv} and
-\code{N} the \code{blocks} callback returns, at an observation,
+Each order of differentiation involves one more order of the family, so
+beyond the third order's \code{dcurv} and \code{N} the \code{blocks} callback returns, at
+an observation,
 
 \deqn{\texttt{Q} = \sum_{r,r'}\ell_{pprr'}V_r^\top V_{r'}, \qquad
   \texttt{P} = \sum_{r,r'}\Big(\sum_{s,s'}\ell_{prr'ss'}
     (V_s\cdot v)(V_{s'}\cdot w)\Big)V_r^\top V_{r'},}
 
 with \code{cppp} \eqn{= \ell_{ppp}} beside them, and \code{N} a list of
-two, one per direction. \code{P} is the only place the family's FIFTH
-derivative enters; \code{cppp} is a scalar no contraction recovers, the
-level's own curvature moving by it.
+two, one per direction. \code{P} is the only place where the family's fifth
+derivative enters. The scalar \code{cppp} is not recovered by any contraction;
+it is the amount by which the level's own curvature moves.
 
 The base method returns zeros, so an additive term is covered without
-writing anything. A structural term refuses, for the reason
-\code{\link[=term_third]{term_third()}} gives: zero there would be a false statement rather
-than a true one.
+writing anything. A structural term signals an error, for the reason
+that \code{\link[=term_third]{term_third()}} gives: a zero fourth derivative would misstate it.
 }
 \examples{
 set.seed(1)
 dd <- data.frame(t = 1:20, y = rnorm(20))
 term <- term_build(linpar(~t), dd)
 # an additive term bends no predictor, so every order above the first is
-# zero and the base method says so
+# zero, as the base method returns
 out <- term_fourth(term, rep(0, 20), dd$y,
                    score = function(e, i) dd$y[i] - e,
                    curvature = function(e, i) -1, psi = list(),
@@ -118,5 +117,5 @@ all(out$curvature == 0)
 \seealso{
 \code{\link[=term_third]{term_third()}} for the third order this differentiates,
 \code{\link[=term_curvature]{term_curvature()}} for the second, \code{\link[statmodels7:reml]{statmodels7::reml()}} for the
-criterion whose Hessian asks for it.
+criterion whose Hessian requires it.
 }

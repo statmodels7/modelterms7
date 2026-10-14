@@ -14,7 +14,7 @@
 \description{
 Prints two lines: the label and the number of regimes, followed by the
 term's parameters. A built term reports how many groups the recursion runs
-over; a specification says so instead.
+over, and a specification reports no group count.
 }
 \details{
 The two forms are
@@ -30,8 +30,7 @@ The group count is \code{length(blueprint$order)}, which is 1 unless the term
 was given a \code{by}. The parameter list is \code{\link[=term_params]{term_params()}}, the same before
 and after a build, \code{k} alone determining it.
 
-Note that a built term is described by its count of groups rather than by
-the word "built", the count being the more useful line.
+A built term is described by its count of groups, not by the word "built".
 }
 \examples{
 set.seed(1)
@@ -42,7 +41,7 @@ dd <- data.frame(t = 1:40, id = rep(1:2, each = 20),
 regime(2)
 term_build(regime(2, by = id, time = t), dd)
 
-# Three regimes carry three levels and six log-ratios.
+# Three regimes carry one level, two gaps and six log-ratios.
 regime(3)
 
 }

@@ -15,9 +15,11 @@ term_posterior(term, eta, y, logdens, psi, ...)
 \item{y}{The response.}
 
 \item{logdens}{The log-density as a function of the predictor and the
-observation index, as \code{\link[=term_loglik]{term_loglik()}} takes it.}
+observation index, as \code{\link[=term_loglik]{term_loglik()}} takes it, returning one value per
+observation.}
 
-\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
+\item{psi}{The term's parameters on the parameter scale, named as
+\code{\link[=term_params]{term_params()}}.}
 
 \item{...}{Passed to methods.}
 }
@@ -32,11 +34,11 @@ likelihood mixed over states.
 }
 \details{
 \code{\link[=term_loglik]{term_loglik()}} returns the derivative of the mixed likelihood
-in the term's own parameters, which is the piece estimating those needs.
-Estimating the coefficients needs something else, and for this term that
-something is not a second recursion carrying derivatives: it is one
-quantity, by Fisher's identity. Writing \eqn{\gamma_t(k)} for the probability
-returned here and \eqn{\theta_t(k)} for the parameters the model has at
+in the term's own parameters. The derivative in the coefficients of the
+model's equations is obtained from the smoothed probabilities, by Fisher's
+identity, and needs no second recursion carrying derivatives. Writing
+\eqn{L} for the log-likelihood, \eqn{\gamma_t(k)} for the probability
+returned here and \eqn{\theta_t(k)} for the parameters of the model at
 observation \eqn{t} under regime \eqn{k},
 
 \deqn{\frac{\partial L}{\partial \eta_{q,t}}
@@ -44,16 +46,15 @@ observation \eqn{t} under regime \eqn{k},
     \frac{\partial \ell(y_t; \theta_t(k))}{\partial \eta_q},}
 
 for every predictor the model carries, not only the one the regimes
-shift. A caller therefore differentiates its own likelihood \eqn{K} times
-vectorized and weights the results, and needs no callback per
-observation: the regimes shift a predictor that is known before the
-recursion starts, which is the property that made the forward pass
-compilable and makes this cheap.
+shift. A caller therefore differentiates its own likelihood \eqn{K} times,
+vectorized, and weights the results, with no callback per observation. This
+is possible because the regimes shift a predictor that is known before the
+recursion starts.
 
-The probabilities come from the forward pass this term already runs and a
-backward pass beside it, both normalized at every step. Without the
-normalization the quantities are products of \eqn{t} densities and reach
-zero in double precision within a few hundred observations.
+The probabilities come from a forward pass and a backward pass beside it,
+both normalized at every step. Without the normalization the
+quantities are products of \eqn{t} densities and reach zero in double
+precision on a long series.
 }
 \examples{
 set.seed(1)

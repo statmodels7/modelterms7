@@ -8,16 +8,16 @@
 }
 \arguments{
 \item{term}{A built \code{GasTerm} whose blueprint carries at least one
-subformula. With no development the caller uses \code{.gas_coefs()} instead.}
+subformula. A term without a subformula is handled by \code{.gas_coefs()}.}
 
 \item{u}{The term's parameter vector, in \code{\link[=term_params]{term_params()}} order, on the mixed
-scale above.}
+scale described above.}
 
 \item{newdata}{A data frame of the rows to read at, carrying every variable
 the subformulas name.}
 }
 \value{
-A list of three:
+A list with the following elements:
 \describe{
 \item{\code{om}}{numeric, one \eqn{\omega_t} per row of \code{newdata}.}
 \item{\code{A}}{\code{nrow(newdata)} by \code{p}, the score loadings.}
@@ -25,8 +25,9 @@ A list of three:
 Levinson-Durbin applied row by row. A zero-column matrix at
 \eqn{q = 0}.}
 \item{\code{dom}, \code{dA}, \code{dB}}{the derivatives of \code{om}, of each column of
-\code{A} and of each column of \code{B} in \code{u}, each a \code{nrow(newdata)} by
-\code{length(u)} matrix (\code{dA} and \code{dB} are lists of them).}
+\code{A} and of each column of \code{B} with respect to \code{u}, each a
+\code{nrow(newdata)} by \code{length(u)} matrix (\code{dA} and \code{dB} are lists of
+them).}
 }
 }
 \description{
@@ -34,22 +35,25 @@ Evaluates the recursion's coefficients \eqn{(\omega_t, \kappa_t, \xi_t)}
 at each row of \code{newdata}, so that \code{\link[=term_continue]{term_continue()}} can carry a score-driven
 filter past the end of its series. A parameter carrying a subformula is read
 by calling \code{\link[=term_predict]{term_predict()}} on each of its sub-terms, which reapplies the
-blueprint each one recorded at build time; a basis or a set of contrasts is
-therefore not relearned on the new rows. A parameter with no subformula is
-constant along them.
+blueprint each sub-term recorded at build time; a basis or a set of contrasts
+is therefore not relearned on the new rows. A parameter with no subformula is
+constant over the rows.
 }
 \details{
 For a developed parameter \eqn{j} the value at row \eqn{t} is
-\eqn{\psi_{j,t} = g_j^{-1}(z_t' \gamma_j)} with \eqn{g_j} the parameter's own
-link and \eqn{\gamma_j} its coefficients, and the persistence goes on to
-Levinson-Durbin, so \code{B} holds autoregressive coefficients where \code{u} holds
-partial autocorrelations.
+\eqn{\psi_{j,t} = g_j^{-1}(z_t' \gamma_j)}, where \eqn{g_j} is the
+parameter's own link and \eqn{\gamma_j} its coefficients. The partial
+autocorrelations obtained in this way are mapped to autoregressive
+coefficients by the Levinson-Durbin recursion, so \code{B} holds autoregressive
+coefficients where \code{u} holds the coordinates of the partial autocorrelations.
 
-\code{u} mixes two scales, matching what \code{\link[=term_filter]{term_filter()}} is handed: a parameter
-with no subformula is taken as it stands, on the parameter scale, while a
-developed parameter's entries are its coefficients on the unconstrained
-scale and go through the chart here. With \eqn{p = q = 1} and no
-development, \code{u = c(0.3, 0.4, 0.7)} gives \eqn{\omega = 0.3},
+The vector \code{u} has the two scales of the parameter vector that
+\code{\link[=term_filter]{term_filter()}} receives. An entry for a parameter with no subformula is the
+parameter itself, on the parameter scale. The entries of a developed
+parameter are its coefficients on the unconstrained scale, and the chart is
+applied to them here. For example, with \eqn{p = q = 1}, the development
+\code{omega ~ 0 + z} and scalar \eqn{\kappa_1} and partial autocorrelation,
+\code{u = c(0.3, 0.4, 0.7)} gives \eqn{\omega_t = 0.3 z_t},
 \eqn{\kappa_1 = 0.4} and a partial autocorrelation of 0.7.
 }
 \seealso{

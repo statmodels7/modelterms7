@@ -15,7 +15,7 @@
 \item{psi}{The parameters on the parameter scale, named as
 \code{\link[=term_params]{term_params()}}.}
 
-\item{g}{The weights the second derivative is contracted against.}
+\item{g}{The weights against which the second derivative is contracted.}
 
 \item{seed}{The derivative of the static predictor in the unknowns.}
 
@@ -26,20 +26,21 @@
 
 \item{score_values, curvature_values}{The score and curvature of the
 model's log-density evaluated at the current predictors, one value per
-observation, on the parameter scale the callbacks read. Supplying both,
-together with \code{blocks_data}, routes the second-order recursion of
-the subformula route through the compiled kernel; either \code{NULL}
-keeps the R route.}
+observation, on the parameter scale that the callbacks read. Supplying
+both, together with \code{blocks_data}, routes the recursion through the
+compiled kernel, on the route without subformulas as well as on the
+route with them. If any of the three is \code{NULL}, the R route runs.}
 
 \item{blocks_data}{The model's derivative pieces as data instead of as a
 callback: a list with \code{H} (the mixed second derivatives, one
-column per distribution parameter), \code{D3} (the third derivatives,
-one column per parameter pair, pair \verb{(r, r2)} at column
-\code{(r - 1) * np + r2}), \code{Vs} (the per-parameter jacobian rows
-of the other equations) and \code{ap} (the filter's own parameter
-index), and for the third and fourth orders \code{D4} and \code{D5}, one column
-per index triple and quadruple laid out the same way. Read only by the
-compiled route.}
+column per distribution parameter), \code{D3} (the third derivatives with the
+filter's own parameter as first index, one column per pair of the other
+two indices, pair \verb{(r, r2)} at column \code{(r - 1) * n_par + r2}, with
+\code{n_par} the number of distribution parameters), \code{Vs} (the per-parameter
+jacobian rows of the other equations) and \code{ap} (the filter's own
+parameter index), and for the third and fourth orders \code{D4} and \code{D5}, one
+column per index triple and quadruple after the filter's own, laid out
+the same way. Read only by the compiled route.}
 
 \item{threads}{Threads for the compiled route's group loop, as
 \code{numericals7::n_threads()} counts them; 1 is sequential.}
@@ -58,14 +59,15 @@ the second derivative is accumulated on each group's active set rather
 than as a square over all the unknowns: a development's coordinate
 reaches only the groups where its column is not identically zero, so
 with grouping indicators the active set has the same size whether the
-panel has ten groups or a thousand. Measured, the full square cost
-0.39 s at 124 unknowns over 1600 rows and would have reached about
-twelve minutes at five hundred groups.
+panel has ten groups or a thousand. Accumulating the square over all the
+unknowns would grow with the square of their number, and the number of
+unknowns grows with the number of groups.
 
-\code{blocks} is called with the row of the jacobian restricted to the
-active set and with that set, and returns its pieces in the same
-coordinates. A callback of the earlier three-argument shape is still
-accepted and given the full row, its result being subset here; it costs
-the quadratic allocation the restriction exists to avoid.
+\code{blocks} is called as \code{blocks(e, i, v, act)}, with the row \code{v} of the
+Jacobian restricted to the active set \code{act}, and returns its pieces in the
+coordinates of that set. A callback of three arguments, \code{blocks(e, i, v)},
+is also accepted: it is given the full row and its result is subset here,
+which costs the quadratic allocation that the restriction is meant to
+avoid.
 }
 \keyword{internal}

@@ -15,24 +15,28 @@ The term with \code{blueprint} filled. \code{\link[=term_is_built]{term_is_built
 property on this branch, so it is \code{TRUE} for the result.
 }
 \description{
-Evaluates the covariate and the grouping variable, works out the interval
-structure the marginal likelihood is summed or integrated over, and records
-both in the blueprint together with a data-based starting point for the
-term's parameters.
+Evaluates the covariate and the grouping variable, orders the rows of each
+group by the covariate, and records the result in the blueprint. The
+interval structure over which the marginal likelihood is summed or
+integrated follows from that ordering.
 }
 \details{
-The covariate must vary; a constant one has no break-point to place and
-throws. The grouping variable must give one value per row.
+The covariate must vary: a constant covariate has no break-point to place
+and is rejected. The grouping variable must give one value per row and must
+not contain missing values.
 
-What the blueprint records is the group of each observation, the covariate
-sorted within each group, and the labels of the groups. The intervals the
-likelihood decomposes over are the gaps between a group's ordered
+The blueprint records the number of rows (\code{n}), the covariate in the order
+of the data (\code{x}), for each group the row indices ordered by the covariate
+(\code{groups}), and the labels of the groups (\code{labels}). The intervals over
+which the likelihood decomposes are the gaps between a group's ordered
 observations, so they follow from that ordering.
 
-The start is computed here because zero is degenerate for this term: with \code{delta = 0} the intervals are
-indistinguishable, every mass derivative sums to the derivative of a
-constant, and the surface is exactly flat in the prior's location and scale.
-\code{\link[=term_start]{term_start()}} returns what this computed.
+No starting values are computed here: \code{\link[=term_start]{term_start()}} computes them when it
+is called. A start with every change at zero is degenerate for this term.
+With \code{delta = 0} the intervals are indistinguishable, every mass derivative
+sums to the derivative of a constant, and the surface is exactly flat in the
+location and scale of the prior. A fitting layer therefore supplies a
+target to \code{\link[=term_start]{term_start()}}, from which the changes are estimated.
 }
 \examples{
 set.seed(1)
@@ -43,7 +47,8 @@ b <- term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd)
 names(b@blueprint)
 b@blueprint$labels
 
-# The start is data-based, zero being degenerate here.
+# Without a target the start uses the covariate's quantiles and spread, and
+# the change of level starts at zero.
 round(term_start(b), 4)
 
 # A constant covariate has no break-point to place.

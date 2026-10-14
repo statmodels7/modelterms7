@@ -25,10 +25,14 @@ parameters, as a list of vectors of the kind \code{\link[=term_start]{term_start
 layer fits from each and keeps the best.
 }
 \details{
-The base method returns one start, \code{\link[=term_start]{term_start()}}'s, so a term that says
-nothing is fitted once, as before. \code{\link[=regime]{regime()}} returns \code{n_start} of them:
-its likelihood has several maxima and the term can say which region of
-its parameters is worth covering.
+The base method returns the single start that \code{\link[=term_start]{term_start()}} gives, so a
+term without a method of its own is fitted once. \code{\link[=regime]{regime()}} returns
+\code{n_start} starts, because its likelihood has several maxima and the starts
+cover different regions of its parameters. In each start after the first,
+the free entries of the transition matrix are drawn from a normal
+distribution of standard deviation 2 and normal draws of standard deviation
+0.7 are added to the log gaps. The seed of the start is fixed, and the state
+of the random number generator of the caller is restored.
 
 The first element is always \code{\link[=term_start]{term_start()}}'s, so a fit with one start is
 the fit without this generic.

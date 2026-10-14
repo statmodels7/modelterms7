@@ -2,7 +2,7 @@
 % Please edit documentation in R/seg_hold.R
 \name{term_held.SegTerm}
 \alias{term_held.SegTerm}
-\title{The Coefficients a Held Break-Point Term Holds}
+\title{Coefficients Held by a Break-Point Term}
 \arguments{
 \item{term}{A \code{\link[=SegTerm]{SegTerm()}}.}
 
@@ -12,7 +12,8 @@
 An integer vector of positions in the term's coefficients.
 }
 \description{
-The coefficient slots of the break-points where the term is held by
-\code{\link[=seg_hold]{seg_hold()}}, and none otherwise.
+Returns the coefficient slots that carry the break-points of a term in the
+held state set by \code{\link[=seg_hold]{seg_hold()}}. For a \code{\link[=SegTerm]{SegTerm()}} that is not held, built or
+not, the result is an empty vector.
 }
 \keyword{internal}

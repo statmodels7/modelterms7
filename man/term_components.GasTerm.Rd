@@ -4,7 +4,7 @@
 \alias{term_components.GasTerm}
 \title{How a Score-Driven Term's Parameters Divide}
 \arguments{
-\item{term}{A built \code{\link[=GasTerm]{GasTerm()}}. An unbuilt one gives an empty list.}
+\item{term}{A built \code{\link[=GasTerm]{GasTerm()}}. An unbuilt term gives an empty list.}
 
 \item{...}{Unused.}
 }
@@ -15,19 +15,18 @@ describes.
 }
 \description{
 One entry per base parameter of the filter, giving the positions in
-\code{\link[=term_params]{term_params()}} that parameter owns and the sub-terms developing it. A
-parameter with no subformula owns one position; a developed one owns as many
-as its design has columns.
+\code{\link[=term_params]{term_params()}} that the parameter owns and the sub-terms that develop it. A
+parameter with no subformula owns one position; a developed parameter owns
+as many positions as its design has columns.
 }
 \details{
-For a structural term the \code{index} field gives positions in \code{\link[=term_params]{term_params()}}
-and not columns of a block, this branch having none. It is the vector the
-term's state, its readable quantities and its variance matrix are all
-indexed by.
+A score-driven term has no block, so the \code{index} field gives positions in
+\code{\link[=term_params]{term_params()}} and not columns of a block. The term's state, its readable
+quantities and its variance matrix are all indexed by that vector.
 
-A consumer reads it to report a fitted filter parameter by parameter, and
-\code{\link[=term_penalties]{term_penalties()}} uses the same division to place each sub-term's penalty
-on the coordinates it covers.
+The division serves to report a fitted filter parameter by parameter. The
+method of \code{\link[=term_penalties]{term_penalties()}} for a score-driven term uses the same layout to
+place each sub-term's penalty on the coordinates that the sub-term covers.
 }
 \examples{
 set.seed(1)
@@ -41,7 +40,7 @@ lapply(term_components(b), function(z) z$index)
 
 }
 \seealso{
-\code{\link[=term_components]{term_components()}} for the contract, \code{\link[=term_params]{term_params()}} for the
-vector the indices point into.
+\code{\link[=term_components]{term_components()}} for the fields of an entry, \code{\link[=term_params]{term_params()}} for
+the vector the indices point into.
 }
 \keyword{internal}

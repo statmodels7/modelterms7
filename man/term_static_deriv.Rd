@@ -22,9 +22,10 @@ column per coefficient.}
 \item{...}{Passed to methods.}
 }
 \value{
-A matrix of \code{X}'s dimensions, holding \eqn{\partial f_t/\partial
-  \beta} for each column of \code{X}, so the full derivative of the predictor
-is \code{X + result}. \code{NULL} for a term that carries no state.
+A matrix of \code{X}'s dimensions, holding the full derivative
+\eqn{\partial \eta_t/\partial \beta = x_t + \partial f_t/\partial \beta}
+for each column of \code{X}, so that the design is already included. \code{NULL} for
+a term that carries no state.
 }
 \description{
 How the predictor a structural term produces moves when the static part
@@ -32,23 +33,24 @@ of the predictor moves, one row per observation and one column per
 direction the caller supplies.
 }
 \details{
-A score-driven term's level is driven by scores read AT the predictor the
-recursion is producing, so a coefficient in the same equation reaches the
-level as well as the static part: writing \eqn{f_t} for the level and
+A score-driven term's level is driven by scores read at the predictor that
+the recursion is producing, so a coefficient in the same equation reaches
+the level as well as the static part: writing \eqn{f_t} for the level and
 \eqn{x_t} for a row of the design,
 \deqn{\frac{\partial \eta_t}{\partial \beta} = x_t +
   \frac{\partial f_t}{\partial \beta},}
-and the second piece obeys the recursion the filter already runs,
+and the second piece obeys the recursion that the filter already runs,
 \deqn{\frac{\partial f_t}{\partial \beta} =
-  \sum_i \alpha_i \, \ell''_{t-i}
+  \sum_i \kappa_i \, \ell''_{t-i}
     \frac{\partial \eta_{t-i}}{\partial \beta} +
-  \sum_j \beta_j \frac{\partial f_{t-j}}{\partial \beta}.}
-The curvature it needs is the one \code{\link[=term_filter]{term_filter()}} returns, so
-no callback is evaluated here and the pass is arithmetic alone.
+  \sum_j \xi_j \frac{\partial f_{t-j}}{\partial \beta},}
+with \eqn{\kappa_i} the score loadings, \eqn{\xi_j} the autoregressive
+coefficients and \eqn{\ell''_t} the curvature. The curvature is the one
+that \code{\link[=term_filter]{term_filter()}} returns, so no callback is evaluated here and the pass
+is arithmetic alone.
 
-Without it a standard error of the predictor counts the static part only.
-Measured on a score-driven mean with one covariate beside it, that
-understates the standard error by about a quarter.
+Without this derivative, the standard error of the predictor accounts for
+the static part only and leaves out the part that runs through the filter.
 
 The base method returns \code{NULL}. A term that is not a filter carries no
 state, so the derivative is the design row itself and the caller needs

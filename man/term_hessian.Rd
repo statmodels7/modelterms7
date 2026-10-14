@@ -28,16 +28,22 @@ term_hessian(
 \item{y}{The response.}
 
 \item{logdens}{A function of a predictor value and a row index returning
-the log-density there, as \code{\link[=term_loglik]{term_loglik()}} takes it.}
+the log-density there, one value per observation, as \code{\link[=term_loglik]{term_loglik()}}
+takes it.}
 
 \item{grad}{A function of the same two arguments returning a matrix with
 one row per observation and one column per distribution parameter, the
 derivative of the log-density in each predictor.}
 
 \item{hess}{A function of the same two arguments returning an array of
-second derivatives in the predictors, one slice per observation.}
+dimension \code{c(n, p, p)}, observation first, holding the second derivatives
+of the log-density in the predictors, where \code{p} is the number of
+distribution parameters.}
 
-\item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
+\item{psi}{The term's parameters on the parameter scale, named as
+\code{\link[=term_params]{term_params()}}. The derivatives in the columns \code{cols} are taken in the
+unconstrained coordinates, so the derivative in a gap is taken in its
+logarithm, as it is for the scale of \code{\link[=term_links]{term_links()}}.}
 
 \item{seed}{A list with one matrix per distribution parameter, each with
 one row per observation and one column per unknown, giving the
@@ -50,17 +56,20 @@ occupy, in the order of \code{\link[=term_params]{term_params()}}.}
 \item{level}{The index, among the distribution parameters, of the one the
 regimes shift.}
 
-\item{weights}{Optional observation weights.}
+\item{weights}{Optional observation weights: one number or one number per
+observation, none missing. \code{NULL} gives every observation the weight one.}
 
 \item{...}{Passed to methods.}
 }
 \value{
-A list of three: \code{loglik}, the \code{n} per-observation contributions;
-\code{gradient}, the derivative of their weighted sum in the caller's whole
-unknown vector; and \code{hessian}, the observed Hessian of the mixture in
-that same vector, an \code{m} by \code{m} matrix with \code{m} its length. The Hessian
-is the mixture's own, smaller in the Loewner order than the
-complete-data information by the information the unobserved states cost.
+A list of three: \code{loglik}, the \code{n} per-observation contributions,
+without the weights; \code{gradient}, the derivative of their weighted sum in
+the caller's whole unknown vector; and \code{hessian}, the observed Hessian of
+the weighted sum in that same vector, an \code{m} by \code{m} matrix with \code{m} its
+length. The Hessian is the mixture's own. Its negative, the observed
+information, is smaller in the Loewner order than the complete-data
+information, the difference being the information that the unobserved
+states cost.
 }
 \description{
 The log-likelihood of a term that mixes over latent states, with its
@@ -69,17 +78,18 @@ vector: the coefficients of every equation together with the term's own
 parameters.
 }
 \details{
-\code{\link[=term_posterior]{term_posterior()}} gives the gradient by Fisher's identity, and
-the matrix a caller can assemble from the same smoothed probabilities is
-the complete-data information, the ordinary one averaged over the states.
-That is the matrix an EM step inverts. It is not the observed information
-of the mixture, which is smaller by the information the unobserved states
-cost, and a standard error read off it is too small.
+The smoothed probabilities of \code{\link[=term_posterior]{term_posterior()}} give the gradient by
+Fisher's identity. A caller can also assemble from them the complete-data
+information, which is the ordinary information averaged over the states
+and is the matrix that an EM step inverts. The observed information of the
+mixture is a different matrix, smaller than the complete-data information
+by the information that the unobserved states cost, so a standard error
+computed from the complete-data matrix is too small.
 
 Louis's identity expresses the difference as the conditional variance of
 the complete-data score, which needs the pairwise smoothed probabilities
-and a recursion carrying a second moment. The route taken here is
-shorter. The scaled forward recursion computes the observed
+and a recursion carrying a second moment. This method uses a shorter
+route. The scaled forward recursion computes the observed
 log-likelihood exactly, as \eqn{\log L = \sum_t \log c_t} with \eqn{c_t}
 the normalizing constant of one step, so differentiating that arithmetic
 twice gives the observed Hessian with no identity involved. Carrying
@@ -102,9 +112,9 @@ and \eqn{G} the score and the Hessian of the log-density in \eqn{u} at
 that state, which is where the caller's derivatives are used. Groups are
 independent series and their contributions add.
 
-The cost is \eqn{O(nK^2m^2)} in time and \eqn{O(Km^2)} in storage, and
-the computation is meant to be run once, at a fitted point, never per
-iteration.
+The cost is \eqn{O(nK^2m^2)} in time. The second derivatives of the state
+take \eqn{O(Km^2)} in storage, beside \eqn{O(nKm)} for the emission scores.
+The computation is meant to be run once, at a fitted point.
 }
 \examples{
 set.seed(1)

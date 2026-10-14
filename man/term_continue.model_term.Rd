@@ -2,7 +2,7 @@
 % Please edit documentation in R/structural.R
 \name{term_continue.model_term}
 \alias{term_continue.model_term}
-\title{A Term Without State Is Not Continued}
+\title{Base Method of term_continue()}
 \arguments{
 \item{term}{A term.}
 

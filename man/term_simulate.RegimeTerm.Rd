@@ -8,31 +8,37 @@
 
 \item{psi}{The term's parameters, on the parameter scale.}
 
-\item{eta}{The static part of the predictor.}
+\item{eta}{The static part of the predictor, one value per row of the
+data the term was built on.}
 
 \item{draw}{Ignored: the levels do not read the response.}
 
 \item{...}{Ignored.}
 }
 \value{
-A list with \code{eta}, \code{y} (\code{NULL}) and
-\code{latent}, the state of each observation.
+A list with \code{eta}, the static predictor plus the level of each
+observation's state; \code{y} (\code{NULL}); and \code{latent}, the state of each
+observation, in the order of the data.
 }
 \description{
 A path of the latent chain, and the predictor each observation gets from
 the level of the state it lands in.
 }
 \details{
-The chain is started from its stationary distribution. The model's
-likelihood is written with that initial law, so starting from a fixed
-first state or from a uniform draw would simulate a different model from
-the one a fit reads back. The transition matrix and the
-stationary law come from the term's own
-\code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}}, so nothing about the chart
-is restated here.
+One chain is drawn for each group of the blueprint, in time order, and each
+starts from the chain's stationary distribution. This is how
+\code{\link[=term_loglik]{term_loglik()}} and \code{\link[=term_posterior]{term_posterior()}} read the data, and the likelihood is
+written with that initial law, so starting from a fixed first state or from
+a uniform draw would simulate a different model from the one that is
+fitted. The transition matrix comes from the term's own
+\code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}}, and the stationary law is the solution
+of \eqn{\delta(I - P) = 0} with \eqn{\sum_j \delta_j = 1}, solved in the
+method.
 
-The response is not drawn, the levels not reading it, so \code{y} comes back
-\code{NULL} and the caller draws at the returned predictor.
+The response is not drawn, because the levels do not read it, so \code{y} is
+returned as \code{NULL} and the caller draws at the returned predictor. An \code{eta}
+whose length differs from the number of rows of the build data signals an
+error.
 }
 \seealso{
 \code{\link[=term_simulate]{term_simulate()}}, \code{\link[=regime]{regime()}}

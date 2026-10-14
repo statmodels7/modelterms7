@@ -2,7 +2,7 @@
 % Please edit documentation in R/gas.R
 \name{.gas_curvature_core}
 \alias{.gas_curvature_core}
-\title{The Score-Driven Recursion's Second and Third Derivatives}
+\title{The Score-Driven Recursion's Second, Third and Fourth Derivatives}
 \usage{
 .gas_curvature_core(
   term,
@@ -32,28 +32,39 @@
 
 \item{psi}{The parameters on the parameter scale.}
 
-\item{g}{The weights the contraction is taken against.}
+\item{g}{The weights against which the contraction is taken.}
 
 \item{seed}{The derivative of the static predictor in the unknowns.}
 
 \item{blocks}{The model's derivative pieces.}
 
-\item{direction}{The direction, or \code{NULL} for the second order alone.}
+\item{direction}{\code{NULL} for the second order alone, one numeric vector for
+the third order, or a list of two numeric vectors for the fourth.}
+
+\item{score_values, curvature_values, blocks_data}{As for
+\code{\link[=term_curvature]{term_curvature()}}; the compiled route is taken when all three are given
+(and \code{blocks_data} carries \code{D4} for the third order and \code{D4} and \code{D5} for
+the fourth).}
+
+\item{threads}{Threads for the compiled route's group loop.}
 }
 \value{
-A list with \code{jacobian} and \code{curvature}, and \code{dphi}
-where a direction was given.
+A list with \code{jacobian} and \code{curvature}. With one direction it also
+has \code{dphi}, a matrix, and with two directions it has \code{dphi}, a list of
+two matrices, and \code{dpsi}.
 }
 \description{
-The body \code{\link[=term_curvature]{term_curvature()}} and \code{\link[=term_third]{term_third()}} share.
-With \code{direction} \code{NULL} it propagates the first two derivatives
-of the predictor; with a direction it propagates the third as well,
-contracted against it.
+The body that \code{\link[=term_curvature]{term_curvature()}}, \code{\link[=term_third]{term_third()}} and \code{\link[=term_fourth]{term_fourth()}}
+share. With \code{direction} \code{NULL} it propagates the first two derivatives
+of the predictor. With one direction it propagates the third as well,
+contracted against that direction, and with a list of two directions it
+propagates the fourth, contracted against both.
 }
 \details{
-The two orders are written here once, in place of a method each. The
+The three orders are written here once, in place of a method each. The
 third order's recursion reads \eqn{F}, \eqn{\Phi}, \eqn{\dot S} and
-\eqn{\ddot S} at every lag, so a separate implementation would carry a
-second copy of the first two orders, and the two would drift.
+\eqn{\ddot S} at every lag, and the fourth order reads the third, so a
+separate implementation of each order would carry a copy of the lower
+orders, and the copies could diverge.
 }
 \keyword{internal}

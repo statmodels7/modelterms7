@@ -11,13 +11,22 @@
 \item{y}{The response, unused directly: it reaches the filter through
 \code{score} and \code{curvature}.}
 
-\item{score}{A function of the predictor returning
-\eqn{\partial\ell/\partial\eta} per observation.}
+\item{score}{A function \verb{function(e, i)} of the predictor \code{e} and the
+1-based row index \code{i}, returning the driving score at that row: the
+derivative \eqn{\partial\ell/\partial\eta} where the term's \code{scaling} is
+zero, and \eqn{\mathcal{I}^{-d}\,\partial\ell/\partial\eta} otherwise.
+The method applies no scaling of its own.}
 
-\item{curvature}{A function of the predictor returning
-\eqn{\partial^2\ell/\partial\eta^2} per observation.}
+\item{curvature}{A function \verb{function(e, i)} returning the derivative of
+the driving score with respect to the predictor at that row:
+\eqn{\partial^2\ell/\partial\eta^2} where \code{scaling} is zero.}
 
-\item{psi}{The parameters, named as \code{\link[=term_params]{term_params()}}.}
+\item{psi}{The parameters, named as \code{\link[=term_params]{term_params()}}, each scalar
+coordinate on its parameter scale (the loading itself, the partial
+autocorrelation itself). The coefficients of a development enter as they
+are, the link of the developed parameter being applied inside the
+development. The columns of the returned Jacobian refer to the same
+scale.}
 
 \item{...}{Unused.}
 
@@ -26,18 +35,20 @@
 \code{\link[distributions7:distrib_scalar_route]{distributions7::distrib_scalar_route()}} and
 \code{\link[linkfunctions7:link_scalar_route]{linkfunctions7::link_scalar_route()}} return), \code{link_par} (the link's
 own parameters, from the same function), \code{k} (the parameter's 1-based
-index), \code{bounds}, \code{y} and \code{theta} (the per-observation parameters,
-followed by the distribution's constants). Where the C registries of
+index), \code{bounds}, \code{y}, \code{theta} (the per-observation parameters,
+followed by the distribution's constants) and, where the term's \code{scaling}
+is not zero, \code{scaling}. Where the C registries of
 \pkg{distributions7} and \pkg{linkfunctions7} cover the pair, the
 recursion reads the score and the curvature through their scalar entry
 points instead of the R callbacks; where they do not, the context is
 inert and the callbacks run as before. The groups run over threads only
-when the distribution's entries are safe on a worker thread.}
+when the distribution's entries are safe on a worker thread and there are
+at least eight groups.}
 
 \item{threads}{How many threads the recursion may use, over groups and
 only on the fast route: a group's filter is independent of the others
-and its writes land on its own rows, so no reduction is split and the
-result does not depend on the count, bit for bit.}
+and writes only to its own rows, so the groups are not combined by a
+reduction and the result does not depend on the count, bit for bit.}
 }
 \value{
 A list with \code{eta}, \code{jacobian} and \code{curv}, the

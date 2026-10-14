@@ -16,13 +16,16 @@ gas(
 )
 }
 \arguments{
-\item{p}{The number of score lags. Defaults to 1.}
+\item{p}{The number of score lags, a finite integer of at least 1.
+Defaults to 1.}
 
-\item{q}{The number of autoregressive lags. Defaults to 1.}
+\item{q}{The number of autoregressive lags, a finite integer of at least 0.
+Defaults to 1.}
 
 \item{...}{Two-sided formulas whose left side names a parameter, one
 per parameter to be developed with covariates, e.g.
-\code{kappa1 ~ s(x)}; see the section above.}
+\code{kappa1 ~ s(x)}; see the section above. A formula given in the place of
+\code{p} or \code{q} is rejected.}
 
 \item{by}{An optional grouping variable, evaluated in the data; each
 group is filtered independently, from its own starting level. A
@@ -37,8 +40,10 @@ as it is; see the section on the scaling of the score.}
 
 \item{links}{An optional named list of \pkg{linkfunctions7} links over
 the parameters of \code{\link[=term_params]{term_params()}}, overriding the defaults
-described above. A deviation cannot be named: it is unconstrained by
-construction, acting on the scale its parameter's own link defines.}
+described above. Only the parameters of \code{\link[=term_params]{term_params()}} before any
+development can be named. The coefficients of a development are
+unconstrained, and the link of the developed parameter is applied inside
+the development.}
 
 \item{label}{A single non-empty string naming the term.}
 }
@@ -47,15 +52,15 @@ An object of class \code{\link[=GasTerm]{GasTerm()}} (a specification; see
 \code{\link[=term_build]{term_build()}}).
 }
 \description{
-A generalized autoregressive score component (\cite{creal2013},
-\cite{harvey2013}): a level \eqn{f_t} added to the linear predictor,
-driven by the score of the observation density at the previous times,
+A generalized autoregressive score component (Creal et al., 2013; Harvey,
+2013): a level \eqn{f_t} added to the linear predictor, driven by the score
+of the observation density at the previous times,
 \deqn{f_t = \omega + \sum_{i=1}^{p} \kappa_i s_{t-i} +
   \sum_{j=1}^{q} \xi_j f_{t-j},}
 with \eqn{s_t = \partial \ell_t / \partial \eta_t} the derivative of the
-log-likelihood contribution with respect to the predictor it is
-evaluated at, multiplied by a power of the expected information when
-\code{scaling} is not zero.
+log-likelihood contribution at time \eqn{t} with respect to the predictor
+at which it is evaluated, multiplied by a power of the expected information
+when \code{scaling} is not zero.
 }
 \details{
 The term adds no columns. The predictor at one time depends on the
@@ -80,24 +85,24 @@ the defaults are the following.
 The level carries the identity, being unconstrained. The loadings carry
 the \strong{log} link: a positive loading responds in the direction of the
 score, which is the case the score-driven literature writes, and
-positivity is then structural. A deviation or a submodel moves the loading
-on the log scale, so no group and no observation can take a negative one.
-A loading that must be free in sign is asked for with
-\code{links = list(kappa1 = linkfunctions7::identity_link())}.
+positivity is then structural. A subformula develops the loading on the
+log scale, so every group and every observation has a positive loading.
+A loading that must be free in sign takes the identity link, which is set
+with \code{links = list(kappa1 = linkfunctions7::identity_link())}.
 
-The persistence is carried by \strong{partial autocorrelations} rather
-than by the coefficients \eqn{\xi_j}: the stationary region of an
-autoregression is not a box, so no collection of scalar links covers
-it, while the partial autocorrelations each range over \eqn{(-1, 1)}
-independently and the Levinson-Durbin recursion carries them onto the
-coefficients bijectively. At \eqn{q = 1} the two coincide. The
-coordinate is named for the chart it lives on, \code{pacf1} and so on,
-following the convention of \pkg{parameters7}.
+The persistence is carried by \strong{partial autocorrelations} and not by the
+coefficients \eqn{\xi_j} directly. The stationary region of an
+autoregression is not a box, so a collection of scalar links cannot
+represent it, whereas the partial autocorrelations each range over
+\eqn{(-1, 1)} independently and the Levinson-Durbin recursion maps them
+bijectively onto the coefficients. At \eqn{q = 1} the two coincide. Each
+coordinate is named after the chart on which it is estimated, \code{pacf1} and
+so on, following the convention of \pkg{parameters7}.
 
-Whatever the links, a parameter modeled per group or per observation
-stays in its own set: a departure acts on the unconstrained scale, so a
-loading on the log link is positive and a persistence on the rhobit
-link is stationary at every observation, whatever the departure is.
+With the default links, a parameter developed over groups or observations
+stays in its own set. The development acts on the unconstrained scale, so
+a loading on the log link is positive and a persistence on the rhobit link
+is stationary at every observation.
 }
 
 \subsection{One parameter at a time}{
@@ -111,7 +116,7 @@ propagated with it; what is missing is a way to say that one filter
 spans several parameters, since a term written inside the formula of
 one parameter has no place to declare it. That belongs to the model
 layer. The persistence would also need a different chart: the
-partial-autocorrelation construction below is a scalar one, and the
+partial-autocorrelation construction above is a scalar one, and the
 stationary region of a matrix autoregression is a bound on the
 spectral radius of its companion matrix, which is not a box.
 }
@@ -126,7 +131,7 @@ where \eqn{d} is the argument \code{scaling} and \eqn{\mathcal{I}_t} is evaluate
 at the predictor and at the other parameters of observation \eqn{t}. The
 level is scalar, so \eqn{\mathcal{I}_t} is a number and every real
 \eqn{d} defines a valid model. The literature uses three values
-(\cite{creal2013}). With \eqn{d = 0}, the default, the score is used as
+(Creal et al., 2013). With \eqn{d = 0}, the default, the score is used as
 it is. With \eqn{d = 1/2} the scaled score has unit conditional variance.
 With \eqn{d = 1} the update is the score premultiplied by the inverse
 information, a step of Fisher scoring, and to first order it does not
@@ -139,10 +144,12 @@ Wherever \eqn{\mathcal{I}_t} varies with the observation, the loadings
 \eqn{\kappa_i} have different units for different values of \eqn{d}. Where it
 is constant, as for the log-scale of a gaussian, changing \eqn{d} only
 rescales the loadings and leaves the likelihood unchanged. A scaling
-other than zero requires a family whose expected information has an
-analytic second derivative (\code{\link[distributions7:distrib_d2expected_hessian]{distributions7::distrib_d2expected_hessian()}}),
-because the derivatives of the filter reach the fourth derivative of
-\eqn{\mathcal{I}_t}.
+other than zero requires a univariate family whose expected information
+has an analytic second derivative
+(\code{\link[distributions7:distrib_d2expected_hessian]{distributions7::distrib_d2expected_hessian()}}), because the derivatives
+of the filter reach the fourth derivative of \eqn{\mathcal{I}_t}, which is
+read from the derivatives of the expected information up to
+\code{\link[distributions7:distrib_d4expected_hessian]{distributions7::distrib_d4expected_hessian()}}.
 }
 
 \subsection{The level beside an intercept}{
@@ -170,21 +177,22 @@ describe the same predictor. With a persistence close to one the factor
 standard error is not comparable with the intercept's: a change in
 \eqn{\omega} moves the level by that factor. The identity is for a scalar
 level; a level developed by a subformula is confounded with the part of
-its span the equation's design shares.
+its span that the equation's design shares.
 }
 
 \subsection{Groups and time}{
 \code{by} filters each group independently, as a panel of short series needs,
-and \code{time} gives the order within a group.
-Without \code{time} the rows are taken in the order they appear.
+and \code{time} gives the order within a group. Only the order of the times
+matters: a gap between two times counts as one step of the recursion.
+Without \code{time} the rows are taken in the order in which they appear.
 }
 
 \subsection{A parameter developed with covariates}{
 A two-sided formula in \code{...} whose left side names a parameter
 develops it as \eqn{\psi_{j,t} = g_j^{-1}(z_t^\top\gamma_j)}, the
 design \eqn{Z} built from the right-hand side through
-\code{\link[=interpret_formula]{interpret_formula()}}, so it takes any additive term of the
-package:
+\code{\link[=interpret_formula]{interpret_formula()}}, so it takes the additive terms of the package
+whose block does not move with their coefficients:
 \preformatted{gas(p = 1, q = 1, omega ~ ridge(~g), kappa1 ~ s(x),
     pacf1 ~ random(~1 | id), by = id)}
 The development acts on the unconstrained scale of the parameter's own
@@ -194,7 +202,7 @@ log link is positive at every observation, a persistence on the rhobit
 chart is inside \eqn{(-1, 1)} at every observation, and at \eqn{q = 1}
 that bounds the recursion's growth step by step. The coefficients
 \eqn{\gamma_j} are the term's parameters, unconstrained and on the
-identity link; the penalties the sub-terms carry are reported through
+identity link; the penalties that the sub-terms carry are reported through
 \code{\link[=term_penalties]{term_penalties()}} under the key \code{parameter::subterm}.
 A parameter that varies by observation changes the recursion itself,
 \deqn{f_t = \omega_t + \sum_i a_{i,t}\, s_{t-i}
@@ -206,8 +214,8 @@ pass and the curvature all run the general recursion.
 \code{by = ~f} (a formula, where a grouping variable is a bare symbol)
 is the shorthand giving the same subformula to every parameter; mixing
 it with per-parameter formulas is an error. A structural term, and a
-term whose block moves with its own coefficients, are rejected inside
-a subformula.
+term whose block moves with its own coefficients (\code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}},
+\code{\link[=jseg]{jseg()}} and \code{\link[=nl]{nl()}}), are rejected inside a subformula.
 }
 
 \subsection{A population value and a departure per group}{
@@ -229,10 +237,8 @@ component, here by the penalty. An unpenalized development over group
 indicators is therefore for reading a filter at given parameters rather
 than for fitting one.
 
-Earlier releases spelled this case as \verb{deviations =} with a
-\verb{penalty =}; both arguments are gone, the subformula reproducing
-them exactly (the same fit to the printed digit, hyperparameter
-included) while covering what they could not.
+The arguments \code{deviations} and \code{penalty} are not accepted and are
+rejected by name; the subformula takes their place.
 }
 }
 \examples{
@@ -258,8 +264,8 @@ out <- term_filter(b, eta = rep(0, 60), y = dd$y,
 # The level tracks the change in the mean.
 round(out$eta[c(1, 15, 30, 32, 45, 60)], 3)
 
-# And the Jacobian it propagates is exact, not differenced: a central
-# difference of the filter agrees with it to the step's own accuracy.
+# The Jacobian that the filter propagates is exact; a central difference
+# of the filter agrees with it to the accuracy of the step.
 f <- function(v) sum(term_filter(b, rep(0, 60), dd$y,
                                  function(e, i) dd$y[i] - e,
                                  function(e, i) -1,
@@ -301,7 +307,8 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   ft <- statmodels7::statmod(y ~ 0 + gas(p = 1, q = 1, time = t),
                              distributions7::gaussian1_distrib(), fd)
   # truth: omega 0.05, kappa 0.3, xi 0.9. xi is reported as the
-  # autoregressive coefficient, which its coordinate is not.
+  # autoregressive coefficient, whereas the estimated coordinate is a
+  # partial autocorrelation.
   print(round(coef(ft)$mu, 3))
 
   # With an intercept the level is held at zero and the intercept

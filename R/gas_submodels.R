@@ -45,29 +45,28 @@ NULL
 #'
 #' @description
 #' One entry per base parameter of the filter, giving the positions in
-#' [term_params()] that parameter owns and the sub-terms developing it. A
-#' parameter with no subformula owns one position; a developed one owns as many
-#' as its design has columns.
+#' [term_params()] that the parameter owns and the sub-terms that develop it. A
+#' parameter with no subformula owns one position; a developed parameter owns
+#' as many positions as its design has columns.
 #'
 #' @details
-#' For a structural term the `index` field gives positions in [term_params()]
-#' and not columns of a block, this branch having none. It is the vector the
-#' term's state, its readable quantities and its variance matrix are all
-#' indexed by.
+#' A score-driven term has no block, so the `index` field gives positions in
+#' [term_params()] and not columns of a block. The term's state, its readable
+#' quantities and its variance matrix are all indexed by that vector.
 #'
-#' A consumer reads it to report a fitted filter parameter by parameter, and
-#' [term_penalties()] uses the same division to place each sub-term's penalty
-#' on the coordinates it covers.
+#' The division serves to report a fitted filter parameter by parameter. The
+#' method of [term_penalties()] for a score-driven term uses the same layout to
+#' place each sub-term's penalty on the coordinates that the sub-term covers.
 #'
-#' @param term A built [GasTerm()]. An unbuilt one gives an empty list.
+#' @param term A built [GasTerm()]. An unbuilt term gives an empty list.
 #' @param ... Unused.
 #'
 #' @return A named list, one entry per base parameter and named by it, each
 #'   with `name`, `index`, `subs` and `sub_index` as [term_components()]
 #'   describes.
 #'
-#' @seealso [term_components()] for the contract, [term_params()] for the
-#'   vector the indices point into.
+#' @seealso [term_components()] for the fields of an entry, [term_params()] for
+#'   the vector the indices point into.
 #'
 #' @examples
 #' set.seed(1)
@@ -1051,32 +1050,35 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 #' at each row of `newdata`, so that [term_continue()] can carry a score-driven
 #' filter past the end of its series. A parameter carrying a subformula is read
 #' by calling [term_predict()] on each of its sub-terms, which reapplies the
-#' blueprint each one recorded at build time; a basis or a set of contrasts is
-#' therefore not relearned on the new rows. A parameter with no subformula is
-#' constant along them.
+#' blueprint each sub-term recorded at build time; a basis or a set of contrasts
+#' is therefore not relearned on the new rows. A parameter with no subformula is
+#' constant over the rows.
 #'
 #' @details
 #' For a developed parameter \eqn{j} the value at row \eqn{t} is
-#' \eqn{\psi_{j,t} = g_j^{-1}(z_t' \gamma_j)} with \eqn{g_j} the parameter's own
-#' link and \eqn{\gamma_j} its coefficients, and the persistence goes on to
-#' Levinson-Durbin, so `B` holds autoregressive coefficients where `u` holds
-#' partial autocorrelations.
+#' \eqn{\psi_{j,t} = g_j^{-1}(z_t' \gamma_j)}, where \eqn{g_j} is the
+#' parameter's own link and \eqn{\gamma_j} its coefficients. The partial
+#' autocorrelations obtained in this way are mapped to autoregressive
+#' coefficients by the Levinson-Durbin recursion, so `B` holds autoregressive
+#' coefficients where `u` holds the coordinates of the partial autocorrelations.
 #'
-#' `u` mixes two scales, matching what [term_filter()] is handed: a parameter
-#' with no subformula is taken as it stands, on the parameter scale, while a
-#' developed parameter's entries are its coefficients on the unconstrained
-#' scale and go through the chart here. With \eqn{p = q = 1} and no
-#' development, `u = c(0.3, 0.4, 0.7)` gives \eqn{\omega = 0.3},
+#' The vector `u` has the two scales of the parameter vector that
+#' [term_filter()] receives. An entry for a parameter with no subformula is the
+#' parameter itself, on the parameter scale. The entries of a developed
+#' parameter are its coefficients on the unconstrained scale, and the chart is
+#' applied to them here. For example, with \eqn{p = q = 1}, the development
+#' `omega ~ 0 + z` and scalar \eqn{\kappa_1} and partial autocorrelation,
+#' `u = c(0.3, 0.4, 0.7)` gives \eqn{\omega_t = 0.3 z_t},
 #' \eqn{\kappa_1 = 0.4} and a partial autocorrelation of 0.7.
 #'
 #' @param term A built `GasTerm` whose blueprint carries at least one
-#'   subformula. With no development the caller uses `.gas_coefs()` instead.
+#'   subformula. A term without a subformula is handled by `.gas_coefs()`.
 #' @param u The term's parameter vector, in [term_params()] order, on the mixed
-#'   scale above.
+#'   scale described above.
 #' @param newdata A data frame of the rows to read at, carrying every variable
 #'   the subformulas name.
 #'
-#' @return A list of three:
+#' @return A list with the following elements:
 #'   \describe{
 #'     \item{`om`}{numeric, one \eqn{\omega_t} per row of `newdata`.}
 #'     \item{`A`}{`nrow(newdata)` by `p`, the score loadings.}
@@ -1084,8 +1086,9 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 #'       Levinson-Durbin applied row by row. A zero-column matrix at
 #'       \eqn{q = 0}.}
 #'     \item{`dom`, `dA`, `dB`}{the derivatives of `om`, of each column of
-#'       `A` and of each column of `B` in `u`, each a `nrow(newdata)` by
-#'       `length(u)` matrix (`dA` and `dB` are lists of them).}
+#'       `A` and of each column of `B` with respect to `u`, each a
+#'       `nrow(newdata)` by `length(u)` matrix (`dA` and `dB` are lists of
+#'       them).}
 #'   }
 #'
 #' @seealso [term_continue()], the only caller; [term_filter()] for the same

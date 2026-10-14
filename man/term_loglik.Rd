@@ -16,11 +16,12 @@ observation.}
 \item{y}{The response. It reaches the recursion through the callbacks; the
 argument is passed for methods that need it directly.}
 
-\item{logdens}{A function \verb{(e, i)} returning the log-density of
-observation \code{i} at predictor \code{e}.}
+\item{logdens}{A function \verb{(e, i)} returning the log-density at predictor
+\code{e} of each observation in the index vector \code{i}, one value per element of
+\code{i}.}
 
 \item{score}{A function \verb{(e, i)} returning the derivative of that
-log-density with respect to the predictor.}
+log-density with respect to the predictor, one value per element of \code{i}.}
 
 \item{psi}{The term's parameters on the \strong{parameter} scale, named as
 \code{\link[=term_params]{term_params()}}.}
@@ -31,7 +32,9 @@ log-density with respect to the predictor.}
 A list of two: \code{loglik}, a numeric vector of \code{n} contributions
 summing to the term's log-likelihood, and \code{jacobian}, an \code{n} by
 \code{length(psi)} matrix of their derivatives in the term's parameters,
-exact and propagated through the recursion.
+computed exactly by propagation through the recursion. The columns follow
+\code{\link[=term_params]{term_params()}}, and the derivative in a gap is taken in the gap itself,
+not in its logarithm.
 }
 \description{
 The per-observation log-likelihood contributions a structural term
@@ -59,21 +62,24 @@ the filtered distribution, never differenced.
 }
 
 \section{How the model reaches it}{
-The term knows the chain and the levels and nothing about the family. The
-two callbacks are how the model's own density enters: \code{logdens} returns the
-log-density of one observation at a given predictor and \code{score} its
-derivative in that predictor. Both are called with the predictor shifted by
-each regime's level, so a term of \eqn{K} regimes evaluates them \eqn{K}
-times per observation.
+The term holds the chain and the levels and contains nothing about the
+family. The two callbacks are how the model's own density enters: \code{logdens}
+returns the log-density at a given predictor, one value per observation, and
+\code{score} returns its derivative in that predictor. For \code{\link[=regime]{regime()}}, each is
+called once per regime, with the predictor shifted by that regime's level
+and the whole index vector of the observations, so a term of \eqn{K}
+regimes makes \eqn{K} calls to each.
 
-Unlike \code{\link[=term_filter]{term_filter()}}'s callbacks these do \strong{not} depend on the state the
-recursion has reached: a regime shifts a predictor known in advance. That
-is why the density and the score of every observation under every regime
-can be computed once, vectorized, before the recursion starts.
+The callbacks of \code{\link[=term_filter]{term_filter()}} depend on the state the recursion has
+reached. The callbacks of a regime term do not, because a regime shifts a
+predictor that is known in advance. The density and the score of every
+observation under every regime can therefore be computed once, vectorized,
+before the recursion starts.
 
-The method on \code{\link[=structural_term]{structural_term()}} throws, naming the class: a term of the
-filter shape implements \code{\link[=term_filter]{term_filter()}} instead, and a fitting layer tells
-the two apart by which one answers.
+The method on \code{\link[=structural_term]{structural_term()}} signals an error that names the class. A
+term of the filter shape implements \code{\link[=term_filter]{term_filter()}} instead, and a fitting
+layer distinguishes the two shapes by which of the two generics has a method
+for the term.
 }
 
 \examples{

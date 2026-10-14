@@ -2,7 +2,7 @@
 % Please edit documentation in R/structural.R
 \name{term_static_deriv.model_term}
 \alias{term_static_deriv.model_term}
-\title{No State, No Propagation}
+\title{Base Method of term_static_deriv()}
 \arguments{
 \item{term}{A term.}
 

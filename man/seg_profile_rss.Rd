@@ -9,8 +9,8 @@ seg_profile_rss(term, y, weights = NULL)
 \arguments{
 \item{term}{A built break-point term (see \code{\link[=term_build]{term_build()}}).}
 
-\item{y}{A numeric vector, one value per observation of the build data:
-the response, net of whatever the caller wants held.}
+\item{y}{A numeric vector of finite values, one per observation of the
+build data: the response, net of whatever the caller wants held.}
 
 \item{weights}{Optional non-negative weights, one per observation; the
 profile is then weighted least squares.}
@@ -19,8 +19,9 @@ profile is then weighted least squares.}
 A single number; \code{Inf} where the fit fails.
 }
 \description{
-The residual sum of squares of \code{y} on the term's own columns at its
-current positions, the number \code{\link[=seg_polish]{seg_polish()}} descends on,
+The residual sum of squares of \code{y} on an intercept, the linear column where
+the term has one, and the term's own columns at its current positions, the
+number that \code{\link[=seg_polish]{seg_polish()}} descends on,
 read at one point. A restarting loop screens proposals with it: two
 configurations of positions are compared by their profiles at the cost
 of two linear fits, where refitting the model to compare them costs a

@@ -8,9 +8,10 @@ using namespace Rcpp;
 // work.
 //
 // kind: 0 = seg (continuous), 1 = jump (discontinuous), 2 = both.
-// Column order matches .seg_names(): the linear column if present, then
-// the slope changes (seg, jseg), then either the break-point Jacobians
-// (seg) or the kappa columns followed by the g columns (jump, jseg).
+// Column order matches .seg_block() in R/segmented.R: the linear column if
+// present, then the slope changes (seg, jseg; the argument `del`), then
+// either the break-point Jacobians (seg) or the change-of-level columns
+// (the argument `kap`) followed by the g columns (jump, jseg).
 //
 // For a discontinuous term the indicator columns are built on the
 // covariate RESCALED away from the break-point, after Fasola, Muggeo and

@@ -9,13 +9,14 @@
 \item{...}{Unused, and accepted so that the signature matches \code{\link[=print]{print()}}'s.}
 }
 \value{
-\code{x}, invisibly. Called for the lines it writes.
+\code{x}, invisibly. Called for the lines that it writes.
 }
 \description{
-Prints the label, the construction and how many break-points the term
-carries, followed by where they currently sit. A smoothed term adds a line
-naming its smoother and the transition width, and a term with a developed
-coefficient says which one.
+For a built term, prints the label, the construction and how many
+break-points the term has, followed by where they currently sit. A term
+that has not been built prints its label and construction followed by
+\code{(specification)}. A smoothed term adds a line naming its smoother and the
+transition width, and a term with a developed coefficient says which one.
 }
 \details{
 The form is
@@ -29,9 +30,8 @@ with every \code{\link[=term_refresh]{term_refresh()}}. Where a break-point carr
 there is no single number, a position then being one value per observation,
 and the range is printed instead.
 
-The smoother line reports the width because it changes what the term means:
-the transition is a real feature of the model, not an implementation
-detail, and a fit at one width is not a fit at another.
+The smoother line reports the width because the width changes what the
+term means: a fit at one width is a different model from a fit at another.
 }
 \examples{
 set.seed(1)

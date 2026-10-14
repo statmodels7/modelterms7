@@ -7,8 +7,8 @@
 regime(k = 2, by = NULL, time = NULL, label = "regime", n_start = 1)
 }
 \arguments{
-\item{k}{The number of regimes, a single whole number of at least 2.
-Anything else throws.}
+\item{k}{The number of regimes, a single finite whole number of at least 2.
+Any other value signals an error.}
 
 \item{by}{An optional grouping variable, given as a bare expression. Each
 group runs its own recursion from the stationary distribution, so a panel
@@ -16,18 +16,22 @@ of independent series is \code{by = id}. \code{NULL}, the default, is one group.
 
 \item{time}{An optional ordering variable, a bare expression. \code{NULL}, the
 default, takes the rows in the order they are given. Both \code{by} and \code{time}
-must evaluate to one non-missing value per row at build time.}
+must evaluate to one non-missing value per row at build time. Within a
+group, \code{time} only orders the rows: a gap between two times counts as one
+step of the chain.}
 
 \item{label}{A single non-empty character string naming the term,
 \code{"regime"} by default.}
 
 \item{n_start}{The number of starting points a fitting layer tries, a
-single whole number of at least 1. The likelihood of a regime model has
-several maxima, and one start reaches whichever basin it lies in. The
-first start is \code{\link[=term_start]{term_start()}}'s, the levels at the quantiles of the
-response; each further one displaces it as \code{\link[=term_starts]{term_starts()}} describes,
-and the fit keeps the best. \code{1}, the default, fits from the first start
-alone. Each start costs about one fit.}
+single finite whole number of at least 1. The likelihood of a regime model
+has several maxima, and a fit started at one point reaches the maximum of
+the basin that contains it. The first start is \code{\link[=term_start]{term_start()}}'s, which
+places the levels at the quantiles of the response when the fitting layer
+supplies it and at zero otherwise. Each further start displaces the first
+as \code{\link[=term_starts]{term_starts()}} describes, and the fit with the best criterion is kept.
+\code{1}, the default, fits from the first start alone. The model is fitted
+once from each start.}
 }
 \value{
 An unbuilt \code{\link[=RegimeTerm]{RegimeTerm()}}: a specification, whose \code{blueprint} is
@@ -48,20 +52,20 @@ predictor shifted by the level of regime \eqn{j},
   \qquad c_t = \sum_j \tilde\alpha_t(j), \qquad
   \alpha_t = \tilde\alpha_t / c_t,}
 
-started at the chain's stationary distribution, with the log-likelihood
+where the predictive distribution of the first observation of each group is
+the chain's stationary distribution. The log-likelihood is
 \eqn{\sum_t \log c_t}. Those contributions are what \code{\link[=term_loglik]{term_loglik()}}
 returns, one per observation, with their exact derivatives propagated
 beside the state.
 
-Normalizing at every step is what keeps the recursion representable. The
+Normalizing at every step keeps the recursion representable. The
 unnormalized quantities are products of \eqn{t} densities, so they decay
-geometrically and reach zero in double precision on a series of a few
-hundred observations.
+geometrically and reach zero in double precision on a long series.
 }
 
-\section{It is the complement of the other dynamic term}{
-\code{\link[=gas]{gas()}} is driven by the score of the density and moves continuously; a
-regime chain moves in jumps between a finite number of states. Both are
+\section{Relation to gas()}{
+\code{\link[=gas]{gas()}} is driven by the score of the density and moves continuously, while
+a regime chain moves in jumps between a finite number of states. Both are
 built from the density itself, so both apply to any family the model
 carries, and both propagate their exact derivative beside the state.
 }
@@ -72,23 +76,24 @@ The levels are \strong{ordered by construction}: \code{level1} is free on the
 identity, and each of the others is the previous one plus a positive gap,
 \code{gap2} ... \code{gapK}, each carried on a log link. Without an ordering the
 regimes are exchangeable and the likelihood has \eqn{K!} identical maxima,
-which is not a hard problem to fit but is one whose answer cannot be
-reported.
+so the estimates of the individual regimes cannot be reported without a
+labeling.
 
 The transition matrix is \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}}, whose free
 values are the additive log-ratios of each row, named \code{alr1.1}, \code{alr2.1}
 and so on, so every row is a probability vector at any coordinate. A chain
 of \eqn{K} regimes therefore has \eqn{K(K-1)} of them, and
-\code{\link[=term_params]{term_params()}} returns \eqn{K + K(K-1)} names in all: one level, \eqn{K-1}
-gaps and the rest.
+\code{\link[=term_params]{term_params()}} returns \eqn{K + K(K-1)} names in all: one level,
+\eqn{K-1} gaps and \eqn{K(K-1)} log-ratios.
 
 The initial distribution is the chain's stationary one, which costs no
-parameters; its derivative comes from the linear system it solves.
+parameters. Its derivative comes from the same linear system that gives the
+distribution itself.
 
-\code{\link[=term_level_param]{term_level_param()}} answers \code{"level1"}, since a constant added to it
+\code{\link[=term_level_param]{term_level_param()}} returns \code{"level1"}, since a constant added to it
 shifts every regime and is the direction an intercept in the same equation
-also spans. The gaps are unaffected: what a constant cannot express is a
-difference between regimes.
+also spans. A constant leaves the gaps unchanged, because it cannot express
+a difference between regimes.
 }
 
 \examples{

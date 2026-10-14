@@ -9,7 +9,7 @@ term_params(term, ...)
 }
 \arguments{
 \item{term}{An object inheriting from \code{\link[=structural_term]{structural_term()}}. A class that
-does not implement the generic throws
+does not implement the generic signals the error
 \code{"the term class 'X' does not implement term_params()."}.}
 
 \item{...}{Passed to methods. No shipped method reads anything here.}
@@ -19,28 +19,31 @@ A character vector, one name per parameter, of length
 \code{\link[=term_npar]{term_npar()}}.
 }
 \description{
-The names of a structural term's own parameters, in the order its filter
-and its derivative recursions expect them. A structural term contributes no
-design block, so these are not coefficients: they are estimated beside the
+The names of a structural term's own parameters, in the order that its
+filter, its likelihood and their derivatives expect. A structural term
+contributes no design block, so these are not coefficients: they are
+estimated beside the
 distribution's, on the unconstrained scale \code{\link[=term_links]{term_links()}} defines, and
 \code{\link[=term_npar]{term_npar()}} counts them.
 }
 \details{
-The names are the term's own vocabulary. \code{\link[=gas]{gas()}} answers \code{omega} for the
+The names are the term's own vocabulary. \code{\link[=gas]{gas()}} gives \code{omega} for the
 level, \code{kappa1} ... \code{kappap} for the score loadings and \code{pacf1} ... \code{pacfq}
-for the persistence; \code{\link[=regime]{regime()}} answers its levels and the free entries of
-its transition matrix. They are what indexes everything else about the
-term: \code{\link[=term_start]{term_start()}} returns one value per name, \code{\link[=term_readable]{term_readable()}} carries
-them onto the quantities a reader reads, and a \code{\link[=term_penalties]{term_penalties()}} entry's
-\code{index} gives positions in this vector.
+for the persistence. \code{\link[=regime]{regime()}} gives \code{level1}, the gaps \code{gap2} ...
+\code{gapk} between consecutive levels, and the free entries \verb{alr*.*} of its
+transition matrix. A marginal break-point term gives the names listed in
+\code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}. The names index everything else about the
+term: \code{\link[=term_start]{term_start()}} returns one value per name, \code{\link[=term_readable]{term_readable()}} maps
+them onto the quantities a reader reads, and the \code{index} of a
+\code{\link[=term_penalties]{term_penalties()}} entry gives positions in this vector.
 
-A \strong{subformula} expands the parameter it develops in place, so
+A \strong{subformula} expands in place the parameter that it develops, so
 \code{gas(p = 1, q = 1)} has three parameters and
 \code{gas(p = 1, q = 1, omega ~ z)} has four: \code{omega.(Intercept)} and \code{omega.z}
 where the level was.
 
-The method on \code{\link[=structural_term]{structural_term()}} throws, naming the class: a structural
-class supplies this itself.
+The method on \code{\link[=structural_term]{structural_term()}} signals an error that names the class.
+A structural class supplies its own method.
 }
 \examples{
 # The score-driven vocabulary: a level, a loading, a persistence.
@@ -58,7 +61,8 @@ c(npar = term_npar(g), names = length(term_params(g)))
 
 }
 \seealso{
-\code{\link[=term_links]{term_links()}} for the chart each rides, \code{\link[=term_start]{term_start()}} for where
-they begin, \code{\link[=term_readable]{term_readable()}} for the quantities they map to,
-\code{\link[=term_coef_names]{term_coef_names()}} for the additive branch's equivalent.
+\code{\link[=term_links]{term_links()}} for the chart on which each parameter is carried,
+\code{\link[=term_start]{term_start()}} for where the parameters begin, \code{\link[=term_readable]{term_readable()}} for the
+quantities to which they map, \code{\link[=term_coef_names]{term_coef_names()}} for the additive
+branch's equivalent.
 }

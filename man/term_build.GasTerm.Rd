@@ -22,19 +22,20 @@ blueprint. The recursion itself runs later, in \code{\link[=term_filter]{term_fi
 }
 \details{
 \code{by} and \code{time} are evaluated in the data. Each must give one non-missing
-value per row, and the blueprint records the row indices of each group in
-time order, and the filter iterates over exactly that.
+value per row. The blueprint records the row indices of each group in time
+order, and the filter iterates over exactly that order.
 
 Each subformula's right-hand side goes through \code{\link[=interpret_formula]{interpret_formula()}} and its
 terms are built, so their blueprints are recorded and a prediction reapplies
 them. A structural sub-term, and one whose own block moves with its
 coefficients, are rejected: a parameter's development must be a fixed
-design. The penalties those sub-terms carry become the term's own
-\code{\link[=term_penalties]{term_penalties()}} entries, keyed \code{parameter::subterm}.
+design. The penalties that those sub-terms carry become entries of the
+term's own \code{\link[=term_penalties]{term_penalties()}}, keyed \code{parameter::subterm}.
 
-Without \code{time} the rows are taken as they come. That is a real choice: the
-recursion is about order, so a data frame that is not already sorted gives a
-different model.
+Without \code{time} the rows of each group are taken in the order in which they
+appear, so a data frame that is not sorted by time gives a different
+model. With \code{time}, only the order of the times matters, and a gap between
+two times counts as one step.
 }
 \examples{
 set.seed(1)

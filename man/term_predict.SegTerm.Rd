@@ -4,7 +4,7 @@
 \alias{term_predict.SegTerm}
 \title{A Break-Point Term's Block at New Rows}
 \arguments{
-\item{term}{A built \code{\link[=SegTerm]{SegTerm()}}. An unbuilt one throws
+\item{term}{A built \code{\link[=SegTerm]{SegTerm()}}. An unbuilt one signals the error
 \code{"the term has not been built; call term_build(term, data) first."}.}
 
 \item{newdata}{A data frame carrying the covariate and whatever the
@@ -18,7 +18,7 @@ term's coefficient names as column names.
 }
 \description{
 The working block evaluated at \code{newdata}, at the break-points and the
-coefficients the term currently carries. The positions are not re-derived
+coefficients that the term currently carries. The positions are not re-derived
 from the new rows, and any development of a coefficient is reapplied through
 its sub-terms' own blueprints.
 }
@@ -50,6 +50,6 @@ seg_psi(b)
 }
 \seealso{
 \code{\link[=term_predict]{term_predict()}} for the generic, \code{\link[=term_value]{term_value()}} for the
-contribution, \code{\link[=seg_psi]{seg_psi()}} for the positions it is evaluated at.
+contribution, \code{\link[=seg_psi]{seg_psi()}} for the positions at which it is evaluated.
 }
 \keyword{internal}

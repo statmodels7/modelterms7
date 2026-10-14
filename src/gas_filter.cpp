@@ -10,7 +10,7 @@ using namespace Rcpp;
 // The score-driven recursion and the derivative of its state, propagated
 // together. The callbacks into R -- the score and the curvature belong to
 // whatever distribution the model carries -- remain the default; where the
-// caller supplies a FAST context (piano_parallel.txt, section 2a), the
+// caller supplies a FAST context, the
 // family's and the link's scalar C entry points are resolved once per call
 // with R_GetCCallable and the loop runs without touching the R API, which
 // is the precondition for the threads over groups below, not only a speed.
@@ -80,7 +80,7 @@ struct FastCtx {
         double out[2];
         sc(fam, k, y[row1 - 1], thl, out);
         // the same composition, in the same order, as distrib_kernel():
-        // g * h1, and h * h1 * h1 + g * h2
+        // l_k * h1, and l_kk * h1 * h1 + l_k * h2
         double s = out[0] * h1;
         double c = out[1] * h1 * h1 + out[0] * h2;
         if (scaling == 0.0) {
@@ -90,7 +90,10 @@ struct FastCtx {
         }
         // and the scaled score, as statmodels7's structural_callbacks()
         // composes it from the kernel's information and dinformation:
-        // I = -E h1^2, I' = -(E' h1^3 + 2 E h1 h2), u = s I^-d,
+        // I = -E h1^2, I' = -(E' h1^3 + 2 E h1 h2), where E = E[l_kk] (a
+        // negative number) is the expected second derivative of the
+        // log-density in the family parameter theta_k and E' its derivative
+        // in theta_k, u = s I^-d,
         // u' = c I^-d - d s I^(-d-1) I'
         double ei[2];
         info(fam, k, y[row1 - 1], thl, ei);

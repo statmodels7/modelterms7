@@ -40,9 +40,9 @@ List marg_seg_nodes_cpp(const NumericVector& xs, double m, double tau,
   // the lower region
   const double a = std::min(m, x1) - 8.5 * tau;
   const double wid = x1 - a;
-  // the panel counts are clamped in double before the cast, so a tiny tau
-  // cannot overflow an int
-  const int ns = (int) std::min(8.0, std::max(4.0, std::ceil(wid / (2.5 * tau))));
+  // the caller has bounded the total count (.marg_check_panels()); the
+  // clamp in double before the cast only keeps the cast defined
+  const int ns = (int) std::min(1e6, std::max(4.0, std::ceil(wid / (2.5 * tau))));
   std::vector<double> ed = seq_lo(a, x1, ns + 1);
   for (int s = 0; s < ns; ++s) {
     lo.push_back(ed[s]);
@@ -53,7 +53,7 @@ List marg_seg_nodes_cpp(const NumericVector& xs, double m, double tau,
   for (int j = 0; j < nx - 1; ++j) {
     const double wj = xs[j + 1] - xs[j];
     if (wj <= 0) continue;
-    const int nsj = (int) std::min(6.0, std::max(1.0, std::ceil(wj / (2.5 * tau))));
+    const int nsj = (int) std::min(1e6, std::max(1.0, std::ceil(wj / (2.5 * tau))));
     std::vector<double> edj = seq_lo(xs[j], xs[j + 1], nsj + 1);
     for (int s = 0; s < nsj; ++s) {
       lo.push_back(edj[s]);

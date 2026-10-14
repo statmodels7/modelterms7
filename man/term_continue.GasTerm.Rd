@@ -12,7 +12,8 @@
 
 \item{s_past}{The score at each observed row.}
 
-\item{newdata}{The rows to continue onto.}
+\item{newdata}{The rows to continue onto, carrying the variables that \code{by}
+and \code{time} name.}
 
 \item{...}{Ignored.}
 
@@ -34,23 +35,26 @@ The level the recursion reaches at rows that come after the observed
 ones.
 }
 \details{
-The recursion is the filter's own, started from the level and score the
-observed part ended at, never from the term's own seed. What changes
-past the data is the score: it has zero conditional mean by construction,
-the model's own defining property, so at a row whose response is not
-observed the driving term is its expectation and the continuation is the
-deterministic recursion
+The recursion is the filter's own, started from the levels and scores of
+the observed part. A lag that falls before the first observed row of a
+group takes the first observed level, which equals the starting level.
+What changes past the data is the score: it has zero conditional mean by
+construction, the model's own defining property, so at a row whose
+response is not observed the driving term is its expectation and the
+continuation is the deterministic recursion
 \deqn{f_{n+h} = \omega + \sum_i \kappa_i s_{n+h-i} +
   \sum_j \xi_j f_{n+h-j},}
 the loadings contributing only while \eqn{n+h-i} is still an observed
-time. No simulation and no integration is involved.
+time. The continuation involves no simulation and no integration.
 
-A new row is placed by its own time within its own group, and must come
-after every observed time of that group: a row falling inside the series
-is not a continuation but a re-reading of it, where the response is known
-and the filter must be run instead of continued, so it is rejected with
-the rows named. A group the fit never saw is rejected for the same
-reason: there is no state to continue.
+The new rows of a group are ordered by their own time and must come after
+every observed time of that group. The continuation treats them as
+consecutive steps whatever the spacing of the times, so that a gap between
+two times counts as one step, as in the sample. A row falling inside the
+series re-reads observed data, where the response is known, so the filter
+must be run on it and not continued; such a row is rejected, and the rows
+are named. A group that the fit never saw is rejected for the same reason:
+there is no state to continue. The term must have been built with \code{time}.
 }
 \seealso{
 \code{\link[=term_continue]{term_continue()}}, \code{\link[=term_filter]{term_filter()}}

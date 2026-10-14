@@ -523,7 +523,7 @@ S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
     # parametric block and is not penalized -- unless it is all the formula
     # has, where dropping it leaves no block at all. `ridge(~1)` then means
     # the single coefficient under the penalty, which is what a subformula
-    # on a term's own parameter needs: `gamma ~ lasso(~1)` says the change
+    # on a term's own parameter needs: `gamma ~ 0 + lasso(~1)` says the change
     # itself carries a lasso, there being no parametric block of its own to
     # hold an unpenalized intercept.
     f <- if (.intercept_only(term@input)) term@input else {

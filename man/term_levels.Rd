@@ -21,10 +21,10 @@ A numeric vector of one level per component, or a numeric matrix of
 observation. The order matches \code{\link[=term_posterior]{term_posterior()}}'s columns.
 }
 \description{
-The shifts a term of the likelihood shape adds to its equation's predictor,
-one per mixture component, in the order the columns of \code{\link[=term_posterior]{term_posterior()}}
-carry the components. A fitting layer reads the two together to assemble
-Fisher's identity.
+The shifts that a term of the likelihood shape adds to its equation's
+predictor, one per mixture component, in the order in which the columns of
+\code{\link[=term_posterior]{term_posterior()}} carry the components. A fitting layer reads the two
+together to assemble Fisher's identity.
 }
 \details{
 By Fisher's identity the derivative of a likelihood mixed over latent
@@ -52,9 +52,9 @@ of one row per observation and one column per component. A caller reads a
 column of it wherever it would read a constant level, and must accept both
 shapes.
 
-The method on \code{\link[=structural_term]{structural_term()}} throws, naming the class: a term of the
-filter shape reports a predictor instead of components, and answers
-\code{\link[=term_filter]{term_filter()}}.
+The method on \code{\link[=structural_term]{structural_term()}} signals an error that names the class.
+A term of the filter shape contributes a predictor and not components, and
+\code{\link[=term_filter]{term_filter()}} applies to it.
 }
 
 \examples{

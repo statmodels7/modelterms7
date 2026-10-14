@@ -60,26 +60,26 @@ criterion needs when a penalty covers the term's own parameters.
 \details{
 A marginal criterion carries \eqn{-\frac{1}{2}\log|K|} at the penalized
 mode, so its gradient in a hyperparameter needs \eqn{\mathrm{tr}(M\,\partial
-K/\partial u\,[v])}, with \eqn{v} the direction the mode moves in. Where
-the predictor is \eqn{X\beta} that contraction is the family's third
+K/\partial u\,[v])}, with \eqn{v} the direction in which the mode moves.
+Where the predictor is \eqn{X\beta} that contraction is the family's third
 derivative against the design and nothing else. Where a filter produces the
 predictor, \eqn{K} carries \eqn{\sum_t w_t \ell_{p,t}E_t} as well, and
-differentiating it asks for \eqn{\partial^3 e_t/\partial u^3}.
+differentiating it requires \eqn{\partial^3 e_t/\partial u^3}.
 
-\strong{Only contracted.} The full third derivative is an \eqn{m^3} array
-per observation and is never formed: the criterion asks for it along the
-one direction the mode moves in, so what is propagated is a matrix per
-observation, the same size as the curvature and therefore the same
-\eqn{O(nm^2)}. A caller wanting several hyperparameters calls this once
-per direction, which is cheaper than one \eqn{O(nm^3)} assembly whenever
-the hyperparameters are fewer than the unknowns.
+The derivative is only ever contracted. The full third derivative is an
+\eqn{m^3} array per observation and is never formed: the criterion needs it
+only along the one direction in which the mode moves, so what is propagated
+is a matrix per observation, the same size as the curvature and therefore
+the same \eqn{O(nm^2)}. A caller that needs several hyperparameters calls
+this once per direction, which is cheaper than one \eqn{O(nm^3)} assembly
+whenever the hyperparameters are fewer than the unknowns.
 
-\strong{What the model supplies.} Each order of differentiation of the
-predictor pulls in one more order of the family, the recursion being driven
-by a score read at the predictor it produces: the curvature's \code{M} is
-built from third derivatives, and this needs a fourth. \code{blocks}
-therefore returns two quantities beyond the curvature's, at an observation
-with the current Jacobian row \eqn{D} and its directional derivative:
+Each order of differentiation of the predictor involves one more order of
+the family, the recursion being driven by a score read at the predictor that
+it produces: the curvature's \code{M} is built from third derivatives, and this
+method needs a fourth. \code{blocks} therefore returns two quantities beyond the
+curvature's, at an observation, from the current Jacobian row \eqn{D} and
+the direction \eqn{v}:
 
 \deqn{\texttt{dcurv} = \sum_r \ell_{ppr}V_r, \qquad
   \texttt{N} = \sum_{r,r'}\Big(\sum_{r''}\ell_{prr'r''}(V_{r''}\cdot v)\Big)
@@ -89,18 +89,19 @@ with the current Jacobian row \eqn{D} and its directional derivative:
 which is \eqn{\texttt{dcurv}\cdot v}, and the two terms differentiating
 \eqn{M}'s own \eqn{V_p}.
 
-The base method returns zeros. An additive term's second derivative is
-already zero, so it is covered without writing anything, and a term written
-later that does not implement this reports no third derivative instead of a
-wrong one. A structural term refuses: it has a second derivative, so zero
-there would be a false statement rather than a true one.
+The base method returns zeros, which is correct for a term whose predictor
+is a block of columns times coefficients, since the second derivative of
+such a predictor in the coefficients is zero. A term that bends the
+predictor has to implement the method itself, because the base method would
+report zeros for it. A structural term signals an error instead: it has a
+second derivative, so a zero third derivative would misstate it.
 }
 \examples{
 set.seed(1)
 dd <- data.frame(t = 1:20, y = rnorm(20))
 term <- term_build(linpar(~t), dd)
 # an additive term bends no predictor, so every order above the first is
-# zero and the base method says so
+# zero, as the base method returns
 out <- term_third(term, rep(0, 20), dd$y,
                   score = function(e, i) dd$y[i] - e,
                   curvature = function(e, i) -1, psi = list(),
@@ -113,5 +114,5 @@ all(out$curvature == 0)
 \seealso{
 \code{\link[=term_curvature]{term_curvature()}} for the second order this differentiates,
 \code{\link[=term_adjoint]{term_adjoint()}} for the first, \code{\link[statmodels7:reml]{statmodels7::reml()}} for the criterion
-whose gradient asks for it.
+whose gradient requires it.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/structural.R
 \name{term_simulate.model_term}
 \alias{term_simulate.model_term}
-\title{A Term Without State Draws Nothing}
+\title{Base Method of term_simulate()}
 \arguments{
 \item{term}{A term.}
 

@@ -1,22 +1,23 @@
 #' @include term_classes.R generics.R segmented.R
 NULL
 
-#' @title The Coefficients a Term Holds
+#' @title Coefficients Held by a Term
 #'
 #' @description
-#' The positions, among the term's own coefficients, of those the term holds
-#' at their values: the fitting layer keeps them out of the solve, out of the
-#' information it inverts and out of the reading of the mode. A term whose
-#' coefficients are all estimated by the derivative of the objective holds
-#' none, which is the base method's answer.
+#' Returns the positions, among the coefficients of a term, of those that the
+#' term holds fixed. The fitting layer excludes these coefficients from the
+#' solve, from the information matrix that is inverted and from the reading of
+#' the mode. The base method returns an empty vector, since all the
+#' coefficients of an ordinary term are estimated from the derivative of the
+#' objective.
 #'
 #' @details
-#' The one shipped term that answers otherwise is a [jump()] or [jseg()] term
-#' put in its held state by [seg_hold()]. There the break-point is fixed at a
-#' minimum of the profile objective, which is constant between consecutive
-#' observations and so has no derivative to estimate the position with, and
-#' the coefficient slot that carried it in the working construction becomes a
-#' column of zeros.
+#' The one shipped term with a method of its own is a [jump()] or [jseg()]
+#' term put in its held state by [seg_hold()]. Its break-points are fixed at a
+#' minimum of the profile objective. That objective is constant between
+#' consecutive observations, so it has no derivative from which to estimate
+#' the positions, and the coefficient slot that carries each position in the
+#' working construction becomes a column of zeros.
 #'
 #' @param term A term.
 #' @param ... Passed to methods.
@@ -41,11 +42,12 @@ term_held <- S7::new_generic("term_held", "term",
 
 S7::method(term_held, model_term) <- function(term, ...) integer(0)
 
-#' @title The Coefficients a Held Break-Point Term Holds
+#' @title Coefficients Held by a Break-Point Term
 #' @name term_held.SegTerm
 #' @description
-#' The coefficient slots of the break-points where the term is held by
-#' [seg_hold()], and none otherwise.
+#' Returns the coefficient slots that carry the break-points of a term in the
+#' held state set by [seg_hold()]. For a [SegTerm()] that is not held, built or
+#' not, the result is an empty vector.
 #' @param term A [SegTerm()].
 #' @param ... Unused.
 #' @return An integer vector of positions in the term's coefficients.
@@ -60,34 +62,43 @@ S7::method(term_held, SegTerm) <- function(term, ...) {
 #' Hold a Break-Point Term at Its Positions
 #'
 #' @description
-#' Puts a sharp [jump()] or [jseg()] term in its held state, or takes it out.
-#' A held term keeps its break-points where they are and its block is the
-#' exact design at those positions: the covariate for the linear part, the
-#' truncated line \eqn{(x - \psi_k)_+} for each change of slope, the indicator
+#' Puts a sharp [jump()] or [jseg()] term in its held state, or releases it
+#' from that state. A held term keeps its break-points at their current
+#' positions, and its block is the exact design at those positions: the
+#' covariate for the linear part, where the term has one, the truncated line
+#' \eqn{(x - \psi_k)_+} for each change of slope, the indicator
 #' \eqn{1(x > \psi_k)} for each change of level, and a column of zeros in the
 #' slot that carried the position.
 #'
 #' @details
 #' The working construction of Fasola, Muggeo and Kuchenhoff (2018) reaches
 #' its break-points through a block whose weight is frozen at the previous
-#' iterate, so at its fixed point the coefficients are those of the working
-#' model and not the least-squares coefficients at the positions reached. With
-#' the positions held the term contributes a linear function of its
-#' remaining coefficients, and a fit of those is an ordinary fit, which is how
-#' `segmented` and `stepmented` report their coefficients. [term_held()]
-#' names the slot that is held, [term_jacobian_block()] answers `TRUE`, and
-#' [term_refresh()] no longer moves the positions.
+#' iterate. At the fixed point of that iteration the coefficients are therefore
+#' those of the working model, and not the least-squares coefficients at the
+#' positions reached. With the positions held, the term contributes a linear
+#' function of its remaining coefficients, and a fit of those coefficients is
+#' an ordinary fit, which is how `segmented` and `stepmented` report their
+#' coefficients. For a held term, [term_held()] returns the slots that are
+#' held, [term_jacobian_block()] returns `TRUE`, [term_refresh()] does not
+#' move the positions, [term_converged()] returns `TRUE` and [term_stalled()]
+#' returns `FALSE`.
 #'
-#' Taking the term out of the held state writes the position back into the
-#' slot as \eqn{g_k = -\delta_k\psi_k}, so the read-off of the working
-#' construction returns the held positions and the iteration can continue
-#' from them.
+#' A term whose break-points carry a development is held in the same way. The
+#' positions are then the values \eqn{w_i'p_k} of the development at the
+#' current coefficients \eqn{p_k}.
 #'
-#' A continuous [seg()] and a smoothed term are rejected: their positions are
-#' ordinary coefficients with a column of their own.
+#' Releasing the term writes the position back into the slot as
+#' \eqn{g_k = -\delta_k\psi_k}, with the coefficient vector \eqn{p_k} of the
+#' development in place of \eqn{\psi_k} for a developed position. The read-off
+#' of the working construction then returns the held positions, and the
+#' iteration can continue from them.
+#'
+#' A continuous [seg()] and a smoothed term are rejected, since their
+#' positions are ordinary coefficients, each with a column of its own.
 #'
 #' @param term A built [jump()] or [jseg()] term.
-#' @param hold `TRUE` to hold the term, `FALSE` to release it.
+#' @param hold `TRUE` to hold the term, `FALSE` to release it. Releasing a term
+#'   that is not held returns it unchanged.
 #'
 #' @return The term in the requested state, its block rebuilt.
 #'
@@ -181,13 +192,14 @@ seg_hold <- function(term, hold = TRUE) {
 #' Polish a Break-Point Term's Positions Over Every Interval
 #'
 #' @description
-#' The exact minimum of the least-squares profile of a sharp [seg()], [jump()]
-#' or [jseg()] term, one break-point at a time with the others held. The
-#' profile of a change of level is constant between consecutive observations
-#' of the covariate, and the profile of a change of slope has one stationary
-#' point inside each such interval, so its minimum over one break-point is
-#' found interval by interval, and this function does that for every interval
-#' inside the confinement limits.
+#' Minimizes the least-squares profile of a sharp [seg()], [jump()] or
+#' [jseg()] term over the positions of its break-points, one break-point at a
+#' time with the others held. The profile of a [jump()] or a [jseg()] is
+#' constant between consecutive distinct values of the covariate, and the
+#' profile of a [seg()] has one stationary point inside each such interval.
+#' The minimum over one break-point is therefore found interval by interval,
+#' and this function does that for every interval inside the confinement
+#' limits.
 #'
 #' @details
 #' Write \eqn{F} for the columns that do not move with the break-point being
@@ -195,14 +207,16 @@ seg_hold <- function(term, hold = TRUE) {
 #' part, and the columns of the other break-points), and \eqn{a(q)} for the
 #' columns that do: the indicator \eqn{1(x > q)}, and for a [jseg()] also the
 #' truncated line \eqn{(x - q)1(x > q)}. The residual sum of squares at
-#' \eqn{q} is that of the response on \eqn{F} less the part \eqn{a(q)}
-#' explains of what \eqn{F} leaves, and every cross product \eqn{a(q)} enters
-#' is a sum over the observations above \eqn{q} of a fixed quantity, or of
-#' one fixed quantity minus \eqn{q} times another. Sorted once, those sums
-#' are cumulative sums, so all the intervals cost \eqn{O(np^2)} together
-#' rather than one linear fit each. The sweeps over the break-points repeat
-#' until none moves. Each break-point of a [jump()] or a [jseg()] is placed at
-#' the midpoint of its interval.
+#' \eqn{q} is that of the response on \eqn{F} less the part of the remainder
+#' that \eqn{a(q)} explains, and every cross product that involves
+#' \eqn{a(q)} is a sum over the observations above \eqn{q} of a fixed
+#' quantity, or of one fixed quantity minus \eqn{q} times another. Sorted once,
+#' those sums are cumulative sums, so all the intervals cost \eqn{O(np^2)}
+#' together, where one linear fit per interval would cost more. The sweeps over
+#' the break-points repeat, at most `sweeps` times, until none moves. Inside an
+#' interval between consecutive distinct values of the covariate, the span of
+#' the columns of a [jump()] or a [jseg()] does not depend on \eqn{q}, so each
+#' break-point of these terms is placed at the midpoint of its interval.
 #'
 #' For a [seg()] the column that moves is \eqn{(x - q)_+}. Inside the
 #' interval between the consecutive values \eqn{u_k < u_{k+1}} it is
@@ -212,38 +226,41 @@ seg_hold <- function(term, hold = TRUE) {
 #' \eqn{c} and \eqn{a} being the cross products of \eqn{t}, \eqn{s} and
 #' the response after the fixed columns are projected out. Its one
 #' stationary point is \eqn{q^* = -b/\gamma} of the least-squares fit on
-#' \eqn{t} and \eqn{s}, so the minimum over the interval is at \eqn{q^*}
-#' when it falls inside, or at an end, which is an observed value.
+#' \eqn{t} and \eqn{s}. The minimum over the interval is at \eqn{q^*}, when
+#' that falls inside the interval, or at one of the two ends, whichever gives
+#' the smaller residual sum of squares. The ends are consecutive observed
+#' values of the covariate or confinement limits.
 #'
-#' [seg_polish()] sweeps a grid of `k` points instead, which reaches a
-#' neighbourhood of the minimum and not the interval: measured on 16 samples
-#' of 200 observations, a fit polished by the grid reached the interval of
-#' the global minimum in 11.
+#' [seg_polish()] sweeps instead a grid of `k` quantiles of the covariate, so
+#' that the position it reaches is accurate only to the resolution of the grid.
 #'
-#' The profile is least squares of `y` on the term's own columns plus an
-#' intercept, exact for a gaussian response; a fitting layer for any other
-#' family accepts the positions only where its own objective improves.
+#' The profile is the least-squares fit of `y` on an intercept and the term's
+#' own columns, which is exact for a gaussian response. For any other family,
+#' the fitting layer uses the positions that the profile gives only where its
+#' own objective improves. The response must be finite, and missing values are
+#' rejected.
 #'
 #' A held term whose break-point is developed, \eqn{\psi_i = w_i'p} with
 #' \eqn{w_i} the row of the sub-design, is polished in the coefficients
 #' \eqn{p}. Along a line \eqn{p + tv} the position of observation \eqn{i}
 #' crosses \eqn{x_i} at \eqn{t_i = (x_i - \psi_i)/(w_i'v)}, so the profile
-#' is evaluated once between each pair of consecutive crossings, and for a
-#' [jseg()] whose change of slope is not developed like its position it is
-#' then minimized inside the best interval, where it varies smoothly. Where
-#' the sub-design partitions the observations into groups (`psi ~ g`,
-#' `by = ~ 0 + g`) the lines move one group's position at a time, which is a
-#' search over every interval of that group, and the sweep also starts from
-#' each group's own minimum, the minimum of the profile on that group's
-#' observations alone; the better of the two results is kept. With a
-#' continuous covariate in the sub-design the lines are the coordinate
-#' directions and eight fixed directions in each plane of two coordinates,
-#' so the result is the best point found along those lines and not a global
-#' minimum. A developed term is polished only when held (see [seg_hold()]).
+#' is evaluated once between each pair of consecutive crossings. For a
+#' [jseg()] the profile is then also minimized inside the best interval, where
+#' it varies smoothly. Where the sub-design partitions the observations into
+#' groups (`psi ~ g`, `by = ~ 0 + g`), the lines move the position of one
+#' group at a time, which is a search over every interval of that group. The
+#' sweep is also started from each group's own minimum, which is the minimum
+#' of the profile on the observations of that group alone, and the better of
+#' the two results is kept. Otherwise the lines are the coordinate directions
+#' and, in each plane of two coordinates, six further fixed directions, so
+#' that the result is the best point found along those lines and not a global
+#' minimum. A developed [jump()] or [jseg()] is polished only when held (see
+#' [seg_hold()]), and a developed [seg()] is rejected.
 #'
 #' @inheritParams seg_polish
 #'
-#' @return The term at the polished positions (see [seg_relocate()]).
+#' @return The term at the polished positions (see [seg_relocate()]), or the
+#'   term itself when no interval lies inside the confinement limits.
 #'
 #' @seealso [seg_polish()], [seg_hold()], [seg_profile_rss()].
 #'
@@ -290,20 +307,23 @@ seg_polish_exact <- function(term, y, sweeps = 10, weights = NULL) {
 #' The Profile of One Break-Point Over Every Interval
 #'
 #' @description
-#' The least-squares profile of a sharp [seg()], [jump()] or [jseg()] term in
-#' one of its break-points, the others held where they are: the residual sum
-#' of squares in every interval between consecutive distinct values of the
-#' covariate inside the confinement limits, at the midpoint for a change of
-#' level and at the minimizing position for a change of slope. It is the quantity
-#' [seg_polish_exact()] minimizes, returned whole so that a caller whose
-#' objective the profile only approximates can take several candidates from
-#' it.
+#' Returns the least-squares profile of a sharp [seg()], [jump()] or [jseg()]
+#' term in one of its break-points, the others held at their current
+#' positions. The profile is the residual sum of squares in every interval
+#' between consecutive distinct values of the covariate inside the confinement
+#' limits, evaluated at the midpoint of the interval for a [jump()] or a
+#' [jseg()] and at the minimizing position inside the interval for a [seg()].
+#' This is the quantity that [seg_polish_exact()] minimizes. It is returned
+#' whole so that a caller whose objective the profile only approximates can
+#' take several candidates from it.
 #'
 #' @inheritParams seg_polish
 #' @param k Which break-point, an integer.
 #'
 #' @return A data frame with columns `psi`, the position in each interval,
-#'   and `rss`, the profile there (`Inf` where the design is singular).
+#'   and `rss`, the profile there (`Inf` where the design is singular). The
+#'   data frame has no rows when no interval lies inside the confinement
+#'   limits.
 #'
 #' @seealso [seg_polish_exact()].
 #'
@@ -472,6 +492,9 @@ seg_profile_intervals <- function(term, y, k = 1L, weights = NULL) {
   if (length(y) != n) {
     stop("'y' must have one value per observation of the build data.",
          call. = FALSE)
+  }
+  if (!all(is.finite(y))) {
+    stop("'y' must not contain missing or non-finite values.", call. = FALSE)
   }
   w <- if (is.null(weights)) rep(1, n) else as.numeric(weights)
   if (length(w) != n || anyNA(w) || any(w < 0)) {

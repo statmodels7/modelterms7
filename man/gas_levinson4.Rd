@@ -22,8 +22,9 @@ contracted against a second direction, one matrix per coefficient.
 }
 \details{
 The second derivative of a marginal criterion in a pair of hyperparameters
-reads the fourth derivative of the predictor along the two directions the
-mode moves in, and the persistence reaches the predictor through this map.
+reads the fourth derivative of the predictor along the two directions in
+which the mode moves, and the persistence reaches the predictor through
+this map.
 As at the third order it is needed only contracted, so what is propagated
 is a matrix per coefficient and never a four-index array.
 
@@ -38,15 +39,17 @@ and contracting two of those slots against \eqn{v} and \eqn{w} leaves
   - e_k\big(T^{(k-1)}_{k-i}[v]w\big)^{\!\top}
   - \big(T^{(k-1)}_{k-i}[v]w\big)e_k^{\top}.}
 
-Both third derivatives are carried, not one: the last two terms couple
-\eqn{T[v]} with \eqn{w} and \eqn{T[w]} with \eqn{v}, so a recursion holding
-a single contraction cannot reach this order.
+Both third-order contractions \eqn{T[v]} and \eqn{T[w]} are carried: the
+terms in \eqn{v_k} and \eqn{w_k} use one each, and the last two terms use
+\eqn{T[v]} against \eqn{w}, so a recursion holding a single contraction
+cannot reach this order.
 
-The map is multilinear of degree \eqn{k} in the first \eqn{k} partial
-autocorrelations, so the result is identically zero for \eqn{q \le 3}: the
-first coefficient carrying a monomial of degree four is
-\eqn{\xi^{(4)}_1}, which needs \eqn{q = 4}. A check of this function that
-stops at \eqn{q = 3} compares zero with zero and asserts nothing.
+Each coefficient \eqn{\xi^{(k)}_i} is a polynomial of degree at most
+\eqn{k} in the first \eqn{k} partial autocorrelations, multilinear in
+them, so the result is identically zero for \eqn{q \le 3}. The first
+coefficient carrying a monomial of degree four is \eqn{\xi^{(4)}_2}, which
+needs \eqn{q = 4}. A comparison with a reference therefore needs
+\eqn{q \ge 4}.
 }
 \seealso{
 \code{\link[=gas_levinson3]{gas_levinson3()}}, \code{\link[=gas_levinson2]{gas_levinson2()}}

@@ -9,7 +9,7 @@ term_links(term, ...)
 }
 \arguments{
 \item{term}{An object inheriting from \code{\link[=structural_term]{structural_term()}}. A class that
-does not implement the generic throws
+does not implement the generic signals the error
 \code{"the term class 'X' does not implement term_links()."}.}
 
 \item{...}{Passed to methods. No shipped method reads anything here.}
@@ -29,10 +29,13 @@ The charts are chosen so that a proposal from anywhere lands somewhere
 admissible. \code{\link[=gas]{gas()}} puts its level on the identity, its score loadings on
 the \strong{log} so a loading stays positive, and its persistence coordinates on
 the \strong{rhobit} so each partial autocorrelation stays inside \eqn{(-1, 1)}
-and the filter stays stationary. The \code{links} argument of a constructor
-overrides them per parameter.
+and the filter stays stationary. \code{\link[=regime]{regime()}} puts its first level and the
+free entries of its transition matrix on the identity and the gaps between
+levels on the log, so the levels are ordered by construction. The \code{links}
+argument of \code{\link[=gas]{gas()}} overrides the links per parameter.
 
-The persistence is the case worth understanding. The stationary region in
+The persistence uses a different kind of chart from the other parameters.
+The stationary region in
 the autoregressive coefficients is not a box, so no collection of scalar
 links covers it; the partial autocorrelations are each in \eqn{(-1, 1)}
 independently, and Levinson-Durbin carries them onto the coefficients.
@@ -44,7 +47,7 @@ development, \eqn{\psi_{j,t} = g_j^{-1}(z_t'\gamma_j)}, so the parameter
 stays admissible at every observation and the coefficients \eqn{\gamma_j}
 are unconstrained.
 
-The method on \code{\link[=structural_term]{structural_term()}} throws, naming the class.
+The method on \code{\link[=structural_term]{structural_term()}} signals an error that names the class.
 }
 \examples{
 # Identity for the level, log for the loading, rhobit for the persistence.
@@ -65,6 +68,6 @@ linkfunctions7::linkinv(lk$kappa1, c(-40, 0, 40))
 }
 \seealso{
 \code{\link[=term_params]{term_params()}} for the names, \code{\link[=term_start]{term_start()}} for the point on
-this scale a fit begins at, \code{\link[=term_readable]{term_readable()}} for the quantities the
-coordinates map to.
+this scale at which a fit begins, \code{\link[=term_readable]{term_readable()}} for the quantities
+to which the coordinates map.
 }

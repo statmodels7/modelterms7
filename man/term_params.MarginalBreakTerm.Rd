@@ -13,20 +13,23 @@ A character vector, of length \code{\link[=term_npar]{term_npar()}}.
 }
 \description{
 Numbered, one set per break-point, in a fixed order: the linear effect
-\code{beta} where the kind carries one, then the prior's parameters for each
+\code{beta} where the term carries one, then the prior's parameters for each
 break-point, then the changes of slope \code{gamma1} ... and the changes of
 level \code{delta1} ....
 }
 \details{
 The prior's parameters are \code{psik.mean} and \code{psik.sd} under the default
 Gaussian, the mean and the standard deviation of the positions of
-break-point \eqn{k} in the population. Where \code{random(distrib = )} named
-another family the names are that family's own, its location fixed at zero
-and \code{psi1.mean} carrying the position, so a Student t prior adds \code{nu}.
+break-point \eqn{k} in the population. Where \code{random(distrib = )} names
+another family, the parameters are \code{psi1.mean} for the position and the
+free parameters of that family under its own names, with its location fixed
+at zero. A Student t prior therefore gives \code{psi1.mean}, \code{sigma} and \code{nu} in
+place of \code{psi1.mean} and \code{psi1.sd}.
 
-Which of \code{gamma} and \code{delta} appear is the kind: \code{"seg"} has the changes of
-slope, \code{"jump"} the changes of level, \code{"jseg"} both. Only \code{"seg"} and
-\code{"jseg"} carry \code{beta}.
+The kind determines which of \code{gamma} and \code{delta} appear: \code{"seg"} has the
+changes of slope, \code{"jump"} the changes of level and \code{"jseg"} both. \code{beta}
+appears for \code{"seg"} and \code{"jseg"} unless the term was constructed with
+\code{linear = FALSE}.
 }
 \examples{
 set.seed(1)

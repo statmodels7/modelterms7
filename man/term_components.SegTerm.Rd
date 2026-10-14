@@ -2,7 +2,7 @@
 % Please edit documentation in R/segmented.R
 \name{term_components.SegTerm}
 \alias{term_components.SegTerm}
-\title{How a Break-Point Term's Columns Divide}
+\title{The Components of a Break-Point Term}
 \arguments{
 \item{term}{A built \code{\link[=SegTerm]{SegTerm()}}. An unbuilt one gives an empty list.}
 
@@ -19,12 +19,12 @@ developing it. A coefficient with no development owns one column; a
 developed one owns as many as its own design has.
 }
 \details{
-It is what lets a consumer report a fitted break-point term coefficient by
-coefficient, and what \code{\link[=term_penalties]{term_penalties()}} uses to place a sub-term's penalty
-on exactly the coordinates it covers. Those coordinates are \strong{named} as a
-subset of the term's own parameters and never selected with a map: a
-separable penalty under a selection map is the generalized-lasso problem,
-which has no proximal operator.
+It lets a consumer report a fitted break-point term coefficient by
+coefficient. The entries of \code{\link[=term_penalties]{term_penalties()}} place a sub-term's penalty on
+exactly the coordinates that it covers, using the same \code{index} vectors.
+Those coordinates are \strong{named} as a subset of the term's own parameters and
+are not selected with a map: a separable penalty under a selection map is
+the generalized-lasso problem, which has no proximal operator.
 }
 \examples{
 set.seed(1)
@@ -38,7 +38,7 @@ lapply(term_components(b), function(z) z$index)
 
 }
 \seealso{
-\code{\link[=term_components]{term_components()}} for the contract, \code{\link[=term_penalties]{term_penalties()}} for the
-penalties the sub-terms bring.
+\code{\link[=term_components]{term_components()}} for the structure of an entry,
+\code{\link[=term_penalties]{term_penalties()}} for the penalties that the sub-terms bring.
 }
 \keyword{internal}
