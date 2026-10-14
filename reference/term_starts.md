@@ -38,12 +38,17 @@ and named as
 
 ## Details
 
-The base method returns one start,
-[`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)'s,
-so a term that says nothing is fitted once, as before.
+The base method returns the single start that
+[`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
+gives, so a term without a method of its own is fitted once.
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
-returns `n_start` of them: its likelihood has several maxima and the
-term can say which region of its parameters is worth covering.
+returns `n_start` starts, because its likelihood has several maxima and
+the starts cover different regions of its parameters. In each start
+after the first, the free entries of the transition matrix are drawn
+from a normal distribution of standard deviation 2 and normal draws of
+standard deviation 0.7 are added to the log gaps. The seed of the start
+is fixed, and the state of the random number generator of the caller is
+restored.
 
 The first element is always
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)'s,

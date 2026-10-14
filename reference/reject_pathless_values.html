@@ -9,7 +9,7 @@ whose penalty has no kink."><meta property="og:image" content="https://statmodel
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,12 +69,12 @@ them.</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Several values are a grid for a path to visit, and only a penalty with a
-kink is swept along one: everything else has its hyperparameter read at the
-mode by a marginal criterion, which would take the vector and do nothing
-with it. The question is put to the penalty at a probe value of its own
-hyperparameters, the kink set being structural, so a ridge and a random
-effect under a Gaussian prior are covered by the same line as a family
-added later.</p>
+kink is swept along one. For any other penalty the hyperparameter is
+estimated at the mode by a marginal criterion, and a vector given there
+would have no effect. Whether the penalty has a kink is read from the
+penalty at a probe value of its own hyperparameters, the kink set being
+structural, so a ridge and a random effect under a Gaussian prior are
+covered by the same test as a family added later.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

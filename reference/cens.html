@@ -17,7 +17,7 @@ two finite bounds is interval-censored."><meta property="og:image" content="http
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,48 +63,52 @@ two finite bounds is interval-censored.</p>
 
 <dl><dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
 <dd><p>A numeric vector of responses, <code>NA</code> at an interval-censored
-observation. Coerced with <code><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric()</a></code>, so an integer vector is accepted
-and a factor is not.</p></dd>
+observation. Coerced with <code><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric()</a></code>, so an integer vector is accepted;
+a factor is rejected.</p></dd>
 
 
 <dt id="arg-lwr">lwr<a class="anchor" aria-label="anchor" href="#arg-lwr"></a></dt>
 <dd><p>A numeric lower bound, of length 1 or <code>length(y)</code>, recycled to
-<code>length(y)</code>. <code>-Inf</code> by default, which is no left censoring. Any other
-length throws <code>"'lwr' must have length 1 or length(y)."</code>, and an <code>NA</code>
-entry throws <code>"'lwr' must not contain NA."</code>.</p></dd>
+<code>length(y)</code>. <code>-Inf</code> by default, which is no left censoring. A factor is
+rejected. Any other length signals the error
+<code>"'lwr' must have length 1 or length(y)."</code>, and an <code>NA</code> entry signals
+<code>"'lwr' must not contain NA."</code>.</p></dd>
 
 
 <dt id="arg-upr">upr<a class="anchor" aria-label="anchor" href="#arg-upr"></a></dt>
 <dd><p>A numeric upper bound, on the same terms, <code>Inf</code> by default. Every
-<code>upr</code> must be strictly above its <code>lwr</code>; equal bounds throw from the class
-validator.</p></dd>
+<code>upr</code> must be strictly above its <code>lwr</code>; equal bounds are rejected by the
+class validator.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code><a href="censored_response.html">censored_response()</a></code> object of length <code>length(y)</code>, carrying <code>y</code>
-unchanged (<code>NA</code> included), the recycled <code>lwr</code> and <code>upr</code>, and the derived
+    <p>A <code><a href="censored_response.html">censored_response()</a></code> object holding <code>length(y)</code> observations,
+carrying <code>y</code> unchanged (<code>NA</code> included), the recycled <code>lwr</code> and <code>upr</code>, and the derived
 <code>status</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="the-rule-that-assigns-a-status">The rule that assigns a status<a class="anchor" aria-label="anchor" href="#the-rule-that-assigns-a-status"></a></h2>
     <p>The bounds are recycled to <code>length(y)</code> first, so a scalar applies to every
 observation and a vector gives one bound per observation. Each entry is then
-classified by where it sits, with the bounds inclusive:</p><table class="table table"><tr><td>condition</td><td>status</td><td>what is known</td></tr><tr><td><code>y &lt;= lwr</code></td><td><code>"left"</code></td><td>\(Y \le\) <code>lwr</code></td></tr><tr><td><code>y &gt;= upr</code></td><td><code>"right"</code></td><td>\(Y \ge\) <code>upr</code></td></tr><tr><td><code>lwr &lt; y &lt; upr</code></td><td><code>"observed"</code></td><td>\(Y = y\)</td></tr><tr><td><code>is.na(y)</code>, both bounds finite</td><td><code>"interval"</code></td><td>\(Y \in [\)<code>lwr</code>, <code>upr</code>\(]\)</td></tr></table><p>The tests are applied in that order, so a value at or below <code>lwr</code> is left-
-censored even when it is also at or above <code>upr</code>; the validator forbids
-<code>lwr &gt;= upr</code>, so the two cannot both bind. An <code>NA</code> value without two finite
-bounds says nothing about \(Y\) at all and throws.</p>
-<p>At the defaults <code>lwr = -Inf</code> and <code>upr = Inf</code> no value can reach a bound,
-every status comes back <code>"observed"</code>, and the object carries the same
-information the bare vector does.</p>
+classified by where it sits, with the bounds inclusive:</p><table class="table table"><tr><td>condition</td><td>status</td><td>what is known</td></tr><tr><td><code>y &lt;= lwr</code></td><td><code>"left"</code></td><td>\(Y \le\) <code>lwr</code></td></tr><tr><td><code>y &gt;= upr</code></td><td><code>"right"</code></td><td>\(Y \ge\) <code>upr</code></td></tr><tr><td><code>lwr &lt; y &lt; upr</code></td><td><code>"observed"</code></td><td>\(Y = y\)</td></tr><tr><td><code>is.na(y)</code>, both bounds finite</td><td><code>"interval"</code></td><td>\(Y \in [\)<code>lwr</code>, <code>upr</code>\(]\)</td></tr></table><p>The left test is applied first and the right test second, and the later
+assignment overrides the earlier one, so a value that met both conditions
+would receive the status <code>"right"</code>. The class validator rejects
+<code>lwr &gt;= upr</code>, so no value meets both. An <code>NA</code> value without two finite
+bounds carries no information about \(Y\), and <code>cens()</code> signals an error.</p>
+<p>At the defaults <code>lwr = -Inf</code> and <code>upr = Inf</code>, every finite value has the
+status <code>"observed"</code>, and the object then carries the same information as the
+bare vector. Because the tests are inclusive, the value <code>-Inf</code> receives the
+status <code>"left"</code> and the value <code>Inf</code> the status <code>"right"</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="where-it-can-be-used">Where it can be used<a class="anchor" aria-label="anchor" href="#where-it-can-be-used"></a></h2>
     <p>On the left of a formula passed to <code><a href="interpret_formula.html">interpret_formula()</a></code>, which returns the
-object as its <code>response</code> element. <code><a href="https://statmodels7.github.io/statmodels7/reference/statmod.html" class="external-link">statmodels7::statmod()</a></code> refuses that
-response with a message naming the gap: the toolkit marks censoring and does
-not yet assemble a censored likelihood from it. See <code><a href="censored_response.html">censored_response()</a></code>
-for the four contributions such an assembler would need.</p>
+object as its <code>response</code> element. <code><a href="https://statmodels7.github.io/statmodels7/reference/statmod.html" class="external-link">statmodels7::statmod()</a></code> and
+<code><a href="https://statmodels7.github.io/statmodels7/reference/rstatmod.html" class="external-link">statmodels7::rstatmod()</a></code> reject that response with an error message: the
+toolkit marks censoring and does not assemble a censored likelihood from it.
+See <code><a href="censored_response.html">censored_response()</a></code> for the four contributions that such an assembler
+would need.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

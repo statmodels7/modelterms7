@@ -19,7 +19,7 @@ term_values(term, ...)
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 
@@ -35,9 +35,9 @@ block does not cap it and
 does not extend it: those two construct a grid, and here there is
 nothing to construct.
 
-A hyperparameter written out is still **estimated**. What the caller
-fixed is where to look, not the answer, so a fit reports it as chosen by
-the criterion, and
+A hyperparameter written out is still **estimated**. The caller supplies
+the values to search and not the estimate, so a fit reports the
+hyperparameter as chosen by the criterion, and
 [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md)
 does not carry it.
 
@@ -89,9 +89,9 @@ term_hyper(lasso(~ x, lambda = 3))
 #> 
 #> 
 
-# A penalty with no kink has no path, so several values are refused.
+# A penalty with no kink has no path, so several values are rejected.
 try(ridge(~ x, lambda = c(1, 2)))
-#> Error : 'lambda' in 'ridge' has several values, and this term has no path to visit them
-#>   on: its penalty has no kink, so the hyperparameter is estimated by the
+#> Error : 'lambda' in 'ridge' has several values, and this term has no path to visit them:
+#>   its penalty has no kink, so the hyperparameter is estimated by the
 #>   criterion at the mode. Give one number to hold it, or NULL to estimate it.
 ```

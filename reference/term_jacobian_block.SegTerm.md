@@ -1,14 +1,16 @@
 # Whether a Break-Point Term's Block Is a Jacobian
 
 `TRUE` for
-[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
-and for any smoothed construction, `FALSE` for the sharp
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+for any smoothed construction and for a term held by
+[`seg_hold()`](https://statmodels7.github.io/modelterms7/reference/seg_hold.md);
+`FALSE` for a sharp, unheld
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
-and
+or
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md).
-It is the predicate a fitting layer routes on: a Jacobian licenses a
-Gauss-Newton step and a line search on the model's own objective, and a
-working linearization does not.
+It is the predicate that a fitting layer routes on: a Jacobian licenses
+a Gauss-Newton step and a line search on the model's own objective, and
+a working linearization does not.
 
 ## Arguments
 
@@ -16,7 +18,8 @@ working linearization does not.
 
   A
   [`SegTerm()`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md),
-  built or not: the answer is a property of the construction.
+  built or not. The answer depends on the construction and, for a built
+  term, on whether it is held.
 
 - ...:
 
@@ -30,24 +33,27 @@ A single logical.
 
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md) is
 differentiable in its break-points away from them, so its block is the
-exact derivative.
+exact derivative. A sharp
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
-and
+or
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
-freeze the weight \\W = 1/(2\lvert\tilde{x}-\psi\rvert)\\ at the
-previous position and read the break-point off two coefficients, so
-their block is a working linearization: the fixed-point iteration on it
-is not a descent method on the model's objective, its early steps going
-uphill on purpose under a large scaling factor, and forcing a sufficient
-decrease stalls it.
+freezes the weight \\W = 1/(2\lvert\tilde{x}-\psi\rvert)\\ at the
+previous position and reads the break-point off two coefficients, so its
+block is a working linearization: the fixed-point iteration on it is not
+a descent method on the model's objective, its early steps can go uphill
+under a large scaling factor, and forcing a sufficient decrease stalls
+it.
 
 `smoothed` changes the answer for all three. Replacing the step and the
-hinge by an
-[`numericals7::abs_smoother()`](https://statmodels7.github.io/numericals7/reference/abs_smoother.html)'s
-smooth versions makes every break-point an ordinary parameter with a
-true derivative, so a smoothed `jump` answers `TRUE` and is routed like
-an [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
-term.
+hinge by the smooth versions of an
+[`numericals7::abs_smoother()`](https://statmodels7.github.io/numericals7/reference/abs_smoother.html)
+makes every break-point an ordinary parameter with a true derivative, so
+a smoothed `jump` answers `TRUE` and is routed like an
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+term. A term held by
+[`seg_hold()`](https://statmodels7.github.io/modelterms7/reference/seg_hold.md)
+answers `TRUE` as well, its block being the exact design at the held
+positions.
 
 ## See also
 

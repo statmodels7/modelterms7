@@ -37,29 +37,31 @@ term_static_deriv(term, curv, X, psi, ...)
 
 ## Value
 
-A matrix of `X`'s dimensions, holding \\\partial f_t/\partial \beta\\
-for each column of `X`, so the full derivative of the predictor is
-`X + result`. `NULL` for a term that carries no state.
+A matrix of `X`'s dimensions, holding the full derivative \\\partial
+\eta_t/\partial \beta = x_t + \partial f_t/\partial \beta\\ for each
+column of `X`, so that the design is already included. `NULL` for a term
+that carries no state.
 
 ## Details
 
-A score-driven term's level is driven by scores read AT the predictor
-the recursion is producing, so a coefficient in the same equation
+A score-driven term's level is driven by scores read at the predictor
+that the recursion is producing, so a coefficient in the same equation
 reaches the level as well as the static part: writing \\f_t\\ for the
 level and \\x_t\\ for a row of the design, \$\$\frac{\partial
 \eta_t}{\partial \beta} = x_t + \frac{\partial f_t}{\partial \beta},\$\$
-and the second piece obeys the recursion the filter already runs,
-\$\$\frac{\partial f_t}{\partial \beta} = \sum_i \alpha_i \\
-\ell''\_{t-i} \frac{\partial \eta\_{t-i}}{\partial \beta} + \sum_j
-\beta_j \frac{\partial f\_{t-j}}{\partial \beta}.\$\$ The curvature it
-needs is the one
+and the second piece obeys the recursion that the filter already runs,
+\$\$\frac{\partial f_t}{\partial \beta} = \sum_i \kappa_i \\
+\ell''\_{t-i} \frac{\partial \eta\_{t-i}}{\partial \beta} + \sum_j \xi_j
+\frac{\partial f\_{t-j}}{\partial \beta},\$\$ with \\\kappa_i\\ the
+score loadings, \\\xi_j\\ the autoregressive coefficients and
+\\\ell''\_t\\ the curvature. The curvature is the one that
 [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
 returns, so no callback is evaluated here and the pass is arithmetic
 alone.
 
-Without it a standard error of the predictor counts the static part
-only. Measured on a score-driven mean with one covariate beside it, that
-understates the standard error by about a quarter.
+Without this derivative, the standard error of the predictor accounts
+for the static part only and leaves out the part that runs through the
+filter.
 
 The base method returns `NULL`. A term that is not a filter carries no
 state, so the derivative is the design row itself and the caller needs

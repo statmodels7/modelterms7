@@ -1,7 +1,7 @@
 # A Break-Point Term's Block at New Rows
 
 The working block evaluated at `newdata`, at the break-points and the
-coefficients the term currently carries. The positions are not
+coefficients that the term currently carries. The positions are not
 re-derived from the new rows, and any development of a coefficient is
 reapplied through its sub-terms' own blueprints.
 
@@ -11,7 +11,7 @@ reapplied through its sub-terms' own blueprints.
 
   A built
   [`SegTerm()`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md).
-  An unbuilt one throws
+  An unbuilt one signals the error
   `"the term has not been built; call term_build(term, data) first."`.
 
 - newdata:
@@ -48,7 +48,7 @@ for the generic,
 [`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
 for the contribution,
 [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
-for the positions it is evaluated at.
+for the positions at which it is evaluated.
 
 ## Examples
 

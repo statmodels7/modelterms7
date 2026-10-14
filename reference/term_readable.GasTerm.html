@@ -11,7 +11,7 @@ Jacobian from the term's own parameters."><meta property="og:image" content="htt
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,21 +67,24 @@ Jacobian from the term's own parameters.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The level and the loadings are reported through their own links, each a
-function of its own coordinate alone, which the base method already
-does. The persistence is not: it is carried on a partial
-autocorrelation, and the coefficients come from the Levinson-Durbin
-recursion, whose Jacobian the term already computes for the filter.
-Chained onto the rhobit link of each coordinate, that Jacobian is what
-a delta-method standard error for \(\xi_j\) needs. At \(q = 1\)
-the two coincide and the chain factor is the link's alone; above it
-they do not.</p>
+function of its own coordinate alone, as the base method does. The
+persistence is not: it is carried on partial autocorrelations, and the
+coefficients come from the Levinson-Durbin recursion, which the term
+already differentiates for the filter. Each partial autocorrelation is
+mapped through its own link, the rhobit unless <code>links</code> gives another, and
+the Jacobian of the recursion is chained onto these links, which is what a
+delta-method standard error for \(\xi_j\) needs. At \(q = 1\) the two
+coincide and the chain factor is the link's alone; above it they do not.</p>
 <p>The scale an interval is built on follows the same split. At \(q = 1\)
-it is the link of the partial autocorrelation (the rhobit unless <code>links</code>
-gives another), so the interval stays inside the coordinate's range.
-Above it the coefficients range over the stationary region, which is not
-a box, and the interval is built on the identity scale.</p>
-<p>A deviation is reported as it stands, being unconstrained and defined on
-the scale of the parameter it departs from.</p>
+it is the link of the partial autocorrelation, so the interval stays
+inside the coordinate's range. Above it the coefficients range over the
+stationary region, which is not a box, and the interval is built on the
+identity scale.</p>
+<p>The coefficients of a development are reported as they stand, being
+unconstrained and acting on the scale of the link of the developed
+parameter. If any partial autocorrelation is developed, the autoregressive
+coefficients vary by observation, no single \(\xi_j\) exists, and the
+persistence coordinates are reported as the base method gives them.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

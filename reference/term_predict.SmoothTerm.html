@@ -15,7 +15,7 @@ new rows."><meta property="og:image" content="https://statmodels7.github.io/mode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,7 +55,7 @@ new rows.</p>
 
 
 <dl><dt id="arg-term">term<a class="anchor" aria-label="anchor" href="#arg-term"></a></dt>
-<dd><p>A built <code><a href="SmoothTerm.html">SmoothTerm()</a></code>. An unbuilt one throws
+<dd><p>A built <code><a href="SmoothTerm.html">SmoothTerm()</a></code>. An unbuilt term signals the error
 <code>"the term has not been built; call term_build(term, data) first."</code>.</p></dd>
 
 
@@ -77,18 +77,21 @@ names and no row names.</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The basis object in <code>blueprint$core</code> carries the knots and the transform, so
 the columns at new rows are the same functions of the covariate as the
-fitted ones, so \(\tilde{X}\beta\) is the fitted smooth evaluated
-there. Rebuilding instead would place the knots on the new range
-and compute another transform: measured on 80 points, predicting on the
-first ten agrees with those rows of the block exactly and rebuilding differs
-by 2.85.</p>
+fitted ones, and \(\tilde{X}\beta\) is the fitted smooth evaluated
+there. Rebuilding on the new rows would place the knots on their range and
+compute another transform. Predicting on the first rows of the data
+reproduces those rows of the block exactly, and rebuilding on them gives a
+different block (see the examples).</p>
 <p>A factor <code>by</code> is expanded against <code>blueprint$by_levels</code>, so <code>newdata</code> need
 carry only the levels its own rows use and still gets every column, and the
-block is built in the storage the build settled on.</p>
-<p>New covariate values outside the range the basis was placed on are
-evaluated, not refused. A B-spline is zero beyond its knots, so the fitted
-function flattens rather than extrapolating a trend; read a prediction far
-outside the fitting range with that in mind.</p>
+block is built in the storage the build settled on. A level that was not
+present at build signals an error.</p>
+<p>Covariate values outside the interval on which the basis was placed signal
+an error that counts the points outside it. For the default smoother this
+interval is the observed range of the covariate at build, widened by a
+thousandth of that range at each end, and a smoother can set it with <code>lower</code>
+and <code>upper</code>. Inside the interval the columns are evaluated from the
+recorded basis.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

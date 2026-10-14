@@ -1,8 +1,8 @@
 # The Grouping a Term's Coefficients Are Indexed By
 
 For a term whose coefficients are one set per level of a grouping
-variable, the expression that variable came from, the levels it took,
-and how many columns each level carries. `NULL` for every other term.
+variable, the expression that defines that variable, its levels, and the
+number of columns that each level carries. `NULL` for every other term.
 
 ## Usage
 
@@ -18,7 +18,7 @@ term_group(term, ...)
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 
@@ -34,13 +34,14 @@ expressions for the same grouping and `id` under two subsets is the same
 expression for two different ones. The levels settle it, and the
 expression makes a message readable.
 
-`dim` is the number of columns one level carries, which with the levels
-says how the block is laid out: the coefficients are group-major, so
-level \\i\\ occupies positions \\(i-1)d + 1\\ to \\id\\. A consumer
-stacking two such blocks into one covariance needs exactly that, and
-`names` carries the within-group design's own column names in the same
-order, so that the coordinates of the covariance it builds can be said
-to belong to `x` or to the intercept rather than numbered.
+`dim` is the number of columns that one level carries, which together
+with the levels gives the layout of the block: the coefficients are
+group-major, so level \\i\\ occupies positions \\(i-1)d + 1\\ to \\id\\,
+where \\d\\ is `dim`. A consumer stacking two such blocks into one
+covariance needs this layout, and `names` carries the within-group
+design's own column names in the same order, so that each coordinate of
+the covariance that it builds is identified as belonging to `x` or to
+the intercept and is not merely numbered.
 
 The base method returns `NULL`, which is the answer for every term but
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md).

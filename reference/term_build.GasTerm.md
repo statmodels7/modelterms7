@@ -29,22 +29,23 @@ reads that property on this branch, so it is `TRUE` for the result.
 ## Details
 
 `by` and `time` are evaluated in the data. Each must give one
-non-missing value per row, and the blueprint records the row indices of
-each group in time order, and the filter iterates over exactly that.
+non-missing value per row. The blueprint records the row indices of each
+group in time order, and the filter iterates over exactly that order.
 
 Each subformula's right-hand side goes through
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
 and its terms are built, so their blueprints are recorded and a
 prediction reapplies them. A structural sub-term, and one whose own
 block moves with its coefficients, are rejected: a parameter's
-development must be a fixed design. The penalties those sub-terms carry
-become the term's own
-[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-entries, keyed `parameter::subterm`.
+development must be a fixed design. The penalties that those sub-terms
+carry become entries of the term's own
+[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
+keyed `parameter::subterm`.
 
-Without `time` the rows are taken as they come. That is a real choice:
-the recursion is about order, so a data frame that is not already sorted
-gives a different model.
+Without `time` the rows of each group are taken in the order in which
+they appear, so a data frame that is not sorted by time gives a
+different model. With `time`, only the order of the times matters, and a
+gap between two times counts as one step.
 
 ## See also
 

@@ -1,24 +1,26 @@
 # Defining a model term
 
-A term in a model formula is usually a string a fitting function
-switches on. Writing a new one then means editing that function, and a
-user cannot write one at all. Here a term is an object: it builds its
-own design block, carries its own penalty, says how many parameters it
-spends, and reapplies itself to new data. A formula interpreter
-recognizes it by what its call *returns*, so a term defined outside the
-package drops into a formula with no edit anywhere.
+In many fitting functions a term in a model formula is a string on which
+the function switches. Writing a new term then means editing that
+function, and a user cannot write one at all. Here a term is an object.
+It builds its own design block, carries its own penalty, reports its
+number of parameters and reapplies itself to new data. A formula
+interpreter recognizes a term by the value that its call *returns*, so a
+term defined outside the package works in a formula with no edit
+anywhere.
 
-This vignette writes one the package does not ship: a seasonal term, a
-Fourier design of $`2k`$ columns over a known period, penalized so that
-the higher harmonics shrink first.
+This vignette writes a term that the package does not ship: a seasonal
+term, a Fourier design of $`2k`$ columns over a known period, penalized
+so that the higher harmonics shrink first.
 
-## The minimum
+## The minimal additive term
 
-A new additive term is a subclass of `additive_term` and a method for
+A new additive term is a subclass of `additive_term` together with a
+method for
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md).
-A term declares any state of its own as **properties on its own
-subclass**; the shipped `SmoothTerm` carries `vars`, `by` and `spec`
-that way.
+State that belongs to the term is declared as **properties of its own
+subclass**; the shipped `SmoothTerm` carries `vars`, `by`, `spec` and
+`sparse` in this way.
 
 ``` r
 
@@ -28,9 +30,9 @@ SeasonTerm <- S7::new_class(
 )
 ```
 
-The constructor captures the covariate **unevaluated** and records what
-the build will need. Nothing is computed here: a specification is not a
-block, and the data are not in scope yet.
+The constructor captures the covariate **unevaluated** and records the
+settings that the build needs. The constructor computes nothing, because
+a specification is not a block and the data are not yet in scope.
 
 ``` r
 
@@ -49,10 +51,11 @@ season <- function(x, period, k = 3, lambda = NULL) {
 
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 evaluates the expression in the data and fills `X`, `coef_names`,
-`blueprint` and `penalty`. The **blueprint** is what
+`blueprint` and `penalty`. The **blueprint** stores what
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-will need later, and putting it there rather than recomputing it is the
-whole of the contract’s second half.
+needs later, so that prediction reapplies recorded quantities and does
+not recompute them from the new rows. Storing the blueprint at build
+time is the second requirement on a new term.
 
 ``` r
 
@@ -78,12 +81,19 @@ S7::method(term_build, SeasonTerm) <- function(term, data, ...) {
 }
 ```
 
-The penalty is $`\sum_j j^2(a_j^2 + b_j^2)`$, the discrete analogue of a
-roughness penalty: harmonic $`j`$ oscillates $`j`$ times as fast, so
-weighting by $`j^2`$ makes the smoothing parameter buy smoothness, not
-shrinkage alone.
+The penalty is the quadratic form
+$`\tfrac{\lambda}{2}\sum_j j^2(a_j^2 + b_j^2)`$, plus the normalizing
+constant of the corresponding Gaussian prior, where $`a_j`$ and $`b_j`$
+are the cosine and sine coefficients of harmonic $`j`$ and $`\lambda`$
+is the smoothing parameter. Harmonic $`j`$ oscillates $`j`$ times as
+fast, so the weight $`j^2`$ penalizes the higher harmonics more
+strongly, and $`\lambda`$ controls the smoothness of the fit as well as
+its size.
 
-That is the whole of the compulsory part.
+The constructor and the
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+method are the whole of the compulsory part. The term can now be built
+on data:
 
 ``` r
 
@@ -100,7 +110,8 @@ dim(term_matrix(tm))
 #> [1] 200   6
 ```
 
-and it recovers what it was given:
+A least-squares fit on the block recovers the coefficients that
+generated the data:
 
 ``` r
 
@@ -113,14 +124,14 @@ round(cf, 3)
 #>       0.001
 ```
 
-against a truth of `sin1 = 2`, `cos3 = 0.4` and zero elsewhere.
+The truth is `sin1 = 2`, `cos3 = 0.4` and zero for the other
+coefficients.
 
-## Prediction reapplies; it does not rebuild
+## Prediction at new data
 
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 has **no base method**, so a term that will be predicted from or
-cross-validated writes one, and what it must do is reapply the
-blueprint:
+cross-validated defines one. The method reapplies the blueprint:
 
 ``` r
 
@@ -131,10 +142,11 @@ S7::method(term_predict, SeasonTerm) <- function(term, newdata, ...) {
 }
 ```
 
-The period comes from the blueprint, never from the new data. A term
-that recomputed it would be a different term on every subset, and the
-identity that catches the mistake is that predicting on rows the model
-was fitted to must return the block it was fitted with:
+The period comes from the blueprint and never from the new data. A term
+that recomputed it would be a different term on every subset. The
+identity that catches this mistake is that prediction on the rows that
+the model was fitted to must return the block that the model was fitted
+with:
 
 ``` r
 
@@ -144,22 +156,23 @@ all.equal(term_predict(tm, d[rows, , drop = FALSE]),
 #> [1] TRUE
 ```
 
-For a seasonal term the period is a constant the caller gave, so the
-hazard is mild. For a spline it is the knots, for a factor the levels,
-and for a standardized penalized block the column spreads: each is
-learned from the fitting data and each would silently move if it were
-relearned.
+For a seasonal term the period is a constant that the caller supplied,
+so the hazard is small. For a spline the recorded quantities are the
+knots, and for a factor they are the levels. Each is learned from the
+fitting data, and each would silently change if it were learned again at
+prediction.
 
 The [`baseenv()`](https://rdrr.io/r/base/environment.html) enclosure is
-deliberate. It means the expression is evaluated in the new data and
-nowhere else, so a name that is not a column is not found, where it
-would otherwise be picked up from the calling environment and quietly
-supply the fitting data’s values.
+deliberate. The expression is evaluated in the new data with only the
+base namespace behind it, so a variable of the calling environment is
+not found. Under any other enclosure such a variable would be picked up
+from the calling environment and would quietly supply the fitting data’s
+values.
 
-## Validating it
+## Validating the term
 
 [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
-builds the term, then asks six questions of the result:
+builds the term and runs six checks on the result:
 
 ``` r
 
@@ -173,15 +186,19 @@ print(check_term(season(t, period = 1, k = 3), d, verbose = FALSE))
 #> 6    subset     OK      100 rows
 ```
 
-The last is the one worth understanding. It builds the term on a
-**subset** of the rows and compares against predicting there, which is
-how a rebuilt basis or a relearned set of levels is exposed. The subset
-is passed through
-[`droplevels()`](https://rdrr.io/r/base/droplevels.html) first: a plain
-row subset of a data frame keeps every factor level, including the ones
-no row uses, so a term that rebuilt its levels would look correct on it.
+The last check builds the term on all the rows, calls
+[`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
+on a subset of them and compares the result with the corresponding rows
+of the block. A term that rebuilds its basis or relearns its levels at
+prediction fails this check. When the data carry a factor, the subset
+omits every row of the factor’s last level; otherwise it is the first
+half of the rows, as here. The subset is passed through
+[`droplevels()`](https://rdrr.io/r/base/droplevels.html) first, because
+a plain row subset of a data frame keeps every factor level, including
+levels that no row uses, and a term that rebuilt its levels would look
+correct on it.
 
-## The penalty, and what its rank decides
+## The penalty and its rank
 
 The penalty travels with the term, so the effective degrees of freedom
 follow from the term alone:
@@ -196,19 +213,21 @@ c(`lambda = 1` = edf(tm, cf[-1], H, theta = list(lambda = 1)),
 ```
 
 The count runs from 6 down to 0, because the penalty above has **full
-rank**: nothing is left unpenalized, so a large smoothing parameter
+rank**: every coefficient is penalized, so a large smoothing parameter
 removes the seasonal effect entirely. A shipped
-[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) is
-deliberately different, its penalty being rank deficient by exactly one
-so that the effective count runs from $`k`$ down to **one** and the
-limit is a straight line, not nothing. Which of the two a term wants is
-a modeling decision, and it is made by choosing the penalty’s null
-space.
+[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) with
+its default smoother has a penalty that is rank deficient by exactly
+one, so that the effective count runs from the number of coefficients
+down to **one**, and the limit is a straight line. The cyclic, Fourier
+and first-order smoothers have no free line, and their count goes to
+zero. The choice of the penalty’s null space decides which of the two
+behaviors a term has, and it is a modeling decision.
 
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-reports the entries a term declares, each naming a subset of its own
-parameters and the penalty over them. One entry covering everything is
-the ordinary case:
+reports the entries that a term declares. Each entry names a subset of
+the term’s own parameters and the penalty over them, together with the
+hyperparameters that are held and the settings of the path over the
+others. One entry that covers every parameter is the ordinary case:
 
 ``` r
 
@@ -219,17 +238,30 @@ names(term_penalties(tm)[[1]])
 #> [7] "min_ratio" "search"    "ids"
 ```
 
-A term with several may declare several:
+A term with several penalties declares several entries. A
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
-declares two, one on its slope changes and one on its jumps, because a
-slope change and a jump are not comparable quantities and one
-hyperparameter over their union would price them against each other.
+whose developments carry a penalty on each kind of coefficient is an
+example: one entry covers the changes of slope and another the changes
+of level. A slope change and a jump are not comparable quantities, and
+one hyperparameter over their union would price them against each other.
+A
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+written without developments declares no entry.
+
+``` r
+
+jj <- term_build(jseg(t, gamma ~ 0 + lasso(~ 1), delta ~ 0 + ridge(~ 1)), d)
+vapply(term_penalties(jj), function(e) e$name, character(1))
+#> [1] "gamma1::lasso(~1)" "delta1::ridge(~1)"
+length(term_penalties(term_build(jseg(t), d)))
+#> [1] 0
+```
 
 ## In a formula
 
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
-recognizes a term by **evaluating** its call and asking whether the
-value inherits `model_term`. Nothing lists the term names, so the new
+recognizes a term by **evaluating** its call and testing whether the
+value inherits `model_term`. The term names are never listed, so the new
 term is recognized with no edit:
 
 ``` r
@@ -241,24 +273,26 @@ vapply(f$terms, function(z) class(z)[[1]], character(1))
 #> "modelterms7::LinparTerm"              "SeasonTerm"
 ```
 
-A bare covariate collapses into one parametric block, and a call whose
-value does not inherit `model_term` stays a covariate, so `log(x)` is
-arithmetic.
+A bare covariate collapses into one parametric block. A call whose value
+does not inherit `model_term` stays a covariate when a model matrix can
+hold the value, so `log(x)` is arithmetic. A call whose evaluation fails
+signals an error that names the call.
 
-⚠️ Recognition by evaluation has one consequence worth knowing: a
-**masked name** is a third case. `mgcv` exports
+Recognition by evaluation has one further consequence: a **masked name**
+is a third case. `mgcv` exports
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
-[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md),
+[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md), and
 `segmented` exports
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
-so a user with either attached writes this package’s formula and gets
-the other package’s function. The interpreter rejects that where it
-happens, naming the class returned and the package that supplied the
-function, instead of letting the value reach
+so a user who has attached either package and writes this package’s
+formula gets the function of the other package. The interpreter rejects
+the result where it happens. The error names the term, the class of the
+value and the package that supplied the function, and it suggests
+`modelterms7::`, so the value does not reach
 [`model.matrix()`](https://rdrr.io/r/stats/model.matrix.html) and fail
 there.
 
-## What comes free, and the second branch
+## Inherited methods and structural terms
 
 [`term_matrix()`](https://statmodels7.github.io/modelterms7/reference/term_matrix.md),
 [`term_coef_names()`](https://statmodels7.github.io/modelterms7/reference/term_coef_names.md),
@@ -268,42 +302,52 @@ there.
 [`term_smooth()`](https://statmodels7.github.io/modelterms7/reference/term_smooth.md),
 [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md),
 [`print()`](https://rdrr.io/r/base/print.html) and
-[`plot()`](https://rdrr.io/r/graphics/plot.default.html) all come from
-the base classes and read the properties
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) are inherited
+from the base classes and read the properties that
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 filled.
 
-Two further methods matter only for a term whose block **moves with its
+Two further generics matter only for a term whose block **moves with its
 coefficients**.
 [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
-recomputes the block at new coefficients and
+recomputes the block at new coefficients.
 [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
-says whether that block is a Jacobian (so the fitting step is
-Gauss-Newton) or a frozen working linearization (so it is a fixed-point
-iteration).
-[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) and
+reports whether that block is a Jacobian, so that the fitting step is
+Gauss-Newton, or a frozen working linearization, so that the step is a
+fixed-point iteration.
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md),
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
-answer `TRUE`;
+and every smoothed break-point term answer `TRUE`. A sharp
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
-and
+or
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
-answer `FALSE`, their break-point being read off a product of
-coefficients, never estimated as one. A term with a fixed design, like
-the one above, inherits the identity and needs neither.
+answers `FALSE`, because its break-point is read off a product of
+coefficients and is not estimated as a parameter. A term with a fixed
+design, like the one above, inherits a
+[`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
+that returns the term unchanged and the answer `TRUE`, and it needs
+neither method.
 
 The other branch of the class tree is `structural_term`, whose terms
 rewrite the likelihood instead of adding columns:
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
 drives a distribution parameter by a score-driven recursion, and
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
-mixes the likelihood over a latent Markov chain. They are a different
-contract, made of
-[`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md),
-[`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md),
-[`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
+mixes the likelihood over a latent Markov chain. A structural term has a
+different structure. It supplies
+[`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md),
+[`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
 and
-[`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md),
-and a formula may carry at most one of them.
+[`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md),
+and either
+[`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+or
+[`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md),
+with
+[`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
+carrying the derivative of a filter.
+[`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
+fits at most one structural term in a formula.
 
 ## Summary
 
@@ -311,7 +355,7 @@ and a formula may carry at most one of them.
   and a
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   method that fills `X`, `coef_names`, `blueprint` and `penalty`. Any
-  state of its own is a property on the subclass.
+  state of its own is a property of the subclass.
 - The constructor captures the covariate unevaluated and computes
   nothing.
 - [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
@@ -320,9 +364,9 @@ and a formula may carry at most one of them.
   [`baseenv()`](https://rdrr.io/r/base/environment.html) as the
   enclosure.
 - [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
-  asks six questions, the last of them on a
-  [`droplevels()`](https://rdrr.io/r/base/droplevels.html) subset, the
-  one that exposes a rebuild.
+  runs six checks, the last of them on a
+  [`droplevels()`](https://rdrr.io/r/base/droplevels.html) subset, which
+  exposes a rebuild.
 - The penalty’s null space decides what a large smoothing parameter
   leaves behind, and
   [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
@@ -334,4 +378,4 @@ and a formula may carry at most one of them.
   [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
   and
   [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md);
-  a term that rewrites the likelihood is the other branch entirely.
+  a term that rewrites the likelihood belongs to the other branch.

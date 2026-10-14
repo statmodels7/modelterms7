@@ -1,7 +1,7 @@
 # Segmented Term: a Broken Line with Estimated Break-Points
 
 A covariate whose slope changes at \\K\\ break-points estimated with
-everything else, the relationship staying continuous (muggeo2003).
+everything else, the relationship staying continuous (Muggeo, 2003).
 Written in the equation of any parameter of any distribution, the term
 contributes
 
@@ -17,8 +17,9 @@ to that parameter's linear predictor, so that in a model \\g(\theta_i) =
 \\\beta\\ is the slope before the first break-point and \\\gamma_k\\ the
 change of slope at \\\psi_k\\, so the slope over the \\k\\-th segment is
 \\\beta + \gamma_1 + \cdots + \gamma_k\\. The gaussian additive model is
-the case \\g = \mathrm{id}\\ on the mean of a `gaussian1_distrib`;
-nothing here is particular to it.
+the case \\g = \mathrm{id}\\ on the mean of a `gaussian1_distrib`, and
+the term applies to any other distribution and parameter in the same
+way.
 
 ## Usage
 
@@ -80,29 +81,33 @@ seg(
   \\(1 + s'(u))/2\\ and \\(u + s(u))/2\\, so every break-point becomes
   an ordinary parameter of a model as smooth as the smoother
   (\\C^\infty\\ for the probit and the hyperbolic, \\C^3\\ for the
-  quintic, whose page says what that costs under an outer criterion,
-  where the probit is the choice): there is no working parametrization,
-  no auxiliary coefficient and no scaling schedule (`c0` is ignored,
-  with a message), the block is the true Jacobian and the term is fitted
-  by Gauss-Newton like
+  quintic; the page of the quintic gives its cost under an outer
+  criterion, where the probit is the recommended smoother). There is no
+  working parametrization, no auxiliary coefficient and no scaling
+  schedule (for
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md),
+  a `c0` that is passed is ignored with a message), the block is the
+  true Jacobian and the term is fitted by Gauss-Newton like
   [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md). A
-  development of a break-point, `psi ~ random(~1 | id)` and penalized
-  ones included, is then legal for every kind, the read-off that
-  constrained the discontinuous constructions having gone. The
+  smoothed term accepts a development of any coefficient, including a
+  break-point (`psi ~ random(~1 | id)`) and penalized developments, for
+  every kind, since no read-off constrains the development. The
   smoother's width is resolved at build from the covariate's spacing
   (the median gap between distinct values, within groups where a
   break-point development supplies a partition) unless the object
-  carries one; for the quintic, which is exact outside its width, it is
-  raised to at least 0.55 times the largest gap over the range a
-  break-point may take, so that a break-point cannot sit in a gap with
+  carries one. For the quintic, which is exact outside its width, the
+  width is raised to at least 0.55 times the largest gap over the range
+  a break-point may take, so that a break-point cannot sit in a gap with
   no observation within its width. The width is reported: it is the
-  width of the transition, the bent-cable reading, and the smoothing
-  bias it buys is confined to a window of that width (probit, quintic)
-  or decays as \\c/(4\|u\|)\\ (hyperbolic). The objective is still
-  multimodal in the positions – smoothing rounds the local optima and
-  does not remove them, so the profile start and the `n_boot` restarts
-  stay necessary; a smoothed fit from a bad start has been measured
-  converging to an absurd local optimum while reporting success.
+  width of the transition (the bent-cable reading). The smoothing bias
+  is zero outside the transition for the quintic, decays with the
+  Gaussian tails for the probit, and decays as \\c/(4\|u\|)\\ for the
+  hyperbolic, whose parameter \\c\\ is a squared length. The objective
+  remains multimodal in the positions: smoothing rounds the local optima
+  and does not remove them, so the profile start and the `n_boot`
+  restarts remain necessary.
 
 - marginal:
 
@@ -112,16 +117,17 @@ seg(
   requires the subformula `psi ~ random(~1 | g)` and returns a
   structural term of the likelihood shape
   ([`MarginalBreakTerm()`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md));
-  see the section of
-  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md),
-  whose step model is where the marginal buys the most: for a `seg` term
-  the native random-changepoint fit (`psi ~ random(~1 | g)` without
-  `marginal`) is measured equivalent and remains the recommended route,
-  the marginal being the exact-likelihood alternative. One break-point
-  here: the conditional is smooth in the position, so the integral runs
-  on a Gauss-Kronrod panel per interval between a group's ordered
-  observations, and several latents would need a product quadrature
-  whose component count no fitting layer can carry.
+  see the section on the marginal construction in
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md).
+  For a `seg` term the native random-changepoint fit
+  (`psi ~ random(~1 | g)` without `marginal`) estimates the break-points
+  as the mode of the latent distribution and is the recommended route,
+  the marginal being the exact-likelihood alternative. The marginal
+  `seg` has one break-point: the conditional is smooth in the position,
+  so the integral runs on Gauss-Kronrod panels over the intervals
+  between a group's ordered observations, and several latent
+  break-points would need a product quadrature with a number of
+  components that a fitting layer cannot carry.
 
 - n_boot:
 
@@ -145,7 +151,10 @@ seg(
 An object of class
 [`SegTerm()`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md)
 (a specification; see
-[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)),
+or of class
+[`MarginalBreakTerm()`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md)
+with `marginal = TRUE`.
 
 ## Details
 
@@ -154,32 +163,34 @@ An object of class
 The contribution is differentiable in \\\psi_k\\ away from the
 break-point, with \\\partial/\partial\psi_k =
 -\gamma_k\\\mathbb{1}(x\>\psi_k)\\, so the design block is the ordinary
-Jacobian, the break-point is an ordinary coefficient, and the increment
-a Gauss-Newton step solves for is the update of muggeo2003: his working
-variables \\U\\ and \\V\\ are the block's columns and his \\\psi
-\leftarrow \psi + \gamma/\delta\\ is that step. Refreshing the term at
+Jacobian and the break-point is an ordinary coefficient. The working
+variables \\U = (x-\psi)\_{+}\\ and \\V = -\mathbb{1}(x\>\psi)\\ of
+Muggeo (2003) are, up to the factor \\\gamma_k\\ on \\V\\, the columns
+of the block for \\\gamma_k\\ and \\\psi_k\\, so a Gauss-Newton step on
+the block is an iteration of his linearization. Refreshing the term at
 the current coefficients
 ([`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md))
-and fitting is one iteration of it, which is the same contract
-[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
-uses.
+and fitting is one such iteration, which is the scheme that
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) uses
+as well.
 
 The objective has local optima in the break-points and the iteration
 converges from within a basin around where it starts, so
 [`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
-chooses the starting positions on a grid rather than at a conventional
+chooses the starting positions on a grid and not at a conventional
 point. A break-point is confined to the interval between the 5th and the
-95th percentile of the covariate: outside it the indicator is constant,
-the truncated line and that constant are linearly dependent, and the
-block is exactly singular, not merely ill-conditioned. A run ending
-against the limit has not located a break-point, and
+95th percentile of the covariate, so that both sides of a break-point
+carry observations. A position that reaches a limit is clamped there,
+and the column of a clamped break-point is zero, since the contribution
+no longer moves with it. A run ending against the limit has not located
+a break-point, and
 [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
 then reports the limit itself.
 
 The iteration can settle into a cycle of period two in the break-point,
 in which case the rule of
 [`seg_converged()`](https://statmodels7.github.io/modelterms7/reference/seg_step.md)
-is never met while the objective has long since stopped moving; a caller
+is never met while the objective has long since stopped moving. A caller
 that can evaluate the objective should stop on its relative change, as
 `segmented` does.
 
@@ -187,10 +198,10 @@ that can evaluate the objective should stop on its relative change, as
 
 `beta` (present when `linear = TRUE`), `gamma1` ... `gammaK` and `psi1`
 ... `psiK`, in that order. The break-points are coefficients of the
-working block here, which they are not in the discontinuous
+working block here, and they are not in the sharp discontinuous
 constructions, so
 [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
-is the function that reports them either way.
+reports them under every construction.
 
 ## Developing a coefficient with covariates
 
@@ -204,9 +215,14 @@ side names it:
     seg(x, by = ~0 + g)                every coefficient, per level of g
 
 The right side goes through
-[`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
-so it takes *any* term of this package, penalized ones included, and the
-hyperparameters a sub-term declares are reported by
+[`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
+and takes any term with a fixed design block, penalized ones included. A
+structural term
+([`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md),
+[`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md))
+and a term whose block moves with its coefficients (`seg()`,
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)) are
+rejected. The hyperparameters that a sub-term declares are reported by
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 and estimated by the fitting layer. The left side names either one
 coefficient (`gamma2`) or a whole kind (`gamma`, meaning every
@@ -222,15 +238,16 @@ line becoming \\(x_i-\psi\_{k,i})\_{+}w_i'\\ and the Jacobian column
 continuous construction accepts a development of any coefficient and any
 combination of them.
 
-A penalty on the changes themselves, the lasso that selects how many
-break-points are really there, is the development on an intercept alone,
+A penalty on the changes themselves, the lasso that selects the number
+of break-points, is the development on an intercept alone,
 `seg(x, npsi = 4, gamma ~ 0 + lasso(~1))`: the \\K\\ changes are then
 one penalized block under one hyperparameter, the entries of a
 subformula shared by every coefficient of a kind being pooled into one.
-The `0 +` is not decoration. A subformula follows the intercept
-convention of a formula, so `gamma ~ lasso(~1)` carries the subformula's
-own unpenalized intercept beside the penalized column, which for an
-intercept-only development is the same column twice.
+A subformula follows the intercept convention of a formula, so
+`gamma ~ lasso(~1)` carries the subformula's own unpenalized intercept
+beside the penalized column, which for an intercept-only development
+repeats the same constant column. That design is rejected when the term
+is built, and the `0 +` removes the subformula's own intercept.
 
 ## The linear effect
 

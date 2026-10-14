@@ -2,9 +2,16 @@
 
 Runs the term's recursion over the data and returns the predictor it
 produces, together with the derivative of that predictor with respect to
-the term's own parameters. This is the operation that makes a structural
-term structural: the predictor at one observation depends on the others,
-so it cannot be written as a block of columns.
+the term's own parameters. This is the operation that defines a
+filter-shaped structural term such as
+[`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md):
+the predictor at one observation depends on the others, so it cannot be
+written as a block of columns. The structural terms of the likelihood
+shape,
+[`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+and the marginal break-point term, have no filter and implement
+[`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
+instead.
 
 ## Usage
 
@@ -28,13 +35,19 @@ term_filter(term, eta, y, score, curvature, psi, ...)
 
 - score:
 
-  A function of the predictor returning the derivative of the
-  log-likelihood with respect to it, one value per observation.
+  A function `function(e, i)` of a predictor value `e` and an
+  observation index `i`, returning the single value that drives the
+  recursion at that observation: the derivative of the log-likelihood
+  with respect to the predictor, multiplied by the information scaling
+  when the `scaling` of
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  is not zero.
 
 - curvature:
 
-  A function of the predictor returning the second derivative of the
-  log-likelihood with respect to it.
+  A function `function(e, i)` returning the derivative of that driving
+  value with respect to `e`, which is the second derivative of the
+  log-likelihood when the scaling is zero.
 
 - psi:
 
@@ -67,9 +80,16 @@ where \\f_t\\ is the term's own recursion, driven by `score` and
 `curvature` evaluated at the predictor already produced. Both are read
 at \\\eta_t\\, so `curvature` is the second derivative \\\partial^{2}
 \ell_t / \partial \eta^{2}\\ and is negative at an ordinary observation.
-**Its sign is load-bearing**: passing the information, which is its
-negative, returns a predictor and a Jacobian that are internally
-consistent and wrong, with no error to say so.
+Its sign matters: the predictor does not depend on `curvature`, but the
+Jacobian does, so passing the information, which is the negative of the
+curvature, returns the correct predictor together with a Jacobian that
+is not its derivative, and no error is signaled.
+
+The filter applies no scaling of its own. The callbacks supplied are the
+driving sequence of the recursion, and a fitting layer that uses the
+`scaling` of
+[`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+builds callbacks that return the scaled score and its derivative.
 
 The derivative is returned because the recursion is the only place it
 can be computed. Propagating it beside the state costs one extra vector
@@ -80,9 +100,9 @@ difference.
 ## See also
 
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
-and
+for the filter shape and
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
-for the two structural shapes,
+for the likelihood shape,
 [`term_static_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_static_deriv.md)
 for the same recursion in the static predictor,
 [`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)

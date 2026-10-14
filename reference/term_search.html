@@ -11,7 +11,7 @@ names neither is covered the way the fitting layer covers one by default."><meta
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,26 +57,29 @@ names neither is covered the way the fitting layer covers one by default.</p>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Passed to methods. No shipped method reads anything here.</p></dd>
+<dd><p>Passed to methods. The shipped methods do not use it.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A named list, one entry per penalty of the term, each the single
-string <code>"grid"</code> or <code>"cyclic"</code>. Empty where the term names none.</p>
+string <code>"grid"</code> or <code>"cyclic"</code>. Empty where every penalty of the term has
+fewer than two swept hyperparameters.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>It matters only for a term carrying <strong>more than one</strong> hyperparameter with a
-kink, so <code><a href="enet.html">enet()</a></code>, <code><a href="scad.html">scad()</a></code> and <code><a href="mcp.html">mcp()</a></code>; there is nothing to combine
-otherwise, and <code><a href="lasso.html">lasso()</a></code> does not take the argument. Under <code>"grid"</code> the cost
-is the product of the term's own grids, 25 by 5 at the defaults; under
-<code>"cyclic"</code> it is their sum per pass.</p>
-<p>It is one word per penalty. It says how the hyperparameters are combined
-<strong>with each other</strong>, which is not a property any one of them has.</p>
-<p>Between two terms the sweep alternates whatever each one names, so
-<code>y ~ lasso(X) + enet(R)</code> costs the two blocks added, so one term asking for
-a product does not make the other pay for it.</p>
+    <p>It matters only for a term with <strong>more than one</strong> swept hyperparameter:
+<code><a href="enet.html">enet()</a></code> by default, and <code><a href="scad.html">scad()</a></code> and <code><a href="mcp.html">mcp()</a></code> when their shape is left
+<code>NULL</code> to be estimated, since the shape is held by default. There is
+nothing to combine otherwise, and <code><a href="lasso.html">lasso()</a></code> does not take the argument.
+Under <code>"grid"</code> the cost is the product of the grids of the swept
+hyperparameters; under <code>"cyclic"</code> it is their sum per pass.</p>
+<p>It is one word per penalty, and it states how the hyperparameters are
+combined <strong>with each other</strong>, which is not a property of any single one of
+them.</p>
+<p>Between two terms the sweep alternates, whichever search each term names, so
+<code>y ~ lasso(X) + enet(R)</code> costs the two blocks added. A term with
+<code>search = "grid"</code> therefore does not raise the cost of the other term.</p>
 <p>The keys are <code><a href="term_penalties.html">term_penalties()</a></code>'s entry names, <code>""</code> for a penalty over the
 whole term.</p>
     </div>
@@ -96,6 +99,14 @@ the depth of the kink-size axis.</p></div>
 <span class="r-in"><span><span class="fu">term_search</span><span class="op">(</span><span class="fu"><a href="enet.html">enet</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span>, search <span class="op">=</span> <span class="st">"cyclic"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "cyclic"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># SCAD sweeps its shape only when it is estimated.</span></span></span>
+<span class="r-in"><span><span class="fu">term_search</span><span class="op">(</span><span class="fu"><a href="scad.html">scad</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
+<span class="r-in"><span><span class="fu">term_search</span><span class="op">(</span><span class="fu"><a href="scad.html">scad</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span>, a <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "grid"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># One hyperparameter, so nothing to combine and no argument to take.</span></span></span>

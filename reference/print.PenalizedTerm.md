@@ -8,9 +8,9 @@ Prints one line describing a
 or [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
 term. An unbuilt specification reports its label and whether it will
 standardize; a built one reports the number of coefficients, the
-penalty's name and the hyperparameters that penalty carries, and adds a
-second line giving the spread each column was standardized by when there
-is one.
+penalty's name and the hyperparameters that penalty carries, and, when
+the term is standardized, adds a second line giving the spread by which
+each column is standardized.
 
 ## Arguments
 
@@ -33,14 +33,15 @@ is one.
 
 The built form reads `ncol(x@X)`, `x@penalty@penalty_name` and
 `x@penalty@params`, so the hyperparameters shown are the penalty's own
-names, `lambda` for a ridge or a lasso, `lambda, alpha` for the elastic
+names: `lambda` for a ridge or a lasso, `lambda, alpha` for the elastic
 net, `lambda, a` for SCAD and `lambda, gamma` for MCP.
 
-The standardization line matters for reading a fitted hyperparameter:
-with `standardize = TRUE` the penalty acts on the coefficients of
-columns divided by those spreads, and the spreads are frozen in the
-blueprint at build time, so prediction at new rows uses the same
-numbers.
+The standardization line is needed to read a fitted hyperparameter. With
+`standardize = TRUE` the penalty is evaluated at the coefficients
+multiplied by those spreads, which are the coefficients of the columns
+divided by the spreads. The spreads are computed once at build time and
+recorded in the blueprint. They enter the penalty only: the design block
+is not rescaled, so prediction at new rows does not use them.
 
 ## See also
 

@@ -3,7 +3,9 @@
 Coordinate descent over the break-point positions on the exact profile:
 one position at a time is swept over a grid with the others held, the
 least-squares fit at fixed positions being an ordinary linear model, and
-the sweeps repeat until no position moves. The term comes back relocated
+the sweeps repeat until no position moves. The grid has `k` quantiles of
+the covariate, from the 2nd to the 98th percentile and confined to the
+term's limits. The term comes back relocated
 ([`seg_relocate()`](https://statmodels7.github.io/modelterms7/reference/seg_relocate.md))
 at the best positions found.
 
@@ -22,8 +24,8 @@ seg_polish(term, y, k = 50, sweeps = 10, weights = NULL)
 
 - y:
 
-  A numeric vector, one value per observation of the build data: the
-  response, net of whatever the caller wants held.
+  A numeric vector of finite values, one per observation of the build
+  data: the response, net of whatever the caller wants held.
 
 - k:
 
@@ -31,8 +33,8 @@ seg_polish(term, y, k = 50, sweeps = 10, weights = NULL)
 
 - sweeps:
 
-  At most how many passes over the positions. Defaults to 10; the
-  descent usually stops moving in two or three.
+  At most how many passes over the positions. Defaults to 10. The
+  descent stops once a full pass moves no position.
 
 - weights:
 
@@ -45,31 +47,30 @@ The term at the polished positions.
 
 ## Details
 
-This is
-[`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)'s
-device made conditional, and it exists for the failure a start cannot
-fix: with several break-points the iteration can capture two of them on
-one feature and press the third against its confinement limit, and
-neither a bootstrap excursion – whose perturbation is of order
-\\1/\sqrt{n}\\, nor a random relocation escapes it, the basin of the
-right configuration being narrow. A grid sweep of one position with the
-others held walks straight to the missing feature, because the profile
-at fixed positions is exact and unimodal around it.
+This is the device of
+[`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
+made conditional on the current positions, and it addresses the failure
+that a start cannot fix: with several break-points the iteration can
+capture two of them on one feature and press the third against its
+confinement limit, and neither a bootstrap excursion, whose perturbation
+is of order \\1/\sqrt{n}\\, nor a random relocation escapes it, the
+basin of the right configuration being narrow. A grid sweep of one
+position with the others held reaches the missing feature, since the
+profile at fixed positions is exact.
 
-The profile is least squares of `y` on the term's own columns at fixed
-positions, so it is exact for a gaussian response and a starting rule
-for any other, the argument
+The profile is least squares of `y` on an intercept, the linear column
+where the term has one, and the term's own columns at fixed positions,
+so it is exact for a gaussian response and a starting rule for any
+other, the argument that
 [`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
 already makes. A term whose per-break-point coefficients carry a
 development is rejected, its positions being one per observation.
 
 With `weights`, the profile is weighted least squares. A restarting loop
-sweeps the profile of a bootstrap resample that way, the multinomial
-counts of sampling the rows with replacement as weights – which moves
-the profile's optima the way refitting the resample would, at the cost
-of grid-many linear fits instead of a whole model fit: the non-convexity
-of these models lives entirely in the positions, so exploring the
-positions is the whole of what an excursion is for.
+can sweep the profile of a bootstrap resample in this way, using the
+multinomial counts of sampling the rows with replacement as weights.
+This moves the optima of the profile as refitting the resample would, at
+the cost of one linear fit per grid point instead of a whole model fit.
 
 ## See also
 

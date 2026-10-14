@@ -29,7 +29,7 @@ enet(
 
   A one-sided formula, such as `~ x1 + x2` or `~ 0 + g`, or a numeric
   matrix, ideally a matrix column of the model data frame. A two-sided
-  formula throws.
+  formula is rejected with an error.
 
 - label:
 
@@ -59,30 +59,36 @@ enet(
   Labels sharing this term's hyperparameters with those of other terms
   carrying the same ones: each is then estimated at a single value,
   wherever in the formula they sit. A named vector, `c(alpha = "A")`,
-  since the penalty carries several and which was meant is not a guess;
-  `NULL`, the default, shares nothing. See
-  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md),
-  whose page says what the labels mean and what care they want.
+  because the penalty has several hyperparameters and the name says
+  which one is shared; `NULL`, the default, shares nothing. See
+  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md)
+  for the meaning of the labels and the restrictions on their use.
 
 - n_lambda, n_alpha:
 
-  How many values the path visits for each, at least 2. They differ
-  because the axes do: \\\lambda\\ descends the size of the kink over
-  four decades and wants that many points, while \\\alpha\\ spans one
-  bounded interval and does not.
+  How many values the path visits for each, at least 2. The two are
+  separate arguments because the axes differ: \\\lambda\\ descends from
+  the kink size that empties the block to `min_ratio` times that size
+  (four decades at the default `min_ratio`), which takes more points
+  than \\\alpha\\, which spans one bounded interval. Each signals an
+  error when given explicitly for a hyperparameter that is held or
+  written out.
 
 - min_ratio:
 
   How far down the path reaches, as a fraction of the kink that empties
   the block: smaller reaches a denser fit, larger stops sooner. A single
   number in \\(0, 1)\\, `1e-4` by default. Only the sweep by kink size
-  reads it.
+  reads it, and it signals an error when given explicitly while `lambda`
+  is held or written out.
 
 - search:
 
   `"grid"` to visit every combination of \\\lambda\\ and \\\alpha\\,
   `"cyclic"` to sweep one at a time with the other held. See
   [`term_search()`](https://statmodels7.github.io/modelterms7/reference/term_search.md).
+  Given explicitly while fewer than two hyperparameters are swept, it
+  signals an error.
 
 - sparse:
 
@@ -94,10 +100,10 @@ enet(
 
 - ...:
 
-  Not used, and reported. An argument named after another penalty's
-  hyperparameter is the mistake this catches: `scad(~ x, gamma = 1)`
-  throws `"'scad' has no argument 'gamma'."` and lists the ones it does
-  have.
+  Not used. Any argument supplied here is rejected with an error that
+  names it and lists the penalty's hyperparameters. The typical case is
+  an argument named after another penalty's hyperparameter:
+  `scad(~ x, gamma = 1)` signals `"'scad' has no argument 'gamma'."`.
 
 ## Value
 
@@ -106,8 +112,7 @@ An unbuilt
 a specification, with `X`, `coef_names`, `blueprint` and `penalty` empty
 until
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-fills them, and the penalty attached there over as many coefficients as
-the block turns out to have.
+fills them. The build attaches the penalty over the block's columns.
 
 ## Details
 
@@ -116,9 +121,12 @@ the block turns out to have.
 \alpha),\$\$ the normalizing constant being that of the product of a
 Laplace and a Gaussian at zero
 ([`distributions7::enet_distrib()`](https://statmodels7.github.io/distributions7/reference/enet_distrib.html)).
-It depends on both hyperparameters, so both are estimable, where a
-merely settable one would be all a dropped constant leaves. A penalty
-written as a formula, with the constant dropped, would not have that.
+The constant depends on both hyperparameters and is kept, so the value
+is minus the log density of that distribution, as for the ridge and the
+lasso. Because of the kink at zero, both hyperparameters are chosen
+along a path and scored by
+[`statmodels7::bic()`](https://statmodels7.github.io/statmodels7/reference/aic.html)
+by default, as for the lasso.
 
 \\\alpha\\ is the mixing weight: at \\\alpha \to 1\\ the penalty is the
 lasso and at \\\alpha \to 0\\ the ridge, and the kink at zero has
@@ -128,7 +136,7 @@ half-width \\\lambda\alpha\\, so both hyperparameters scale it.
 values by kink size; `alpha` on \\(0, 1)\\, swept over `n_alpha` values
 across that interval, the ends excluded because the penalty there is one
 of the other two. Every combination of the two is visited,
-`n_lambda * n_alpha` fits, unless `search = "cyclic"` asks for one at a
+`n_lambda * n_alpha` fits, unless `search = "cyclic"` sweeps one at a
 time instead.
 
 ## References

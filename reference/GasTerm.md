@@ -41,13 +41,13 @@ GasTerm(
   A character string prefixed to the term's coefficient names when
   non-empty, and used as the title of
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and the tag
-  of [`print()`](https://rdrr.io/r/base/print.html). `character(0)` and
-  `""` both mean no label.
+  of [`print()`](https://rdrr.io/r/base/print.html). The empty string
+  `""` means no label.
 
 - hyper:
 
-  The hyperparameters of the term's penalty the caller **held**, as a
-  named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller **held**, as
+  a named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -96,7 +96,7 @@ GasTerm(
 
 - p:
 
-  The number of score lags, an integer of at least 0.
+  The number of score lags, an integer of at least 1.
 
 - q:
 
@@ -123,8 +123,8 @@ GasTerm(
 
 - scaling:
 
-  The power \\d\\ of the expected information the score is multiplied
-  by, \\\mathcal{I}^{-d}\\; zero for the score as it is.
+  The power \\d\\ of the expected information, the score being
+  multiplied by \\\mathcal{I}^{-d}\\; zero for the score as it is.
 
 ## Value
 
@@ -132,11 +132,11 @@ An S7 object of class `GasTerm`, inheriting from
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
 and
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
-with the seven properties above beside
-[`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)'s
-six.
+with the properties described above beside those that
+[`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
+supplies.
 
-## The seven properties of its own
+## The properties of the class
 
 `p` is the number of score lags and `q` the number of autoregressive
 ones, which together fix the parameter count at \\1 + p + q\\ before any
@@ -145,24 +145,29 @@ subformula.
 `by` and `time` are the grouping and ordering expressions as written,
 kept unevaluated; `NULL` means one series in row order.
 
-`links` holds whatever the caller overrode, empty where the defaults
-stand: the identity on the level, the log on each loading, the rhobit on
-each partial autocorrelation. `submodels` holds one right-hand side per
-parameter developed over covariates.
+`links` holds the links that the caller overrode, and is empty where the
+defaults stand: the identity on the level, the log on each loading, the
+rhobit on each partial autocorrelation. `submodels` holds one right-hand
+side per parameter developed over covariates.
 
-`blueprint` is filled by
+`scaling` is the power \\d\\ of the expected information that multiplies
+the score; zero leaves the score as it is.
+
+The `blueprint` property is inherited from
+[`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
+and is not redeclared by this class.
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-and carries the row order within each group, the built sub-terms of each
-subformula and their designs. The class overrides the branch's
-`blueprint` property because a structural term has no design block to
-hang one on.
+fills it with the row order within each group, the built sub-terms of
+each subformula and their designs.
 
 ## What the class is for
 
-The recursion, its exact Jacobian, the reverse pass, the curvature and
-the contracted third derivative are all methods on it, so a fitting
-layer can estimate the term's parameters beside the coefficients of
-every equation and read the joint observed information.
+The recursion with its exact Jacobian, the reverse pass, the curvature,
+the contracted third and fourth derivatives, the static derivative, the
+continuation past the observed series and the simulation are among the
+methods on the class, so a fitting layer can estimate the term's
+parameters beside the coefficients of every equation and read the joint
+observed information.
 
 ## See also
 

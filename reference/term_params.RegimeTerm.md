@@ -24,12 +24,14 @@ A character vector of length \\K + K(K-1)\\.
 
 ## Details
 
-The order matters: it is the order
+The order is the one that
 [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md),
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md),
+the columns of
 [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)'s
-Jacobian columns and the joint variance matrix are all indexed by, and
-`psi` must supply the names whatever order they come in.
+Jacobian and the joint variance matrix all follow. The argument `psi` of
+the methods is matched by name, so it may list the parameters in any
+order.
 
 The log-ratio names come from
 [`parameters7::transition_matrix()`](https://statmodels7.github.io/parameters7/reference/transition_matrix.html)'s

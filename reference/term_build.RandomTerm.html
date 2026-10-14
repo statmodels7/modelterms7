@@ -13,7 +13,7 @@ recorded, so term_predict() maps new rows onto the same ones."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,12 +72,18 @@ within-group covariates.</p></dd>
     <div class="section level2">
     <h2 id="the-block">The block<a class="anchor" aria-label="anchor" href="#the-block"></a></h2>
     <p>With \(m\) levels and a within-group design \(Z_i\) of \(d\) columns,
-the block is \(\mathrm{diag}(Z_1, \dots, Z_m)\), ordered <strong>group-major</strong>,
-so the \(d\) coefficients of one group are adjacent. It is built as a
+the block is \(\mathrm{diag}(Z_1, \dots, Z_m)\) for data ordered by group,
+with the columns ordered <strong>group-major</strong>, so the \(d\) coefficients of one
+group are adjacent. It is built as a
 <code>dgCMatrix</code>: a row belongs to one group, so the density is \(1/m\).</p>
-<p>The coefficient names are <code>label.level.column</code>, so <code>random(~ x | g)</code> over
+<p>The coefficient names are <code>label.level.column</code>, or <code>label.level</code> when the
+within-group design is the intercept alone. The term <code>random(~ x | g)</code> over
 three levels gives <code>random.a.(Intercept)</code>, <code>random.a.x</code>,
-<code>random.b.(Intercept)</code> and so on, which is the group-major order read off.</p>
+<code>random.b.(Intercept)</code> and so on, which is the group-major order, and
+<code>random(~ 1 | g)</code> gives <code>random.a</code>, <code>random.b</code> and <code>random.c</code>. When the
+rows of the data are not ordered by group, the rows of the block follow the
+data and its columns keep this order.</p>
+<p>A grouping variable with fewer than two levels is rejected.</p>
     </div>
     <div class="section level2">
     <h2 id="the-penalty-and-what-the-build-checks">The penalty, and what the build checks<a class="anchor" aria-label="anchor" href="#the-penalty-and-what-the-build-checks"></a></h2>
@@ -86,13 +92,17 @@ three levels gives <code>random.a.(Intercept)</code>, <code>random.a.x</code>,
 centered multivariate Gaussian on an unstructured covariance for several
 correlated ones.</p>
 <p>Whatever the distribution, its location parameters must be <strong>held</strong>. A free
-location is confounded with the intercept of the equation the term sits in,
-and the build rejects it with a message naming the parameter and the fix. A
-multivariate distribution must also match the within-group dimension, and
-one that carries no matrix parameter cannot express correlated effects at
-all.</p>
+location is confounded with the intercept of the equation in which the term
+sits, and the build rejects it with a message naming the parameter and the
+remedy. A multivariate distribution must also match the within-group
+dimension, and one that carries no matrix parameter cannot express
+correlated effects at all.</p>
 <p>Any value named in <code>hyper</code> is checked here too, against the penalty's own
 names, this being the first point at which the penalty exists.</p>
+<p>A term carrying a covariance label is finished differently: its block and
+coefficient names are built as above, and it declares no penalty.
+<code>hyper</code>, <code>id</code>, <code>correlated = FALSE</code> and a <code>distrib</code> that is a list or is
+univariate are rejected for such a term.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -131,11 +141,11 @@ names, this being the first point at which the penalty exists.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [8,]                    0  0.0000000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  [9,]                    1  0.5757814</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># A free location is refused, naming the parameter.</span></span></span>
+<span class="r-in"><span><span class="co"># A free location is rejected, naming the parameter.</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="random.html">random</a></span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span> <span class="op">|</span> <span class="va">g</span>,</span></span>
 <span class="r-in"><span>                      distrib <span class="op">=</span> <span class="fu">distributions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/distributions7/reference/gaussian1_distrib.html" class="external-link">gaussian1_distrib</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Error : 'distrib' has a free location ('mu'), which is confounded with the</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   intercept of the equation the term sits in. Hold it with</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   intercept of the equation in which the term sits. Hold it with</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   distributions7::fixed(): at zero for a family on the line, and at</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   whatever centers the effects where the prior is a transformation of</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   another family, the parameter being the mean on the original scale.</span>

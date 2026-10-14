@@ -39,13 +39,13 @@ SmoothTerm(
   A character string prefixed to the term's coefficient names when
   non-empty, and used as the title of
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and the tag
-  of [`print()`](https://rdrr.io/r/base/print.html). `character(0)` and
-  `""` both mean no label.
+  of [`print()`](https://rdrr.io/r/base/print.html). The empty string
+  `""` means no label.
 
 - hyper:
 
-  The hyperparameters of the term's penalty the caller **held**, as a
-  named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller **held**, as
+  a named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -117,12 +117,14 @@ SmoothTerm(
 
 - by:
 
-  The expression the smooth varies with, or `NULL`.
+  The expression of the variable over which the smooth varies, or
+  `NULL`.
 
 - spec:
 
   A named list of what the build reads: `smoothers`, one basis7 smoother
-  per covariate; `by_hyper`; and for
+  per covariate; `by_hyper`; `default_label`, saying whether the label
+  was built from the call; and for
   [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
   the `anisotropic` flag.
 
@@ -138,7 +140,7 @@ An S7 object of class `SmoothTerm`, inheriting from
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 and
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
-with the four properties above beside the ten they supply.
+with the four properties above beside those of the two parent classes.
 
 ## The four properties of its own
 
@@ -147,12 +149,14 @@ with the four properties above beside the ten they supply.
 two or more for
 [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md),
 kept unevaluated so that a build reads them in whatever data it is
-given. `by` is the expression the smooth varies with, or `NULL`.
+given. `by` is the expression of the variable over which the smooth
+varies, or `NULL`.
 
 `spec` carries what the build reads: the basis7 smoothers, one per
 covariate, which hold the whole construction; `by_hyper`, saying whether
 the levels of a factor `by` share a smoothing parameter or carry one
-each; and for
+each; `default_label`, saying whether the label was built from the call;
+and for
 [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
 whether the penalty is anisotropic. What a build then computes from the
 data goes into the blueprint instead: the Demmler-Reinsch transform, the

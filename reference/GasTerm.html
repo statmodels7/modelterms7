@@ -15,7 +15,7 @@ term_filter() and has no term_matrix() method at all."><meta property="og:image"
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,13 +77,13 @@ observation density, added to the predictor of one distribution parameter.
 <dl><dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
 <dd><p>A character string prefixed to the term's coefficient names
 when non-empty, and used as the title of <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> and the tag of
-<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>. <code>character(0)</code> and <code>""</code> both mean no label.</p></dd>
+<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>. The empty string <code>""</code> means no label.</p></dd>
 
 
 <dt id="arg-hyper">hyper<a class="anchor" aria-label="anchor" href="#arg-hyper"></a></dt>
-<dd><p>The hyperparameters of the term's penalty the caller <strong>held</strong>,
-as a named list keyed by the penalty's names. Empty, the default, means
-every one of them is estimated. See <code><a href="term_hyper.html">term_hyper()</a></code>.</p></dd>
+<dd><p>The hyperparameters of the term's penalty that the caller
+<strong>held</strong>, as a named list keyed by the penalty's names. Empty, the
+default, means every one of them is estimated. See <code><a href="term_hyper.html">term_hyper()</a></code>.</p></dd>
 
 
 <dt id="arg-grid">grid<a class="anchor" aria-label="anchor" href="#arg-grid"></a></dt>
@@ -125,7 +125,7 @@ sub-term designs, empty until <code><a href="term_build.html">term_build()</a></
 
 
 <dt id="arg-p">p<a class="anchor" aria-label="anchor" href="#arg-p"></a></dt>
-<dd><p>The number of score lags, an integer of at least 0.</p></dd>
+<dd><p>The number of score lags, an integer of at least 1.</p></dd>
 
 
 <dt id="arg-q">q<a class="anchor" aria-label="anchor" href="#arg-q"></a></dt>
@@ -152,38 +152,41 @@ developed over covariates. Empty where none is.</p></dd>
 
 
 <dt id="arg-scaling">scaling<a class="anchor" aria-label="anchor" href="#arg-scaling"></a></dt>
-<dd><p>The power \(d\) of the expected information the score is
-multiplied by, \(\mathcal{I}^{-d}\); zero for the score as it is.</p></dd>
+<dd><p>The power \(d\) of the expected information, the score
+being multiplied by \(\mathcal{I}^{-d}\); zero for the score as it is.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An S7 object of class <code>GasTerm</code>, inheriting from
-<code><a href="structural_term.html">structural_term()</a></code> and <code><a href="model_term.html">model_term()</a></code>, with the seven properties above
-beside <code><a href="model_term.html">model_term()</a></code>'s six.</p>
+<code><a href="structural_term.html">structural_term()</a></code> and <code><a href="model_term.html">model_term()</a></code>, with the properties described
+above beside those that <code><a href="structural_term.html">structural_term()</a></code> supplies.</p>
     </div>
     <div class="section level2">
-    <h2 id="the-seven-properties-of-its-own">The seven properties of its own<a class="anchor" aria-label="anchor" href="#the-seven-properties-of-its-own"></a></h2>
+    <h2 id="the-properties-of-the-class">The properties of the class<a class="anchor" aria-label="anchor" href="#the-properties-of-the-class"></a></h2>
     <p><code>p</code> is the number of score lags and <code>q</code> the number of autoregressive ones,
 which together fix the parameter count at \(1 + p + q\) before any
 subformula.</p>
 <p><code>by</code> and <code>time</code> are the grouping and ordering expressions as written, kept
 unevaluated; <code>NULL</code> means one series in row order.</p>
-<p><code>links</code> holds whatever the caller overrode, empty where the defaults stand:
-the identity on the level, the log on each loading, the rhobit on each
-partial autocorrelation. <code>submodels</code> holds one right-hand side per
-parameter developed over covariates.</p>
-<p><code>blueprint</code> is filled by <code><a href="term_build.html">term_build()</a></code> and carries the row order within
-each group, the built sub-terms of each subformula and their designs. The
-class overrides the branch's <code>blueprint</code> property because a structural term
-has no design block to hang one on.</p>
+<p><code>links</code> holds the links that the caller overrode, and is empty where the
+defaults stand: the identity on the level, the log on each loading, the
+rhobit on each partial autocorrelation. <code>submodels</code> holds one right-hand
+side per parameter developed over covariates.</p>
+<p><code>scaling</code> is the power \(d\) of the expected information that multiplies
+the score; zero leaves the score as it is.</p>
+<p>The <code>blueprint</code> property is inherited from <code><a href="structural_term.html">structural_term()</a></code> and is not
+redeclared by this class. <code><a href="term_build.html">term_build()</a></code> fills it with the row order within
+each group, the built sub-terms of each subformula and their designs.</p>
     </div>
     <div class="section level2">
     <h2 id="what-the-class-is-for">What the class is for<a class="anchor" aria-label="anchor" href="#what-the-class-is-for"></a></h2>
-    <p>The recursion, its exact Jacobian, the reverse pass, the curvature and the
-contracted third derivative are all methods on it, so a fitting layer can
-estimate the term's parameters beside the coefficients of every equation
-and read the joint observed information.</p>
+    <p>The recursion with its exact Jacobian, the reverse pass, the curvature, the
+contracted third and fourth derivatives, the static derivative, the
+continuation past the observed series and the simulation are among the
+methods on the class, so a fitting layer can estimate the term's
+parameters beside the coefficients of every equation and read the joint
+observed information.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

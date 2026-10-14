@@ -1,12 +1,14 @@
-# The Score-Driven Recursion's Second and Third Derivatives
+# The Score-Driven Recursion's Second, Third and Fourth Derivatives
 
-The body
-[`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
-and
+The body that
+[`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md),
 [`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
+and
+[`term_fourth()`](https://statmodels7.github.io/modelterms7/reference/term_fourth.md)
 share. With `direction` `NULL` it propagates the first two derivatives
-of the predictor; with a direction it propagates the third as well,
-contracted against it.
+of the predictor. With one direction it propagates the third as well,
+contracted against that direction, and with a list of two directions it
+propagates the fourth, contracted against both.
 
 ## Usage
 
@@ -54,7 +56,7 @@ contracted against it.
 
 - g:
 
-  The weights the contraction is taken against.
+  The weights against which the contraction is taken.
 
 - seed:
 
@@ -66,16 +68,31 @@ contracted against it.
 
 - direction:
 
-  The direction, or `NULL` for the second order alone.
+  `NULL` for the second order alone, one numeric vector for the third
+  order, or a list of two numeric vectors for the fourth.
+
+- score_values, curvature_values, blocks_data:
+
+  As for
+  [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md);
+  the compiled route is taken when all three are given (and
+  `blocks_data` carries `D4` for the third order and `D4` and `D5` for
+  the fourth).
+
+- threads:
+
+  Threads for the compiled route's group loop.
 
 ## Value
 
-A list with `jacobian` and `curvature`, and `dphi` where a direction was
-given.
+A list with `jacobian` and `curvature`. With one direction it also has
+`dphi`, a matrix, and with two directions it has `dphi`, a list of two
+matrices, and `dpsi`.
 
 ## Details
 
-The two orders are written here once, in place of a method each. The
+The three orders are written here once, in place of a method each. The
 third order's recursion reads \\F\\, \\\Phi\\, \\\dot S\\ and \\\ddot
-S\\ at every lag, so a separate implementation would carry a second copy
-of the first two orders, and the two would drift.
+S\\ at every lag, and the fourth order reads the third, so a separate
+implementation of each order would carry a copy of the lower orders, and
+the copies could diverge.

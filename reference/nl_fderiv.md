@@ -16,19 +16,20 @@ nl_fderiv(term, coef = NULL, order = 1L)
 
   A built
   [`NlTerm()`](https://statmodels7.github.io/modelterms7/reference/NlTerm.md).
-  Anything else throws `"'term' must be a built nl() term."`, and an
-  unbuilt one `"the term is not built."`.
+  Any other object is rejected with the error
+  `"'term' must be a built nl() term."`, and an unbuilt term with
+  `"the term is not built."`.
 
 - coef:
 
-  The coefficients to read at, or `NULL` for the ones the term currently
-  carries, which
+  The coefficients to read at, one per coefficient of the term, or
+  `NULL` for the ones the term currently carries, which
   [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
-  last committed.
+  last committed. A vector of another length is rejected.
 
 - order:
 
-  1, 2, 3 or 4. Anything else throws.
+  1, 2, 3 or 4. Any other value is rejected.
 
 ## Value
 
@@ -39,22 +40,24 @@ order.
 
 ## Details
 
-The route is chosen per order, in this priority: a function supplied to
+The route is chosen for each order separately, in this priority: a
+function supplied to
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
 where there is one, then the symbolic route where the expression can be
-differentiated, and otherwise one stencil applied to the highest order
-that is analytic, a supplied one included. That is why writing out a
-Hessian pays twice: the third and fourth orders are then one difference
-away from an exact second instead of from the function.
+differentiated, and otherwise one stencil applied to the highest
+analytic order below the one wanted (a supplied one included), or to the
+value of \\f\\ where no lower order is analytic. A supplied Hessian
+therefore serves the third and fourth orders, which are then one
+difference away from an exact second order.
 
-Only **one** stencil is applied, never a chain of them. A fourth
-derivative built from four nested first differences is noise; the same
-discipline holds everywhere in the toolkit.
+In each parameter the difference is a single stencil of the order
+required, so a derivative of order four in one parameter is never built
+from nested first differences. Stencils in different parameters are
+composed.
 
 The components are in the term's own parameters, not in its
-coefficients. The chain rule onto the coefficients, the links and a
-subformula's design, belongs to the term, which is the only thing that
-knows them.
+coefficients. The chain rule onto the coefficients, through the links
+and the design of a subformula, is applied by the term.
 
 ## See also
 

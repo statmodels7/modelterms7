@@ -37,13 +37,13 @@ RegimeTerm(
   A character string prefixed to the term's coefficient names when
   non-empty, and used as the title of
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and the tag
-  of [`print()`](https://rdrr.io/r/base/print.html). `character(0)` and
-  `""` both mean no label.
+  of [`print()`](https://rdrr.io/r/base/print.html). The empty string
+  `""` means no label.
 
 - hyper:
 
-  The hyperparameters of the term's penalty the caller **held**, as a
-  named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller **held**, as
+  a named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -120,15 +120,18 @@ An S7 object of class `RegimeTerm`, inheriting from
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
 and
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
-with the six properties above beside
-[`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)'s
-six.
+with the five properties above in addition to the eight that
+[`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
+supplies (the seven of
+[`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)
+and `blueprint`).
 
 ## The five properties of its own
 
 `k` is the number of regimes. `by` and `time` are the grouping and
-ordering expressions as written, kept unevaluated; `NULL` means one
-group in row order.
+ordering expressions as written, kept unevaluated. A `by` of `NULL`
+means one group, and a `time` of `NULL` means that the rows are taken in
+the order they are given.
 
 `chain` is the
 [`parameters7::transition_matrix()`](https://statmodels7.github.io/parameters7/reference/transition_matrix.html)
@@ -137,11 +140,14 @@ every row is a probability vector at any coordinate. Its `free_names`
 are the tail of
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
-`blueprint` is filled by
+`n_start` is the number of starting points that a fitting layer tries, a
+whole number of at least 1.
+
+The property `blueprint` is inherited from
+[`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md),
+which declares it.
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-and holds the row order within each group and the observation count. The
-class overrides the branch's `blueprint` property because a structural
-term carries no design block to hang one on.
+fills it with the row order within each group and the observation count.
 
 ## See also
 

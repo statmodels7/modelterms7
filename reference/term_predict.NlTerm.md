@@ -11,7 +11,7 @@ submodel is not relearned.
 
   A built
   [`NlTerm()`](https://statmodels7.github.io/modelterms7/reference/NlTerm.md).
-  An unbuilt one throws
+  An unbuilt one is rejected with the error
   `"the term has not been built; call term_build(term, data) first."`.
 
 - newdata:
@@ -41,8 +41,9 @@ is what reports \\f\\ itself at new rows.
 
 Reading the block on its own is rarely what a caller wants for a
 nonlinear term. \\\tilde{X}\beta\\ is the **linearization** of \\f\\:
-the two agree in the increment a Gauss-Newton step takes, never in the
-value. `term_value(term, newdata = ...)` gives the contribution.
+the two agree in the increment that a Gauss-Newton step takes, and in
+general they differ in value. `term_value(term, newdata = ...)` returns
+the contribution.
 
 ## See also
 

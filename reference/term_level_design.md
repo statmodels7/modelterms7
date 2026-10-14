@@ -1,6 +1,6 @@
 # The Design of a Term's Level Development
 
-Where the parameter
+Where the parameter that
 [`term_level_param()`](https://statmodels7.github.io/modelterms7/reference/term_level_param.md)
 names is developed with covariates, the design of that development, with
 one column per coordinate named as
@@ -34,8 +34,9 @@ It exists for the subspace form of the confounding question.
 is constant shifts the equation's predictor exactly as an intercept
 does. With the level developed, a direction of the development's span
 that also lies in the span of the equation's design raises the same
-question for that direction, and only a fitting layer, which holds both
-designs, can ask it. This generic hands it the one half it cannot see.
+question for that direction. Only a fitting layer, which holds both
+designs, can answer it, and this generic supplies the design of the
+development, which the layer cannot compute from the term alone.
 
 ## See also
 

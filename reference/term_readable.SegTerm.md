@@ -1,6 +1,6 @@
-# What a Fitted Break-Point Term Is About
+# The Quantities Reported for a Break-Point Term
 
-The quantities of the model the term defines, in place of the
+The quantities of the model that the term defines, in place of the
 coefficients of the working block it is fitted through: the linear
 effect \\\beta\\ where the term carries one, the changes of slope
 \\\gamma_k\\ and of level \\\delta_k\\, and the break-points \\\psi_k\\,
@@ -30,12 +30,12 @@ documents, or `NULL` where no quantity is reported.
 
 ## Details
 
-A continuous term holds every one of those as a coefficient and the
-Jacobian is a selection. A discontinuous one does not hold the
-break-point at all: it is read off the auxiliary pair as \\\psi_k =
--g_k/\delta_k\\, which the joint construction reaches too, its quadratic
-degenerating to that reading once the increment has vanished. The
-Jacobian rows are then
+A continuous or smoothed term holds every one of those as a coefficient,
+and the Jacobian is a selection, as it is for a held term. A sharp
+discontinuous term does not hold the break-point as a coefficient: it is
+read off the auxiliary pair as \\\psi_k = -g_k/\delta_k\\, which the
+joint construction reaches too, its quadratic degenerating to that
+reading once the increment has vanished. The Jacobian rows are then
 
 \$\$\frac{\partial \psi_k}{\partial g_k} = -\frac{1}{\delta_k}, \qquad
 \frac{\partial \psi_k}{\partial \delta_k} =
@@ -44,10 +44,10 @@ Jacobian rows are then
 which is the delta method `segmented` reports a break-point's standard
 error by. The joint construction reads its position from a quadratic
 that also carries the change of slope, and the two readings differ by
-the increment the iteration has left: the value reported is the one the
-term holds, so that this and
+the increment that the iteration has left: the value reported is the one
+that the term holds, so that this and
 [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
-cannot give two numbers for one quantity, and the Jacobian is the fixed
+give the same number for one quantity, and the Jacobian is the fixed
 point's, which the quadratic degenerates to once the increment has
 vanished.
 

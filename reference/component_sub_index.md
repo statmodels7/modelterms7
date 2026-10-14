@@ -39,12 +39,12 @@ takes `index` at positions \\k_1 + \dots + k\_{i-1} + 1\\ to \\k_1 +
 [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md),
 so every sub-term must be built.
 
-The term computes this rather than a consumer, because it rests on how
-the block was assembled.
+The term computes this division, and a consumer does not, because it
+rests on how the block was assembled.
 
 ## See also
 
 [`term_components()`](https://statmodels7.github.io/modelterms7/reference/term_components.md),
-the only caller;
+whose methods are its only callers;
 [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
 for the counts it divides by.

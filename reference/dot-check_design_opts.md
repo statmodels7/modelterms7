@@ -3,7 +3,7 @@
 Validates the `sparse` and `contrasts` arguments the design-building
 constructors share, and normalizes `contrasts = NULL` to an empty list
 so that the class property is always a list. Called from the
-constructor, so a mistake is reported where it was written.
+constructor, so an invalid value is rejected at the call that wrote it.
 
 ## Usage
 
@@ -16,15 +16,16 @@ constructor, so a mistake is reported where it was written.
 - sparse:
 
   What the constructor was given: `TRUE`, `FALSE`, or `NULL` for the
-  storage to be settled at build. Anything else throws, the message
-  naming `what`.
+  storage to be settled at build. Any other value signals an error whose
+  message names `what`.
 
 - contrasts:
 
-  What the constructor was given: a named list, or `NULL`. Anything else
-  throws. The names are not checked against the formula's factors;
+  What the constructor was given: a named list, or `NULL`. Any other
+  value signals an error. The names are not checked against the
+  formula's factors; at build,
   [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)
-  does that at build.
+  warns about a name that the data do not carry and ignores that entry.
 
 - what:
 

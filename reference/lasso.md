@@ -26,7 +26,7 @@ lasso(
 
   A one-sided formula, such as `~ x1 + x2` or `~ 0 + g`, or a numeric
   matrix, ideally a matrix column of the model data frame. A two-sided
-  formula throws.
+  formula is rejected with an error.
 
 - label:
 
@@ -52,21 +52,24 @@ lasso(
   carrying the same one: they are then estimated at a single value,
   wherever in the formula they sit. `NULL`, the default, shares nothing.
   See
-  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md),
-  whose page says what the labels mean and what care they want.
+  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md)
+  for the meaning of the labels and the restrictions on their use.
 
 - n_lambda:
 
   How many values the path visits, a whole number of at least 2, `25` by
-  default. The axis descends four decades of kink size, and that many
-  points are what covers it.
+  default. The axis descends from the kink size that empties the block
+  to `min_ratio` times that size, which is four decades at the default
+  `min_ratio`. Given explicitly while `lambda` is held or written out,
+  it signals an error.
 
 - min_ratio:
 
   How far down the path reaches, as a fraction of the kink that empties
   the block: smaller reaches a denser fit, larger stops sooner. A single
   number in \\(0, 1)\\, `1e-4` by default. Only the sweep by kink size
-  reads it.
+  reads it, and it signals an error when given explicitly while `lambda`
+  is held or written out.
 
 - sparse:
 
@@ -78,10 +81,10 @@ lasso(
 
 - ...:
 
-  Not used, and reported. An argument named after another penalty's
-  hyperparameter is the mistake this catches: `scad(~ x, gamma = 1)`
-  throws `"'scad' has no argument 'gamma'."` and lists the ones it does
-  have.
+  Not used. Any argument supplied here is rejected with an error that
+  names it and lists the penalty's hyperparameters. The typical case is
+  an argument named after another penalty's hyperparameter:
+  `scad(~ x, gamma = 1)` signals `"'scad' has no argument 'gamma'."`.
 
 ## Value
 
@@ -90,8 +93,7 @@ An unbuilt
 a specification, with `X`, `coef_names`, `blueprint` and `penalty` empty
 until
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-fills them, and the penalty attached there over as many coefficients as
-the block turns out to have.
+fills them. The build attaches the penalty over the block's columns.
 
 ## Details
 

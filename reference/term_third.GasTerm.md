@@ -29,7 +29,7 @@ two orders are.
 
 - g:
 
-  The weights the third derivative is contracted against.
+  The weights against which the third derivative is contracted.
 
 - seed:
 
@@ -69,9 +69,9 @@ The recursion gains one state, \\\Psi_t = \partial^3f_t/\partial
 u^3\[v\]\\, seeded by the third derivative of the score in the same way
 \\\Phi\\ is seeded by its second. Everything else it needs, meaning the
 directional derivatives of \\F\\, \\\Phi\\, \\\dot S\\ and \\\ddot S\\,
-is a contraction of a quantity the second-order recursion already
-carries, so no second recursion is run and no three-index array is
-formed.
+is a contraction of a quantity that the second-order recursion already
+carries. The third order therefore needs no second recursion and forms
+no three-index array.
 
 The chart contributes its own third derivatives: the level and the
 loadings through their scalar links, the persistence through

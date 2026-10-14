@@ -9,7 +9,7 @@ kink there, so coefficients are set exactly to zero and the term selects."><meta
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,7 @@ kink there, so coefficients are set exactly to zero and the term selects.</p>
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A one-sided formula, such as <code>~ x1 + x2</code> or <code>~ 0 + g</code>, or a numeric
 matrix, ideally a matrix column of the model data frame. A two-sided
-formula throws.</p></dd>
+formula is rejected with an error.</p></dd>
 
 
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
@@ -87,21 +87,24 @@ path build one. Must lie in \((0, \infty)\).</p></dd>
 <dd><p>A label sharing this term's hyperparameter with those of
 other terms carrying the same one: they are then estimated at a
 single value, wherever in the formula they sit. <code>NULL</code>, the
-default, shares nothing. See <code><a href="term_ids.html">term_ids()</a></code>, whose page says what
-the labels mean and what care they want.</p></dd>
+default, shares nothing. See <code><a href="term_ids.html">term_ids()</a></code> for the meaning of the labels
+and the restrictions on their use.</p></dd>
 
 
 <dt id="arg-n-lambda">n_lambda<a class="anchor" aria-label="anchor" href="#arg-n-lambda"></a></dt>
 <dd><p>How many values the path visits, a whole number of at
-least 2, <code>25</code> by default. The axis descends four decades of kink
-size, and that many points are what covers it.</p></dd>
+least 2, <code>25</code> by default. The axis descends from the kink size that
+empties the block to <code>min_ratio</code> times that size, which is four decades
+at the default <code>min_ratio</code>. Given explicitly while <code>lambda</code> is held or
+written out, it signals an error.</p></dd>
 
 
 <dt id="arg-min-ratio">min_ratio<a class="anchor" aria-label="anchor" href="#arg-min-ratio"></a></dt>
 <dd><p>How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
 stops sooner. A single number in \((0, 1)\), <code>1e-4</code> by default.
-Only the sweep by kink size reads it.</p></dd>
+Only the sweep by kink size reads it, and it signals an error when given
+explicitly while <code>lambda</code> is held or written out.</p></dd>
 
 
 <dt id="arg-sparse">sparse<a class="anchor" aria-label="anchor" href="#arg-sparse"></a></dt>
@@ -112,17 +115,17 @@ input needs no such argument. See the section above.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Not used, and reported. An argument named after another penalty's
-hyperparameter is the mistake this catches: <code>scad(~ x, gamma = 1)</code> throws
-<code>"'scad' has no argument 'gamma'."</code> and lists the ones it does have.</p></dd>
+<dd><p>Not used. Any argument supplied here is rejected with an error
+that names it and lists the penalty's hyperparameters. The typical case is
+an argument named after another penalty's hyperparameter:
+<code>scad(~ x, gamma = 1)</code> signals <code>"'scad' has no argument 'gamma'."</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An unbuilt <code><a href="PenalizedTerm.html">PenalizedTerm()</a></code>: a specification, with <code>X</code>,
 <code>coef_names</code>, <code>blueprint</code> and <code>penalty</code> empty until <code><a href="term_build.html">term_build()</a></code>
-fills them, and the penalty attached there over as many coefficients
-as the block turns out to have.</p>
+fills them. The build attaches the penalty over the block's columns.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

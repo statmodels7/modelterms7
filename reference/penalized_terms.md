@@ -23,7 +23,7 @@ the term.
 
   A one-sided formula, such as `~ x1 + x2` or `~ 0 + g`, or a numeric
   matrix, ideally a matrix column of the model data frame. A two-sided
-  formula throws.
+  formula is rejected with an error.
 
 - label:
 
@@ -47,10 +47,10 @@ the term.
 
 - ...:
 
-  Not used, and reported. An argument named after another penalty's
-  hyperparameter is the mistake this catches: `scad(~ x, gamma = 1)`
-  throws `"'scad' has no argument 'gamma'."` and lists the ones it does
-  have.
+  Not used. Any argument supplied here is rejected with an error that
+  names it and lists the penalty's hyperparameters. The typical case is
+  an argument named after another penalty's hyperparameter:
+  `scad(~ x, gamma = 1)` signals `"'scad' has no argument 'gamma'."`.
 
 ## Value
 
@@ -76,9 +76,10 @@ factor.
 The exception is a formula whose intercept is all it has. `ridge(~ 1)`
 is a block of that one column under the penalty, removing it leaving no
 block at all. That is the form a subformula on another term's parameter
-uses: `gamma ~ 0 + lasso(~ 1)` says the parameter itself carries a
+uses: `gamma ~ 0 + lasso(~ 1)` means that the parameter itself carries a
 lasso, there being no parametric block of its own to hold an unpenalized
-intercept.
+intercept. A formula with neither an intercept nor a term, such as
+`ridge(~ 0)`, has no columns, and the term is rejected when it is built.
 
 A **matrix** is used as given, and its columns are named after its own
 column names, or numbered `1`, `2`, ... when it has none.
@@ -93,10 +94,10 @@ the model data frame:
     ridge(R)      # in the formula
 
 A subset of `dd` then carries the matching rows of `R`. A free-standing
-matrix from the calling environment builds, its value having been
-captured, and prediction is refused with a message naming the
-expression: resolving it outside the new data would silently reuse the
-build-time rows whenever the counts happened to agree.
+matrix from the calling environment can be used to build the term, its
+value being captured, but prediction signals an error that names the
+expression. Resolving the name outside the new data would reuse the
+build-time rows whenever the row counts agree.
 
 ## Sparse storage
 
@@ -113,9 +114,9 @@ would cost the memory the choice exists to avoid.
 
 It pays where the formula carries a factor of many levels, whose
 indicator columns hold one non-zero per row, and `lasso(~ 0 + g)` over
-hundreds of groups is the case. On numeric covariates the block is dense
-whatever is asked for, and the sparse storage then costs more than it
-saves. Left `NULL`, the default, the storage is settled at build by
+hundreds of groups is the case. On numeric covariates the block has no
+zeros to exploit, and the sparse storage then costs more than it saves.
+Left `NULL`, the default, the storage is settled at build by
 [`.resolve_sparse()`](https://statmodels7.github.io/modelterms7/reference/dot-resolve_sparse.md):
 the dense indicator part holds `n` times its column count in cells
 against one non-zero per row, and the two routes cross at about \\10^5\\
@@ -129,13 +130,15 @@ stays sparse under it.
 
 A hyperparameter is comparable across coordinates only where the
 coordinates share a scale. Without `standardize` a lasso penalizes a
-column measured in meters more than the same column measured in
-kilometers, and a reader of \\\lambda\\ has no way to tell.
+column measured in kilometers more heavily than the same column measured
+in meters, because for the same fitted effect the coefficient per
+kilometer is 1000 times the coefficient per meter, and a reader of
+\\\lambda\\ has no way to tell.
 
-`standardize = TRUE` divides each coefficient by the standard deviation
-of its own column, through the penalty's diagonal map. With \\z_j =
-x_j/s_j\\ the coefficients satisfy \\\beta\_{z,j} = s_j\beta\_{x,j}\\,
-so
+`standardize = TRUE` penalizes each coefficient multiplied by the
+standard deviation of its own column, \\s_j\beta_j\\, through the
+penalty's diagonal map. With \\z_j = x_j/s_j\\ the coefficients satisfy
+\\\beta\_{z,j} = s_j\beta\_{x,j}\\, so
 
 \$\$\lambda\sum_j \lvert\beta\_{z,j}\rvert = \lambda\sum_j
 s_j\lvert\beta\_{x,j}\rvert = \rho(S\beta_x), \qquad S =
@@ -154,19 +157,26 @@ The spread is computed from the built block by
 and frozen in `blueprint$standardize`, so the same term standardizes
 identically in every equation of a distributional model and does not
 move with the working weights of a fit. A constant column takes \\s_j =
-1\\. [`print()`](https://rdrr.io/r/base/print.html) shows the values, a
-number that changes the meaning of \\\lambda\\ having to be legible.
+1\\. [`print()`](https://rdrr.io/r/base/print.html) shows the values,
+because a change of scale changes the meaning of \\\lambda\\.
 
-For SCAD and MCP the map is not a rescaling of \\\lambda\\ alone.
-Substituting \\s_j\beta_j\\ gives \\\lambda_j = \lambda s_j\\ **and**
-\\a_j = a/s_j\\ (or \\\gamma_j = \gamma/s_j\\), a composition of both
-hyperparameters per coordinate, which the map expresses exactly.
+For SCAD and MCP the map is not a rescaling of \\\lambda\\ alone. The
+penalty of the \\j\\-th coefficient is the original penalty evaluated at
+\\s_j\lvert\beta_j\rvert\\, with the same \\\lambda\\ and \\a\\ (or
+\\\gamma\\) for every coordinate, so that the map acts on the argument
+of the penalty and leaves the hyperparameters unchanged. The penalty of
+coordinate \\j\\ becomes flat at \\\lvert\beta_j\rvert = a\lambda/s_j\\
+(at \\\gamma\lambda/s_j\\ for MCP). For MCP this equals an MCP on
+\\\beta_j\\ with \\\lambda_j = \lambda s_j\\ and \\\gamma_j =
+\gamma/s_j^2\\. For SCAD no pair \\(\lambda_j, a_j)\\ reproduces it,
+because the slope at the origin, \\s_j\lambda\\, and the end of the
+first segment, \\\lambda/s_j\\, would both have to equal \\\lambda_j\\.
 
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
-does not standardize and takes no such argument. Its columns are
-grouping indicators and its penalty is a variance component with a
-meaning of its own; weighting it by the size of the groups would change
-the model.
+does not standardize and takes no such argument. Its columns are the
+grouping indicators, multiplied by the covariate of a random slope, and
+its penalty is a variance component with a meaning of its own; weighting
+it by the size of the groups would change the model.
 
 ## See also
 
@@ -233,7 +243,7 @@ apply(term_matrix(bs), 2, sd)
 #>    lasso.x1    lasso.x3 
 #>   0.7822996 886.9946868 
 
-# An argument named after another penalty's hyperparameter is reported.
+# An argument named after another penalty's hyperparameter is rejected.
 try(scad(~ x1, gamma = 1))
 #> Error : 'scad' has no argument 'gamma'.
 #>   Its hyperparameters are: lambda, a, each held by naming it and estimated when left NULL.

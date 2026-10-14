@@ -2,9 +2,9 @@
 
 `"level1"`. The levels are ordered by construction, each the previous
 plus a positive gap, so the first one shifts every regime and is the
-direction an intercept in the same equation also spans. The gaps are
-unaffected: what a constant cannot express is a difference between
-regimes.
+direction an intercept in the same equation also spans. A constant
+leaves the gaps unchanged, because it cannot express a difference
+between regimes.
 
 ## Arguments
 

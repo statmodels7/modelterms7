@@ -14,7 +14,7 @@ columns before it is returned.
 
   A built
   [`PenalizedTerm()`](https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.md).
-  An unbuilt one throws
+  An unbuilt one signals the error
   `"the term has not been built; call term_build(term, data) first."`.
 
 - newdata:
@@ -39,15 +39,15 @@ The matrix branch evaluates `blueprint$expr` with `newdata` as the data
 and [`baseenv()`](https://rdrr.io/r/base/environment.html) as the
 enclosure, so the calling environment is not on the search path. A
 free-standing matrix therefore cannot be found, and the error names the
-expression and says to supply it as a column of the data. That is
-deliberate: resolving the name outside `newdata` would silently return
-the build-time rows whenever the row counts happened to agree, which is
-a wrong answer rather than an error.
+expression and advises supplying it as a column of the data. That is
+deliberate: resolving the name outside `newdata` would return the
+build-time rows whenever the row counts agreed, and the result would
+then be wrong without any error.
 
 Two shape checks follow the evaluation, because an expression that
 resolves in `newdata` may still give the wrong block: a row count
 differing from `nrow(newdata)` and a column count differing from the
-build's each throw with both numbers.
+build's each signal an error that reports both numbers.
 
 ## See also
 

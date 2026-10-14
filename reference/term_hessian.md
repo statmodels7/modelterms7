@@ -42,7 +42,7 @@ term_hessian(
 - logdens:
 
   A function of a predictor value and a row index returning the
-  log-density there, as
+  log-density there, one value per observation, as
   [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
   takes it.
 
@@ -54,13 +54,19 @@ term_hessian(
 
 - hess:
 
-  A function of the same two arguments returning an array of second
-  derivatives in the predictors, one slice per observation.
+  A function of the same two arguments returning an array of dimension
+  `c(n, p, p)`, observation first, holding the second derivatives of the
+  log-density in the predictors, where `p` is the number of distribution
+  parameters.
 
 - psi:
 
-  The term's parameters, named as
+  The term's parameters on the parameter scale, named as
   [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
+  The derivatives in the columns `cols` are taken in the unconstrained
+  coordinates, so the derivative in a gap is taken in its logarithm, as
+  it is for the scale of
+  [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md).
 
 - seed:
 
@@ -82,7 +88,9 @@ term_hessian(
 
 - weights:
 
-  Optional observation weights.
+  Optional observation weights: one number or one number per
+  observation, none missing. `NULL` gives every observation the weight
+  one.
 
 - ...:
 
@@ -90,32 +98,35 @@ term_hessian(
 
 ## Value
 
-A list of three: `loglik`, the `n` per-observation contributions;
-`gradient`, the derivative of their weighted sum in the caller's whole
-unknown vector; and `hessian`, the observed Hessian of the mixture in
-that same vector, an `m` by `m` matrix with `m` its length. The Hessian
-is the mixture's own, smaller in the Loewner order than the
-complete-data information by the information the unobserved states cost.
+A list of three: `loglik`, the `n` per-observation contributions,
+without the weights; `gradient`, the derivative of their weighted sum in
+the caller's whole unknown vector; and `hessian`, the observed Hessian
+of the weighted sum in that same vector, an `m` by `m` matrix with `m`
+its length. The Hessian is the mixture's own. Its negative, the observed
+information, is smaller in the Loewner order than the complete-data
+information, the difference being the information that the unobserved
+states cost.
 
 ## Details
 
+The smoothed probabilities of
 [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)
-gives the gradient by Fisher's identity, and the matrix a caller can
-assemble from the same smoothed probabilities is the complete-data
-information, the ordinary one averaged over the states. That is the
-matrix an EM step inverts. It is not the observed information of the
-mixture, which is smaller by the information the unobserved states cost,
-and a standard error read off it is too small.
+give the gradient by Fisher's identity. A caller can also assemble from
+them the complete-data information, which is the ordinary information
+averaged over the states and is the matrix that an EM step inverts. The
+observed information of the mixture is a different matrix, smaller than
+the complete-data information by the information that the unobserved
+states cost, so a standard error computed from the complete-data matrix
+is too small.
 
 Louis's identity expresses the difference as the conditional variance of
 the complete-data score, which needs the pairwise smoothed probabilities
-and a recursion carrying a second moment. The route taken here is
-shorter. The scaled forward recursion computes the observed
-log-likelihood exactly, as \\\log L = \sum_t \log c_t\\ with \\c_t\\ the
-normalizing constant of one step, so differentiating that arithmetic
-twice gives the observed Hessian with no identity involved. Carrying
-\\a_t(k)\\ together with its first and second derivatives in the unknown
-vector \\u\\,
+and a recursion carrying a second moment. This method uses a shorter
+route. The scaled forward recursion computes the observed log-likelihood
+exactly, as \\\log L = \sum_t \log c_t\\ with \\c_t\\ the normalizing
+constant of one step, so differentiating that arithmetic twice gives the
+observed Hessian with no identity involved. Carrying \\a_t(k)\\ together
+with its first and second derivatives in the unknown vector \\u\\,
 
 \$\$\frac{\partial \log c_t}{\partial u} = \frac{\dot c_t}{c_t}, \qquad
 \frac{\partial^2 \log c_t}{\partial u \partial u^\top} = \frac{\ddot
@@ -131,9 +142,9 @@ The emission enters through \\\ddot w = w(gg^\top + G)\\, with \\g\\ and
 state, which is where the caller's derivatives are used. Groups are
 independent series and their contributions add.
 
-The cost is \\O(nK^2m^2)\\ in time and \\O(Km^2)\\ in storage, and the
-computation is meant to be run once, at a fitted point, never per
-iteration.
+The cost is \\O(nK^2m^2)\\ in time. The second derivatives of the state
+take \\O(Km^2)\\ in storage, beside \\O(nKm)\\ for the emission scores.
+The computation is meant to be run once, at a fitted point.
 
 ## See also
 

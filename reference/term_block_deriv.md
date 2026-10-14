@@ -18,7 +18,8 @@ term_block_deriv(term, coef = NULL, v, ...)
 
 - coef:
 
-  The coefficients, or `NULL` for the ones it carries.
+  The coefficients, one per coefficient of the term, or `NULL` for the
+  ones it carries.
 
 - v:
 
@@ -50,10 +51,12 @@ derivative the other did not: for
 writing \\q\_{p_1p_2} = f\_{p_1p_2}h\_{p_1}'h\_{p_2}' +
 \delta\_{p_1p_2}f\_{p_1}h\_{p_1}''\\, \$\$\Big(\frac{\partial
 X}{\partial\beta}v\Big)\[i, c_1\] = Z\_{p_1}\[i,c_1\]\sum\_{p_2}
-q\_{p_1p_2}(i)\\(Z\_{p_2}v\_{p_2})\[i\],\$\$ the second derivative of
-\\f\\, one order below what an array would need.
+q\_{p_1p_2}(i)\\(Z\_{p_2}v\_{p_2})\[i\],\$\$ so the only derivative of
+\\f\\ that enters is the second, as in
+[`term_block_contract()`](https://statmodels7.github.io/modelterms7/reference/term_block_contract.md).
 
-The base method returns zeros, right for a block that does not move.
+The base method returns zeros, which is exact for a block that does not
+move.
 
 ## See also
 

@@ -26,5 +26,8 @@ documents.
 
 The default answer is the base reading of
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
-returned by calling that method rather than by repeating it, so the two
-cannot drift.
+obtained by calling the method on
+[`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md).
+Every entry carries the fields that
+[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+documents.

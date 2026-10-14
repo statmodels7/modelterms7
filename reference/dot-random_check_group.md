@@ -28,21 +28,19 @@ the spelling that says the values really are labels.
 A grouping variable's values are labels, and
 [`factor()`](https://rdrr.io/r/base/factor.html) turns any vector into
 one by formatting its values, so a continuous covariate in that position
-gives one level per distinct value and a random effect with as many
-coefficients as there are rows. Measured before the check existed,
-`random(~ 1 | x)` with a standard normal `x` at 60 observations built 60
-columns and reported nothing.
+would give one level per distinct value and a random effect with as many
+coefficients as there are rows.
 
-What is rejected is a **double carrying a value that is not a whole
-number**, which is narrow on purpose. Integer codes are the ordinary way
-to write a grouping variable and stay legal, and a caller who means the
-levels of a non-integer vector writes
+Only a **double carrying a value that is not a whole number** is
+rejected. Integer codes are the ordinary way to write a grouping
+variable and are accepted, and a caller who means the levels of a
+non-integer vector writes
 [`factor()`](https://rdrr.io/r/base/factor.html) around it, which
 arrives here as a factor and passes.
 
-The check also does the work the two-bar form needs: `~ 1 | u | id` and
-`~ 1 | id | u` are syntactically the same shape and differ only in which
-position holds what, so the defence is that the last position must be
+The check also applies to the two-bar form: `~ 1 | u | id` and
+`~ 1 | id | u` have the same syntactic shape and differ only in which
+position holds which element, so the last position is required to be
 usable as a grouping variable.
 
 ## See also

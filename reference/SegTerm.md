@@ -45,13 +45,13 @@ SegTerm(
   A character string prefixed to the term's coefficient names when
   non-empty, and used as the title of
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and the tag
-  of [`print()`](https://rdrr.io/r/base/print.html). `character(0)` and
-  `""` both mean no label.
+  of [`print()`](https://rdrr.io/r/base/print.html). The empty string
+  `""` means no label.
 
 - hyper:
 
-  The hyperparameters of the term's penalty the caller **held**, as a
-  named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller **held**, as
+  a named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -148,13 +148,13 @@ An S7 object of class `SegTerm`, inheriting from
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 and
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
-with the six properties above beside the ten they supply.
+with the properties above beside those that the two classes supply.
 
-## The six properties of its own
+## The properties of its own
 
-`kind` is `"seg"`, `"jump"` or `"jseg"`, and it decides almost
-everything else: which coefficients the term has, whether its block is a
-Jacobian, and which developments it will accept.
+`kind` is `"seg"`, `"jump"` or `"jseg"`, and it determines which
+coefficients the term has, whether its block is a Jacobian and which
+developments it accepts.
 
 `var` is the covariate expression, `npsi` the number of break-points,
 and `linear` whether the block carries the linear effect \\\beta x\\,
@@ -164,7 +164,7 @@ which `seg` and `jseg` do by default and `jump` never does.
 `spec` the resolved construction settings: the starting positions, the
 scaling factor `c0`, the restart budget `n_boot` and any smoother.
 
-## Two kinds of block, and what distinguishes them
+## The two kinds of block
 
 For
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
@@ -174,23 +174,27 @@ coefficient and a linear fit on the block is a Gauss-Newton step.
 [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
 answers `TRUE`.
 
-For
+For a sharp
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
-and
+or
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
-it is a working linearization with the weight \\W =
+the block is a working linearization with the weight \\W =
 1/(2\lvert\tilde{x} - \psi\rvert)\\ frozen at the previous break-point,
-and the break-point is **read off** two coefficients rather than
+and the break-point is **read off** two coefficients and is not
 incremented.
 [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
 answers `FALSE`, and a fitting layer routes such a term to exact working
-fits alternating with committed read-offs. Smoothing the step
-([`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)'s
-`smoothed` argument) turns the break-point back into an ordinary
-parameter, and the answer back to `TRUE`.
+fits alternating with committed read-offs. Smoothing the step (the
+`smoothed` argument of
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md))
+makes the break-point an ordinary parameter again, and the answer
+becomes `TRUE`. A term held by
+[`seg_hold()`](https://statmodels7.github.io/modelterms7/reference/seg_hold.md)
+also answers `TRUE`, its block being the exact design at the held
+positions.
 
 [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
-is the one function that reports the position under either construction.
+reports the position under every construction.
 
 ## See also
 
@@ -217,7 +221,7 @@ d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0) + rnorm(120, sd = 0.4)
 vapply(list(seg(x), jump(x), jseg(x)), function(t) t@kind, character(1))
 #> [1] "seg"  "jump" "jseg"
 
-# Which decides the coefficients the term carries.
+# which determines the coefficients that the term carries.
 lapply(list(seg = seg(x), jump = jump(x), jseg = jseg(x)),
        function(t) term_coef_names(term_build(t, d)))
 #> $seg

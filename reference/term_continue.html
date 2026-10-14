@@ -9,7 +9,7 @@ it was built on, continuing its recursion rather than restarting it."><meta prop
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -85,8 +85,13 @@ past the series means carrying the state forward. What makes it possible
 without simulation is that the quantity driving the recursion has zero
 conditional mean, the score itself for a score-driven term, so beyond the
 data the recursion is deterministic.</p>
-<p>The base method signals an error. A term with state that cannot say what
-its state does next has nothing to offer a prediction, and returning zero
+<p>Among the shipped classes, <code><a href="gas.html">gas()</a></code> implements the generic. Its method needs
+<code>time</code>, rejects rows that fall inside the observed series and rows of a
+group that the sample does not contain, and counts a gap between two times
+as one step. A lag that falls before the observed series takes the starting
+level of the recursion.</p>
+<p>The base method signals an error. A term with state whose next value is
+undefined cannot give a prediction past the series, and returning zero
 there would read as a term with no effect at all.</p>
     </div>
     <div class="section level2">

@@ -2,9 +2,8 @@
 
 Evaluates the covariate, resolves any development of the term's own
 coefficients, places the break-points at their starting positions and
-builds the working block there. It also settles the confinement limits,
-the scaling schedule and, where the term is smoothed, the transition
-width.
+builds the working block there. It also sets the confinement limits, the
+scaling schedule and, where the term is smoothed, the transition width.
 
 ## Arguments
 
@@ -24,42 +23,57 @@ width.
 
 ## Value
 
-The term with `X`, `coef_names`, `blueprint` and, where a subformula
-brought one, `penalty` filled.
+The term with `X`, `coef_names` and `blueprint` filled. The slot
+`penalty` is `NULL`; the penalties of the developments are recorded in
+the blueprint and listed by
+[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md).
 
-## What is settled here
+## The quantities set at build
 
 The covariate must vary. The break-points are confined to the interval
-between the 5th and the 95th percentile of it: outside that the
-indicator is constant, the truncated line and that constant are linearly
-dependent, and the block is exactly singular. A run ending against the
-limit has found no break-point, and
+between the 5th and the 95th percentile of it, so that both sides of a
+break-point carry observations (a break-point beyond the range of the
+data would make the indicator constant, the truncated line and that
+constant linearly dependent, and the block exactly singular). A run
+ending against the limit has found no break-point, and
 [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
 then reports the limit itself.
 
 The starting positions are `psi` where it was given and evenly spaced
-quantiles of the covariate otherwise. Zero is degenerate here, so
+quantiles of the covariate otherwise. A start of zero is degenerate for
+this term, so
 [`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)
-returns these rather than a vector of zeros.
+returns these positions and not a vector of zeros.
 
 Each subformula's right-hand side goes through
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
 and its terms are built, so their blueprints are recorded and reapplied
-at prediction. What a development may carry depends on `kind`: the
-continuous construction takes any of them, and the discontinuous ones
-only a scalar change of level or a design that partitions the rows,
-their read-off being a product of two unknowns.
+at prediction. What a development may carry depends on `kind`. The
+continuous construction takes any of them. A sharp
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+takes a development of the break-point with a scalar change of level on
+any design, or one development shared by the change of level and the
+break-point on a design that partitions the rows; a sharp
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+takes only the shared partition development, the read-off being a
+product of two unknowns. A smoothed term takes any development. A design
+that carries the intercept twice, the subformula's own and a constant
+column of a sub-term, as in `gamma ~ lasso(~1)`, is rejected, and
+`gamma ~ 0 + lasso(~1)` is the spelling of an intercept-only penalized
+development.
 
 ## The smoothed form
 
-With `smoothed` the step and the hinge are replaced by a
-[`numericals7::abs_smoother()`](https://statmodels7.github.io/numericals7/reference/abs_smoother.html)'s
-versions, and the transition width is resolved here from the covariate's
-spacing, within groups where a development of the break-point supplies a
-partition. The width is checked against the derived floor
-\\\sqrt{\epsilon}D\\ and reported by
-[`print()`](https://rdrr.io/r/base/print.html), a number that changes
-what the term means having to be legible.
+With `smoothed` the step and the hinge are replaced by the versions of a
+[`numericals7::abs_smoother()`](https://statmodels7.github.io/numericals7/reference/abs_smoother.html),
+and the transition width is resolved here from the covariate's spacing,
+within groups where a development of the break-point supplies a
+partition. The width is checked against the floor \\\sqrt{\epsilon}D\\,
+with \\D\\ the range of the covariate, carried onto the smoother's own
+width scale by
+[`numericals7::smoother_width_floor()`](https://statmodels7.github.io/numericals7/reference/smoother_width_floor.html),
+and a width below it is rejected. The width is reported by
+[`print()`](https://rdrr.io/r/base/print.html).
 
 ## See also
 

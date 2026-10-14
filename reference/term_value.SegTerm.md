@@ -1,14 +1,15 @@
 # The Contribution of a Break-Point Term
 
-The values the term contributes to the linear predictor at its current
-break-points: the broken line for
+The values that the term contributes to the linear predictor at its
+current break-points: the broken line for
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
 the step for
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md),
 both for
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md).
-It is what a Gauss-Newton step needs beside the block, and for the
-continuous construction it is **not** the block times the coefficients.
+It is what a Gauss-Newton step needs beside the block, and for
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+and for a smoothed term it is **not** the block times the coefficients.
 
 ## Arguments
 
@@ -41,15 +42,16 @@ A numeric vector of one value per observation.
 
 For `seg` the block is the Jacobian, so \\X\beta\\ is the linearization
 and the two differ by whatever that drops: a step at the break-point, in
-a construction that is continuous. For `jump` the columns satisfy
-\\X\beta = \\ the contribution exactly, the identity behind the read-off
-making them so, and the two agree to the last bit.
+a construction that is continuous. The same holds for a smoothed term.
+For a sharp `jump` the columns satisfy \\X\beta = \\ the contribution,
+the identity behind the read-off making them so, and the two agree to
+rounding error.
 
 With `newdata` the contribution is returned on those rows, at the
-break-points the term **carries**. They are not re-derived from the new
-rows, exactly as
+break-points that the term carries. They are not re-derived from the new
+rows, in the same way as
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-reapplies rather than rebuilds.
+reapplies a term and does not rebuild it.
 
 ## See also
 
@@ -73,7 +75,7 @@ b <- term_refresh(term_build(seg(x, npsi = 1), d), c(0.5, 2, 6))
 max(abs(as.numeric(term_matrix(b) %*% b@blueprint$coef) - term_value(b)))
 #> [1] 12
 
-# jump: the columns reproduce the contribution exactly.
+# jump: the columns reproduce the contribution to rounding error.
 bj <- term_build(jump(x, npsi = 1), d)
 max(abs(as.numeric(term_matrix(bj) %*% bj@blueprint$coef) - term_value(bj)))
 #> [1] 4.440892e-16

@@ -1,7 +1,7 @@
 # The Family Under Any Wrappers
 
-Follows `parent_distrib` to the distribution a wrapper wraps, so that a
-question about the family is asked of the family.
+Follows `parent_distrib` to the distribution that a wrapper wraps, so
+that a property of the family is read from the family.
 
 ## Usage
 
@@ -21,7 +21,7 @@ A distributions7 object.
 
 ## Details
 
-The property is asked for with
+The property is detected with
 [`S7::prop_names()`](https://rconsortium.github.io/S7/reference/prop_names.html)
 instead of testing the class, so a wrapper written later is followed
 without an edit here.

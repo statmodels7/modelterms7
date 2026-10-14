@@ -11,7 +11,7 @@ weight the caller supplies."><meta property="og:image" content="https://statmode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,8 @@ weight the caller supplies.</p>
 
 
 <dt id="arg-coef">coef<a class="anchor" aria-label="anchor" href="#arg-coef"></a></dt>
-<dd><p>The coefficients, or <code>NULL</code> for the ones it carries.</p></dd>
+<dd><p>The coefficients, one per coefficient of the term, or <code>NULL</code> for
+the ones it carries.</p></dd>
 
 
 <dt id="arg-a">A<a class="anchor" aria-label="anchor" href="#arg-a"></a></dt>
@@ -83,7 +84,8 @@ marginal criterion reads \(\log|K|\) with
 \(\partial K/\partial\beta\) gains everything coming from
 \(\partial X/\partial\beta\).</p>
 <p><strong>Only the contraction is computed.</strong> \(\partial X/\partial\beta\) is
-\(n \times m \times m\) and nothing needs it whole. For <code><a href="nl.html">nl()</a></code> it is closed form at \(O(nm)\):
+\(n \times m \times m\) and nothing needs it whole. For <code><a href="nl.html">nl()</a></code> it is
+closed form at \(O(nm)\):
 writing \(X_{i,c} = w_{p}(i) Z_p[i,c]\) with
 \(w_p = (\partial f/\partial\theta_p)\,h_p'\),
 $$\frac{\partial X_{i,c_1}}{\partial\beta_{c_2}} =
@@ -91,26 +93,26 @@ $$\frac{\partial X_{i,c_1}}{\partial\beta_{c_2}} =
   + \delta_{p_1p_2} f_{p_1} h_{p_1}''\Big),$$
 so with \(s_{p}(i) = \sum_{c\in p} A_{ic}Z_{p}[i,c]\) the answer is
 \(Z_{p_2}'\sum_{p_1} q_{p_1p_2}s_{p_1}\), one crossprod per parameter.
-The chain rule onto the coefficients, each parameter's link and its
-subformula's design, stays here, this being the only place that knows them.</p>
-<p><code><a href="seg.html">seg()</a></code> has its own, written from the closed forms. Theirs is not a
-difference a caller could take: a break-point column is a step function in
-its break-point, so the quotient diverges as the step shrinks. Measured at
-\(h\), \(h/4\) and \(h/16\) it reads 3.6e4, 1.4e5 and 5.8e5, where
-<code><a href="nl.html">nl()</a></code>'s stays at 0.6038 throughout. What is bounded is written out
-instead. The truncated line \((x-\psi)_+\) has derivative
+The chain rule onto the coefficients, through each parameter's link and its
+subformula's design, is applied in this method.</p>
+<p><code><a href="seg.html">seg()</a></code> has its own, written from the closed forms. Its derivative is not a
+difference that a caller could take: a break-point column is a step function
+in its break-point, so the difference quotient diverges as the step shrinks.
+The bounded quantities are written out instead. The truncated line
+\((x-\psi)_+\) has derivative
 \(-\mathbf{1}(x&gt;\psi)\) in the break-point, and the break-point column
 \(-\gamma(x)\mathbf{1}(x&gt;\psi)\) has the same indicator as its derivative
 in the change and zero almost everywhere in the break-point, which is the
 value taken.</p>
-<p><code><a href="jump.html">jump()</a></code> and <code><a href="jseg.html">jseg()</a></code> keep the base method's zeros.
-Their position is read off a product of the unknowns, \(\psi = -g/\delta\),
+<p>A sharp <code><a href="jump.html">jump()</a></code> or <code><a href="jseg.html">jseg()</a></code> keeps the base method's zeros.
+Its position is read off a product of the unknowns, \(\psi = -g/\delta\),
 so a column's derivative runs through that read-off instead of through a
 development's design, and the weight \(W = 1/(2\lvert\tilde x-\psi\rvert)\)
-they carry has an unbounded derivative in the break-point. Their block is a
-working linearization with a frozen weight, which is
-the same fact that makes <code><a href="term_converged.html">term_converged()</a></code> answer differently for
-them.</p>
+it carries has an unbounded derivative in the break-point. Its block is a
+working linearization with a frozen weight, which is the reason that
+<code><a href="term_jacobian_block.html">term_jacobian_block()</a></code> answers <code>FALSE</code> for it. A break-point term with
+<code>smoothed =</code> has a block that is a true Jacobian, and its contraction is
+written out from the smoother's derivatives.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

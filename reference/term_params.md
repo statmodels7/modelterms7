@@ -1,9 +1,9 @@
 # Parameters of a Structural Term
 
-The names of a structural term's own parameters, in the order its filter
-and its derivative recursions expect them. A structural term contributes
-no design block, so these are not coefficients: they are estimated
-beside the distribution's, on the unconstrained scale
+The names of a structural term's own parameters, in the order that its
+filter, its likelihood and their derivatives expect. A structural term
+contributes no design block, so these are not coefficients: they are
+estimated beside the distribution's, on the unconstrained scale
 [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
 defines, and
 [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
@@ -21,7 +21,7 @@ term_params(term, ...)
 
   An object inheriting from
   [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md).
-  A class that does not implement the generic throws
+  A class that does not implement the generic signals the error
   `"the term class 'X' does not implement term_params()."`.
 
 - ...:
@@ -37,35 +37,39 @@ A character vector, one name per parameter, of length
 
 The names are the term's own vocabulary.
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
-answers `omega` for the level, `kappa1` ... `kappap` for the score
-loadings and `pacf1` ... `pacfq` for the persistence;
+gives `omega` for the level, `kappa1` ... `kappap` for the score
+loadings and `pacf1` ... `pacfq` for the persistence.
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
-answers its levels and the free entries of its transition matrix. They
-are what indexes everything else about the term:
+gives `level1`, the gaps `gap2` ... `gapk` between consecutive levels,
+and the free entries `alr*.*` of its transition matrix. A marginal
+break-point term gives the names listed in
+[`MarginalBreakTerm()`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md).
+The names index everything else about the term:
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
 returns one value per name,
 [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
-carries them onto the quantities a reader reads, and a
+maps them onto the quantities a reader reads, and the `index` of a
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-entry's `index` gives positions in this vector.
+entry gives positions in this vector.
 
-A **subformula** expands the parameter it develops in place, so
+A **subformula** expands in place the parameter that it develops, so
 `gas(p = 1, q = 1)` has three parameters and
 `gas(p = 1, q = 1, omega ~ z)` has four: `omega.(Intercept)` and
 `omega.z` where the level was.
 
 The method on
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
-throws, naming the class: a structural class supplies this itself.
+signals an error that names the class. A structural class supplies its
+own method.
 
 ## See also
 
 [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
-for the chart each rides,
+for the chart on which each parameter is carried,
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
-for where they begin,
+for where the parameters begin,
 [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
-for the quantities they map to,
+for the quantities to which they map,
 [`term_coef_names()`](https://statmodels7.github.io/modelterms7/reference/term_coef_names.md)
 for the additive branch's equivalent.
 

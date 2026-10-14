@@ -39,9 +39,8 @@ comes from the scores. The autoregressive and loading coefficients are
 read at each row, which covers a term whose parameters carry submodels
 of their own as well as one whose parameters are constant.
 
-It is written in R. It evaluates no callback, runs once at a variance
-instead of at every iteration of a fit, and costs one pass over the data
-per column.
+It is written in R, evaluates no callback, and makes one pass over the
+data, carrying all the columns of `X` together.
 
 ## See also
 

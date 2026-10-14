@@ -28,12 +28,12 @@ The built form is
     <NlTerm> 'nl' built: 2 coefficients; symbolic derivatives
       parameters: a, r
 
-`symbolic` means [`stats::deriv()`](https://rdrr.io/r/stats/deriv.html)
-could read the expression, and `numeric` that the derivatives are
-differenced. That is worth seeing at a glance: the two routes differ by
-six orders of magnitude at the higher orders, which
-[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
-tabulates.
+The route is the term's `deriv_mode`. `symbolic` means that
+[`stats::deriv()`](https://rdrr.io/r/stats/deriv.html) could read the
+expression. `formula_fd` means that it could not, and the first
+derivatives of the formula are differenced. `numeric` means that the
+term wraps a function, whose derivatives are differenced unless
+supplied. A differenced derivative loses accuracy as its order grows.
 
 The coefficient count is the block's width, so a developed parameter
 makes it larger than the number of parameters printed on the second
@@ -59,7 +59,7 @@ term_build(nl(~ a * exp(-r * x), start = list(a = 1, r = 1)), dd)
 #> <NlTerm> 'nl' built: 2 coefficients; symbolic derivatives
 #>   parameters: a, r
 
-# An opaque function differences its derivatives, and says so.
+# An opaque function is differenced, and the route is printed as numeric.
 term_build(nl(function(x, theta) theta$a * exp(-theta$r * x),
               params = c("a", "r"), x = x, start = list(a = 1, r = 1)), dd)
 #> <NlTerm> 'nl' built: 2 coefficients; numeric derivatives

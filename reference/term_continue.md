@@ -50,9 +50,17 @@ without simulation is that the quantity driving the recursion has zero
 conditional mean, the score itself for a score-driven term, so beyond
 the data the recursion is deterministic.
 
-The base method signals an error. A term with state that cannot say what
-its state does next has nothing to offer a prediction, and returning
-zero there would read as a term with no effect at all.
+Among the shipped classes,
+[`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+implements the generic. Its method needs `time`, rejects rows that fall
+inside the observed series and rows of a group that the sample does not
+contain, and counts a gap between two times as one step. A lag that
+falls before the observed series takes the starting level of the
+recursion.
+
+The base method signals an error. A term with state whose next value is
+undefined cannot give a prediction past the series, and returning zero
+there would read as a term with no effect at all.
 
 ## See also
 

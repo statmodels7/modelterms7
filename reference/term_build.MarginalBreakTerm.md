@@ -1,9 +1,9 @@
 # Build a Marginal Break-Point Term
 
-Evaluates the covariate and the grouping variable, works out the
-interval structure the marginal likelihood is summed or integrated over,
-and records both in the blueprint together with a data-based starting
-point for the term's parameters.
+Evaluates the covariate and the grouping variable, orders the rows of
+each group by the covariate, and records the result in the blueprint.
+The interval structure over which the marginal likelihood is summed or
+integrated follows from that ordering.
 
 ## Arguments
 
@@ -28,20 +28,25 @@ reads that property on this branch, so it is `TRUE` for the result.
 
 ## Details
 
-The covariate must vary; a constant one has no break-point to place and
-throws. The grouping variable must give one value per row.
+The covariate must vary: a constant covariate has no break-point to
+place and is rejected. The grouping variable must give one value per row
+and must not contain missing values.
 
-What the blueprint records is the group of each observation, the
-covariate sorted within each group, and the labels of the groups. The
-intervals the likelihood decomposes over are the gaps between a group's
-ordered observations, so they follow from that ordering.
+The blueprint records the number of rows (`n`), the covariate in the
+order of the data (`x`), for each group the row indices ordered by the
+covariate (`groups`), and the labels of the groups (`labels`). The
+intervals over which the likelihood decomposes are the gaps between a
+group's ordered observations, so they follow from that ordering.
 
-The start is computed here because zero is degenerate for this term:
-with `delta = 0` the intervals are indistinguishable, every mass
-derivative sums to the derivative of a constant, and the surface is
-exactly flat in the prior's location and scale.
+No starting values are computed here:
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
-returns what this computed.
+computes them when it is called. A start with every change at zero is
+degenerate for this term. With `delta = 0` the intervals are
+indistinguishable, every mass derivative sums to the derivative of a
+constant, and the surface is exactly flat in the location and scale of
+the prior. A fitting layer therefore supplies a target to
+[`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md),
+from which the changes are estimated.
 
 ## See also
 
@@ -62,7 +67,8 @@ names(b@blueprint)
 b@blueprint$labels
 #> [1] "1" "2" "3"
 
-# The start is data-based, zero being degenerate here.
+# Without a target the start uses the covariate's quantiles and spread, and
+# the change of level starts at zero.
 round(term_start(b), 4)
 #> psi1.mean   psi1.sd    delta1 
 #>    4.5000    0.1542    0.0000 

@@ -1,18 +1,20 @@
 # Effective Degrees of Freedom of a Term
 
-Counts what a built term spends, given the coefficients a fit reached,
-the curvature at that fit and the hyperparameters that were estimated.
-An unpenalized parameter costs one; a parameter under a penalty costs
-less, and how much less depends on the kind of penalty. The three rules
-partition the term's parameters, so a term carrying several penalties is
-counted piece by piece and the pieces add.
+Computes the effective degrees of freedom of a built term from the
+coefficients of a fit, the curvature at that fit and the estimated
+hyperparameters. An unpenalized parameter counts one. A parameter under
+a non-smooth penalty counts one when it is nonzero and zero otherwise.
+The parameters unpenalized or under a smooth penalty are counted
+together by a single trace, which is less than their number when a
+penalty acts on them. The three rules partition the term's parameters,
+and the counts add.
 
-The one method is registered on
+The method is registered on
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)
-and reads the penalties the term declares through
+and reads the penalties that the term declares through
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
-so a term class written outside the package is counted by the same rule
-with nothing to register.
+so a term class defined outside the package is counted by the same rules
+without registering a method.
 
 ## Usage
 
@@ -26,21 +28,22 @@ edf(term, coef = NULL, hessian = NULL, theta = NULL, tol = 1e-08, ...)
 
   A built term (see
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
-  An unbuilt one throws.
+  An unbuilt term signals an error.
 
 - coef:
 
   The fitted coefficients of the term's block, a numeric vector of
-  length `term_npar(term)`. Any other length throws with the required
-  length named. `NULL` is allowed for an unpenalized term.
+  length `term_npar(term)`. A vector of any other length signals an
+  error that gives the required length. `NULL` is allowed for an
+  unpenalized term.
 
 - hessian:
 
   The unpenalized curvature of the fit restricted to the term's own
   block, a \\k \times k\\ matrix with \\k\\ = `term_npar(term)`,
   typically the weighted crossproduct of the block at the fitted
-  weights. Any other shape throws. `NULL` is allowed unless the trace
-  runs.
+  weights. When the trace runs, a matrix of any other shape signals an
+  error. `NULL` is allowed unless the trace runs.
 
 - theta:
 
@@ -48,14 +51,15 @@ edf(term, coef = NULL, hessian = NULL, theta = NULL, tol = 1e-08, ...)
   penalty's own named list, `list(lambda = 0.25)`. A term carrying
   several takes a list of such lists, keyed by the names
   [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-  gives; an unkeyed list throws, naming them. The two spellings are told
-  apart by the value being a list, a hyperparameter never being one.
+  gives; an unkeyed list signals an error that lists the names. The two
+  spellings are distinguished by the value being a list, since a
+  hyperparameter is never a list.
 
 - tol:
 
   The magnitude below which a coefficient counts as zero under a
   non-smooth penalty, `1e-8` by default. A proximal step returns exact
-  zeros, so the threshold matters only for coefficients a different
+  zeros, so the threshold matters only for coefficients that a different
   route left small.
 
 - ...:
@@ -70,21 +74,22 @@ numbers.
 
 ## The three rules
 
-**A parameter no penalty reaches counts one**, exactly. A term with no
-penalties at all therefore returns `term_npar(term)` and reads none of
-the other arguments.
+**A parameter outside every penalty counts one**, exactly. A term with
+no penalties at all therefore returns `term_npar(term)` and reads none
+of the other arguments.
 
 **A parameter under a non-smooth penalty counts one when it is away from
 zero and nothing when it is at it.** For the lasso that count is an
 unbiased estimator of the degrees of freedom (Zou, Hastie and
 Tibshirani, 2007). A penalty is treated as non-smooth when
 [`penalties7::penalty_kinks()`](https://statmodels7.github.io/penalties7/reference/penalty_kinks.html)
-reports any point at a probe value of its hyperparameters, so lasso,
-SCAD, MCP and the elastic net go here and ridge does not.
+reports any point at a probe value of its hyperparameters. The lasso,
+SCAD, MCP and the elastic net are therefore counted by this rule, and
+the ridge is not.
 
 **Everything else is counted together by one trace.** Over the
-parameters left, meaning those unpenalized and those under a smooth
-penalty,
+parameters that remain, meaning those unpenalized and those under a
+smooth penalty,
 
 \$\$\mathrm{edf} = \mathrm{tr}\\(H + S)^{-1} H\\,\$\$
 
@@ -93,24 +98,26 @@ carries each smooth penalty's Hessian in the coefficients, evaluated at
 `coef` and at the estimated hyperparameters and placed at the parameters
 that penalty covers. An unpenalized parameter contributes a zero row and
 column to \\S\\, so the trace returns its one. As a smoothing parameter
-grows the trace falls toward the dimension of the penalty's null space:
-for [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md)
-that limit is 1, the straight line the Demmler-Reinsch penalty leaves
-free.
+grows, the trace falls toward the dimension of the penalty's null space.
+For [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md)
+with the B-spline, P-spline or Legendre smoother that limit is 1, the
+straight line that the Demmler-Reinsch penalty leaves free; for the
+first-order B-spline, the cyclic and the Fourier smoothers it is 0.
 
-Each rule reduces to what a term reported before it carried more than
-one penalty: the trace over every column for a single smooth penalty,
-the nonzero count for a single kinked one, the coefficient count for
-none.
+When one penalty covers the whole block, the result is the trace over
+every column if the penalty is smooth, the number of nonzero
+coefficients if it is non-smooth, and the number of coefficients if
+there is no penalty.
 
 ## Which arguments are needed when
 
-`hessian` is asked for over the whole block and read at the rows and
-columns the trace runs over. It is never needed when every parameter
-sits under a kinked penalty, the count being read from `coef` alone, and
-`coef` is never needed when the term carries no penalty. Everything the
-rule in force does not reach may be left `NULL`; leaving out something
-it does reach throws with the missing arguments named.
+`hessian` is supplied for the whole block and read at the rows and
+columns over which the trace runs. It is not needed when every penalty
+of the term is non-smooth, since the count is then read from `coef`
+alone, and `coef` is not needed when the term carries no penalty. An
+argument that the rule in force does not read may be left `NULL`. An
+argument that the rule reads and that is missing signals an error, and
+the message names the arguments the rule needs.
 
 ## References
 
@@ -138,7 +145,7 @@ dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20), x3 = rnorm(20))
 edf(term_build(linpar(~ x1 + x2), dd))
 #> [1] 3
 
-# A ridge spends between 2 and 0 as lambda grows.
+# For a ridge the count falls from 2 toward 0 as lambda grows.
 b <- term_build(ridge(~ x1 + x2), dd)
 H <- crossprod(term_matrix(b))
 vapply(c(1e-6, 0.25, 10, 1e6),
@@ -156,8 +163,8 @@ bl <- term_build(lasso(~ x1 + x2 + x3), dd)
 edf(bl, coef = c(1, 0, -2), theta = list(lambda = 1))
 #> [1] 2
 
-# A smooth falls from k toward the dimension of its null space, which
-# for s() is the one straight line the penalty leaves free.
+# For a smooth the count falls from k toward the dimension of the penalty's
+# null space, which for this smoother is the straight line.
 d2 <- data.frame(x = seq(0, 1, length.out = 60))
 bs <- term_build(s(x, basis7::bspline_smooth(k = 8)), d2)
 Hs <- crossprod(term_matrix(bs))

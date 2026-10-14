@@ -13,7 +13,7 @@ criterion needs when a penalty covers the term's own parameters."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -122,41 +122,42 @@ third derivative contracted against both <code>g</code> and <code>direction</cod
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>A marginal criterion carries \(-\frac{1}{2}\log|K|\) at the penalized
 mode, so its gradient in a hyperparameter needs \(\mathrm{tr}(M\,\partial
-K/\partial u\,[v])\), with \(v\) the direction the mode moves in. Where
-the predictor is \(X\beta\) that contraction is the family's third
+K/\partial u\,[v])\), with \(v\) the direction in which the mode moves.
+Where the predictor is \(X\beta\) that contraction is the family's third
 derivative against the design and nothing else. Where a filter produces the
 predictor, \(K\) carries \(\sum_t w_t \ell_{p,t}E_t\) as well, and
-differentiating it asks for \(\partial^3 e_t/\partial u^3\).</p>
-<p><strong>Only contracted.</strong> The full third derivative is an \(m^3\) array
-per observation and is never formed: the criterion asks for it along the
-one direction the mode moves in, so what is propagated is a matrix per
-observation, the same size as the curvature and therefore the same
-\(O(nm^2)\). A caller wanting several hyperparameters calls this once
-per direction, which is cheaper than one \(O(nm^3)\) assembly whenever
-the hyperparameters are fewer than the unknowns.</p>
-<p><strong>What the model supplies.</strong> Each order of differentiation of the
-predictor pulls in one more order of the family, the recursion being driven
-by a score read at the predictor it produces: the curvature's <code>M</code> is
-built from third derivatives, and this needs a fourth. <code>blocks</code>
-therefore returns two quantities beyond the curvature's, at an observation
-with the current Jacobian row \(D\) and its directional derivative:</p>
+differentiating it requires \(\partial^3 e_t/\partial u^3\).</p>
+<p>The derivative is only ever contracted. The full third derivative is an
+\(m^3\) array per observation and is never formed: the criterion needs it
+only along the one direction in which the mode moves, so what is propagated
+is a matrix per observation, the same size as the curvature and therefore
+the same \(O(nm^2)\). A caller that needs several hyperparameters calls
+this once per direction, which is cheaper than one \(O(nm^3)\) assembly
+whenever the hyperparameters are fewer than the unknowns.</p>
+<p>Each order of differentiation of the predictor involves one more order of
+the family, the recursion being driven by a score read at the predictor that
+it produces: the curvature's <code>M</code> is built from third derivatives, and this
+method needs a fourth. <code>blocks</code> therefore returns two quantities beyond the
+curvature's, at an observation, from the current Jacobian row \(D\) and
+the direction \(v\):</p>
 <p>$$\texttt{dcurv} = \sum_r \ell_{ppr}V_r, \qquad
   \texttt{N} = \sum_{r,r'}\Big(\sum_{r''}\ell_{prr'r''}(V_{r''}\cdot v)\Big)
     V_r^\top V_{r'},$$</p>
 <p><code>dcurv</code> serving both the derivative of the curvature along \(v\),
 which is \(\texttt{dcurv}\cdot v\), and the two terms differentiating
 \(M\)'s own \(V_p\).</p>
-<p>The base method returns zeros. An additive term's second derivative is
-already zero, so it is covered without writing anything, and a term written
-later that does not implement this reports no third derivative instead of a
-wrong one. A structural term refuses: it has a second derivative, so zero
-there would be a false statement rather than a true one.</p>
+<p>The base method returns zeros, which is correct for a term whose predictor
+is a block of columns times coefficients, since the second derivative of
+such a predictor in the coefficients is zero. A term that bends the
+predictor has to implement the method itself, because the base method would
+report zeros for it. A structural term signals an error instead: it has a
+second derivative, so a zero third derivative would misstate it.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="term_curvature.html">term_curvature()</a></code> for the second order this differentiates,
 <code><a href="term_adjoint.html">term_adjoint()</a></code> for the first, <code><a href="https://statmodels7.github.io/statmodels7/reference/reml.html" class="external-link">statmodels7::reml()</a></code> for the criterion
-whose gradient asks for it.</p></div>
+whose gradient requires it.</p></div>
     </div>
 
     <div class="section level2">
@@ -165,7 +166,7 @@ whose gradient asks for it.</p></div>
 <span class="r-in"><span><span class="va">dd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>t <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">20</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">term</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="linpar.html">linpar</a></span><span class="op">(</span><span class="op">~</span><span class="va">t</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># an additive term bends no predictor, so every order above the first is</span></span></span>
-<span class="r-in"><span><span class="co"># zero and the base method says so</span></span></span>
+<span class="r-in"><span><span class="co"># zero, as the base method returns</span></span></span>
 <span class="r-in"><span><span class="va">out</span> <span class="op">&lt;-</span> <span class="fu">term_third</span><span class="op">(</span><span class="va">term</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">20</span><span class="op">)</span>, <span class="va">dd</span><span class="op">$</span><span class="va">y</span>,</span></span>
 <span class="r-in"><span>                  score <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span>, <span class="va">i</span><span class="op">)</span> <span class="va">dd</span><span class="op">$</span><span class="va">y</span><span class="op">[</span><span class="va">i</span><span class="op">]</span> <span class="op">-</span> <span class="va">e</span>,</span></span>
 <span class="r-in"><span>                  curvature <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">e</span>, <span class="va">i</span><span class="op">)</span> <span class="op">-</span><span class="fl">1</span>, psi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span></span>

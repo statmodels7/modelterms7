@@ -11,7 +11,7 @@ coefficient is not shrunk at all."><meta property="og:image" content="https://st
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,7 +68,7 @@ coefficient is not shrunk at all.</p>
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A one-sided formula, such as <code>~ x1 + x2</code> or <code>~ 0 + g</code>, or a numeric
 matrix, ideally a matrix column of the model data frame. A two-sided
-formula throws.</p></dd>
+formula is rejected with an error.</p></dd>
 
 
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
@@ -101,30 +101,35 @@ they stand, and <code>NULL</code> has the path build one. Must lie in
 <dd><p>Labels sharing this term's hyperparameters with those of
 other terms carrying the same ones: each is then estimated at a
 single value, wherever in the formula they sit. A named vector,
-<code>c(a = "A")</code>, since the penalty carries several and which was
-meant is not a guess; <code>NULL</code>, the default, shares nothing. See
-<code><a href="term_ids.html">term_ids()</a></code>, whose page says what the labels mean and what care
-they want.</p></dd>
+<code>c(a = "A")</code>, because the penalty has several hyperparameters and the
+name says which one is shared; <code>NULL</code>, the default, shares nothing. See
+<code><a href="term_ids.html">term_ids()</a></code> for the meaning of the labels and the restrictions on their
+use.</p></dd>
 
 
 <dt id="arg-n-lambda-n-a">n_lambda, n_a<a class="anchor" aria-label="anchor" href="#arg-n-lambda-n-a"></a></dt>
 <dd><p>How many values the path visits for each, at least 2.
-They differ because the axes do: \(\lambda\) descends the size of the
-kink over four decades and wants that many points, while \(a\) spans
-the shape's useful range and does not.</p></dd>
+The two are separate arguments because the axes differ: \(\lambda\)
+descends from the kink size that empties the block to <code>min_ratio</code> times
+that size (four decades at the default <code>min_ratio</code>), which takes more
+points than \(a\), which spans the shape's useful range. Each signals
+an error when given explicitly for a hyperparameter that is held or
+written out, so <code>n_a</code> requires <code>a = NULL</code>.</p></dd>
 
 
 <dt id="arg-min-ratio">min_ratio<a class="anchor" aria-label="anchor" href="#arg-min-ratio"></a></dt>
 <dd><p>How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
 stops sooner. A single number in \((0, 1)\), <code>1e-4</code> by default.
-Only the sweep by kink size reads it.</p></dd>
+Only the sweep by kink size reads it, and it signals an error when given
+explicitly while <code>lambda</code> is held or written out.</p></dd>
 
 
 <dt id="arg-search">search<a class="anchor" aria-label="anchor" href="#arg-search"></a></dt>
 <dd><p><code>"grid"</code> to visit every combination of \(\lambda\)
 and \(a\), <code>"cyclic"</code> to sweep one at a time with the other held.
-See <code><a href="term_search.html">term_search()</a></code>.</p></dd>
+See <code><a href="term_search.html">term_search()</a></code>. Given explicitly while fewer than two hyperparameters
+are swept, it signals an error.</p></dd>
 
 
 <dt id="arg-sparse">sparse<a class="anchor" aria-label="anchor" href="#arg-sparse"></a></dt>
@@ -135,17 +140,17 @@ input needs no such argument. See the section above.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Not used, and reported. An argument named after another penalty's
-hyperparameter is the mistake this catches: <code>scad(~ x, gamma = 1)</code> throws
-<code>"'scad' has no argument 'gamma'."</code> and lists the ones it does have.</p></dd>
+<dd><p>Not used. Any argument supplied here is rejected with an error
+that names it and lists the penalty's hyperparameters. The typical case is
+an argument named after another penalty's hyperparameter:
+<code>scad(~ x, gamma = 1)</code> signals <code>"'scad' has no argument 'gamma'."</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An unbuilt <code><a href="PenalizedTerm.html">PenalizedTerm()</a></code>: a specification, with <code>X</code>,
 <code>coef_names</code>, <code>blueprint</code> and <code>penalty</code> empty until <code><a href="term_build.html">term_build()</a></code>
-fills them, and the penalty attached there over as many coefficients
-as the block turns out to have.</p>
+fills them. The build attaches the penalty over the block's columns.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -157,21 +162,25 @@ from \(t = \lambda\), and is flat past \(t = a\lambda\), which removes
 the bias the lasso puts on a large coefficient. Being improper it
 carries no normalizing constant, and is therefore not a log prior and not
 reachable by a marginal criterion.</p>
+<p>The formula above is the penalty for a loss of unit curvature. In a
+<code><a href="https://statmodels7.github.io/statmodels7/reference/statmod.html" class="external-link">statmodels7::statmod()</a></code> fit the penalty on coordinate \(j\) is scaled by
+the curvature \(c_j\) of the likelihood in that coordinate: the slope at
+zero remains \(\lambda\), the penalty bends from \(\lambda/c_j\) and is
+flat past \(a\lambda/c_j\), so the shape keeps its meaning whatever the
+scale of the response. Rescaling a Gaussian response by \(k\) and
+dividing \(\lambda\) by \(k\) reproduces the fit with \(a\)
+unchanged. The scaling is applied by <span class="pkg">statmodels7</span>; the penalty that
+this term builds is the unscaled one.</p>
 <p><strong>Hyperparameters.</strong> <code>lambda</code> on \((0, \infty)\), swept over
-<code>n_lambda</code> values by kink size; <code>a</code> on \((2, \infty)\), below which the
-penalty is not what its definition intends, swept over
-<code>n_a</code> values on a geometric grid above that bound, since the shape
-leaves the kink at zero unchanged and no kink-size path can reach it.</p>
-<p><strong>The shape is HELD at \(a = 3.7\) by default</strong>, the value of Fan and
-Li and the one <span class="pkg">ncvreg</span> holds, so only \(\lambda\) is searched.
-<code>a = NULL</code> estimates it over the grid instead, and <code>n_a</code> sizes that
-grid. Measured over eight data configurations, estimating it chose the
-grid's LOWER ENDPOINT every time and changed no model: the columns kept
-were identical and the error against the truth agreed to four decimals.</p>
-<p>⚠️ <strong>The shape is not scale free</strong>, which is why the literature's
-value belongs to standardized data. See <code><a href="mcp.html">mcp()</a></code>, whose page carries the
-measurement: rescaling the response reproduces the fit only when the
-shape moves with the square of the scale.</p>
+<code>n_lambda</code> values by kink size; <code>a</code> on \((2, \infty)\), the range over
+which the proximal operator at unit curvature is single valued. The shape
+leaves the kink at zero unchanged, so a path over the kink size cannot
+reach it. It is swept over <code>n_a</code> values on a geometric grid that starts just
+above the smallest shape at which the block can be fitted.</p>
+<p>The shape is held at \(a = 3.7\) by default, the value of Fan and Li and
+the value that <span class="pkg">ncvreg</span> holds, so only \(\lambda\) is searched.
+<code>a = NULL</code> estimates it over the grid instead, and <code>n_a</code> sizes that grid.
+The grid runs from 0.25 to 25 above the smallest admissible shape.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
@@ -214,15 +223,27 @@ Statistical Association</em> 96, 1348–1360.</p>
 <span class="r-in"><span><span class="fu">penalties7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/penalties7/reference/penalty_kinks.html" class="external-link">penalty_kinks</a></span><span class="op">(</span><span class="va">p</span>, <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lambda <span class="op">=</span> <span class="fl">1</span>, a <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1]  0 -1  1 -3  3</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># The literature's shape, held.</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="term_hyper.html">term_hyper</a></span><span class="op">(</span><span class="fu">scad</span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span>, a <span class="op">=</span> <span class="fl">3.7</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># The literature's shape is held by default, and `a = NULL` estimates it</span></span></span>
+<span class="r-in"><span><span class="co"># over a grid.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="term_hyper.html">term_hyper</a></span><span class="op">(</span><span class="fu">scad</span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]$a</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3.7</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span><span class="fu"><a href="term_hyper.html">term_hyper</a></span><span class="op">(</span><span class="fu">scad</span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span>, a <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
+<span class="r-in"><span><span class="fu"><a href="term_grid.html">term_grid</a></span><span class="op">(</span><span class="fu">scad</span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span>, a <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]$lambda</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 25</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [[1]]$a</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Below 2 the shape is refused.</span></span></span>
+<span class="r-in"><span><span class="co"># At or below 2 the shape is rejected, the bound being open.</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu">scad</span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span>, a <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Error : 'a' in 'scad' must lie strictly inside (2, Inf); it is 2.</span>
 <span class="r-in"><span></span></span>

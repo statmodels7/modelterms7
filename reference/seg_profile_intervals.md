@@ -1,18 +1,23 @@
 # The Profile of One Break-Point Over Every Interval
 
-The least-squares profile of a sharp
+Returns the least-squares profile of a sharp
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 or
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
-term in one of its break-points, the others held where they are: the
-residual sum of squares in every interval between consecutive distinct
-values of the covariate inside the confinement limits, at the midpoint
-for a change of level and at the minimizing position for a change of
-slope. It is the quantity
+term in one of its break-points, the others held at their current
+positions. The profile is the residual sum of squares in every interval
+between consecutive distinct values of the covariate inside the
+confinement limits, evaluated at the midpoint of the interval for a
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+or a
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+and at the minimizing position inside the interval for a
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md).
+This is the quantity that
 [`seg_polish_exact()`](https://statmodels7.github.io/modelterms7/reference/seg_polish_exact.md)
-minimizes, returned whole so that a caller whose objective the profile
-only approximates can take several candidates from it.
+minimizes. It is returned whole so that a caller whose objective the
+profile only approximates can take several candidates from it.
 
 ## Usage
 
@@ -29,8 +34,8 @@ seg_profile_intervals(term, y, k = 1L, weights = NULL)
 
 - y:
 
-  A numeric vector, one value per observation of the build data: the
-  response, net of whatever the caller wants held.
+  A numeric vector of finite values, one per observation of the build
+  data: the response, net of whatever the caller wants held.
 
 - k:
 
@@ -44,7 +49,8 @@ seg_profile_intervals(term, y, k = 1L, weights = NULL)
 ## Value
 
 A data frame with columns `psi`, the position in each interval, and
-`rss`, the profile there (`Inf` where the design is singular).
+`rss`, the profile there (`Inf` where the design is singular). The data
+frame has no rows when no interval lies inside the confinement limits.
 
 ## See also
 

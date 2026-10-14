@@ -23,24 +23,25 @@ linpar(formula, label = "", sparse = NULL, contrasts = NULL)
 
 - formula:
 
-  A one-sided formula, `~ x1 + x2`. A two-sided formula throws
-  `"'formula' must be one-sided, e.g. ~ x1 + x2."`, and anything that is
-  not a formula throws. Its environment is kept and used for symbols the
-  data do not carry. A formula with no columns at all, `~ 0`, fails in
-  the class validator at build time.
+  A one-sided formula, `~ x1 + x2`. A two-sided formula is rejected with
+  the error `"'formula' must be one-sided, e.g. ~ x1 + x2."`, and so is
+  any object that is not a formula. Its environment is kept and used for
+  symbols that the data do not carry. A formula with no columns at all,
+  `~ 0`, is rejected at build, when the empty set of column names is
+  assigned to the `coef_names` property.
 
 - label:
 
   A single character string, `""` by default. When non-empty it is
   prefixed to every coefficient name as `label.name`, and it is the
   title [`plot()`](https://rdrr.io/r/graphics/plot.default.html) uses.
-  Anything that is not one string throws.
+  Any other value is rejected.
 
 - sparse:
 
   `TRUE` to build a `dgCMatrix`, `FALSE` for a base matrix, or `NULL`,
-  the default, to settle it from the design by the rule above. Anything
-  else throws
+  the default, to settle it from the design by the rule above. Any other
+  value signals the error
   `"'sparse' in 'linpar' must be TRUE, FALSE, or NULL to settle it from the design."`.
 
 - contrasts:
@@ -48,7 +49,7 @@ linpar(formula, label = "", sparse = NULL, contrasts = NULL)
   A named list of contrasts for the formula's factors, of the kind
   [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)'s
   `contrasts.arg` takes, or `NULL`, the default, for the session's
-  `options("contrasts")`. Anything that is not a list throws.
+  `options("contrasts")`. A value that is not a list is rejected.
 
 ## Value
 
@@ -69,52 +70,52 @@ still gets its column.
 
 The blueprint records the terms object, the factor levels
 ([`stats::.getXlevels()`](https://rdrr.io/r/stats/checkMFClasses.html)),
-the contrasts actually used and the storage settled on.
+the contrasts actually used, the storage settled on and the
+`drop_intercept` setting.
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-reapplies all four, so a factor column at new rows is encoded against
-the levels seen at build time. A level the blueprint does not know is
-rejected by
+reapplies each of them, so a factor column at new rows is encoded
+against the levels seen at build time. A level the blueprint does not
+know is rejected by
 [`stats::model.frame()`](https://rdrr.io/r/stats/model.frame.html) with
 `"factor g has new levels zz"`.
 
 ## Several parametric blocks
 
-`y ~ x1 + x2` and `y ~ linpar(~ x1 + x2)` produce the same block, so the
-explicit constructor is for callers wanting more than one parametric
-block with distinct labels, or wanting to set `sparse` or `contrasts` on
-it. Arguments for the block
+`y ~ x1 + x2` and `y ~ linpar(~ x1 + x2)` give the same columns,
+`(Intercept)`, `x1` and `x2`, but the second splits them into two
+blocks: the block that
+[`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
+builds implicitly, which holds the intercept, and the block of
+`linpar()`, which holds `x1` and `x2`. The explicit constructor is
+therefore for callers wanting more than one parametric block with
+distinct labels, or wanting to set `sparse` or `contrasts` on a block.
+Arguments for the block that
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
 builds implicitly go through that function's own `linpar` argument.
 
 The intercept belongs to the formula. When the formula carries one, a
 `linpar()` written in it drops its own column `(Intercept)` after the
-model matrix is built, so its factors keep their contrasts and
-`y ~ linpar(~ x + g)` gives the columns of `lm(y ~ x + g)`. Under `0 +`
-the block keeps its intercept.
+model matrix is built, so its factors keep their contrasts and, together
+with the implicit block, `y ~ linpar(~ x + g)` gives the columns of
+`lm(y ~ x + g)`. Under `0 +` the block keeps its intercept.
 
 ## Sparse storage
 
 `sparse = TRUE` builds through
 [`Matrix::sparse.model.matrix()`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html),
 which builds the block sparse. Building a dense matrix and compressing
-it would cost the memory the choice exists to avoid. Measured at 20000
-rows and a factor of 1000 levels, the two routes give identical numbers
-at 0.007 s and 1.8 MB against 0.164 s and 161.3 MB; a design of 20000 by
-19014 that would be 3.0 GB dense builds sparse in 0.3 s and 3.1 MB.
+it would use the memory that the sparse route is meant to avoid.
 
-It pays where the formula carries a **factor of many levels**, whose
-indicator columns hold one non-zero per row. On numeric covariates the
-block is dense whatever is asked for, and the sparse storage then costs
+Sparse storage pays where the formula carries a **factor of many
+levels**, whose indicator columns hold one non-zero per row. On numeric
+covariates the block has few zero entries, and sparse storage then costs
 more than it saves.
 
-`sparse = NULL`, the default, settles it at build from the size of the
-indicator part: `n * ncol_ind > 1e5`, where `ncol_ind` counts the
-columns coming from factors
+`sparse = NULL`, the default, settles the storage at build from the size
+of the indicator part: the block is built sparse when
+`n * ncol_ind > 1e5`, where `ncol_ind` is an upper bound on the number
+of columns coming from factors
 ([`.indicator_cols()`](https://statmodels7.github.io/modelterms7/reference/dot-indicator_cols.md)).
-Measured over fifteen combinations, building the block and forming its
-crossproduct, the two routes cross between \\10^5\\ and \\3 \times
-10^5\\ cells and the sparse route then wins by orders: at 20000 rows it
-is 1.4 times faster at 15 levels, 14 times at 60 and 445 times at 400.
 
 The settled storage is part of the blueprint, so
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)

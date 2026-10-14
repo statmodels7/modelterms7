@@ -1,5 +1,174 @@
 # Changelog
 
+## modelterms7 0.96.0
+
+#### Changes
+
+- [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+  keeps the set of analytic derivative orders. An order without a closed
+  form takes one stencil on the highest analytic order below it, or on
+  the value of the function when there is none; an opaque function no
+  longer differences its numerical gradient, and a supplied `hessian` is
+  used for orders three and four without a `gradient`.
+- [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+  rejects `params` with a formula and, at build, a `start` entry that
+  names no parameter. A supplied derivative must return components of
+  length 1 or
+  n. [`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md),
+  [`nl_fderiv()`](https://statmodels7.github.io/modelterms7/reference/nl_fderiv.md),
+  [`term_kinks()`](https://statmodels7.github.io/modelterms7/reference/term_kinks.md)
+  and the block derivatives of an
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+  term check the length of `coef`.
+- [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
+  rejects a data frame without rows.
+- [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
+  [`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md),
+  [`enet()`](https://statmodels7.github.io/modelterms7/reference/enet.md),
+  [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md)
+  and
+  [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
+  reject a block without columns at build.
+- [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
+  [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
+  reject a non-finite `hyper`.
+- [`censored_response()`](https://statmodels7.github.io/modelterms7/reference/censored_response.md)
+  rejects a missing bound with its own message;
+  [`cens()`](https://statmodels7.github.io/modelterms7/reference/cens.md)
+  rejects a factor.
+- [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
+  signals the error of a call that fails to evaluate, with the call’s
+  text, instead of placing the call in the parametric block. A marginal
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  or
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  that carries the linear effect absorbs the bare covariate, as
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  does.
+- Every entry of
+  [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+  carries the same fields. An entry carried up from the subformula of a
+  break-point term keeps its written-out values and its `search`.
+- [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
+  of a
+  [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
+  term rejects a missing grouping value under `unseen = "error"`.
+- [`term_grid()`](https://statmodels7.github.io/modelterms7/reference/term_grid.md),
+  [`term_path_min()`](https://statmodels7.github.io/modelterms7/reference/term_path_min.md)
+  and
+  [`term_search()`](https://statmodels7.github.io/modelterms7/reference/term_search.md)
+  report only what a path uses: no grid for a held or written-out
+  hyperparameter, a depth only where the path over `lambda` is built, a
+  search only where two or more hyperparameters are swept.
+- [`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md),
+  [`enet()`](https://statmodels7.github.io/modelterms7/reference/enet.md),
+  [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md)
+  and
+  [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
+  reject a grid size, `min_ratio` or `search` given for a hyperparameter
+  that is held or written out.
+- The marginal
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  split every interval of the quadrature so that no panel spans more
+  than 2.5 standard deviations of the prior on the break-point. The
+  number of panels had an upper limit, and a spread below about a
+  hundredth of the spacing of the covariate gave a wrong log-likelihood
+  and gradient. A group that would need more than 4000 panels is
+  rejected with a message that names the spread.
+- [`term_simulate()`](https://statmodels7.github.io/modelterms7/reference/term_simulate.md)
+  of
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  draws one chain per group, in time order, each started from the
+  stationary law, as the likelihood reads the data. It drew one chain
+  over all rows in row order.
+- [`term_continue()`](https://statmodels7.github.io/modelterms7/reference/term_continue.md)
+  of
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  takes a lag that falls before the observed series at the starting
+  level, as the filter does, in the value and in its derivative. A group
+  with fewer observed rows than `q` was continued without it.
+- [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
+  of
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  applies each partial autocorrelation’s own link when it reports the
+  persistences `xi1`, …; it applied the first one’s link to every
+  coordinate.
+- [`term_hessian()`](https://statmodels7.github.io/modelterms7/reference/term_hessian.md)
+  of
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  and of the marginal break-point term takes weights of length 1 or n
+  and rejects any other length, which was recycled.
+  [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)
+  and
+  [`term_hessian()`](https://statmodels7.github.io/modelterms7/reference/term_hessian.md)
+  of
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  check the lengths of what the callbacks return, as
+  [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
+  does.
+- [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  reject a development that carries the intercept twice, as in
+  `gamma ~ lasso(~1)`, and name the spelling `gamma ~ 0 + lasso(~1)`.
+  With the free intercept beside it, a penalty on the copy has no
+  effect.
+- [`seg_relocate()`](https://statmodels7.github.io/modelterms7/reference/seg_relocate.md)
+  rejects a non-finite position.
+  [`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md),
+  [`seg_polish()`](https://statmodels7.github.io/modelterms7/reference/seg_polish.md),
+  [`seg_polish_exact()`](https://statmodels7.github.io/modelterms7/reference/seg_polish_exact.md),
+  [`seg_profile_rss()`](https://statmodels7.github.io/modelterms7/reference/seg_profile_rss.md)
+  and
+  [`seg_profile_intervals()`](https://statmodels7.github.io/modelterms7/reference/seg_profile_intervals.md)
+  reject a response with missing or non-finite values.
+- [`term_coef_draw()`](https://statmodels7.github.io/modelterms7/reference/term_coef_draw.md)
+  of a held break-point term draws no position.
+- [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  rejects an infinite `k` or `n_start`, and
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  an infinite `p` or `q`;
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  rejects a formula given in the place of `p` or `q`. The message of the
+  marginal term about the location of an explicit prior no longer names
+  a particular family, and its message about `n_boot` says that the
+  argument is ignored.
+
+#### Documentation
+
+- Every page of the package rewritten and checked against the code: the
+  generics, the term classes,
+  [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md),
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md),
+  [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md),
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
+  [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md),
+  the penalized terms, the hyperparameter readers, the formula
+  interpreter,
+  [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md),
+  [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md),
+  the censored response, the break-point terms and their helpers, the
+  marginal break-point term,
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md),
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  and the structural generics; README, vignette and the pkgdown
+  descriptions likewise. The pages of
+  [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md)
+  and
+  [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
+  describe the curvature scaling of the fitting layer: rescaling a
+  Gaussian response by k is reproduced with lambda/k and the same shape.
+  The pages of
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  and
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  state that `time` orders the rows within a group, so that a gap
+  between two times counts as one step. The class pages list the
+  properties that each class has.
+
 ## modelterms7 0.95.1
 
 - Documentation repairs found by `R CMD check --as-cran`: the examples
@@ -29,7 +198,7 @@
   and
   [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
   builds each kind of link once and shares it among the parameters. A
-  fit with three regimes on `geyser` takes 27 per cent less time.
+  fit with three regimes on `geyser` takes 27 percent less time.
 
 ## modelterms7 0.94.0
 
@@ -248,7 +417,7 @@
 
 - A smoothed break-point term passes numericals7 the largest gap between
   consecutive distinct values of its covariate over the range a
-  break-point may take (the central 90 per cent), per group where a
+  break-point may take (the central 90 percent), per group where a
   development supplies a partition and the widest of the groups’ where
   one width is shared. `smooth_quintic()`, exact outside its width, then
   has its width raised to at least 0.55 times that gap, so a break-point
@@ -274,10 +443,10 @@
 - [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
   on a
   [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
-  term takes `unseen = c("error", "zero")`. By default a level the fit
-  never saw is still refused; `"zero"` gives its rows zeros, which is
-  the prediction with that group’s effect at zero. `statmodels7`’s
-  `predict(random = "zero")` and `"marginal"` ask for it.
+  term takes `unseen = c("error", "zero")`. By default a level that the
+  fit never saw is still rejected; `"zero"` gives its rows zeros, which
+  is the prediction with that group’s effect at zero. `statmodels7`’s
+  `predict(random = "zero")` and `"marginal"` pass it.
 
 - [`term_within()`](https://statmodels7.github.io/modelterms7/reference/term_within.md),
   a new generic: the within-group design a group’s effect multiplies, at
@@ -299,14 +468,14 @@
   a new generic, returns the starting points a fitting layer tries for a
   structural term’s own parameters. The base method returns
   [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)’s
-  alone, so a term that says nothing is fitted once.
+  alone, so a term without further starts is fitted once.
 - [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
   takes `n_start`, the number of starts, `1` by default, so no fit
-  changes unless it is asked for. The first start is the quantile start;
-  each further one draws every additive log-ratio of the transition
-  matrix from N(0, 2^2) and adds N(0, 0.7^2) to the logarithm of every
-  gap, with a fixed seed and the caller’s random number generator
-  restored. On
+  changes unless a larger value is given. The first start is the
+  quantile start; each further one draws every additive log-ratio of the
+  transition matrix from N(0, 2^2) and adds N(0, 0.7^2) to the logarithm
+  of every gap, with a fixed seed and the caller’s random number
+  generator restored. On
   [`MASS::geyser`](https://rdrr.io/pkg/MASS/man/geyser.html) with three
   regimes, eight starts reach five distinct maxima of the
   log-likelihood, from -1053.39 to -1210.49.
@@ -390,7 +559,7 @@
   [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)‘s
   alone; the developments of
   [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
-  and of the break-point terms’ own coefficients keep asking for a fixed
+  and of the break-point terms’ own coefficients keep requiring a fixed
   design.
 - Such a parameter is MOBILE: its predictor is the sum of the sub-terms’
   contributions and its design is read at the coefficients rather than
@@ -405,9 +574,9 @@
   re-derived. Checked at every order against one numerical
   differentiation of the order below, on a smoothed jump, jseg and seg,
   a sharp seg, a break-point developed over `random(~1 | id)` and two
-  developed parameters at once: 1e-11 to 4e-10. A 5 per cent error in
-  any of the five pieces of the chain fails the tests. A parameter with
-  a fixed development is untouched: 40 outputs of four such terms are
+  developed parameters at once: 1e-11 to 4e-10. A 5 percent error in any
+  of the five pieces of the chain fails the tests. A parameter with a
+  fixed development is untouched: 40 outputs of four such terms are
   [`identical()`](https://rdrr.io/r/base/identical.html) to 0.78.0’s.
 - **The break-point is searched for at the start.** Where a response is
   given,
@@ -509,11 +678,11 @@
 - ⚠️ **The two rules COINCIDE for every margin whose roughness matrix
   exceeds one, which is what confines the change.** `max(1, s)` is `s`
   there, so only a margin whose roughness matrix is SMALL moves. ⚠️ That
-  is not the same as a wide covariate, and the measurement is what says
-  so: the Gram also falls with the number of knots, a coarser basis
-  being flatter, so at `k = 4` a covariate on already reads `2.90e-01`
-  while at `k = 5` the same one reads `1.55e+00` and is untouched.
-  Measured over a battery of eight shapes on a margin over , four are
+  is not the same as a wide covariate, and the measurement shows this:
+  the Gram also falls with the number of knots, a coarser basis being
+  flatter, so at `k = 4` a covariate on already reads `2.90e-01` while
+  at `k = 5` the same one reads `1.55e+00` and is untouched. Measured
+  over a battery of eight shapes on a margin over , four are
   [`identical()`](https://rdrr.io/r/base/identical.html) on all eight
   leaves (two margins on one scale, anisotropic and isotropic, a
   three-margin product, and an
@@ -544,8 +713,8 @@
   other two, at fewer effective degrees of freedom (33.1-34.0 against
   34.3-35.0) and converging 8 of 8 against 6.
 
-- ⚠️ **WHAT IT BUYS IS THAT THE SEARCH REACHES THE ANSWER, and the
-  measurement that says so is an invariance the old rule broke.** The
+- ⚠️ **The normalization lets the search reach the answer, and the
+  measurement that shows it is an invariance the old rule broke.** The
   same model fitted on a covariate in days and on the same covariate in
   years has the identical design block, the bases placing their knots
   over the observed range, so only the penalty’s scale differs. Under
@@ -610,7 +779,7 @@
   take their `smoothed` argument from `numericals7`, where the smoothers
   of the absolute value moved in 0.13.0. A smoother is written
   [`numericals7::smooth_probit()`](https://statmodels7.github.io/numericals7/reference/smooth_probit.html),
-  the check on the argument asks for a
+  the check on the argument requires a
   [`numericals7::abs_smoother`](https://statmodels7.github.io/numericals7/reference/abs_smoother.html),
   and the error raised for anything else names that package. The width
   is resolved by
@@ -637,8 +806,8 @@
   matrix, and the levels of a factor `by` may be smoothed apart.** Both
   are answered through
   [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
-  which is the general question a term is asked about its penalties, and
-  both leave the default alone.
+  the general method by which a term reports its penalties, and both
+  leave the default alone.
 
 - `s(x, bspline_smooth(penalty = penalties7::lasso_penalty))` penalizes
   the smooth’s own coordinates with any penalty. The factory is the
@@ -670,25 +839,24 @@
   rather than selecting them with a map is what keeps `has_prox()` TRUE,
   a separable penalty under a selection map being the generalized lasso.
 
-  The licence for that reading is an identity rather than an argument: a
-  ridge over the penalized coordinates beside the free column reproduces
-  the fit
+  The reading is justified by an identity: a ridge over the penalized
+  coordinates beside the free column reproduces the fit
   [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) has
   always produced, to the printed digit – log-likelihood 1.041, edf
   11.486, lambda 3.77088, rmse 0.0351 on both sides.
 
 - `s(x, by = g, by_hyper = "level")` estimates one smoothing parameter
   per level, where `"shared"`, the default, estimates one for all of
-  them. Which to want is a question about the data: levels that differ
-  in how wiggly they are ask for different amounts of smoothing.
-  Measured on three levels of one curve at amplitudes 1, 0.15 and 2.5,
-  the separately estimated smoothing parameters are 2.03, 111.9 and
-  0.468 – a factor of 239 apart – the effective degrees of freedom fall
-  from 25.5 to 21.7 as the flattest level is smoothed away, and the root
-  mean square error against the truth from 0.0551 to 0.0526. It is what
-  does by default and what `id` there undoes; this package’s default is
-  the other way round, and stays there because every fit written before
-  this must not move.
+  them. Which to want is a question about the data: levels of different
+  wiggliness need different amounts of smoothing. Measured on three
+  levels of one curve at amplitudes 1, 0.15 and 2.5, the separately
+  estimated smoothing parameters are 2.03, 111.9 and 0.468 – a factor of
+  239 apart – the effective degrees of freedom fall from 25.5 to 21.7 as
+  the flattest level is smoothed away, and the root mean square error
+  against the truth from 0.0551 to 0.0526. It is what does by default
+  and what `id` there undoes; this package’s default is the other way
+  round, and stays there because every fit written before this must not
+  move.
 
   The per-level fit reproduces three separately written smooths EXACTLY
   – the same three smoothing parameters, the same 21.706 effective
@@ -702,42 +870,42 @@
   [`check_ids()`](https://statmodels7.github.io/modelterms7/reference/check_ids.md)
   sees exactly the names `hyper` does.
 
-- ⚠️ **Every existing fit is unchanged, and what says so is an
-  identity.** Against the battery captured before the smoother
-  migration: 192 comparisons, no difference. Against the fit itself: the
-  log-likelihood, the coefficients, the effective degrees of freedom,
+- ⚠️ **Every existing fit is unchanged, as comparisons with
+  [`identical()`](https://rdrr.io/r/base/identical.html) show.** Against
+  the battery captured before the smoother migration: 192 comparisons,
+  no difference. Against the fit itself: the log-likelihood, the
+  coefficients, the effective degrees of freedom,
   [`vcov()`](https://rdrr.io/r/stats/vcov.html), the fitted values and
   the hyperparameter are
   [`identical()`](https://rdrr.io/r/base/identical.html) between
   `s(x, bspline_smooth(k = 20))` and the same call with `penalty = NULL`
   and `by_hyper = "shared"` written out.
 
-- ⚠️ **A penalty with a kink has no REML reading, and that is a change
-  in what the number means rather than in how it is computed.** A
-  marginal criterion wants the second derivative the kink has not, so
-  the smoothing parameter of a lasso, an elastic net, SCAD or MCP is
-  chosen by a path over `statmod()`’s `sparse_criterion` – BIC by
-  default – whatever `outer_criterion` says. That substitution is what
-  this layer has always done for
+- ⚠️ **A penalty with a kink has no REML reading.** A marginal criterion
+  needs the second derivative, which the kink does not have, so the
+  smoothing parameter of a lasso, an elastic net, SCAD or MCP is chosen
+  by a path over `statmod()`’s `sparse_criterion` – BIC by default –
+  whatever `outer_criterion` specifies. That substitution is what this
+  layer has always done for
   [`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md)
   and its siblings; the page of
   [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) now
-  says so, since a smooth is where a reader expects REML.
+  states this, since a smooth is where a reader expects REML.
 
 - `.random_hyper()` is
   [`.entry_hyper()`](https://statmodels7.github.io/modelterms7/reference/dot-entry_hyper.md)
-  and has moved to `generics.R`. It implements the
+  and has moved to `generics.R`. It implements the structure of a
   [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-  entry contract and has nothing to do with random effects: it splits a
-  term’s `hyper` and `id` over the entries and checks every name against
-  the penalty that carries it, at the build, which is the first point at
+  entry and has nothing to do with random effects: it splits a term’s
+  `hyper` and `id` over the entries and checks every name against the
+  penalty that carries it, at the build, which is the first point at
   which those penalties exist. A smooth needs exactly that, for the same
   reason a random effect does – which hyperparameters there are depends
   on the penalty. Its `ids` argument was undocumented and now is not.
 
 - The hyperparameter names of a smooth are still checked AT THE
   CONSTRUCTOR wherever they can be, which is every call that does not
-  ask for a factory or for one parameter per level. The strict check is
+  pass a factory or request one parameter per level. The strict check is
   what reports `hyper = c(lamda = 2)` where it is written, and giving it
   up for one code path would have moved that report to the build for the
   common call.
@@ -745,8 +913,8 @@
 - ⚠️ [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
   rejects a margin carrying a `penalty` factory. A tensor product’s
   penalty is the sum of the marginal roughnesses, and a factory does not
-  say whether it replaces one of them, all of them, or the sum. The
-  question has an answer only once somebody asks it of a model.
+  specify whether it replaces one of them, all of them, or the sum. The
+  question has an answer only for a specific model.
 
 - The page of
   [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) said
@@ -769,11 +937,11 @@
          hyper = NULL, id = NULL, label = NULL, sparse = NULL)
 
   `k`, `degree`, `basis`, `bases`, `linear` and `lambda` are
-  **retired**. `k` and `degree` were a B-spline’s arguments wearing the
-  shape of general ones, `linear` named the null space “linear”, which
-  it is only when the penalty is of order 2, and `basis` was an escape
-  hatch that silently overrode the first two and then imposed a
-  construction written for a B-spline on whatever basis it was handed.
+  **retired**. `k` and `degree` were a B-spline’s arguments in the form
+  of general ones, `linear` named the null space “linear”, which it is
+  only when the penalty is of order 2, and `basis` was an escape hatch
+  that silently overrode the first two and then imposed a construction
+  written for a B-spline on whatever basis it was handed.
 
 - **What that opens, and it needed no branch in
   [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md):**
@@ -784,14 +952,15 @@
   arrives complete without this package being touched, which is what the
   separation was for.
 
-- ⚠️ **Every existing fit is unchanged, and what says so is an
-  identity.** Against a battery captured from the previous release
-  before any of this was written – fifteen term shapes and twelve fitted
-  models, with and without `by`, factor and numeric, sparse and dense,
-  tensor products isotropic and not, a distributional model, a held
-  hyperparameter, a shared one and a Poisson – the block, the
-  coefficient names, the penalty, the block at new rows, the
-  log-likelihood, the coefficients, the effective degrees of freedom,
+- ⚠️ **Every existing fit is unchanged, as comparisons with
+  [`identical()`](https://rdrr.io/r/base/identical.html) show.** Against
+  a battery captured from the previous release before any of this was
+  written – fifteen term shapes and twelve fitted models, with and
+  without `by`, factor and numeric, sparse and dense, tensor products
+  isotropic and not, a distributional model, a held hyperparameter, a
+  shared one and a Poisson – the block, the coefficient names, the
+  penalty, the block at new rows, the log-likelihood, the coefficients,
+  the effective degrees of freedom,
   [`vcov()`](https://rdrr.io/r/stats/vcov.html), the fitted values and
   the convergence flag are
   [`identical()`](https://rdrr.io/r/base/identical.html): **192
@@ -817,8 +986,8 @@
   and nothing else.** The constraint, the null space and the coordinates
   belong to the **product**: the tensor contains the constant whatever
   its margins do, so the block is centered over the observed covariates
-  rather than each margin being constrained. A margin asking for one of
-  those three at a non-default value is rejected with the reason.
+  rather than each margin being constrained. A margin that sets one of
+  those three to a non-default value is rejected with the reason.
 
 - Per-margin dimensions are a **list** of smoothers,
   `te(x, z, smooths = list(bspline_smooth(k = 4), bspline_smooth(k = 5)))`,
@@ -891,7 +1060,8 @@
   is untouched.
 
 - [`term_fourth()`](https://statmodels7.github.io/modelterms7/reference/term_fourth.md)
-  refuses on a structural term that has not written it, exactly as
+  signals an error on a structural term that has not written it, exactly
+  as
   [`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
   does and for the same reason: a term that bends the predictor and
   reports zero cannot be told from one that genuinely has none. An
@@ -900,7 +1070,7 @@
 ## modelterms7 0.70.0
 
 - [`term_coef_draw()`](https://statmodels7.github.io/modelterms7/reference/term_coef_draw.md)
-  draws the block coefficients whose meaning only the term knows and
+  draws the block coefficients whose meaning only the term defines and
   hands every other one back untouched. A break-point is the case it
   exists for: it is a position on the covariate’s own axis, and nothing
   else in a model is measured in those units, so a caller drawing a
@@ -930,15 +1100,14 @@
   slope and the increment left by the previous position, so its gap is
   2.2e-03 median and 1.1e-01 at worst.
 
-- ⚠️ THE DRAW SPREADS FROM THE COVARIATE’S OWN QUANTILES AND NOT FROM
-  WHERE THE TERM SITS, which is not the same thing and cost a
-  measurement to see. A simulation builds its specification against a
+- ⚠️ The draw spreads from the covariate’s own quantiles and not from
+  where the term sits. A simulation builds its specification against a
   placeholder response, and a break-point that was not named chooses its
   start on a least-squares profile of it – a profile of noise, which is
   flat, so its minimum lands against a confinement limit as readily as
   anywhere. Spreading from there put the fifty groups at a median of
   0.048, the limit itself, with a spread of 0.017 against the 0.053
-  asked for.
+  requested.
 
 - A prior over the coordinates the term drew is no longer that prior’s,
   so `scale` reports the width used and a caller reporting the truth
@@ -958,10 +1127,10 @@
   quantity, not choosable by hand – a filter whose level is developed
   over a hundred groups carries a hundred and one of them.
 
-- The start rather than zero, because the term already knows where the
-  sensible region of its own charts is: zero on a log chart is a loading
-  of one and a filter strong enough to destabilize its own recursion. A
-  constraint a chart carries is then respected for free,
+- The start rather than zero, because the term already identifies where
+  the sensible region of its own charts is: zero on a log chart is a
+  loading of one and a filter strong enough to destabilize its own
+  recursion. A constraint a chart carries is then respected for free,
   [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)’s
   levels being a first level and positive gaps and a persistence being
   stationary at any coordinate.
@@ -984,24 +1153,24 @@
   saying what any of them was, so the coordinates of that covariance
   came out numbered.
 
-- A COVARIANCE LABEL ON THE LATENT OF A MARGINAL BREAK-POINT IS REFUSED
-  WITH THE REASON, and the reason is the model’s rather than the
-  layer’s: under `marginal = TRUE` the break-point is a latent the
-  likelihood integrates out, with a prior of its own, and a covariance
-  block is a prior over coefficients. The message says so and names the
+- A covariance label on the latent of a marginal break-point is rejected
+  with the reason, which is the model’s rather than the layer’s: under
+  `marginal = TRUE` the break-point is a latent the likelihood
+  integrates out, with a prior of its own, and a covariance block is a
+  prior over coefficients. The message states the reason and names the
   remedy – drop the middle bar, or fit the break-point at its mode,
   where the label IS carried.
 
-  It was refused before, by accident and with the wrong reason. The
+  It was rejected before, by accident and with the wrong reason. The
   check that the latent’s formula is intercept-only read the left
   operand of the outermost bar, which under `~ 1 | u | g` is `1 | u`
   rather than `1`, so a caller writing an intercept-only formula was
   told it was not one. That side is read through
   [`.random_parts()`](https://statmodels7.github.io/modelterms7/reference/dot-random_parts.md)
-  now, which knows the grammar, and `~ 1 + x | u | g` is still refused
-  for being what it is.
+  now, which parses the grammar, and `~ 1 + x | u | g` is still
+  rejected, its formula not being intercept-only.
 
-  The refusal sits here rather than in the fitting layer because a
+  The rejection sits here rather than in the fitting layer because a
   marginal term reports no components: every other structural term
   declares its developments through
   [`term_components()`](https://statmodels7.github.io/modelterms7/reference/term_components.md)
@@ -1029,7 +1198,7 @@
   may give the two one shrinkage.
 
   A single unnamed string shares **the** hyperparameter and is legal
-  only where the penalty carries one; a penalty carrying several wants a
+  only where the penalty carries one; a penalty carrying several needs a
   named vector, `c(alpha = "A")`, since sharing the mixing of an elastic
   net while leaving its strength free is a model and which was meant is
   not a guess.
@@ -1038,7 +1207,7 @@
   at one value, each keeping its own block, its own coefficients and its
   own effective degrees of freedom. Nothing checks whether the two are
   comparable, deliberately, since a shared value multiplies each penalty
-  as it is; the documentation says what care that wants, and what it
+  as it is; the documentation says what care that requires, and what it
   means best between penalties of the same shape over covariates of
   comparable scale.
 
@@ -1062,7 +1231,7 @@
   reports it, with a base method answering `NA_character_` for every
   other kind of term.
 
-  A labelled term declares **no penalty of its own**: its coefficients
+  A labeled term declares **no penalty of its own**: its coefficients
   share a block with those of the other terms carrying the label, and
   that block may span another equation, so the prior over it belongs to
   the class and is built by the fitting layer.
@@ -1070,36 +1239,36 @@
   returns an empty list and
   [`term_penalty()`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md)
   is `NULL`, which is the right answer rather than a gap. It follows
-  that `hyper` is refused there, the hyperparameters being the class’s;
-  that `correlated = FALSE` beside a label asks for two opposite things
-  and is refused; and that a `distrib` names the class’s joint prior, so
-  it must be multivariate, its dimension checked where the class is
-  known. A univariate one is refused naming the copula: a joint law
-  whose coordinates are of different families – a gaussian intercept
-  correlated with a Student t slope – is not an elliptical family, a
-  multivariate gaussian having gaussian margins and a multivariate t
-  having t margins with one shared nu.
+  that `hyper` is rejected there, the hyperparameters being the class’s;
+  that `correlated = FALSE` beside a label requests two opposite things
+  and is rejected; and that a `distrib` names the class’s joint prior,
+  so it must be multivariate, its dimension checked where the class is
+  known. A univariate one is rejected with an error that names the
+  copula: a joint law whose coordinates are of different families – a
+  gaussian intercept correlated with a Student t slope – is not an
+  elliptical family, a multivariate gaussian having gaussian margins and
+  a multivariate t having t margins with one shared nu.
 
-  What the change also closes is a defect. That spelling was not refused
-  before, it was read as data: with no column of that name it stopped
-  with `object 'u' not found`; with a factor column it built twice the
-  columns, with names like `random.a.1 | uTRUE` and a warning about
-  `'|'` applied to factors; and with a numeric column it built twice the
-  columns and reported nothing at all. The label is now taken as a
-  symbol and never evaluated, so a column carrying its name is not
+  What the change also closes is a defect. That spelling was not
+  rejected before, it was read as data: with no column of that name it
+  stopped with `object 'u' not found`; with a factor column it built
+  twice the columns, with names like `random.a.1 | uTRUE` and a warning
+  about `'|'` applied to factors; and with a numeric column it built
+  twice the columns and reported nothing at all. The label is now taken
+  as a symbol and never evaluated, so a column carrying its name is not
   looked at, and all three cases build the block the one-bar formula
   builds.
 
 - [`term_group()`](https://statmodels7.github.io/modelterms7/reference/term_group.md)
   reports the grouping a term’s coefficients are indexed by: the
   expression, its levels and the number of columns one level carries.
-  Two labelled terms belong to one covariance block only if they share a
+  Two labeled terms belong to one covariance block only if they share a
   grouping, and both halves are needed to decide it – `droplevels(id)`
   and `id` are different expressions for one grouping, and `id` under
   two subsets is one expression for two groupings. The base method
   returns `NULL`.
 
-- A continuous grouping variable is refused.
+- A continuous grouping variable is rejected.
   [`factor()`](https://rdrr.io/r/base/factor.html) turns any vector into
   a grouping by formatting its values, so `random(~ 1 | x)` with a
   standard normal `x` at 60 observations built 60 columns – one level
@@ -1120,7 +1289,7 @@
   did, and the message that reports the retired `precision` argument now
   names `mvgaussian2_distrib()`, which is the spelling that replaces it:
   a structured precision is written as the matrix parameter of the
-  family that says so.
+  precision form of the family.
 
   Nothing about what the term builds changes. The side has always been
   read from the distribution’s `params_interpretation`, never from
@@ -1165,7 +1334,7 @@
 
 ## modelterms7 0.63.0
 
-- `structural_term` declares `blueprint`, so the branch’s contract is a
+- `structural_term` declares `blueprint`, so the branch’s structure is a
   declaration rather than a convention. Every consumer already treated
   the property as belonging to the branch –
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
@@ -1220,9 +1389,9 @@
   [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
   and the marginal break-point terms answered `FALSE` whether or not
   they were built: they contribute no design columns and so have no
-  coefficient names to count. Each branch is now asked about the
-  property it fills – coefficient names for an additive term, the
-  blueprint for a structural one – and the additive answer is unchanged.
+  coefficient names to count. Each branch now tests the property it
+  fills – coefficient names for an additive term, the blueprint for a
+  structural one – and the additive answer is unchanged.
 
   Every caller was on the additive side except one,
   [`print.model_term()`](https://statmodels7.github.io/modelterms7/reference/print.model_term.md),
@@ -1232,7 +1401,7 @@
   could reach it; it now tests the branch before reading `X` and reports
   a built structural term without a coefficient count.
 
-  `blueprint` is asked for with
+  `blueprint` is looked up with
   [`S7::prop_names()`](https://rconsortium.github.io/S7/reference/prop_names.html)
   rather than assumed. It is declared on `additive_term` and on each of
   the three shipped structural classes, and not on the abstract
@@ -1241,7 +1410,7 @@
   “Can’t find property”.
 
 - [`term_build.structural_term()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-  is removed, leaving the `model_term` default. It threw “structural
+  is removed, leaving the `model_term` default. It signaled “structural
   terms are reserved for a later release; none is implemented yet”,
   which
   [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md),
@@ -1256,15 +1425,15 @@
 ## modelterms7 0.60.0
 
 - [`term_simulate()`](https://statmodels7.github.io/modelterms7/reference/term_simulate.md)
-  says how a response is DRAWN from a term that carries state, which is
-  a different operation from fitting one and differs in which direction
-  the response moves. A term whose contribution does not read the
-  response reports it and leaves the drawing to the caller; a
+  defines how a response is drawn from a term that carries state, which
+  is a different operation from fitting one and differs in which
+  direction the response moves. A term whose contribution does not read
+  the response reports it and leaves the drawing to the caller; a
   score-driven term cannot, its level being driven by the score of the
   response at the time before, so it draws as the recursion runs. One
-  contract covers both: the caller passes a function that draws at a
-  predictor, and a method that drew returns the responses while one that
-  did not returns `NULL`. The score-driven method writes NO new
+  specification covers both: the caller passes a function that draws at
+  a predictor, and a method that drew returns the responses while one
+  that did not returns `NULL`. The score-driven method writes NO new
   recursion –
   [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
   calls its score callback exactly once per observation, in time order,
@@ -1275,7 +1444,7 @@
   term draws each group’s positions from their prior.
 
 - [`term_continue()`](https://statmodels7.github.io/modelterms7/reference/term_continue.md)
-  says what a structural term’s contribution does at rows that come
+  defines what a structural term’s contribution does at rows that come
   after the ones it was built on. A term with state cannot be reapplied
   – what it reports at one row is where a recursion has got to – so a
   prediction past the series carries the state forward instead. What
@@ -1293,13 +1462,13 @@
   as a term with no effect.
 
 - [`term_static_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_static_deriv.md)
-  says how the predictor a structural term produces moves when the
-  static part of the predictor moves. A score-driven level is driven by
-  scores read AT the predictor the recursion is producing, so a
+  defines how the predictor that a structural term produces moves when
+  the static part of the predictor moves. A score-driven level is driven
+  by scores read AT the predictor the recursion is producing, so a
   coefficient in the same equation reaches the level as well as the
   design row; the derivative obeys the recursion the filter already
   runs, seeded at zero because the starting level depends on the term’s
-  parameters alone, and it needs no callback, the curvature it
+  parameters alone, and it needs no callback, the curvature that it
   multiplies being the one
   [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
   returns. Measured on a score-driven mean with one covariate beside it,
@@ -1309,12 +1478,12 @@
   without state carrying nothing to propagate.
 
 - [`term_components()`](https://statmodels7.github.io/modelterms7/reference/term_components.md)
-  says how a term’s columns divide among the parameters it is written
+  reports how a term’s columns divide among the parameters it is written
   in: one entry per parameter, with the columns that belong to it and
   the sub-terms developing it. What divides them is the term’s answer
   and cannot be recovered from a coefficient name, which is built for a
-  reader; the base method returns an empty list, the honest answer for a
-  term whose columns are one block with one meaning.
+  reader; the base method returns an empty list for a term whose columns
+  are one block with one meaning.
 
 - Each entry also carries `sub_index`, the columns belonging to each of
   its sub-terms. A parameter may be developed by several at once and
@@ -1326,10 +1495,10 @@
   would be assuming it.
 
 - [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
-  refuses quantity by quantity rather than all at once. A developed
+  omits a quantity individually and not all of them at once. A developed
   parameter is a vector of coefficients over covariates and has no
   single value to report, so it is skipped; the parameters beside it are
-  unaffected. Refusing them along with it left a summary printing the
+  unaffected. Omitting them along with it left a summary printing the
   working coefficients a discontinuous construction is fitted through,
   which are no part of the model. Where every parameter is developed
   nothing is left and the answer is `NULL`, as before.
@@ -1355,7 +1524,7 @@
   difference on that row grows fourfold as the step is quartered, which
   is what “almost everywhere” sets aside. Without that second half the
   first is satisfied by a sample with no observation near the
-  break-point, which asks nothing.
+  break-point, which tests nothing.
 
 - And the two kinds of zero are told apart. For
   [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
@@ -1369,8 +1538,13 @@
   [`term_block_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md)
   answers zeros while the block moves by five orders of magnitude at the
   scaling factor the annealing descends to, because there the block is a
-  working linearization with a frozen weight. The zeros are a refusal in
-  one case and a description in the other.
+  working linearization with a frozen weight. For
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  the zeros are the value of the second derivative; for
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  they stand for a derivative that the block does not have.
 
 ## modelterms7 0.59.0
 
@@ -1409,7 +1583,7 @@
   answer is exact away from those two points rather than everywhere.
 
 - `.seg_smooth_parts()` takes an `order`, so the smoother’s fourth
-  derivative is computed only where this method asks for it and not at
+  derivative is computed only where this method needs it and not at
   every step a fit takes.
 
 - Still nothing consumes the generic. Measured against the previous
@@ -1454,7 +1628,7 @@
   curved, and the Newton direction of an outer search.
 
 - `.nl_theta()` takes an `order`, so the third derivative of the link is
-  computed only where this method asks for it and not on every Jacobian
+  computed only where this method needs it and not on every Jacobian
   evaluation of every fit.
 
 ## modelterms7 0.57.0
@@ -1504,7 +1678,7 @@
   are ordinary ones estimated by maximum likelihood,
   [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
   declares nothing – and the term is structural of the likelihood shape
-  (`MarginalBreakTerm`, the contract of
+  (`MarginalBreakTerm`, the structure of
   [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)).
 
 - For
@@ -1555,8 +1729,7 @@
   per interval reaches 3e-9 where a 4-node Gauss-Legendre rule is off by
   0.2 to 0.95 on the log-likelihood.
 
-- The contract:
-  [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
+- [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
   returns one-step predictive contributions with the exact jacobian
   (numDeriv 1e-10 on the step kind, 2e-5 on the quadrature kinds’
   scale),
@@ -1755,15 +1928,15 @@
   [`identical()`](https://rdrr.io/r/base/identical.html) at 1 and 2
   threads.
   [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
-  passes both through its dots, so the contract is unchanged.
+  passes both through its dots, so the interface is unchanged.
 
 ## modelterms7 0.50.0
 
 - **[`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)
   takes a `target`**, the response on the scale of the predictor the
   term contributes to. It is the one thing a term cannot work out for
-  itself: the term knows its formula and its charts, the fitting layer
-  knows the distribution, the link and the equation. Every method
+  itself: the term holds its formula and its charts, the fitting layer
+  holds the distribution, the link and the equation. Every method
   already had `...`, so the argument is compatible, and a term with no
   use for it ignores it.
 
@@ -1870,8 +2043,8 @@
   [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md),
   [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
   and the five penalized constructors, and the storage is then SETTLED
-  AT BUILD from the size of the design rather than asked for. `TRUE` and
-  `FALSE` override it, and an explicit `TRUE` is still refused where
+  AT BUILD from the size of the design rather than requested. `TRUE` and
+  `FALSE` override it, and an explicit `TRUE` is still rejected where
   there is nothing to build on.
 
 - **The threshold is the cells of the dense indicator part, not a count
@@ -1934,13 +2107,13 @@
   and zeros on the base class, which is exactly right for a fixed
   design. The chain rule onto the coefficients – each parameter’s link
   and its subformula’s design – stays in the term, the only thing that
-  knows them. Verified against a brute-force numerical `dX/dbeta` at
+  holds them. Verified against a brute-force numerical `dX/dbeta` at
   1e-11 across links on one or both parameters, a developed parameter,
   three parameters and an opaque function.
 
 ## modelterms7 0.45.0
 
-- A smooth with a factor `by` says its penalty is one copy per level
+- A smooth with a factor `by` declares its penalty as one copy per level
   rather than handing `penalties7` the assembled product:
   `quadratic_penalty(P, blocks = m)` instead of
   `quadratic_penalty(kronecker(diag(m), P))`. Nothing of size `(mk)^2`
@@ -1964,7 +2137,7 @@
   identical, and the storage is in the blueprint so prediction does not
   densify.
 
-- It is REFUSED where there is nothing to build on rather than accepted
+- It is rejected where there is nothing to build on rather than accepted
   and ignored: without a `by` the basis is dense by construction, the
   Demmler-Reinsch rotation making it so, and a numeric `by` merely
   multiplies it. The first is caught at construction and the second at
@@ -1973,8 +2146,8 @@
 - The BLOCK alone is sparse. The penalty of a factor `by` is the same
   matrix repeated blockwise and comes back dense – 25.92 MB at those
   sizes, at a density of 0.0005 – because `penalties7` densifies at its
-  contract boundary. Making that sparse is a change to that package’s
-  contract, not to this construction, and it is not made here.
+  interface boundary. Making that sparse is a change to that package’s
+  interface, not to this construction, and it is not made here.
 
 ## modelterms7 0.43.0
 
@@ -1987,13 +2160,13 @@
   0.002 s and 1.8 MB against
   [`stats::model.matrix`](https://rdrr.io/r/stats/model.matrix.html)’s
   0.100 s and 161.5 MB, the numbers identical, and a design that would
-  be 32 GB dense builds in 0.02 s and 19 MB – which is what says there
-  is no dense intermediate.
+  be 32 GB dense builds in 0.02 s and 19 MB – which shows that there is
+  no dense intermediate.
 
 - It pays where the formula carries a factor of many levels, whose
   indicator columns hold one non-zero per row, and costs more than it
-  saves on numeric covariates, whose block is dense whatever is asked
-  for. The storage is part of the blueprint, so
+  saves on numeric covariates, whose block is dense whichever storage is
+  requested. The storage is part of the blueprint, so
   [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
   builds new data the same way, and standardization does not undo it,
   being a diagonal map on the penalty and never an operation on the
@@ -2026,9 +2199,9 @@
   `"grid"` for every combination of them, `"cyclic"` for one at a time.
   It sat on the criterion, where it did not belong – the same criterion
   is put to the smooth hyperparameters of a model, which are read at the
-  mode rather than swept, so most of what it is asked about could not
-  use it. A penalty with a kink is fitted by a scheme of its own, and
-  how that scheme covers the term’s own hyperparameters is part of the
+  mode rather than swept, so most of what it is applied to could not use
+  it. A penalty with a kink is fitted by a scheme of its own, and how
+  that scheme covers the term’s own hyperparameters is part of the
   scheme.
   [`term_search()`](https://statmodels7.github.io/modelterms7/reference/term_search.md)
   reports it.
@@ -2066,7 +2239,7 @@
   the criterion”, which named a number nothing printed – a default a
   reader cannot find is a default a reader cannot choose against. The
   two grid sizes differ because the axes do: a path over the size of the
-  kink spans four decades and wants that many points, an axis beside it
+  kink spans four decades and needs that many points, an axis beside it
   spans one bounded interval and does not.
 
 ## modelterms7 0.40.0
@@ -2089,7 +2262,7 @@
   would put outside the parameter’s own domain.
   `fixed(transformation(gamma2_distrib(), log_transform()), mu = 1)` is
   now a usable effects distribution, and its free-location form is still
-  refused.
+  rejected.
 
 - The page says which hyperparameters carry an interval and which do
   not, and why: a run that ended where the criterion has no maximum has
@@ -2109,10 +2282,10 @@
 ## modelterms7 0.37.0
 
 - [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
-  says two things and nothing else: the formula, and the distribution of
-  the effects. Which chart the hyperparameters ride, what they are
-  called, how many there are and where the log-density has a kink are
-  properties of that distribution, read off it rather than restated.
+  specifies two things only: the formula, and the distribution of the
+  effects. Which chart the hyperparameters ride, what they are called,
+  how many there are and where the log-density has a kink are properties
+  of that distribution, read off it rather than restated.
 
 - The hyperparameter of `random(~ 1 | g)` IS the standard deviation of
   the effects. It was `lambda`, a precision, which a reader of a mixed
@@ -2127,7 +2300,7 @@
   the structure is. Correlation is admitted by a PROPERTY – a location
   block as long as the dimension, and a covariance, precision or scale
   matrix – so a family added later is covered and the simplex-valued
-  ones are refused without being named. A family with no mixed
+  ones are rejected without being named. A family with no mixed
   response-parameter block is rejected at the build rather than at the
   criterion, where the message would name a generic.
 
@@ -2156,9 +2329,10 @@
   so a Laplace prior on a random effect declared no kink where a
   [`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md)
   term on the same parent declares one at zero – and a fitting layer
-  chooses the scheme by asking, so the block went to the system solved
-  by a curvature the penalty does not have there. `NULL`, the spelling
-  that would have fixed it, was rejected by the property’s own type.
+  chooses the scheme by querying the penalty, so the block went to the
+  system solved by a curvature that the penalty does not have there.
+  `NULL`, the spelling that would have fixed it, was rejected by the
+  property’s own type.
 
 - `correlated` beside `distrib` is an error rather than ignored; the
   page said it was ignored, which is worse than an error.
@@ -2211,9 +2385,9 @@
   `scad(~x, n_a = 6)`, `mcp(~x, n_gamma = 7)`. How finely a
   hyperparameter is swept belongs to the term for the same reason as
   whether it is swept at all: a penalized block of four columns and one
-  of four hundred want different grids, and a criterion applies to every
-  term of the model at once and cannot know which it is looking at.
-  `NULL`, the default, leaves it to the criterion.
+  of four hundred need different grids, and a criterion applies to every
+  term of the model at once and cannot tell them apart. `NULL`, the
+  default, leaves it to the criterion.
   [`term_grid()`](https://statmodels7.github.io/modelterms7/reference/term_grid.md)
   reports it, and the value travels with the penalty’s entry as the held
   values do.
@@ -2269,10 +2443,10 @@
 ## modelterms7 0.31.0
 
 - [`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md),
-  a new generic: the coefficients a built term asks to be started at.
-  The base method returns zero everywhere, which is what a term whose
-  block is a fixed design wants, and a term that recomputes its block
-  from its coefficients answers with the start
+  a new generic: the coefficients at which a built term is started. The
+  base method returns zero everywhere, which is what a term whose block
+  is a fixed design needs, and a term that recomputes its block from its
+  coefficients answers with the start
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   computed. Zero is degenerate rather than neutral there: in
   [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
@@ -2380,21 +2554,22 @@
   differentiated once more and contracted against ONE direction,
   together with the derivative of the term’s jacobian along the same
   direction. It is what the exact gradient of a marginal criterion needs
-  where a penalty covers the term’s own parameters, the criterion asking
-  for `tr(M dK/du[v])` at the direction the penalized mode moves in. The
-  full third derivative is an `m^3` array per observation and is never
-  formed: what is propagated is a matrix per observation, the same size
-  as the curvature and therefore the same O(n m^2). Measured against
+  where a penalty covers the term’s own parameters, the criterion
+  requiring `tr(M dK/du[v])` at the direction the penalized mode moves
+  in. The full third derivative is an `m^3` array per observation and is
+  never formed: what is propagated is a matrix per observation, the same
+  size as the curvature and therefore the same O(n m^2). Measured
+  against
   [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
   on panels of 9, 15 and 30 unknowns: 2.62x, 2.66x and 2.78x, flat in
   the number of unknowns.
 
   The base method on `model_term` returns zero, which is right for a
-  term whose predictor is a block of columns; `structural_term` REFUSES,
-  so a term that bends the predictor and has not written its third
-  derivative reports nothing rather than a zero a caller could not tell
-  from a genuine one. `GasTerm` implements it on both routes, scalar and
-  submodel.
+  term whose predictor is a block of columns; `structural_term` signals
+  an error, so a term that bends the predictor and has not written its
+  third derivative reports nothing rather than a zero a caller could not
+  tell from a genuine one. `GasTerm` implements it on both routes,
+  scalar and submodel.
 
   Each order of differentiating the predictor through the recursion
   pulls in one more order of the family, the score the recursion is
@@ -2487,8 +2662,8 @@
   twelve-minute trap of a full square at five hundred groups required.
   Measured at n up to 10000, the general recursion costs 5.4-5.6x the
   compiled scalar filter, flat in n; porting it is the natural next step
-  and the scalar kernel’s own measurement (callbacks 17-27 per cent of
-  the loop) says roughly what it would pay.
+  and the scalar kernel’s own measurement (callbacks 17-27 percent of
+  the loop) gives roughly what it would pay.
 
 - `gas(deviations =, penalty =)` and `nl(penalty =, penalize =)` are
   RETIRED: the subformulas subsume them (Giovanni, explicit). A gas
@@ -2607,9 +2782,10 @@
   and exercised the new terms the moment the default moved.
 
 - [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
-  says where a term’s own parameters start, on the unconstrained scale.
+  defines where a term’s own parameters start, on the unconstrained
+  scale.
 
-  The start belongs to the term because only the term knows what a
+  The start belongs to the term because only the term defines what a
   coordinate of zero means on each of its charts. The base method
   returns zero everywhere, each link’s natural point;
   [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
@@ -2661,14 +2837,14 @@
   The coefficients agree to 2.4e-16 for the smooth branch and EXACTLY
   for the kinked one.
 
-  ⚠️ The gap between the two branches is not noise and is worth reading:
-  the kinked branch reaches a compiled coordinate descent that takes an
-  `arma::mat`, so `statmodels7:::coord_fit()` still materializes the
-  penalized block dense at that one boundary. That is the remaining
-  densification in the chain, it is the whole of the difference between
-  38x and 16x, and closing it means a sparse path in the kernel – which
-  is also the natural algorithm, a coordinate update on a sparse column
-  touching only its nonzeros.
+  ⚠️ The gap between the two branches is systematic: the kinked branch
+  reaches a compiled coordinate descent that takes an `arma::mat`, so
+  `statmodels7:::coord_fit()` still materializes the penalized block
+  dense at that one boundary. That is the remaining densification in the
+  chain, it is the whole of the difference between 38x and 16x, and
+  closing it means a sparse path in the kernel – which is also the
+  natural algorithm, a coordinate update on a sparse column touching
+  only its nonzeros.
 
 ## modelterms7 0.25.0
 
@@ -2682,12 +2858,12 @@
 
   A hyperparameter is comparable across coordinates only where the
   coordinates share a scale, and without this a lasso penalizes a column
-  measured in metres more than the same column measured in kilometres.
+  measured in meters more than the same column measured in kilometers.
   `standardize = TRUE` divides each coefficient by the standard
   deviation of its own column through the penalty’s DIAGONAL MAP, so the
   design is never rescaled: a sparse block stays sparse, `lambda` stays
   one number, and the coefficients come back on the scale the data
-  arrived in with nothing to map back. Centring, which is what would
+  arrived in with nothing to map back. Centering, which is what would
   destroy sparsity, is not needed, the fit being invariant to a
   translation of a penalized column where an intercept is free.
 
@@ -2728,11 +2904,11 @@
   takes in **0.0006 s against 12.77 s**.
 
   [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
-  asks `.is_block()` rather than
+  calls `.is_block()` rather than
   [`is.matrix()`](https://rdrr.io/r/base/matrix.html), which is FALSE
   for every `Matrix` class and would have failed a term for being
-  efficient. A term’s `X` was already `class_any`, so the contract
-  needed no change.
+  efficient. A term’s `X` was already `class_any`, so the class
+  declaration needed no change.
 
 - [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
   accumulates PER GROUP and never forms the square over all the
@@ -2868,7 +3044,7 @@
   two differ by the conditional variance of the complete-data score, so
   the complete-data one is the larger and a standard error read off it
   is too small. Measured on a two-regime gaussian, the difference
-  reaches 30 per cent of a standard error where the regimes overlap and
+  reaches 30 percent of a standard error where the regimes overlap and
   vanishes as they separate and the states become known.
 
   Louis’s identity is one route to it and is not the one taken. The
@@ -2910,16 +3086,16 @@
   groups, where the score at the marginal mean is out by 1.4.
 
 - [`term_level_param()`](https://statmodels7.github.io/modelterms7/reference/term_level_param.md)
-  says which of a term’s parameters shifts its equation’s predictor by a
-  constant: `"omega"` for
+  reports which of a term’s parameters shifts its equation’s predictor
+  by a constant: `"omega"` for
   [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md),
   `"level1"` for
   [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md),
   and `character(0)` for everything else. It exists so that a fitting
-  layer can resolve the confounding with an intercept rather than refuse
+  layer can resolve the confounding with an intercept rather than reject
   the model. Which parameter is the level is the term’s answer; which
-  one is dropped is the layer’s, since only the layer knows what else
-  the equation carries.
+  one is dropped is the layer’s, since only the layer sees what else the
+  equation carries.
 
 ## modelterms7 0.18.0
 
@@ -2931,18 +3107,19 @@
   contracted against the caller’s weights. It is what an observed
   information needs and what the reverse recursion alone does not give.
 
-  The contract keeps the split the adjoint already uses. `seed` is the
-  derivative of the static predictor in the caller’s unknowns, so the
-  term learns nothing else about them; `blocks` is a callback returning,
-  at an observation and the Jacobian the recursion has reached, the two
-  model quantities that seed the first and second derivatives of the
-  score – `sum_q l_pq C_q` and `sum_{r,r'} l_prr' V_r' V_r'`. A model of
-  one equation supplies zero and `l_ppp D'D`.
+  The interface keeps the split that the adjoint already uses. `seed` is
+  the derivative of the static predictor in the caller’s unknowns, so
+  the term learns nothing else about them; `blocks` is a callback
+  returning, at an observation and the Jacobian the recursion has
+  reached, the two model quantities that seed the first and second
+  derivatives of the score – `sum_q l_pq C_q` and
+  `sum_{r,r'} l_prr' V_r' V_r'`. A model of one equation supplies zero
+  and `l_ppp D'D`.
 
   Against numDeriv at p, q in {1,2}^2: the Jacobian 1.05e-10 and the
   contracted second derivative 1.0e-09 on a matrix of scale 24.6.
 
-  Deviations are refused rather than silently mishandled: the per-group
+  Deviations are rejected rather than silently mishandled: the per-group
   chain adds a factor to every derivative and is not written.
 
 - [`gas_levinson2()`](https://statmodels7.github.io/modelterms7/reference/gas_levinson2.md)
@@ -2954,7 +3131,7 @@
   numDeriv: 3.8e-12, 2.9e-12 and 9.4e-11 at q = 2, 3 and 4. The value
   and the jacobian are bit-identical to
   [`gas_levinson()`](https://statmodels7.github.io/modelterms7/reference/gas_levinson.md),
-  which is what says this is not a second route to them, and the last
+  which shows that this is not a second route to them, and the last
   coefficient’s second derivative is exactly zero at every order, it
   being the last partial autocorrelation.
 
@@ -3010,11 +3187,11 @@
   treats them, through the levels and constants the blueprint recorded.
 
 - [`term_converged()`](https://statmodels7.github.io/modelterms7/reference/term_converged.md)
-  asks whether a term’s own iteration has settled, which a score cannot
-  always answer. Where the block is the Jacobian of the contribution the
-  gradient of the model’s objective is the model’s and its vanishing is
-  the test; where the block is a working linearization with a frozen
-  weight, as in
+  reports whether a term’s own iteration has settled, which a score
+  cannot always answer. Where the block is the Jacobian of the
+  contribution the gradient of the model’s objective is the model’s and
+  its vanishing is the test; where the block is a working linearization
+  with a frozen weight, as in
   [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
   and
   [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md),
@@ -3123,9 +3300,9 @@
 ## modelterms7 0.15.0
 
 - [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-  is what a term declares it wants penalized: a list of entries, each
-  naming a subset of the term’s own parameters and the penalty over
-  them. It generalizes
+  is what a term declares as penalized: a list of entries, each naming a
+  subset of the term’s own parameters and the penalty over them. It
+  generalizes
   [`term_penalty()`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md)
   in the two directions a model layer needs.
 
@@ -3152,7 +3329,7 @@
   over the whole of it. It is not the term’s name: two
   [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
   terms in one formula are two terms with their own hyperparameters, and
-  it is the caller that knows what it called each one.
+  it is the caller that records what it called each one.
 
 ## modelterms7 0.14.0
 
@@ -3198,7 +3375,7 @@
   2, over T from 1e3 to 1e5, agreeing to 1.8e-15. End to end the term
   costs 2.04 microseconds per observation at k = 3, against 40 before.
 - term_loglik()’s closures are called with the whole index vector. A
-  closure returning one value where n were asked is rejected with a
+  closure returning one value where n were requested is rejected with a
   message saying so.
 
 ## modelterms7 0.11.1
@@ -3248,7 +3425,7 @@
   discontinuous one uses the identity of Fasola, Muggeo and Kuchenhoff
   (2018), which is linear in the break-point once the weight is frozen,
   so the break-point is read off two coefficients rather than searched
-  for. Both run under the existing term_refresh() contract, with by and
+  for. Both run under the existing term_refresh() interface, with by and
   an optional penalty on the changes. The working block is compiled
   (1.2x to 3.2x the R form over n from 1e3 to 1e6, agreeing to a
   rounding); the linear fit around it is BLAS in either language.
@@ -3271,14 +3448,14 @@
   step needs beside it. The function may be a formula, read symbolically
   where deriv() manages it and differenced where it does not, or an
   opaque function, always differenced. Links per parameter; covariate
-  submodels on the formula route, which is the only one that says where
+  submodels on the formula route, which is the only one that shows where
   a parameter enters.
 
 ## modelterms7 0.7.0
 
 - The score-driven recursion is compiled. The two callbacks into R
   remain, the score and the curvature belonging to the model’s
-  distribution, but the arithmetic around them was 73 to 83 per cent of
+  distribution, but the arithmetic around them was 73 to 83 percent of
   the loop’s time: measured 2.3x to 3.2x faster, and the R loop stays as
   the twin the kernel is compared against.
 

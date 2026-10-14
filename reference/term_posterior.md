@@ -30,11 +30,11 @@ term_posterior(term, eta, y, logdens, psi, ...)
   The log-density as a function of the predictor and the observation
   index, as
   [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
-  takes it.
+  takes it, returning one value per observation.
 
 - psi:
 
-  The term's parameters, named as
+  The term's parameters on the parameter scale, named as
   [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
 - ...:
@@ -50,27 +50,26 @@ one, giving \\P(S_t = k \mid y_1, \dots, y_n)\\.
 
 [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
 returns the derivative of the mixed likelihood in the term's own
-parameters, which is the piece estimating those needs. Estimating the
-coefficients needs something else, and for this term that something is
-not a second recursion carrying derivatives: it is one quantity, by
-Fisher's identity. Writing \\\gamma_t(k)\\ for the probability returned
-here and \\\theta_t(k)\\ for the parameters the model has at observation
-\\t\\ under regime \\k\\,
+parameters. The derivative in the coefficients of the model's equations
+is obtained from the smoothed probabilities, by Fisher's identity, and
+needs no second recursion carrying derivatives. Writing \\L\\ for the
+log-likelihood, \\\gamma_t(k)\\ for the probability returned here and
+\\\theta_t(k)\\ for the parameters of the model at observation \\t\\
+under regime \\k\\,
 
 \$\$\frac{\partial L}{\partial \eta\_{q,t}} = \sum_k \gamma_t(k)\\
 \frac{\partial \ell(y_t; \theta_t(k))}{\partial \eta_q},\$\$
 
 for every predictor the model carries, not only the one the regimes
-shift. A caller therefore differentiates its own likelihood \\K\\ times
-vectorized and weights the results, and needs no callback per
-observation: the regimes shift a predictor that is known before the
-recursion starts, which is the property that made the forward pass
-compilable and makes this cheap.
+shift. A caller therefore differentiates its own likelihood \\K\\ times,
+vectorized, and weights the results, with no callback per observation.
+This is possible because the regimes shift a predictor that is known
+before the recursion starts.
 
-The probabilities come from the forward pass this term already runs and
-a backward pass beside it, both normalized at every step. Without the
-normalization the quantities are products of \\t\\ densities and reach
-zero in double precision within a few hundred observations.
+The probabilities come from a forward pass and a backward pass beside
+it, both normalized at every step. Without the normalization the
+quantities are products of \\t\\ densities and reach zero in double
+precision on a long series.
 
 ## See also
 

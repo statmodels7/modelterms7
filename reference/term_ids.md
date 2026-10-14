@@ -1,9 +1,9 @@
 # Which of a Term's Hyperparameters Are Shared
 
-The sharing labels a term carries: a named character vector whose names
-are its own hyperparameters and whose values are the labels. The terms
-carrying the same label for the same hyperparameter estimate **one**
-value.
+The sharing labels a term carries. Each element of the answer is a named
+character vector whose names are the hyperparameters of one penalty
+entry and whose values are the labels. The terms carrying the same label
+for the same hyperparameter estimate **one** value.
 
 ## Usage
 
@@ -19,7 +19,7 @@ term_ids(term, ...)
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 
@@ -29,37 +29,39 @@ nothing.
 
 ## What sharing is, and what it is not
 
-It does not merge the penalties. They stay two objects with the same
-number in them, so each keeps its own block, its own coefficients and
-its own effective degrees of freedom; what is shared is the value a
-criterion estimates. Two smooths with one label are one smoothing
+Sharing does not merge the penalties. They stay two objects with the
+same number in them, so each keeps its own block, its own coefficients
+and its own effective degrees of freedom; what is shared is the value
+that a criterion estimates. Two smooths with one label are one smoothing
 parameter over two curves, which is mgcv's `id`, and two lassos with one
 label are one threshold swept along one path.
 
-## Care
+## Comparability of the penalties
 
-Nothing checks whether two penalties are comparable, deliberately. A
-shared value multiplies each penalty as it is, so it means what one
-expects between penalties of the same shape over covariates of
-comparable scale, and something the caller had better intend otherwise.
-Two smooths of the same basis and dimension are the case it is for.
+The comparability of two penalties is not checked, deliberately. A
+shared value multiplies each penalty as it is, so it has the usual
+meaning for penalties of the same shape over covariates of comparable
+scale, and the caller is responsible for the comparison in other cases.
+The intended case is two smooths of the same basis and dimension.
 
 ## Where it may be written
 
 On any term that carries a penalty, including one written inside a
 subformula: a
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
-developing its slope change, its level change and its break-point over
-three ridges may give the three one label and estimate one shrinkage for
-them.
+developing its slope change and its break-point over two ridges may give
+the two one label and estimate one shrinkage for them, and a
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+developing its slope change and its level change may do the same.
 
-The shape is
-[`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md)'s,
-one entry of the answer per entry of
-[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
-so the two reporters read alike: a built term answers from its entries,
-which is what lets a structural term report what its subformulas' terms
-share without a method of its own, and an unbuilt one answers from its
+The shape is that of
+[`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md):
+one element of the answer for each entry of
+[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+that shares anything, keyed by the name of the entry, so the two
+functions read alike. A built term answers from its entries, which
+allows a structural term to report what the terms of its subformulas
+share without a method of its own, and an unbuilt term answers from its
 own property.
 
 ## See also

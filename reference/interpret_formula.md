@@ -10,8 +10,13 @@ single
 [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
 block with the usual
 [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)
-conventions. The terms come back unbuilt, so the caller decides which
-data each is built against.
+conventions. An [`offset()`](https://rdrr.io/r/stats/offset.html) term
+is not among the labels that
+[`stats::terms()`](https://rdrr.io/r/stats/terms.html) returns, so it is
+dropped without a message;
+[`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
+separates offsets before calling this function. The terms come back
+unbuilt, so the caller decides which data each is built against.
 
 ## Usage
 
@@ -23,15 +28,15 @@ interpret_formula(formula, data, linpar = list())
 
 - formula:
 
-  A two-sided or one-sided model formula. Anything else throws
-  `"'formula' must be a formula."`. Its environment is where a term
-  call's symbols are looked up when `data` does not carry them, and it
-  is carried onto the formula of the implicit `linpar` block.
+  A two-sided or one-sided model formula. Anything else signals the
+  error `"'formula' must be a formula."`. Its environment is where a
+  term call's symbols are looked up when `data` does not carry them, and
+  it is carried onto the formula of the implicit `linpar` block.
 
 - data:
 
   A data frame in which the formula's symbols are evaluated. Anything
-  else throws `"'data' must be a data frame."`.
+  else signals the error `"'data' must be a data frame."`.
 
 - linpar:
 
@@ -44,11 +49,11 @@ interpret_formula(formula, data, linpar = list())
   own defaults. A
   [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
   term the caller writes out takes its own arguments and ignores this
-  one. Anything that is not a list throws.
+  one. Anything that is not a list signals an error.
 
 ## Value
 
-A list of four elements:
+A list with the elements:
 
 - `response`:
 
@@ -62,7 +67,7 @@ A list of four elements:
   block comes first under the name `"linpar"` and is absent when the
   formula has no bare covariates and no intercept. Every other name is
   the term's label as it appears in the formula, deparsed, such as
-  `"s(x2, bspline_smooth(k = 5))"`.
+  `"s(x2, basis7::bspline_smooth(k = 5))"`.
 
 - `intercept`:
 
@@ -75,10 +80,13 @@ A list of four elements:
 ## Recognition by evaluation
 
 A term constructor is identified by what its call returns, so a term
-class defined outside the package works in a formula the day it is
-written, with no list of special names to amend. `log(x)` evaluates to a
-numeric vector and stays a covariate; `s(x, bspline_smooth(k = 5))`
-evaluates to a `SmoothTerm` and is routed as a term.
+class defined outside the package works in a formula without a list of
+special names to amend. `log(x)` evaluates to a numeric vector and stays
+a covariate; `s(x, basis7::bspline_smooth(k = 5))` evaluates to a
+`SmoothTerm` and is routed as a term. A call whose evaluation signals an
+error, such as a term constructor called with an argument it does not
+have, signals the error `"evaluating '<label>' failed: <message>"`, so
+the call is not treated as a covariate.
 
 Some labels are never evaluated: `:`, `*`, `^`, `%in%`, `+`, `-`, `(`
 and `I`. A bare interaction `x1:x2` parses as a call to `:`, which on
@@ -88,14 +96,14 @@ unrelated to the column
 builds. Those labels go straight to the parametric block.
 
 A call whose value is neither a term nor something a model matrix can
-hold throws, naming the label and the class it produced. The commonest
-way to arrive there is a masked name. `mgcv` also exports
+hold signals an error that names the label and the class of the value.
+The commonest cause is a masked name. The package `mgcv` also exports
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
-[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md) and
+[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md), and
 `segmented` exports
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
-so where the package exports a term of that name and the name resolves
-elsewhere, the message says where it was found and suggests
+so where this package exports a term of that name and the name resolves
+elsewhere, the message states where the function was found and suggests
 `modelterms7::`.
 
 ## The response and the intercept
@@ -123,10 +131,14 @@ A [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
 or
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
 term built with `linear = TRUE`, which is the default, contributes the
-same column the bare covariate would, so `y ~ x + seg(x)` is rank
-deficient by one. The term owns that effect, so the covariate is dropped
-from the parametric block and a warning names both. Writing
-`seg(x, linear = FALSE)` keeps the linear effect outside the term.
+same column as the bare covariate, so `y ~ x + seg(x)` is rank deficient
+by one. The term carries that effect, so the covariate is dropped from
+the parametric block and a warning names both. The same holds for a
+marginal
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md) or
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+built with `marginal = TRUE`. Writing `seg(x, linear = FALSE)` keeps the
+linear effect outside the term.
 
 Only the bare main effect is removed, matched on the deparsed
 expression: an interaction spans no main effect and is left alone. A
@@ -134,7 +146,7 @@ term that spans the same direction without being that one column is
 reported by a warning and left unmodified. A spline basis is the case:
 it contains the line, and its penalty leaves the line unpenalized, so
 `s(x) + seg(x)` is confounded too. There is no single column to remove
-there, and reshaping another term is not this function's business.
+there, and this function does not modify another term.
 
 ## What it does not do
 
@@ -173,7 +185,7 @@ names(out$terms)
 #> [1] "linpar"
 out$terms$linpar@formula
 #> ~x1 + log(x2)
-#> <environment: 0x56120aaefc40>
+#> <environment: 0x56070cdf8080>
 
 # A constructor call becomes a term, keyed by its label in the formula.
 out2 <- interpret_formula(y ~ x1 + s(x2, basis7::bspline_smooth(k = 5)) + ridge(~ g), dd)
@@ -208,19 +220,19 @@ term_coef_names(term_build(li$terms[["linpar(~x1 + g)"]], dd))
 # An interaction is a covariate: `:` is never evaluated.
 interpret_formula(y ~ x1:x2 + g, dd)$terms$linpar@formula
 #> ~g + x1:x2
-#> <environment: 0x56120aaefc40>
+#> <environment: 0x56070cdf8080>
 
 # seg() carries the linear effect, so the bare covariate is removed.
 w <- interpret_formula(y ~ x1 + seg(x1), dd)
 #> Warning: the covariate 'x1' is exactly collinear with the linear effect that 'seg' carries, and has been removed from the parametric part. Write seg(x1, linear = FALSE) to keep the linear effect outside the term instead.
 w$terms$linpar@formula          # x1 is gone; the term carries it
 #> ~1
-#> <environment: 0x56120aaefc40>
+#> <environment: 0x56070cdf8080>
 
 # Unless the term is told not to own it.
 interpret_formula(y ~ x1 + seg(x1, linear = FALSE), dd)$terms$linpar@formula
 #> ~x1
-#> <environment: 0x56120aaefc40>
+#> <environment: 0x56070cdf8080>
 
 # Arguments for the implicit block go through `linpar`.
 sp <- interpret_formula(y ~ g, dd, linpar = list(sparse = TRUE))
@@ -229,7 +241,7 @@ class(term_matrix(term_build(sp$terms$linpar, dd)))
 #> attr(,"package")
 #> [1] "Matrix"
 
-# A call that returns neither a term nor a covariate is refused by name.
+# A call that returns neither a term nor a covariate is rejected by name.
 e <- new.env(parent = globalenv())
 assign("s", function(x, ...) structure(list(), class = "gamObject"), envir = e)
 f <- y ~ s(x1)

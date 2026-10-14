@@ -34,9 +34,9 @@ wrote out.
 
 Several values are neither a held hyperparameter nor a request to build
 a grid: they are the grid. Each is checked against the penalty's bounds
-as a held value would be. Nothing else is applied to them: the value
+as a held value would be. No other rule is applied to them: the value
 that empties the block does not cap them and the depth of the path does
-not reach them, the caller having said which values to visit.
+not apply to them, since the values to visit are given.
 
 They are sorted, because a path is walked from the emptiest fit towards
 the fullest and its warm starts follow that order, and duplicates are

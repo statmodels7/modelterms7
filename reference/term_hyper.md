@@ -1,9 +1,9 @@
 # The Hyperparameters a Term Holds
 
 Reports the hyperparameter values the caller fixed in the constructor,
-one entry per penalty the term carries. A hyperparameter left `NULL` is
-**estimated** by whatever criterion the fit runs and does not appear
-here, so an empty result means every one of them is free.
+one entry per penalty the term carries. A hyperparameter left `NULL`, or
+written out as a grid, is **estimated** by the fit and does not appear
+here, so an empty result means that the term holds none.
 
 ## Usage
 
@@ -19,7 +19,7 @@ term_hyper(term, ...)
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 
@@ -30,28 +30,48 @@ penalty's own hyperparameter names. Empty where the term holds nothing.
 
 ## The three states of one argument
 
-A constructor's hyperparameter argument carries three meanings, read per
-hyperparameter at a time. `NULL`, the default, has the path build a grid
-or a marginal criterion estimate the value at the mode. **One number**
-holds it, and that is what this reports. **Several numbers** are a grid
-the path visits as they stand, which
+A constructor's hyperparameter argument carries three meanings, read for
+one hyperparameter at a time. `NULL` leaves the hyperparameter to be
+estimated: a path builds a grid for a penalty with a kink, and a
+marginal criterion estimates the value at the mode for a smooth one.
+`NULL` is the default for `lambda` and `alpha`, whereas the shape of
+[`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md)
+and
+[`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
+defaults to a held number, and `NULL` there has the shape estimated.
+**One number** holds the hyperparameter, and that is what this function
+reports. **Several numbers** are a grid that the path visits as they
+stand, which
 [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md)
-reports; the hyperparameter is still estimated there, the caller having
-said where to look, leaving the answer to the fit.
+reports; the hyperparameter is still estimated, the values to search
+being given and the estimate being left to the fit.
 
 ## How the entries are keyed
 
 The names are the ones
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 gives its entries: `""` for a penalty covering the whole term, and
-`parameter::label` for one a subformula brought in. A term whose
-penalties come from sub-terms, which is what a structural term with
-subformulas is, propagates their held values without a method of its
+`parameter::label` for a penalty brought in by a subformula. A term
+whose penalties come from sub-terms, such as
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) or
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+with subformulas, propagates their held values without a method of its
 own, every entry of that enumeration carrying its own in the field
 `fixed`.
 
-A built term answers from those entries and an unbuilt one from its own
-`hyper` property, so the answer is the same before and after a build.
+A built term reports those entries, and an unbuilt term reports its own
+`hyper` property with the names as written. The two answers are the same
+for the penalized terms, and for
+[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
+[`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
+where the names are not qualified. A qualified name, such as `lambda.a`
+for the level `a` of a factor, is reported as written before the build
+and under its entry after it. For a term whose held values sit in
+subformulas, such as
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) and
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+the sub-terms exist only after the build, so an unbuilt term reports an
+empty list.
 
 ## See also
 
@@ -93,12 +113,24 @@ term_hyper(enet(~ x, alpha = 0.5))
 #> 
 #> 
 
-# A held value on a sub-term is reported under that entry's name.
+# The shape of SCAD is held by default; NULL has it estimated.
+term_hyper(scad(~ x))
+#> [[1]]
+#> [[1]]$a
+#> [1] 3.7
+#> 
+#> 
+term_hyper(scad(~ x, a = NULL))
+#> list()
+
+# A held value on a sub-term is reported under that entry's name once the
+# term is built.
 set.seed(4)
 d <- data.frame(x = runif(40, 0, 5), g = factor(rep(1:4, 10)))
-nb <- term_build(nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g, lambda = 2),
-                    r ~ 1), d)
-term_hyper(nb)
+nu <- nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g, lambda = 2), r ~ 1)
+term_hyper(nu)
+#> list()
+term_hyper(term_build(nu, d))
 #> $`a::lasso(~g, lambda = 2)`
 #> $`a::lasso(~g, lambda = 2)`$lambda
 #> [1] 2

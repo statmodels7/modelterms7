@@ -1,8 +1,10 @@
-# The Grid a Term Asks For
+# The Grid Sizes of a Term
 
-Reports how many values a path visits for each of the term's
-hyperparameters, one entry per penalty. A hyperparameter the term names
-nothing for is swept at the fitting layer's own default.
+Reports the number of values that a path visits for each hyperparameter
+of the term that is swept, one entry per penalty. A hyperparameter that
+the term holds has no grid and is not reported. A swept hyperparameter
+for which the term records no size is covered at the default size of the
+fitting layer.
 
 ## Usage
 
@@ -18,38 +20,48 @@ term_grid(term, ...)
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 
 A named list, one entry per penalty of the term, each a named list of
-single whole numbers keyed by hyperparameter. Empty where the term names
-no grid at all.
+single whole numbers keyed by hyperparameter. Empty where no
+hyperparameter of the term has a recorded grid size.
 
 ## Details
 
 How finely a hyperparameter is swept belongs to the term because the
 term is where the penalty is named: a block of four columns and one of
-four hundred want different grids, and an outer criterion, which is put
-to every hyperparameter of the model, does not know which it is looking
-at.
+four hundred want different grids, and an outer criterion applies to
+every hyperparameter of the model alike, so a size set there could not
+distinguish between them.
 
-Only a hyperparameter with a **path** has a grid.
+Only a hyperparameter with a **path** has a grid, and a held
+hyperparameter has none.
 [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
-[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md),
-[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md) and
+[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
+[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md) with
+their default penalty, and
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
-report nothing, their hyperparameters being estimated at the mode by a
-marginal criterion;
+with its default Gaussian prior, report nothing, their hyperparameters
+being estimated at the mode by a marginal criterion. A smoother whose
+penalty factory has a kink is swept by a path but reports nothing
+either, and the path uses its default size.
 [`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md)
-reports its `n_lambda`, and
-[`enet()`](https://statmodels7.github.io/modelterms7/reference/enet.md),
+reports its `n_lambda`,
+[`enet()`](https://statmodels7.github.io/modelterms7/reference/enet.md)
+reports `n_lambda` and `n_alpha`, and
 [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md)
 and
 [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
-report both of theirs. Those constructors write their defaults into the
-term, so `lasso(~ x)` reports `lambda = 25` where an unset argument
-would give an empty list.
+report `n_lambda` together with `n_a` or `n_gamma` where the shape is
+estimated, since the shape is held by default. These constructors write
+their sizes into the term, so `lasso(~ x)` reports `lambda = 25` where
+an unset argument would give an empty list. A hyperparameter written out
+as a vector has no grid to build and is not reported here; the path
+visits the written-out values, which
+[`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md)
+reports.
 
 The keys are
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)'s
@@ -81,13 +93,36 @@ term_grid(lasso(~ x, n_lambda = 50))
 #> 
 #> 
 
-# Two axes, and their two sizes: the kink axis is swept far more finely.
+# Two axes, and their two sizes: the kink axis is swept more finely.
 term_grid(enet(~ x))
 #> [[1]]
 #> [[1]]$lambda
 #> [1] 25
 #> 
 #> [[1]]$alpha
+#> [1] 5
+#> 
+#> 
+
+# A held hyperparameter has no grid, and neither has the held shape of SCAD.
+term_grid(enet(~ x, alpha = 0.5))
+#> [[1]]
+#> [[1]]$lambda
+#> [1] 25
+#> 
+#> 
+term_grid(scad(~ x))
+#> [[1]]
+#> [[1]]$lambda
+#> [1] 25
+#> 
+#> 
+term_grid(scad(~ x, a = NULL))
+#> [[1]]
+#> [[1]]$lambda
+#> [1] 25
+#> 
+#> [[1]]$a
 #> [1] 5
 #> 
 #> 

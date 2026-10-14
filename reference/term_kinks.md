@@ -1,11 +1,11 @@
 # Where a Term's Objective Has a Kink
 
 The positions, among the term's own coefficients, of those in which the
-model's objective is not differentiable at the coefficients given. A
-fitting layer reads it where a line search rejects every step along a
-Newton or Gauss-Newton direction: holding those coordinates at their
-values and solving for the rest is the step at a kink, the same thing
-holding a coordinate at a bound is at a boundary.
+term's contribution to the objective is not differentiable at the
+coefficients given. A fitting layer reads them where a line search
+rejects every step along a Newton or Gauss-Newton direction: holding
+those coordinates at their values and solving for the rest is the step
+at a kink, as holding a coordinate at a bound is the step at a boundary.
 
 ## Usage
 
@@ -25,7 +25,7 @@ term_kinks(term, coef = NULL, ...)
 
 - ...:
 
-  Passed to methods.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 
@@ -35,17 +35,29 @@ empty.
 ## Details
 
 A term whose contribution is a smooth function of its coefficients has
-no kink, and that is the base method's answer. The one shipped term that
-answers otherwise is the continuous break-point construction,
+no kink, and that is the base method's answer. Two shipped terms answer
+otherwise: the continuous break-point construction,
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
 whose truncated line \\(x-\psi)\_+\\ is not differentiable in \\\psi\\
-at an observation. Measured on `seg(x, psi ~ random(~1 | id))`, the
-penalized mode puts one group's break-point exactly on an observation,
-the one-sided slopes there being \\+6.0\\ and \\-1.6\\, and a scoring
-step on all the coefficients is rejected at every length: the other
-groups' deviations then stay where they were, with scores up to \\1.6\\,
-and the objective 0.010 above the mode. Holding the two coordinates that
-move that break-point reaches the mode in four iterations.
+at an observation, and
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md),
+which reports the kinks of a
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+sub-term that develops one of its parameters. A smoothed
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+and the discontinuous
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+and
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+answer `integer(0)`. The kinks of a penalty are not reported here;
+[`term_smooth()`](https://statmodels7.github.io/modelterms7/reference/term_smooth.md)
+reports them.
+
+In a penalized fit of `seg(x, psi ~ random(~ 1 | id))`, the mode can put
+one group's break-point exactly on an observation, where the one-sided
+slopes differ. A scoring step on all the coefficients can then be
+rejected at every length. Holding the coordinates that move that
+break-point and solving for the rest gives a step that reaches the mode.
 
 ## See also
 

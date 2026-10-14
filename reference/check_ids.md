@@ -29,28 +29,29 @@ check_ids(x, names, what = "this term")
 
 ## Value
 
-A named character vector, possibly empty.
+A character vector, possibly empty, named by the hyperparameters. In the
+deferred case (`names = NULL`) a single unnamed string is returned
+unnamed, to be named by the second call.
 
 ## Details
 
-Two forms are accepted and they say the same thing. An unnamed single
+Two forms are accepted and both have the same meaning. An unnamed single
 string shares **the** hyperparameter, and is legal only where the
 penalty carries one: it is the short form for the frequent case, a
 smooth or a ridge. A named vector names which, `c(alpha = "A")`, and is
 what a penalty carrying several needs, since sharing the mixing of an
-elastic net while leaving its strength free is a model and guessing
-which was meant is not.
+elastic net while leaving its strength free is a different model from
+the reverse, and the code does not guess which one was meant.
 
-The short form on a penalty carrying several is an error listing them,
-rather than a rule about position. The names are checked against the
-penalty's own, so a misspelling is reported where it was written.
+The short form on a penalty carrying several hyperparameters is an error
+that lists them. The names are checked against the penalty's own, so a
+misspelling is reported where it was written.
 
-Sharing does not merge the penalties. They stay two objects estimated at
-one value, so nothing here asks whether they are comparable: the two may
-weigh quite different matrices, and whether that is the model wanted is
-the caller's to know. What the documentation says instead is that `id`
-is worth care, and that it means what one expects between penalties of
-the same shape over covariates of comparable scale.
+Sharing does not merge the penalties. They remain two objects estimated
+at one value, and no check is made that they are comparable: the two may
+weigh quite different matrices, and the caller decides whether that is
+the model intended. A shared value is most meaningful between penalties
+of the same shape over covariates of comparable scale.
 
 ## See also
 

@@ -25,7 +25,7 @@ written, with nothing to register."><meta property="og:image" content="https://s
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -84,13 +84,13 @@ written, with nothing to register.</p>
 <dl><dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
 <dd><p>A character string prefixed to the term's coefficient names
 when non-empty, and used as the title of <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> and the tag of
-<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>. <code>character(0)</code> and <code>""</code> both mean no label.</p></dd>
+<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>. The empty string <code>""</code> means no label.</p></dd>
 
 
 <dt id="arg-hyper">hyper<a class="anchor" aria-label="anchor" href="#arg-hyper"></a></dt>
-<dd><p>The hyperparameters of the term's penalty the caller <strong>held</strong>,
-as a named list keyed by the penalty's names. Empty, the default, means
-every one of them is estimated. See <code><a href="term_hyper.html">term_hyper()</a></code>.</p></dd>
+<dd><p>The hyperparameters of the term's penalty that the caller
+<strong>held</strong>, as a named list keyed by the penalty's names. Empty, the
+default, means every one of them is estimated. See <code><a href="term_hyper.html">term_hyper()</a></code>.</p></dd>
 
 
 <dt id="arg-grid">grid<a class="anchor" aria-label="anchor" href="#arg-grid"></a></dt>
@@ -129,25 +129,24 @@ See <code><a href="term_ids.html">term_ids()</a></code>.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Nothing: the class is abstract and cannot be instantiated. As a type
-it is the parent of every term, with the seven properties above.</p>
+it is the parent of every term, with the properties above.</p>
     </div>
     <div class="section level2">
     <h2 id="the-two-branches">The two branches<a class="anchor" aria-label="anchor" href="#the-two-branches"></a></h2>
     <p><code><a href="additive_term.html">additive_term()</a></code> contributes a block of design columns \(X_j\beta_j\) to
 a linear predictor. <code><a href="structural_term.html">structural_term()</a></code> rewrites the likelihood instead:
 <code><a href="gas.html">gas()</a></code>'s predictor is a recursion, <code><a href="regime.html">regime()</a></code>'s contribution is a
-likelihood mixed over latent states. The branch decides which generics a
+likelihood mixed over latent states. The branch determines which generics a
 consumer may call, so <code><a href="https://statmodels7.github.io/statmodels7/reference/statmod.html" class="external-link">statmodels7::statmod()</a></code> routes on it.</p>
     </div>
     <div class="section level2">
-    <h2 id="what-the-root-carries-and-why">What the root carries, and why<a class="anchor" aria-label="anchor" href="#what-the-root-carries-and-why"></a></h2>
-    <p>Beyond <code>label</code> the properties are all about a hyperparameter path.
-<strong>Which hyperparameters are estimated is said by the term and by nothing
-else</strong>: the term is where the penalty is named, so it is where a held value,
-a grid size, a written-out set of values, the depth of the path and the way
-several hyperparameters are combined all belong. An outer criterion is put
-to every hyperparameter of a model, smooth ones included, and carries none
-of this.</p>
+    <h2 id="the-properties-of-the-root">The properties of the root<a class="anchor" aria-label="anchor" href="#the-properties-of-the-root"></a></h2>
+    <p>Beyond <code>label</code> the properties all describe a hyperparameter path. The term
+alone determines which hyperparameters are estimated: the term is where the
+penalty is named, so a held value, a grid size, a written-out set of values,
+the depth of the path and the way several hyperparameters are combined all
+belong to it. An outer criterion applies to every hyperparameter of a model,
+smooth ones included, and records none of this.</p>
 <p>Each of <code>hyper</code>, <code>grid</code> and <code>values</code> is a named list keyed by the penalty's
 own hyperparameter names, and each is empty by default. <code>min_ratio</code> and
 <code>search</code> are single values rather than one per hyperparameter, because only
@@ -156,16 +155,16 @@ swept over its own interval and a shape over a geometric grid above its
 lower bound.</p>
     </div>
     <div class="section level2">
-    <h2 id="it-cannot-be-constructed">It cannot be constructed<a class="anchor" aria-label="anchor" href="#it-cannot-be-constructed"></a></h2>
+    <h2 id="abstract-classes">Abstract classes<a class="anchor" aria-label="anchor" href="#abstract-classes"></a></h2>
     <p><code>model_term</code> is abstract, as are <code>additive_term</code> and <code>structural_term</code>.
-<code>model_term()</code> throws
-<code>"Can't construct an object from abstract class &lt;model_term&gt;"</code>. Use it as a
-parent when writing a term class, and as the test
-<code>S7::S7_inherits(x, model_term)</code> when asking whether an object is a term.</p>
+Calling <code>model_term()</code> signals the error
+<code>"Can't construct an object from abstract class &lt;model_term&gt;"</code>. The class
+serves as a parent when writing a term class, and as the test
+<code>S7::S7_inherits(x, model_term)</code> when testing whether an object is a term.</p>
 <p>A class inheriting from it supplies <code><a href="term_build.html">term_build()</a></code> at the very least: the
-method registered here throws, naming the class that did not implement it.
-Most other generics carry a usable default, so a new term class starts from
-a working object and overrides what it has reason to.</p>
+method registered here signals an error that names the class that did not
+implement it. Most other generics have a usable default, so a new term class
+starts from a working object and overrides what it has reason to.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

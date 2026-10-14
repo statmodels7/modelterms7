@@ -2,10 +2,10 @@
 
 ## The classes and the generics
 
-The contract a term implements: how it builds a block from data, how it
-reproduces that block on new rows, what it carries in the way of
-coefficients, hyperparameters and penalties, and the two shapes a
-structural term takes instead.
+The two branches of the class tree and the generics that a term
+implements: building a block from data, reproducing that block on new
+rows, and reporting coefficients, hyperparameters and penalties. A
+structural term implements a filter or a likelihood instead of a block.
 
 - [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)
   : S7 Base Class for Model Terms
@@ -28,7 +28,7 @@ structural term takes instead.
 - [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md)
   : The Hyperparameters a Term Holds
 - [`term_grid()`](https://statmodels7.github.io/modelterms7/reference/term_grid.md)
-  : The Grid a Term Asks For
+  : The Grid Sizes of a Term
 - [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md)
   : The Hyperparameter Values a Term Writes Out
 - [`term_path_min()`](https://statmodels7.github.io/modelterms7/reference/term_path_min.md)
@@ -48,7 +48,7 @@ structural term takes instead.
 - [`term_kinks()`](https://statmodels7.github.io/modelterms7/reference/term_kinks.md)
   : Where a Term's Objective Has a Kink
 - [`term_held()`](https://statmodels7.github.io/modelterms7/reference/term_held.md)
-  : The Coefficients a Term Holds
+  : Coefficients Held by a Term
 - [`term_tag()`](https://statmodels7.github.io/modelterms7/reference/term_tag.md)
   : The Covariance Label of a Term
 - [`term_group()`](https://statmodels7.github.io/modelterms7/reference/term_group.md)
@@ -96,7 +96,7 @@ column of the data.
 ## The random-effect term
 
 Grouped intercepts and slopes, with the effects’ distribution attached
-as the penalty. That is what a random effect is under penalized
+as the penalty, which is how a random effect enters a penalized
 likelihood.
 
 - [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
@@ -106,9 +106,9 @@ likelihood.
 
 ## Smooth terms
 
-The penalized smooths of one and of several covariates, built on basis7:
-a Demmler-Reinsch reparametrization for one variable and a tensor
-product, anisotropic by default, for more.
+The penalized smooths of one and of several covariates, built on the
+smoothers of basis7: s() for one covariate and te() for a tensor
+product, anisotropic by default.
 
 - [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) :
   Penalized Smooth of One Covariate
@@ -146,14 +146,15 @@ Gauss-Newton step.
 
 ## Break-point terms
 
-The break-points at which an effect changes slope, level or both, each
-written as a working linear model in the break-point position, with the
-grid rule that chooses where to start.
+The break-points at which an effect changes slope, level or both. The
+sharp constructions are estimated through a working linear model in the
+break-point position, a smoothed construction treats each break-point as
+an ordinary parameter, and the grid rule chooses where to start.
 
 - [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
   : Segmented Term: a Broken Line with Estimated Break-Points
 - [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
-  : Stepmented Term: a Level that Changes at Estimated Break-Points
+  : Step Term: a Level that Changes at Estimated Break-Points
 - [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
   : Segmented-with-Jump Term: Slope and Level Both Changing
 - [`SegTerm()`](https://statmodels7.github.io/modelterms7/reference/SegTerm.md)
@@ -183,8 +184,9 @@ grid rule that chooses where to start.
 ## Structural terms
 
 Terms that rewrite the likelihood instead of adding to the predictor:
-score-driven dynamics and a latent Markov chain, both propagating their
-exact derivative beside the state.
+score-driven dynamics, a latent Markov chain and break-points integrated
+out of the likelihood, each carrying its exact derivatives through its
+recursion.
 
 - [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
   : Score-Driven Dynamics
@@ -201,7 +203,7 @@ exact derivative beside the state.
 - [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
   : Links of a Structural Term's Parameters
 - [`term_charted()`](https://statmodels7.github.io/modelterms7/reference/term_charted.md)
-  : The Coordinates of a Term That Ride a Chart With an Edge
+  : Charted Coordinates of a Term
 - [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
   : Where a Term's Own Parameters Start
 - [`term_starts()`](https://statmodels7.github.io/modelterms7/reference/term_starts.md)
@@ -244,17 +246,18 @@ exact derivative beside the state.
 
 ## The formula layer
 
-Reading a model formula into terms, by what each call evaluates to and
-never by its name, so a term class defined outside the package needs no
-registration.
+Reading a model formula into terms. A call is a term when its value
+inherits from model_term, whatever the name of the function, so a term
+class defined outside the package needs no registration.
 
 - [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
   : Interpret a Model Formula Into Terms
 
 ## The response
 
-Marking a censored response on the left side of a formula, the status of
-each observation derived from the values given.
+Marking a censored response on the left side of a formula, with the
+status of each observation derived from the values given.
+statmodels7::statmod() rejects a censored response.
 
 - [`cens()`](https://statmodels7.github.io/modelterms7/reference/cens.md)
   : Mark a Response as Censored
@@ -263,16 +266,19 @@ each observation derived from the values given.
 
 ## Fitted views
 
-What a fitted term reports: effective degrees of freedom counted per
-penalty, the printed summary, and the plot at supplied coefficients.
+The effective degrees of freedom of a term, computed from the
+coefficients, the curvature and the hyperparameters of a fit: one for
+each unpenalized parameter, a count of the nonzero coefficients under a
+kinked penalty, and one trace over the remaining parameters.
 
 - [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
   : Effective Degrees of Freedom of a Term
 
 ## Validation
 
-The structural checks a term must pass against a data frame, including
-the one a term that rebuilds instead of reapplying its blueprint fails.
+The structural checks of an additive term against a data frame, among
+them the subset check that a term fails when it rebuilds its block
+instead of reapplying its blueprint.
 
 - [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
   : Structural Checks on a Model Term

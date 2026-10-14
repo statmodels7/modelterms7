@@ -21,7 +21,10 @@ term_start(term, ...)
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The methods for
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  and for a marginal break-point term read `target` here, the response
+  on the scale of the predictor.
 
 ## Value
 
@@ -32,22 +35,28 @@ and named as
 
 ## Details
 
-The start belongs to the term because only the term knows what a
-coordinate of zero means on each of its charts. The base method returns
-zero everywhere, which is each link's own natural point, and that is
-right wherever zero means "the model without this term".
+The start is supplied by the term because the meaning of a coordinate of
+zero depends on the chart that the term uses for each parameter. The
+base method returns zero everywhere, which is each link's own natural
+point, and that is appropriate wherever zero means "the model without
+this term".
 
-It does not always.
+Zero does not always have that meaning.
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
-overrides it: its score loadings ride a log chart, so a coordinate of
-zero is a loading of **one**, which is a strongly driven filter and a
-poor place to begin. It starts them at 0.1 through the chart, \\\log 0.1
-= -2.303\\, and leaves every other coordinate at zero.
+overrides the base method: its score loadings ride a log chart, so a
+coordinate of zero is a loading of **one**, which is a strongly driven
+filter and a poor place to begin. The method places each loading at 0.1
+through the chart, \\\log 0.1 = -2.303\\, and leaves every other
+coordinate at zero. When a loading is developed by a subformula, the
+constant start is projected onto the design of the development.
 
-A term that needs the data to place its start, as a marginal break-point
-term does, computes it at
-[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-and returns it from here.
+A term that needs the response to place its start reads it from
+`target`, which reaches the method through the dots.
+[`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+places its levels at quantiles of `target`, and a marginal break-point
+term computes the profile of its break-points from `target` and
+otherwise uses quantiles of the covariate. Both are computed when the
+generic is called.
 
 ## See also
 

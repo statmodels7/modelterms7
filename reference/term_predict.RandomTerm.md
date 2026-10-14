@@ -3,7 +3,7 @@
 Rebuilds the within-group design at `newdata` and interacts it with the
 group indicators **of the levels recorded at build time**, so the block
 has the same columns in the same order however few levels the new rows
-happen to use. A level the term never saw is refused.
+happen to use. By default, a level that the term never saw is rejected.
 
 ## Arguments
 
@@ -11,7 +11,7 @@ happen to use. A level the term never saw is refused.
 
   A built
   [`RandomTerm()`](https://statmodels7.github.io/modelterms7/reference/RandomTerm.md).
-  An unbuilt one throws
+  An unbuilt one signals the error
   `"the term has not been built; call term_build(term, data) first."`.
 
 - newdata:
@@ -22,11 +22,11 @@ happen to use. A level the term never saw is refused.
 
 - unseen:
 
-  What a row of a level the term never saw gets: `"error"` (the default)
-  signals the error described above, `"zero"` gives it a row of zeros,
-  which is the prediction with that group's effect at zero. It is what
-  `statmodels7`'s `predict(random = "zero")` and
-  `predict(random = "marginal")` ask for.
+  What a row of a level the term never saw, or of a missing grouping
+  value, gets: `"error"` (the default) signals the error described
+  above, and `"zero"` gives the row zeros, which is the prediction with
+  that group's effect at zero. It is the value that `statmodels7`'s
+  `predict(random = "zero")` and `predict(random = "marginal")` pass.
 
 - ...:
 
@@ -40,11 +40,11 @@ columns, with the term's coefficient names as column names.
 
 ## Details
 
-The refusal is the right answer rather than a limitation: a coefficient
-was never fitted for an unseen group, so there is nothing to predict
-with. The message names the level. Predicting a new group's response
-means predicting at the population value, which is the model without
-this term's contribution.
+No coefficient was fitted for an unseen group, so there is nothing to
+predict with. The message names the level. A missing grouping value is
+rejected in the same way. Predicting a new group's response means
+predicting at the population value, which is the model without this
+term's contribution.
 
 The block comes back sparse, as the fitted one is.
 
@@ -72,13 +72,13 @@ c(levels_here = nlevels(nd$g), cols = ncol(term_predict(b, nd)))
 all.equal(term_predict(b, dd), term_matrix(b))
 #> [1] TRUE
 
-# A level the fit never saw has no coefficient, so it is refused.
+# A level the fit never saw has no coefficient, so it is rejected.
 bad <- dd
 levels(bad$g) <- c("a", "b", "zz")
 try(term_predict(b, bad))
 #> Error : grouping level 'zz' was not present at build time.
 
-# Unless it is asked to give such a row no effect of its own.
+# With unseen = "zero", such a row gets no effect of its own.
 as.matrix(term_predict(b, bad, unseen = "zero"))[bad$g == "zz", ]
 #>      random.a random.b random.c
 #> [1,]        0        0        0

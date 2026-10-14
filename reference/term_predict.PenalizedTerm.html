@@ -15,7 +15,7 @@ rows and columns before it is returned."><meta property="og:image" content="http
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,7 +55,7 @@ rows and columns before it is returned.</p>
 
 
 <dl><dt id="arg-term">term<a class="anchor" aria-label="anchor" href="#arg-term"></a></dt>
-<dd><p>A built <code><a href="PenalizedTerm.html">PenalizedTerm()</a></code>. An unbuilt one throws
+<dd><p>A built <code><a href="PenalizedTerm.html">PenalizedTerm()</a></code>. An unbuilt one signals the error
 <code>"the term has not been built; call term_build(term, data) first."</code>.</p></dd>
 
 
@@ -79,14 +79,14 @@ and no row names.</p>
     <p>The matrix branch evaluates <code>blueprint$expr</code> with <code>newdata</code> as the data and
 <code><a href="https://rdrr.io/r/base/environment.html" class="external-link">baseenv()</a></code> as the enclosure, so the calling environment is not on the
 search path. A free-standing matrix therefore cannot be found, and the error
-names the expression and says to supply it as a column of the data. That is
-deliberate: resolving the name outside <code>newdata</code> would silently return the
-build-time rows whenever the row counts happened to agree, which is a wrong
-answer rather than an error.</p>
+names the expression and advises supplying it as a column of the data. That
+is deliberate: resolving the name outside <code>newdata</code> would return the
+build-time rows whenever the row counts agreed, and the result would then be
+wrong without any error.</p>
 <p>Two shape checks follow the evaluation, because an expression that resolves
 in <code>newdata</code> may still give the wrong block: a row count differing from
-<code>nrow(newdata)</code> and a column count differing from the build's each throw
-with both numbers.</p>
+<code>nrow(newdata)</code> and a column count differing from the build's each signal
+an error that reports both numbers.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

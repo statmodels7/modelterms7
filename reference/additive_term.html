@@ -3,14 +3,18 @@
 columns \(X_j \beta_j\) to the linear predictor of one distribution
 parameter. Everything a formula can write that is not a filter or a latent
 mixture is on this branch: linpar(), the five penalized terms, random(),
-s() and te(), nl() and the break-point terms.
+s() and te(), nl() and the break-point terms seg(), jump() and
+jseg(). With marginal = TRUE the break-point terms are structural
+terms instead.
 A built term on this branch carries four things beyond the root's
 properties: the block itself, the coefficient names, the blueprint that
 reproduces the block on new rows, and the penalty on its coefficients."><meta property="og:description" content="The branch of model_term() whose terms contribute a block of design
 columns \(X_j \beta_j\) to the linear predictor of one distribution
 parameter. Everything a formula can write that is not a filter or a latent
 mixture is on this branch: linpar(), the five penalized terms, random(),
-s() and te(), nl() and the break-point terms.
+s() and te(), nl() and the break-point terms seg(), jump() and
+jseg(). With marginal = TRUE the break-point terms are structural
+terms instead.
 A built term on this branch carries four things beyond the root's
 properties: the block itself, the coefficient names, the blueprint that
 reproduces the block on new rows, and the penalty on its coefficients."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
@@ -21,7 +25,7 @@ reproduces the block on new rows, and the penalty on its coefficients."><meta pr
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +56,9 @@ reproduces the block on new rows, and the penalty on its coefficients."><meta pr
 columns \(X_j \beta_j\) to the linear predictor of one distribution
 parameter. Everything a formula can write that is not a filter or a latent
 mixture is on this branch: <code><a href="linpar.html">linpar()</a></code>, the five penalized terms, <code><a href="random.html">random()</a></code>,
-<code><a href="s.html">s()</a></code> and <code><a href="te.html">te()</a></code>, <code><a href="nl.html">nl()</a></code> and the break-point terms.</p>
+<code><a href="s.html">s()</a></code> and <code><a href="te.html">te()</a></code>, <code><a href="nl.html">nl()</a></code> and the break-point terms <code><a href="seg.html">seg()</a></code>, <code><a href="jump.html">jump()</a></code> and
+<code><a href="jseg.html">jseg()</a></code>. With <code>marginal = TRUE</code> the break-point terms are structural
+terms instead.</p>
 <p>A built term on this branch carries four things beyond the root's
 properties: the block itself, the coefficient names, the blueprint that
 reproduces the block on new rows, and the penalty on its coefficients.</p>
@@ -82,13 +88,13 @@ reproduces the block on new rows, and the penalty on its coefficients.</p>
 <dl><dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
 <dd><p>A character string prefixed to the term's coefficient names
 when non-empty, and used as the title of <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> and the tag of
-<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>. <code>character(0)</code> and <code>""</code> both mean no label.</p></dd>
+<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>. The empty string <code>""</code> means no label.</p></dd>
 
 
 <dt id="arg-hyper">hyper<a class="anchor" aria-label="anchor" href="#arg-hyper"></a></dt>
-<dd><p>The hyperparameters of the term's penalty the caller <strong>held</strong>,
-as a named list keyed by the penalty's names. Empty, the default, means
-every one of them is estimated. See <code><a href="term_hyper.html">term_hyper()</a></code>.</p></dd>
+<dd><p>The hyperparameters of the term's penalty that the caller
+<strong>held</strong>, as a named list keyed by the penalty's names. Empty, the
+default, means every one of them is estimated. See <code><a href="term_hyper.html">term_hyper()</a></code>.</p></dd>
 
 
 <dt id="arg-grid">grid<a class="anchor" aria-label="anchor" href="#arg-grid"></a></dt>
@@ -148,55 +154,59 @@ term reads them. Empty until <code><a href="term_build.html">term_build()</a></c
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>Nothing: the class is abstract and cannot be instantiated.
-<code>additive_term()</code> throws. As a type it is the parent of every term that
-contributes design columns, carrying the four properties above beside
-<code><a href="model_term.html">model_term()</a></code>'s six.</p>
+Calling <code>additive_term()</code> signals an error. As a type it is the parent of
+every term that contributes design columns, carrying the four properties
+above beside those of <code><a href="model_term.html">model_term()</a></code>.</p>
     </div>
     <div class="section level2">
-    <h2 id="what-a-build-fills-and-what-stays-empty">What a build fills, and what stays empty<a class="anchor" aria-label="anchor" href="#what-a-build-fills-and-what-stays-empty"></a></h2>
+    <h2 id="the-build">The build<a class="anchor" aria-label="anchor" href="#the-build"></a></h2>
     <p>A specification has <code>X</code> empty and <code>blueprint</code> an empty list; <code><a href="term_build.html">term_build()</a></code>
-fills all four. The blueprint is the reason <code><a href="term_predict.html">term_predict()</a></code> can <strong>reapply</strong>
-the mapping instead of rebuilding it: the factor levels, the contrasts, the
-knots a basis was placed on and the spreads a standardization used are
-recorded there at build time. <code><a href="check_term.html">check_term()</a></code>'s subset check is what tests
-that they really are.</p>
-<p><code>penalty</code> is <code>NULL</code> for an unpenalized term. Reading it directly answers for
-a term carrying one penalty over its whole block; <code><a href="term_penalties.html">term_penalties()</a></code> is the
-general form and covers a term whose penalty reaches part of its parameters
-or which carries several.</p>
+fills <code>X</code>, <code>coef_names</code> and <code>blueprint</code>, and <code>penalty</code> as well for a term
+that carries a penalty. The blueprint is the reason <code><a href="term_predict.html">term_predict()</a></code> can
+<strong>reapply</strong> the mapping instead of rebuilding it: the factor levels, the
+contrasts, the knots on which a basis was placed and the spreads that a
+standardization used are recorded there at build time. <code><a href="check_term.html">check_term()</a></code>'s
+subset check tests that they are.</p>
+<p><code>penalty</code> is <code>NULL</code> for an unpenalized term. Reading it directly gives the
+penalty of a term that carries one penalty over its whole block;
+<code><a href="term_penalties.html">term_penalties()</a></code> is the general form and covers a term whose penalty
+reaches part of its parameters or which carries several.</p>
     </div>
     <div class="section level2">
-    <h2 id="the-contract-on-this-branch">The contract on this branch<a class="anchor" aria-label="anchor" href="#the-contract-on-this-branch"></a></h2>
+    <h2 id="the-methods-of-this-branch">The methods of this branch<a class="anchor" aria-label="anchor" href="#the-methods-of-this-branch"></a></h2>
     <p><code><a href="term_matrix.html">term_matrix()</a></code> returns <code>X</code>, <code><a href="term_coef_names.html">term_coef_names()</a></code> returns <code>coef_names</code>,
 <code><a href="term_npar.html">term_npar()</a></code> counts the columns and <code><a href="term_penalty.html">term_penalty()</a></code> returns <code>penalty</code>, all
-from the properties, so a subclass gets them without writing anything. What
-a subclass owes is <code><a href="term_build.html">term_build()</a></code> and <code><a href="term_predict.html">term_predict()</a></code>.</p>
+from the properties, so a subclass gets them without writing anything. A
+subclass must supply <code><a href="term_build.html">term_build()</a></code> and <code><a href="term_predict.html">term_predict()</a></code>.</p>
 <p>A term whose block moves with its own coefficients, as <code><a href="nl.html">nl()</a></code> and <code><a href="seg.html">seg()</a></code>
-do, also implements <code><a href="term_refresh.html">term_refresh()</a></code> and <code><a href="term_value.html">term_value()</a></code>, and answers
-<code><a href="term_jacobian_block.html">term_jacobian_block()</a></code> to say whether the block it returns is a Jacobian or
-a frozen working linearization.</p>
+do, also implements <code><a href="term_refresh.html">term_refresh()</a></code> and <code><a href="term_value.html">term_value()</a></code>.
+<code><a href="term_jacobian_block.html">term_jacobian_block()</a></code> reports whether the block is a Jacobian or a frozen
+working linearization; it is <code>TRUE</code> by default, and a term whose block is
+the latter overrides it.</p>
     </div>
     <div class="section level2">
     <h2 id="the-block-need-not-be-dense">The block need not be dense<a class="anchor" aria-label="anchor" href="#the-block-need-not-be-dense"></a></h2>
     <p><code>X</code> is <code>class_any</code>, so a block may be a base matrix or any <span class="pkg">Matrix</span>
 class. A grouping indicator has one non-zero per row, and <code><a href="random.html">random()</a></code> builds
-it sparse; <code><a href="linpar.html">linpar()</a></code> and the penalized terms build sparse when asked. Code
-reading a block tests <code>is.matrix(x) &amp;&amp; is.numeric(x)</code> or a two-dimensional
-S4 object, since <code><a href="https://rdrr.io/r/base/matrix.html" class="external-link">is.matrix()</a></code> alone is <code>FALSE</code> for every <span class="pkg">Matrix</span>
-class.</p>
+it sparse; <code><a href="linpar.html">linpar()</a></code> and the penalized terms build sparse where their
+<code>sparse</code> argument is <code>TRUE</code>, or, when it is <code>NULL</code>, where the factor part of
+the design is large. Code reading a block tests
+<code>is.matrix(x) &amp;&amp; is.numeric(x)</code> or a two-dimensional S4 object, since
+<code><a href="https://rdrr.io/r/base/matrix.html" class="external-link">is.matrix()</a></code> alone is <code>FALSE</code> for every <span class="pkg">Matrix</span> class.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="structural_term.html">structural_term()</a></code> for the other branch, <code><a href="term_build.html">term_build()</a></code>,
-<code><a href="term_predict.html">term_predict()</a></code> and <code><a href="term_matrix.html">term_matrix()</a></code> for the contract, and <code><a href="linpar.html">linpar()</a></code> for
-the simplest term on this branch.</p></div>
+<code><a href="term_predict.html">term_predict()</a></code> and <code><a href="term_matrix.html">term_matrix()</a></code> for the methods of the branch, and
+<code><a href="linpar.html">linpar()</a></code> for the simplest term on this branch.</p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span>, g <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">letters</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># A specification carries no block; a build fills all four properties.</span></span></span>
+<span class="r-in"><span><span class="co"># A specification carries no block; a build fills the block, the names and</span></span></span>
+<span class="r-in"><span><span class="co"># the blueprint, and the penalty where the term has one.</span></span></span>
 <span class="r-in"><span><span class="va">spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="ridge.html">ridge</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span> <span class="op">+</span> <span class="va">g</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">spec</span><span class="op">@</span><span class="va">X</span><span class="op">)</span>, blueprint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">spec</span><span class="op">@</span><span class="va">blueprint</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         X blueprint </span>

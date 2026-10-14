@@ -11,7 +11,13 @@ the five penalized terms,
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
 [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md),
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) and
-the break-point terms.
+the break-point terms
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+and
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md).
+With `marginal = TRUE` the break-point terms are structural terms
+instead.
 
 A built term on this branch carries four things beyond the root's
 properties: the block itself, the coefficient names, the blueprint that
@@ -42,13 +48,13 @@ additive_term(
   A character string prefixed to the term's coefficient names when
   non-empty, and used as the title of
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and the tag
-  of [`print()`](https://rdrr.io/r/base/print.html). `character(0)` and
-  `""` both mean no label.
+  of [`print()`](https://rdrr.io/r/base/print.html). The empty string
+  `""` means no label.
 
 - hyper:
 
-  The hyperparameters of the term's penalty the caller **held**, as a
-  named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller **held**, as
+  a named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -116,31 +122,32 @@ additive_term(
 
 ## Value
 
-Nothing: the class is abstract and cannot be instantiated.
-`additive_term()` throws. As a type it is the parent of every term that
-contributes design columns, carrying the four properties above beside
-[`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)'s
-six.
+Nothing: the class is abstract and cannot be instantiated. Calling
+`additive_term()` signals an error. As a type it is the parent of every
+term that contributes design columns, carrying the four properties above
+beside those of
+[`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md).
 
-## What a build fills, and what stays empty
+## The build
 
 A specification has `X` empty and `blueprint` an empty list;
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-fills all four. The blueprint is the reason
+fills `X`, `coef_names` and `blueprint`, and `penalty` as well for a
+term that carries a penalty. The blueprint is the reason
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 can **reapply** the mapping instead of rebuilding it: the factor levels,
-the contrasts, the knots a basis was placed on and the spreads a
-standardization used are recorded there at build time.
+the contrasts, the knots on which a basis was placed and the spreads
+that a standardization used are recorded there at build time.
 [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)'s
-subset check is what tests that they really are.
+subset check tests that they are.
 
-`penalty` is `NULL` for an unpenalized term. Reading it directly answers
-for a term carrying one penalty over its whole block;
+`penalty` is `NULL` for an unpenalized term. Reading it directly gives
+the penalty of a term that carries one penalty over its whole block;
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 is the general form and covers a term whose penalty reaches part of its
 parameters or which carries several.
 
-## The contract on this branch
+## The methods of this branch
 
 [`term_matrix()`](https://statmodels7.github.io/modelterms7/reference/term_matrix.md)
 returns `X`,
@@ -150,7 +157,7 @@ returns `coef_names`,
 counts the columns and
 [`term_penalty()`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md)
 returns `penalty`, all from the properties, so a subclass gets them
-without writing anything. What a subclass owes is
+without writing anything. A subclass must supply
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 and
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md).
@@ -161,11 +168,11 @@ A term whose block moves with its own coefficients, as
 do, also implements
 [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
 and
-[`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md),
-and answers
+[`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md).
 [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
-to say whether the block it returns is a Jacobian or a frozen working
-linearization.
+reports whether the block is a Jacobian or a frozen working
+linearization; it is `TRUE` by default, and a term whose block is the
+latter overrides it.
 
 ## The block need not be dense
 
@@ -174,10 +181,12 @@ A grouping indicator has one non-zero per row, and
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
 builds it sparse;
 [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
-and the penalized terms build sparse when asked. Code reading a block
-tests `is.matrix(x) && is.numeric(x)` or a two-dimensional S4 object,
-since [`is.matrix()`](https://rdrr.io/r/base/matrix.html) alone is
-`FALSE` for every Matrix class.
+and the penalized terms build sparse where their `sparse` argument is
+`TRUE`, or, when it is `NULL`, where the factor part of the design is
+large. Code reading a block tests `is.matrix(x) && is.numeric(x)` or a
+two-dimensional S4 object, since
+[`is.matrix()`](https://rdrr.io/r/base/matrix.html) alone is `FALSE` for
+every Matrix class.
 
 ## See also
 
@@ -187,7 +196,7 @@ for the other branch,
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 and
 [`term_matrix()`](https://statmodels7.github.io/modelterms7/reference/term_matrix.md)
-for the contract, and
+for the methods of the branch, and
 [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
 for the simplest term on this branch.
 
@@ -196,7 +205,8 @@ for the simplest term on this branch.
 ``` r
 d <- data.frame(x = rnorm(20), g = factor(rep(letters[1:4], 5)))
 
-# A specification carries no block; a build fills all four properties.
+# A specification carries no block; a build fills the block, the names and
+# the blueprint, and the penalty where the term has one.
 spec <- ridge(~ x + g)
 c(X = length(spec@X), blueprint = length(spec@blueprint))
 #>         X blueprint 

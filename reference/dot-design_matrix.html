@@ -11,7 +11,7 @@ attributes, and returns the block beside the contrasts that were used."><meta pr
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,15 +73,14 @@ levels.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list of two: <code>X</code>, the block, and <code>contrasts</code>, the named list
-<code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">stats::model.matrix()</a></code> recorded, which is <code>NULL</code> when no factor was
-coded.</p>
+<code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">stats::model.matrix()</a></code> recorded. On the dense route it is <code>NULL</code> when no
+factor was coded, and on the sparse route it is an empty named list.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The two routes give identical numbers; what differs is the storage and the
 cost of producing it. The sparse route builds the matrix sparse and never
-forms a dense intermediate: at 20000 rows and a factor of 1000 levels,
-0.007 s and 1.8 MB against 0.164 s and 161.3 MB.</p>
+forms a dense intermediate.</p>
 <p>The contrasts come back beside the block instead of staying on it: the block
 is what a consumer reads, and the contrasts are what the blueprint records.</p>
     </div>

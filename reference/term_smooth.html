@@ -13,7 +13,7 @@ block that needs a proximal step or a coordinate descent."><meta property="og:im
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,7 @@ answer is <code>TRUE</code> by default.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Passed to methods. No shipped method reads anything here.</p></dd>
+<dd><p>Passed to methods. The shipped methods do not use it.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -70,20 +70,21 @@ answer is <code>TRUE</code> by default.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="the-answer-comes-from-the-penalties">The answer comes from the penalties<a class="anchor" aria-label="anchor" href="#the-answer-comes-from-the-penalties"></a></h2>
-    <p>The term does not declare it. Every entry of <code><a href="term_penalties.html">term_penalties()</a></code> is asked for
-its kink set through <code><a href="https://statmodels7.github.io/penalties7/reference/penalty_kinks.html" class="external-link">penalties7::penalty_kinks()</a></code>, at a probe value inside
-each hyperparameter's bounds, and the answer is <code>FALSE</code> as soon as one
-entry reports a point. So an unpenalized term is smooth, a ridge or a
-Gaussian prior is smooth, and lasso, SCAD, MCP and the elastic net are not.
-A term cannot disagree with its own penalties.</p>
+    <p>The term does not declare the answer. For every entry of <code><a href="term_penalties.html">term_penalties()</a></code>
+the function evaluates the kink set through <code><a href="https://statmodels7.github.io/penalties7/reference/penalty_kinks.html" class="external-link">penalties7::penalty_kinks()</a></code>, at
+a probe value inside each hyperparameter's bounds, and the result is <code>FALSE</code>
+as soon as one entry has a point in its kink set. An unpenalized term is
+therefore smooth, a ridge or a Gaussian prior is smooth, and lasso, SCAD, MCP
+and the elastic net are not. The answer always agrees with the penalties
+that the term carries.</p>
 <p>The probe is any admissible value, the kink set being structural: the
 midpoint of a bounded interval, one step inside a half-bounded one, zero
 where the interval is the whole line.</p>
     </div>
     <div class="section level2">
-    <h2 id="it-answers-for-the-whole-term">It answers for the whole term<a class="anchor" aria-label="anchor" href="#it-answers-for-the-whole-term"></a></h2>
+    <h2 id="the-answer-covers-the-whole-term">The answer covers the whole term<a class="anchor" aria-label="anchor" href="#the-answer-covers-the-whole-term"></a></h2>
     <p>A term carrying a penalty over part of its parameters and none over the rest
-answers for the part. <code>nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g))</code> is not
+answers from the part that is penalized. <code>nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g))</code> is not
 smooth: the coefficients developing <code>a</code> sit at a kink, although <code>r</code> is
 unpenalized.</p>
     </div>
@@ -92,12 +93,13 @@ unpenalized.</p>
     <p>The penalty is attached at <code><a href="term_build.html">term_build()</a></code>, so <code><a href="term_penalties.html">term_penalties()</a></code> on an
 unbuilt term is empty and this answers <code>TRUE</code> whatever penalty the term will
 carry. <code>term_smooth(lasso(~ x))</code> is <code>TRUE</code> and
-<code>term_smooth(term_build(lasso(~ x), d))</code> is <code>FALSE</code>. Ask a built term.</p>
+<code>term_smooth(term_build(lasso(~ x), d))</code> is <code>FALSE</code>. The function is
+therefore applied to a built term.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_penalties.html">term_penalties()</a></code> for the entries it runs over,
-<code><a href="https://statmodels7.github.io/penalties7/reference/penalty_kinks.html" class="external-link">penalties7::penalty_kinks()</a></code> for the set it reads, <code><a href="edf.html">edf()</a></code>, which uses
+    <div class="dont-index"><p><code><a href="term_penalties.html">term_penalties()</a></code> for the entries that it evaluates,
+<code><a href="https://statmodels7.github.io/penalties7/reference/penalty_kinks.html" class="external-link">penalties7::penalty_kinks()</a></code> for the kink set, <code><a href="edf.html">edf()</a></code>, which uses
 the same split to count degrees of freedom.</p></div>
     </div>
 

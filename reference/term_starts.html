@@ -11,7 +11,7 @@ layer fits from each and keeps the best."><meta property="og:image" content="htt
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,10 +72,14 @@ scale, each of length <code><a href="term_npar.html">term_npar()</a></code> and 
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The base method returns one start, <code><a href="term_start.html">term_start()</a></code>'s, so a term that says
-nothing is fitted once, as before. <code><a href="regime.html">regime()</a></code> returns <code>n_start</code> of them:
-its likelihood has several maxima and the term can say which region of
-its parameters is worth covering.</p>
+    <p>The base method returns the single start that <code><a href="term_start.html">term_start()</a></code> gives, so a
+term without a method of its own is fitted once. <code><a href="regime.html">regime()</a></code> returns
+<code>n_start</code> starts, because its likelihood has several maxima and the starts
+cover different regions of its parameters. In each start after the first,
+the free entries of the transition matrix are drawn from a normal
+distribution of standard deviation 2 and normal draws of standard deviation
+0.7 are added to the log gaps. The seed of the start is fixed, and the state
+of the random number generator of the caller is restored.</p>
 <p>The first element is always <code><a href="term_start.html">term_start()</a></code>'s, so a fit with one start is
 the fit without this generic.</p>
     </div>

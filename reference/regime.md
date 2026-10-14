@@ -17,8 +17,8 @@ regime(k = 2, by = NULL, time = NULL, label = "regime", n_start = 1)
 
 - k:
 
-  The number of regimes, a single whole number of at least 2. Anything
-  else throws.
+  The number of regimes, a single finite whole number of at least 2. Any
+  other value signals an error.
 
 - by:
 
@@ -30,7 +30,9 @@ regime(k = 2, by = NULL, time = NULL, label = "regime", n_start = 1)
 
   An optional ordering variable, a bare expression. `NULL`, the default,
   takes the rows in the order they are given. Both `by` and `time` must
-  evaluate to one non-missing value per row at build time.
+  evaluate to one non-missing value per row at build time. Within a
+  group, `time` only orders the rows: a gap between two times counts as
+  one step of the chain.
 
 - label:
 
@@ -39,16 +41,18 @@ regime(k = 2, by = NULL, time = NULL, label = "regime", n_start = 1)
 
 - n_start:
 
-  The number of starting points a fitting layer tries, a single whole
-  number of at least 1. The likelihood of a regime model has several
-  maxima, and one start reaches whichever basin it lies in. The first
-  start is
+  The number of starting points a fitting layer tries, a single finite
+  whole number of at least 1. The likelihood of a regime model has
+  several maxima, and a fit started at one point reaches the maximum of
+  the basin that contains it. The first start is
   [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)'s,
-  the levels at the quantiles of the response; each further one
-  displaces it as
+  which places the levels at the quantiles of the response when the
+  fitting layer supplies it and at zero otherwise. Each further start
+  displaces the first as
   [`term_starts()`](https://statmodels7.github.io/modelterms7/reference/term_starts.md)
-  describes, and the fit keeps the best. `1`, the default, fits from the
-  first start alone. Each start costs about one fit.
+  describes, and the fit with the best criterion is kept. `1`, the
+  default, fits from the first start alone. The model is fitted once
+  from each start.
 
 ## Value
 
@@ -67,24 +71,24 @@ shifted by the level of regime \\j\\,
 c_t = \sum_j \tilde\alpha_t(j), \qquad \alpha_t = \tilde\alpha_t /
 c_t,\$\$
 
-started at the chain's stationary distribution, with the log-likelihood
-\\\sum_t \log c_t\\. Those contributions are what
+where the predictive distribution of the first observation of each group
+is the chain's stationary distribution. The log-likelihood is \\\sum_t
+\log c_t\\. Those contributions are what
 [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
 returns, one per observation, with their exact derivatives propagated
 beside the state.
 
-Normalizing at every step is what keeps the recursion representable. The
+Normalizing at every step keeps the recursion representable. The
 unnormalized quantities are products of \\t\\ densities, so they decay
-geometrically and reach zero in double precision on a series of a few
-hundred observations.
+geometrically and reach zero in double precision on a long series.
 
-## It is the complement of the other dynamic term
+## Relation to gas()
 
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md) is
-driven by the score of the density and moves continuously; a regime
-chain moves in jumps between a finite number of states. Both are built
-from the density itself, so both apply to any family the model carries,
-and both propagate their exact derivative beside the state.
+driven by the score of the density and moves continuously, while a
+regime chain moves in jumps between a finite number of states. Both are
+built from the density itself, so both apply to any family the model
+carries, and both propagate their exact derivative beside the state.
 
 ## The parameters and their charts
 
@@ -92,8 +96,8 @@ The levels are **ordered by construction**: `level1` is free on the
 identity, and each of the others is the previous one plus a positive
 gap, `gap2` ... `gapK`, each carried on a log link. Without an ordering
 the regimes are exchangeable and the likelihood has \\K!\\ identical
-maxima, which is not a hard problem to fit but is one whose answer
-cannot be reported.
+maxima, so the estimates of the individual regimes cannot be reported
+without a labeling.
 
 The transition matrix is
 [`parameters7::transition_matrix()`](https://statmodels7.github.io/parameters7/reference/transition_matrix.html),
@@ -102,17 +106,18 @@ whose free values are the additive log-ratios of each row, named
 any coordinate. A chain of \\K\\ regimes therefore has \\K(K-1)\\ of
 them, and
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
-returns \\K + K(K-1)\\ names in all: one level, \\K-1\\ gaps and the
-rest.
+returns \\K + K(K-1)\\ names in all: one level, \\K-1\\ gaps and
+\\K(K-1)\\ log-ratios.
 
 The initial distribution is the chain's stationary one, which costs no
-parameters; its derivative comes from the linear system it solves.
+parameters. Its derivative comes from the same linear system that gives
+the distribution itself.
 
 [`term_level_param()`](https://statmodels7.github.io/modelterms7/reference/term_level_param.md)
-answers `"level1"`, since a constant added to it shifts every regime and
-is the direction an intercept in the same equation also spans. The gaps
-are unaffected: what a constant cannot express is a difference between
-regimes.
+returns `"level1"`, since a constant added to it shifts every regime and
+is the direction an intercept in the same equation also spans. A
+constant leaves the gaps unchanged, because it cannot express a
+difference between regimes.
 
 ## References
 

@@ -9,28 +9,30 @@ a glance.
 
 The coefficients are supplied by the caller. A term holds a design block
 and no fit, so there is nothing to display without them, and
-`coef = NULL` throws.
+`coef = NULL` is rejected.
 
 ## Arguments
 
 - x:
 
-  A built additive term. An unbuilt one throws
+  A built additive term. An unbuilt term signals the error
   `"the term has not been built; call term_build(term, data) first."`.
 
 - coef:
 
   The coefficients to draw, a numeric vector of length `term_npar(x)`.
-  Required: `NULL` throws
+  Required: `NULL` signals the error
   `"'coef' is required: a term is displayed at fitted coefficients."`,
-  and any other length throws with the required length named.
+  and a vector of any other length signals an error that gives the
+  required length.
 
 - ...:
 
   Passed to
   [`graphics::plot()`](https://rdrr.io/r/graphics/plot.default.html), so
-  `col`, `ylim`, `cex` and the rest of the usual graphical arguments
-  work. `xaxt`, `xlab`, `ylab`, `main` and `pch` are set here.
+  `col`, `ylim`, `cex` and the other usual graphical arguments are
+  accepted. The method sets `xaxt`, `xlab`, `ylab`, `main` and `pch`
+  itself, and passing any of them signals an error.
 
 ## Value
 
@@ -45,9 +47,11 @@ seven lines so that the coefficient names fit, and
 exit.
 
 The horizontal axis is the coefficient's position in the block, so the
-picture is of the block and not of the covariate. For a smooth, whose
+plot shows the block and not the covariate. For
+[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md), whose
 block is a Demmler-Reinsch reparametrization, the columns are ordered
-from least to most wiggly, and a penalized fit shows a decaying profile.
+from the smoothest to the most wiggly, and a penalized fit shows a
+decaying profile.
 
 ## See also
 

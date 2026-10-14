@@ -27,9 +27,13 @@ of length one or more. Empty for `NULL` or a zero-length input.
 ## Details
 
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
-builds one of three penalties depending on what it was given: a ridge, a
-structured prior over a parameters7 matrix, or a distributions7 family
-used coordinatewise. Which names there are is therefore not known until
+builds its penalty from the distribution of the effects with
+[`penalties7::distrib_penalty()`](https://statmodels7.github.io/penalties7/reference/distrib_penalty.html):
+a centered Gaussian by default, a multivariate distributions7 family for
+correlated effects, or a univariate family used once for each
+within-group column. A smooth whose penalty comes from a factory, or
+that has one smoothing parameter per level of a factor, is read in the
+same way. The names of the hyperparameters are therefore known only when
 the term is built. The shape is checked here and the names against the
 penalty by
 [`check_hyper()`](https://statmodels7.github.io/modelterms7/reference/check_hyper.md)

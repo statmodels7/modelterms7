@@ -1,10 +1,11 @@
-# The Coefficients a Term Holds
+# Coefficients Held by a Term
 
-The positions, among the term's own coefficients, of those the term
-holds at their values: the fitting layer keeps them out of the solve,
-out of the information it inverts and out of the reading of the mode. A
-term whose coefficients are all estimated by the derivative of the
-objective holds none, which is the base method's answer.
+Returns the positions, among the coefficients of a term, of those that
+the term holds fixed. The fitting layer excludes these coefficients from
+the solve, from the information matrix that is inverted and from the
+reading of the mode. The base method returns an empty vector, since all
+the coefficients of an ordinary term are estimated from the derivative
+of the objective.
 
 ## Usage
 
@@ -29,16 +30,17 @@ empty.
 
 ## Details
 
-The one shipped term that answers otherwise is a
+The one shipped term with a method of its own is a
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 or
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
 term put in its held state by
 [`seg_hold()`](https://statmodels7.github.io/modelterms7/reference/seg_hold.md).
-There the break-point is fixed at a minimum of the profile objective,
-which is constant between consecutive observations and so has no
-derivative to estimate the position with, and the coefficient slot that
-carried it in the working construction becomes a column of zeros.
+Its break-points are fixed at a minimum of the profile objective. That
+objective is constant between consecutive observations, so it has no
+derivative from which to estimate the positions, and the coefficient
+slot that carries each position in the working construction becomes a
+column of zeros.
 
 ## See also
 

@@ -1,13 +1,13 @@
 # Score-Driven Dynamics
 
-A generalized autoregressive score component (creal2013, harvey2013): a
-level \\f_t\\ added to the linear predictor, driven by the score of the
-observation density at the previous times, \$\$f_t = \omega +
-\sum\_{i=1}^{p} \kappa_i s\_{t-i} + \sum\_{j=1}^{q} \xi_j f\_{t-j},\$\$
-with \\s_t = \partial \ell_t / \partial \eta_t\\ the derivative of the
-log-likelihood contribution with respect to the predictor it is
-evaluated at, multiplied by a power of the expected information when
-`scaling` is not zero.
+A generalized autoregressive score component (Creal et al., 2013;
+Harvey, 2013): a level \\f_t\\ added to the linear predictor, driven by
+the score of the observation density at the previous times, \$\$f_t =
+\omega + \sum\_{i=1}^{p} \kappa_i s\_{t-i} + \sum\_{j=1}^{q} \xi_j
+f\_{t-j},\$\$ with \\s_t = \partial \ell_t / \partial \eta_t\\ the
+derivative of the log-likelihood contribution at time \\t\\ with respect
+to the predictor at which it is evaluated, multiplied by a power of the
+expected information when `scaling` is not zero.
 
 ## Usage
 
@@ -28,17 +28,20 @@ gas(
 
 - p:
 
-  The number of score lags. Defaults to 1.
+  The number of score lags, a finite integer of at least 1. Defaults to
+  1.
 
 - q:
 
-  The number of autoregressive lags. Defaults to 1.
+  The number of autoregressive lags, a finite integer of at least 0.
+  Defaults to 1.
 
 - ...:
 
   Two-sided formulas whose left side names a parameter, one per
   parameter to be developed with covariates, e.g. `kappa1 ~ s(x)`; see
-  the section above.
+  the section above. A formula given in the place of `p` or `q` is
+  rejected.
 
 - by:
 
@@ -61,9 +64,11 @@ gas(
 
   An optional named list of linkfunctions7 links over the parameters of
   [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md),
-  overriding the defaults described above. A deviation cannot be named:
-  it is unconstrained by construction, acting on the scale its
-  parameter's own link defines.
+  overriding the defaults described above. Only the parameters of
+  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
+  before any development can be named. The coefficients of a development
+  are unconstrained, and the link of the developed parameter is applied
+  inside the development.
 
 - label:
 
@@ -103,24 +108,24 @@ defaults are the following.
 The level carries the identity, being unconstrained. The loadings carry
 the **log** link: a positive loading responds in the direction of the
 score, which is the case the score-driven literature writes, and
-positivity is then structural. A deviation or a submodel moves the
-loading on the log scale, so no group and no observation can take a
-negative one. A loading that must be free in sign is asked for with
-`links = list(kappa1 = linkfunctions7::identity_link())`.
+positivity is then structural. A subformula develops the loading on the
+log scale, so every group and every observation has a positive loading.
+A loading that must be free in sign takes the identity link, which is
+set with `links = list(kappa1 = linkfunctions7::identity_link())`.
 
-The persistence is carried by **partial autocorrelations** rather than
-by the coefficients \\\xi_j\\: the stationary region of an
-autoregression is not a box, so no collection of scalar links covers it,
-while the partial autocorrelations each range over \\(-1, 1)\\
-independently and the Levinson-Durbin recursion carries them onto the
-coefficients bijectively. At \\q = 1\\ the two coincide. The coordinate
-is named for the chart it lives on, `pacf1` and so on, following the
-convention of parameters7.
+The persistence is carried by **partial autocorrelations** and not by
+the coefficients \\\xi_j\\ directly. The stationary region of an
+autoregression is not a box, so a collection of scalar links cannot
+represent it, whereas the partial autocorrelations each range over
+\\(-1, 1)\\ independently and the Levinson-Durbin recursion maps them
+bijectively onto the coefficients. At \\q = 1\\ the two coincide. Each
+coordinate is named after the chart on which it is estimated, `pacf1`
+and so on, following the convention of parameters7.
 
-Whatever the links, a parameter modeled per group or per observation
-stays in its own set: a departure acts on the unconstrained scale, so a
-loading on the log link is positive and a persistence on the rhobit link
-is stationary at every observation, whatever the departure is.
+With the default links, a parameter developed over groups or
+observations stays in its own set. The development acts on the
+unconstrained scale, so a loading on the log link is positive and a
+persistence on the rhobit link is stationary at every observation.
 
 ### One parameter at a time
 
@@ -134,7 +139,7 @@ what is missing is a way to say that one filter spans several
 parameters, since a term written inside the formula of one parameter has
 no place to declare it. That belongs to the model layer. The persistence
 would also need a different chart: the partial-autocorrelation
-construction below is a scalar one, and the stationary region of a
+construction above is a scalar one, and the stationary region of a
 matrix autoregression is a bound on the spectral radius of its companion
 matrix, which is not a box.
 
@@ -148,25 +153,27 @@ expected information of the same predictor, \$\$s_t =
 \\\mathcal{I}\_t\\ is evaluated at the predictor and at the other
 parameters of observation \\t\\. The level is scalar, so
 \\\mathcal{I}\_t\\ is a number and every real \\d\\ defines a valid
-model. The literature uses three values (creal2013). With \\d = 0\\, the
-default, the score is used as it is. With \\d = 1/2\\ the scaled score
-has unit conditional variance. With \\d = 1\\ the update is the score
-premultiplied by the inverse information, a step of Fisher scoring, and
-to first order it does not depend on the link of the parameter. The
-value \\d = 1\\ with the identity link gives three known models exactly:
-GARCH(1, 1) for the variance of a gaussian, the INGARCH(1, 1) model for
-the mean of a Poisson and the ACD(1, 1) model for the mean of an
-exponential.
+model. The literature uses three values (Creal et al., 2013). With \\d =
+0\\, the default, the score is used as it is. With \\d = 1/2\\ the
+scaled score has unit conditional variance. With \\d = 1\\ the update is
+the score premultiplied by the inverse information, a step of Fisher
+scoring, and to first order it does not depend on the link of the
+parameter. The value \\d = 1\\ with the identity link gives three known
+models exactly: GARCH(1, 1) for the variance of a gaussian, the
+INGARCH(1, 1) model for the mean of a Poisson and the ACD(1, 1) model
+for the mean of an exponential.
 
 Wherever \\\mathcal{I}\_t\\ varies with the observation, the loadings
 \\\kappa_i\\ have different units for different values of \\d\\. Where
 it is constant, as for the log-scale of a gaussian, changing \\d\\ only
 rescales the loadings and leaves the likelihood unchanged. A scaling
-other than zero requires a family whose expected information has an
-analytic second derivative
+other than zero requires a univariate family whose expected information
+has an analytic second derivative
 ([`distributions7::distrib_d2expected_hessian()`](https://statmodels7.github.io/distributions7/reference/distrib_d2expected_hessian.html)),
 because the derivatives of the filter reach the fourth derivative of
-\\\mathcal{I}\_t\\.
+\\\mathcal{I}\_t\\, which is read from the derivatives of the expected
+information up to
+[`distributions7::distrib_d4expected_hessian()`](https://statmodels7.github.io/distributions7/reference/distrib_d4expected_hessian.html).
 
 ### The level beside an intercept
 
@@ -192,13 +199,14 @@ persistence close to one the factor \\1/(1 - \sum_j \xi_j)\\ is large,
 so \\\omega\\ is small, and its standard error is not comparable with
 the intercept's: a change in \\\omega\\ moves the level by that factor.
 The identity is for a scalar level; a level developed by a subformula is
-confounded with the part of its span the equation's design shares.
+confounded with the part of its span that the equation's design shares.
 
 ### Groups and time
 
 `by` filters each group independently, as a panel of short series needs,
-and `time` gives the order within a group. Without `time` the rows are
-taken in the order they appear.
+and `time` gives the order within a group. Only the order of the times
+matters: a gap between two times counts as one step of the recursion.
+Without `time` the rows are taken in the order in which they appear.
 
 ### A parameter developed with covariates
 
@@ -206,7 +214,8 @@ A two-sided formula in `...` whose left side names a parameter develops
 it as \\\psi\_{j,t} = g_j^{-1}(z_t^\top\gamma_j)\\, the design \\Z\\
 built from the right-hand side through
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
-so it takes any additive term of the package:
+so it takes the additive terms of the package whose block does not move
+with their coefficients:
 
     gas(p = 1, q = 1, omega ~ ridge(~g), kappa1 ~ s(x),
         pacf1 ~ random(~1 | id), by = id)
@@ -218,7 +227,7 @@ link is positive at every observation, a persistence on the rhobit chart
 is inside \\(-1, 1)\\ at every observation, and at \\q = 1\\ that bounds
 the recursion's growth step by step. The coefficients \\\gamma_j\\ are
 the term's parameters, unconstrained and on the identity link; the
-penalties the sub-terms carry are reported through
+penalties that the sub-terms carry are reported through
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 under the key `parameter::subterm`. A parameter that varies by
 observation changes the recursion itself, \$\$f_t = \omega_t + \sum_i
@@ -230,7 +239,13 @@ run the general recursion.
 `by = ~f` (a formula, where a grouping variable is a bare symbol) is the
 shorthand giving the same subformula to every parameter; mixing it with
 per-parameter formulas is an error. A structural term, and a term whose
-block moves with its own coefficients, are rejected inside a subformula.
+block moves with its own coefficients
+([`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md),
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+and
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)),
+are rejected inside a subformula.
 
 ### A population value and a departure per group
 
@@ -251,10 +266,8 @@ identified the same way, there by a variance component, here by the
 penalty. An unpenalized development over group indicators is therefore
 for reading a filter at given parameters rather than for fitting one.
 
-Earlier releases spelled this case as `deviations =` with a `penalty =`;
-both arguments are gone, the subformula reproducing them exactly (the
-same fit to the printed digit, hyperparameter included) while covering
-what they could not.
+The arguments `deviations` and `penalty` are not accepted and are
+rejected by name; the subformula takes their place.
 
 ## References
 
@@ -308,8 +321,8 @@ out <- term_filter(b, eta = rep(0, 60), y = dd$y,
 round(out$eta[c(1, 15, 30, 32, 45, 60)], 3)
 #> [1]  0.500 -0.468 -0.181  1.475  2.268  2.079
 
-# And the Jacobian it propagates is exact, not differenced: a central
-# difference of the filter agrees with it to the step's own accuracy.
+# The Jacobian that the filter propagates is exact; a central difference
+# of the filter agrees with it to the accuracy of the step.
 f <- function(v) sum(term_filter(b, rep(0, 60), dd$y,
                                  function(e, i) dd$y[i] - e,
                                  function(e, i) -1,
@@ -357,7 +370,8 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   ft <- statmodels7::statmod(y ~ 0 + gas(p = 1, q = 1, time = t),
                              distributions7::gaussian1_distrib(), fd)
   # truth: omega 0.05, kappa 0.3, xi 0.9. xi is reported as the
-  # autoregressive coefficient, which its coordinate is not.
+  # autoregressive coefficient, whereas the estimated coordinate is a
+  # partial autocorrelation.
   print(round(coef(ft)$mu, 3))
 
   # With an intercept the level is held at zero and the intercept

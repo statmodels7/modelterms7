@@ -11,7 +11,7 @@ likelihood mixed over states."><meta property="og:image" content="https://statmo
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,11 +66,13 @@ likelihood mixed over states.</p>
 
 <dt id="arg-logdens">logdens<a class="anchor" aria-label="anchor" href="#arg-logdens"></a></dt>
 <dd><p>The log-density as a function of the predictor and the
-observation index, as <code><a href="term_loglik.html">term_loglik()</a></code> takes it.</p></dd>
+observation index, as <code><a href="term_loglik.html">term_loglik()</a></code> takes it, returning one value per
+observation.</p></dd>
 
 
 <dt id="arg-psi">psi<a class="anchor" aria-label="anchor" href="#arg-psi"></a></dt>
-<dd><p>The term's parameters, named as <code><a href="term_params.html">term_params()</a></code>.</p></dd>
+<dd><p>The term's parameters on the parameter scale, named as
+<code><a href="term_params.html">term_params()</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -85,25 +87,24 @@ summing to one, giving \(P(S_t = k \mid y_1, \dots, y_n)\).</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><code><a href="term_loglik.html">term_loglik()</a></code> returns the derivative of the mixed likelihood
-in the term's own parameters, which is the piece estimating those needs.
-Estimating the coefficients needs something else, and for this term that
-something is not a second recursion carrying derivatives: it is one
-quantity, by Fisher's identity. Writing \(\gamma_t(k)\) for the probability
-returned here and \(\theta_t(k)\) for the parameters the model has at
+in the term's own parameters. The derivative in the coefficients of the
+model's equations is obtained from the smoothed probabilities, by Fisher's
+identity, and needs no second recursion carrying derivatives. Writing
+\(L\) for the log-likelihood, \(\gamma_t(k)\) for the probability
+returned here and \(\theta_t(k)\) for the parameters of the model at
 observation \(t\) under regime \(k\),</p>
 <p>$$\frac{\partial L}{\partial \eta_{q,t}}
   = \sum_k \gamma_t(k)\,
     \frac{\partial \ell(y_t; \theta_t(k))}{\partial \eta_q},$$</p>
 <p>for every predictor the model carries, not only the one the regimes
-shift. A caller therefore differentiates its own likelihood \(K\) times
-vectorized and weights the results, and needs no callback per
-observation: the regimes shift a predictor that is known before the
-recursion starts, which is the property that made the forward pass
-compilable and makes this cheap.</p>
-<p>The probabilities come from the forward pass this term already runs and a
-backward pass beside it, both normalized at every step. Without the
-normalization the quantities are products of \(t\) densities and reach
-zero in double precision within a few hundred observations.</p>
+shift. A caller therefore differentiates its own likelihood \(K\) times,
+vectorized, and weights the results, with no callback per observation. This
+is possible because the regimes shift a predictor that is known before the
+recursion starts.</p>
+<p>The probabilities come from a forward pass and a backward pass beside it,
+both normalized at every step. Without the normalization the
+quantities are products of \(t\) densities and reach zero in double
+precision on a long series.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -1,21 +1,26 @@
-# Where a Break-Point Term's Objective Has a Kink
+# The Kinks of a Break-Point Term's Objective
 
 The positions, within the term's own coefficient vector, of the
-coefficients that move a break-point sitting on an observation, for the
-continuous construction only. There the truncated line \\(x-\psi)\_+\\
-has a derivative in \\\psi\\ of \\-1\\ from one side and \\0\\ from the
-other, so the objective is not differentiable in any coefficient that
-moves \\\psi\\: the break-point's own when it carries no development,
-and otherwise every coefficient of its development whose column is not
-zero at the observations concerned. An observation counts as sitting on
-the break-point within the band the block's own column reads its side
-in.
+coefficients that move a break-point sitting on an observation strictly
+inside the confinement limits, for the continuous construction only. A
+position clamped at a limit does not move with its coefficients and is
+not reported. There the truncated line \\(x-\psi)\_+\\ has a derivative
+in \\\psi\\ of \\-1\\ from one side and \\0\\ from the other, so the
+objective is not differentiable in any coefficient that moves \\\psi\\:
+the break-point's own when it carries no development, and otherwise
+every coefficient of its development whose column is not zero at the
+observations concerned. An observation counts as sitting on the
+break-point within the band in which the block's own column reads its
+side.
 
-A discontinuous construction answers `integer(0)`: its position is read
-off a product of the unknowns and it is fitted by working fits rather
-than by a line search on the objective. A smoothed term answers
-`integer(0)`, having no kink, and so does a marginal one, which
-integrates the break-point out.
+A sharp
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+or
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+answers `integer(0)`: its position is read off a product of the unknowns
+and it is fitted by working fits and not by a line search on the
+objective. A smoothed term answers `integer(0)`, having no kink, and so
+does a marginal one, which integrates the break-point out.
 
 ## Arguments
 

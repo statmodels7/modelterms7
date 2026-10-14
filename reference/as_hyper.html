@@ -9,7 +9,7 @@ only what can be checked before the penalty exists."><meta property="og:image" c
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,11 +64,14 @@ vector of length one or more. Empty for <code>NULL</code> or a zero-length input
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><code><a href="random.html">random()</a></code> builds one of three penalties depending on what it was given: a
-ridge, a structured prior over a <span class="pkg">parameters7</span> matrix, or a
-<span class="pkg">distributions7</span> family used coordinatewise. Which names there are is
-therefore not known until the term is built. The shape is checked here and the
-names against the penalty by <code><a href="check_hyper.html">check_hyper()</a></code> at that point.</p>
+    <p><code><a href="random.html">random()</a></code> builds its penalty from the distribution of the effects with
+<code><a href="https://statmodels7.github.io/penalties7/reference/distrib_penalty.html" class="external-link">penalties7::distrib_penalty()</a></code>: a centered Gaussian by default, a
+multivariate <span class="pkg">distributions7</span> family for correlated effects, or a
+univariate family used once for each within-group column. A smooth whose
+penalty comes from a factory, or that has one smoothing parameter per level
+of a factor, is read in the same way. The names of the hyperparameters are
+therefore known only when the term is built. The shape is checked here and
+the names against the penalty by <code><a href="check_hyper.html">check_hyper()</a></code> at that point.</p>
 <p>A vector entry is a written-out grid, exactly as it is in the constructors
 that name their hyperparameters, so the length is not
 checked here either; <code><a href="dot-hyper_parts.html">.hyper_parts()</a></code> splits the two once the penalty

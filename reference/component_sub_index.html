@@ -11,7 +11,7 @@ term_components() entry."><meta property="og:image" content="https://statmodels7
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,13 +75,13 @@ cumulated: with counts \(k_1, \dots, k_m\) the \(i\)-th sub-term takes
 <code>index</code> at positions \(k_1 + \dots + k_{i-1} + 1\) to
 \(k_1 + \dots + k_i\). The counts come from <code><a href="term_npar.html">term_npar()</a></code>, so every
 sub-term must be built.</p>
-<p>The term computes this rather than a consumer, because it rests on how the
-block was assembled.</p>
+<p>The term computes this division, and a consumer does not, because it rests
+on how the block was assembled.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_components.html">term_components()</a></code>, the only caller; <code><a href="term_npar.html">term_npar()</a></code> for the counts
-it divides by.</p></div>
+    <div class="dont-index"><p><code><a href="term_components.html">term_components()</a></code>, whose methods are its only callers;
+<code><a href="term_npar.html">term_npar()</a></code> for the counts it divides by.</p></div>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

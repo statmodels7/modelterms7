@@ -1,11 +1,13 @@
 # Where a Marginal Break-Point Term Starts
 
 Given a target (the response on the scale of the predictor, which the
-fitting layer supplies), the exact profile: each group's best split by
-least squares on its own observations under the term's own design, the
-population positions and the prior scales read off those, and the
-changes their pooled means. Without one, the covariate's quantiles and a
-scale from its spread, with the changes at zero.
+fitting layer supplies), a least-squares profile in two stages. The
+first stage chooses common positions, with a free intercept for each
+group, and estimates the linear effect and the changes of level and
+slope on all groups pooled. The second stage moves the positions of each
+group one at a time, with the pooled coefficients held. Without a
+target, the starting positions are quantiles of the covariate, the scale
+is derived from its spread, and the changes are zero.
 
 ## Arguments
 
@@ -25,3 +27,27 @@ scale from its spread, with the changes at zero.
 ## Value
 
 A named numeric vector on the unconstrained scale.
+
+## Details
+
+With a target, the candidate positions are 23 quantiles of the covariate
+between its 6% and 94% points. The local minima of the pooled residual
+sum of squares over the candidates (at most four) are the seeds. For \\K
+\> 1\\ the further positions are added greedily to a seed. Each group's
+positions are then moved, one at a time, over the midpoints between its
+distinct observations, and the seed whose final fit leaves the smallest
+residual sum of squares is retained. That fit has coefficients shared
+across groups and the positions of each group, and it supplies the
+linear effect and the changes.
+
+The medians of the group positions give `psik.mean`, unless positions
+were given to the constructor, which then take precedence. Their median
+absolute deviations give the prior scale, which is floored in every case
+at half the median gap between consecutive distinct covariate values.
+Without a target the positions are the quantiles of the covariate at \\k
+/ (K + 1)\\ and the scale is one sixth of the distance between its 5%
+and 95% quantiles. Under an explicit prior, `psi1.mean` takes the
+position, a parameter of the prior that is interpreted as a scale starts
+at the scale through its own link, and the other parameters start at
+zero. A target of the wrong length is not used, and an unbuilt term
+returns zeros.

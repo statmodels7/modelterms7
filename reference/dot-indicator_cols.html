@@ -11,7 +11,7 @@ factor of the product .resolve_sparse() compares against its threshold."><meta p
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,14 +68,13 @@ factor of the product <code><a href="dot-resolve_sparse.html">.resolve_sparse()<
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>A term contributes the product of its variables' level counts, a numeric
 variable counting one, and a term carrying no factor at all is skipped: its
-columns are dense whatever the storage, so they say nothing about the
-choice. Character and logical columns are counted by their number of
-distinct values, since <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">stats::model.matrix()</a></code> will code them as factors.</p>
+columns have few zero entries for sparse storage to exploit, so they do not
+enter the choice. Character and logical columns are counted by their number
+of distinct values, since <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">stats::model.matrix()</a></code> codes them as factors.</p>
 <p>The count is an <strong>upper bound</strong>: contrasts drop one level per factor, and an
 interaction of two factors is counted at the product of their full level
-counts. That is the right side to err on, the number being read against a
-threshold below which the sparse route loses little and above which it wins
-by orders.</p>
+counts. The count is read against a threshold on <code>n * ncol_ind</code>, so it
+overestimates the number of indicator columns of the built block.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -36,13 +36,13 @@ structural_term(
   A character string prefixed to the term's coefficient names when
   non-empty, and used as the title of
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and the tag
-  of [`print()`](https://rdrr.io/r/base/print.html). `character(0)` and
-  `""` both mean no label.
+  of [`print()`](https://rdrr.io/r/base/print.html). The empty string
+  `""` means no label.
 
 - hyper:
 
-  The hyperparameters of the term's penalty the caller **held**, as a
-  named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller **held**, as
+  a named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -89,24 +89,23 @@ structural_term(
   own filter or recursion needs. Its contents are that subclass's
   business and nothing outside the term reads them. Empty in a
   specification and filled by
-  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md),
-  which is what
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md).
   [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
-  reads on this branch, a structural term having no coefficient names to
-  record being built in.
+  reads it on this branch, because a structural term has no coefficient
+  names from which to tell.
 
 ## Value
 
-Nothing: the class is abstract and cannot be instantiated.
-`structural_term()` throws. As a type it is the parent of
+Nothing: the class is abstract and cannot be instantiated. Calling
+`structural_term()` signals an error. As a type it is the parent of
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md),
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
-and the marginal break-point terms, and carries
-[`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)'s
-six properties together with `blueprint`, the branch's record of having
-been built, empty in a specification.
+and the marginal break-point terms, and carries the properties of
+[`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)
+together with `blueprint`, the branch's record of having been built,
+empty in a specification.
 
-## Parameters, not coefficients
+## The parameters of a structural term
 
 What such a term estimates are its **own parameters**, named by
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
@@ -117,13 +116,15 @@ whatever an optimizer proposes.
 [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
 counts those parameters,
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
-says where they start, and a
+gives their starting values, and a
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 entry indexes into them, where an additive term's entry indexes into
 columns.
 
-The class adds no properties of its own: everything a built structural
-term records goes in the root's `label` and in the subclass's own slots.
+The class adds one property of its own, `blueprint`, which records that
+the term has been built. Everything else that a built structural term
+records is held in the root's properties and in the subclass's own
+slots.
 
 ## The two shapes
 
@@ -133,10 +134,12 @@ returns the level at each observation together with the Jacobian in the
 term's parameters, propagated beside the state because the recursion is
 the only place it can be computed.
 [`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md),
-[`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
-and
+[`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md),
 [`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
-carry the first three orders through the same recursion.
+and
+[`term_fourth()`](https://statmodels7.github.io/modelterms7/reference/term_fourth.md)
+carry the derivatives of the first to the fourth order through the same
+recursion.
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
 has this shape.
 
@@ -150,8 +153,14 @@ the observed information of the mixture.
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
 and the marginal break-point terms have this shape.
 
-A fitting layer tells them apart by which of the two generics answers,
-and at most one structural term is allowed per model formula.
+The fitting layer distinguishes the two shapes by which of the two
+generics
+[`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+and
+[`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
+has a method for the term's class.
+[`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
+admits at most one structural term per model formula.
 
 ## See also
 

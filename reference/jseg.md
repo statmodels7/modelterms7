@@ -76,8 +76,8 @@ jseg(
 
   The starting value of the scaling factor that separates the
   observations from the break-point, as a fraction of the distance to
-  the ends of the range. Defaults to `0.05`, the value fasola2018
-  recommend; see Details.
+  the ends of the range. Defaults to `0.05`, the value Fasola et
+  al. (2018) recommend; see Details.
 
 - smoothed:
 
@@ -90,29 +90,31 @@ jseg(
   \\(1 + s'(u))/2\\ and \\(u + s(u))/2\\, so every break-point becomes
   an ordinary parameter of a model as smooth as the smoother
   (\\C^\infty\\ for the probit and the hyperbolic, \\C^3\\ for the
-  quintic, whose page says what that costs under an outer criterion,
-  where the probit is the choice): there is no working parametrization,
-  no auxiliary coefficient and no scaling schedule (`c0` is ignored,
-  with a message), the block is the true Jacobian and the term is fitted
-  by Gauss-Newton like
+  quintic; the page of the quintic gives its cost under an outer
+  criterion, where the probit is the recommended smoother). There is no
+  working parametrization, no auxiliary coefficient and no scaling
+  schedule (for
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  and `jseg()`, a `c0` that is passed is ignored with a message), the
+  block is the true Jacobian and the term is fitted by Gauss-Newton like
   [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md). A
-  development of a break-point, `psi ~ random(~1 | id)` and penalized
-  ones included, is then legal for every kind, the read-off that
-  constrained the discontinuous constructions having gone. The
+  smoothed term accepts a development of any coefficient, including a
+  break-point (`psi ~ random(~1 | id)`) and penalized developments, for
+  every kind, since no read-off constrains the development. The
   smoother's width is resolved at build from the covariate's spacing
   (the median gap between distinct values, within groups where a
   break-point development supplies a partition) unless the object
-  carries one; for the quintic, which is exact outside its width, it is
-  raised to at least 0.55 times the largest gap over the range a
-  break-point may take, so that a break-point cannot sit in a gap with
+  carries one. For the quintic, which is exact outside its width, the
+  width is raised to at least 0.55 times the largest gap over the range
+  a break-point may take, so that a break-point cannot sit in a gap with
   no observation within its width. The width is reported: it is the
-  width of the transition, the bent-cable reading, and the smoothing
-  bias it buys is confined to a window of that width (probit, quintic)
-  or decays as \\c/(4\|u\|)\\ (hyperbolic). The objective is still
-  multimodal in the positions – smoothing rounds the local optima and
-  does not remove them, so the profile start and the `n_boot` restarts
-  stay necessary; a smoothed fit from a bad start has been measured
-  converging to an absurd local optimum while reporting success.
+  width of the transition (the bent-cable reading). The smoothing bias
+  is zero outside the transition for the quintic, decays with the
+  Gaussian tails for the probit, and decays as \\c/(4\|u\|)\\ for the
+  hyperbolic, whose parameter \\c\\ is a squared length. The objective
+  remains multimodal in the positions: smoothing rounds the local optima
+  and does not remove them, so the profile start and the `n_boot`
+  restarts remain necessary.
 
 - marginal:
 
@@ -122,16 +124,17 @@ jseg(
   requires the subformula `psi ~ random(~1 | g)` and returns a
   structural term of the likelihood shape
   ([`MarginalBreakTerm()`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md));
-  see the section of
-  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md),
-  whose step model is where the marginal buys the most: for a `seg` term
-  the native random-changepoint fit (`psi ~ random(~1 | g)` without
-  `marginal`) is measured equivalent and remains the recommended route,
-  the marginal being the exact-likelihood alternative. One break-point
-  here: the conditional is smooth in the position, so the integral runs
-  on a Gauss-Kronrod panel per interval between a group's ordered
-  observations, and several latents would need a product quadrature
-  whose component count no fitting layer can carry.
+  see the section on the marginal construction in
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md).
+  For a `seg` term the native random-changepoint fit
+  (`psi ~ random(~1 | g)` without `marginal`) estimates the break-points
+  as the mode of the latent distribution and is the recommended route,
+  the marginal being the exact-likelihood alternative. The marginal
+  `seg` has one break-point: the conditional is smooth in the position,
+  so the integral runs on Gauss-Kronrod panels over the intervals
+  between a group's ordered observations, and several latent
+  break-points would need a product quadrature with a number of
+  components that a fitting layer cannot carry.
 
 - n_boot:
 
@@ -164,8 +167,8 @@ with `marginal = TRUE`.
 
 Both devices of the two constructions are used at once: the truncated
 line is differentiable in the break-point and the step is linearized by
-the identity of fasola2018, on the rescaled covariate its scaling
-schedule provides (see
+the identity of Fasola et al. (2018), on the rescaled covariate that its
+scaling schedule provides (see
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)).
 What is particular to the joint term is the read-off, since the
 truncated line depends on the break-point as well and reading only the
@@ -185,7 +188,7 @@ increment solves
 
 the root of smaller modulus. At \\\gamma = 0\\ the quadratic degenerates
 to \\h = -(b + a\psi^{0})/a\\, that is \\\psi = -b/a\\, so the pure step
-is a case this contains, never an exception to it.
+is a special case of this reading.
 
 Everything
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
@@ -197,21 +200,28 @@ and the choice of starting positions applies here unchanged.
 `beta` (present when `linear = TRUE`), `gamma1` ... `gammaK`, the
 changes of slope, then `delta1` ... `deltaK`, the changes of level, then
 `g1` ... `gK`, the auxiliary coefficients from which the break-points
-are read. Ask
+are read;
 [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
-for the break-points.
+reports the break-points. A smoothed term holds the break-points
+directly, and its coefficients end with `psi1` ... `psiK` in place of
+`g1` ... `gK`.
 
 ## Developing a coefficient with covariates
 
-`beta` and `gammaK` take a development on any design, both entering the
-block linearly. `deltaK` and `psiK` enter the quadratic above, which is
-a scalar identity: it splits observation by observation only where the
-design has one column per group and each observation belongs to one, so
-`jseg(x, by = ~0 + g)` is an independent set of everything per level and
-a development of `delta` or `psi` on any other design is rejected. The
+`beta` enters the block linearly and takes a development on any design.
+`gammaK`, `deltaK` and `psiK` all enter the quadratic above, which is a
+scalar identity: it splits observation by observation only where the
+design has one column per group and each observation belongs to one. A
+sharp `jseg` therefore accepts a development of these coefficients when
+each one that varies (a development with a single column is a scalar)
+carries the same development, the break-point is among them, and the
+design partitions the rows, as `by = ~0 + g` gives:
+`jseg(x, by = ~0 + g)` is an independent set of everything per level.
+Any other development of `gamma`, `delta` or `psi` is rejected. The
 componentwise reading that would remain diverges whenever a change of
-level passes near zero mid-iteration, which on a joint model it
-routinely does, so it is rejected instead of shipped diverging.
+level passes near zero during the iteration, which happens routinely in
+a joint model, and for that reason the development is rejected. A
+smoothed `jseg` accepts a development of any coefficient.
 
 ## The marginal construction
 
@@ -220,10 +230,9 @@ break-point per group out of the likelihood exactly, on the
 Gauss-Kronrod panels of
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)'s
 marginal with the change of level entering each interval's conditional
-as a constant. On gaussian data the mode-based routes are measured
-equivalent; on non-gaussian families the marginal is the robust one, the
-measured comparison on a Poisson panel recovering the per-group
-positions where the smoothed modes lose them.
+as a constant. The mode-based routes approximate the integral over the
+latent break-points by a Laplace approximation, and the marginal
+construction evaluates it by quadrature.
 
 ## References
 

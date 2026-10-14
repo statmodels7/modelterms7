@@ -18,7 +18,8 @@ term_block_contract(term, coef = NULL, A, ...)
 
 - coef:
 
-  The coefficients, or `NULL` for the ones it carries.
+  The coefficients, one per coefficient of the term, or `NULL` for the
+  ones it carries.
 
 - A:
 
@@ -53,34 +54,34 @@ Z\_{p_1}\[i,c_1\]Z\_{p_2}\[i,c_2\]\Big(f\_{p_1p_2}h\_{p_1}'h\_{p_2}' +
 \delta\_{p_1p_2} f\_{p_1} h\_{p_1}''\Big),\$\$ so with \\s\_{p}(i) =
 \sum\_{c\in p} A\_{ic}Z\_{p}\[i,c\]\\ the answer is
 \\Z\_{p_2}'\sum\_{p_1} q\_{p_1p_2}s\_{p_1}\\, one crossprod per
-parameter. The chain rule onto the coefficients, each parameter's link
-and its subformula's design, stays here, this being the only place that
-knows them.
+parameter. The chain rule onto the coefficients, through each
+parameter's link and its subformula's design, is applied in this method.
 
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
-has its own, written from the closed forms. Theirs is not a difference a
-caller could take: a break-point column is a step function in its
-break-point, so the quotient diverges as the step shrinks. Measured at
-\\h\\, \\h/4\\ and \\h/16\\ it reads 3.6e4, 1.4e5 and 5.8e5, where
-[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)'s
-stays at 0.6038 throughout. What is bounded is written out instead. The
+has its own, written from the closed forms. Its derivative is not a
+difference that a caller could take: a break-point column is a step
+function in its break-point, so the difference quotient diverges as the
+step shrinks. The bounded quantities are written out instead. The
 truncated line \\(x-\psi)\_+\\ has derivative \\-\mathbf{1}(x\>\psi)\\
 in the break-point, and the break-point column
 \\-\gamma(x)\mathbf{1}(x\>\psi)\\ has the same indicator as its
 derivative in the change and zero almost everywhere in the break-point,
 which is the value taken.
 
+A sharp
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
-and
+or
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
-keep the base method's zeros. Their position is read off a product of
-the unknowns, \\\psi = -g/\delta\\, so a column's derivative runs
-through that read-off instead of through a development's design, and the
-weight \\W = 1/(2\lvert\tilde x-\psi\rvert)\\ they carry has an
-unbounded derivative in the break-point. Their block is a working
-linearization with a frozen weight, which is the same fact that makes
-[`term_converged()`](https://statmodels7.github.io/modelterms7/reference/term_converged.md)
-answer differently for them.
+keeps the base method's zeros. Its position is read off a product of the
+unknowns, \\\psi = -g/\delta\\, so a column's derivative runs through
+that read-off instead of through a development's design, and the weight
+\\W = 1/(2\lvert\tilde x-\psi\rvert)\\ it carries has an unbounded
+derivative in the break-point. Its block is a working linearization with
+a frozen weight, which is the reason that
+[`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
+answers `FALSE` for it. A break-point term with `smoothed =` has a block
+that is a true Jacobian, and its contraction is written out from the
+smoother's derivatives.
 
 ## See also
 

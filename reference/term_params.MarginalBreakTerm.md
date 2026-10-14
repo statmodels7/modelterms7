@@ -1,7 +1,7 @@
 # The Parameters of a Marginal Break-Point Term
 
 Numbered, one set per break-point, in a fixed order: the linear effect
-`beta` where the kind carries one, then the prior's parameters for each
+`beta` where the term carries one, then the prior's parameters for each
 break-point, then the changes of slope `gamma1` ... and the changes of
 level `delta1` ....
 
@@ -26,14 +26,16 @@ A character vector, of length
 
 The prior's parameters are `psik.mean` and `psik.sd` under the default
 Gaussian, the mean and the standard deviation of the positions of
-break-point \\k\\ in the population. Where `random(distrib = )` named
-another family the names are that family's own, its location fixed at
-zero and `psi1.mean` carrying the position, so a Student t prior adds
-`nu`.
+break-point \\k\\ in the population. Where `random(distrib = )` names
+another family, the parameters are `psi1.mean` for the position and the
+free parameters of that family under its own names, with its location
+fixed at zero. A Student t prior therefore gives `psi1.mean`, `sigma`
+and `nu` in place of `psi1.mean` and `psi1.sd`.
 
-Which of `gamma` and `delta` appear is the kind: `"seg"` has the changes
-of slope, `"jump"` the changes of level, `"jseg"` both. Only `"seg"` and
-`"jseg"` carry `beta`.
+The kind determines which of `gamma` and `delta` appear: `"seg"` has the
+changes of slope, `"jump"` the changes of level and `"jseg"` both.
+`beta` appears for `"seg"` and `"jseg"` unless the term was constructed
+with `linear = FALSE`.
 
 ## See also
 

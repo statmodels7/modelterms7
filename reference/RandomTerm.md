@@ -38,13 +38,13 @@ RandomTerm(
   A character string prefixed to the term's coefficient names when
   non-empty, and used as the title of
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and the tag
-  of [`print()`](https://rdrr.io/r/base/print.html). `character(0)` and
-  `""` both mean no label.
+  of [`print()`](https://rdrr.io/r/base/print.html). The empty string
+  `""` means no label.
 
 - hyper:
 
-  The hyperparameters of the term's penalty the caller **held**, as a
-  named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller **held**, as
+  a named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -135,25 +135,25 @@ An S7 object of class `RandomTerm`, inheriting from
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 and
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
-with the four properties above beside the ten they supply.
+with the four properties above in addition to those of the two parent
+classes.
 
-## The three properties of its own
+## The properties of its own
 
 `formula` is the bar formula as given, `~ 1 | g` or `~ x | g`, kept with
-its environment. `correlated` says whether the **default** Gaussian lets
-the within-group effects depend on each other; it is read only where
-`distrib` is `NULL`, the two saying the same thing.
+its environment. `correlated` states whether the **default** Gaussian
+lets the within-group effects depend on each other. It is read only
+where `distrib` is `NULL`, since a distribution given in `distrib`
+determines the same thing.
 
 `tag` is the covariance label written between two bars, `~ 1 | u | g`,
 or `NA_character_` where the formula carries one bar. It is reported by
 [`term_tag()`](https://statmodels7.github.io/modelterms7/reference/term_tag.md).
-The two say different things and the difference is the scope:
-`correlated` is about the columns of this term, `tag` about the columns
-of other terms.
+The `tag` and `correlated` differ in scope: `correlated` concerns the
+columns of this term, and `tag` the columns of other terms.
 
 `distrib` is the effects' distribution as supplied, or `NULL` for the
-default. What the build turns it into is a penalties7 penalty, read
-through
+default. The build turns it into a penalties7 penalty, read through
 [`term_penalty()`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md)
 or
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
@@ -174,7 +174,7 @@ the constructor;
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 for the entries a built one declares;
 [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
-for what a fitted random effect spends.
+for the effective degrees of freedom of a fitted random effect.
 
 ## Examples
 
@@ -187,7 +187,7 @@ S7::S7_inherits(tm, RandomTerm)
 #> [1] TRUE
 tm@formula
 #> ~x | g
-#> <environment: 0x5611f36d6750>
+#> <environment: 0x5606ef5c8ea0>
 tm@correlated
 #> [1] TRUE
 

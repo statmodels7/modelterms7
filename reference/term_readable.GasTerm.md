@@ -28,19 +28,25 @@ documents.
 ## Details
 
 The level and the loadings are reported through their own links, each a
-function of its own coordinate alone, which the base method already
-does. The persistence is not: it is carried on a partial
-autocorrelation, and the coefficients come from the Levinson-Durbin
-recursion, whose Jacobian the term already computes for the filter.
-Chained onto the rhobit link of each coordinate, that Jacobian is what a
-delta-method standard error for \\\xi_j\\ needs. At \\q = 1\\ the two
-coincide and the chain factor is the link's alone; above it they do not.
+function of its own coordinate alone, as the base method does. The
+persistence is not: it is carried on partial autocorrelations, and the
+coefficients come from the Levinson-Durbin recursion, which the term
+already differentiates for the filter. Each partial autocorrelation is
+mapped through its own link, the rhobit unless `links` gives another,
+and the Jacobian of the recursion is chained onto these links, which is
+what a delta-method standard error for \\\xi_j\\ needs. At \\q = 1\\ the
+two coincide and the chain factor is the link's alone; above it they do
+not.
 
 The scale an interval is built on follows the same split. At \\q = 1\\
-it is the link of the partial autocorrelation (the rhobit unless `links`
-gives another), so the interval stays inside the coordinate's range.
-Above it the coefficients range over the stationary region, which is not
-a box, and the interval is built on the identity scale.
+it is the link of the partial autocorrelation, so the interval stays
+inside the coordinate's range. Above it the coefficients range over the
+stationary region, which is not a box, and the interval is built on the
+identity scale.
 
-A deviation is reported as it stands, being unconstrained and defined on
-the scale of the parameter it departs from.
+The coefficients of a development are reported as they stand, being
+unconstrained and acting on the scale of the link of the developed
+parameter. If any partial autocorrelation is developed, the
+autoregressive coefficients vary by observation, no single \\\xi_j\\
+exists, and the persistence coordinates are reported as the base method
+gives them.

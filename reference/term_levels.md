@@ -1,7 +1,8 @@
 # The Levels of a Likelihood-Shaped Structural Term
 
-The shifts a term of the likelihood shape adds to its equation's
-predictor, one per mixture component, in the order the columns of
+The shifts that a term of the likelihood shape adds to its equation's
+predictor, one per mixture component, in the order in which the columns
+of
 [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)
 carry the components. A fitting layer reads the two together to assemble
 Fisher's identity.
@@ -68,9 +69,10 @@ constant level, and must accept both shapes.
 
 The method on
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
-throws, naming the class: a term of the filter shape reports a predictor
-instead of components, and answers
-[`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md).
+signals an error that names the class. A term of the filter shape
+contributes a predictor and not components, and
+[`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+applies to it.
 
 ## See also
 

@@ -11,7 +11,7 @@ n * ncol_ind exceeds \(10^5\)."><meta property="og:image" content="https://statm
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,15 +75,11 @@ n * ncol_ind exceeds \(10^5\)."><meta property="og:image" content="https://statm
     <p>The dense indicator part holds <code>n * ncol_ind</code> cells where the sparse one
 holds one non-zero per row, so that product is what separates the two
 routes, and the threshold is read off it rather than off a count of levels.</p>
-<p>Measured over fifteen combinations of sample size and level count, building
-the block and forming its crossproduct, the routes cross between
-\(10^5\) and \(3 \times 10^5\) cells. Below that the sparse route loses
-a little (0.6 to 0.9 times the dense route); above it the gap opens quickly:
-at 20000 rows the ratios are 1.4 at 15 levels, 12.3 at 25, 14.4 at 60,
-139 at 200 and 445 at 400.</p>
+<p>Below about \(10^5\) cells the sparse route is slightly slower than the
+dense route, and above it the sparse route is faster, so the threshold is
+placed at \(10^5\).</p>
 <p>A design carrying no factor has no indicator part, so the product is zero
-and the block is built dense, which is the right answer for a purely
-continuous design.</p>
+and the block is built dense, which suits a purely continuous design.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

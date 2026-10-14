@@ -9,7 +9,7 @@ hyperparameter to share, empty where the constructor was given none."><meta prop
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,25 +67,27 @@ written, to be resolved by a second call where the names are known.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A named character vector, possibly empty.</p>
+    <p>A character vector, possibly empty, named by the hyperparameters.
+In the deferred case (<code>names = NULL</code>) a single unnamed string is returned
+unnamed, to be named by the second call.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Two forms are accepted and they say the same thing. An unnamed single string
-shares <strong>the</strong> hyperparameter, and is legal only where the penalty carries
-one: it is the short form for the frequent case, a smooth or a ridge. A
-named vector names which, <code>c(alpha = "A")</code>, and is what a penalty carrying
-several needs, since sharing the mixing of an elastic net while leaving its
-strength free is a model and guessing which was meant is not.</p>
-<p>The short form on a penalty carrying several is an error listing them,
-rather than a rule about position. The names are checked against the
-penalty's own, so a misspelling is reported where it was written.</p>
-<p>Sharing does not merge the penalties. They stay two objects estimated at one
-value, so nothing here asks whether they are comparable: the two may weigh
-quite different matrices, and whether that is the model wanted is the
-caller's to know. What the documentation says instead is that <code>id</code> is worth
-care, and that it means what one expects between penalties of the same shape
-over covariates of comparable scale.</p>
+    <p>Two forms are accepted and both have the same meaning. An unnamed single
+string shares <strong>the</strong> hyperparameter, and is legal only where the penalty
+carries one: it is the short form for the frequent case, a smooth or a
+ridge. A named vector names which, <code>c(alpha = "A")</code>, and is what a penalty
+carrying several needs, since sharing the mixing of an elastic net while
+leaving its strength free is a different model from the reverse, and the
+code does not guess which one was meant.</p>
+<p>The short form on a penalty carrying several hyperparameters is an error
+that lists them. The names are checked against the penalty's own, so a
+misspelling is reported where it was written.</p>
+<p>Sharing does not merge the penalties. They remain two objects estimated at
+one value, and no check is made that they are comparable: the two may weigh
+quite different matrices, and the caller decides whether that is the model
+intended. A shared value is most meaningful between penalties of the same
+shape over covariates of comparable scale.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

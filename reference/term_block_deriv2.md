@@ -19,7 +19,8 @@ term_block_deriv2(term, coef = NULL, v, u, ...)
 
 - coef:
 
-  The coefficients, or `NULL` for the ones it carries.
+  The coefficients, one per coefficient of the term, or `NULL` for the
+  ones it carries.
 
 - v, u:
 
@@ -88,25 +89,25 @@ other three where they are, which is the symmetry in `v` and `u`.
 
 Nothing new is derived: \\f\_{p_1p_2p_3}\\ is the third order of
 [`nl_fderiv()`](https://statmodels7.github.io/modelterms7/reference/nl_fderiv.md),
-served by the same four-way machinery as the lower orders, and \\h'''\\
-is
+served by the same routes as the lower orders, and \\h'''\\ is
 [`linkfunctions7::d3linkinv()`](https://statmodels7.github.io/linkfunctions7/reference/d3linkinv.html),
 exact for every shipped link and numerical for a user-defined one. The
-cost is \\O(nP^3)\\ in the term's own parameters, of which there are two
-to four in practice, and the call is made once per pair of
-hyperparameters rather than once per observation.
+cost is \\O(nP^3)\\ in the number \\P\\ of the term's own parameters,
+and the call is made once per pair of hyperparameters rather than once
+per observation.
 
 A break-point term answers according to its construction. With
-`smoothed` an
+`smoothed` set to an
 [`numericals7::abs_smoother()`](https://statmodels7.github.io/numericals7/reference/abs_smoother.html)
 the block is the true Jacobian and the closed forms are the smoother's
 own one order further up than
 [`term_block_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md)
 reads them: with \\u = x - \psi\\, \\P = s''/2\\, \\T = s'''/2\\ and \\Q
-= s''''/2\\, the change columns contribute \\P\\ and \\T\\ twice in the
-break-point and the break-point column contributes the two mixed pieces
-and \\-(\gamma T + \delta Q)\\. The sharp constructions answer zeros:
-for
+= s''''/2\\, the change columns carry \\P\\ (for \\\gamma\\) and \\T\\
+(for \\\delta\\) times the product of the two break-point directions in
+their own entries, and the break-point column carries the two mixed
+pieces and \\-(\gamma T + \delta Q)\\ times that product. The sharp
+constructions answer zeros: for
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
 the second derivative is genuinely zero away from the break-points, the
 truncated line's derivative in the position being an indicator and the
@@ -117,16 +118,18 @@ and
 the block is a working linearization with a frozen weight, which is why
 the first-order generics already answer zeros there.
 
-Two properties of the smoothed branch are worth stating because they are
-exact. Where a break-point sits against its confinement limit the whole
-contribution is zero, every addend carrying a direction in the
-break-point, which the first derivative does not, the position column
-moving with the change whatever the position does. And under
+Two properties of the smoothed branch are exact. Where a break-point
+sits against its confinement limit the whole contribution is zero,
+because every addend carries a direction in the break-point and the
+confinement gates that direction;
+[`term_block_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md)
+is zero there for the same reason. Under
 [`numericals7::smooth_quintic()`](https://statmodels7.github.io/numericals7/reference/smooth_quintic.html),
 which is exact outside \\\[-h, h\]\\, the answer is zero on every
-observation further than the width from a break-point; that smoother is
-\\C^3\\, so its fourth derivative jumps at \\\pm h\\ and the answer is
-exact away from those two points, leaving it exact everywhere else.
+observation further than the width from a break-point. That smoother is
+\\C^3\\, so its fourth derivative jumps at \\\pm h\\, and the answer is
+exact at every observation that is not at distance \\h\\ from a
+break-point.
 
 ## See also
 

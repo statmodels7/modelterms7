@@ -1,4 +1,4 @@
-# How a Break-Point Term's Columns Divide
+# The Components of a Break-Point Term
 
 One entry per coefficient of the term, `beta`, `gamma1` ... , `delta1`
 ... , `psi1` ... , giving the columns that coefficient owns and the
@@ -26,20 +26,21 @@ describes.
 
 ## Details
 
-It is what lets a consumer report a fitted break-point term coefficient
-by coefficient, and what
+It lets a consumer report a fitted break-point term coefficient by
+coefficient. The entries of
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-uses to place a sub-term's penalty on exactly the coordinates it covers.
-Those coordinates are **named** as a subset of the term's own parameters
-and never selected with a map: a separable penalty under a selection map
-is the generalized-lasso problem, which has no proximal operator.
+place a sub-term's penalty on exactly the coordinates that it covers,
+using the same `index` vectors. Those coordinates are **named** as a
+subset of the term's own parameters and are not selected with a map: a
+separable penalty under a selection map is the generalized-lasso
+problem, which has no proximal operator.
 
 ## See also
 
 [`term_components()`](https://statmodels7.github.io/modelterms7/reference/term_components.md)
-for the contract,
+for the structure of an entry,
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-for the penalties the sub-terms bring.
+for the penalties that the sub-terms bring.
 
 ## Examples
 

@@ -2,8 +2,8 @@
 
 Returns the \\n \times k\\ block a built additive term contributes to
 the linear predictor, with the term's coefficient names as column names
-and one row per observation of the data it was built on. The block is
-the term's `X` property, returned as it is stored.
+and one row per observation of the data on which it was built. The block
+is the term's `X` property, returned as it is stored.
 
 ## Usage
 
@@ -17,12 +17,12 @@ term_matrix(term, ...)
 
   A built additive term (see
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
-  A specification throws
+  A specification signals the error
   `"the term has not been built; call term_build(term, data) first."`.
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 
@@ -36,13 +36,15 @@ term was built on and `ncol` equal to
 The block is **not necessarily a base matrix**.
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
 builds a grouping indicator as a `dgCMatrix`, since a row belongs to one
-group and the density is \\1/m\\, and
+group and the fraction of nonzero entries is \\1/m\\ for \\m\\ groups,
+and
 [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md),
-the penalized terms and a smooth with a factor `by` build sparse when
-asked. Code that reads a block therefore tests
-`is.matrix(x) && is.numeric(x)` or a two-dimensional S4 object;
-[`is.matrix()`](https://rdrr.io/r/base/matrix.html) alone is `FALSE` for
-every Matrix class and would reject a block for being economical.
+the penalized terms and a smooth with a factor `by` build a sparse block
+where their `sparse` argument selects it. Code that reads a block
+therefore tests `is.matrix(x) && is.numeric(x)` or a two-dimensional S4
+object; [`is.matrix()`](https://rdrr.io/r/base/matrix.html) alone is
+`FALSE` for every Matrix class and would reject a block merely for being
+stored sparsely.
 
 For a term whose block moves with its own coefficients,
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) and
@@ -50,10 +52,11 @@ For a term whose block moves with its own coefficients,
 this returns the block at the coefficients last committed by
 [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md).
 [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
-says whether that block is a Jacobian or a frozen working linearization.
+reports whether that block is a Jacobian or a frozen working
+linearization.
 
 A structural term contributes no block and registers no method, so
-`term_matrix()` on one stops with S7's method-not-found error.
+`term_matrix()` on one signals S7's method-not-found error.
 
 ## See also
 

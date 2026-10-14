@@ -1,4 +1,4 @@
-# The Penalty Entries a Random-Effect Term Declares
+# Penalty Entries of a Random-Effect Term
 
 One entry over the whole block when the prior reads a group's effects
 together, and one per within-group column when they are independent.

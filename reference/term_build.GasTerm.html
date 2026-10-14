@@ -11,7 +11,7 @@ blueprint. The recursion itself runs later, in term_filter()."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,17 +69,18 @@ property on this branch, so it is <code>TRUE</code> for the result.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><code>by</code> and <code>time</code> are evaluated in the data. Each must give one non-missing
-value per row, and the blueprint records the row indices of each group in
-time order, and the filter iterates over exactly that.</p>
+value per row. The blueprint records the row indices of each group in time
+order, and the filter iterates over exactly that order.</p>
 <p>Each subformula's right-hand side goes through <code><a href="interpret_formula.html">interpret_formula()</a></code> and its
 terms are built, so their blueprints are recorded and a prediction reapplies
 them. A structural sub-term, and one whose own block moves with its
 coefficients, are rejected: a parameter's development must be a fixed
-design. The penalties those sub-terms carry become the term's own
-<code><a href="term_penalties.html">term_penalties()</a></code> entries, keyed <code>parameter::subterm</code>.</p>
-<p>Without <code>time</code> the rows are taken as they come. That is a real choice: the
-recursion is about order, so a data frame that is not already sorted gives a
-different model.</p>
+design. The penalties that those sub-terms carry become entries of the
+term's own <code><a href="term_penalties.html">term_penalties()</a></code>, keyed <code>parameter::subterm</code>.</p>
+<p>Without <code>time</code> the rows of each group are taken in the order in which they
+appear, so a data frame that is not sorted by time gives a different
+model. With <code>time</code>, only the order of the times matters, and a gap between
+two times counts as one step.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

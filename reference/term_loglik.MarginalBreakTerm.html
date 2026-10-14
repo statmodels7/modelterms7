@@ -11,7 +11,7 @@ parameters on the parameter scale."><meta property="og:image" content="https://s
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,22 +86,26 @@ monotone process of active break-points is a hidden Markov chain on the
 \(2^K\) side patterns whose transition factors over the coordinates,
 each flip weighted by its interval's prior mass, so the cost is
 \(n K 2^K\), against the \((n+1)^K\) of the cells. The
-derivatives ride the same recursion: the masses' in the prior's
-parameters, the emissions' in the changes of level.
+derivatives are propagated through the same recursion: the derivatives of
+the interval masses with respect to the parameters of the prior, and the
+derivatives of the emissions with respect to the changes of level.
 For the continuous kinds the conditional is smooth within an interval
-and the integral runs on a fixed Gauss-Kronrod panel per interval
-(<code><a href="https://statmodels7.github.io/numericals7/reference/gauss_kronrod15.html" class="external-link">numericals7::gauss_kronrod15()</a></code>), the interior nodes fixed
-points of the data so that the derivatives in the prior's parameters
-read the prior alone; the region below the data, where the hinge keeps
-moving, is covered by panels that follow the prior's bulk, whose node
-motion the derivatives carry, and the region above it, where the
-conditional is constant, contributes its closed tail mass.</p>
+and the integral runs on Gauss-Kronrod panels
+(<code><a href="https://statmodels7.github.io/numericals7/reference/gauss_kronrod15.html" class="external-link">numericals7::gauss_kronrod15()</a></code>). The interior nodes lie at fixed
+points determined by the data, so the derivatives in the parameters of the
+prior involve the prior alone. The region below the data, where the hinge
+keeps moving, is covered by panels that follow the bulk of the prior, and
+the derivatives carry the motion of their nodes. The region above the data,
+where the conditional is constant, contributes its closed tail mass.</p>
+<p>No panel spans more than 2.5 prior standard deviations. The region below
+the data carries at least four panels, and each interval between two
+consecutive distinct observations at least one, so the number of panels
+grows as <code>psi1.sd</code> decreases against the spacing of the covariate. A group
+that would need more than 4000 panels is rejected.</p>
 <p>The per-observation contributions are the one-step predictive densities
-given the group's observations at smaller covariate values, which sum
-to each group's marginal log-likelihood; producing them costs one pass
-over the component weights per observation, so the decomposition is a
-factor of the group's size dearer than the total alone, which the
-per-group cell or node count already prices.</p>
+given the group's observations at smaller covariate values, and they sum
+to each group's marginal log-likelihood. They are the increments of the
+running logarithm of the forward pass that gives the total.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

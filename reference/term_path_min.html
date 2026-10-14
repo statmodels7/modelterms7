@@ -13,7 +13,7 @@ larger one stops sooner."><meta property="og:image" content="https://statmodels7
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,26 +60,29 @@ larger one stops sooner.</p>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Passed to methods. No shipped method reads anything here.</p></dd>
+<dd><p>Passed to methods. The shipped methods do not use it.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A named list, one entry per penalty of the term, each a single
-number in \((0, 1)\). Empty where the term names none.</p>
+number in \((0, 1)\). Empty where no penalty of the term has a swept
+hyperparameter and a recorded depth.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>It belongs to the term for the same reason the grid size does: how far the
 useful range of a hyperparameter extends is a property of the block, and a
-criterion applies to every term of the model at once.</p>
-<p>It is <strong>one number per penalty</strong>, one per hyperparameter being unnecessary:
-only the path over the size of the kink uses it. A bounded hyperparameter
-is swept over its own interval, and a shape that does not move the kink over
-a geometric grid above its lower bound; a fraction of an emptying value
-means nothing in either.</p>
-<p><code><a href="lasso.html">lasso()</a></code>, <code><a href="enet.html">enet()</a></code>, <code><a href="scad.html">scad()</a></code> and <code><a href="mcp.html">mcp()</a></code> write their <code>min_ratio</code> default of
-<code>1e-4</code> into the term, so they report it whether or not the caller set one.
+criterion is applied to every term of the model at once.</p>
+<p>It is <strong>one number per penalty</strong>, because only the path over the size of
+the kink uses it. A bounded hyperparameter is swept over its own interval,
+and a shape that does not move the kink over a geometric grid above its
+lower bound; a fraction of an emptying value has no meaning on either axis.</p>
+<p><code><a href="lasso.html">lasso()</a></code>, <code><a href="enet.html">enet()</a></code>, <code><a href="scad.html">scad()</a></code> and <code><a href="mcp.html">mcp()</a></code> write their <code>min_ratio</code> default
+into the term, so each reports it whether or not the caller set one, as
+long as the path over <code>lambda</code> is built. A penalty whose <code>lambda</code> is held or
+written out reports nothing, and the constructors reject an explicit
+<code>min_ratio</code> for it.
 <code><a href="ridge.html">ridge()</a></code>, <code><a href="s.html">s()</a></code>, <code><a href="te.html">te()</a></code> and <code><a href="random.html">random()</a></code> have no path and report nothing.</p>
 <p>The keys are <code><a href="term_penalties.html">term_penalties()</a></code>'s entry names, <code>""</code> for a penalty over the
 whole term.</p>
@@ -102,8 +105,10 @@ whole term.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1e-06</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># No path, nothing to report.</span></span></span>
+<span class="r-in"><span><span class="co"># No path, or no swept hyperparameter, so nothing to report.</span></span></span>
 <span class="r-in"><span><span class="fu">term_path_min</span><span class="op">(</span><span class="fu"><a href="ridge.html">ridge</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
+<span class="r-in"><span><span class="fu">term_path_min</span><span class="op">(</span><span class="fu"><a href="lasso.html">lasso</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span>, lambda <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

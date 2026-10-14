@@ -1,4 +1,4 @@
-# A Term Without State Is Not Continued
+# Base Method of term_continue()
 
 The base method signals an error.
 

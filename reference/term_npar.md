@@ -5,11 +5,11 @@ columns of the design block for an additive term, and the number of
 entries of
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
 for a structural one, which has no block. It is the length of the vector
-a
+into which a
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-entry indexes into, the length
-[`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
-measures against, and the length a fit reserves for the term.
+entry indexes, the length against which
+[`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md) is
+measured, and the length that a fit reserves for the term.
 
 ## Usage
 
@@ -23,12 +23,12 @@ term_npar(term, ...)
 
   A built term (see
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
-  An unbuilt additive term throws
+  An unbuilt additive term signals the error
   `"the term has not been built; call term_build(term, data) first."`.
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 
@@ -38,8 +38,8 @@ A single whole number.
 
 The two methods are the two branches. On
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
-it is `ncol(term@X)`, so it equals `length(term_coef_names(term))` and a
-specification throws. On
+it is `ncol(term@X)`, so it equals `length(term_coef_names(term))`, and
+a specification signals an error. On
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
 it is `length(term_params(term))`, which is the count of the term's own
 parameters after any subformula has expanded: `gas(p = 1, q = 1)` has
@@ -55,7 +55,7 @@ for the names behind the count,
 [`term_matrix()`](https://statmodels7.github.io/modelterms7/reference/term_matrix.md)
 for the block,
 [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
-for what the term spends of it.
+for the effective degrees of freedom of the term.
 
 ## Examples
 

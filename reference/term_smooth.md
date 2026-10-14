@@ -21,7 +21,7 @@ term_smooth(term, ...)
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 
@@ -29,25 +29,26 @@ A single logical, never `NA`.
 
 ## The answer comes from the penalties
 
-The term does not declare it. Every entry of
+The term does not declare the answer. For every entry of
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-is asked for its kink set through
+the function evaluates the kink set through
 [`penalties7::penalty_kinks()`](https://statmodels7.github.io/penalties7/reference/penalty_kinks.html),
-at a probe value inside each hyperparameter's bounds, and the answer is
-`FALSE` as soon as one entry reports a point. So an unpenalized term is
-smooth, a ridge or a Gaussian prior is smooth, and lasso, SCAD, MCP and
-the elastic net are not. A term cannot disagree with its own penalties.
+at a probe value inside each hyperparameter's bounds, and the result is
+`FALSE` as soon as one entry has a point in its kink set. An unpenalized
+term is therefore smooth, a ridge or a Gaussian prior is smooth, and
+lasso, SCAD, MCP and the elastic net are not. The answer always agrees
+with the penalties that the term carries.
 
 The probe is any admissible value, the kink set being structural: the
 midpoint of a bounded interval, one step inside a half-bounded one, zero
 where the interval is the whole line.
 
-## It answers for the whole term
+## The answer covers the whole term
 
 A term carrying a penalty over part of its parameters and none over the
-rest answers for the part. `nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g))`
-is not smooth: the coefficients developing `a` sit at a kink, although
-`r` is unpenalized.
+rest answers from the part that is penalized.
+`nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g))` is not smooth: the
+coefficients developing `a` sit at a kink, although `r` is unpenalized.
 
 ## A specification is always smooth
 
@@ -57,14 +58,15 @@ so
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 on an unbuilt term is empty and this answers `TRUE` whatever penalty the
 term will carry. `term_smooth(lasso(~ x))` is `TRUE` and
-`term_smooth(term_build(lasso(~ x), d))` is `FALSE`. Ask a built term.
+`term_smooth(term_build(lasso(~ x), d))` is `FALSE`. The function is
+therefore applied to a built term.
 
 ## See also
 
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-for the entries it runs over,
+for the entries that it evaluates,
 [`penalties7::penalty_kinks()`](https://statmodels7.github.io/penalties7/reference/penalty_kinks.html)
-for the set it reads,
+for the kink set,
 [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md),
 which uses the same split to count degrees of freedom.
 

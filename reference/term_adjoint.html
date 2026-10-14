@@ -11,7 +11,7 @@ it was given, both accounting for the recursion."><meta property="og:image" cont
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -93,15 +93,16 @@ log-density to obtain the derivative in another equation's predictor.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p><code><a href="term_filter.html">term_filter()</a></code> returns the derivative of the predictor in the
-term's own parameters, which is the piece estimating those needs.
-Estimating the coefficients of the same equation needs something else: the level at
-one time is driven by the scores at earlier ones, which are read at
-predictors those coefficients also enter, so the derivative of the
-predictor in a coefficient carries a term the block does not. Propagating
-that forward would cost one derivative array per coefficient; the reverse
-recursion here costs one pass whatever their number, and is exact.</p>
-<p>Two derivatives are returned because the score the caller supplies depends
-on more than the predictor it is read at. Writing
+term's own parameters, which is the piece that the estimation of those
+parameters needs. Estimating the coefficients of the same equation needs a
+different derivative: the level at one time is driven by the scores at
+earlier times, which are read at predictors that those coefficients also
+enter, so the derivative of the predictor in a coefficient carries a term
+that the block does not. Propagating that forward would cost one derivative
+array per coefficient; the reverse recursion here costs one pass whatever
+their number, and is exact.</p>
+<p>Two derivatives are returned because the score that the caller supplies
+depends on more than the predictor at which it is read. Writing
 \(s_t\) for that score and \(\bar{s}_t\) for
 <code>dscore</code>, the derivative of the objective in anything the score
 depends on is</p>

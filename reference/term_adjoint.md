@@ -57,17 +57,18 @@ log-density to obtain the derivative in another equation's predictor.
 
 [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
 returns the derivative of the predictor in the term's own parameters,
-which is the piece estimating those needs. Estimating the coefficients
-of the same equation needs something else: the level at one time is
-driven by the scores at earlier ones, which are read at predictors those
-coefficients also enter, so the derivative of the predictor in a
-coefficient carries a term the block does not. Propagating that forward
-would cost one derivative array per coefficient; the reverse recursion
-here costs one pass whatever their number, and is exact.
+which is the piece that the estimation of those parameters needs.
+Estimating the coefficients of the same equation needs a different
+derivative: the level at one time is driven by the scores at earlier
+times, which are read at predictors that those coefficients also enter,
+so the derivative of the predictor in a coefficient carries a term that
+the block does not. Propagating that forward would cost one derivative
+array per coefficient; the reverse recursion here costs one pass
+whatever their number, and is exact.
 
-Two derivatives are returned because the score the caller supplies
-depends on more than the predictor it is read at. Writing \\s_t\\ for
-that score and \\\bar{s}\_t\\ for `dscore`, the derivative of the
+Two derivatives are returned because the score that the caller supplies
+depends on more than the predictor at which it is read. Writing \\s_t\\
+for that score and \\\bar{s}\_t\\ for `dscore`, the derivative of the
 objective in anything the score depends on is
 
 \$\$\frac{\partial L}{\partial \theta} = \left.\frac{\partial

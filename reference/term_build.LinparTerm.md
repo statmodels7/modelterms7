@@ -6,7 +6,7 @@ term's formula against `data`, prefixes the coefficient names with the
 term's label, and records the blueprint
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 will reapply: the terms object with the response deleted, the factor
-levels, the contrasts used, and the storage settled on.
+levels, the contrasts used, the storage settled on and `drop_intercept`.
 
 ## Arguments
 
@@ -36,9 +36,9 @@ coefficient names.
 called with `na.action = na.pass`, so a row with a missing covariate
 keeps its place and the block stays aligned with the response, and with
 `drop.unused.levels = FALSE`, so a factor level present in the data but
-used by no row still gets a column. Both choices are about alignment: a
-block whose rows have been silently dropped no longer matches the
-response it is fitted against.
+used by no row still gets a column. The first choice keeps the rows of
+the block aligned with the response, and the second keeps the columns of
+the block aligned with the coefficients of the fit.
 
 ## The storage
 

@@ -21,7 +21,7 @@ term_penalty(term, ...)
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 
@@ -29,24 +29,30 @@ A penalties7 penalty object, or `NULL` when the term is unpenalized,
 when its penalty covers only part of its parameters, or when it has not
 been built.
 
-## It answers only for a penalty over the whole block
+## A penalty over the whole block
 
 A term whose penalty reaches part of its parameters returns `NULL` here
 and declares that penalty through
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
-which names the parameters it covers.
+which names the parameters it covers. A
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
-penalizes its changes of slope and leaves the linear effect and the
-break-points free;
-[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) and
+term and an
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) term
+carry a penalty only where a subformula on one of their parameters
+declares one, as in `gamma ~ 0 + lasso(~ 1)` over the changes of slope
+of a
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+and their other parameters stay free;
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
-carry the penalties of whatever sub-terms develop their own parameters.
-Reporting one of those here would say it covers the block, so this
-generic answers only where that is true.
+declares its penalties through
+[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+in the same way. Reporting one of those penalties here would state that
+it covers the whole block, so this generic answers only where that
+holds.
 
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-is therefore the general question, and it is the one a fitting layer
-asks. This one is the convenience for the common case.
+is therefore the general function, and a fitting layer enumerates
+penalties through it. This one is the shortcut for the common case.
 
 ## A specification carries no penalty
 
@@ -63,7 +69,7 @@ and, through it, for
 The one method is registered on
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 and reads the `penalty` property. A structural term has no such
-property, so `term_penalty()` on one stops with S7's method-not-found
+property, so `term_penalty()` on one signals S7's method-not-found
 error.
 
 ## See also
@@ -95,8 +101,12 @@ c(name = p@penalty_name, params = p@params, n_coef = p@n_coef)
 #> "quadratic"    "lambda"         "1" 
 
 # A term whose penalty covers part of its parameters answers NULL here
-# and declares it through term_penalties() instead.
-sb <- term_build(seg(x, npsi = 1), data.frame(x = sort(runif(50, 0, 10))))
+# and declares it through term_penalties() instead: a lasso on the
+# change of slope of a break-point term.
+sb <- term_build(seg(x, npsi = 1, gamma ~ 0 + lasso(~ 1)),
+                 data.frame(x = sort(runif(50, 0, 10))))
 term_penalty(sb)
 #> NULL
+vapply(term_penalties(sb), function(z) z$name, character(1))
+#> [1] "gamma1::lasso(~1)"
 ```

@@ -2,7 +2,7 @@
 
 [`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
 differentiated once more along a second direction. It is what the exact
-HESSIAN of a marginal criterion needs when the model carries a term that
+Hessian of a marginal criterion needs when the model carries a term that
 bends the predictor.
 
 ## Usage
@@ -84,43 +84,44 @@ directions.
 
 A marginal criterion carries \\-\frac{1}{2}\log\|K\|\\ at the penalized
 mode, so its gradient in one hyperparameter reads \\\partial K/\partial
-u\\ along the direction the mode moves in, which is
+u\\ along the direction in which the mode moves, which is
 [`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md),
-and its second derivative in a PAIR reads the same object along two
-directions. Where the predictor is \\X\beta\\ that is the family's
-derivatives against the design and nothing else; where a filter produces
-it, \\K\\ carries \\\sum_t w_t \ell\_{p,t}E_t\\ as well, and
-differentiating that twice asks for \\\partial^4 e_t/\partial u^4\\.
+and its second derivative in a pair of hyperparameters reads the same
+object along two directions. Where the predictor is \\X\beta\\ that is
+the family's derivatives against the design and nothing else; where a
+filter produces it, \\K\\ carries \\\sum_t w_t \ell\_{p,t}E_t\\ as well,
+and differentiating that twice requires \\\partial^4 e_t/\partial u^4\\.
 
-**Only contracted, and only twice.** The full fourth derivative is an
-\\m^4\\ array per observation and is never formed: what is propagated is
-a matrix per observation, the same size as the curvature and therefore
-the same \\O(nm^2)\\. A caller wanting a Hessian over \\n_h\\
-hyperparameters calls this once per pair.
+The derivative is contracted in two directions only. The full fourth
+derivative is an \\m^4\\ array per observation and is never formed: what
+is propagated is a matrix per observation, the same size as the
+curvature and therefore the same \\O(nm^2)\\. A caller that needs a
+Hessian over \\n_h\\ hyperparameters calls this once per pair.
 
-**Five states, not three.** The recursion carries \\F_t\\, \\\Phi_t\\,
-\\\Psi^{(v)}\_t\\, \\\Psi^{(w)}\_t\\ and \\\Omega_t\\: BOTH third
-derivatives, because the product rule at the fourth order pairs each
-direction's third derivative with the other direction, so a recursion
-holding one contraction cannot reach this order.
+The recursion carries five states, \\F_t\\, \\\Phi_t\\,
+\\\Psi^{(v)}\_t\\, \\\Psi^{(w)}\_t\\ and \\\Omega_t\\. Both third
+derivatives are carried, because the product rule at the fourth order
+pairs each direction's third derivative with the other direction, so a
+recursion holding one contraction cannot reach this order.
 
-**What the model supplies.** Each order of differentiation pulls in one
-more order of the family, so beyond the third order's `dcurv` and `N`
-the `blocks` callback returns, at an observation,
+Each order of differentiation involves one more order of the family, so
+beyond the third order's `dcurv` and `N` the `blocks` callback returns,
+at an observation,
 
 \$\$\texttt{Q} = \sum\_{r,r'}\ell\_{pprr'}V_r^\top V\_{r'}, \qquad
 \texttt{P} = \sum\_{r,r'}\Big(\sum\_{s,s'}\ell\_{prr'ss'} (V_s\cdot
 v)(V\_{s'}\cdot w)\Big)V_r^\top V\_{r'},\$\$
 
 with `cppp` \\= \ell\_{ppp}\\ beside them, and `N` a list of two, one
-per direction. `P` is the only place the family's FIFTH derivative
-enters; `cppp` is a scalar no contraction recovers, the level's own
-curvature moving by it.
+per direction. `P` is the only place where the family's fifth derivative
+enters. The scalar `cppp` is not recovered by any contraction; it is the
+amount by which the level's own curvature moves.
 
 The base method returns zeros, so an additive term is covered without
-writing anything. A structural term refuses, for the reason
+writing anything. A structural term signals an error, for the reason
+that
 [`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
-gives: zero there would be a false statement rather than a true one.
+gives: a zero fourth derivative would misstate it.
 
 ## See also
 
@@ -129,7 +130,7 @@ for the third order this differentiates,
 [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
 for the second,
 [`statmodels7::reml()`](https://statmodels7.github.io/statmodels7/reference/reml.html)
-for the criterion whose Hessian asks for it.
+for the criterion whose Hessian requires it.
 
 ## Examples
 
@@ -138,7 +139,7 @@ set.seed(1)
 dd <- data.frame(t = 1:20, y = rnorm(20))
 term <- term_build(linpar(~t), dd)
 # an additive term bends no predictor, so every order above the first is
-# zero and the base method says so
+# zero, as the base method returns
 out <- term_fourth(term, rep(0, 20), dd$y,
                    score = function(e, i) dd$y[i] - e,
                    curvature = function(e, i) -1, psi = list(),

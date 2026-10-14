@@ -13,7 +13,7 @@ of its contribution, which depends on where the parameters currently are."><meta
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -93,9 +93,13 @@ break-point is read off two coefficients instead of being incremented.
 <code><a href="term_jacobian_block.html">term_jacobian_block()</a></code> is what tells the two apart.</p>
 <p>The refresh is committed once per sweep, never per trial point. A
 discontinuous term's rescaling factor halves whenever the break-point
-reverses direction, which is a fact about the path: advancing it inside a
-line search would anneal on every trial, and refreshing from the
-specification each time would freeze the schedule at its starting value.</p>
+reverses direction, and is not allowed below a floor derived from the
+conditioning of the working block, which the refresh records. The factor
+depends on the path of the iteration: advancing it inside a line search
+would anneal on every trial, and refreshing from the specification each time
+would freeze the schedule at its starting value.</p>
+<p>For a nonlinear term <code>coef</code> must have one entry per coefficient of the term;
+a vector of another length is rejected.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

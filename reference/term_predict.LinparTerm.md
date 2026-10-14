@@ -11,7 +11,7 @@ names. Nothing is re-derived from the new rows.
 
   A built
   [`LinparTerm()`](https://statmodels7.github.io/modelterms7/reference/LinparTerm.md).
-  An unbuilt one throws
+  An unbuilt one signals the error
   `"the term has not been built; call term_build(term, data) first."`.
 
 - newdata:
@@ -35,12 +35,13 @@ The levels come from `blueprint$xlev`, so a factor in `newdata` need
 carry only the levels its own rows use and still gets the full set of
 columns. A level the blueprint does not know is rejected by
 [`stats::model.frame()`](https://rdrr.io/r/stats/model.frame.html) with
-`"factor g has new levels zz"`, which is the right answer: a coefficient
-was never fitted for it.
+`"factor g has new levels zz"`, because no coefficient was fitted for
+that level.
 
 The storage comes from `blueprint$sparse` rather than being decided
-again, so a prediction does not spend at new rows what the build was
-careful not to. `na.action = na.pass` again keeps every row.
+again, so a prediction builds the same kind of block as the fit and does
+not densify a sparse block at new rows. `na.action = na.pass` again
+keeps every row.
 
 ## See also
 
@@ -66,7 +67,7 @@ levels(nd$g)
 dim(term_predict(b, nd))
 #> [1] 4 5
 
-# A level the fit never saw is refused.
+# A level the fit never saw is rejected.
 bad <- dd
 levels(bad$g) <- c("a", "b", "c", "zz")
 try(term_predict(b, bad))

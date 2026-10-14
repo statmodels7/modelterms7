@@ -15,7 +15,7 @@ constructs it."><meta property="og:image" content="https://statmodels7.github.io
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,13 +77,13 @@ constructs it.</p>
 <dl><dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
 <dd><p>A character string prefixed to the term's coefficient names
 when non-empty, and used as the title of <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> and the tag of
-<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>. <code>character(0)</code> and <code>""</code> both mean no label.</p></dd>
+<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>. The empty string <code>""</code> means no label.</p></dd>
 
 
 <dt id="arg-hyper">hyper<a class="anchor" aria-label="anchor" href="#arg-hyper"></a></dt>
-<dd><p>The hyperparameters of the term's penalty the caller <strong>held</strong>,
-as a named list keyed by the penalty's names. Empty, the default, means
-every one of them is estimated. See <code><a href="term_hyper.html">term_hyper()</a></code>.</p></dd>
+<dd><p>The hyperparameters of the term's penalty that the caller
+<strong>held</strong>, as a named list keyed by the penalty's names. Empty, the
+default, means every one of them is estimated. See <code><a href="term_hyper.html">term_hyper()</a></code>.</p></dd>
 
 
 <dt id="arg-grid">grid<a class="anchor" aria-label="anchor" href="#arg-grid"></a></dt>
@@ -164,24 +164,24 @@ default Gaussian.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An S7 object of class <code>RandomTerm</code>, inheriting from
-<code><a href="additive_term.html">additive_term()</a></code> and <code><a href="model_term.html">model_term()</a></code>, with the four properties above
-beside the ten they supply.</p>
+<code><a href="additive_term.html">additive_term()</a></code> and <code><a href="model_term.html">model_term()</a></code>, with the four properties above in
+addition to those of the two parent classes.</p>
     </div>
     <div class="section level2">
-    <h2 id="the-three-properties-of-its-own">The three properties of its own<a class="anchor" aria-label="anchor" href="#the-three-properties-of-its-own"></a></h2>
+    <h2 id="the-properties-of-its-own">The properties of its own<a class="anchor" aria-label="anchor" href="#the-properties-of-its-own"></a></h2>
     <p><code>formula</code> is the bar formula as given, <code>~ 1 | g</code> or <code>~ x | g</code>, kept with its
-environment. <code>correlated</code> says whether the <strong>default</strong> Gaussian lets the
-within-group effects depend on each other; it is read only where <code>distrib</code>
-is <code>NULL</code>, the two saying the same thing.</p>
+environment. <code>correlated</code> states whether the <strong>default</strong> Gaussian lets the
+within-group effects depend on each other. It is read only where <code>distrib</code>
+is <code>NULL</code>, since a distribution given in <code>distrib</code> determines the same
+thing.</p>
 <p><code>tag</code> is the covariance label written between two bars, <code>~ 1 | u | g</code>, or
 <code>NA_character_</code> where the formula carries one bar. It is reported by
-<code><a href="term_tag.html">term_tag()</a></code>. The two say different things and the difference is the scope:
-<code>correlated</code> is about the columns of this term, <code>tag</code> about the columns of
-other terms.</p>
+<code><a href="term_tag.html">term_tag()</a></code>. The <code>tag</code> and <code>correlated</code> differ in scope: <code>correlated</code>
+concerns the columns of this term, and <code>tag</code> the columns of other terms.</p>
 <p><code>distrib</code> is the effects' distribution as supplied, or <code>NULL</code> for the
-default. What the build turns it into is a <span class="pkg">penalties7</span> penalty, read
-through <code><a href="term_penalty.html">term_penalty()</a></code> or <code><a href="term_penalties.html">term_penalties()</a></code>, so the hyperparameter names
-and their bounds all come from the distribution.</p>
+default. The build turns it into a <span class="pkg">penalties7</span> penalty, read through
+<code><a href="term_penalty.html">term_penalty()</a></code> or <code><a href="term_penalties.html">term_penalties()</a></code>, so the hyperparameter names and
+their bounds all come from the distribution.</p>
     </div>
     <div class="section level2">
     <h2 id="the-block-is-sparse-by-construction">The block is sparse by construction<a class="anchor" aria-label="anchor" href="#the-block-is-sparse-by-construction"></a></h2>
@@ -192,7 +192,8 @@ and passing one is an error.</p>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="random.html">random()</a></code>, the constructor; <code><a href="term_penalties.html">term_penalties()</a></code> for the entries a
-built one declares; <code><a href="edf.html">edf()</a></code> for what a fitted random effect spends.</p></div>
+built one declares; <code><a href="edf.html">edf()</a></code> for the effective degrees of freedom of a
+fitted random effect.</p></div>
     </div>
 
     <div class="section level2">
@@ -205,7 +206,7 @@ built one declares; <code><a href="edf.html">edf()</a></code> for what a fitted 
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span><span class="va">tm</span><span class="op">@</span><span class="va">formula</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x | g</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5611f36d6750&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5606ef5c8ea0&gt;</span>
 <span class="r-in"><span><span class="va">tm</span><span class="op">@</span><span class="va">correlated</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span></span></span>

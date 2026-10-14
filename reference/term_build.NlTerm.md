@@ -24,19 +24,27 @@ supplied returns the right components.
 
 ## Value
 
-The term with `X`, `coef_names`, `blueprint` and, where a subformula
-brought one, `penalty` filled.
+The term with `X`, `coef_names`, `nl_params`, `links`, `deriv_mode` and
+`blueprint` filled. The penalties of the sub-terms are kept in the
+blueprint and reported by
+[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md);
+the `penalty` property stays `NULL`.
 
 ## What is settled here
 
 On the formula route
 [`stats::deriv()`](https://rdrr.io/r/stats/deriv.html) is tried on the
-expression, and `deriv_mode` records whether it succeeded. Every
-function given to `gradient`, `hessian`, `deriv3` or `deriv4` is called
-once and its names checked against the components of that order: a name
-that is not one of them, a missing component or a repeated one throws
-here. Falling back to the numerical route would leave an exact
-derivative silently unused, which is worse than not having it.
+expression, and `deriv_mode` records whether it succeeded. The
+expressions of orders two to four are formed with
+[`stats::D()`](https://rdrr.io/r/stats/deriv.html) where that succeeds,
+and the orders that are analytic, whether symbolic or supplied, are
+recorded in the blueprint. Every function given to `gradient`,
+`hessian`, `deriv3` or `deriv4` is called once and its names and lengths
+are checked against the components of that order: a name that is not one
+of them, a missing component, a repeated one or a component of a length
+other than 1 or `n` is an error here. The term does not fall back to the
+numerical route in these cases. A name in `start`, `links` or
+`subformulas` that is not a parameter is an error as well.
 
 Each parameter's subformula goes through
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
@@ -51,11 +59,12 @@ predictor are then read at the coefficients rather than stored.
 ## The starting point
 
 The block is the Jacobian **at the starting coefficients**, so it is
-only as good as they are. Where `start` names nothing,
+only as good as they are. A parameter that `start` does not name is
+built at coefficient zero. When the fitting layer supplies a response,
 [`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)
-estimates the parameters from the data over a deterministic grid on each
-free parameter's chart; zero is a degenerate point for a nonlinear
-function, not a neutral one.
+estimates each such parameter over a deterministic grid on its chart,
+because zero can be a degenerate starting point for a nonlinear
+function.
 
 ## See also
 

@@ -2,7 +2,7 @@
 
 Prints two lines: the label and the number of regimes, followed by the
 term's parameters. A built term reports how many groups the recursion
-runs over; a specification says so instead.
+runs over, and a specification reports no group count.
 
 ## Arguments
 
@@ -36,8 +36,8 @@ was given a `by`. The parameter list is
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md),
 the same before and after a build, `k` alone determining it.
 
-Note that a built term is described by its count of groups rather than
-by the word "built", the count being the more useful line.
+A built term is described by its count of groups, not by the word
+"built".
 
 ## See also
 
@@ -59,7 +59,7 @@ term_build(regime(2, by = id, time = t), dd)
 #> <RegimeTerm> 'regime': 2 regimes; 2 group(s)
 #>   parameters: level1, gap2, alr1.1, alr2.1
 
-# Three regimes carry three levels and six log-ratios.
+# Three regimes carry one level, two gaps and six log-ratios.
 regime(3)
 #> <RegimeTerm> 'regime': 3 regimes (specification)
 #>   parameters: level1, gap2, gap3, alr1.1, alr1.2, alr2.1, alr2.2, alr3.1, alr3.2

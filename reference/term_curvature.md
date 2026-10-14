@@ -2,8 +2,8 @@
 
 The Jacobian of the predictor the term produces with respect to a
 caller's unknowns, and the second derivative of that predictor
-contracted against a caller's weights. It is what an observed
-information needs and
+contracted against a caller's weights. This second derivative is the
+piece of the Hessian of the log-likelihood that
 [`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
 does not give.
 
@@ -49,8 +49,10 @@ term_curvature(term, eta, y, score, curvature, psi, g, seed, blocks, ...)
 
 - blocks:
 
-  A function of the predictor, the index and the current Jacobian row,
-  returning `cross` and `M`.
+  A function `function(e, i, D, act)` of the predictor, the observation
+  index, the current Jacobian row restricted to the active set and that
+  set, returning `cross` and `M` on the active set. A function of the
+  first three arguments only is accepted and is given the full row.
 
 - ...:
 
@@ -66,31 +68,36 @@ the `ncol(seed)` by `ncol(seed)` second derivative contracted against
 ## Details
 
 The gradient of a model carrying a filter needs no second derivative and
-no forward Jacobian: the reverse recursion answers it in one pass. The
-curvature needs both. Writing \\u\\ for the caller's unknowns, \\D_t =
-\partial e_t/\partial u\\ and \\E_t = \partial^2 e_t/\partial u \partial
-u^\top\\, the observed information of the model is
+no forward Jacobian: the reverse recursion gives it in one pass. The
+curvature needs both. Writing \\u\\ for the caller's unknowns, \\p\\ for
+the distribution parameter whose predictor carries the filter, \\D_t =
+\partial e_t/\partial u\\ for the derivative of that predictor,
+\\V\_{q,t}\\ for the derivative of the predictor of parameter \\q\\
+(with \\V\_{p,t} = D_t\\) and \\E_t = \partial^2 e_t/\partial u \partial
+u^\top\\, the Hessian of the log-likelihood in \\u\\ is
 
 \$\$\sum_t w_t \sum\_{q,r} \ell\_{qr,t} V\_{q,t}^\top V\_{r,t} + \sum_t
 w_t \ell\_{p,t} E_t,\$\$
 
-whose first sum is a weighted crossproduct the caller assembles and
-whose second is what this returns, the weights \\g_t = w_t\ell\_{p,t}\\
-being supplied.
+and the observed information is its negative. The first sum is a
+weighted crossproduct that the caller assembles, and the second is what
+this returns, the weights \\g_t = w_t\ell\_{p,t}\\ being supplied.
 
 `seed` is \\\partial \eta^{0}/\partial u\\, one row per observation: the
-caller says how its unknowns reach the static predictor and the term
-knows nothing else about them. `blocks` is where the model's own
-derivatives enter, since the score the recursion is driven by depends on
-every equation, beyond the predictor it is read at. It is called once
-per observation with the predictor there and the Jacobian the recursion
-has reached, and returns the two quantities that seed the first and
-second derivatives of that score,
+caller supplies how its unknowns reach the static predictor, and the
+term holds no other information about them. `blocks` is where the
+model's own derivatives enter, since the score that drives the recursion
+depends on every equation, beyond the predictor at which it is read. It
+is called once per observation, with the predictor there, the index, the
+Jacobian row that the recursion has reached (restricted to the active
+coordinates of the group) and the indices of those coordinates, and it
+returns the two quantities that seed the first and second derivatives of
+that score,
 
 \$\$\dot S_t = \ell\_{pp,t}D_t + \texttt{cross}, \qquad \ddot S_t =
 \ell\_{pp,t}E_t + \texttt{M},\$\$
 
-with `cross` \\= \sum\_{q\ne p}\ell\_{pq,t}C\_{q,t}\\ and `M` \\=
+with `cross` \\= \sum\_{q\ne p}\ell\_{pq,t}V\_{q,t}\\ and `M` \\=
 \sum\_{r,r'}\ell\_{prr',t}V\_{r,t}^\top V\_{r',t}\\, the third
 derivatives of the log-density in the predictors. A model of one
 equation has `cross` zero and `M` equal to \\\ell\_{ppp}D^\top D\\.

@@ -29,7 +29,7 @@ A list of one `q` by `q` matrix per coefficient.
 
 The second derivative of a marginal criterion in a pair of
 hyperparameters reads the fourth derivative of the predictor along the
-two directions the mode moves in, and the persistence reaches the
+two directions in which the mode moves, and the persistence reaches the
 predictor through this map. As at the third order it is needed only
 contracted, so what is propagated is a matrix per coefficient and never
 a four-index array.
@@ -46,15 +46,16 @@ T^{(k-1)}\_{k-i}\[w\] - w_k T^{(k-1)}\_{k-i}\[v\] -
 e_k\big(T^{(k-1)}\_{k-i}\[v\]w\big)^{\\\top} -
 \big(T^{(k-1)}\_{k-i}\[v\]w\big)e_k^{\top}.\$\$
 
-Both third derivatives are carried, not one: the last two terms couple
-\\T\[v\]\\ with \\w\\ and \\T\[w\]\\ with \\v\\, so a recursion holding
-a single contraction cannot reach this order.
+Both third-order contractions \\T\[v\]\\ and \\T\[w\]\\ are carried: the
+terms in \\v_k\\ and \\w_k\\ use one each, and the last two terms use
+\\T\[v\]\\ against \\w\\, so a recursion holding a single contraction
+cannot reach this order.
 
-The map is multilinear of degree \\k\\ in the first \\k\\ partial
-autocorrelations, so the result is identically zero for \\q \le 3\\: the
-first coefficient carrying a monomial of degree four is
-\\\xi^{(4)}\_1\\, which needs \\q = 4\\. A check of this function that
-stops at \\q = 3\\ compares zero with zero and asserts nothing.
+Each coefficient \\\xi^{(k)}\_i\\ is a polynomial of degree at most
+\\k\\ in the first \\k\\ partial autocorrelations, multilinear in them,
+so the result is identically zero for \\q \le 3\\. The first coefficient
+carrying a monomial of degree four is \\\xi^{(4)}\_2\\, which needs \\q
+= 4\\. A comparison with a reference therefore needs \\q \ge 4\\.
 
 ## See also
 

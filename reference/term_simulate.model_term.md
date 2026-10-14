@@ -1,4 +1,4 @@
-# A Term Without State Draws Nothing
+# Base Method of term_simulate()
 
 The base method signals an error: an ordinary term contributes its block
 times its coefficients and has nothing of its own to draw.

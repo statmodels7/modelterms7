@@ -9,7 +9,7 @@ recursion, giving the exact Hessian of the mixed log-likelihood."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,11 +59,11 @@ recursion, giving the exact Hessian of the mixed log-likelihood.</p>
 
 <dt id="arg-logdens-grad-hess">logdens, grad, hess<a class="anchor" aria-label="anchor" href="#arg-logdens-grad-hess"></a></dt>
 <dd><p>The log-density and its first two derivatives in
-the predictors.</p></dd>
+the predictors. The last returns an array of dimension <code>c(n, p, p)</code>.</p></dd>
 
 
 <dt id="arg-psi">psi<a class="anchor" aria-label="anchor" href="#arg-psi"></a></dt>
-<dd><p>The term's parameters.</p></dd>
+<dd><p>The term's parameters on the parameter scale.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
@@ -79,7 +79,8 @@ the predictors.</p></dd>
 
 
 <dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
-<dd><p>Observation weights.</p></dd>
+<dd><p>Observation weights: one number or one per observation,
+none missing.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -89,6 +90,15 @@ the predictors.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with <code>loglik</code>, <code>gradient</code> and <code>hessian</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>The recursion runs in R over each group in time order. The derivatives in
+the term's own parameters are taken on the unconstrained scale: the first
+level and the log-ratios as they are, and each gap through its logarithm.
+The callbacks <code>logdens</code>, <code>grad</code> and <code>hess</code> are called once per regime with
+the whole index vector, and a result of the wrong length or shape signals an
+error.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

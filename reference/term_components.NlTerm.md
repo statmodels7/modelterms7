@@ -27,16 +27,14 @@ describes.
 ## Details
 
 A consumer reads it to report a fitted nonlinear term parameter by
-parameter, and
-[`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
-counts over it. A coefficient name is built for a reader, so the
-division cannot be recovered by parsing one back; the term has to say
-it.
+parameter and to place the coordinates of each sub-term. A coefficient
+name is meant for display, so the division of the columns cannot be
+recovered by parsing the names; the term records it in its blueprint.
 
 ## See also
 
 [`term_components()`](https://statmodels7.github.io/modelterms7/reference/term_components.md)
-for the contract,
+for the structure of an entry,
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 for the penalties those sub-terms bring.
 

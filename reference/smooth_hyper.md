@@ -1,8 +1,10 @@
 # The Held Smoothing Parameters of a Smooth
 
-Carries the `lambda` a smooth's constructor was given onto the names its
-penalty uses, and checks it against the positivity every smoothing
-parameter obeys.
+Carries the `hyper` argument of
+[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) or
+[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md) onto
+the names its penalty uses, and checks that every held smoothing
+parameter is finite and strictly positive.
 
 ## Usage
 

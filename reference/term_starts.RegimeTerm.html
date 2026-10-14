@@ -13,7 +13,7 @@ the first level staying where the first start put it."><meta property="og:image"
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,16 +70,15 @@ unconstrained scale.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>A log-ratio of standard deviation 2 reaches a transition probability of
-0.02 or 0.98 about one time in three, so the draws cover chains that stay
+    <p>A log-ratio of standard deviation 2 gives transition probabilities spread
+over the interval from near 0 to near 1, so the draws cover chains that stay
 in a regime and chains that leave it at once. A gap scaled by
 \(e^{\pm 0.7}\), about a factor of two either way, keeps the levels
-ordered and within the range of the response. The draw for start
-\(s\) is made with the seed \(100 + s - 1\), and the caller's random
-number generator is restored afterwards, so the same fit gives the same
-starts and does not move the caller's stream. Measured on <code><a href="https://rdrr.io/pkg/MASS/man/geyser.html" class="external-link">MASS::geyser</a></code>
-with three regimes, eight starts reach five distinct maxima of the
-log-likelihood, from -1053.39 to -1210.49.</p>
+ordered. The draw for start \(s\) is made with the seed
+\(100 + s - 1\), and the caller's random number generator is restored
+afterwards, so the same fit gives the same starts and does not move the
+caller's stream. The log-likelihood of a regime model has several local
+maxima, which different starts may reach.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

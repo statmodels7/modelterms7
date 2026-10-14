@@ -3,15 +3,15 @@
 at each row of newdata, so that term_continue() can carry a score-driven
 filter past the end of its series. A parameter carrying a subformula is read
 by calling term_predict() on each of its sub-terms, which reapplies the
-blueprint each one recorded at build time; a basis or a set of contrasts is
-therefore not relearned on the new rows. A parameter with no subformula is
-constant along them."><meta property="og:description" content="Evaluates the recursion's coefficients \((\omega_t, \kappa_t, \xi_t)\)
+blueprint each sub-term recorded at build time; a basis or a set of contrasts
+is therefore not relearned on the new rows. A parameter with no subformula is
+constant over the rows."><meta property="og:description" content="Evaluates the recursion's coefficients \((\omega_t, \kappa_t, \xi_t)\)
 at each row of newdata, so that term_continue() can carry a score-driven
 filter past the end of its series. A parameter carrying a subformula is read
 by calling term_predict() on each of its sub-terms, which reapplies the
-blueprint each one recorded at build time; a basis or a set of contrasts is
-therefore not relearned on the new rows. A parameter with no subformula is
-constant along them."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
+blueprint each sub-term recorded at build time; a basis or a set of contrasts
+is therefore not relearned on the new rows. A parameter with no subformula is
+constant over the rows."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -19,7 +19,7 @@ constant along them."><meta property="og:image" content="https://statmodels7.git
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,9 +50,9 @@ constant along them."><meta property="og:image" content="https://statmodels7.git
 at each row of <code>newdata</code>, so that <code><a href="term_continue.html">term_continue()</a></code> can carry a score-driven
 filter past the end of its series. A parameter carrying a subformula is read
 by calling <code><a href="term_predict.html">term_predict()</a></code> on each of its sub-terms, which reapplies the
-blueprint each one recorded at build time; a basis or a set of contrasts is
-therefore not relearned on the new rows. A parameter with no subformula is
-constant along them.</p>
+blueprint each sub-term recorded at build time; a basis or a set of contrasts
+is therefore not relearned on the new rows. A parameter with no subformula is
+constant over the rows.</p>
     </div>
 
     <div class="section level2">
@@ -66,12 +66,12 @@ constant along them.</p>
 
 <dl><dt id="arg-term">term<a class="anchor" aria-label="anchor" href="#arg-term"></a></dt>
 <dd><p>A built <code>GasTerm</code> whose blueprint carries at least one
-subformula. With no development the caller uses <code>.gas_coefs()</code> instead.</p></dd>
+subformula. A term without a subformula is handled by <code>.gas_coefs()</code>.</p></dd>
 
 
 <dt id="arg-u">u<a class="anchor" aria-label="anchor" href="#arg-u"></a></dt>
 <dd><p>The term's parameter vector, in <code><a href="term_params.html">term_params()</a></code> order, on the mixed
-scale above.</p></dd>
+scale described above.</p></dd>
 
 
 <dt id="arg-newdata">newdata<a class="anchor" aria-label="anchor" href="#arg-newdata"></a></dt>
@@ -81,7 +81,7 @@ the subformulas name.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list of three:</p><dl><dt><code>om</code></dt>
+    <p>A list with the following elements:</p><dl><dt><code>om</code></dt>
 <dd><p>numeric, one \(\omega_t\) per row of <code>newdata</code>.</p></dd>
 
 <dt><code>A</code></dt>
@@ -94,23 +94,27 @@ Levinson-Durbin applied row by row. A zero-column matrix at
 
 <dt><code>dom</code>, <code>dA</code>, <code>dB</code></dt>
 <dd><p>the derivatives of <code>om</code>, of each column of
-<code>A</code> and of each column of <code>B</code> in <code>u</code>, each a <code>nrow(newdata)</code> by
-<code>length(u)</code> matrix (<code>dA</code> and <code>dB</code> are lists of them).</p></dd>
+<code>A</code> and of each column of <code>B</code> with respect to <code>u</code>, each a
+<code>nrow(newdata)</code> by <code>length(u)</code> matrix (<code>dA</code> and <code>dB</code> are lists of
+them).</p></dd>
 
 
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>For a developed parameter \(j\) the value at row \(t\) is
-\(\psi_{j,t} = g_j^{-1}(z_t' \gamma_j)\) with \(g_j\) the parameter's own
-link and \(\gamma_j\) its coefficients, and the persistence goes on to
-Levinson-Durbin, so <code>B</code> holds autoregressive coefficients where <code>u</code> holds
-partial autocorrelations.</p>
-<p><code>u</code> mixes two scales, matching what <code><a href="term_filter.html">term_filter()</a></code> is handed: a parameter
-with no subformula is taken as it stands, on the parameter scale, while a
-developed parameter's entries are its coefficients on the unconstrained
-scale and go through the chart here. With \(p = q = 1\) and no
-development, <code>u = c(0.3, 0.4, 0.7)</code> gives \(\omega = 0.3\),
+\(\psi_{j,t} = g_j^{-1}(z_t' \gamma_j)\), where \(g_j\) is the
+parameter's own link and \(\gamma_j\) its coefficients. The partial
+autocorrelations obtained in this way are mapped to autoregressive
+coefficients by the Levinson-Durbin recursion, so <code>B</code> holds autoregressive
+coefficients where <code>u</code> holds the coordinates of the partial autocorrelations.</p>
+<p>The vector <code>u</code> has the two scales of the parameter vector that
+<code><a href="term_filter.html">term_filter()</a></code> receives. An entry for a parameter with no subformula is the
+parameter itself, on the parameter scale. The entries of a developed
+parameter are its coefficients on the unconstrained scale, and the chart is
+applied to them here. For example, with \(p = q = 1\), the development
+<code>omega ~ 0 + z</code> and scalar \(\kappa_1\) and partial autocorrelation,
+<code>u = c(0.3, 0.4, 0.7)</code> gives \(\omega_t = 0.3 z_t\),
 \(\kappa_1 = 0.4\) and a partial autocorrelation of 0.7.</p>
     </div>
     <div class="section level2">

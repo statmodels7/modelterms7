@@ -39,9 +39,9 @@ A data frame with one row per observation and one column per regime,
 
 ## Details
 
-The probabilities are
-[`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)'s,
-computed by the forward and backward recursions; this method only labels
-them. The rows are in the order of the data the term was built on,
-whatever `by` and `time` say, so the result can be bound to that data
-directly.
+The probabilities are those of
+[`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md),
+computed by the forward and backward recursions, and this method adds
+the column labels. The rows are in the order of the data on which the
+term was built, whatever `by` and `time` say, so the result can be bound
+to that data directly.

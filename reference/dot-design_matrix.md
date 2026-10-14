@@ -38,14 +38,14 @@ were used.
 
 A list of two: `X`, the block, and `contrasts`, the named list
 [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)
-recorded, which is `NULL` when no factor was coded.
+recorded. On the dense route it is `NULL` when no factor was coded, and
+on the sparse route it is an empty named list.
 
 ## Details
 
 The two routes give identical numbers; what differs is the storage and
 the cost of producing it. The sparse route builds the matrix sparse and
-never forms a dense intermediate: at 20000 rows and a factor of 1000
-levels, 0.007 s and 1.8 MB against 0.164 s and 161.3 MB.
+never forms a dense intermediate.
 
 The contrasts come back beside the block instead of staying on it: the
 block is what a consumer reads, and the contrasts are what the blueprint

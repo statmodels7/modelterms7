@@ -22,27 +22,28 @@ cens(y, lwr = -Inf, upr = Inf)
   A numeric vector of responses, `NA` at an interval-censored
   observation. Coerced with
   [`as.numeric()`](https://rdrr.io/r/base/numeric.html), so an integer
-  vector is accepted and a factor is not.
+  vector is accepted; a factor is rejected.
 
 - lwr:
 
   A numeric lower bound, of length 1 or `length(y)`, recycled to
-  `length(y)`. `-Inf` by default, which is no left censoring. Any other
-  length throws `"'lwr' must have length 1 or length(y)."`, and an `NA`
-  entry throws `"'lwr' must not contain NA."`.
+  `length(y)`. `-Inf` by default, which is no left censoring. A factor
+  is rejected. Any other length signals the error
+  `"'lwr' must have length 1 or length(y)."`, and an `NA` entry signals
+  `"'lwr' must not contain NA."`.
 
 - upr:
 
   A numeric upper bound, on the same terms, `Inf` by default. Every
-  `upr` must be strictly above its `lwr`; equal bounds throw from the
-  class validator.
+  `upr` must be strictly above its `lwr`; equal bounds are rejected by
+  the class validator.
 
 ## Value
 
 A
 [`censored_response()`](https://statmodels7.github.io/modelterms7/reference/censored_response.md)
-object of length `length(y)`, carrying `y` unchanged (`NA` included),
-the recycled `lwr` and `upr`, and the derived `status`.
+object holding `length(y)` observations, carrying `y` unchanged (`NA`
+included), the recycled `lwr` and `upr`, and the derived `status`.
 
 ## The rule that assigns a status
 
@@ -58,14 +59,17 @@ entry is then classified by where it sits, with the bounds inclusive:
 | `lwr < y < upr`                | `"observed"` | \\Y = y\\                      |
 | `is.na(y)`, both bounds finite | `"interval"` | \\Y \in \[\\`lwr`, `upr`\\\]\\ |
 
-The tests are applied in that order, so a value at or below `lwr` is
-left- censored even when it is also at or above `upr`; the validator
-forbids `lwr >= upr`, so the two cannot both bind. An `NA` value without
-two finite bounds says nothing about \\Y\\ at all and throws.
+The left test is applied first and the right test second, and the later
+assignment overrides the earlier one, so a value that met both
+conditions would receive the status `"right"`. The class validator
+rejects `lwr >= upr`, so no value meets both. An `NA` value without two
+finite bounds carries no information about \\Y\\, and `cens()` signals
+an error.
 
-At the defaults `lwr = -Inf` and `upr = Inf` no value can reach a bound,
-every status comes back `"observed"`, and the object carries the same
-information the bare vector does.
+At the defaults `lwr = -Inf` and `upr = Inf`, every finite value has the
+status `"observed"`, and the object then carries the same information as
+the bare vector. Because the tests are inclusive, the value `-Inf`
+receives the status `"left"` and the value `Inf` the status `"right"`.
 
 ## Where it can be used
 
@@ -73,10 +77,12 @@ On the left of a formula passed to
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
 which returns the object as its `response` element.
 [`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
-refuses that response with a message naming the gap: the toolkit marks
-censoring and does not yet assemble a censored likelihood from it. See
+and
+[`statmodels7::rstatmod()`](https://statmodels7.github.io/statmodels7/reference/rstatmod.html)
+reject that response with an error message: the toolkit marks censoring
+and does not assemble a censored likelihood from it. See
 [`censored_response()`](https://statmodels7.github.io/modelterms7/reference/censored_response.md)
-for the four contributions such an assembler would need.
+for the four contributions that such an assembler would need.
 
 ## See also
 

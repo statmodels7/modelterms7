@@ -1,9 +1,9 @@
 # How a Term's Columns Divide Among Its Own Parameters
 
-Returns one entry per parameter a term is written in, saying which of
-its columns belong to that parameter and which sub-terms develop it. A
-term whose columns are one block with one meaning answers with an empty
-list.
+Returns one entry per parameter in which a term is written, giving the
+columns that belong to that parameter and the sub-terms that develop it.
+A term whose columns are one block with one meaning answers with an
+empty list.
 
 ## Usage
 
@@ -19,7 +19,7 @@ term_components(term, ...)
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 
@@ -47,7 +47,7 @@ with
 
 An empty list for a term whose columns do not divide.
 
-## Why the term has to say it
+## Why the term supplies the division
 
 A term may be written in parameters of its own:
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) in
@@ -55,17 +55,16 @@ the parameters of \\f\\,
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md) in
 a slope, a change and a break-point. Any of them may be developed over
 covariates, and the block then carries several groups of columns meaning
-different things. Only the term knows which group is which. A
-coefficient name is built for a reader, and recovering the division by
-parsing one back is the shape of mistake this package avoids everywhere
-else.
+different things. Only the term records which group each column belongs
+to. A coefficient name is built for a reader, so a consumer reads the
+division from this function and does not recover it by parsing names.
 
 ## A parameter may have several sub-terms, of different kinds
 
 `seg(x, psi ~ random(~ 1 | id))` develops the break-point with an
 unpenalized intercept and a random block, so that component's `subs` has
 two entries and only the second carries a penalty. A consumer reporting
-a component reports a sequence.
+a component therefore reports a sequence of sub-terms.
 
 `sub_index` splits `index` among those sub-terms, in the order the block
 binds them, which is
@@ -78,7 +77,7 @@ A structural term contributes no design columns, and `index` gives
 positions in
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md):
 the vector its state, its readable quantities and its variance matrix
-are all indexed by. In both branches the field names the term's own
+are all indexed by. In both branches `index` refers to the term's own
 coefficients.
 
 The base method returns an empty list, which is the answer for

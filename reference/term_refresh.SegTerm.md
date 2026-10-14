@@ -1,9 +1,13 @@
 # Recompute a Break-Point Term at New Coefficients
 
 Moves the break-points to where the coefficients put them, rebuilds the
-working block there, and advances the scaling schedule. It is one step
-of the iteration that estimates the break-points, and the block it
-returns is what the next linear fit is taken on.
+working block there, and, for a sharp `jump` or `jseg`, advances the
+scaling schedule. A smoothed term has no schedule, and a term held by
+[`seg_hold()`](https://statmodels7.github.io/modelterms7/reference/seg_hold.md)
+keeps its positions and only rebuilds the exact block at the new
+coefficients. It is one step of the iteration that estimates the
+break-points, and the block that it returns is what the next linear fit
+is taken on.
 
 ## Arguments
 
@@ -15,7 +19,7 @@ returns is what the next linear fit is taken on.
 - coef:
 
   The coefficients to move to, of length `ncol(term@X)`. Any other
-  length throws with the required length named.
+  length signals an error that names the required length.
 
 - ...:
 
@@ -28,16 +32,20 @@ scaling schedule all recomputed at `coef`.
 
 ## How the new positions are found
 
-For `seg` the break-point is a coefficient, so the new position is read
-straight out of `coef`. For `jump` and `jseg` it is **read off** two of
-them: the identity \\1(x \> \psi) = 1/2 + (x-\psi)/(2\|x-\psi\|)\\ makes
-the step linear in \\\psi\\ once the weight is frozen, and \\\psi =
--g_k/\delta_k\\ follows. `jseg` reads a quadratic instead, its truncated
-line depending on the position as well.
+For `seg`, and for any smoothed term, the break-point is a coefficient,
+so the new position is read straight out of `coef`. For a sharp `jump`
+and `jseg` it is **read off** two of them: the identity \\1(x \> \psi) =
+1/2 + (x-\psi)/(2\|x-\psi\|)\\ makes the step linear in \\\psi\\ once
+the weight is frozen, and \\\psi = -g_k/\delta_k\\ follows. `jseg` reads
+a quadratic instead, its truncated line depending on the position as
+well.
 
-Every new position is clamped into the confinement interval the build
-settled, and crossed break-points are relabeled so that each keeps
-travelling with its own scaling factor and direction.
+Every new position is clamped into the confinement interval that
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+set. When the term has more than one break-point and none of its
+per-break-point coefficients carries a development, crossed break-points
+are relabeled so that each keeps traveling with its own scaling factor
+and direction.
 
 ## The scaling schedule
 
@@ -82,7 +90,7 @@ c(before = seg_psi(b), after = seg_psi(r))
 max(abs(term_matrix(r) - term_matrix(b))) > 0
 #> [1] TRUE
 
-# A wrong length is refused.
+# A coefficient vector of the wrong length is an error.
 try(term_refresh(b, c(1, 2)))
 #> Error : 'coef' must have length 3.
 ```

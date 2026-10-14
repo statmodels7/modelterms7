@@ -9,7 +9,7 @@ the block and its names as usual, and no penalty entry at all."><meta property="
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -90,19 +90,21 @@ the block and its names as usual, and no penalty entry at all.</p>
     <p>The coefficients of a labelled term share a covariance block with those of
 every other term carrying the same label and the same grouping, and that
 block may span another equation entirely. The prior over it is therefore a
-property of the class and not of any of its members, and building one here
-would leave two answers to the same question with nothing to say which the
-fit should read. <code><a href="term_penalties.html">term_penalties()</a></code> returns an empty list, which is the
-right answer rather than a gap, and the fitting layer collects the labelled
-terms and declares one entry over their stacked columns.</p>
-<p>What the blueprint records is what the layer needs to do that: the
-within-group dimension and the grouping's levels, beside the pieces
+property of the class and not of any of its members, and a penalty built
+here would give two priors for the same block, with no rule for which the
+fit should read. <code><a href="term_penalties.html">term_penalties()</a></code> returns an empty list, and the fitting
+layer collects the labelled terms and declares one entry over their stacked
+columns.</p>
+<p>The blueprint records what the layer needs for that: the within-group
+dimension and the grouping's levels, beside the pieces
 <code><a href="term_predict.RandomTerm.html">term_predict.RandomTerm()</a></code> already reads.</p>
-<p>A <code>distrib</code> given here names the <strong>class's</strong> joint prior. Its dimension is
-the total over the class and cannot be checked from one term, so that one
-check is left to the layer; the rest – that it is a continuous
-distributions7 object with its location held – is asked here, where the
-message can name the argument.</p>
+<p>The function rejects <code>hyper</code>, <code>id</code> and <code>correlated = FALSE</code> on a labelled
+term, and a <code>distrib</code> that is a list or is univariate. A <code>distrib</code> given
+here is the <strong>class's</strong> joint prior. Its dimension is the total over the
+class and cannot be checked from one term, so that check is left to the
+layer. The remaining checks, that it is a continuous <span class="pkg">distributions7</span>
+object with its location held, are made here, where the message can name the
+argument.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

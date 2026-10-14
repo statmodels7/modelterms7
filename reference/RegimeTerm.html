@@ -15,7 +15,7 @@ predictor to report."><meta property="og:image" content="https://statmodels7.git
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,13 +75,13 @@ predictor to report.</p>
 <dl><dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
 <dd><p>A character string prefixed to the term's coefficient names
 when non-empty, and used as the title of <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> and the tag of
-<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>. <code>character(0)</code> and <code>""</code> both mean no label.</p></dd>
+<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>. The empty string <code>""</code> means no label.</p></dd>
 
 
 <dt id="arg-hyper">hyper<a class="anchor" aria-label="anchor" href="#arg-hyper"></a></dt>
-<dd><p>The hyperparameters of the term's penalty the caller <strong>held</strong>,
-as a named list keyed by the penalty's names. Empty, the default, means
-every one of them is estimated. See <code><a href="term_hyper.html">term_hyper()</a></code>.</p></dd>
+<dd><p>The hyperparameters of the term's penalty that the caller
+<strong>held</strong>, as a named list keyed by the penalty's names. Empty, the
+default, means every one of them is estimated. See <code><a href="term_hyper.html">term_hyper()</a></code>.</p></dd>
 
 
 <dt id="arg-grid">grid<a class="anchor" aria-label="anchor" href="#arg-grid"></a></dt>
@@ -147,22 +147,25 @@ single whole number of at least 1, as set by <code><a href="regime.html">regime(
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An S7 object of class <code>RegimeTerm</code>, inheriting from
-<code><a href="structural_term.html">structural_term()</a></code> and <code><a href="model_term.html">model_term()</a></code>, with the six properties above
-beside <code><a href="model_term.html">model_term()</a></code>'s six.</p>
+<code><a href="structural_term.html">structural_term()</a></code> and <code><a href="model_term.html">model_term()</a></code>, with the five properties above in
+addition to the eight that <code><a href="structural_term.html">structural_term()</a></code> supplies (the seven of
+<code><a href="model_term.html">model_term()</a></code> and <code>blueprint</code>).</p>
     </div>
     <div class="section level2">
     <h2 id="the-five-properties-of-its-own">The five properties of its own<a class="anchor" aria-label="anchor" href="#the-five-properties-of-its-own"></a></h2>
     <p><code>k</code> is the number of regimes. <code>by</code> and <code>time</code> are the grouping and ordering
-expressions as written, kept unevaluated; <code>NULL</code> means one group in row
-order.</p>
+expressions as written, kept unevaluated. A <code>by</code> of <code>NULL</code> means one group,
+and a <code>time</code> of <code>NULL</code> means that the rows are taken in the order they are
+given.</p>
 <p><code>chain</code> is the <code><a href="https://statmodels7.github.io/parameters7/reference/transition_matrix.html" class="external-link">parameters7::transition_matrix()</a></code> object, whose free values
 are the additive log-ratios of each row, so every row is a probability
 vector at any coordinate. Its <code>free_names</code> are the tail of
 <code><a href="term_params.html">term_params()</a></code>.</p>
-<p><code>blueprint</code> is filled by <code><a href="term_build.html">term_build()</a></code> and holds the row order within each
-group and the observation count. The class overrides the branch's
-<code>blueprint</code> property because a structural term carries no design block to
-hang one on.</p>
+<p><code>n_start</code> is the number of starting points that a fitting layer tries, a
+whole number of at least 1.</p>
+<p>The property <code>blueprint</code> is inherited from <code><a href="structural_term.html">structural_term()</a></code>, which
+declares it. <code><a href="term_build.html">term_build()</a></code> fills it with the row order within each group
+and the observation count.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

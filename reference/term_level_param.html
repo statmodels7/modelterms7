@@ -11,7 +11,7 @@ equation the term sits in."><meta property="og:image" content="https://statmodel
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,31 +62,39 @@ equation the term sits in.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A single string, or <code>character(0)</code>.</p>
+    <p>A character vector: <code>character(0)</code> for a term that shifts nothing
+by a constant, <code>"level1"</code> for a regime, <code>"omega"</code> for an undeveloped
+<code><a href="gas.html">gas()</a></code> level, and otherwise the names of the level's coordinates whose
+design column is constant.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>It exists so that a fitting layer can resolve the confounding instead of
-refusing the model. A score-driven level \(\omega\) and a regime's first
+rejecting the model. A score-driven level \(\omega\) and a regime's first
 level both add a constant to their equation's predictor: with an
 intercept there too, adding \(c\) to one and subtracting the matching
 amount from the other leaves every predictor unchanged, and the
-likelihood is flat along that direction. Which of the two is dropped is
-the layer's decision and not the term's, since only the layer knows what
-else the equation carries.</p>
+likelihood is flat along that direction. The layer decides which of the two
+is dropped, because only the layer has the full list of terms in the
+equation.</p>
 <p>The base method returns <code>character(0)</code>, meaning the term shifts
-nothing by a constant and no such question arises.</p>
+nothing by a constant and no such question arises. The method for <code><a href="regime.html">regime()</a></code>
+returns <code>"level1"</code>. The method for <code><a href="gas.html">gas()</a></code> returns <code>"omega"</code> when the level
+is not developed and otherwise every coordinate of the development whose
+design column is constant, which can be more than one.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="term_level_design.html">term_level_design()</a></code> for the same question with the level
-developed, <code><a href="term_params.html">term_params()</a></code> for the names it answers among.</p></div>
+developed, <code><a href="term_params.html">term_params()</a></code> for the names from which the answer is taken.</p></div>
     </div>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">term_level_param</span><span class="op">(</span><span class="fu"><a href="gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"</span>
+<span class="r-in"><span><span class="fu">term_level_param</span><span class="op">(</span><span class="fu"><a href="regime.html">regime</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "level1"</span>
 <span class="r-in"><span><span class="fu">term_level_param</span><span class="op">(</span><span class="fu"><a href="linpar.html">linpar</a></span><span class="op">(</span><span class="op">~</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> character(0)</span>
 <span class="r-in"><span></span></span>

@@ -22,9 +22,9 @@ A single logical.
 
 ## Details
 
-The question is a property of the family, so a multivariate family added
-later is covered without an edit here. It is read off
-`params_interpretation`, the same declaration a data-based starting
-value is built from. It excludes the simplex-valued families, whose mean
-coordinates are one fewer than the dimension and which carry no matrix
-parameter at all.
+This is a property of the family, so a multivariate family added later
+is covered without an edit here. It is read from
+`params_interpretation`, the same declaration from which a data-based
+starting value is built. The condition excludes the simplex-valued
+families, whose mean coordinates are one fewer than the dimension and
+which carry no matrix parameter at all.

@@ -1,9 +1,9 @@
 # The Charts of a Marginal Break-Point Term's Parameters
 
-The **log** link on every `psik.sd`, a prior's own link on any parameter
-it contributes, and the identity on everything else. A prior scale must
-be positive; a position, a change of level and a change of slope are
-already unconstrained.
+The **log** link on every `psik.sd`, the prior's own link on any
+parameter that the prior contributes, and the identity on everything
+else. A prior scale must be positive; a position, a change of level and
+a change of slope are already unconstrained.
 
 ## Arguments
 
@@ -24,10 +24,10 @@ A named list of linkfunctions7 links, one per entry of
 
 ## Details
 
-Where `random(distrib = )` named a family other than the Gaussian, that
-family's parameters keep the links it declares in `link_params`, so a
-Student t prior's degrees of freedom ride whatever chart distributions7
-gives them. Nothing about the chart is restated here.
+Where `random(distrib = )` names a family other than the Gaussian, the
+parameters of that family keep the links that are declared in its
+`link_params`. The degrees of freedom of a Student t prior therefore use
+the link that distributions7 assigns to them.
 
 ## See also
 

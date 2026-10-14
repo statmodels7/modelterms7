@@ -2,7 +2,8 @@
 
 Resolves the grouping and the ordering against the data and records them
 in the blueprint. Nothing else is computed: the term has no design
-block, and its chain and levels are already fixed by the constructor.
+block, its chain structure is fixed by the constructor, and its levels
+are parameters supplied at each evaluation.
 
 ## Arguments
 
@@ -39,9 +40,11 @@ runs one forward recursion per group in that order, each from the
 chain's stationary distribution, so a panel of independent series is
 fitted by giving `by`.
 
-Without `time` the rows are taken in the order they appear. That is a
-real choice worth making deliberately: the recursion is about order, so
-a data frame that is not already sorted gives a different model.
+Without `time` the rows are taken in the order they appear. The
+recursion depends on that order, so a data frame that is not already
+sorted defines a different model. With `time`, the rows of a group are
+sorted by it, and `time` only orders them: a gap between two times
+counts as one step of the chain.
 
 ## See also
 

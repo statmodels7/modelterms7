@@ -27,8 +27,11 @@ retired_smooth_args(dots, fn)
 
 ## Details
 
-The four decisions a smooth is made of – the basis, the penalty, the
-null space and the reparametrization – now travel together on a basis7
-smoother, so the settings that described the first two belong there. `k`
-and `degree` are a B-spline's and were never general; `linear` named the
-null space as "linear", which it is only when the penalty is of order 2.
+The four decisions a smooth is made of (the basis, the penalty, the null
+space and the reparametrization) travel together on a basis7 smoother,
+so the settings that described the first two belong there. `k` and
+`degree` belong to a B-spline and not to smoothers in general; `linear`
+named the null space as "linear", which it is only when the penalty is
+of order 2. The smoothing parameter `lambda` is now a hyperparameter of
+the term, held through `hyper`. An argument that is not one of these is
+reported as having no such argument.

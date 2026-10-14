@@ -13,7 +13,7 @@ place into its coefficients, named parameter.coefficient.'><meta property="og:im
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,14 +66,13 @@ so a developed parameter still appears as itself.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The persistence coordinates are named for the chart they live on, never
-for the quantity a reader reads. <code>pacf1</code> is a partial autocorrelation;
-the autoregressive coefficient \(\xi_1\) the literature writes is a
-function of the whole chart through Levinson-Durbin, and coincides with the
-coordinate only at \(q = 1\). <code><a href="term_readable.html">term_readable()</a></code> is what carries the
-coordinates onto the coefficients.</p>
-<p>The order is the one <code><a href="term_links.html">term_links()</a></code>, <code><a href="term_start.html">term_start()</a></code>, <code><a href="term_filter.html">term_filter()</a></code>'s
-Jacobian columns and the joint variance matrix are all indexed by.</p>
+    <p>The persistence coordinates are named after the chart on which they are
+estimated. <code>pacf1</code> is a partial autocorrelation; the autoregressive
+coefficient \(\xi_1\) of the literature is a function of the whole chart
+through Levinson-Durbin, and coincides with the coordinate only at
+\(q = 1\). <code><a href="term_readable.html">term_readable()</a></code> maps the coordinates onto the coefficients.</p>
+<p>The order is the one by which <code><a href="term_links.html">term_links()</a></code>, <code><a href="term_start.html">term_start()</a></code>, the Jacobian
+columns of <code><a href="term_filter.html">term_filter()</a></code> and the joint variance matrix are indexed.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -1,4 +1,4 @@
-# No State, No Propagation
+# Base Method of term_static_deriv()
 
 The base method returns `NULL`: an ordinary term's contribution at one
 observation reads that observation alone.

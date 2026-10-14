@@ -21,7 +21,8 @@ term_value(term, coef = NULL, newdata = NULL, ...)
 - coef:
 
   The coefficients. Optional for a nonlinear term, which carries the
-  ones it was last refreshed at.
+  ones it was last refreshed at, and which rejects a vector with a
+  length other than its number of coefficients.
 
 - newdata:
 
@@ -40,8 +41,8 @@ otherwise.
 
 ## Details
 
-`newdata` asks for the same contribution on other rows, and is what a
-predictor needs where the block is a Jacobian: there
+With `newdata` the same contribution is returned on other rows, which is
+what a predictor needs where the block is a Jacobian: there
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 times the coefficients is the linearization and not the contribution,
 and the two differ by whatever the linearization drops. For

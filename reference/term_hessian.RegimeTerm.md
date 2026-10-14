@@ -20,11 +20,12 @@ recursion, giving the exact Hessian of the mixed log-likelihood.
 
 - logdens, grad, hess:
 
-  The log-density and its first two derivatives in the predictors.
+  The log-density and its first two derivatives in the predictors. The
+  last returns an array of dimension `c(n, p, p)`.
 
 - psi:
 
-  The term's parameters.
+  The term's parameters on the parameter scale.
 
 - seed:
 
@@ -40,7 +41,7 @@ recursion, giving the exact Hessian of the mixed log-likelihood.
 
 - weights:
 
-  Observation weights.
+  Observation weights: one number or one per observation, none missing.
 
 - ...:
 
@@ -49,3 +50,12 @@ recursion, giving the exact Hessian of the mixed log-likelihood.
 ## Value
 
 A list with `loglik`, `gradient` and `hessian`.
+
+## Details
+
+The recursion runs in R over each group in time order. The derivatives
+in the term's own parameters are taken on the unconstrained scale: the
+first level and the log-ratios as they are, and each gap through its
+logarithm. The callbacks `logdens`, `grad` and `hess` are called once
+per regime with the whole index vector, and a result of the wrong length
+or shape signals an error.

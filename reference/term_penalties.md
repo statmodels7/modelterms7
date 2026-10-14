@@ -1,13 +1,13 @@
 # Every Penalty a Term Carries
 
-Returns what a term declares it wants penalized: a list of entries, each
-naming a subset of the term's own parameters, the penalty over them, and
-whatever the caller fixed about that penalty's hyperparameters. This is
-the enumeration a fitting layer runs over, and it is what
+Returns the penalties a term declares: a list of entries, each naming a
+subset of the term's own parameters, the penalty over them, and the
+hyperparameters that the caller held for that penalty. A fitting layer
+enumerates penalties through this list, and
 [`term_smooth()`](https://statmodels7.github.io/modelterms7/reference/term_smooth.md)
 and
 [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
-read.
+read it.
 
 ## Usage
 
@@ -24,12 +24,13 @@ term_penalties(term, ...)
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 
-An unnamed list, possibly empty, one element per declared penalty. Each
-element is a list with
+An unnamed list, possibly empty, one element per declared penalty. Every
+element is a list with the same nine fields, an empty value standing for
+a field that is not set:
 
 - `name`:
 
@@ -50,20 +51,29 @@ element is a list with
 
 - `fixed`:
 
-  the hyperparameters the caller held, a named list, empty when all of
-  them are estimated.
+  the hyperparameters that the caller held, a named list, empty when all
+  of them are estimated.
 
 - `n_values`, `values`, `min_ratio`, `search`:
 
-  what the caller said about the path over this penalty's
-  hyperparameters, from the term's properties of the same names.
+  what the caller specified about the path over this penalty's
+  hyperparameters, taken from the term's properties `grid`, `values`,
+  `min_ratio` and `search`.
+
+- `ids`:
+
+  the sharing labels of this penalty's hyperparameters, a named
+  character vector, empty where none is shared.
+
+An entry that a term carries up from one of its sub-terms keeps the
+values and the search that the sub-term holds.
 
 ## Two ways it generalizes [`term_penalty()`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md)
 
 **A term may carry more than one penalty**, over different parameters of
 its own. A panel model with a population value and a departure per group
-wants the population value free and the departures shrunk, which is one
-penalty over part of the parameters and none over the rest.
+leaves the population value free and shrinks the departures, which is
+one penalty over part of the parameters and none over the rest.
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
 developing two of its parameters by two different penalized sub-terms
 carries two entries.
@@ -90,12 +100,14 @@ its own. Its single entry is named `""`, meaning the whole term.
 
 A name is unique **within** the term and is not the term's own name. Two
 [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
-terms in one formula are two terms with their own hyperparameters, and
-it is the caller who knows what it called each of them;
+terms in one formula are two terms with their own hyperparameters, told
+apart by their names in the formula;
 [`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
-composes a key as `term` or `term::entry`.
+files a hyperparameter under the key `term` for a term with one entry
+and `term::entry` for a term with several.
 
-The list itself is **unnamed**: read `e$name`, not `names(entries)`.
+The list itself is **unnamed**: the key of an entry is its `name` field,
+read as `e$name`, and `names(entries)` is `NULL`.
 
 ## A specification carries no entries
 

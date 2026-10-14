@@ -15,7 +15,7 @@ it."><meta property="og:image" content="https://statmodels7.github.io/modelterms
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,7 +64,8 @@ it.</p>
 
 <dt id="arg-coef">coef<a class="anchor" aria-label="anchor" href="#arg-coef"></a></dt>
 <dd><p>The coefficients. Optional for a nonlinear term, which
-carries the ones it was last refreshed at.</p></dd>
+carries the ones it was last refreshed at, and which rejects a vector
+with a length other than its number of coefficients.</p></dd>
 
 
 <dt id="arg-newdata">newdata<a class="anchor" aria-label="anchor" href="#arg-newdata"></a></dt>
@@ -84,8 +85,8 @@ otherwise.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p><code>newdata</code> asks for the same contribution on other rows, and is what
-a predictor needs where the block is a Jacobian: there
+    <p>With <code>newdata</code> the same contribution is returned on other rows, which is
+what a predictor needs where the block is a Jacobian: there
 <code><a href="term_predict.html">term_predict()</a></code> times the coefficients is the linearization and
 not the contribution, and the two differ by whatever the linearization
 drops. For <code><a href="seg.html">seg()</a></code> that difference is a step at the

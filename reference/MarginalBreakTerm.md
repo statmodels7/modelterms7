@@ -47,13 +47,13 @@ MarginalBreakTerm(
   A character string prefixed to the term's coefficient names when
   non-empty, and used as the title of
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and the tag
-  of [`print()`](https://rdrr.io/r/base/print.html). `character(0)` and
-  `""` both mean no label.
+  of [`print()`](https://rdrr.io/r/base/print.html). The empty string
+  `""` means no label.
 
 - hyper:
 
-  The hyperparameters of the term's penalty the caller **held**, as a
-  named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller **held**, as
+  a named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -95,8 +95,8 @@ MarginalBreakTerm(
 
 - blueprint:
 
-  A named list of the resolved grouping and interval structure, empty
-  until
+  A named list recording the number of rows, the covariate, the rows of
+  each group and the group labels, empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
@@ -116,7 +116,7 @@ MarginalBreakTerm(
 - linear:
 
   Whether the term carries the linear effect as its own parameter,
-  `TRUE` for `"seg"` and `"jseg"`.
+  `beta`. It is `FALSE` for `"jump"`.
 
 - group:
 
@@ -139,45 +139,64 @@ An S7 object of class `MarginalBreakTerm`, inheriting from
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
 and
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
-with the eight properties above beside
-[`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)'s
-six.
+with the properties listed above beside the inherited ones.
 
-## The eight properties of its own
+## Properties
 
-`kind` is `"jump"`, `"seg"` or `"jseg"`; `var` the covariate expression;
-`npsi` the number of break-points per group; `linear` whether the term
-carries the linear effect as a parameter of its own, which `seg` and
-`jseg` do.
+The class defines the properties `kind`, `var`, `npsi`, `linear`,
+`group`, `prior` and `spec`, and inherits the others from
+[`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
+and
+[`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
+among them `blueprint`.
+
+`kind` is `"jump"`, `"seg"` or `"jseg"`; `var` is the covariate
+expression; `npsi` is the number of break-points per group; `linear`
+records whether the term carries the linear effect as a parameter of its
+own. It is `TRUE` for
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+and
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+unless `linear = FALSE` was given, and `FALSE` for
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md).
 
 `group` is the grouping expression, taken from the break-point's
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
-subformula. `prior` is the latent's distribution: `NULL` for the
-Gaussian, or a distributions7 object where `random(distrib = )` named
-one, and its location must be fixed at zero, `psi1.mean` carrying the
-position.
+subformula. `prior` is the distribution of the latent positions: `NULL`
+for the Gaussian, or a distributions7 object where `random(distrib = )`
+names one. The location of that distribution must be fixed at zero,
+since `psi1.mean` carries the position.
 
-`spec` holds the resolved construction settings and `blueprint` the
-grouping and the interval structure
+`spec` holds the resolved construction settings. `blueprint` is
+inherited from
+[`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
+and holds the grouping and the covariate that
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-worked out.
+records.
 
-## The parameters
+## Parameters
 
-They are numbered, one set per break-point: `psi1.mean`, `psi1.sd`,
-`delta1` for a one-break-point step term, with `psi1.mean` the mean of
-the positions in the population, `psi1.sd` their standard deviation
-between groups on a log chart, and `delta1` the change of level. A
-continuous kind adds `beta` for the linear effect and `gamma1` for the
-change of slope.
+The parameters are numbered, one set per break-point. A step term with
+one break-point has `psi1.mean`, `psi1.sd` and `delta1`, where
+`psi1.mean` is the mean of the positions in the population, `psi1.sd` is
+their standard deviation between groups (estimated through a log link)
+and `delta1` is the change of level. A
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+term has `beta` for the linear effect, `psi1.mean`, `psi1.sd` and
+`gamma1` for the change of slope. A
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+term has `beta`, `psi1.mean`, `psi1.sd`, `gamma1` and `delta1`.
 
-## What it costs
+## Number of break-points
 
-At most **eight** break-points. The forward recursion of the step kind
-costs \\n K 2^K\\ and stays cheap well past that; what does not is the
-fitting layer, which reads a posterior over the \\2^K\\ side patterns
-and evaluates the family once per pattern. The continuous kinds stay at
-one break-point, a product quadrature over more being far dearer still.
+A step term takes at most eight break-points per group. The forward
+recursion of the step kind costs \\n K 2^K\\ operations for \\n\\
+observations and \\K\\ break-points. The fitting layer reads a posterior
+over the \\2^K\\ side patterns and evaluates the family once per
+pattern, and the number of patterns therefore limits \\K\\. The
+continuous kinds take one break-point, because a product quadrature over
+several would need a node set whose size grows as a power of their
+number.
 
 ## See also
 
@@ -189,7 +208,7 @@ for the constructors;
 [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
 for the likelihood;
 [`term_latent()`](https://statmodels7.github.io/modelterms7/reference/term_latent.md)
-for the posterior positions a reader wants.
+for the posterior positions.
 
 ## Examples
 

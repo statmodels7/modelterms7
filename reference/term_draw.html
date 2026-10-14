@@ -11,7 +11,7 @@ unconstrained scale term_links() defines."><meta property="og:image" content="ht
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,8 +57,8 @@ unconstrained scale <code><a href="term_links.html">term_links()</a></code> defi
 
 
 <dt id="arg-sd">sd<a class="anchor" aria-label="anchor" href="#arg-sd"></a></dt>
-<dd><p>The width of the draw, <code>1</code> by default, halved before it is
-applied for the reason measured above.</p></dd>
+<dd><p>The width of the draw, <code>1</code> by default. The standard deviation
+applied is <code>sd / 2</code>, for the reason given in the details.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -73,40 +73,37 @@ returns.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Simulating from a model that carries state means choosing values for the
-term's own parameters, and in quantity they cannot be chosen by hand: a
-score-driven filter whose level is developed over a hundred groups carries
-a hundred and one of them, and a caller made to name each one names none
-and simulates a model with no dynamics and no heterogeneity at all.</p>
-<p>The rule is the start plus noise, and the start rather than zero because
-the term already knows where the sensible region of its own charts is. A
-score loading rides a log chart, so zero there is a loading of one and a
-filter strong enough to destabilize its own recursion; <code><a href="term_start.html">term_start()</a></code>
-places it at 0.1 and the draw spreads from that. A constraint a chart
-carries is then respected for free: <code><a href="regime.html">regime()</a></code> writes its levels as a
-first level and positive gaps, so any draw on the unconstrained scale is
-ordered by construction, and a persistence on a partial-autocorrelation
-chart is stationary at any coordinate whatever.</p>
+    <p>Simulating from a model that carries state requires values for the term's
+own parameters. A score-driven filter whose level is developed over a
+hundred groups has a hundred level coordinates in addition to its loading
+and persistence coordinates, and choosing each of them by hand is
+impractical.</p>
+<p>The rule is the start plus noise. The start is used instead of zero because
+it lies in the region of the term's own charts where the term is well
+behaved. A score loading rides a log chart, so zero there is a loading of
+one and a filter strong enough to destabilize its own recursion;
+<code><a href="term_start.html">term_start()</a></code> places it at 0.1 and the draw spreads from that. A
+constraint that a chart carries is respected by every draw: <code><a href="regime.html">regime()</a></code>
+writes its levels as a first level and positive gaps, so any draw on the
+unconstrained scale is ordered by construction, and a persistence on a
+partial-autocorrelation chart is stationary at any coordinate.</p>
     </div>
     <div class="section level2">
     <h2 id="the-width">The width<a class="anchor" aria-label="anchor" href="#the-width"></a></h2>
-    <p>Half of <code>sd</code>, and the half is measured rather than chosen. Sixty draws per
-family of a <code>gas(1, 1)</code> over sixty times, at widths 0.3, 0.5 and 1: at a
-width of 1 two Poisson series of sixty are not finite and the level of
-another spans 859, where at 0.5 none of a hundred and eighty fails and the
-widest level spans 2.04. Read on the charts the same number is a
-persistence between -0.27 and 0.88 at the fifth and ninety-fifth
-percentiles, against -0.80 to 0.98 at a width of 1, which is the whole
-stationary region and describes noise rather than a random effect.</p>
+    <p>The standard deviation of the draw is <code>sd / 2</code>. At the full width of <code>sd</code>
+a score-driven filter with a Poisson response can produce non-finite
+series, and a persistence on the partial-autocorrelation chart covers
+nearly the whole stationary region, which describes noise and not a random
+effect.</p>
     </div>
     <div class="section level2">
-    <h2 id="coordinates-a-penalty-covers">Coordinates a penalty covers<a class="anchor" aria-label="anchor" href="#coordinates-a-penalty-covers"></a></h2>
-    <p>They are drawn here too, and a caller that can see the penalty is expected
-to overwrite them. What a development's deviation is drawn from is the
-prior its sub-term declares – a Gaussian random effect, a Laplace one –
-and this method cannot see it: the prior's own scale is a hyperparameter
-and choosing one is the caller's business. <code><a href="term_penalties.html">term_penalties()</a></code> says which
-coordinates those are, and <span class="pkg">penalties7</span>'s <code>penalty_draw()</code> draws them.</p>
+    <h2 id="coordinates-covered-by-a-penalty">Coordinates covered by a penalty<a class="anchor" aria-label="anchor" href="#coordinates-covered-by-a-penalty"></a></h2>
+    <p>These coordinates are drawn as well, and a caller that has access to the
+penalty is expected to overwrite them. The deviation of a development
+follows the prior that its sub-term declares (a Gaussian random effect or a
+Laplace one). This method does not receive that prior, because its scale is
+a hyperparameter that the caller chooses. <code><a href="term_penalties.html">term_penalties()</a></code> identifies
+those coordinates, and <span class="pkg">penalties7</span>'s <code>penalty_draw()</code> draws them.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

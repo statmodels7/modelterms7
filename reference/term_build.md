@@ -23,19 +23,19 @@ term_build(term, data, ...)
 
 - data:
 
-  A data frame carrying every variable the term names. Anything else
-  throws `"'data' must be a data frame."` from the generic, before
-  dispatch.
+  A data frame carrying every variable the term names. Any other object
+  is rejected by the generic, before dispatch, with the error
+  `"'data' must be a data frame."`.
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 
 A built term of the same class as `term`. For an additive term the `X`,
-`coef_names` and `blueprint` properties are filled; for a structural
-term the `blueprint` is.
+`coef_names` and `blueprint` properties are filled, and `penalty` is
+where the term is penalized; for a structural term the `blueprint` is.
 [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
 is `TRUE` either way, reading whichever of the two the branch fills.
 
@@ -76,17 +76,19 @@ re-derives its factor levels and its knots from those rows. That is what
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 exists to avoid, and what
 [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)'s
-subset check tests for. Build once, predict thereafter.
+subset check tests for. A term is therefore built once and applied to
+other rows with
+[`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md).
 
 ## The default
 
-There is one, on
-[`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
-and it throws `"the term class 'X' does not implement term_build()."`,
-naming the class, so a term class that supplies nothing else says so
-clearly. It covers both branches: every shipped structural term
-registers a method of its own, and a structural class written elsewhere
-that does not is named the same way.
+The default method is registered on
+[`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md).
+It signals the error
+`"the term class 'X' does not implement term_build()."`, which names the
+class of the term. It covers both branches: every shipped structural
+term registers a method of its own, and a structural class written
+elsewhere that does not register one receives the same error.
 
 ## See also
 
@@ -128,7 +130,7 @@ term_params(g)
 try(term_matrix(g))
 #> Error : Can't find method for `term_matrix(<modelterms7::GasTerm>)`.
 
-# A class that implements nothing is told which class it is.
+# A class without a method signals an error that names the class.
 Foo <- S7::new_class("Foo", parent = additive_term)
 try(term_build(Foo(), d))
 #> Error : the term class 'Foo' does not implement term_build().

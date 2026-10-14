@@ -15,7 +15,7 @@ row of the matrix.'><meta property="og:image" content="https://statmodels7.githu
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,9 +68,10 @@ row of the matrix.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The order matters: it is the order <code><a href="term_links.html">term_links()</a></code>, <code><a href="term_start.html">term_start()</a></code>,
-<code><a href="term_loglik.html">term_loglik()</a></code>'s Jacobian columns and the joint variance matrix are all
-indexed by, and <code>psi</code> must supply the names whatever order they come in.</p>
+    <p>The order is the one that <code><a href="term_links.html">term_links()</a></code>, <code><a href="term_start.html">term_start()</a></code>, the columns of
+<code><a href="term_loglik.html">term_loglik()</a></code>'s Jacobian and the joint variance matrix all follow. The
+argument <code>psi</code> of the methods is matched by name, so it may list the
+parameters in any order.</p>
 <p>The log-ratio names come from <code><a href="https://statmodels7.github.io/parameters7/reference/transition_matrix.html" class="external-link">parameters7::transition_matrix()</a></code>'s own
 <code>free_names</code>, so the spelling is that package's.</p>
     </div>

@@ -20,11 +20,12 @@ exact derivatives.
 
 - logdens, score:
 
-  The log-density and its derivative in the predictor.
+  The log-density and its derivative in the predictor, each returning
+  one value per observation.
 
 - psi:
 
-  The parameters, named as
+  The parameters on the parameter scale, named as
   [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
 - ...:
@@ -34,3 +35,13 @@ exact derivatives.
 ## Value
 
 A list with `loglik` and `jacobian`.
+
+## Details
+
+The density and the score of every observation under every regime are
+computed first, one call of each callback per regime with the whole
+index vector, and the recursion and its first derivatives are then run
+by the compiled kernel `regime_forward_cpp()`. The derivative in a gap
+is taken in the gap itself. A gap that is not positive and a `psi` that
+lacks a parameter signal an error, as does a callback that does not
+return one value per observation.

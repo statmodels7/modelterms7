@@ -9,7 +9,7 @@ score-driven term."><meta property="og:image" content="https://statmodels7.githu
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -77,9 +77,8 @@ so the propagated derivative starts at zero and everything after it comes
 from the scores. The autoregressive and loading coefficients are read at
 each row, which covers a term whose parameters carry submodels of their
 own as well as one whose parameters are constant.</p>
-<p>It is written in R. It evaluates no callback, runs once at a variance
-instead of at every iteration of a fit, and costs one
-pass over the data per column.</p>
+<p>It is written in R, evaluates no callback, and makes one pass over the
+data, carrying all the columns of <code>X</code> together.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

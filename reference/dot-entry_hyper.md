@@ -1,6 +1,6 @@
 # Where a Held Hyperparameter Belongs
 
-Splits a term's `hyper` over the entries it declares through
+Splits a term's `hyper` over the entries that the term declares through
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 and checks every name against the penalty that carries it. The same
 applies to `id`.
@@ -40,15 +40,16 @@ The entries, with `fixed`, `values` and `ids` filled in and checked.
 
 ## Details
 
-Which hyperparameters a term has is not always known when the term is
+The hyperparameters of a term are not always determined when the term is
 written. A random effect's are the effects' distribution's, and a
 smooth's are its penalty's, which may come from a factory called at a
-coefficient count the data settle. The check is therefore made here, at
-the build, which is the first point at which the penalties exist.
+coefficient count that the data determine. The check is therefore made
+here, at the build, which is the first point at which the penalties
+exist.
 
 A name is qualified by the entry it belongs to where there is more than
 one: the within-group column for a random effect, the level of the
 factor for a smooth with one smoothing parameter per level. An
-unqualified name is an error that lists what there is, not a value
-recycled over every entry, since silent recycling is the trap this
-package's history records for `ifelse`.
+unqualified name is an error that lists the names available. A value is
+never recycled over the entries, because a value applied silently to
+every entry would be wrong for those it does not belong to.

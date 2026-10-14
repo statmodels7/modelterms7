@@ -1,8 +1,10 @@
 # Print a Score-Driven Term
 
 Prints the label, the two orders and, for a built term, over how many
-groups the filter runs. A second line names any developed parameters,
-and a third lists the parameters themselves.
+groups the filter runs; an unbuilt term is marked "(specification)".
+Where parameters are developed, a line names them; a non-zero scaling
+has a line of its own with the power of the information; the parameters
+themselves are listed on the last line.
 
 ## Arguments
 
@@ -19,7 +21,7 @@ and a third lists the parameters themselves.
 
 ## Value
 
-`x`, invisibly. Called for the lines it writes.
+`x`, invisibly. Called for the lines that it writes.
 
 ## Details
 
@@ -27,15 +29,12 @@ The form is
 
     <GasTerm> 'gas': score-driven, p = 1, q = 1; 3 group(s)
       developed: omega
-      parameters: omega.(Intercept), omega.g2, kappa1, pacf1
+      parameters: omega.(Intercept), omega.gv, kappa1, pacf1
 
 The `developed` line appears only where a subformula was given. The
 parameter list is
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md),
 so a developed parameter shows there as its coefficients.
-
-A built term is described by its group count rather than by the word
-"built", the count being the more useful line.
 
 ## See also
 

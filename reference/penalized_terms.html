@@ -23,7 +23,7 @@ term."><meta property="og:image" content="https://statmodels7.github.io/modelter
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,7 @@ term.</p>
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
 <dd><p>A one-sided formula, such as <code>~ x1 + x2</code> or <code>~ 0 + g</code>, or a numeric
 matrix, ideally a matrix column of the model data frame. A two-sided
-formula throws.</p></dd>
+formula is rejected with an error.</p></dd>
 
 
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
@@ -92,9 +92,10 @@ input needs no such argument. See the section above.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Not used, and reported. An argument named after another penalty's
-hyperparameter is the mistake this catches: <code>scad(~ x, gamma = 1)</code> throws
-<code>"'scad' has no argument 'gamma'."</code> and lists the ones it does have.</p></dd>
+<dd><p>Not used. Any argument supplied here is rejected with an error
+that names it and lists the penalty's hyperparameters. The typical case is
+an argument named after another penalty's hyperparameter:
+<code>scad(~ x, gamma = 1)</code> signals <code>"'scad' has no argument 'gamma'."</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -113,8 +114,10 @@ terms, the factor levels and the contrasts, exactly as <code><a href="linpar.htm
 <p>The exception is a formula whose intercept is all it has. <code>ridge(~ 1)</code> is a
 block of that one column under the penalty, removing it leaving no block at
 all. That is the form a subformula on another term's parameter uses:
-<code>gamma ~ 0 + lasso(~ 1)</code> says the parameter itself carries a lasso, there
-being no parametric block of its own to hold an unpenalized intercept.</p>
+<code>gamma ~ 0 + lasso(~ 1)</code> means that the parameter itself carries a lasso,
+there being no parametric block of its own to hold an unpenalized intercept.
+A formula with neither an intercept nor a term, such as <code>ridge(~ 0)</code>, has no
+columns, and the term is rejected when it is built.</p>
 <p>A <strong>matrix</strong> is used as given, and its columns are named after its own
 column names, or numbered <code>1</code>, <code>2</code>, ... when it has none.</p>
     </div>
@@ -126,10 +129,10 @@ data frame:</p>
 <p></p><div class="sourceCode r"><pre><code><span><span class="va">dd</span><span class="op">$</span><span class="va">R</span> <span class="op">&lt;-</span> <span class="va">R</span></span>
 <span><span class="fu"><a href="../reference/ridge.html">ridge</a></span><span class="op">(</span><span class="va">R</span><span class="op">)</span>      <span class="co"># in the formula</span></span></code></pre><p></p></div>
 <p>A subset of <code>dd</code> then carries the matching rows of <code>R</code>. A free-standing
-matrix from the calling environment builds, its value having been captured,
-and prediction is refused with a message naming the expression: resolving it
-outside the new data would silently reuse the build-time rows whenever the
-counts happened to agree.</p>
+matrix from the calling environment can be used to build the term, its value
+being captured, but prediction signals an error that names the expression.
+Resolving the name outside the new data would reuse the build-time rows
+whenever the row counts agree.</p>
     </div>
     <div class="section level2">
     <h2 id="sparse-storage">Sparse storage<a class="anchor" aria-label="anchor" href="#sparse-storage"></a></h2>
@@ -145,8 +148,8 @@ dense one and compressing it would cost the memory the choice exists to
 avoid.</p>
 <p>It pays where the formula carries a factor of many levels, whose indicator
 columns hold one non-zero per row, and <code>lasso(~ 0 + g)</code> over hundreds of
-groups is the case. On numeric covariates the block is dense whatever is
-asked for, and the sparse storage then costs more than it saves. Left
+groups is the case. On numeric covariates the block has no zeros to exploit,
+and the sparse storage then costs more than it saves. Left
 <code>NULL</code>, the default, the storage is settled at build by <code><a href="dot-resolve_sparse.html">.resolve_sparse()</a></code>:
 the dense indicator part holds <code>n</code> times its column count in cells against
 one non-zero per row, and the two routes cross at about \(10^5\) of those
@@ -161,10 +164,12 @@ it.</p>
 
 <p>A hyperparameter is comparable across coordinates only where the coordinates
 share a scale. Without <code>standardize</code> a lasso penalizes a column measured in
-meters more than the same column measured in kilometers, and a reader of
-\(\lambda\) has no way to tell.</p>
-<p><code>standardize = TRUE</code> divides each coefficient by the standard deviation of
-its own column, through the penalty's diagonal map. With \(z_j = x_j/s_j\)
+kilometers more heavily than the same column measured in meters, because for
+the same fitted effect the coefficient per kilometer is 1000 times the
+coefficient per meter, and a reader of \(\lambda\) has no way to tell.</p>
+<p><code>standardize = TRUE</code> penalizes each coefficient multiplied by the standard
+deviation of its own column, \(s_j\beta_j\), through the penalty's
+diagonal map. With \(z_j = x_j/s_j\)
 the coefficients satisfy \(\beta_{z,j} = s_j\beta_{x,j}\), so</p>
 <p>$$\lambda\sum_j \lvert\beta_{z,j}\rvert
   = \lambda\sum_j s_j\lvert\beta_{x,j}\rvert
@@ -179,15 +184,23 @@ translation of a penalized column wherever an intercept is free.</p>
 <code>blueprint$standardize</code>, so the same term standardizes identically in every
 equation of a distributional model and does not move with the working
 weights of a fit. A constant column takes \(s_j = 1\). <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the
-values, a number that changes the meaning of \(\lambda\) having to be
-legible.</p>
-<p>For SCAD and MCP the map is not a rescaling of \(\lambda\) alone.
-Substituting \(s_j\beta_j\) gives \(\lambda_j = \lambda s_j\) <strong>and</strong>
-\(a_j = a/s_j\) (or \(\gamma_j = \gamma/s_j\)), a composition of both
-hyperparameters per coordinate, which the map expresses exactly.</p>
+values, because a change of scale changes the meaning of \(\lambda\).</p>
+<p>For SCAD and MCP the map is not a rescaling of \(\lambda\) alone. The
+penalty of the \(j\)-th coefficient is the original penalty evaluated at
+\(s_j\lvert\beta_j\rvert\), with the same \(\lambda\) and \(a\) (or
+\(\gamma\)) for every coordinate, so that the map acts on the argument of
+the penalty and leaves the hyperparameters unchanged. The penalty of
+coordinate \(j\) becomes flat at \(\lvert\beta_j\rvert = a\lambda/s_j\)
+(at \(\gamma\lambda/s_j\) for MCP). For MCP this equals an MCP on
+\(\beta_j\) with \(\lambda_j = \lambda s_j\) and
+\(\gamma_j = \gamma/s_j^2\). For SCAD no pair \((\lambda_j, a_j)\)
+reproduces it, because the slope at the origin, \(s_j\lambda\), and the
+end of the first segment, \(\lambda/s_j\), would both have to equal
+\(\lambda_j\).</p>
 <p><code><a href="random.html">random()</a></code> does not standardize and takes no such argument. Its columns are
-grouping indicators and its penalty is a variance component with a meaning
-of its own; weighting it by the size of the groups would change the model.</p>
+the grouping indicators, multiplied by the covariate of a random slope, and
+its penalty is a variance component with a meaning of its own; weighting it
+by the size of the groups would change the model.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -242,7 +255,7 @@ one reports.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    lasso.x1    lasso.x3 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   0.7822996 886.9946868 </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># An argument named after another penalty's hyperparameter is reported.</span></span></span>
+<span class="r-in"><span><span class="co"># An argument named after another penalty's hyperparameter is rejected.</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu"><a href="scad.html">scad</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span>, gamma <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Error : 'scad' has no argument 'gamma'.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Its hyperparameters are: lambda, a, each held by naming it and estimated when left NULL.</span>

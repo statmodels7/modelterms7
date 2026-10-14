@@ -24,12 +24,14 @@ A named numeric vector on the unconstrained scale.
 
 ## Details
 
-Without the response every level starts at zero and every gap at one,
-which puts the regimes wherever the scale of the data does not; on
-response in the hundreds that start is far from any mode. The quantiles
-spread the regimes over the data, as
+Without the response the start is the zero vector on the unconstrained
+scale: the first level is zero, every gap is one and every row of the
+transition matrix is uniform, so the levels are \\0, 1, \dots, k - 1\\
+whatever the scale of the data. The quantiles spread the regimes over
+the data, as
 [`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
 spreads break-points over a covariate. `target` is the response on the
 scale of the predictor, which the fitting layer supplies where the
-family reads the parameter directly; where it is absent, or where two
-quantiles coincide, the conventional start is returned.
+family reads the parameter directly. Where it is absent, where fewer
+than \\k\\ of its values are finite, or where two quantiles coincide,
+the conventional start above is returned.

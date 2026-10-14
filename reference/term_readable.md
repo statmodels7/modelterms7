@@ -33,14 +33,18 @@ quantity is built on.
 
 ## Details
 
-A term's parameters are the coordinates it is estimated on, chosen so
-that a search runs unconstrained, and they are not always the quantities
-the model is about. The clearest case is a score-driven persistence,
-which rides a partial autocorrelation because the stationary region is
-not a box: what the literature writes as \\\beta_1\\ is the
-autoregressive coefficient, which is a function of the whole chart and
-coincides with it only at \\q = 1\\. Reporting the coordinate under the
-coefficient's name would promise one quantity and print another.
+A term's parameters are the coordinates on which it is estimated, chosen
+so that a search runs unconstrained, and they are not always the
+quantities the model is about. The clearest case is a score-driven
+persistence, which rides a partial autocorrelation because the
+stationary region is not a box: the autoregressive coefficient \\\xi_1\\
+is a function of the whole chart and coincides with the coordinate only
+at \\q = 1\\. Reporting the coordinate under the coefficient's name
+would promise one quantity and print another.
+[`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+therefore reports `xi1`, ..., and
+[`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+reports the transition probabilities `p1.1`, `p1.2`, ... row by row.
 
 Each row gives a value and the row of \\\partial(\text{value}) /
 \partial\zeta\\ at the current parameters, so a standard error is
@@ -49,8 +53,8 @@ the quantity in its own set, exactly as parameters7's `param_readable()`
 does for a matrix parameter.
 
 The base method reports the parameters themselves on the parameter
-scale, with the diagonal Jacobian of their links. That is the right
-answer for every term whose coordinates are already its quantities.
+scale, with the diagonal Jacobian of their links. That is appropriate
+for every term whose coordinates are already its quantities.
 
 ## See also
 

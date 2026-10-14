@@ -24,7 +24,7 @@ A single string, possibly `NA_character_`.
 
 The property is a character vector and is empty on a term built before
 the label existed, so the two spellings of "no label" are read in one
-place rather than at each caller.
+place.
 
 ## See also
 

@@ -13,7 +13,7 @@ so the surface may be rough in one direction and smooth in another."><meta prope
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,7 +67,7 @@ so the surface may be rough in one direction and smooth in another.</p>
 
 <dl><dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>The covariates, bare expressions evaluated in the data, at least
-two of them. One throws <code>"'te' needs at least two covariates; use s() for one."</code>.</p></dd>
+two of them. A single covariate signals the error <code>"'te' needs at least two covariates; use s() for one."</code>.</p></dd>
 
 
 <dt id="arg-smooths">smooths<a class="anchor" aria-label="anchor" href="#arg-smooths"></a></dt>
@@ -75,15 +75,15 @@ two of them. One throws <code>"'te' needs at least two covariates; use s() for o
 for every covariate, or a list of one per covariate.
 <code>bspline_smooth(k = 5)</code> is the default. A margin carrying a <code>penalty</code>
 factory is rejected: a tensor product's penalty is the sum of the
-marginal roughnesses, and a factory does not say how it composes with
+marginal roughnesses, and a factory does not specify how it composes with
 that sum.</p>
 <p>What the product reads from a margin is its <strong>basis</strong> and its
 <strong>roughness matrix</strong>, so <code>k</code>, <code>degree</code>, <code>order</code>, <code>measure</code>, <code>lower</code> and
 <code>upper</code> all act. The constraint, the null space and the
 reparametrization are the product's own and not a margin's: the tensor
 contains the constant whatever its margins do, and it is the product
-that is centered. A margin asking for one of those is rejected rather
-than ignored.</p></dd>
+that is centered. A margin that sets one of those is rejected and not
+ignored.</p></dd>
 
 
 <dt id="arg-by">by<a class="anchor" aria-label="anchor" href="#arg-by"></a></dt>
@@ -100,15 +100,15 @@ margin, so <code>"level"</code> gives one per margin per level.</p></dd>
 
 <dt id="arg-anisotropic">anisotropic<a class="anchor" aria-label="anchor" href="#arg-anisotropic"></a></dt>
 <dd><p><code>TRUE</code>, the default, for one smoothing parameter per
-margin; <code>FALSE</code> for one over their sum. Anything that is not a single
-logical throws.</p></dd>
+margin; <code>FALSE</code> for one over their sum. An argument that is not a single
+non-missing logical signals an error.</p></dd>
 
 
 <dt id="arg-hyper">hyper<a class="anchor" aria-label="anchor" href="#arg-hyper"></a></dt>
 <dd><p>The hyperparameters to hold, as a named numeric vector, with
 anything left out <strong>estimated</strong>. An anisotropic product carries one per
 margin, so a vector of that length, or a named one holding some of
-them.</p></dd>
+them. A held value must be finite.</p></dd>
 
 
 <dt id="arg-id">id<a class="anchor" aria-label="anchor" href="#arg-id"></a></dt>
@@ -149,23 +149,22 @@ a tensor smooth. With <code>anisotropic = FALSE</code> they are summed first and
 per margin.</p>
 <p>Each component is normalized to a largest entry of one before either of
 those happens, since a roughness matrix carries the units of its own
-covariate: measured at <code>k = 4</code> over 300 observations, the
-second-derivative Gram of a covariate on \([0, 365]\) has a largest
-entry of 7.455e-07 against 3.652e+01 for one on \([0, 1]\), a factor of
-4.9e+07. The size also falls with the number of knots, a coarser basis
-being flatter, so the quantity that decides is the matrix and not the
-range. Under
-<code>anisotropic = TRUE</code> that is a reparametrization and nothing about the fit
-moves: the component's own <code>lambda</code> absorbs the factor, so what the
-normalization buys there is that the reported parameters of two margins are
-comparable with each other. Under <code>anisotropic = FALSE</code> it is part of the
-model, one <code>lambda</code> weighting a sum whose terms it fixes, and margins on
-very different ranges then contribute comparably where otherwise the widest
-would contribute almost nothing.</p>
+covariate: the second-derivative Gram of a covariate on \([0, 365]\) has
+a largest entry many orders of magnitude smaller than that of a covariate on
+\([0, 1]\), and its size also depends on the number of knots. Under
+<code>anisotropic = TRUE</code> the normalization is a reparametrization and the fit is
+the same: the component's own <code>lambda</code> absorbs the factor, so the
+normalization makes the reported parameters of two margins comparable with
+each other. Under <code>anisotropic = FALSE</code> it is part of the model, since one
+<code>lambda</code> weights a sum whose terms it fixes, and margins on very different
+ranges then contribute comparably, where otherwise the margin on the widest
+range would contribute almost nothing.</p>
 <p>The marginal bases are <strong>not</strong> reparametrized, so the marginal linear
-effects are not separated out as <code><a href="s.html">s()</a></code> separates its one. They lie in the
-null space of the tensor penalty, and a strongly penalized fit is shrunk
-toward no surface at all rather than toward a plane.</p>
+effects are not separated out as <code><a href="s.html">s()</a></code> separates its one. With the default
+second-derivative roughness they lie in the null space of the tensor
+penalty, together with their product, so a strongly penalized fit is shrunk
+toward the bilinear surface (the centered columns for \(x\), \(z\) and \(xz\))
+and not toward zero.</p>
     </div>
     <div class="section level2">
     <h2 id="centering">Centering<a class="anchor" aria-label="anchor" href="#centering"></a></h2>

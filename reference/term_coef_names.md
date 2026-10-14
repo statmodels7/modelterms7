@@ -17,12 +17,12 @@ term_coef_names(term, ...)
 
   A built additive term (see
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)).
-  A specification throws
+  A specification signals the error
   `"the term has not been built; call term_build(term, data) first."`.
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 

@@ -21,7 +21,7 @@ are estimated by plain maximum likelihood."><meta property="og:image" content="h
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -86,13 +86,13 @@ are estimated by plain maximum likelihood.</p>
 <dl><dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
 <dd><p>A character string prefixed to the term's coefficient names
 when non-empty, and used as the title of <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> and the tag of
-<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>. <code>character(0)</code> and <code>""</code> both mean no label.</p></dd>
+<code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code>. The empty string <code>""</code> means no label.</p></dd>
 
 
 <dt id="arg-hyper">hyper<a class="anchor" aria-label="anchor" href="#arg-hyper"></a></dt>
-<dd><p>The hyperparameters of the term's penalty the caller <strong>held</strong>,
-as a named list keyed by the penalty's names. Empty, the default, means
-every one of them is estimated. See <code><a href="term_hyper.html">term_hyper()</a></code>.</p></dd>
+<dd><p>The hyperparameters of the term's penalty that the caller
+<strong>held</strong>, as a named list keyed by the penalty's names. Empty, the
+default, means every one of them is estimated. See <code><a href="term_hyper.html">term_hyper()</a></code>.</p></dd>
 
 
 <dt id="arg-grid">grid<a class="anchor" aria-label="anchor" href="#arg-grid"></a></dt>
@@ -129,8 +129,9 @@ See <code><a href="term_ids.html">term_ids()</a></code>.</p></dd>
 
 
 <dt id="arg-blueprint">blueprint<a class="anchor" aria-label="anchor" href="#arg-blueprint"></a></dt>
-<dd><p>A named list of the resolved grouping and interval
-structure, empty until <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
+<dd><p>A named list recording the number of rows, the covariate,
+the rows of each group and the group labels, empty until <code><a href="term_build.html">term_build()</a></code>
+fills it.</p></dd>
 
 
 <dt id="arg-kind">kind<a class="anchor" aria-label="anchor" href="#arg-kind"></a></dt>
@@ -148,7 +149,7 @@ structure, empty until <code><a href="term_build.html">term_build()</a></code> f
 
 <dt id="arg-linear">linear<a class="anchor" aria-label="anchor" href="#arg-linear"></a></dt>
 <dd><p>Whether the term carries the linear effect as its own
-parameter, <code>TRUE</code> for <code>"seg"</code> and <code>"jseg"</code>.</p></dd>
+parameter, <code>beta</code>. It is <code>FALSE</code> for <code>"jump"</code>.</p></dd>
 
 
 <dt id="arg-group">group<a class="anchor" aria-label="anchor" href="#arg-group"></a></dt>
@@ -168,43 +169,53 @@ subformula.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An S7 object of class <code>MarginalBreakTerm</code>, inheriting from
-<code><a href="structural_term.html">structural_term()</a></code> and <code><a href="model_term.html">model_term()</a></code>, with the eight properties above
-beside <code><a href="model_term.html">model_term()</a></code>'s six.</p>
+<code><a href="structural_term.html">structural_term()</a></code> and <code><a href="model_term.html">model_term()</a></code>, with the properties listed above
+beside the inherited ones.</p>
     </div>
     <div class="section level2">
-    <h2 id="the-eight-properties-of-its-own">The eight properties of its own<a class="anchor" aria-label="anchor" href="#the-eight-properties-of-its-own"></a></h2>
-    <p><code>kind</code> is <code>"jump"</code>, <code>"seg"</code> or <code>"jseg"</code>; <code>var</code> the covariate expression;
-<code>npsi</code> the number of break-points per group; <code>linear</code> whether the term
-carries the linear effect as a parameter of its own, which <code>seg</code> and <code>jseg</code>
-do.</p>
+    <h2 id="properties">Properties<a class="anchor" aria-label="anchor" href="#properties"></a></h2>
+    <p>The class defines the properties <code>kind</code>, <code>var</code>, <code>npsi</code>, <code>linear</code>, <code>group</code>,
+<code>prior</code> and <code>spec</code>, and inherits the others from <code><a href="structural_term.html">structural_term()</a></code> and
+<code><a href="model_term.html">model_term()</a></code>, among them <code>blueprint</code>.</p>
+<p><code>kind</code> is <code>"jump"</code>, <code>"seg"</code> or <code>"jseg"</code>; <code>var</code> is the covariate expression;
+<code>npsi</code> is the number of break-points per group; <code>linear</code> records whether
+the term carries the linear effect as a parameter of its own. It is <code>TRUE</code>
+for <code><a href="seg.html">seg()</a></code> and <code><a href="jseg.html">jseg()</a></code> unless <code>linear = FALSE</code> was given, and <code>FALSE</code> for
+<code><a href="jump.html">jump()</a></code>.</p>
 <p><code>group</code> is the grouping expression, taken from the break-point's <code><a href="random.html">random()</a></code>
-subformula. <code>prior</code> is the latent's distribution: <code>NULL</code> for the Gaussian,
-or a <span class="pkg">distributions7</span> object where <code>random(distrib = )</code> named one, and
-its location must be fixed at zero, <code>psi1.mean</code> carrying the position.</p>
-<p><code>spec</code> holds the resolved construction settings and <code>blueprint</code> the
-grouping and the interval structure <code><a href="term_build.html">term_build()</a></code> worked out.</p>
+subformula. <code>prior</code> is the distribution of the latent positions: <code>NULL</code> for
+the Gaussian, or a <span class="pkg">distributions7</span> object where <code>random(distrib = )</code>
+names one. The location of that distribution must be fixed at zero, since
+<code>psi1.mean</code> carries the position.</p>
+<p><code>spec</code> holds the resolved construction settings. <code>blueprint</code> is inherited
+from <code><a href="structural_term.html">structural_term()</a></code> and holds the grouping and the covariate that
+<code><a href="term_build.html">term_build()</a></code> records.</p>
     </div>
     <div class="section level2">
-    <h2 id="the-parameters">The parameters<a class="anchor" aria-label="anchor" href="#the-parameters"></a></h2>
-    <p>They are numbered, one set per break-point: <code>psi1.mean</code>, <code>psi1.sd</code>,
-<code>delta1</code> for a one-break-point step term, with <code>psi1.mean</code> the mean of the
-positions in the population, <code>psi1.sd</code> their standard deviation between
-groups on a log chart, and <code>delta1</code> the change of level. A continuous kind adds <code>beta</code>
-for the linear effect and <code>gamma1</code> for the change of slope.</p>
+    <h2 id="parameters">Parameters<a class="anchor" aria-label="anchor" href="#parameters"></a></h2>
+    <p>The parameters are numbered, one set per break-point. A step term with one
+break-point has <code>psi1.mean</code>, <code>psi1.sd</code> and <code>delta1</code>, where <code>psi1.mean</code> is
+the mean of the positions in the population, <code>psi1.sd</code> is their standard
+deviation between groups (estimated through a log link) and <code>delta1</code> is the
+change of level. A <code><a href="seg.html">seg()</a></code> term has <code>beta</code> for the linear effect, <code>psi1.mean</code>,
+<code>psi1.sd</code> and <code>gamma1</code> for the change of slope. A <code><a href="jseg.html">jseg()</a></code> term has
+<code>beta</code>, <code>psi1.mean</code>, <code>psi1.sd</code>, <code>gamma1</code> and <code>delta1</code>.</p>
     </div>
     <div class="section level2">
-    <h2 id="what-it-costs">What it costs<a class="anchor" aria-label="anchor" href="#what-it-costs"></a></h2>
-    <p>At most <strong>eight</strong> break-points. The forward recursion of the step kind costs
-\(n K 2^K\) and stays cheap well past that; what does not is the fitting
-layer, which reads a posterior over the \(2^K\) side patterns and
-evaluates the family once per pattern. The continuous kinds stay at one
-break-point, a product quadrature over more being far dearer still.</p>
+    <h2 id="number-of-break-points">Number of break-points<a class="anchor" aria-label="anchor" href="#number-of-break-points"></a></h2>
+    <p>A step term takes at most eight break-points per group. The forward
+recursion of the step kind costs \(n K 2^K\) operations for \(n\)
+observations and \(K\) break-points. The fitting layer reads a posterior
+over the \(2^K\) side patterns and evaluates the family once per pattern,
+and the number of patterns therefore limits \(K\). The continuous kinds take one break-point, because
+a product quadrature over several would need a node set whose size grows as
+a power of their number.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="jump.html">jump()</a></code>, <code><a href="seg.html">seg()</a></code> and <code><a href="jseg.html">jseg()</a></code> for the constructors;
 <code><a href="term_loglik.html">term_loglik()</a></code> for the likelihood; <code><a href="term_latent.html">term_latent()</a></code> for the posterior
-positions a reader wants.</p></div>
+positions.</p></div>
     </div>
 
     <div class="section level2">

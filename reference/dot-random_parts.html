@@ -11,7 +11,7 @@ are not one of the two."><meta property="og:image" content="https://statmodels7.
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,27 +58,22 @@ are not one of the two.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list with <code>within</code> and <code>group</code>, both language objects, and <code>tag</code>,
-a single string or <code>NA_character_</code>.</p>
+    <p>A list with <code>within</code>, the left side of the bar (a call, a symbol or
+the constant <code>1</code>), <code>group</code>, a symbol or a call, and <code>tag</code>, a single string
+or <code>NA_character_</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>R nests the bars to the left, so in <code>~ 1 + x | u | id</code> the outer bar has
 <code>id</code> on its right and <code>1 + x | u</code> on its left. The last position is
 therefore the grouping variable and the middle one the label, which is
-<span class="pkg">brms</span>'s convention and comes out of the parser rather than being
-imposed.</p>
+<span class="pkg">brms</span>'s convention and is the reading that the parser itself yields.</p>
 <p>The label is taken with <code><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character()</a></code> on the symbol and <strong>never
 evaluated</strong>, so a column of the data carrying that name is not read. It is
-the one thing in a formula that does not refer to the data, and reading it
-as data is what the two-bar form did before: with no such column it stopped
-with <code>object 'u' not found</code>, with a factor column it built twice the columns
-and a warning about <code>'|'</code> applied to factors, and with a numeric column it
-built twice the columns and said nothing at all.</p>
-<p>Two bars are the most that carry a meaning, so a third is rejected rather
-than read.</p>
-<p>Written once because the constructor and <code><a href="term_build.html">term_build()</a></code> both need the split
-and two copies of it would agree only by accident.</p>
+the one element of the formula that does not refer to the data.</p>
+<p>Two bars are the most that carry a meaning, so a third is rejected.</p>
+<p>The constructor and <code><a href="term_build.html">term_build()</a></code> both call this function, so that the
+split is defined in one place.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

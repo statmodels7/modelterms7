@@ -4,10 +4,11 @@ Holds a response whose observations are not all exact: the values, a
 lower and an upper bound for each of them, and a status saying which of
 the four cases the observation is.
 [`cens()`](https://statmodels7.github.io/modelterms7/reference/cens.md)
-is the constructor to call, and it derives the statuses from the values
-and the bounds. The raw S7 constructor documented here takes all four
-vectors and checks only that they agree, so it is the form to use when
-the statuses are already known.
+is the usual constructor and derives the statuses from the values and
+the bounds. The raw S7 constructor documented here takes all four
+vectors and validates them (equal lengths, bounds that are not missing,
+each lower bound strictly below its upper bound, and status names), so
+it is the form to use when the statuses are already known.
 
 ## Usage
 
@@ -31,20 +32,20 @@ censored_response(
 
   Numeric vectors of censoring bounds, of the same length as `y`.
   Infinite entries are allowed and mean no censoring on that side. The
-  validator rejects any pair with `lwr >= upr`.
+  validator rejects a missing entry and any pair with `lwr >= upr`.
 
 - status:
 
   A character vector of the same length as `y`, each entry one of
   `"observed"`, `"left"`, `"right"` or `"interval"`. Any other string
-  throws, naming the first one it meets.
+  signals an error that names the first one found.
 
 ## Value
 
 An S7 object of class `censored_response` with properties `y`, `lwr`,
 `upr` (numeric, all of one length) and `status` (character, the same
-length). It carries no methods beyond
-[`print()`](https://rdrr.io/r/base/print.html).
+length). The class has a [`print()`](https://rdrr.io/r/base/print.html)
+method and no other methods.
 
 ## The four statuses and what each asserts
 
@@ -63,26 +64,31 @@ with \\f\\ and \\F\\ the density and the distribution function of the
 fitted family. `y` is `NA` for an interval-censored observation, its
 value being unknown; every other status carries a number.
 
-## What reads it today
+## Use in fitting
 
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
 accepts `cens(...)` on the left of a formula and returns the object as
-the `response` element of its result. Nothing then assembles the four
-contributions above:
+the `response` element of its result. No function assembles the four
+contributions above into a likelihood:
 [`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
-stops with a message naming the gap, and no other function in the
-toolkit reads the class. The pieces exist:
+and
+[`statmodels7::rstatmod()`](https://statmodels7.github.io/statmodels7/reference/rstatmod.html)
+reject a censored response with an error message, and no other function
+in the toolkit reads the class. The derivatives of \\F\\ in the
+parameters are available from
 [`distributions7::distrib_grad_cdf()`](https://statmodels7.github.io/distributions7/reference/distrib_grad_cdf.html)
-and `distrib_hess_cdf()` carry the derivatives of \\F\\ in the
-parameters. The assembler that would use them is not written, so the
-class records what is known about each observation and no more.
+and `distrib_hess_cdf()`. Without an assembler the class records what is
+known about each observation and nothing more.
 
 ## What the validator enforces
 
-`y`, `lwr`, `upr` and `status` must be the same length; every lower
-bound must be **strictly** below its upper bound, so `lwr = upr` is
-rejected; and every status must be one of the four names. A failure
-throws with the offending rule quoted.
+`y`, `lwr`, `upr` and `status` must be the same length; `lwr` and `upr`
+must not be missing; every lower bound must be **strictly** below its
+upper bound, so `lwr = upr` is rejected; and every status must be one of
+the four names. A failure signals an error that quotes the violated
+rule. The validator does not check that a status agrees with the values:
+a status of `"interval"` with a non-missing `y` is accepted, and so is a
+missing `y` with another status.
 
 ## See also
 
@@ -112,7 +118,10 @@ censored_response(y = c(2, 9), lwr = c(-Inf, -Inf), upr = c(Inf, 9),
                   status = c("observed", "right"))
 #> <censored_response> 2 observations: 1 observed, 1 right
 
-# Three ways to fail the validator.
+# Four ways to fail the validator.
+try(censored_response(y = 1, lwr = NA_real_, upr = 1, status = "observed"))
+#> Error : <modelterms7::censored_response> object is invalid:
+#> - lwr and upr must not be missing
 try(censored_response(y = 1, lwr = 2, upr = 1, status = "observed"))
 #> Error : <modelterms7::censored_response> object is invalid:
 #> - every lower bound must be strictly below its upper bound

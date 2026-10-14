@@ -11,7 +11,7 @@ layer reads it to begin a search."><meta property="og:image" content="https://st
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,9 @@ layer reads it to begin a search.</p>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Passed to methods. No shipped method reads anything here.</p></dd>
+<dd><p>Passed to methods. The methods for <code><a href="regime.html">regime()</a></code> and for a marginal
+break-point term read <code>target</code> here, the response on the scale of the
+predictor.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -67,16 +69,22 @@ layer reads it to begin a search.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The start belongs to the term because only the term knows what a coordinate
-of zero means on each of its charts. The base method returns zero
-everywhere, which is each link's own natural point, and that is right
-wherever zero means "the model without this term".</p>
-<p>It does not always. <code><a href="gas.html">gas()</a></code> overrides it: its score loadings ride a log
-chart, so a coordinate of zero is a loading of <strong>one</strong>, which is a strongly
-driven filter and a poor place to begin. It starts them at 0.1 through the
-chart, \(\log 0.1 = -2.303\), and leaves every other coordinate at zero.</p>
-<p>A term that needs the data to place its start, as a marginal break-point
-term does, computes it at <code><a href="term_build.html">term_build()</a></code> and returns it from here.</p>
+    <p>The start is supplied by the term because the meaning of a coordinate of
+zero depends on the chart that the term uses for each parameter. The base
+method returns zero everywhere, which is each link's own natural point, and
+that is appropriate wherever zero means "the model without this term".</p>
+<p>Zero does not always have that meaning. <code><a href="gas.html">gas()</a></code> overrides the base method:
+its score loadings ride a log chart, so a coordinate of zero is a loading of
+<strong>one</strong>, which is a strongly driven filter and a poor place to begin. The
+method places each loading at 0.1 through the chart, \(\log 0.1 = -2.303\),
+and leaves every other coordinate at zero. When a loading is developed by a
+subformula, the constant start is projected onto the design of the
+development.</p>
+<p>A term that needs the response to place its start reads it from <code>target</code>,
+which reaches the method through the dots. <code><a href="regime.html">regime()</a></code> places its levels at
+quantiles of <code>target</code>, and a marginal break-point term computes the profile
+of its break-points from <code>target</code> and otherwise uses quantiles of the
+covariate. Both are computed when the generic is called.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

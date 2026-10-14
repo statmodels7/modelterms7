@@ -1,8 +1,8 @@
 # MCP Penalty on a Block of Coefficients
 
 The minimax concave penalty: like SCAD it selects and then flattens, and
-it begins to flatten immediately, where SCAD waits for a first
-threshold.
+it begins to flatten immediately, whereas SCAD keeps the slope of the
+lasso up to \\t = \lambda\\.
 
 ## Usage
 
@@ -29,7 +29,7 @@ mcp(
 
   A one-sided formula, such as `~ x1 + x2` or `~ 0 + g`, or a numeric
   matrix, ideally a matrix column of the model data frame. A two-sided
-  formula throws.
+  formula is rejected with an error.
 
 - label:
 
@@ -61,30 +61,36 @@ mcp(
   Labels sharing this term's hyperparameters with those of other terms
   carrying the same ones: each is then estimated at a single value,
   wherever in the formula they sit. A named vector, `c(gamma = "A")`,
-  since the penalty carries several and which was meant is not a guess;
-  `NULL`, the default, shares nothing. See
-  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md),
-  whose page says what the labels mean and what care they want.
+  because the penalty has several hyperparameters and the name says
+  which one is shared; `NULL`, the default, shares nothing. See
+  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md)
+  for the meaning of the labels and the restrictions on their use.
 
 - n_lambda, n_gamma:
 
-  How many values the path visits for each, at least 2. They differ
-  because the axes do: \\\lambda\\ descends the size of the kink over
-  four decades and wants that many points, while \\\gamma\\ spans the
-  shape's useful range and does not.
+  How many values the path visits for each, at least 2. The two are
+  separate arguments because the axes differ: \\\lambda\\ descends from
+  the kink size that empties the block to `min_ratio` times that size
+  (four decades at the default `min_ratio`), which takes more points
+  than \\\gamma\\, which spans the shape's useful range. Each signals an
+  error when given explicitly for a hyperparameter that is held or
+  written out, so `n_gamma` requires `gamma = NULL`.
 
 - min_ratio:
 
   How far down the path reaches, as a fraction of the kink that empties
   the block: smaller reaches a denser fit, larger stops sooner. A single
   number in \\(0, 1)\\, `1e-4` by default. Only the sweep by kink size
-  reads it.
+  reads it, and it signals an error when given explicitly while `lambda`
+  is held or written out.
 
 - search:
 
   `"grid"` to visit every combination of \\\lambda\\ and \\\gamma\\,
   `"cyclic"` to sweep one at a time with the other held. See
   [`term_search()`](https://statmodels7.github.io/modelterms7/reference/term_search.md).
+  Given explicitly while fewer than two hyperparameters are swept, it
+  signals an error.
 
 - sparse:
 
@@ -96,10 +102,10 @@ mcp(
 
 - ...:
 
-  Not used, and reported. An argument named after another penalty's
-  hyperparameter is the mistake this catches: `scad(~ x, gamma = 1)`
-  throws `"'scad' has no argument 'gamma'."` and lists the ones it does
-  have.
+  Not used. Any argument supplied here is rejected with an error that
+  names it and lists the penalty's hyperparameters. The typical case is
+  an argument named after another penalty's hyperparameter:
+  `scad(~ x, gamma = 1)` signals `"'scad' has no argument 'gamma'."`.
 
 ## Value
 
@@ -108,41 +114,38 @@ An unbuilt
 a specification, with `X`, `coef_names`, `blueprint` and `penalty` empty
 until
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-fills them, and the penalty attached there over as many coefficients as
-the block turns out to have.
+fills them. The build attaches the penalty over the block's columns.
 
 ## Details
 
 Defined by its derivative, for \\t = \lvert\beta_j\rvert \ge 0\\,
 \$\$\rho'(t) = \left(\lambda - \frac{t}{\gamma}\right)\_+ ,\$\$ summed
 over the coefficients: it starts at \\\lambda\\, falls linearly, and is
-flat past \\t = \gamma\lambda\\. Improper by construction, so it carries
+flat past \\t = \gamma\lambda\\. The penalty is improper, so it carries
 no normalizing constant and is not reachable by a marginal criterion.
+
+The formula above is the penalty for a loss of unit curvature. In a
+[`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
+fit the penalty on coordinate \\j\\ is scaled by the curvature \\c_j\\
+of the likelihood in that coordinate: the slope at zero remains
+\\\lambda\\, and the penalty is flat past \\\gamma\lambda/c_j\\, so the
+shape keeps its meaning whatever the scale of the response. Rescaling a
+Gaussian response by \\k\\ and dividing \\\lambda\\ by \\k\\ reproduces
+the fit with \\\gamma\\ unchanged. The scaling is applied by
+statmodels7; the penalty that this term builds is the unscaled one.
 
 **Hyperparameters.** `lambda` on \\(0, \infty)\\, swept over `n_lambda`
 values by kink size; `gamma` on \\(1, \infty)\\, at or below which the
-penalized objective need not be convex even for an orthogonal design,
-swept over `n_gamma` values on a geometric grid above that bound.
+penalized objective need not be convex even for an orthogonal design.
+The shape leaves the kink at zero unchanged, so a path over the kink
+size cannot reach it. It is swept over `n_gamma` values on a geometric
+grid that starts just above the smallest shape at which the block can be
+fitted.
 
-**The shape is HELD at \\\gamma = 3\\ by default**, the value of Zhang,
-so only \\\lambda\\ is searched. `gamma = NULL` estimates it over the
-grid instead, and `n_gamma` sizes that grid. Measured over eight data
-configurations, estimating it chose the grid's LOWER ENDPOINT every time
-and changed no model: the columns kept were identical and the error
-against the truth agreed to four decimals. The endpoint is the floor
-plus 0.25, so what was reported as an estimate was the grid's own edge,
-and it did not move with `n_gamma`, which refines the interior and
-cannot touch either end.
-
-⚠️ **The shape is not scale free**, which is why the literature's value
-belongs to standardized data. Rescaling the response by \\k\\ sends
-\\\beta \to k\beta\\, and the fit is reproduced at \\(\lambda/k,\\
-\gamma k^2)\\, verified to 1.7e-13 at \\k = 2, 5, 10\\: the shape
-carries the units of a proximal step, and the floor it is swept above
-grows with them. On a response of much larger scale a small held shape
-falls outside the convex region the compiled coordinate descent needs
-and the fit takes the general route, measured at 7.4 s against 0.4 s at
-a hundredfold response.
+The shape is held at \\\gamma = 3\\ by default, the value that ncvreg
+holds, so only \\\lambda\\ is searched. `gamma = NULL` estimates it over
+the grid instead, and `n_gamma` sizes that grid. The grid runs from 0.25
+to 25 above the smallest admissible shape.
 
 ## References
 
@@ -176,7 +179,7 @@ p@params_bounds
 #> 
 
 # The derivative starts at lambda and falls linearly to zero at
-# gamma * lambda, where SCAD would still be on its first segment.
+# gamma * lambda. SCAD's derivative stays at lambda up to t = lambda.
 rho1 <- function(t, lambda, gamma) pmax(lambda - t / gamma, 0)
 rho1(c(0, 1, 2, 3), lambda = 1, gamma = 2)
 #> [1] 1.0 0.5 0.0 0.0
@@ -185,15 +188,27 @@ rho1(c(0, 1, 2, 3), lambda = 1, gamma = 2)
 penalties7::penalty_kinks(p, list(lambda = 1, gamma = 2))
 #> [1]  0 -2  2
 
-# The literature's shape, held.
-term_hyper(mcp(~ x1 + x2, gamma = 3))
+# The literature's shape is held by default, and `gamma = NULL` estimates it
+# over a grid.
+term_hyper(mcp(~ x1 + x2))
 #> [[1]]
 #> [[1]]$gamma
 #> [1] 3
 #> 
 #> 
+term_hyper(mcp(~ x1 + x2, gamma = NULL))
+#> list()
+term_grid(mcp(~ x1 + x2, gamma = NULL))
+#> [[1]]
+#> [[1]]$lambda
+#> [1] 25
+#> 
+#> [[1]]$gamma
+#> [1] 5
+#> 
+#> 
 
-# At or below 1 the objective need not be convex, so it is refused.
+# At or below 1 the objective need not be convex, so it is rejected.
 try(mcp(~ x1 + x2, gamma = 1))
 #> Error : 'gamma' in 'mcp' must lie strictly inside (1, Inf); it is 1.
 

@@ -41,20 +41,24 @@ and `latent`, whatever the term drew.
 
 ## Details
 
-Simulating from a model that carries state is not the same operation as
-fitting one, and the difference is which direction the response moves
-in. A term whose contribution does not read the response can report that
-contribution and leave the drawing to the caller: a latent chain's
-levels and a group's break-point drawn from its prior are both like
-that. A score-driven term cannot. Its level at one time is driven by the
-score of the response at the time before, so the response has to be
-drawn AS the recursion runs.
+Simulating from a model that carries state differs from fitting one in
+the direction in which the response moves. A term whose contribution
+does not read the response can report that contribution and leave the
+drawing to the caller: the levels of a latent chain
+([`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md))
+and the break-point of a group drawn from its prior (a marginal
+break-point term) are both of this kind. A score-driven term cannot do
+so. Its level at one time is driven by the score of the response at the
+time before, so the response has to be drawn as the recursion runs.
 
-One contract covers both. The caller supplies `draw`, a function of a
-predictor and a row index returning one response value, and the method
-returns the predictor it produced; a method that drew returns the
-responses as well and one that did not returns `NULL` there, leaving the
-caller to draw at the predictor.
+The same calling convention covers both. The caller supplies `draw`, a
+function of a predictor and a row index returning one response value,
+and the method returns the predictor it produced. A method that drew
+returns the responses as well, and a method that did not returns `NULL`
+there, leaving the caller to draw at the predictor.
+[`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+draws one chain per group, in time order and started from the stationary
+distribution, and returns the state of each row as `latent`.
 
 ## See also
 

@@ -24,11 +24,11 @@ A numeric vector of length one, or of length zero.
 
 ## Details
 
-One number per term, one per hyperparameter being unnecessary: only the
-path over the size of the kink uses it: a bounded hyperparameter is
-swept over its own interval and a shape that does not move the kink over
-a geometric grid above its lower bound, and a fraction of an emptying
-value means nothing in either.
+The fraction is one number per term, because only the path over the size
+of the kink uses it. A bounded hyperparameter is swept over its own
+interval, and a shape that does not move the kink over a geometric grid
+above its lower bound; a fraction of an emptying value has no meaning on
+either axis.
 
 ## See also
 

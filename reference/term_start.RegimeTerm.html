@@ -9,7 +9,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,14 +63,15 @@
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Without the response every level starts at zero and every gap at one,
-which puts the regimes wherever the scale of the data does not; on
-response in the hundreds that start is far from any mode. The quantiles
-spread the regimes over the data, as <code><a href="seg_start.html">seg_start()</a></code> spreads break-points
-over a covariate. <code>target</code> is the response on the scale of the predictor,
-which the fitting layer supplies where the family reads the parameter
-directly; where it is absent, or where two quantiles coincide, the
-conventional start is returned.</p>
+    <p>Without the response the start is the zero vector on the unconstrained
+scale: the first level is zero, every gap is one and every row of the
+transition matrix is uniform, so the levels are \(0, 1, \dots, k - 1\)
+whatever the scale of the data. The quantiles spread the regimes over the
+data, as <code><a href="seg_start.html">seg_start()</a></code> spreads break-points over a covariate. <code>target</code> is
+the response on the scale of the predictor, which the fitting layer
+supplies where the family reads the parameter directly. Where it is
+absent, where fewer than \(k\) of its values are finite, or where two
+quantiles coincide, the conventional start above is returned.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

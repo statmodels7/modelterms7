@@ -13,7 +13,7 @@ is re-derived from the new rows."><meta property="og:image" content="https://sta
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@ is re-derived from the new rows.</p>
 
 
 <dl><dt id="arg-term">term<a class="anchor" aria-label="anchor" href="#arg-term"></a></dt>
-<dd><p>A built <code><a href="LinparTerm.html">LinparTerm()</a></code>. An unbuilt one throws
+<dd><p>A built <code><a href="LinparTerm.html">LinparTerm()</a></code>. An unbuilt one signals the error
 <code>"the term has not been built; call term_build(term, data) first."</code>.</p></dd>
 
 
@@ -75,11 +75,12 @@ names.</p>
     <p>The levels come from <code>blueprint$xlev</code>, so a factor in <code>newdata</code> need carry
 only the levels its own rows use and still gets the full set of columns. A
 level the blueprint does not know is rejected by <code><a href="https://rdrr.io/r/stats/model.frame.html" class="external-link">stats::model.frame()</a></code> with
-<code>"factor g has new levels zz"</code>, which is the right answer: a coefficient was
-never fitted for it.</p>
+<code>"factor g has new levels zz"</code>, because no coefficient was fitted for that
+level.</p>
 <p>The storage comes from <code>blueprint$sparse</code> rather than being decided again,
-so a prediction does not spend at new rows what the build was careful not
-to. <code>na.action = na.pass</code> again keeps every row.</p>
+so a prediction builds the same kind of block as the fit and does not
+densify a sparse block at new rows. <code>na.action = na.pass</code> again keeps every
+row.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -103,7 +104,7 @@ to. <code>na.action = na.pass</code> again keeps every row.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="fu"><a href="term_predict.html">term_predict</a></span><span class="op">(</span><span class="va">b</span>, <span class="va">nd</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4 5</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># A level the fit never saw is refused.</span></span></span>
+<span class="r-in"><span><span class="co"># A level the fit never saw is rejected.</span></span></span>
 <span class="r-in"><span><span class="va">bad</span> <span class="op">&lt;-</span> <span class="va">dd</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/levels.html" class="external-link">levels</a></span><span class="op">(</span><span class="va">bad</span><span class="op">$</span><span class="va">g</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span>, <span class="st">"zz"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu"><a href="term_predict.html">term_predict</a></span><span class="op">(</span><span class="va">b</span>, <span class="va">bad</span><span class="op">)</span><span class="op">)</span></span></span>

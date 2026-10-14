@@ -29,7 +29,7 @@ directions, and the lower orders' contractions beside it.
 
 - g:
 
-  The weights the fourth derivative is contracted against.
+  The weights against which the fourth derivative is contracted.
 
 - seed:
 
@@ -66,8 +66,8 @@ A list with `jacobian`, `dphi`, `dpsi` and `curvature`.
 
 ## Details
 
-The recursion carries five states – \\F_t\\, \\\Phi_t\\, the two third
-derivatives \\\Psi^{(v)}\_t\\ and \\\Psi^{(w)}\_t\\, and \\\Omega_t\\ –
+The recursion carries five states, \\F_t\\, \\\Phi_t\\, the two third
+derivatives \\\Psi^{(v)}\_t\\ and \\\Psi^{(w)}\_t\\, and \\\Omega_t\\,
 and each of the recursion's products is differentiated by
 [`.gas_prod4()`](https://statmodels7.github.io/modelterms7/reference/dot-gas_prod4.md),
 the sixteen-term rule written once. The persistence's own fourth
@@ -78,5 +78,6 @@ through
 and the starting level's is read off the fixed point \\f_0 = \omega +
 Sf_0\\.
 
-Both third derivatives are needed and not one: the product rule at this
-order pairs each direction's third derivative with the other direction.
+Both third derivatives are carried, because the product rule at this
+order pairs the third derivative along each direction with the other
+direction.

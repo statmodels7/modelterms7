@@ -31,33 +31,43 @@ the centering constraint for
 
 ## Value
 
-The term with `X`, `coef_names`, `blueprint` and `penalty` filled.
+The term with `X`, `coef_names` and `blueprint` filled, and with
+`penalty` filled except where the term declares penalties of its own (a
+penalty factory on the smoother, or `by_hyper = "level"`), in which case
+`penalty` is `NULL` and
+[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
+returns them.
 
 ## The default basis
 
-Where no basis was supplied, each margin gets a
-[`basis7::bspline_basis()`](https://statmodels7.github.io/basis7/reference/bspline_basis.html)
-over the observed range of its covariate, padded by a thousandth of that
-range at each end so that the extreme observations are strictly inside.
-A basis given through `basis` or `bases` is used with its own range,
-untouched.
+Each margin is built by its smoother,
+[`basis7::bspline_smooth()`](https://statmodels7.github.io/basis7/reference/bspline_smooth.html)
+by default. Unless the smoother sets `lower` and `upper`, the basis is
+placed on the observed range of the covariate, padded by a thousandth of
+that range at each end so that the extreme observations are strictly
+inside.
 
 ## One covariate
 
-[`basis7::dr_basis()`](https://statmodels7.github.io/basis7/reference/dr_basis.html)
-takes the inner product at the observed values, and the block is that
-basis evaluated there. With `linear = TRUE` a column \\(x -
-\bar{x})/s_x\\ is prepended and the penalty is \\\mathrm{diag}(0, 1,
-\dots, 1)\\; the center and the scale go into the blueprint with the
-transform. Without it the penalty is the identity.
+The block is built by
+[`basis7::smoother_build()`](https://statmodels7.github.io/basis7/reference/smoother_build.html),
+which takes the Demmler-Reinsch inner product at the observed values.
+With the default
+[`basis7::bspline_smooth()`](https://statmodels7.github.io/basis7/reference/bspline_smooth.html)
+(`null_space = "keep"`) a column \\(x - \bar{x})/s_x\\ is prepended and
+the penalty is \\\mathrm{diag}(0, 1, \dots, 1)\\; the center and the
+scale go into the blueprint with the transform. With
+`null_space = "drop"` that column is absent and the penalty is the
+identity.
 
 ## Several covariates
 
 [`basis7::tensor_basis()`](https://statmodels7.github.io/basis7/reference/tensor_basis.html)
 combines the margins, and one penalty component per margin is carried
 into the product as \\I \otimes \cdots \otimes P_v \otimes \cdots
-\otimes I\\, each \\P_v\\ the margin's second-derivative Gram normalized
-to a maximum entry of one.
+\otimes I\\, each \\P_v\\ the margin's roughness matrix at the order and
+the measure that its smoother carries (the second-derivative Gram at the
+defaults), normalized to a maximum entry of one.
 
 The Kronecker product is taken over the **reversed** blocks, because
 [`basis7::tensor_basis()`](https://statmodels7.github.io/basis7/reference/tensor_basis.html)
@@ -71,8 +81,10 @@ product of the marginal dimensions.
 A factor `by` interacts the basis with the level indicators, giving `m`
 copies of the block and a penalty repeated blockwise; the levels are
 recorded so a prediction uses the same set. A numeric `by` multiplies
-the basis. The storage is settled here and recorded, an explicit
-`sparse = TRUE` being refused where there is no factor `by`.
+the basis after an unpenalized constant column, named `const`, has been
+put in front of it, and the block is not centered. The storage is
+settled here and recorded, an explicit `sparse = TRUE` being rejected
+where there is no factor `by`.
 
 ## See also
 

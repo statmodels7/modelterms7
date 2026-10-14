@@ -2,10 +2,11 @@
 
 Prints one line giving the number of observations and how many carry
 each status, in the fixed order `observed`, `left`, `right`, `interval`.
-A status no observation has is left out, so a response with no censoring
-at all prints as `<censored_response> 20 observations: 20 observed`. The
-values and the bounds are not shown; read them from the `y`, `lwr` and
-`upr` properties.
+A status that no observation has is left out, so a response with no
+censoring at all prints as
+`<censored_response> 20 observations: 20 observed`. The values and the
+bounds are not shown; read them from the `y`, `lwr` and `upr`
+properties.
 
 ## Arguments
 

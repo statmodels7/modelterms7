@@ -5,7 +5,7 @@ scaling schedule fresh and the block rebuilt, ready to iterate from
 there. A restart proposal needs it: a bootstrap resample perturbs the
 objective by \\1/\sqrt{n}\\ and stops escaping a deep basin as the
 sample grows, so the restarting loop also proposes fresh positions
-outright, which this is the operation behind.
+outright, and this function performs that operation.
 
 ## Usage
 
@@ -22,7 +22,7 @@ seg_relocate(term, psi)
 
 - psi:
 
-  A numeric vector, one position per break-point.
+  A numeric vector, one finite position per break-point.
 
 ## Value
 
@@ -31,12 +31,19 @@ The term at the new positions.
 ## Details
 
 The positions are sorted and confined to the term's own interval. For a
-discontinuous construction the auxiliary coefficients are set to \\g_k =
--\delta_k\psi_k\\, a change of level at zero replaced by one, so the
-read-off returns exactly the positions given. A term whose
-per-break-point coefficients carry a development is rejected: its
-positions are one per observation and a single vector does not place
-them.
+sharp
+[`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+or
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+the auxiliary coefficients are set to \\g_k = -\delta_k\psi_k\\, a
+change of level smaller than \\10^{-8}\\ in absolute value being
+replaced by one first, so the read-off returns exactly the positions
+given. A continuous or smoothed term stores the positions themselves. On
+a term held by
+[`seg_hold()`](https://statmodels7.github.io/modelterms7/reference/seg_hold.md)
+it moves the held positions. A term whose per-break-point coefficients
+carry a development is rejected: its positions are one per observation
+and a single vector does not place them.
 
 ## See also
 

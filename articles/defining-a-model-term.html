@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,34 +64,37 @@
 
     
     
-<p>A term in a model formula is usually a string a fitting function
-switches on. Writing a new one then means editing that function, and a
-user cannot write one at all. Here a term is an object: it builds its
-own design block, carries its own penalty, says how many parameters it
-spends, and reapplies itself to new data. A formula interpreter
-recognizes it by what its call <em>returns</em>, so a term defined
-outside the package drops into a formula with no edit anywhere.</p>
-<p>This vignette writes one the package does not ship: a seasonal term,
-a Fourier design of
+<p>In many fitting functions a term in a model formula is a string on
+which the function switches. Writing a new term then means editing that
+function, and a user cannot write one at all. Here a term is an object.
+It builds its own design block, carries its own penalty, reports its
+number of parameters and reapplies itself to new data. A formula
+interpreter recognizes a term by the value that its call
+<em>returns</em>, so a term defined outside the package works in a
+formula with no edit anywhere.</p>
+<p>This vignette writes a term that the package does not ship: a
+seasonal term, a Fourier design of
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>k</mi></mrow><annotation encoding="application/x-tex">2k</annotation></semantics></math>
 columns over a known period, penalized so that the higher harmonics
 shrink first.</p>
 <div class="section level2">
-<h2 id="the-minimum">The minimum<a class="anchor" aria-label="anchor" href="#the-minimum"></a>
+<h2 id="the-minimal-additive-term">The minimal additive term<a class="anchor" aria-label="anchor" href="#the-minimal-additive-term"></a>
 </h2>
-<p>A new additive term is a subclass of <code>additive_term</code> and a
-method for <code><a href="../reference/term_build.html">term_build()</a></code>. A term declares any state of its
-own as <strong>properties on its own subclass</strong>; the shipped
-<code>SmoothTerm</code> carries <code>vars</code>, <code>by</code> and
-<code>spec</code> that way.</p>
+<p>A new additive term is a subclass of <code>additive_term</code>
+together with a method for <code><a href="../reference/term_build.html">term_build()</a></code>. State that belongs
+to the term is declared as <strong>properties of its own
+subclass</strong>; the shipped <code>SmoothTerm</code> carries
+<code>vars</code>, <code>by</code>, <code>spec</code> and
+<code>sparse</code> in this way.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">SeasonTerm</span> <span class="op">&lt;-</span> <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/new_class.html" class="external-link">new_class</a></span><span class="op">(</span></span>
 <span>  <span class="st">"SeasonTerm"</span>, parent <span class="op">=</span> <span class="va">additive_term</span>,</span>
 <span>  properties <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>expr <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/class_any.html" class="external-link">class_any</a></span>, spec <span class="op">=</span> <span class="fu">S7</span><span class="fu">::</span><span class="va"><a href="https://rconsortium.github.io/S7/reference/base_classes.html" class="external-link">class_list</a></span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>The constructor captures the covariate <strong>unevaluated</strong>
-and records what the build will need. Nothing is computed here: a
-specification is not a block, and the data are not in scope yet.</p>
+and records the settings that the build needs. The constructor computes
+nothing, because a specification is not a block and the data are not yet
+in scope.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">season</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">period</span>, <span class="va">k</span> <span class="op">=</span> <span class="fl">3</span>, <span class="va">lambda</span> <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">xe</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/substitute.html" class="external-link">substitute</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
@@ -106,9 +109,11 @@ specification is not a block, and the data are not in scope yet.</p>
 <span><span class="op">}</span></span></code></pre></div>
 <p><code><a href="../reference/term_build.html">term_build()</a></code> evaluates the expression in the data and
 fills <code>X</code>, <code>coef_names</code>, <code>blueprint</code>
-and <code>penalty</code>. The <strong>blueprint</strong> is what
-<code><a href="../reference/term_predict.html">term_predict()</a></code> will need later, and putting it there rather
-than recomputing it is the whole of the contract’s second half.</p>
+and <code>penalty</code>. The <strong>blueprint</strong> stores what
+<code><a href="../reference/term_predict.html">term_predict()</a></code> needs later, so that prediction reapplies
+recorded quantities and does not recompute them from the new rows.
+Storing the blueprint at build time is the second requirement on a new
+term.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">.season_X</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">period</span>, <span class="va">k</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">j</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">k</span><span class="op">)</span></span>
@@ -130,16 +135,27 @@ than recomputing it is the whole of the contract’s second half.</p>
 <span>    penalty <span class="op">=</span> <span class="fu">penalties7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/penalties7/reference/quadratic_penalty.html" class="external-link">quadratic_penalty</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">sp</span><span class="op">$</span><span class="va">k</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>The penalty is
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>j</mi></msub><msup><mi>j</mi><mn>2</mn></msup><mo stretchy="false" form="prefix">(</mo><msubsup><mi>a</mi><mi>j</mi><mn>2</mn></msubsup><mo>+</mo><msubsup><mi>b</mi><mi>j</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\sum_j j^2(a_j^2 + b_j^2)</annotation></semantics></math>,
-the discrete analogue of a roughness penalty: harmonic
+<p>The penalty is the quadratic form
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle displaystyle="false"><mfrac><mi>λ</mi><mn>2</mn></mfrac></mstyle><msub><mo>∑</mo><mi>j</mi></msub><msup><mi>j</mi><mn>2</mn></msup><mo stretchy="false" form="prefix">(</mo><msubsup><mi>a</mi><mi>j</mi><mn>2</mn></msubsup><mo>+</mo><msubsup><mi>b</mi><mi>j</mi><mn>2</mn></msubsup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\tfrac{\lambda}{2}\sum_j j^2(a_j^2 + b_j^2)</annotation></semantics></math>,
+plus the normalizing constant of the corresponding Gaussian prior, where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>a</mi><mi>j</mi></msub><annotation encoding="application/x-tex">a_j</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>b</mi><mi>j</mi></msub><annotation encoding="application/x-tex">b_j</annotation></semantics></math>
+are the cosine and sine coefficients of harmonic
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
+is the smoothing parameter. Harmonic
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
 oscillates
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>j</mi><annotation encoding="application/x-tex">j</annotation></semantics></math>
-times as fast, so weighting by
+times as fast, so the weight
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>j</mi><mn>2</mn></msup><annotation encoding="application/x-tex">j^2</annotation></semantics></math>
-makes the smoothing parameter buy smoothness, not shrinkage alone.</p>
-<p>That is the whole of the compulsory part.</p>
+penalizes the higher harmonics more strongly, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>λ</mi><annotation encoding="application/x-tex">\lambda</annotation></semantics></math>
+controls the smoothness of the fit as well as its size.</p>
+<p>The constructor and the <code><a href="../reference/term_build.html">term_build()</a></code> method are the
+whole of the compulsory part. The term can now be built on data:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>t <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">4</span>, length.out <span class="op">=</span> <span class="fl">200</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">d</span><span class="op">$</span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fl">2</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fl">2</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">*</span> <span class="va">d</span><span class="op">$</span><span class="va">t</span><span class="op">)</span> <span class="op">+</span> <span class="fl">0.4</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="fl">6</span> <span class="op">*</span> <span class="va">pi</span> <span class="op">*</span> <span class="va">d</span><span class="op">$</span><span class="va">t</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">200</span>, sd <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
@@ -152,7 +168,8 @@ makes the smoothing parameter buy smoothness, not shrinkage alone.</p>
 <span><span class="co">#&gt; [1] "cos1" "cos2" "cos3" "sin1" "sin2" "sin3"</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="fu"><a href="../reference/term_matrix.html">term_matrix</a></span><span class="op">(</span><span class="va">tm</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 200   6</span></span></code></pre></div>
-<p>and it recovers what it was given:</p>
+<p>A least-squares fit on the block recovers the coefficients that
+generated the data:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lmfit.html" class="external-link">lm.fit</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fu"><a href="../reference/term_matrix.html">term_matrix</a></span><span class="op">(</span><span class="va">tm</span><span class="op">)</span><span class="op">)</span>, <span class="va">d</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">cf</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"(Intercept)"</span>, <span class="fu"><a href="../reference/term_coef_names.html">term_coef_names</a></span><span class="op">(</span><span class="va">tm</span><span class="op">)</span><span class="op">)</span></span>
@@ -161,46 +178,47 @@ makes the smoothing parameter buy smoothness, not shrinkage alone.</p>
 <span><span class="co">#&gt;       0.011      -0.019      -0.022       0.369       2.049      -0.001 </span></span>
 <span><span class="co">#&gt;        sin3 </span></span>
 <span><span class="co">#&gt;       0.001</span></span></code></pre></div>
-<p>against a truth of <code>sin1 = 2</code>, <code>cos3 = 0.4</code> and
-zero elsewhere.</p>
+<p>The truth is <code>sin1 = 2</code>, <code>cos3 = 0.4</code> and zero
+for the other coefficients.</p>
 </div>
 <div class="section level2">
-<h2 id="prediction-reapplies-it-does-not-rebuild">Prediction reapplies; it does not rebuild<a class="anchor" aria-label="anchor" href="#prediction-reapplies-it-does-not-rebuild"></a>
+<h2 id="prediction-at-new-data">Prediction at new data<a class="anchor" aria-label="anchor" href="#prediction-at-new-data"></a>
 </h2>
 <p><code><a href="../reference/term_predict.html">term_predict()</a></code> has <strong>no base method</strong>, so a
-term that will be predicted from or cross-validated writes one, and what
-it must do is reapply the blueprint:</p>
+term that will be predicted from or cross-validated defines one. The
+method reapplies the blueprint:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/method.html" class="external-link">method</a></span><span class="op">(</span><span class="va">term_predict</span>, <span class="va">SeasonTerm</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">term</span>, <span class="va">newdata</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="va">term</span><span class="op">@</span><span class="va">expr</span>, <span class="va">newdata</span>, <span class="fu"><a href="https://rdrr.io/r/base/environment.html" class="external-link">baseenv</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="va">bp</span> <span class="op">&lt;-</span> <span class="va">term</span><span class="op">@</span><span class="va">blueprint</span></span>
 <span>  <span class="fu">.season_X</span><span class="op">(</span><span class="va">x</span>, <span class="va">bp</span><span class="op">$</span><span class="va">period</span>, <span class="va">bp</span><span class="op">$</span><span class="va">k</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>The period comes from the blueprint, never from the new data. A term
-that recomputed it would be a different term on every subset, and the
-identity that catches the mistake is that predicting on rows the model
-was fitted to must return the block it was fitted with:</p>
+<p>The period comes from the blueprint and never from the new data. A
+term that recomputed it would be a different term on every subset. The
+identity that catches this mistake is that prediction on the rows that
+the model was fitted to must return the block that the model was fitted
+with:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rows</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">40</span>, <span class="fl">111</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu"><a href="../reference/term_predict.html">term_predict</a></span><span class="op">(</span><span class="va">tm</span>, <span class="va">d</span><span class="op">[</span><span class="va">rows</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span><span class="op">)</span>,</span>
 <span>          <span class="fu"><a href="../reference/term_matrix.html">term_matrix</a></span><span class="op">(</span><span class="va">tm</span><span class="op">)</span><span class="op">[</span><span class="va">rows</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span>, check.attributes <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span></code></pre></div>
-<p>For a seasonal term the period is a constant the caller gave, so the
-hazard is mild. For a spline it is the knots, for a factor the levels,
-and for a standardized penalized block the column spreads: each is
-learned from the fitting data and each would silently move if it were
-relearned.</p>
-<p>The <code><a href="https://rdrr.io/r/base/environment.html" class="external-link">baseenv()</a></code> enclosure is deliberate. It means the
-expression is evaluated in the new data and nowhere else, so a name that
-is not a column is not found, where it would otherwise be picked up from
-the calling environment and quietly supply the fitting data’s
-values.</p>
+<p>For a seasonal term the period is a constant that the caller
+supplied, so the hazard is small. For a spline the recorded quantities
+are the knots, and for a factor they are the levels. Each is learned
+from the fitting data, and each would silently change if it were learned
+again at prediction.</p>
+<p>The <code><a href="https://rdrr.io/r/base/environment.html" class="external-link">baseenv()</a></code> enclosure is deliberate. The expression is
+evaluated in the new data with only the base namespace behind it, so a
+variable of the calling environment is not found. Under any other
+enclosure such a variable would be picked up from the calling
+environment and would quietly supply the fitting data’s values.</p>
 </div>
 <div class="section level2">
-<h2 id="validating-it">Validating it<a class="anchor" aria-label="anchor" href="#validating-it"></a>
+<h2 id="validating-the-term">Validating the term<a class="anchor" aria-label="anchor" href="#validating-the-term"></a>
 </h2>
-<p><code><a href="../reference/check_term.html">check_term()</a></code> builds the term, then asks six questions of
-the result:</p>
+<p><code><a href="../reference/check_term.html">check_term()</a></code> builds the term and runs six checks on the
+result:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="fu"><a href="../reference/check_term.html">check_term</a></span><span class="op">(</span><span class="fu">season</span><span class="op">(</span><span class="va">t</span>, period <span class="op">=</span> <span class="fl">1</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>, <span class="va">d</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;       check status          info</span></span>
@@ -210,16 +228,19 @@ the result:</p>
 <span><span class="co">#&gt; 4    smooth     OK        smooth</span></span>
 <span><span class="co">#&gt; 5 reproduce     OK              </span></span>
 <span><span class="co">#&gt; 6    subset     OK      100 rows</span></span></code></pre></div>
-<p>The last is the one worth understanding. It builds the term on a
-<strong>subset</strong> of the rows and compares against predicting
-there, which is how a rebuilt basis or a relearned set of levels is
-exposed. The subset is passed through <code><a href="https://rdrr.io/r/base/droplevels.html" class="external-link">droplevels()</a></code> first: a
-plain row subset of a data frame keeps every factor level, including the
-ones no row uses, so a term that rebuilt its levels would look correct
-on it.</p>
+<p>The last check builds the term on all the rows, calls
+<code><a href="../reference/term_predict.html">term_predict()</a></code> on a subset of them and compares the result
+with the corresponding rows of the block. A term that rebuilds its basis
+or relearns its levels at prediction fails this check. When the data
+carry a factor, the subset omits every row of the factor’s last level;
+otherwise it is the first half of the rows, as here. The subset is
+passed through <code><a href="https://rdrr.io/r/base/droplevels.html" class="external-link">droplevels()</a></code> first, because a plain row
+subset of a data frame keeps every factor level, including levels that
+no row uses, and a term that rebuilt its levels would look correct on
+it.</p>
 </div>
 <div class="section level2">
-<h2 id="the-penalty-and-what-its-rank-decides">The penalty, and what its rank decides<a class="anchor" aria-label="anchor" href="#the-penalty-and-what-its-rank-decides"></a>
+<h2 id="the-penalty-and-its-rank">The penalty and its rank<a class="anchor" aria-label="anchor" href="#the-penalty-and-its-rank"></a>
 </h2>
 <p>The penalty travels with the term, so the effective degrees of
 freedom follow from the term alone:</p>
@@ -230,80 +251,99 @@ freedom follow from the term alone:</p>
 <span><span class="co">#&gt;   lambda = 1 lambda = 1e6 </span></span>
 <span><span class="co">#&gt; 5.7381084609 0.0002722007</span></span></code></pre></div>
 <p>The count runs from 6 down to 0, because the penalty above has
-<strong>full rank</strong>: nothing is left unpenalized, so a large
+<strong>full rank</strong>: every coefficient is penalized, so a large
 smoothing parameter removes the seasonal effect entirely. A shipped
-<code><a href="../reference/s.html">s()</a></code> is deliberately different, its penalty being rank
-deficient by exactly one so that the effective count runs from
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
-down to <strong>one</strong> and the limit is a straight line, not
-nothing. Which of the two a term wants is a modeling decision, and it is
-made by choosing the penalty’s null space.</p>
-<p><code><a href="../reference/term_penalties.html">term_penalties()</a></code> reports the entries a term declares,
-each naming a subset of its own parameters and the penalty over them.
-One entry covering everything is the ordinary case:</p>
+<code><a href="../reference/s.html">s()</a></code> with its default smoother has a penalty that is rank
+deficient by exactly one, so that the effective count runs from the
+number of coefficients down to <strong>one</strong>, and the limit is a
+straight line. The cyclic, Fourier and first-order smoothers have no
+free line, and their count goes to zero. The choice of the penalty’s
+null space decides which of the two behaviors a term has, and it is a
+modeling decision.</p>
+<p><code><a href="../reference/term_penalties.html">term_penalties()</a></code> reports the entries that a term
+declares. Each entry names a subset of the term’s own parameters and the
+penalty over them, together with the hyperparameters that are held and
+the settings of the path over the others. One entry that covers every
+parameter is the ordinary case:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="../reference/term_penalties.html">term_penalties</a></span><span class="op">(</span><span class="va">tm</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 1</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="../reference/term_penalties.html">term_penalties</a></span><span class="op">(</span><span class="va">tm</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "name"      "index"     "penalty"   "fixed"     "n_values"  "values"   </span></span>
 <span><span class="co">#&gt; [7] "min_ratio" "search"    "ids"</span></span></code></pre></div>
-<p>A term with several may declare several: <code><a href="../reference/jseg.html">jseg()</a></code> declares
-two, one on its slope changes and one on its jumps, because a slope
-change and a jump are not comparable quantities and one hyperparameter
-over their union would price them against each other.</p>
+<p>A term with several penalties declares several entries. A
+<code><a href="../reference/jseg.html">jseg()</a></code> whose developments carry a penalty on each kind of
+coefficient is an example: one entry covers the changes of slope and
+another the changes of level. A slope change and a jump are not
+comparable quantities, and one hyperparameter over their union would
+price them against each other. A <code><a href="../reference/jseg.html">jseg()</a></code> written without
+developments declares no entry.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">jj</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="../reference/jseg.html">jseg</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">gamma</span> <span class="op">~</span> <span class="fl">0</span> <span class="op">+</span> <span class="fu"><a href="../reference/lasso.html">lasso</a></span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span><span class="op">)</span>, <span class="va">delta</span> <span class="op">~</span> <span class="fl">0</span> <span class="op">+</span> <span class="fu"><a href="../reference/ridge.html">ridge</a></span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="../reference/term_penalties.html">term_penalties</a></span><span class="op">(</span><span class="va">jj</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="va">e</span><span class="op">$</span><span class="va">name</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "gamma1::lasso(~1)" "delta1::ridge(~1)"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="../reference/term_penalties.html">term_penalties</a></span><span class="op">(</span><span class="fu"><a href="../reference/term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="../reference/jseg.html">jseg</a></span><span class="op">(</span><span class="va">t</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="in-a-formula">In a formula<a class="anchor" aria-label="anchor" href="#in-a-formula"></a>
 </h2>
 <p><code><a href="../reference/interpret_formula.html">interpret_formula()</a></code> recognizes a term by
-<strong>evaluating</strong> its call and asking whether the value
-inherits <code>model_term</code>. Nothing lists the term names, so the
-new term is recognized with no edit:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<strong>evaluating</strong> its call and testing whether the value
+inherits <code>model_term</code>. The term names are never listed, so
+the new term is recognized with no edit:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">d</span><span class="op">$</span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">d</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">f</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/interpret_formula.html">interpret_formula</a></span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x</span> <span class="op">+</span> <span class="fu">season</span><span class="op">(</span><span class="va">t</span>, period <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>, data <span class="op">=</span> <span class="va">d</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">f</span><span class="op">$</span><span class="va">terms</span>, <span class="kw">function</span><span class="op">(</span><span class="va">z</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">z</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span>, <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                    linpar     season(t, period = 1) </span></span>
 <span><span class="co">#&gt; "modelterms7::LinparTerm"              "SeasonTerm"</span></span></code></pre></div>
-<p>A bare covariate collapses into one parametric block, and a call
-whose value does not inherit <code>model_term</code> stays a covariate,
-so <code>log(x)</code> is arithmetic.</p>
-<p>⚠️ Recognition by evaluation has one consequence worth knowing: a
+<p>A bare covariate collapses into one parametric block. A call whose
+value does not inherit <code>model_term</code> stays a covariate when a
+model matrix can hold the value, so <code>log(x)</code> is arithmetic. A
+call whose evaluation fails signals an error that names the call.</p>
+<p>Recognition by evaluation has one further consequence: a
 <strong>masked name</strong> is a third case. <code>mgcv</code> exports
-<code><a href="../reference/s.html">s()</a></code> and <code><a href="../reference/te.html">te()</a></code>, <code>segmented</code> exports
-<code><a href="../reference/seg.html">seg()</a></code>, so a user with either attached writes this package’s
-formula and gets the other package’s function. The interpreter rejects
-that where it happens, naming the class returned and the package that
-supplied the function, instead of letting the value reach
-<code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix()</a></code> and fail there.</p>
+<code><a href="../reference/s.html">s()</a></code> and <code><a href="../reference/te.html">te()</a></code>, and <code>segmented</code>
+exports <code><a href="../reference/seg.html">seg()</a></code>, so a user who has attached either package
+and writes this package’s formula gets the function of the other
+package. The interpreter rejects the result where it happens. The error
+names the term, the class of the value and the package that supplied the
+function, and it suggests <code>modelterms7::</code>, so the value does
+not reach <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix()</a></code> and fail there.</p>
 </div>
 <div class="section level2">
-<h2 id="what-comes-free-and-the-second-branch">What comes free, and the second branch<a class="anchor" aria-label="anchor" href="#what-comes-free-and-the-second-branch"></a>
+<h2 id="inherited-methods-and-structural-terms">Inherited methods and structural terms<a class="anchor" aria-label="anchor" href="#inherited-methods-and-structural-terms"></a>
 </h2>
 <p><code><a href="../reference/term_matrix.html">term_matrix()</a></code>, <code><a href="../reference/term_coef_names.html">term_coef_names()</a></code>,
 <code><a href="../reference/term_npar.html">term_npar()</a></code>, <code><a href="../reference/term_penalty.html">term_penalty()</a></code>,
 <code><a href="../reference/term_value.html">term_value()</a></code>, <code><a href="../reference/term_smooth.html">term_smooth()</a></code>,
-<code><a href="../reference/edf.html">edf()</a></code>, <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> all
-come from the base classes and read the properties
+<code><a href="../reference/edf.html">edf()</a></code>, <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> are
+inherited from the base classes and read the properties that
 <code><a href="../reference/term_build.html">term_build()</a></code> filled.</p>
-<p>Two further methods matter only for a term whose block <strong>moves
+<p>Two further generics matter only for a term whose block <strong>moves
 with its coefficients</strong>. <code><a href="../reference/term_refresh.html">term_refresh()</a></code> recomputes
-the block at new coefficients and <code><a href="../reference/term_jacobian_block.html">term_jacobian_block()</a></code>
-says whether that block is a Jacobian (so the fitting step is
-Gauss-Newton) or a frozen working linearization (so it is a fixed-point
-iteration). <code><a href="../reference/nl.html">nl()</a></code> and <code><a href="../reference/seg.html">seg()</a></code> answer
-<code>TRUE</code>; <code><a href="../reference/jump.html">jump()</a></code> and <code><a href="../reference/jseg.html">jseg()</a></code> answer
-<code>FALSE</code>, their break-point being read off a product of
-coefficients, never estimated as one. A term with a fixed design, like
-the one above, inherits the identity and needs neither.</p>
+the block at new coefficients. <code><a href="../reference/term_jacobian_block.html">term_jacobian_block()</a></code>
+reports whether that block is a Jacobian, so that the fitting step is
+Gauss-Newton, or a frozen working linearization, so that the step is a
+fixed-point iteration. <code><a href="../reference/nl.html">nl()</a></code>, <code><a href="../reference/seg.html">seg()</a></code> and every
+smoothed break-point term answer <code>TRUE</code>. A sharp
+<code><a href="../reference/jump.html">jump()</a></code> or <code><a href="../reference/jseg.html">jseg()</a></code> answers <code>FALSE</code>,
+because its break-point is read off a product of coefficients and is not
+estimated as a parameter. A term with a fixed design, like the one
+above, inherits a <code><a href="../reference/term_refresh.html">term_refresh()</a></code> that returns the term
+unchanged and the answer <code>TRUE</code>, and it needs neither
+method.</p>
 <p>The other branch of the class tree is <code>structural_term</code>,
 whose terms rewrite the likelihood instead of adding columns:
 <code><a href="../reference/gas.html">gas()</a></code> drives a distribution parameter by a score-driven
 recursion, and <code><a href="../reference/regime.html">regime()</a></code> mixes the likelihood over a latent
-Markov chain. They are a different contract, made of
-<code><a href="../reference/term_filter.html">term_filter()</a></code>, <code><a href="../reference/term_loglik.html">term_loglik()</a></code>,
-<code><a href="../reference/term_params.html">term_params()</a></code> and <code><a href="../reference/term_adjoint.html">term_adjoint()</a></code>, and a
-formula may carry at most one of them.</p>
+Markov chain. A structural term has a different structure. It supplies
+<code><a href="../reference/term_params.html">term_params()</a></code>, <code><a href="../reference/term_links.html">term_links()</a></code> and
+<code><a href="../reference/term_npar.html">term_npar()</a></code>, and either <code><a href="../reference/term_filter.html">term_filter()</a></code> or
+<code><a href="../reference/term_loglik.html">term_loglik()</a></code>, with <code><a href="../reference/term_adjoint.html">term_adjoint()</a></code> carrying
+the derivative of a filter. <code><a href="https://statmodels7.github.io/statmodels7/reference/statmod.html" class="external-link">statmodels7::statmod()</a></code> fits at
+most one structural term in a formula.</p>
 </div>
 <div class="section level2">
 <h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
@@ -313,7 +353,7 @@ formula may carry at most one of them.</p>
 <strong>Minimum to define an additive term:</strong> a subclass of
 <code>additive_term</code> and a <code><a href="../reference/term_build.html">term_build()</a></code> method that
 fills <code>X</code>, <code>coef_names</code>, <code>blueprint</code>
-and <code>penalty</code>. Any state of its own is a property on the
+and <code>penalty</code>. Any state of its own is a property of the
 subclass.</li>
 <li>The constructor captures the covariate unevaluated and computes
 nothing.</li>
@@ -322,8 +362,8 @@ nothing.</li>
 the blueprint, and evaluate in the new data with <code><a href="https://rdrr.io/r/base/environment.html" class="external-link">baseenv()</a></code>
 as the enclosure.</li>
 <li>
-<code><a href="../reference/check_term.html">check_term()</a></code> asks six questions, the last of them on a
-<code><a href="https://rdrr.io/r/base/droplevels.html" class="external-link">droplevels()</a></code> subset, the one that exposes a rebuild.</li>
+<code><a href="../reference/check_term.html">check_term()</a></code> runs six checks, the last of them on a
+<code><a href="https://rdrr.io/r/base/droplevels.html" class="external-link">droplevels()</a></code> subset, which exposes a rebuild.</li>
 <li>The penalty’s null space decides what a large smoothing parameter
 leaves behind, and <code><a href="../reference/edf.html">edf()</a></code> follows from the term alone.</li>
 <li>
@@ -331,7 +371,7 @@ leaves behind, and <code><a href="../reference/edf.html">edf()</a></code> follow
 call, so a term defined outside the package needs no registration.</li>
 <li>A block that moves with its coefficients adds
 <code><a href="../reference/term_refresh.html">term_refresh()</a></code> and <code><a href="../reference/term_jacobian_block.html">term_jacobian_block()</a></code>; a
-term that rewrites the likelihood is the other branch entirely.</li>
+term that rewrites the likelihood belongs to the other branch.</li>
 </ul>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

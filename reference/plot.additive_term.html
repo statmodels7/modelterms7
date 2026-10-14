@@ -5,15 +5,15 @@ dotted line at zero, and the coefficient names rotated along the horizontal
 axis. It shows which coefficients a penalty has driven to zero and how large
 the survivors are, so it reads a lasso or a smooth at a glance.
 The coefficients are supplied by the caller. A term holds a design block and
-no fit, so there is nothing to display without them, and coef = NULL
-throws."><meta property="og:description" content="Draws the coefficients of a built additive term as a stem plot: one point
+no fit, so there is nothing to display without them, and coef = NULL is
+rejected."><meta property="og:description" content="Draws the coefficients of a built additive term as a stem plot: one point
 per coefficient against its position in the block, a stem down to zero, a
 dotted line at zero, and the coefficient names rotated along the horizontal
 axis. It shows which coefficients a penalty has driven to zero and how large
 the survivors are, so it reads a lasso or a smooth at a glance.
 The coefficients are supplied by the caller. A term holds a design block and
-no fit, so there is nothing to display without them, and coef = NULL
-throws."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
+no fit, so there is nothing to display without them, and coef = NULL is
+rejected."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -21,7 +21,7 @@ throws."><meta property="og:image" content="https://statmodels7.github.io/modelt
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,8 +54,8 @@ dotted line at zero, and the coefficient names rotated along the horizontal
 axis. It shows which coefficients a penalty has driven to zero and how large
 the survivors are, so it reads a lasso or a smooth at a glance.</p>
 <p>The coefficients are supplied by the caller. A term holds a design block and
-no fit, so there is nothing to display without them, and <code>coef = NULL</code>
-throws.</p>
+no fit, so there is nothing to display without them, and <code>coef = NULL</code> is
+rejected.</p>
     </div>
 
 
@@ -64,21 +64,23 @@ throws.</p>
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>A built additive term. An unbuilt one throws
+<dd><p>A built additive term. An unbuilt term signals the error
 <code>"the term has not been built; call term_build(term, data) first."</code>.</p></dd>
 
 
 <dt id="arg-coef">coef<a class="anchor" aria-label="anchor" href="#arg-coef"></a></dt>
 <dd><p>The coefficients to draw, a numeric vector of length
-<code>term_npar(x)</code>. Required: <code>NULL</code> throws
-<code>"'coef' is required: a term is displayed at fitted coefficients."</code>, and
-any other length throws with the required length named.</p></dd>
+<code>term_npar(x)</code>. Required: <code>NULL</code> signals the error
+<code>"'coef' is required: a term is displayed at fitted coefficients."</code>, and a
+vector of any other length signals an error that gives the required
+length.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Passed to <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">graphics::plot()</a></code>, so <code>col</code>, <code>ylim</code>, <code>cex</code> and the
-rest of the usual graphical arguments work. <code>xaxt</code>, <code>xlab</code>, <code>ylab</code>,
-<code>main</code> and <code>pch</code> are set here.</p></dd>
+other usual graphical arguments are accepted. The method sets <code>xaxt</code>,
+<code>xlab</code>, <code>ylab</code>, <code>main</code> and <code>pch</code> itself, and passing any of them signals an
+error.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -92,9 +94,9 @@ rest of the usual graphical arguments work. <code>xaxt</code>, <code>xlab</code>
 seven lines so that the coefficient names fit, and <code><a href="https://rdrr.io/r/graphics/par.html" class="external-link">graphics::par()</a></code> is
 restored on exit.</p>
 <p>The horizontal axis is the coefficient's position in the block, so the
-picture is of the block and not of the covariate. For a smooth, whose block
-is a Demmler-Reinsch reparametrization, the columns are ordered from least
-to most wiggly, and a penalized fit shows a decaying profile.</p>
+plot shows the block and not the covariate. For <code><a href="s.html">s()</a></code>, whose block is a
+Demmler-Reinsch reparametrization, the columns are ordered from the smoothest
+to the most wiggly, and a penalized fit shows a decaying profile.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

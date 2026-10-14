@@ -1,7 +1,7 @@
 # The Covariance Label of a Term
 
-The label a term carries to say that its coefficients share a covariance
-block with those of other terms, or `NA_character_` where it carries
+The label that marks a term whose coefficients share a covariance block
+with those of other terms, or `NA_character_` where the term carries
 none.
 
 ## Usage
@@ -18,7 +18,7 @@ term_tag(term, ...)
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 
@@ -34,6 +34,9 @@ each other, and a fitting layer collects them into one block.
 
 The label is a **name and not data**. It is read as a symbol and never
 evaluated, so a column of the data with the same name is not looked at.
+A term that carries a label declares no penalties through
+[`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md):
+the prior of the shared covariance block is built by the fitting layer.
 
 The base method returns `NA_character_`, which is the answer for every
 term but

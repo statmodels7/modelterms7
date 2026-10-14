@@ -13,7 +13,7 @@ submodel is not relearned."><meta property="og:image" content="https://statmodel
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@ submodel is not relearned.</p>
 
 
 <dl><dt id="arg-term">term<a class="anchor" aria-label="anchor" href="#arg-term"></a></dt>
-<dd><p>A built <code><a href="NlTerm.html">NlTerm()</a></code>. An unbuilt one throws
+<dd><p>A built <code><a href="NlTerm.html">NlTerm()</a></code>. An unbuilt one is rejected with the error
 <code>"the term has not been built; call term_build(term, data) first."</code>.</p></dd>
 
 
@@ -78,7 +78,9 @@ the fit reached, or \(\tilde{X}\beta\) is not the fitted contribution.
 <code><a href="term_value.html">term_value()</a></code> is what reports \(f\) itself at new rows.</p>
 <p>Reading the block on its own is rarely what a caller wants for a nonlinear
 term. \(\tilde{X}\beta\) is the <strong>linearization</strong> of \(f\): the two
-agree in the increment a Gauss-Newton step takes, never in the value. <code>term_value(term, newdata = ...)</code> gives the contribution.</p>
+agree in the increment that a Gauss-Newton step takes, and in general they
+differ in value. <code>term_value(term, newdata = ...)</code> returns the
+contribution.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

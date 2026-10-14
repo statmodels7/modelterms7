@@ -11,7 +11,7 @@ term drew on the way."><meta property="og:image" content="https://statmodels7.gi
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -80,19 +80,21 @@ drawn or <code>NULL</code>; and <code>latent</code>, whatever the term drew.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Simulating from a model that carries state is not the same operation as
-fitting one, and the difference is which direction the response moves in.
-A term whose contribution does not read the response can report that
-contribution and leave the drawing to the caller: a latent chain's levels
-and a group's break-point drawn from its prior are both like that. A
-score-driven term cannot. Its level at one time is driven by the score of
-the response at the time before, so the response has to be drawn AS the
-recursion runs.</p>
-<p>One contract covers both. The caller supplies <code>draw</code>, a function of
-a predictor and a row index returning one response value, and the method
-returns the predictor it produced; a method that drew returns the
-responses as well and one that did not returns <code>NULL</code> there, leaving
-the caller to draw at the predictor.</p>
+    <p>Simulating from a model that carries state differs from fitting one in the
+direction in which the response moves. A term whose contribution does not
+read the response can report that contribution and leave the drawing to the
+caller: the levels of a latent chain (<code><a href="regime.html">regime()</a></code>) and the break-point of a
+group drawn from its prior (a marginal break-point term) are both of this
+kind. A score-driven term cannot do so. Its level at one time is driven by
+the score of the response at the time before, so the response has to be
+drawn as the recursion runs.</p>
+<p>The same calling convention covers both. The caller supplies <code>draw</code>, a
+function of a predictor and a row index returning one response value, and
+the method returns the predictor it produced. A method that drew returns
+the responses as well, and a method that did not returns <code>NULL</code> there,
+leaving the caller to draw at the predictor. <code><a href="regime.html">regime()</a></code> draws one chain per
+group, in time order and started from the stationary distribution, and
+returns the state of each row as <code>latent</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

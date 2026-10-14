@@ -6,10 +6,10 @@ at each row of `newdata`, so that
 can carry a score-driven filter past the end of its series. A parameter
 carrying a subformula is read by calling
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-on each of its sub-terms, which reapplies the blueprint each one
+on each of its sub-terms, which reapplies the blueprint each sub-term
 recorded at build time; a basis or a set of contrasts is therefore not
 relearned on the new rows. A parameter with no subformula is constant
-along them.
+over the rows.
 
 ## Usage
 
@@ -21,14 +21,14 @@ along them.
 
 - term:
 
-  A built `GasTerm` whose blueprint carries at least one subformula.
-  With no development the caller uses `.gas_coefs()` instead.
+  A built `GasTerm` whose blueprint carries at least one subformula. A
+  term without a subformula is handled by `.gas_coefs()`.
 
 - u:
 
   The term's parameter vector, in
   [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
-  order, on the mixed scale above.
+  order, on the mixed scale described above.
 
 - newdata:
 
@@ -37,7 +37,7 @@ along them.
 
 ## Value
 
-A list of three:
+A list with the following elements:
 
 - `om`:
 
@@ -55,25 +55,27 @@ A list of three:
 - `dom`, `dA`, `dB`:
 
   the derivatives of `om`, of each column of `A` and of each column of
-  `B` in `u`, each a `nrow(newdata)` by `length(u)` matrix (`dA` and
-  `dB` are lists of them).
+  `B` with respect to `u`, each a `nrow(newdata)` by `length(u)` matrix
+  (`dA` and `dB` are lists of them).
 
 ## Details
 
 For a developed parameter \\j\\ the value at row \\t\\ is \\\psi\_{j,t}
-= g_j^{-1}(z_t' \gamma_j)\\ with \\g_j\\ the parameter's own link and
-\\\gamma_j\\ its coefficients, and the persistence goes on to
-Levinson-Durbin, so `B` holds autoregressive coefficients where `u`
-holds partial autocorrelations.
+= g_j^{-1}(z_t' \gamma_j)\\, where \\g_j\\ is the parameter's own link
+and \\\gamma_j\\ its coefficients. The partial autocorrelations obtained
+in this way are mapped to autoregressive coefficients by the
+Levinson-Durbin recursion, so `B` holds autoregressive coefficients
+where `u` holds the coordinates of the partial autocorrelations.
 
-`u` mixes two scales, matching what
+The vector `u` has the two scales of the parameter vector that
 [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
-is handed: a parameter with no subformula is taken as it stands, on the
-parameter scale, while a developed parameter's entries are its
-coefficients on the unconstrained scale and go through the chart here.
-With \\p = q = 1\\ and no development, `u = c(0.3, 0.4, 0.7)` gives
-\\\omega = 0.3\\, \\\kappa_1 = 0.4\\ and a partial autocorrelation of
-0.7.
+receives. An entry for a parameter with no subformula is the parameter
+itself, on the parameter scale. The entries of a developed parameter are
+its coefficients on the unconstrained scale, and the chart is applied to
+them here. For example, with \\p = q = 1\\, the development
+`omega ~ 0 + z` and scalar \\\kappa_1\\ and partial autocorrelation,
+`u = c(0.3, 0.4, 0.7)` gives \\\omega_t = 0.3 z_t\\, \\\kappa_1 = 0.4\\
+and a partial autocorrelation of 0.7.
 
 ## See also
 

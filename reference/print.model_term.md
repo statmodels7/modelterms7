@@ -2,9 +2,9 @@
 
 Prints one line naming the term's class, its label when it has one, and
 whether it is built. A built term reports how many coefficients its
-block carries; a specification says so and names the call that would
-build it. This is the default for every term class, and several classes
-override it to add what they alone carry.
+block carries; a specification is marked as one and names the call that
+would build it. This is the default for every term class, and several
+classes override it to add what they alone carry.
 
 ## Arguments
 
@@ -39,14 +39,14 @@ package.
 The classes that override this add something of their own:
 [`print.PenalizedTerm()`](https://statmodels7.github.io/modelterms7/reference/print.PenalizedTerm.md)
 names the penalty and the standardization,
-[`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)'s
+[`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
 and
-[`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)'s
+[`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
 report their parameters,
-[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)'s
-its formula and
-[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)'s
-its break-points.
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+reports its parameters and its derivative mode, and
+[`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+reports its break-points.
 
 ## See also
 

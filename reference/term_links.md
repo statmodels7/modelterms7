@@ -18,7 +18,7 @@ term_links(term, ...)
 
   An object inheriting from
   [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md).
-  A class that does not implement the generic throws
+  A class that does not implement the generic signals the error
   `"the term class 'X' does not implement term_links()."`.
 
 - ...:
@@ -39,14 +39,19 @@ admissible.
 puts its level on the identity, its score loadings on the **log** so a
 loading stays positive, and its persistence coordinates on the
 **rhobit** so each partial autocorrelation stays inside \\(-1, 1)\\ and
-the filter stays stationary. The `links` argument of a constructor
-overrides them per parameter.
+the filter stays stationary.
+[`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+puts its first level and the free entries of its transition matrix on
+the identity and the gaps between levels on the log, so the levels are
+ordered by construction. The `links` argument of
+[`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+overrides the links per parameter.
 
-The persistence is the case worth understanding. The stationary region
-in the autoregressive coefficients is not a box, so no collection of
-scalar links covers it; the partial autocorrelations are each in \\(-1,
-1)\\ independently, and Levinson-Durbin carries them onto the
-coefficients. That is why
+The persistence uses a different kind of chart from the other
+parameters. The stationary region in the autoregressive coefficients is
+not a box, so no collection of scalar links covers it; the partial
+autocorrelations are each in \\(-1, 1)\\ independently, and
+Levinson-Durbin carries them onto the coefficients. That is why
 [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
 exists: the coordinate and the quantity a reader reads are different
 things.
@@ -58,16 +63,16 @@ parameter stays admissible at every observation and the coefficients
 
 The method on
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
-throws, naming the class.
+signals an error that names the class.
 
 ## See also
 
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
 for the names,
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
-for the point on this scale a fit begins at,
+for the point on this scale at which a fit begins,
 [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
-for the quantities the coordinates map to.
+for the quantities to which the coordinates map.
 
 ## Examples
 

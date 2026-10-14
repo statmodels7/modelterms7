@@ -13,7 +13,7 @@ one number for a held value."><meta property="og:image" content="https://statmod
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,7 @@ one number for a held value.</p>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Passed to methods. No shipped method reads anything here.</p></dd>
+<dd><p>Passed to methods. The shipped methods do not use it.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -74,9 +74,9 @@ duplicates. Empty where the term wrote nothing out.</p>
     <p>A written-out grid is used as it stands. The value that empties the block
 does not cap it and <code><a href="term_path_min.html">term_path_min()</a></code> does not extend it: those two
 construct a grid, and here there is nothing to construct.</p>
-<p>A hyperparameter written out is still <strong>estimated</strong>. What the caller fixed
-is where to look, not the answer, so a fit reports it as chosen by the
-criterion, and <code><a href="term_hyper.html">term_hyper()</a></code> does not carry it.</p>
+<p>A hyperparameter written out is still <strong>estimated</strong>. The caller supplies the
+values to search and not the estimate, so a fit reports the hyperparameter as
+chosen by the criterion, and <code><a href="term_hyper.html">term_hyper()</a></code> does not carry it.</p>
 <p>The values are sorted and deduplicated at construction, because a path is
 walked from the emptiest fit toward the fullest and its warm starts follow
 that order. Which end of the sorted order is the sparse one depends on the
@@ -118,10 +118,10 @@ built, <code><a href="term_penalties.html">term_penalties()</a></code> for the e
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># A penalty with no kink has no path, so several values are refused.</span></span></span>
+<span class="r-in"><span><span class="co"># A penalty with no kink has no path, so several values are rejected.</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu"><a href="ridge.html">ridge</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span>, lambda <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Error : 'lambda' in 'ridge' has several values, and this term has no path to visit them</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   on: its penalty has no kink, so the hyperparameter is estimated by the</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Error : 'lambda' in 'ridge' has several values, and this term has no path to visit them:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   its penalty has no kink, so the hyperparameter is estimated by the</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   criterion at the mode. Give one number to hold it, or NULL to estimate it.</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

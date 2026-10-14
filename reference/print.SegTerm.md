@@ -1,9 +1,11 @@
 # Print a Break-Point Term
 
-Prints the label, the construction and how many break-points the term
-carries, followed by where they currently sit. A smoothed term adds a
-line naming its smoother and the transition width, and a term with a
-developed coefficient says which one.
+For a built term, prints the label, the construction and how many
+break-points the term has, followed by where they currently sit. A term
+that has not been built prints its label and construction followed by
+`(specification)`. A smoothed term adds a line naming its smoother and
+the transition width, and a term with a developed coefficient says which
+one.
 
 ## Arguments
 
@@ -20,7 +22,7 @@ developed coefficient says which one.
 
 ## Value
 
-`x`, invisibly. Called for the lines it writes.
+`x`, invisibly. Called for the lines that it writes.
 
 ## Details
 
@@ -37,9 +39,9 @@ Where a break-point carries a development there is no single number, a
 position then being one value per observation, and the range is printed
 instead.
 
-The smoother line reports the width because it changes what the term
-means: the transition is a real feature of the model, not an
-implementation detail, and a fit at one width is not a fit at another.
+The smoother line reports the width because the width changes what the
+term means: a fit at one width is a different model from a fit at
+another.
 
 ## See also
 

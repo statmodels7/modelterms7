@@ -15,7 +15,7 @@ the right components."><meta property="og:image" content="https://statmodels7.gi
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,18 +69,23 @@ whatever the subformulas name.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The term with <code>X</code>, <code>coef_names</code>, <code>blueprint</code> and, where a
-subformula brought one, <code>penalty</code> filled.</p>
+    <p>The term with <code>X</code>, <code>coef_names</code>, <code>nl_params</code>, <code>links</code>, <code>deriv_mode</code>
+and <code>blueprint</code> filled. The penalties of the sub-terms are kept in the
+blueprint and reported by <code><a href="term_penalties.html">term_penalties()</a></code>; the <code>penalty</code> property
+stays <code>NULL</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="what-is-settled-here">What is settled here<a class="anchor" aria-label="anchor" href="#what-is-settled-here"></a></h2>
     <p>On the formula route <code><a href="https://rdrr.io/r/stats/deriv.html" class="external-link">stats::deriv()</a></code> is tried on the expression, and
-<code>deriv_mode</code> records whether it succeeded. Every function given to
-<code>gradient</code>, <code>hessian</code>, <code>deriv3</code> or <code>deriv4</code> is called once and its names
-checked against the components of that order: a name that is not one of
-them, a missing component or a repeated one throws here. Falling back to
-the numerical route would leave an exact derivative silently unused, which
-is worse than not having it.</p>
+<code>deriv_mode</code> records whether it succeeded. The expressions of orders two to
+four are formed with <code><a href="https://rdrr.io/r/stats/deriv.html" class="external-link">stats::D()</a></code> where that succeeds, and the orders that
+are analytic, whether symbolic or supplied, are recorded in the blueprint.
+Every function given to <code>gradient</code>, <code>hessian</code>, <code>deriv3</code> or <code>deriv4</code> is
+called once and its names and lengths are checked against the components of
+that order: a name that is not one of them, a missing component, a repeated
+one or a component of a length other than 1 or <code>n</code> is an error here. The term
+does not fall back to the numerical route in these cases. A name in <code>start</code>,
+<code>links</code> or <code>subformulas</code> that is not a parameter is an error as well.</p>
 <p>Each parameter's subformula goes through <code><a href="interpret_formula.html">interpret_formula()</a></code> and its
 terms are built, so their blueprints are recorded and reapplied at
 prediction. A structural sub-term is rejected, and so is one whose own block
@@ -91,10 +96,11 @@ are then read at the coefficients rather than stored.</p>
     <div class="section level2">
     <h2 id="the-starting-point">The starting point<a class="anchor" aria-label="anchor" href="#the-starting-point"></a></h2>
     <p>The block is the Jacobian <strong>at the starting coefficients</strong>, so it is only
-as good as they are. Where <code>start</code> names nothing, <code><a href="term_coef_start.html">term_coef_start()</a></code>
-estimates the parameters from the data over a deterministic grid on each
-free parameter's chart; zero is a degenerate point for a nonlinear function,
-not a neutral one.</p>
+as good as they are. A parameter that <code>start</code> does not name is built at
+coefficient zero. When the fitting layer supplies a response,
+<code><a href="term_coef_start.html">term_coef_start()</a></code> estimates each such parameter over a deterministic grid
+on its chart, because zero can be a degenerate starting point for a
+nonlinear function.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -1,6 +1,6 @@
-# Has a Break-Point Term Run Out of Step Control?
+# Whether a Break-Point Term Has Stalled
 
-`TRUE` for a
+`TRUE` for an unheld sharp
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 or
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
@@ -9,8 +9,11 @@ that has not settled sits at the floor of its scaling factor, which
 [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
 records at each refresh. Always `FALSE` for
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
-and for a smoothed construction, which have no scaling schedule, and for
-a term not yet refreshed twice, whose step has not been measured.
+and for a smoothed construction, which have no scaling schedule, for a
+term held by
+[`seg_hold()`](https://statmodels7.github.io/modelterms7/reference/seg_hold.md),
+and for a term not yet refreshed twice, whose step has not been
+measured.
 
 ## Arguments
 

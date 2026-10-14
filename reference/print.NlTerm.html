@@ -11,7 +11,7 @@ specification says only that it is one."><meta property="og:image" content="http
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,10 +65,12 @@ specification says only that it is one.</p>
     <p>The built form is</p>
 <p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="sc">&lt;</span>NlTerm<span class="sc">&gt;</span> <span class="st">'nl'</span> built<span class="sc">:</span> <span class="dv">2</span> coefficients; symbolic derivatives</span>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  parameters<span class="sc">:</span> a, r</span></code></pre><p></p></div>
-<p><code>symbolic</code> means <code><a href="https://rdrr.io/r/stats/deriv.html" class="external-link">stats::deriv()</a></code> could read the expression, and <code>numeric</code>
-that the derivatives are differenced. That is worth seeing at a glance: the
-two routes differ by six orders of magnitude at the higher orders, which
-<code><a href="nl.html">nl()</a></code> tabulates.</p>
+<p>The route is the term's <code>deriv_mode</code>. <code>symbolic</code> means that
+<code><a href="https://rdrr.io/r/stats/deriv.html" class="external-link">stats::deriv()</a></code> could read the expression. <code>formula_fd</code> means that it could
+not, and the first derivatives of the formula are differenced. <code>numeric</code>
+means that the term wraps a function, whose derivatives are differenced
+unless supplied. A differenced derivative loses accuracy as its order
+grows.</p>
 <p>The coefficient count is the block's width, so a developed parameter makes
 it larger than the number of parameters printed on the second line.</p>
     </div>
@@ -91,7 +93,7 @@ it larger than the number of parameters printed on the second line.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;NlTerm&gt; 'nl' built: 2 coefficients; symbolic derivatives</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   parameters: a, r</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># An opaque function differences its derivatives, and says so.</span></span></span>
+<span class="r-in"><span><span class="co"># An opaque function is differenced, and the route is printed as numeric.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="nl.html">nl</a></span><span class="op">(</span><span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">theta</span><span class="op">)</span> <span class="va">theta</span><span class="op">$</span><span class="va">a</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="op">-</span><span class="va">theta</span><span class="op">$</span><span class="va">r</span> <span class="op">*</span> <span class="va">x</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>              params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"r"</span><span class="op">)</span>, x <span class="op">=</span> <span class="va">x</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">1</span>, r <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;NlTerm&gt; 'nl' built: 2 coefficients; numeric derivatives</span>

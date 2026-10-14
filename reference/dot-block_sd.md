@@ -1,8 +1,9 @@
 # Column Standard Deviations of a Block, in Either Storage
 
 The standard deviation of each column of a design block, computed
-without densifying a Matrix. It is the spread `standardize = TRUE`
-divides each coefficient by.
+without densifying a Matrix. It is the spread that `standardize = TRUE`
+puts in the penalty's diagonal map, so that each coefficient is
+penalized as \\s_j\beta_j\\.
 
 ## Usage
 

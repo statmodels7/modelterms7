@@ -9,9 +9,10 @@ for a parametric block whose coefficients carry a penalties7 penalty.
 [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md)
 and
 [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
-all construct it; the five differ only in the penalty their factory
-attaches at build time, so every derivative, hyperparameter, bound, link
-and kink belongs to the penalty object and none of it is restated here.
+all construct it. The five differ in the penalty that their factory
+attaches at build time and in the hyperparameter arguments that their
+constructors take, so every derivative, hyperparameter, bound, link and
+kink belongs to the penalty object and none of it is restated here.
 
 ## Usage
 
@@ -43,13 +44,13 @@ PenalizedTerm(
   A character string prefixed to the term's coefficient names when
   non-empty, and used as the title of
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and the tag
-  of [`print()`](https://rdrr.io/r/base/print.html). `character(0)` and
-  `""` both mean no label.
+  of [`print()`](https://rdrr.io/r/base/print.html). The empty string
+  `""` means no label.
 
 - hyper:
 
-  The hyperparameters of the term's penalty the caller **held**, as a
-  named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller **held**, as
+  a named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -121,26 +122,28 @@ PenalizedTerm(
 
 - input_expr:
 
-  The expression that produced a matrix input, kept so that
+  The expression that produced the input, kept so that
   [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-  can re-evaluate it in new data. `NULL` on the formula route.
+  can re-evaluate a matrix input in new data. It is recorded on the
+  formula route as well, where it is not read.
 
 - factory:
 
   A function of the coefficient count, returning the penalties7 penalty
   over that many coefficients, and taking the diagonal map as a second
-  argument where `standardize` asks for one.
+  argument when `standardize = TRUE`.
 
 - standardize:
 
-  A single logical: whether the block's columns are put on a common
-  scale by the penalty's diagonal map. `FALSE` by default.
+  A single logical: whether each coefficient is penalized on the scale
+  of its own column, through the penalty's diagonal map. `FALSE` by
+  default.
 
 - sparse:
 
   `TRUE`, `FALSE` or `NULL` for the formula route's storage; see
   [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
-  for the rule `NULL` is settled by. A matrix input needs no such
+  for the rule by which `NULL` is settled. A matrix input needs no such
   argument.
 
 ## Value
@@ -149,26 +152,30 @@ An S7 object of class `PenalizedTerm`, inheriting from
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 and
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
-with the five properties above beside the ten they supply.
+with the five properties above beside those that the two parent classes
+supply.
 
 ## The five properties of its own
 
 `input` is the block as it was given, a one-sided formula or a matrix.
-`input_expr` is the expression that produced a matrix input, kept so
+`input_expr` is the expression that produced the input. It is recorded
+for a formula input as well, and it is read only for a matrix input, so
 that
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 can re-evaluate it in new data.
 
 `factory` maps a coefficient count to the penalty. It is called at
-build, when the count is finally known, and with the diagonal map as a
-second argument when `standardize` asks for one, so a factory that will
-never be standardized may take the count alone.
+build, when the count is known, and with the diagonal map as a second
+argument when `standardize = TRUE`, so a factory that is never used with
+standardization may take the count alone.
 
 `standardize` is a single logical on the specification; after a build
 the spreads themselves are in `blueprint$standardize`, one per column.
 
 `sparse` governs the formula route only, a matrix input being kept in
-whatever storage it arrives in. `NULL` until the build settles it.
+whatever storage it arrives in. The property stays as the caller wrote
+it, `NULL` by default, and the storage that the build settles on is
+recorded in `blueprint$sparse`.
 
 ## What the class does not decide
 

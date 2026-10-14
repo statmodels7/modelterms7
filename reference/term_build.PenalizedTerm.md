@@ -44,13 +44,14 @@ block. The blueprint records `kind = "formula"`, the terms object, the
 levels, the contrasts and the settled storage.
 
 A **matrix** is used as it stands, and its row count must equal
-`nrow(data)`; anything else throws with both numbers. Its columns take
-the matrix's own names, or `1`, `2`, ... where it has none. The
-blueprint records `kind = "matrix"`, the expression that produced it and
-those base names.
+`nrow(data)`; any other row count is an error that gives both numbers.
+Its columns take the matrix's own names, or `1`, `2`, ... where it has
+none. The blueprint records `kind = "matrix"`, the expression that
+produced it and those base names.
 
 Either way every column name is prefixed with the term's label, and the
-block's row names are dropped.
+block's row names are dropped. A block without columns, as in
+`ridge(~ 0)`, is rejected.
 
 ## Standardization is applied to the penalty
 
@@ -89,4 +90,8 @@ c(cols = ncol(term_matrix(b)), n_coef = b@penalty@n_coef)
 M <- matrix(rnorm(30), 10, 3)
 try(term_build(ridge(M), dd))
 #> Error : the matrix input has 10 rows and 'data' has 20.
+
+# A formula with neither an intercept nor a term has no columns.
+try(term_build(ridge(~ 0), dd))
+#> Error : the block of 'ridge' has no columns.
 ```

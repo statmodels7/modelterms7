@@ -6,9 +6,10 @@ Demmler-Reinsch reparametrization, which separates the linear effect
 from the nonlinear deviation and turns the roughness penalty into the
 identity on the deviation.
 
-As the smoothing parameter grows the fit approaches a straight line, and
+With the default smoother the fit approaches a straight line as the
+smoothing parameter grows, and
 [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
-falls to exactly one.
+falls to one.
 
 ## Usage
 
@@ -38,7 +39,7 @@ s(
   the roughness penalty, the null space and the reparametrization
   together.
   [`basis7::bspline_smooth()`](https://statmodels7.github.io/basis7/reference/bspline_smooth.html)
-  is the default and is the construction this term has always used;
+  is the default;
   [`basis7::fourier_smooth()`](https://statmodels7.github.io/basis7/reference/fourier_smooth.html)
   is the periodic one and
   [`basis7::legendre_smooth()`](https://statmodels7.github.io/basis7/reference/legendre_smooth.html)
@@ -47,7 +48,8 @@ s(
 - by:
 
   An optional factor or numeric variable, given as a bare expression;
-  `NULL` by default. See the section above.
+  `NULL` by default. A character or logical variable is treated as a
+  factor. See the section above.
 
 - by_hyper:
 
@@ -61,8 +63,8 @@ s(
   The hyperparameters of the smoother's penalty to hold, as a named
   numeric vector such as `c(lambda = 2)`. What names there are depends
   on the penalty; anything left out is **estimated**, which is the
-  default. Under `by_hyper = "level"` a name is qualified by the level,
-  `c(lambda.a = 2)`.
+  default. A held value must be finite. Under `by_hyper = "level"` a
+  name is qualified by the level, `c(lambda.a = 2)`.
 
 - id:
 
@@ -81,7 +83,7 @@ s(
 - sparse:
 
   `TRUE`, `FALSE`, or `NULL` to settle it at build. Only a factor `by`
-  admits `TRUE`; without one it is refused rather than ignored. See the
+  admits `TRUE`; without one it is rejected and not ignored. See the
   section above.
 
 - ...:
@@ -108,12 +110,11 @@ ordering is what the penalty reads: it is the quadratic penalty of
 \\\mathrm{diag}(0, 1, \dots, 1)\\, rank deficient by exactly one, so the
 linear effect is unpenalized and the deviation is shrunk toward zero.
 
-Two consequences a reader of a fit needs. At a large smoothing parameter
-the fit tends to a straight line, so
+At a large smoothing parameter the fit tends to a straight line, so
 [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
-runs from `k - 1` down to 1 and never to 0. And the linear column is
+runs from `k - 1` down to 1 and not to 0. The linear column is
 orthogonal to the rest over the observed covariate, so the linear and
-the nonlinear parts of a fitted smooth are separately readable.
+the nonlinear parts of a fitted smooth can be read separately.
 
 `bspline_smooth(null_space = "drop")` drops that first column, and the
 penalty is then the identity over the whole block, of full rank.
@@ -127,28 +128,24 @@ data settle:
 penalties7 constructor passes bare, and anything else is a function of
 the count.
 
-What it buys is that the Demmler-Reinsch coordinates are ordered from
-the smoothest to the most wiggly and the roughness penalty on them is
-the identity, so an \\\ell_1\\ penalty takes whole directions of
-wiggliness to exactly zero and chooses the smooth's effective dimension.
-Measured at \\n = 300\\ with \\k = 20\\, the coordinates surviving as
-the smoothing parameter grows are 15, 10, 4, 2, 1 and 0 of 18, and the
-fit at FOUR of them is the closest to the truth: the root mean square
-errors at those six counts are 0.2453, 0.2427, 0.2412, 0.2425, 0.2709
-and 0.4967. So the \\\ell_1\\ buys a smaller smooth and a slightly
-better one at once. A heavy-tailed penalty is the robust reading of the
-same block, and a structured one estimates the correlation of the
-coefficients rather than fixing it.
+The Demmler-Reinsch coordinates are ordered from the smoothest to the
+most wiggly, and the roughness penalty on them is the identity. An
+\\\ell_1\\ penalty on them therefore takes whole directions of
+wiggliness to exactly zero, so that the penalty chooses the effective
+dimension of the smooth. A heavy-tailed penalty gives a robust reading
+of the same block, and a structured one estimates the correlation of the
+coefficients instead of fixing it.
 
-Two things follow, and neither is a detail. The penalty covers **the
-penalized coordinates alone**: a roughness matrix carries a zero row for
-the linear column and leaves it free by its own arithmetic, where a
+Two properties of the fit follow. The penalty covers **the penalized
+coordinates alone**: a roughness matrix carries a zero row for the
+linear column and leaves it free by its own arithmetic, whereas a
 separable penalty has no such row and would shrink it, so the free
-columns are outside the entry it declares. And a penalty **with a kink**
-has no second derivative at zero, which a marginal criterion needs, so
-its smoothing parameter is chosen by a path over `sparse_criterion` –
-BIC by default – and not by REML, whatever `outer_criterion` says. That
-is a change in what the number means and not only in how it is computed.
+columns are outside the entry that the term declares. A penalty **with a
+kink** has no second derivative at zero, which a marginal criterion
+needs, so its smoothing parameter is chosen by a path over
+`sparse_criterion` (BIC by default) and not by REML, whatever
+`outer_criterion` is. The selection criterion for that parameter is
+therefore BIC, and not the marginal likelihood.
 
 ## The construction is empirical
 
@@ -161,9 +158,10 @@ the separation of the linear from the nonlinear part holds at new rows
 as it does at old.
 
 Rebuilding on other rows instead would place the knots on their range
-and compute another transform. Measured on 80 points, predicting on the
-first ten agrees with those rows of the original block exactly and
-rebuilding differs by 2.85.
+and compute another transform, so the columns would be different
+functions of the covariate. Predicting on the first rows of the data
+reproduces those rows of the block exactly, and rebuilding on them gives
+a different block (see the examples).
 
 ## Varying the smooth by another variable
 
@@ -172,19 +170,15 @@ multiplied by each level's indicator, and the penalty is the same matrix
 repeated blockwise. `s(x, bspline_smooth(k = 5), by = g)` over a
 four-level factor has 16 columns.
 
-`by_hyper` says whether the levels are smoothed **together or apart**.
-`"shared"`, the default, estimates one smoothing parameter for all of
-them, which is what this package has always done. `"level"` declares one
-penalty per level through
+`by_hyper` determines whether the levels are smoothed **together or
+apart**. `"shared"`, the default, estimates one smoothing parameter for
+all of the levels. `"level"` declares one penalty per level through
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
 so each is estimated on its own; it is what mgcv does by default, and
-what `id` there undoes. Which to want is a question about the data
-rather than about the code: levels that differ in how wiggly they are,
-or in how much of them there is, ask for different amounts of smoothing.
-Measured on three levels of one curve at amplitudes 1, 0.15 and 2.5, the
-separately estimated smoothing parameters are 2.03, 111.9 and 0.468 – a
-factor of 239 apart – and the effective degrees of freedom fall from
-25.5 to 21.7 as the flattest level is smoothed away.
+what `id` there undoes. The choice depends on the data: levels that
+differ in how wiggly they are, or in how many observations they hold,
+need different amounts of smoothing, and `"level"` lets each level take
+its own.
 
 Under `"level"` a held hyperparameter is qualified by the level it
 belongs to, `hyper = c(lambda.a = 2)`, and so is an `id`.
@@ -193,33 +187,37 @@ A **numeric** `by` gives a varying-coefficient term: the smooth
 multiplies that variable, and the fitted function is the coefficient of
 `by` as it changes with the covariate. The term is not centered: its
 first column is the constant times `by`, unpenalized and named `const`,
-because the constant of the coefficient is the main effect of `by`,
-which no other term carries (this is also what mgcv does). Writing `by`
-in the formula as well makes that column aliased. The default label is
-`s(x):z` for a `by` called `z`, so a formula may carry `s(x)` and
-`s(x, by = z)` together. A numeric `by` has no levels, so
-`by_hyper = "level"` is rejected rather than read as `"shared"`.
+because the constant of the coefficient is the main effect of `by`, a
+coefficient that only this column carries (this is also what mgcv does).
+Writing `by` in the formula as well makes that column aliased. The
+default label is `s(x):z` for a `by` called `z`, so a formula may carry
+`s(x)` and `s(x, by = z)` together. A numeric `by` has no levels, so
+`by_hyper = "level"` is rejected and is not read as `"shared"`.
 
 ## Sparse storage
 
 A factor `by` is the one place a smooth's block can be sparse, each row
 sitting in the block of its own level and nowhere else, a density of
 \\1/m\\. `sparse = TRUE` builds it that way instead of building the
-dense matrix and compressing it: measured at 2000 rows, \\k = 10\\ and
-200 levels, 0.35 MB against 28.93 MB with the numbers identical.
+dense matrix and compressing it. The sparse block needs far less storage
+than the dense one, and the two hold the same numbers.
 
-`sparse = NULL`, the default, settles it at build from the size of the
-block through
-[`.resolve_sparse()`](https://statmodels7.github.io/modelterms7/reference/dot-resolve_sparse.md),
-the dense form holding \\n m k\\ cells against \\n k\\ non-zeros.
+`sparse = NULL`, the default, settles the storage at build: the block is
+stored as sparse when its dense form would hold more than \\10^5\\
+cells, that is when \\n m k \> 10^5\\, with \\m\\ levels and \\k\\
+columns per level (see
+[`.resolve_sparse()`](https://statmodels7.github.io/modelterms7/reference/dot-resolve_sparse.md)).
 
-An explicit `TRUE` is **refused** without a factor `by`, and the message
-says why: the basis is dense by construction and a numeric `by` merely
-multiplies it, so there would be nothing to build on.
+An explicit `TRUE` without a factor `by` is rejected, and the error
+message gives the reason: the basis is dense by construction and a
+numeric `by` multiplies it, so there is nothing to build on.
 
-The block alone is sparse. The penalty of a factor `by` is the same
-matrix repeated blockwise and penalties7 returns it dense, 25.92 MB at
-those sizes; that is a property of that package's contract.
+The penalty of a factor `by` is the same matrix repeated blockwise. In
+`s()` and in a
+[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md) with
+`anisotropic = FALSE` it is stored as one block, and
+[`penalties7::penalty_matrix()`](https://statmodels7.github.io/penalties7/reference/penalty_matrix.html)
+returns it as a sparse matrix.
 
 ## References
 
@@ -314,7 +312,7 @@ max(abs(term_predict(b, dd[1:10, ]) - X[1:10, ]))
 max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 8)), dd[1:10, ])) - X[1:10, ]))
 #> [1] 2.849289
 
-# Sparsity needs a factor `by`, and says so when there is none.
+# Sparsity needs a factor `by`; without one the build signals an error.
 try(term_build(s(x, basis7::bspline_smooth(k = 5), sparse = TRUE), dd))
 #> Error : 'sparse' has nothing to build on here: a smooth's basis is dense by
 #>   construction. Sparsity comes from a FACTOR 'by', whose indicators put each

@@ -13,8 +13,9 @@ collects a formula's bare covariates into, so most models carry one
 whether or not the caller wrote it.
 
 Beyond the additive branch's four properties it records the formula,
-whether the block is sparse, and the contrasts used for the formula's
-factors.
+whether the block is sparse, the contrasts used for the formula's
+factors, and whether the column `(Intercept)` is dropped after the
+coding.
 
 ## Usage
 
@@ -45,13 +46,13 @@ LinparTerm(
   A character string prefixed to the term's coefficient names when
   non-empty, and used as the title of
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and the tag
-  of [`print()`](https://rdrr.io/r/base/print.html). `character(0)` and
-  `""` both mean no label.
+  of [`print()`](https://rdrr.io/r/base/print.html). The empty string
+  `""` means no label.
 
 - hyper:
 
-  The hyperparameters of the term's penalty the caller **held**, as a
-  named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller **held**, as
+  a named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -153,26 +154,31 @@ An S7 object of class `LinparTerm`, inheriting from
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 and
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
-with the four properties above beside the ten they supply.
+with the four properties above beside the properties it inherits.
 
-## The three properties of its own
+## The properties of its own
 
 `formula` is the one-sided formula, kept with its environment, so a
 symbol the data do not carry is still found where the formula was
 written.
 
-`sparse` holds what the caller asked for and `NULL` where nothing was
-asked. The build leaves it alone and records the storage it settled on
+`sparse` holds the value the caller gave, and `NULL` where none was
+given. The build leaves it alone and records the storage it settled on
 in `blueprint$sparse`, which is the value
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 reads, so the block and a prediction from it never differ in storage. A
-formula naming a factor of many levels has one non-zero per row, and the
-dense model matrix of it is the memory the choice exists to avoid.
+formula naming a factor of many levels has one non-zero per row, and
+building the dense model matrix of it is the memory use that sparse
+storage avoids.
 
 `contrasts` is a named list, one entry per factor, or empty for the
 session's own `options("contrasts")`. Whatever is used is recorded in
 the blueprint and reapplied, so a fit and a prediction never disagree
 about the coding.
+
+`drop_intercept` is `FALSE` by default. When it is `TRUE`, the build
+removes the column `(Intercept)` after the coding, and the blueprint
+records the setting so that a prediction applies it again.
 
 The class carries no penalty: `penalty` is `NULL` on every `LinparTerm`,
 and
@@ -202,14 +208,14 @@ S7::S7_inherits(tm, LinparTerm)
 #> [1] TRUE
 tm@formula
 #> ~x + g
-#> <environment: 0x5611f70d52c0>
+#> <environment: 0x5606f21de0d0>
 
-# The property keeps what was asked for; the blueprint records what the
+# The property keeps the value given; the blueprint records what the
 # build settled on, and that is what a prediction reads.
 bt <- term_build(tm, d)
-c(asked = is.null(bt@sparse), settled = bt@blueprint$sparse)
-#>   asked settled 
-#>    TRUE   FALSE 
+c(sparse_is_null = is.null(bt@sparse), settled = bt@blueprint$sparse)
+#> sparse_is_null        settled 
+#>           TRUE          FALSE 
 term_build(linpar(~ g, sparse = TRUE), d)@blueprint$sparse
 #> [1] TRUE
 

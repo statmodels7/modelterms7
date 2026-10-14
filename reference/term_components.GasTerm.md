@@ -2,9 +2,9 @@
 
 One entry per base parameter of the filter, giving the positions in
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
-that parameter owns and the sub-terms developing it. A parameter with no
-subformula owns one position; a developed one owns as many as its design
-has columns.
+that the parameter owns and the sub-terms that develop it. A parameter
+with no subformula owns one position; a developed parameter owns as many
+positions as its design has columns.
 
 ## Arguments
 
@@ -12,7 +12,7 @@ has columns.
 
   A built
   [`GasTerm()`](https://statmodels7.github.io/modelterms7/reference/GasTerm.md).
-  An unbuilt one gives an empty list.
+  An unbuilt term gives an empty list.
 
 - ...:
 
@@ -27,22 +27,22 @@ describes.
 
 ## Details
 
-For a structural term the `index` field gives positions in
+A score-driven term has no block, so the `index` field gives positions
+in
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
-and not columns of a block, this branch having none. It is the vector
-the term's state, its readable quantities and its variance matrix are
-all indexed by.
+and not columns of a block. The term's state, its readable quantities
+and its variance matrix are all indexed by that vector.
 
-A consumer reads it to report a fitted filter parameter by parameter,
-and
+The division serves to report a fitted filter parameter by parameter.
+The method of
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-uses the same division to place each sub-term's penalty on the
-coordinates it covers.
+for a score-driven term uses the same layout to place each sub-term's
+penalty on the coordinates that the sub-term covers.
 
 ## See also
 
 [`term_components()`](https://statmodels7.github.io/modelterms7/reference/term_components.md)
-for the contract,
+for the fields of an entry,
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
 for the vector the indices point into.
 

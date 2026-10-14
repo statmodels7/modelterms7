@@ -61,9 +61,14 @@ is what tells the two apart.
 
 The refresh is committed once per sweep, never per trial point. A
 discontinuous term's rescaling factor halves whenever the break-point
-reverses direction, which is a fact about the path: advancing it inside
-a line search would anneal on every trial, and refreshing from the
-specification each time would freeze the schedule at its starting value.
+reverses direction, and is not allowed below a floor derived from the
+conditioning of the working block, which the refresh records. The factor
+depends on the path of the iteration: advancing it inside a line search
+would anneal on every trial, and refreshing from the specification each
+time would freeze the schedule at its starting value.
+
+For a nonlinear term `coef` must have one entry per coefficient of the
+term; a vector of another length is rejected.
 
 ## See also
 

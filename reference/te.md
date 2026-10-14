@@ -27,7 +27,7 @@ te(
 - ...:
 
   The covariates, bare expressions evaluated in the data, at least two
-  of them. One throws
+  of them. A single covariate signals the error
   `"'te' needs at least two covariates; use s() for one."`.
 
 - smooths:
@@ -36,15 +36,15 @@ te(
   covariate, or a list of one per covariate. `bspline_smooth(k = 5)` is
   the default. A margin carrying a `penalty` factory is rejected: a
   tensor product's penalty is the sum of the marginal roughnesses, and a
-  factory does not say how it composes with that sum.
+  factory does not specify how it composes with that sum.
 
   What the product reads from a margin is its **basis** and its
   **roughness matrix**, so `k`, `degree`, `order`, `measure`, `lower`
   and `upper` all act. The constraint, the null space and the
   reparametrization are the product's own and not a margin's: the tensor
   contains the constant whatever its margins do, and it is the product
-  that is centered. A margin asking for one of those is rejected rather
-  than ignored.
+  that is centered. A margin that sets one of those is rejected and not
+  ignored.
 
 - by:
 
@@ -64,13 +64,15 @@ te(
 - anisotropic:
 
   `TRUE`, the default, for one smoothing parameter per margin; `FALSE`
-  for one over their sum. Anything that is not a single logical throws.
+  for one over their sum. An argument that is not a single non-missing
+  logical signals an error.
 
 - hyper:
 
   The hyperparameters to hold, as a named numeric vector, with anything
   left out **estimated**. An anisotropic product carries one per margin,
-  so a vector of that length, or a named one holding some of them.
+  so a vector of that length, or a named one holding some of them. A
+  held value must be finite.
 
 - id:
 
@@ -117,26 +119,25 @@ total, which costs one hyperparameter instead of one per margin.
 
 Each component is normalized to a largest entry of one before either of
 those happens, since a roughness matrix carries the units of its own
-covariate: measured at `k = 4` over 300 observations, the
-second-derivative Gram of a covariate on \\\[0, 365\]\\ has a largest
-entry of 7.455e-07 against 3.652e+01 for one on \\\[0, 1\]\\, a factor
-of 4.9e+07. The size also falls with the number of knots, a coarser
-basis being flatter, so the quantity that decides is the matrix and not
-the range. Under `anisotropic = TRUE` that is a reparametrization and
-nothing about the fit moves: the component's own `lambda` absorbs the
-factor, so what the normalization buys there is that the reported
-parameters of two margins are comparable with each other. Under
-`anisotropic = FALSE` it is part of the model, one `lambda` weighting a
-sum whose terms it fixes, and margins on very different ranges then
-contribute comparably where otherwise the widest would contribute almost
+covariate: the second-derivative Gram of a covariate on \\\[0, 365\]\\
+has a largest entry many orders of magnitude smaller than that of a
+covariate on \\\[0, 1\]\\, and its size also depends on the number of
+knots. Under `anisotropic = TRUE` the normalization is a
+reparametrization and the fit is the same: the component's own `lambda`
+absorbs the factor, so the normalization makes the reported parameters
+of two margins comparable with each other. Under `anisotropic = FALSE`
+it is part of the model, since one `lambda` weights a sum whose terms it
+fixes, and margins on very different ranges then contribute comparably,
+where otherwise the margin on the widest range would contribute almost
 nothing.
 
 The marginal bases are **not** reparametrized, so the marginal linear
 effects are not separated out as
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md)
-separates its one. They lie in the null space of the tensor penalty, and
-a strongly penalized fit is shrunk toward no surface at all rather than
-toward a plane.
+separates its one. With the default second-derivative roughness they lie
+in the null space of the tensor penalty, together with their product, so
+a strongly penalized fit is shrunk toward the bilinear surface (the
+centered columns for \\x\\, \\z\\ and \\xz\\) and not toward zero.
 
 ## Centering
 

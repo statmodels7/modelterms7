@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -34,7 +34,7 @@
     <div class="section level2">
       <h2 id="the-classes-and-the-generics">The classes and the generics<a class="anchor" aria-label="anchor" href="#the-classes-and-the-generics"></a></h2>
 
-      <div class="section-desc"><p>The contract a term implements: how it builds a block from data, how it reproduces that block on new rows, what it carries in the way of coefficients, hyperparameters and penalties, and the two shapes a structural term takes instead.</p></div>
+      <div class="section-desc"><p>The two branches of the class tree and the generics that a term implements: building a block from data, reproducing that block on new rows, and reporting coefficients, hyperparameters and penalties. A structural term implements a filter or a likelihood instead of a block.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -116,7 +116,7 @@
           <code><a href="term_grid.html">term_grid()</a></code>
 
         </dt>
-        <dd>The Grid a Term Asks For</dd>
+        <dd>The Grid Sizes of a Term</dd>
 
         <dt>
 
@@ -186,7 +186,7 @@
           <code><a href="term_held.html">term_held()</a></code>
 
         </dt>
-        <dd>The Coefficients a Term Holds</dd>
+        <dd>Coefficients Held by a Term</dd>
 
         <dt>
 
@@ -313,7 +313,7 @@
       </dl></div><div class="section level2">
       <h2 id="the-random-effect-term">The random-effect term<a class="anchor" aria-label="anchor" href="#the-random-effect-term"></a></h2>
 
-      <div class="section-desc"><p>Grouped intercepts and slopes, with the effects’ distribution attached as the penalty. That is what a random effect is under penalized likelihood.</p></div>
+      <div class="section-desc"><p>Grouped intercepts and slopes, with the effects’ distribution attached as the penalty, which is how a random effect enters a penalized likelihood.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -336,7 +336,7 @@
       </dl></div><div class="section level2">
       <h2 id="smooth-terms">Smooth terms<a class="anchor" aria-label="anchor" href="#smooth-terms"></a></h2>
 
-      <div class="section-desc"><p>The penalized smooths of one and of several covariates, built on basis7: a Demmler-Reinsch reparametrization for one variable and a tensor product, anisotropic by default, for more.</p></div>
+      <div class="section-desc"><p>The penalized smooths of one and of several covariates, built on the smoothers of basis7: s() for one covariate and te() for a tensor product, anisotropic by default.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -445,7 +445,7 @@
       </dl></div><div class="section level2">
       <h2 id="break-point-terms">Break-point terms<a class="anchor" aria-label="anchor" href="#break-point-terms"></a></h2>
 
-      <div class="section-desc"><p>The break-points at which an effect changes slope, level or both, each written as a working linear model in the break-point position, with the grid rule that chooses where to start.</p></div>
+      <div class="section-desc"><p>The break-points at which an effect changes slope, level or both. The sharp constructions are estimated through a working linear model in the break-point position, a smoothed construction treats each break-point as an ordinary parameter, and the grid rule chooses where to start.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -464,7 +464,7 @@
           <code><a href="jump.html">jump()</a></code>
 
         </dt>
-        <dd>Stepmented Term: a Level that Changes at Estimated Break-Points</dd>
+        <dd>Step Term: a Level that Changes at Estimated Break-Points</dd>
 
         <dt>
 
@@ -552,7 +552,7 @@
       </dl></div><div class="section level2">
       <h2 id="structural-terms">Structural terms<a class="anchor" aria-label="anchor" href="#structural-terms"></a></h2>
 
-      <div class="section-desc"><p>Terms that rewrite the likelihood instead of adding to the predictor: score-driven dynamics and a latent Markov chain, both propagating their exact derivative beside the state.</p></div>
+      <div class="section-desc"><p>Terms that rewrite the likelihood instead of adding to the predictor: score-driven dynamics, a latent Markov chain and break-points integrated out of the likelihood, each carrying its exact derivatives through its recursion.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -613,7 +613,7 @@
           <code><a href="term_charted.html">term_charted()</a></code>
 
         </dt>
-        <dd>The Coordinates of a Term That Ride a Chart With an Edge</dd>
+        <dd>Charted Coordinates of a Term</dd>
 
         <dt>
 
@@ -750,7 +750,7 @@
       </dl></div><div class="section level2">
       <h2 id="the-formula-layer">The formula layer<a class="anchor" aria-label="anchor" href="#the-formula-layer"></a></h2>
 
-      <div class="section-desc"><p>Reading a model formula into terms, by what each call evaluates to and never by its name, so a term class defined outside the package needs no registration.</p></div>
+      <div class="section-desc"><p>Reading a model formula into terms. A call is a term when its value inherits from model_term, whatever the name of the function, so a term class defined outside the package needs no registration.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -766,7 +766,7 @@
       </dl></div><div class="section level2">
       <h2 id="the-response">The response<a class="anchor" aria-label="anchor" href="#the-response"></a></h2>
 
-      <div class="section-desc"><p>Marking a censored response on the left side of a formula, the status of each observation derived from the values given.</p></div>
+      <div class="section-desc"><p>Marking a censored response on the left side of a formula, with the status of each observation derived from the values given. statmodels7::statmod() rejects a censored response.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -789,7 +789,7 @@
       </dl></div><div class="section level2">
       <h2 id="fitted-views">Fitted views<a class="anchor" aria-label="anchor" href="#fitted-views"></a></h2>
 
-      <div class="section-desc"><p>What a fitted term reports: effective degrees of freedom counted per penalty, the printed summary, and the plot at supplied coefficients.</p></div>
+      <div class="section-desc"><p>The effective degrees of freedom of a term, computed from the coefficients, the curvature and the hyperparameters of a fit: one for each unpenalized parameter, a count of the nonzero coefficients under a kinked penalty, and one trace over the remaining parameters.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -805,7 +805,7 @@
       </dl></div><div class="section level2">
       <h2 id="validation">Validation<a class="anchor" aria-label="anchor" href="#validation"></a></h2>
 
-      <div class="section-desc"><p>The structural checks a term must pass against a data frame, including the one a term that rebuilds instead of reapplying its blueprint fails.</p></div>
+      <div class="section-desc"><p>The structural checks of an additive term against a data frame, among them the subset check that a term fails when it rebuilds its block instead of reapplying its blueprint.</p></div>
 
       <dl></dl></div><div class="section level2">
 

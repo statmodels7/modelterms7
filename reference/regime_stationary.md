@@ -28,8 +28,9 @@ regime_stationary(P, dP, d2P = NULL)
 
 ## Value
 
-A list with `delta` and `ddelta`, the latter one row per element of
-`dP`, and, when `d2P` is given, `d2delta`, one square matrix per state.
+A list with `delta`; `ddelta`, a list with one numeric vector of length
+\\K\\ per element of `dP`; and, when `d2P` is given, `d2delta`, a list
+with one square matrix per state, each of size `length(dP)`.
 
 ## Details
 

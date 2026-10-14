@@ -17,7 +17,7 @@ all."><meta property="og:image" content="https://statmodels7.github.io/modelterm
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -76,13 +76,14 @@ argument is passed for methods that need it directly.</p></dd>
 
 
 <dt id="arg-logdens">logdens<a class="anchor" aria-label="anchor" href="#arg-logdens"></a></dt>
-<dd><p>A function <code>(e, i)</code> returning the log-density of
-observation <code>i</code> at predictor <code>e</code>.</p></dd>
+<dd><p>A function <code>(e, i)</code> returning the log-density at predictor
+<code>e</code> of each observation in the index vector <code>i</code>, one value per element of
+<code>i</code>.</p></dd>
 
 
 <dt id="arg-score">score<a class="anchor" aria-label="anchor" href="#arg-score"></a></dt>
 <dd><p>A function <code>(e, i)</code> returning the derivative of that
-log-density with respect to the predictor.</p></dd>
+log-density with respect to the predictor, one value per element of <code>i</code>.</p></dd>
 
 
 <dt id="arg-psi">psi<a class="anchor" aria-label="anchor" href="#arg-psi"></a></dt>
@@ -99,7 +100,9 @@ log-density with respect to the predictor.</p></dd>
     <p>A list of two: <code>loglik</code>, a numeric vector of <code>n</code> contributions
 summing to the term's log-likelihood, and <code>jacobian</code>, an <code>n</code> by
 <code>length(psi)</code> matrix of their derivatives in the term's parameters,
-exact and propagated through the recursion.</p>
+computed exactly by propagation through the recursion. The columns follow
+<code><a href="term_params.html">term_params()</a></code>, and the derivative in a gap is taken in the gap itself,
+not in its logarithm.</p>
     </div>
     <div class="section level2">
     <h2 id="what-the-contributions-are">What the contributions are<a class="anchor" aria-label="anchor" href="#what-the-contributions-are"></a></h2>
@@ -117,19 +120,22 @@ the filtered distribution, never differenced.</p>
     </div>
     <div class="section level2">
     <h2 id="how-the-model-reaches-it">How the model reaches it<a class="anchor" aria-label="anchor" href="#how-the-model-reaches-it"></a></h2>
-    <p>The term knows the chain and the levels and nothing about the family. The
-two callbacks are how the model's own density enters: <code>logdens</code> returns the
-log-density of one observation at a given predictor and <code>score</code> its
-derivative in that predictor. Both are called with the predictor shifted by
-each regime's level, so a term of \(K\) regimes evaluates them \(K\)
-times per observation.</p>
-<p>Unlike <code><a href="term_filter.html">term_filter()</a></code>'s callbacks these do <strong>not</strong> depend on the state the
-recursion has reached: a regime shifts a predictor known in advance. That
-is why the density and the score of every observation under every regime
-can be computed once, vectorized, before the recursion starts.</p>
-<p>The method on <code><a href="structural_term.html">structural_term()</a></code> throws, naming the class: a term of the
-filter shape implements <code><a href="term_filter.html">term_filter()</a></code> instead, and a fitting layer tells
-the two apart by which one answers.</p>
+    <p>The term holds the chain and the levels and contains nothing about the
+family. The two callbacks are how the model's own density enters: <code>logdens</code>
+returns the log-density at a given predictor, one value per observation, and
+<code>score</code> returns its derivative in that predictor. For <code><a href="regime.html">regime()</a></code>, each is
+called once per regime, with the predictor shifted by that regime's level
+and the whole index vector of the observations, so a term of \(K\)
+regimes makes \(K\) calls to each.</p>
+<p>The callbacks of <code><a href="term_filter.html">term_filter()</a></code> depend on the state the recursion has
+reached. The callbacks of a regime term do not, because a regime shifts a
+predictor that is known in advance. The density and the score of every
+observation under every regime can therefore be computed once, vectorized,
+before the recursion starts.</p>
+<p>The method on <code><a href="structural_term.html">structural_term()</a></code> signals an error that names the class. A
+term of the filter shape implements <code><a href="term_filter.html">term_filter()</a></code> instead, and a fitting
+layer distinguishes the two shapes by which of the two generics has a method
+for the term.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

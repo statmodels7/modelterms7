@@ -21,8 +21,8 @@ term_draw(term, sd = 1, ...)
 
 - sd:
 
-  The width of the draw, `1` by default, halved before it is applied for
-  the reason measured above.
+  The width of the draw, `1` by default. The standard deviation applied
+  is `sd / 2`, for the reason given in the details.
 
 - ...:
 
@@ -40,46 +40,43 @@ returns.
 
 ## Details
 
-Simulating from a model that carries state means choosing values for the
-term's own parameters, and in quantity they cannot be chosen by hand: a
-score-driven filter whose level is developed over a hundred groups
-carries a hundred and one of them, and a caller made to name each one
-names none and simulates a model with no dynamics and no heterogeneity
-at all.
+Simulating from a model that carries state requires values for the
+term's own parameters. A score-driven filter whose level is developed
+over a hundred groups has a hundred level coordinates in addition to its
+loading and persistence coordinates, and choosing each of them by hand
+is impractical.
 
-The rule is the start plus noise, and the start rather than zero because
-the term already knows where the sensible region of its own charts is. A
-score loading rides a log chart, so zero there is a loading of one and a
-filter strong enough to destabilize its own recursion;
+The rule is the start plus noise. The start is used instead of zero
+because it lies in the region of the term's own charts where the term is
+well behaved. A score loading rides a log chart, so zero there is a
+loading of one and a filter strong enough to destabilize its own
+recursion;
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
-places it at 0.1 and the draw spreads from that. A constraint a chart
-carries is then respected for free:
+places it at 0.1 and the draw spreads from that. A constraint that a
+chart carries is respected by every draw:
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
 writes its levels as a first level and positive gaps, so any draw on the
 unconstrained scale is ordered by construction, and a persistence on a
-partial-autocorrelation chart is stationary at any coordinate whatever.
+partial-autocorrelation chart is stationary at any coordinate.
 
 ## The width
 
-Half of `sd`, and the half is measured rather than chosen. Sixty draws
-per family of a `gas(1, 1)` over sixty times, at widths 0.3, 0.5 and 1:
-at a width of 1 two Poisson series of sixty are not finite and the level
-of another spans 859, where at 0.5 none of a hundred and eighty fails
-and the widest level spans 2.04. Read on the charts the same number is a
-persistence between -0.27 and 0.88 at the fifth and ninety-fifth
-percentiles, against -0.80 to 0.98 at a width of 1, which is the whole
-stationary region and describes noise rather than a random effect.
+The standard deviation of the draw is `sd / 2`. At the full width of
+`sd` a score-driven filter with a Poisson response can produce
+non-finite series, and a persistence on the partial-autocorrelation
+chart covers nearly the whole stationary region, which describes noise
+and not a random effect.
 
-## Coordinates a penalty covers
+## Coordinates covered by a penalty
 
-They are drawn here too, and a caller that can see the penalty is
-expected to overwrite them. What a development's deviation is drawn from
-is the prior its sub-term declares – a Gaussian random effect, a Laplace
-one – and this method cannot see it: the prior's own scale is a
-hyperparameter and choosing one is the caller's business.
+These coordinates are drawn as well, and a caller that has access to the
+penalty is expected to overwrite them. The deviation of a development
+follows the prior that its sub-term declares (a Gaussian random effect
+or a Laplace one). This method does not receive that prior, because its
+scale is a hyperparameter that the caller chooses.
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-says which coordinates those are, and penalties7's `penalty_draw()`
-draws them.
+identifies those coordinates, and penalties7's `penalty_draw()` draws
+them.
 
 ## See also
 

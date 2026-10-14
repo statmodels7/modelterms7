@@ -11,7 +11,7 @@ the parameters, and a third names the prior where one was given."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,13 +63,11 @@ the parameters, and a third names the prior where one was given.</p>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The form is</p>
-<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="sc">&lt;</span>MarginalBreakTerm<span class="sc">&gt;</span> <span class="st">'jump'</span> (jump)<span class="sc">:</span> <span class="dv">1</span> latent <span class="cf">break</span><span class="sc">-</span>point per group,</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>                    integrated <span class="fu">out</span> (<span class="dv">3</span> groups)</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>  parameters<span class="sc">:</span> psi1.mean, psi1.sd, delta1</span></code></pre><p></p></div>
-<p>The prior line appears only where <code>random(distrib = )</code> named a family; under
-the default Gaussian there is nothing to name. A built structural term is
-described by its group count rather than by the word "built", the count
-being the more useful line.</p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="sc">&lt;</span>MarginalBreakTerm<span class="sc">&gt;</span> <span class="st">'jump'</span> (jump)<span class="sc">:</span> <span class="dv">1</span> latent <span class="cf">break</span><span class="sc">-</span>point per group, integrated <span class="fu">out</span> (<span class="dv">3</span> groups)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  parameters<span class="sc">:</span> psi1.mean, psi1.sd, delta1</span></code></pre><p></p></div>
+<p>The prior line appears only where <code>random(distrib = )</code> names a family; under
+the default Gaussian there is nothing to name. A built term is shown with
+its number of groups, and an unbuilt one is marked as a specification.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

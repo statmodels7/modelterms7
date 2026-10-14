@@ -11,7 +11,7 @@ Jacobian from the term's own parameters."><meta property="og:image" content="htt
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,9 +68,10 @@ Jacobian from the term's own parameters.</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The levels and the gaps are reported through their own links, as the base
 method does. The chain is estimated on the additive log-ratios of each row
-of the transition matrix, which are coordinates and not the quantities a
-reader wants, so every entry of the matrix is reported instead, \(k^2\)
-of them, row by row and named <code>p1.1</code>, <code>p1.2</code>, and so on. Entry
+of the transition matrix. These are coordinates of the chain and not
+quantities that have a direct interpretation, so every entry of the matrix
+is reported in their place, \(k^2\) of them, row by row and named <code>p1.1</code>,
+<code>p1.2</code>, and so on. Entry
 \(p_{ij}\) depends on the log-ratios of row \(i\) alone, and its row
 of the Jacobian is the derivative of <code><a href="https://statmodels7.github.io/parameters7/reference/transition_matrix.html" class="external-link">parameters7::transition_matrix()</a></code>'s
 value. Each interval is built on the logit scale and mapped back, so it

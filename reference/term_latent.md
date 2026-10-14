@@ -1,10 +1,10 @@
 # The Posterior of a Structural Term's Latent Variable
 
-A summary of the latent variable a structural term integrates over,
-given the whole sample. For a marginal break-point term it is the
-posterior mean and standard deviation of each group's break-points. That
-is what a reader wants from such a fit: where each group's change
-happened, and how sure the data are about it. For a
+A summary of the latent variable over which a structural term
+integrates, given the whole sample. For a marginal break-point term it
+consists of the posterior mean and standard deviation of each group's
+break-points, which locate each group's change and measure the
+uncertainty about its position. For a
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
 term it is the smoothed probability of each regime at each observation.
 
@@ -57,28 +57,30 @@ frame with one row per observation and one column per regime, `state1`,
 ## Details
 
 [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)
-answers the fitting layer's question, the component weights Fisher's
-identity needs at every observation. This one answers the reader's. For
-the marginal break-point term the two come from the same decomposition:
-the mean and variance within an interval are those of the prior
-truncated to it, and under quadrature the moments of the node posterior.
+returns the component weights that Fisher's identity needs at every
+observation, for use by a fitting layer. This function returns a summary
+of the latent variable for the reader of a fit. For the marginal
+break-point term the two come from the same decomposition: the mean and
+variance within an interval are those of the prior truncated to it, and
+under quadrature the moments of the node posterior.
 
-## What a heavy-tailed prior can refuse
+## Priors without moments
 
-The moments are the prior's, so a prior without them has none to report.
-A Student t below one degree of freedom has no mean on an edge interval
-and below two no variance, and the quadrature returns `NA` there instead
-of a number. That is a property of the prior the caller chose.
+The moments are those of the prior, so a prior that lacks them gives
+none. A Student t prior with fewer than one degree of freedom has no
+mean on an edge interval, and with fewer than two it has no variance.
+Where such an interval carries posterior weight of at least 1e-9, the
+corresponding column holds `NA`.
 
 The method on
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
-throws, naming the class:
+signals an error that names the class. A
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
-has no latent variable, its level being a deterministic function of the
-data. A regime's latent is the discrete state, and its method returns
-the probabilities
+term has no latent variable, because its level is a deterministic
+function of the data. The latent variable of a regime term is the
+discrete state, and its method returns the probabilities that
 [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)
-computes, labelled by regime.
+computes, labeled by regime.
 
 ## See also
 

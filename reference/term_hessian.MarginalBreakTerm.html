@@ -11,7 +11,7 @@ term's own parameters on the unconstrained scale."><meta property="og:image" con
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,9 @@ term's own parameters on the unconstrained scale.</p>
 
 <dt id="arg-logdens-grad-hess">logdens, grad, hess<a class="anchor" aria-label="anchor" href="#arg-logdens-grad-hess"></a></dt>
 <dd><p>The log-density and its first two derivatives
-in the predictors.</p></dd>
+in the predictors: <code>grad</code> returns a matrix of one row per observation and
+one column per distribution parameter, and <code>hess</code> an array of dimensions
+observations by parameters by parameters.</p></dd>
 
 
 <dt id="arg-psi">psi<a class="anchor" aria-label="anchor" href="#arg-psi"></a></dt>
@@ -70,19 +72,23 @@ in the predictors.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>The derivative of each predictor in the caller's unknowns.</p></dd>
+<dd><p>A list with one matrix per distribution parameter, each of one
+row per observation, holding the derivative of that parameter's predictor
+in the caller's unknowns.</p></dd>
 
 
 <dt id="arg-cols">cols<a class="anchor" aria-label="anchor" href="#arg-cols"></a></dt>
-<dd><p>The columns the term's own parameters occupy.</p></dd>
+<dd><p>The columns of the <code>seed</code> matrices that the term's own
+parameters occupy, in the order of <code><a href="term_params.html">term_params()</a></code>.</p></dd>
 
 
 <dt id="arg-level">level<a class="anchor" aria-label="anchor" href="#arg-level"></a></dt>
-<dd><p>The distribution parameter the term shifts.</p></dd>
+<dd><p>The index of the distribution parameter that the term shifts.</p></dd>
 
 
 <dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
-<dd><p>Observation weights, constant within each group.</p></dd>
+<dd><p>Observation weights: one number, or one number per
+observation, constant within each group.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -91,23 +97,27 @@ in the predictors.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list with <code>loglik</code>, <code>gradient</code> and <code>hessian</code>.</p>
+    <p>A list with <code>loglik</code>, the contribution of each observation without
+weights, and <code>gradient</code> and <code>hessian</code>, which are weighted.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>Analytic throughout. The step kind propagates first and second
 derivatives through the side chain's forward recursion, the prior's
 interval-mass derivatives closed for the gaussian and read off the cdf
-surface for an explicit prior (whose own degrees-of-freedom column
-carries that surface's documented single stencil, the one non-closed
-piece anywhere). The continuous kinds differentiate the node sum twice;
-the moving panels below the data are affine in the prior's parameters,
-so their motion enters the chain rule with no curvature of its own. The
-one-break-point gaussian step keeps the interval-sum route, independent
-arithmetic the tests hold the propagation to.</p>
+surface of <span class="pkg">distributions7</span> for an explicit prior. The column of an
+explicit prior's degrees of freedom comes from a single finite-difference
+stencil of that surface, the one piece that is not in closed form. The
+continuous kinds differentiate the node sum twice; the moving panels below
+the data are affine in the parameters of the prior, so their motion enters
+the chain rule with no curvature of its own. The one-break-point gaussian
+step uses an interval sum that shares no arithmetic with the propagation,
+and the tests compare the two.</p>
 <p>The marginal likelihood of a group does not factorize over its
-observations, so an observation weight has a reading only when it is
-constant within each group; anything else is rejected.</p>
+observations, so an observation weight has a meaning only when it is
+constant within each group. Weights must be one number or one number per
+observation, without missing values, and weights that vary within a group
+are rejected.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

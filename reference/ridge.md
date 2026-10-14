@@ -1,7 +1,7 @@
 # Ridge Penalty on a Block of Coefficients
 
-A block of coefficients under a Gaussian prior at zero: every one of
-them shrunk towards zero, none of them set to it.
+A block of coefficients under a Gaussian prior at zero. Each coefficient
+of the block is shrunk towards zero, and none is set exactly to zero.
 
 ## Usage
 
@@ -23,7 +23,7 @@ ridge(
 
   A one-sided formula, such as `~ x1 + x2` or `~ 0 + g`, or a numeric
   matrix, ideally a matrix column of the model data frame. A two-sided
-  formula throws.
+  formula is rejected with an error.
 
 - label:
 
@@ -41,7 +41,8 @@ ridge(
 
   The precision of the prior. One number holds it and `NULL`, the
   default, has it estimated. A ridge has no kink and no path, so several
-  numbers are not a grid it could visit. Must lie in \\(0, \infty)\\.
+  numbers are rejected: they would form a grid that nothing visits. Must
+  lie in \\(0, \infty)\\.
 
 - id:
 
@@ -49,8 +50,8 @@ ridge(
   carrying the same one: they are then estimated at a single value,
   wherever in the formula they sit. `NULL`, the default, shares nothing.
   See
-  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md),
-  whose page says what the labels mean and what care they want.
+  [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md)
+  for the meaning of the labels and the restrictions on their use.
 
 - sparse:
 
@@ -62,10 +63,10 @@ ridge(
 
 - ...:
 
-  Not used, and reported. An argument named after another penalty's
-  hyperparameter is the mistake this catches: `scad(~ x, gamma = 1)`
-  throws `"'scad' has no argument 'gamma'."` and lists the ones it does
-  have.
+  Not used. Any argument supplied here is rejected with an error that
+  names it and lists the penalty's hyperparameters. The typical case is
+  an argument named after another penalty's hyperparameter:
+  `scad(~ x, gamma = 1)` signals `"'scad' has no argument 'gamma'."`.
 
 ## Value
 
@@ -74,24 +75,23 @@ An unbuilt
 a specification, with `X`, `coef_names`, `blueprint` and `penalty` empty
 until
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-fills them, and the penalty attached there over as many coefficients as
-the block turns out to have.
+fills them. The build attaches the penalty over the block's columns.
 
 ## Details
 
 Writing \\\beta\\ for the block's coefficients and \\p\\ for their
 number, \$\$\rho(\beta) = \frac{\lambda\lVert\beta\rVert_2^2}{2} -
 \frac{p}{2}\log\\\left(\frac{\lambda}{2\pi}\right).\$\$ The constant is
-kept, and that is what a marginal criterion needs to estimate
-\\\lambda\\: the value is minus the log density of \\N(0,
-\lambda^{-1}I)\\, so \\\lambda\\ is the precision of that prior and a
-larger value shrinks harder.
+kept because a marginal criterion needs it to estimate \\\lambda\\. The
+value is minus the log density of \\N(0, \lambda^{-1}I)\\, so
+\\\lambda\\ is the precision of that prior and a larger value shrinks
+harder.
 
-The penalty is twice differentiable everywhere, so the block is fitted
-in the same system as the unpenalized terms and \\\lambda\\ is estimated
-by
+The penalty is twice differentiable everywhere. The block is therefore
+fitted in the same system as the unpenalized terms, and \\\lambda\\ is
+estimated by
 [`statmodels7::reml()`](https://statmodels7.github.io/statmodels7/reference/reml.html)
-rather than swept along a path.
+or by another marginal criterion instead of being swept along a path.
 
 **Hyperparameter.** `lambda`, admissible on \\(0, \infty)\\.
 
@@ -138,7 +138,7 @@ c(smooth = term_smooth(b),
 #> smooth  kinks 
 #>      1      0 
 
-# Holding it, and the refusal of a grid it has no path to visit.
+# Holding it, and the rejection of a grid it has no path to visit.
 term_hyper(ridge(~ x1 + x2, lambda = 2))
 #> [[1]]
 #> [[1]]$lambda
@@ -146,8 +146,8 @@ term_hyper(ridge(~ x1 + x2, lambda = 2))
 #> 
 #> 
 try(ridge(~ x1 + x2, lambda = c(1, 2)))
-#> Error : 'lambda' in 'ridge' has several values, and this term has no path to visit them
-#>   on: its penalty has no kink, so the hyperparameter is estimated by the
+#> Error : 'lambda' in 'ridge' has several values, and this term has no path to visit them:
+#>   its penalty has no kink, so the hyperparameter is estimated by the
 #>   criterion at the mode. Give one number to hold it, or NULL to estimate it.
 
 

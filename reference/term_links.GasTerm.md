@@ -3,8 +3,8 @@
 The identity on the level, the **log** on every loading and the
 **rhobit** on every partial autocorrelation, unless the `links` argument
 of [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
-overrode one. Each carries its parameter's own admissible set onto the
-whole real line, so an optimizer proposing anything at all gets an
+overrode one. Each default carries its parameter's admissible set onto
+the whole real line, so every value that an optimizer proposes gives an
 admissible filter.
 
 ## Arguments
@@ -26,14 +26,15 @@ A named list of linkfunctions7 links, one per entry of
 ## Details
 
 The log on a loading makes positivity structural: a subformula develops
-the loading on that scale, so no group and no observation can take a
-negative one. A loading that must be free in sign is asked for by name.
+the loading on that scale, so every group and every observation has a
+positive loading. A loading that must be free in sign takes the identity
+link, which is set by naming it in `links`.
 
 The rhobit on a partial autocorrelation keeps it inside \\(-1, 1)\\, and
-Levinson-Durbin then carries the whole chart onto a stationary
-autoregression. That is the reason for the chart: the stationary region
-in the coefficients is not a box, so no collection of scalar links
-covers it.
+Levinson-Durbin then maps the whole chart onto a stationary
+autoregression. The chart is used because the stationary region in the
+coefficients is not a box, so a collection of scalar links cannot
+represent it.
 
 Where a parameter carries a subformula the link is applied **inside**
 the development, so the parameter is admissible at every observation and

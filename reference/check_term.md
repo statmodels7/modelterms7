@@ -11,13 +11,14 @@ answers with a single non-missing logical, that
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 on the same data reproduces the block, and that
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-on a subset of rows returns the corresponding rows of it. One row of the
-result per check, printed as it goes and returned invisibly.
+on a subset of rows returns the corresponding rows of it. The result has
+one row per check; the rows are printed after all the checks have run,
+when `verbose` is `TRUE`, and returned invisibly.
 
-The last check is the one worth running. A term is supposed to record
-its encoding at build time and reapply it; a term that re-derives the
-encoding from whatever rows it is handed passes every other check and
-fails this one.
+The last check detects a term that rebuilds its encoding. A term is
+supposed to record its encoding at build time and reapply it; a term
+that re-derives the encoding from whatever rows it is handed passes
+every other check and fails this one.
 
 ## Usage
 
@@ -31,25 +32,25 @@ check_term(term, data, verbose = TRUE)
 
   A term specification: any object inheriting from
   [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md),
-  built or unbuilt. Anything that is not a
+  built or unbuilt. An object that is not a
   [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)
-  throws `"'term' must inherit from 'model_term'."`, and a
+  signals the error `"'term' must inherit from 'model_term'."`, and a
   [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
   is rejected by name. An already-built term is accepted and is rebuilt
   against `data`.
 
 - data:
 
-  A data frame carrying every variable the term names. Anything else
-  throws `"'data' must be a data frame."`. Any number of rows is
-  accepted; with one row the subset check compares the block against
-  itself and is uninformative.
+  A data frame carrying every variable the term names. Any other object
+  signals the error `"'data' must be a data frame."`, and a data frame
+  without rows signals `"'data' has no rows."`. With one row the subset
+  check compares the block against itself and is uninformative.
 
 - verbose:
 
-  Print one line per check as it completes, `TRUE` by default, in the
-  form ` [OK] subset -- 4 rows`. The rows are returned either way, so
-  `verbose = FALSE` is the form to use inside a test.
+  Print one line per check once all the checks have run, `TRUE` by
+  default, in the form ` [OK] subset -- 4 rows`. The rows are returned
+  either way, so `verbose = FALSE` is the form to use inside a test.
 
 ## Value
 
@@ -67,12 +68,13 @@ one row per check:
 
 - `info`:
 
-  The block's dimensions for `build`, with `", sparse"` appended when it
-  is an S4 matrix; `"smooth"` or `"non-smooth"` for `smooth`; the number
-  of rows kept for `subset`; the condition message where a check threw;
-  and `""` otherwise.
+  The block's dimensions for `build`, in the form `"6 x 4 block"` with
+  `", sparse"` appended when it is an S4 matrix; `"smooth"` or
+  `"non-smooth"` for `smooth`; the number of rows kept for `subset`; the
+  condition message of a check that signaled an error; and `""`
+  otherwise.
 
-A build that throws gives a single row, `check = "build"` and
+A build that signals an error gives a single row, `check = "build"` and
 `status = "FAILED"`, with the message in `info`; no later check is
 attempted.
 
@@ -82,7 +84,8 @@ Write \\X\\ for `term_matrix(term_build(term, data))` and \\S\\ for a
 subset of the row indices. The last two checks are
 
 \$\$\mathrm{predict}(\mathrm{term}, \mathrm{data}) = X, \qquad
-\mathrm{predict}(\mathrm{term}, \mathrm{data}\[S, \]) = X\[S, \],\$\$
+\mathrm{predict}(\mathrm{term}, \mathrm{droplevels}(\mathrm{data}\[S,
+\])) = X\[S, \],\$\$
 
 both compared by [`all.equal()`](https://rdrr.io/r/base/all.equal.html)
 at a relative tolerance of `1e-12`. The second does not follow from the
@@ -92,20 +95,20 @@ factor level or narrows the range a basis is placed on.
 
 ## Which rows the subset takes
 
-The subset is chosen to make that failure reachable. If any column of
-`data` is a factor with two or more levels, every row of its last level
-is dropped, so a rebuilt encoding is one column short. Failing that, the
-first `nrow(data) %/% 2` rows are taken, which still narrows the range
-of a numeric covariate.
+The subset is chosen to make that failure reachable. If a column of
+`data` is a factor with two or more levels whose last level occurs in
+some but not all of the rows, every row of that level is dropped, so a
+rebuilt encoding is one column short. Failing that, the first
+`max(1, nrow(data) %/% 2)` rows are taken, which still narrows the range
+of a numeric covariate. Character columns are not examined.
 
 [`droplevels()`](https://rdrr.io/r/base/droplevels.html) is applied to
-the subset before it is passed on, because that is how new data really
-reach
+the subset before it is passed on, because that is how new data reach
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md):
 a factor column there carries only the levels its own rows use, and the
-rest are known to the blueprint alone. Without the call a plain row
-subset carries the original level set along with it and the check cannot
-fail.
+remaining levels are recorded only in the blueprint. Without the call a
+plain row subset carries the original level set along with it and the
+check cannot fail.
 
 ## What is not checked
 
@@ -123,8 +126,9 @@ by name. A structural term
 and the marginal break-point terms) contributes no design columns and
 registers no
 [`term_matrix()`](https://statmodels7.github.io/modelterms7/reference/term_matrix.md)
-method, so there is nothing for the six checks to read; the message says
-so and names what such a term supplies instead, which is
+method, so there is nothing for the six checks to read; the error
+message gives this reason and lists what such a term supplies instead,
+which is
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md),
 [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md),
 [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
@@ -193,7 +197,7 @@ check_term(random(~ 1 | g), dd)
 #>   [OK] reproduce
 #>   [OK] subset -- 4 rows
 
-# A build that throws gives one row and stops there.
+# A build that fails gives one row and stops there.
 print(check_term(linpar(~ x + nonexistent), dd, verbose = FALSE))
 #>   check status                           info
 #> 1 build FAILED object 'nonexistent' not found

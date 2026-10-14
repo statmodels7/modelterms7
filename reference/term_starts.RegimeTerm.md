@@ -29,14 +29,12 @@ scale.
 
 ## Details
 
-A log-ratio of standard deviation 2 reaches a transition probability of
-0.02 or 0.98 about one time in three, so the draws cover chains that
-stay in a regime and chains that leave it at once. A gap scaled by
-\\e^{\pm 0.7}\\, about a factor of two either way, keeps the levels
-ordered and within the range of the response. The draw for start \\s\\
-is made with the seed \\100 + s - 1\\, and the caller's random number
-generator is restored afterwards, so the same fit gives the same starts
-and does not move the caller's stream. Measured on
-[`MASS::geyser`](https://rdrr.io/pkg/MASS/man/geyser.html) with three
-regimes, eight starts reach five distinct maxima of the log-likelihood,
-from -1053.39 to -1210.49.
+A log-ratio of standard deviation 2 gives transition probabilities
+spread over the interval from near 0 to near 1, so the draws cover
+chains that stay in a regime and chains that leave it at once. A gap
+scaled by \\e^{\pm 0.7}\\, about a factor of two either way, keeps the
+levels ordered. The draw for start \\s\\ is made with the seed \\100 +
+s - 1\\, and the caller's random number generator is restored
+afterwards, so the same fit gives the same starts and does not move the
+caller's stream. The log-likelihood of a regime model has several local
+maxima, which different starts may reach.

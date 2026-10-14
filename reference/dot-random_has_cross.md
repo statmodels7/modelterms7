@@ -1,8 +1,8 @@
-# Whether a Multivariate Family Answers Its Mixed Block
+# Whether a Multivariate Family Defines Its Mixed Block
 
 `TRUE` when `distrib_cross_y` comes from the family itself. The
-multivariate base class rejects that generic, so a family that has not
-overridden it answers `FALSE`.
+multivariate base class rejects that generic, so the function returns
+`FALSE` for a family that has not overridden it.
 
 ## Usage
 
@@ -23,9 +23,8 @@ A single logical.
 ## Details
 
 A marginal criterion reads that block to estimate the covariance of the
-effects, so a family without one can be fitted at held hyperparameters
-and not at estimated ones. The owning class of a method is read through
-its signature and compared by name, never with
-[`identical()`](https://rdrr.io/r/base/identical.html), which is object
-identity and fails whenever a package's code is re-evaluated rather than
-loaded.
+effects, so a family without one is rejected when the term is built. The
+class that owns the method is read from its signature and compared by
+name, since [`identical()`](https://rdrr.io/r/base/identical.html)
+compares object identity and fails when a package's code is re-evaluated
+instead of loaded.

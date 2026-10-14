@@ -4,8 +4,8 @@ The subclass of
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 holding a parametric function that is nonlinear in its own parameters.
 Its design block is the **Jacobian** of that function, so the term is
-linear in the sense a fitting layer needs while the function is not. The
-block depends on where the parameters currently are, and
+linear in the sense that a fitting layer needs while the function is
+not. The block depends on the current values of the parameters, and
 [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
 recomputes it as they move.
 
@@ -40,13 +40,13 @@ NlTerm(
   A character string prefixed to the term's coefficient names when
   non-empty, and used as the title of
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) and the tag
-  of [`print()`](https://rdrr.io/r/base/print.html). `character(0)` and
-  `""` both mean no label.
+  of [`print()`](https://rdrr.io/r/base/print.html). The empty string
+  `""` means no label.
 
 - hyper:
 
-  The hyperparameters of the term's penalty the caller **held**, as a
-  named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller **held**, as
+  a named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -123,7 +123,8 @@ NlTerm(
 
 - links:
 
-  A named list of one linkfunctions7 link per parameter.
+  A named list of linkfunctions7 links, one per parameter once the term
+  is built.
 
 - subformulas:
 
@@ -132,7 +133,7 @@ NlTerm(
 
 - deriv_mode:
 
-  `"symbolic"` or `"numeric"`.
+  One of `"symbolic"`, `"formula_fd"` or `"numeric"`.
 
 - spec:
 
@@ -144,41 +145,63 @@ An S7 object of class `NlTerm`, inheriting from
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 and
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
-with the six properties above beside the ten they supply.
+with the properties described above in addition to those of
+[`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md).
 
-## The six properties of its own
+## Properties of its own
 
 `fn` is the function or formula as given, and `spec$is_formula` records
-which. `nl_params` names the parameters, inferred from a formula or
-taken from `params` for an opaque function.
+which. `nl_params` names the parameters:
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) sets
+it from `params` for a function, and
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+sets it for a formula, from the names that the formula uses and the data
+do not supply.
 
-`links` holds one linkfunctions7 link per parameter, the identity where
-none was named, and `subformulas` one right-hand side per parameter
-developed over covariates, empty otherwise.
+`links` holds the links given in the call. After
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+it holds one linkfunctions7 link per parameter, the identity where none
+was named. `subformulas` holds one right-hand side per parameter
+developed over covariates, and is empty otherwise.
 
 `deriv_mode` is `"symbolic"` where
 [`stats::deriv()`](https://rdrr.io/r/stats/deriv.html) could read the
-expression and `"numeric"` where the derivatives are differenced.
+expression of a formula, `"formula_fd"` where it could not and the first
+derivatives of the formula are differenced, and `"numeric"` for a
+function, whose derivatives are differenced. A specification built from
+a formula carries `"symbolic"` until
+[`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+sets the value. The property records the route of the first derivatives;
 [`nl_fderiv()`](https://statmodels7.github.io/modelterms7/reference/nl_fderiv.md)
-chooses per order, so the field records the route the expression as a
-whole took.
+chooses the route for each order separately.
 
-`spec` carries the resolved construction settings, and the blueprint
-what the build computed: the parameter designs, the starting
-coefficients and the coefficients last committed.
+`spec` carries the resolved construction settings. The blueprint carries
+what the build computed: the parameter designs, the current coefficients
+(the starting ones until
+[`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
+stores others), the value of the function at them, and the orders of
+derivative that are analytic.
 
 ## What makes it an additive term
 
 While \\f\\ is differentiable the term is an ordinary additive one at
-every point, so it needs no branch of its own in a fitting layer. What
-it adds is three generics:
-[`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
-to recompute the block,
-[`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
-to report \\f\\ itself, and
+every point, so a fitting layer needs no branch of its own for it. The
+class implements
+[`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md),
+which recomputes the block,
+[`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md),
+which reports \\f\\ itself, and the derivatives of the block in the
+coefficients
+([`term_block_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv.md),
+[`term_block_contract()`](https://statmodels7.github.io/modelterms7/reference/term_block_contract.md)
+and
+[`term_block_deriv2()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv2.md)).
 [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
-to say that the block really is a Jacobian, which licenses a
-Gauss-Newton step and a line search on the model's own objective.
+is inherited from
+[`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)
+and returns `TRUE`, which states that the block is a Jacobian and
+licenses a Gauss-Newton step and a line search on the model's own
+objective.
 
 ## See also
 
@@ -189,7 +212,7 @@ for the derivatives;
 [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
 and
 [`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
-for the pair a Gauss-Newton step reads.
+for the pair that a Gauss-Newton step reads.
 
 ## Examples
 
@@ -201,9 +224,12 @@ dd$y <- 2 * exp(-1.3 * dd$x) + rnorm(60, sd = 0.05)
 tm <- nl(~ a * exp(-r * x), start = list(a = 1, r = 1))
 S7::S7_inherits(tm, NlTerm)
 #> [1] TRUE
-tm@nl_params
-#> character(0)
-tm@deriv_mode
+
+# The parameters are read from the formula when the term is built.
+b <- term_build(tm, dd)
+b@nl_params
+#> [1] "a" "r"
+b@deriv_mode
 #> [1] "symbolic"
 
 # An opaque function cannot be read symbolically.
@@ -212,7 +238,6 @@ nl(function(x, theta) theta$a * exp(-theta$r * x),
 #> [1] "numeric"
 
 # The block is the Jacobian, so a linear fit on it is a Gauss-Newton step.
-b <- term_build(tm, dd)
 dim(term_matrix(b))
 #> [1] 60  2
 term_jacobian_block(b)

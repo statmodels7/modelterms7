@@ -13,7 +13,7 @@ has to be told about the constraint."><meta property="og:image" content="https:/
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,7 +57,7 @@ has to be told about the constraint.</p>
 
 <dl><dt id="arg-term">term<a class="anchor" aria-label="anchor" href="#arg-term"></a></dt>
 <dd><p>An object inheriting from <code><a href="structural_term.html">structural_term()</a></code>. A class that
-does not implement the generic throws
+does not implement the generic signals the error
 <code>"the term class 'X' does not implement term_links()."</code>.</p></dd>
 
 
@@ -76,9 +76,12 @@ does not implement the generic throws
 admissible. <code><a href="gas.html">gas()</a></code> puts its level on the identity, its score loadings on
 the <strong>log</strong> so a loading stays positive, and its persistence coordinates on
 the <strong>rhobit</strong> so each partial autocorrelation stays inside \((-1, 1)\)
-and the filter stays stationary. The <code>links</code> argument of a constructor
-overrides them per parameter.</p>
-<p>The persistence is the case worth understanding. The stationary region in
+and the filter stays stationary. <code><a href="regime.html">regime()</a></code> puts its first level and the
+free entries of its transition matrix on the identity and the gaps between
+levels on the log, so the levels are ordered by construction. The <code>links</code>
+argument of <code><a href="gas.html">gas()</a></code> overrides the links per parameter.</p>
+<p>The persistence uses a different kind of chart from the other parameters.
+The stationary region in
 the autoregressive coefficients is not a box, so no collection of scalar
 links covers it; the partial autocorrelations are each in \((-1, 1)\)
 independently, and Levinson-Durbin carries them onto the coefficients.
@@ -88,13 +91,13 @@ reader reads are different things.</p>
 development, \(\psi_{j,t} = g_j^{-1}(z_t'\gamma_j)\), so the parameter
 stays admissible at every observation and the coefficients \(\gamma_j\)
 are unconstrained.</p>
-<p>The method on <code><a href="structural_term.html">structural_term()</a></code> throws, naming the class.</p>
+<p>The method on <code><a href="structural_term.html">structural_term()</a></code> signals an error that names the class.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="term_params.html">term_params()</a></code> for the names, <code><a href="term_start.html">term_start()</a></code> for the point on
-this scale a fit begins at, <code><a href="term_readable.html">term_readable()</a></code> for the quantities the
-coordinates map to.</p></div>
+this scale at which a fit begins, <code><a href="term_readable.html">term_readable()</a></code> for the quantities
+to which the coordinates map.</p></div>
     </div>
 
     <div class="section level2">

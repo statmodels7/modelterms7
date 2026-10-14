@@ -1,8 +1,10 @@
 # Has a Term's Own Iteration Settled?
 
-`TRUE` when a term whose block is refreshed has nothing further to say
-about where its own parameters are. A term whose block does not move
-answers `TRUE`, having no iteration of its own.
+`TRUE` when the iteration that a term carries on its own account has
+settled, that is, when its own parameters no longer move. A term with no
+such iteration, including every term whose block does not move and
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md),
+answers `TRUE` through the base method.
 
 ## Usage
 
@@ -30,20 +32,24 @@ It exists because a score cannot always answer the question. Where the
 block is the Jacobian of the contribution, as it is for
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) and
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
-the gradient of the model's objective is the block times the derivative
-of the log-likelihood in the predictor, and its vanishing is the test.
+the gradient of the model's objective is the transpose of the block
+applied to the derivative of the log-likelihood in the predictor, and
+the fitting layer tests its vanishing; the term itself has no verdict to
+add.
 
 Where the block is a working linearization with a frozen weight, as it
-is for
+is for a sharp
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
-and
+or
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md),
 there is no such gradient: the profile objective of a discontinuous term
 is a step function in the break-point. What the iteration drives to zero
-there is the movement of the break-point itself. That movement is what
-[`seg_converged()`](https://statmodels7.github.io/modelterms7/reference/seg_step.md)
-reads, and a fitting layer asks for it here without knowing which
-construction it holds.
+there is the movement of the break-point itself. A break-point term of
+any construction answers through
+[`seg_converged()`](https://statmodels7.github.io/modelterms7/reference/seg_step.md),
+which reads that movement, and a held term answers `TRUE`. A fitting
+layer calls this generic for each refreshed term, whatever its
+construction.
 
 ## See also
 

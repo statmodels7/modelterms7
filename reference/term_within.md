@@ -20,7 +20,7 @@ term_within(term, newdata, ...)
 
 - ...:
 
-  Passed to methods.
+  Passed to methods. The shipped methods do not use it.
 
 ## Value
 

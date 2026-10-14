@@ -25,19 +25,20 @@ A character vector of length
 
 ## Details
 
-The persistence coordinates are named for the chart they live on, never
-for the quantity a reader reads. `pacf1` is a partial autocorrelation;
-the autoregressive coefficient \\\xi_1\\ the literature writes is a
-function of the whole chart through Levinson-Durbin, and coincides with
-the coordinate only at \\q = 1\\.
+The persistence coordinates are named after the chart on which they are
+estimated. `pacf1` is a partial autocorrelation; the autoregressive
+coefficient \\\xi_1\\ of the literature is a function of the whole chart
+through Levinson-Durbin, and coincides with the coordinate only at \\q =
+1\\.
 [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
-is what carries the coordinates onto the coefficients.
+maps the coordinates onto the coefficients.
 
-The order is the one
+The order is the one by which
 [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md),
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md),
-[`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)'s
-Jacobian columns and the joint variance matrix are all indexed by.
+the Jacobian columns of
+[`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+and the joint variance matrix are indexed.
 
 ## See also
 

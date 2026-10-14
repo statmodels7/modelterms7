@@ -43,7 +43,7 @@ derivatives is a single diagonal entry, the link's own \\h'''\\ times
 the direction's component there. The persistence is a composition, the
 Levinson-Durbin map read at \\\rho = h^{-1}(z)\\, and differentiating
 \\B(z) = \xi(\rho(z))\\ three times and contracting the last slot gives
-\$\$T\_{kl}h'\_kh'\_l + P\_{kl}(h''\_kv_kh'\_l + h'\_kh''\_lv_l) +
+\$\$T\_{kl}h'\_kh'\_l + H\_{kl}(h''\_kv_kh'\_l + h'\_kh''\_lv_l) +
 \delta\_{kl}\big((Hw)\_k h''\_k + P_kh'''\_kv_k\big),\$\$ with \\w_m =
 h'\_mv_m\\ the direction pushed onto the partial autocorrelations, \\T\\
 the contracted third derivative of the map and \\P\\, \\H\\ its first

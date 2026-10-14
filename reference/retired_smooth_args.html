@@ -13,7 +13,7 @@ and not what to write instead."><meta property="og:image" content="https://statm
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,12 +69,14 @@ and not what to write instead.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The four decisions a smooth is made of – the basis, the penalty, the
-null space and the reparametrization – now travel together on a
-<span class="pkg">basis7</span> smoother, so the settings that described the first two
-belong there. <code>k</code> and <code>degree</code> are a B-spline's and were never general;
-<code>linear</code> named the null space as "linear", which it is only when the
-penalty is of order 2.</p>
+    <p>The four decisions a smooth is made of (the basis, the penalty, the
+null space and the reparametrization) travel together on a <span class="pkg">basis7</span>
+smoother, so the settings that described the first two belong there. <code>k</code> and
+<code>degree</code> belong to a B-spline and not to smoothers in general; <code>linear</code>
+named the null space as "linear", which it is only when the penalty is of
+order 2. The smoothing parameter <code>lambda</code> is now a hyperparameter of the
+term, held through <code>hyper</code>. An argument that is not one of these is reported
+as having no such argument.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

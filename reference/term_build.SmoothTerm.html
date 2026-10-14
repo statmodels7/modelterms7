@@ -19,7 +19,7 @@ for te()."><meta property="og:image" content="https://statmodels7.github.io/mode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,30 +74,34 @@ for <code><a href="te.html">te()</a></code>.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The term with <code>X</code>, <code>coef_names</code>, <code>blueprint</code> and <code>penalty</code> filled.</p>
+    <p>The term with <code>X</code>, <code>coef_names</code> and <code>blueprint</code> filled, and with
+<code>penalty</code> filled except where the term declares penalties of its own (a
+penalty factory on the smoother, or <code>by_hyper = "level"</code>), in which case
+<code>penalty</code> is <code>NULL</code> and <code><a href="term_penalties.html">term_penalties()</a></code> returns them.</p>
     </div>
     <div class="section level2">
     <h2 id="the-default-basis">The default basis<a class="anchor" aria-label="anchor" href="#the-default-basis"></a></h2>
-    <p>Where no basis was supplied, each margin gets a
-<code><a href="https://statmodels7.github.io/basis7/reference/bspline_basis.html" class="external-link">basis7::bspline_basis()</a></code> over the observed range of its covariate, padded
-by a thousandth of that range at each end so that the extreme observations
-are strictly inside. A basis given through <code>basis</code> or <code>bases</code> is used with
-its own range, untouched.</p>
+    <p>Each margin is built by its smoother, <code><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">basis7::bspline_smooth()</a></code> by default.
+Unless the smoother sets <code>lower</code> and <code>upper</code>, the basis is placed on the
+observed range of the covariate, padded by a thousandth of that range at each
+end so that the extreme observations are strictly inside.</p>
     </div>
     <div class="section level2">
     <h2 id="one-covariate">One covariate<a class="anchor" aria-label="anchor" href="#one-covariate"></a></h2>
-    <p><code><a href="https://statmodels7.github.io/basis7/reference/dr_basis.html" class="external-link">basis7::dr_basis()</a></code> takes the inner product at the observed values, and the
-block is that basis evaluated there. With <code>linear = TRUE</code> a column
-\((x - \bar{x})/s_x\) is prepended and the penalty is
-\(\mathrm{diag}(0, 1, \dots, 1)\); the center and the scale go into the
-blueprint with the transform. Without it the penalty is the identity.</p>
+    <p>The block is built by <code><a href="https://statmodels7.github.io/basis7/reference/smoother_build.html" class="external-link">basis7::smoother_build()</a></code>, which takes the
+Demmler-Reinsch inner product at the observed values. With the default
+<code><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">basis7::bspline_smooth()</a></code> (<code>null_space = "keep"</code>) a column \((x - \bar{x})/s_x\) is prepended and the
+penalty is \(\mathrm{diag}(0, 1, \dots, 1)\); the center and the scale go
+into the blueprint with the transform. With <code>null_space = "drop"</code> that
+column is absent and the penalty is the identity.</p>
     </div>
     <div class="section level2">
     <h2 id="several-covariates">Several covariates<a class="anchor" aria-label="anchor" href="#several-covariates"></a></h2>
     <p><code><a href="https://statmodels7.github.io/basis7/reference/tensor_basis.html" class="external-link">basis7::tensor_basis()</a></code> combines the margins, and one penalty component per
 margin is carried into the product as \(I \otimes \cdots \otimes P_v
-\otimes \cdots \otimes I\), each \(P_v\) the margin's second-derivative
-Gram normalized to a maximum entry of one.</p>
+\otimes \cdots \otimes I\), each \(P_v\) the margin's roughness matrix at
+the order and the measure that its smoother carries (the second-derivative
+Gram at the defaults), normalized to a maximum entry of one.</p>
 <p>The Kronecker product is taken over the <strong>reversed</strong> blocks, because
 <code><a href="https://statmodels7.github.io/basis7/reference/tensor_basis.html" class="external-link">basis7::tensor_basis()</a></code> varies the first margin fastest. The block is then
 centered by <code><a href="https://statmodels7.github.io/basis7/reference/constrain_basis.html" class="external-link">basis7::constrain_basis()</a></code> over the observed covariates, so it
@@ -108,8 +112,10 @@ has one column fewer than the product of the marginal dimensions.</p>
     <p>A factor <code>by</code> interacts the basis with the level indicators, giving <code>m</code>
 copies of the block and a penalty repeated blockwise; the levels are
 recorded so a prediction uses the same set. A numeric <code>by</code> multiplies the
-basis. The storage is settled here and recorded, an explicit <code>sparse = TRUE</code>
-being refused where there is no factor <code>by</code>.</p>
+basis after an unpenalized constant column, named <code>const</code>, has been put in
+front of it, and the block is not centered. The storage is settled here and
+recorded, an explicit <code>sparse = TRUE</code> being rejected where there is no factor
+<code>by</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

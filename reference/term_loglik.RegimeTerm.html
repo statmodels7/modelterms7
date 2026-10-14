@@ -11,7 +11,7 @@ exact derivatives."><meta property="og:image" content="https://statmodels7.githu
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.95.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,11 +61,12 @@ exact derivatives.</p>
 
 
 <dt id="arg-logdens-score">logdens, score<a class="anchor" aria-label="anchor" href="#arg-logdens-score"></a></dt>
-<dd><p>The log-density and its derivative in the predictor.</p></dd>
+<dd><p>The log-density and its derivative in the predictor,
+each returning one value per observation.</p></dd>
 
 
 <dt id="arg-psi">psi<a class="anchor" aria-label="anchor" href="#arg-psi"></a></dt>
-<dd><p>The parameters, named as <code><a href="term_params.html">term_params()</a></code>.</p></dd>
+<dd><p>The parameters on the parameter scale, named as <code><a href="term_params.html">term_params()</a></code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -75,6 +76,16 @@ exact derivatives.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with <code>loglik</code> and <code>jacobian</code>.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>The density and the score of every observation under every regime are
+computed first, one call of each callback per regime with the whole index
+vector, and the recursion and its first derivatives are then run by the
+compiled kernel <code>regime_forward_cpp()</code>. The derivative in a gap is taken in
+the gap itself. A gap that is not positive and a <code>psi</code> that lacks a
+parameter signal an error, as does a callback that does not return one value
+per observation.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
