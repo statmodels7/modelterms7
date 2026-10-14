@@ -64,7 +64,8 @@
 * `regime()` rejects an infinite `k` or `n_start`, and `gas()` an infinite `p`
   or `q`; `gas()` rejects a formula given in the place of `p` or `q`. The
   message of the marginal term about the location of an explicit prior no
-  longer names a particular family.
+  longer names a particular family, and its message about `n_boot` says
+  that the argument is ignored.
 
 ### Documentation
 

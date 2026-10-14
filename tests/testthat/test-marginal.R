@@ -57,7 +57,7 @@ test_that("the constructor takes the psi ~ random subformula and nothing else", 
   expect_message(jump(x, psi ~ random(~1 | id), marginal = TRUE, c0 = 0.1),
                  "ignored")
   expect_message(jump(x, psi ~ random(~1 | id), marginal = TRUE, n_boot = 5),
-                 "exact profile")
+                 "no restarts")
 })
 
 test_that("the default marginal = FALSE leaves the sharp construction alone", {

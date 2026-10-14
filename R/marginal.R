@@ -333,8 +333,8 @@ MarginalBreakTerm <- S7::new_class(
   }
   if (n_boot_set) {
     message(paste("'n_boot' is the restart count of the working",
-                  "construction; the marginal term starts from the exact",
-                  "profile and declares none."))
+                  "construction, and the marginal construction has no",
+                  "restarts: it is ignored."))
   }
   if (!is.null(by)) {
     stop(paste("'by' does not combine with marginal = TRUE: the grouping",

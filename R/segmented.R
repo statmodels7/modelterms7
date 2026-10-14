@@ -3083,8 +3083,7 @@ seg_profile_rss <- function(term, y, weights = NULL) {
 S7::method(print, SegTerm) <- function(x, ...) {
   if (term_is_built(x)) {
     dv <- names(x@subformulas)
-    cat(sprintf("<SegTerm> '%s': %s, %d break-point%s%s
-", x@label, x@kind,
+    cat(sprintf("<SegTerm> '%s': %s, %d break-point%s%s\n", x@label, x@kind,
                 x@npsi, if (x@npsi == 1L) "" else "s",
                 if (length(dv))
                   sprintf("; %s developed", paste(dv, collapse = ", ")) else ""))
@@ -3092,8 +3091,7 @@ S7::method(print, SegTerm) <- function(x, ...) {
     if (!is.null(sm)) {
       # the width is the transition's, the bent-cable reading, so it is
       # reported rather than treated as a detail
-      cat(sprintf("  smoothed (%s, %s = %s%s)
-", sm$sm@smoother_name,
+      cat(sprintf("  smoothed (%s, %s = %s%s)\n", sm$sm@smoother_name,
                   sm$sm@width_name, format(sm$width, digits = 3),
                   if (!is.null(sm$w_group)) sprintf(", per group [%s, %s]",
                     format(min(sm$w_group), digits = 3),
@@ -3106,16 +3104,13 @@ S7::method(print, SegTerm) <- function(x, ...) {
       rng <- apply(psi, 2L, function(p)
         sprintf("[%s, %s]", format(min(p), digits = 4),
                 format(max(p), digits = 4)))
-      cat("  at (developed): ", paste(rng, collapse = ", "), "
-", sep = "")
+      cat("  at (developed): ", paste(rng, collapse = ", "), "\n", sep = "")
     } else {
       cat("  at: ", paste(format(psi, digits = 4), collapse = ", "),
-          "
-", sep = "")
+          "\n", sep = "")
     }
   } else {
-    cat(sprintf("<SegTerm> '%s': %s (specification)
-", x@label, x@kind))
+    cat(sprintf("<SegTerm> '%s': %s (specification)\n", x@label, x@kind))
   }
   invisible(x)
 }
