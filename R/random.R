@@ -265,6 +265,44 @@ RandomTerm <- S7::new_class(
 #' \eqn{\Sigma = \sigma_b^2} it is the ridge, up to the constant that makes
 #' \eqn{\sigma_b} estimable.
 #'
+#' @section Smooth random effects:
+#' Where the left side of the bar is an [s()] or a [te()] call,
+#' `random(~ s(x) | g)`, each level of `g` has a random curve of its own (a
+#' random surface for [te()]), and the term is a [RandomSmoothTerm()]. With
+#' the smooth's columns split into the null space of its penalty
+#' \eqn{N(x)} and the penalized coordinates \eqn{Z(x)}, group \eqn{i}
+#' contributes
+#'
+#' \deqn{g_i(x) = a_{0i} + N(x)a_i + Z(x)\delta_i, \qquad
+#'   (a_{0i}, a_i) \sim \mathrm{N}(0, \Sigma), \qquad
+#'   \delta_i \sim \mathrm{N}(0, \sigma^2 I),}
+#'
+#' independently over the groups. The null space is whatever the smoother's
+#' operator leaves unpenalized, less the constant: a straight line for a
+#' second-derivative penalty, a sine and a cosine for the harmonic operator,
+#' nothing for a cyclic smoother. The smoother's `null_space` decides what it
+#' contributes: under `"keep"` its columns carry \eqn{\Sigma} with the random
+#' level, under `"shrink"` they join the penalized coordinates, and under
+#' `"drop"` they are absent. `~ 0 + s(x) | g` removes the random level.
+#'
+#' \eqn{\Sigma} is the prior that `distrib` and `correlated` describe for the
+#' within-group columns of an ordinary random effect, here over the random
+#' level and the null space. With an unstructured \eqn{\Sigma} the model does
+#' not depend on the origin and the scale of `x`, nor on the phase of a
+#' periodic one. The penalized coordinates are whitened, so that their prior
+#' is independent with one standard deviation, reported as `sigma` of the
+#' entry `smooth`. A smoother with several smoothing parameters (an adaptive
+#' smoother, an anisotropic tensor product) keeps them: the precision is
+#' \eqn{\sum_k \lambda_k S_k} in every group, and the summary reports
+#' \eqn{\lambda_k^{-1/2}}. All the groups share these hyperparameters, so the
+#' curves have one roughness. The population curve is a separate [s()] term
+#' in the same formula, as in `y ~ s(x) + random(~ s(x) | g)`.
+#'
+#' The smooth is written without `by`, `sparse`, `hyper` or `id`. The
+#' hyperparameters belong to the random effect, and `hyper` and `id` of this
+#' function name them (`sigma.smooth`, `lambda1.smooth`, ...). A covariance
+#' label between two bars is rejected.
+#'
 #' @param formula A bar formula, `~ lhs | g`, with `g`
 #'   evaluating to the grouping variable in the data, or `~ lhs | tag | g`
 #'   with a covariance label in the middle. `g` must not be continuous: a
@@ -331,6 +369,12 @@ RandomTerm <- S7::new_class(
 #' # level per row.
 #' try(term_build(random(~ 1 | x), dd))
 #'
+#' # A smooth random effect: one random curve per level of g.
+#' sd <- data.frame(x = runif(60), g = factor(rep(c("a", "b", "c"), 20)))
+#' rs <- term_build(random(~ s(x, smoother = basis7::bspline_smooth(k = 5)) |
+#'                           g), sd)
+#' term_group(rs)$names
+#'
 #'
 #' # Fitted. The data are simulated from a known truth, so the
 #' # estimates below can be read against it.
@@ -369,6 +413,23 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
       !nzchar(label)) {
     stop("'label' must be a single non-empty character string.",
          call. = FALSE)
+  }
+  sm <- .random_smooth_lhs(parts$within, environment(formula))
+  if (!is.null(sm)) {
+    if (!is.na(parts$tag)) {
+      stop(paste0(
+        "a smooth random effect carries no covariance label: its null space\n",
+        "  and its penalized coordinates have priors of their own, which a\n",
+        "  block shared with other terms would replace."), call. = FALSE)
+    }
+    return(RandomSmoothTerm(
+      label = label, formula = formula, correlated = correlated,
+      distrib = distrib, tag = parts$tag,
+      hyper = as_hyper(hyper, label),
+      ids = check_ids(id, NULL, label),
+      X = NULL, coef_names = character(0),
+      blueprint = list(), penalty = NULL,
+      smooth = sm$term, intercept = sm$intercept))
   }
   RandomTerm(label = label, formula = formula, correlated = correlated,
              distrib = distrib, tag = parts$tag,
@@ -1224,7 +1285,15 @@ S7::method(term_predict, RandomTerm) <- function(term, newdata,
 }
 
 # The within-group design at new rows, from the blueprint the build recorded.
+# A smooth random effect evaluates its smooth there and applies the map the
+# build computed; every other one rebuilds its model matrix.
 .random_within <- function(bp, newdata) {
+  if (identical(bp$kind, "smooth")) {
+    W <- as.matrix(term_predict(bp$inner, newdata)) %*% bp$transform
+    if (isTRUE(bp$intercept)) W <- cbind(1, W)
+    dimnames(W) <- list(NULL, bp$wnames)
+    return(W)
+  }
   mf <- stats::model.frame(bp$terms, newdata, na.action = stats::na.pass,
                            xlev = bp$xlev)
   stats::model.matrix(bp$terms, mf, contrasts.arg = bp$contrasts)

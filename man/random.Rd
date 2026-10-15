@@ -243,6 +243,46 @@ minimizer is the best linear unbiased predictor. At \eqn{d = 1} and
 \eqn{\sigma_b} estimable.
 }
 
+\section{Smooth random effects}{
+
+Where the left side of the bar is an \code{\link[=s]{s()}} or a \code{\link[=te]{te()}} call,
+\code{random(~ s(x) | g)}, each level of \code{g} has a random curve of its own (a
+random surface for \code{\link[=te]{te()}}), and the term is a \code{\link[=RandomSmoothTerm]{RandomSmoothTerm()}}. With
+the smooth's columns split into the null space of its penalty
+\eqn{N(x)} and the penalized coordinates \eqn{Z(x)}, group \eqn{i}
+contributes
+
+\deqn{g_i(x) = a_{0i} + N(x)a_i + Z(x)\delta_i, \qquad
+  (a_{0i}, a_i) \sim \mathrm{N}(0, \Sigma), \qquad
+  \delta_i \sim \mathrm{N}(0, \sigma^2 I),}
+
+independently over the groups. The null space is whatever the smoother's
+operator leaves unpenalized, less the constant: a straight line for a
+second-derivative penalty, a sine and a cosine for the harmonic operator,
+nothing for a cyclic smoother. The smoother's \code{null_space} decides what it
+contributes: under \code{"keep"} its columns carry \eqn{\Sigma} with the random
+level, under \code{"shrink"} they join the penalized coordinates, and under
+\code{"drop"} they are absent. \code{~ 0 + s(x) | g} removes the random level.
+
+\eqn{\Sigma} is the prior that \code{distrib} and \code{correlated} describe for the
+within-group columns of an ordinary random effect, here over the random
+level and the null space. With an unstructured \eqn{\Sigma} the model does
+not depend on the origin and the scale of \code{x}, nor on the phase of a
+periodic one. The penalized coordinates are whitened, so that their prior
+is independent with one standard deviation, reported as \code{sigma} of the
+entry \code{smooth}. A smoother with several smoothing parameters (an adaptive
+smoother, an anisotropic tensor product) keeps them: the precision is
+\eqn{\sum_k \lambda_k S_k} in every group, and the summary reports
+\eqn{\lambda_k^{-1/2}}. All the groups share these hyperparameters, so the
+curves have one roughness. The population curve is a separate \code{\link[=s]{s()}} term
+in the same formula, as in \code{y ~ s(x) + random(~ s(x) | g)}.
+
+The smooth is written without \code{by}, \code{sparse}, \code{hyper} or \code{id}. The
+hyperparameters belong to the random effect, and \code{hyper} and \code{id} of this
+function name them (\code{sigma.smooth}, \code{lambda1.smooth}, ...). A covariance
+label between two bars is rejected.
+}
+
 \examples{
 dd <- data.frame(y = rnorm(9), x = rnorm(9),
                  g = factor(rep(c("a", "b", "c"), 3)))
@@ -273,6 +313,12 @@ identical(term_coef_names(term_build(random(~ 1 | u | g), dd)),
 # A continuous grouping variable is rejected rather than turned into one
 # level per row.
 try(term_build(random(~ 1 | x), dd))
+
+# A smooth random effect: one random curve per level of g.
+sd <- data.frame(x = runif(60), g = factor(rep(c("a", "b", "c"), 20)))
+rs <- term_build(random(~ s(x, smoother = basis7::bspline_smooth(k = 5)) |
+                          g), sd)
+term_group(rs)$names
 
 
 # Fitted. The data are simulated from a known truth, so the

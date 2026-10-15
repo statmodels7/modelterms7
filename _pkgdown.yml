@@ -74,12 +74,13 @@ reference:
   - PenalizedTerm
 - title: The random-effect term
   desc: >
-    Grouped intercepts and slopes, with the effects' distribution
-    attached as the penalty, which is how a random effect enters a
-    penalized likelihood.
+    Grouped intercepts, slopes and smooth curves, with the effects'
+    distribution attached as the penalty, which is how a random effect
+    enters a penalized likelihood.
   contents:
   - random
   - RandomTerm
+  - RandomSmoothTerm
 - title: Smooth terms
   desc: >
     The penalized smooths of one and of several covariates, built on the
