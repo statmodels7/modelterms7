@@ -1,3 +1,15 @@
+# modelterms7 0.98.0
+
+### New
+
+* `term_shift_jacobian()` returns, for a term of the likelihood shape, the
+  posterior mean of the shift that it adds to its equation's predictor and
+  the exact derivative of that mean in the coefficients of every equation and
+  the term's own parameters, the posterior moving with all of them. Methods
+  for `regime()` (forward mode through the forward and backward recursions)
+  and for the marginal break-point terms (the side chain of the step kind,
+  the posterior over the quadrature nodes of the continuous kinds).
+
 # modelterms7 0.97.0
 
 ### New

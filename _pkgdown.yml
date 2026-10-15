@@ -157,6 +157,7 @@ reference:
   - term_fourth
   - term_hessian
   - term_posterior
+  - term_shift_jacobian
   - term_levels
   - term_latent
   - term_level_param
