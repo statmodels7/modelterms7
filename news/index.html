@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.96.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.98.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,22 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.98.0" id="modelterms7-0980">modelterms7 0.98.0<a class="anchor" aria-label="anchor" href="#modelterms7-0980"></a></h2>
+<div class="section level4">
+<h4 id="new-0-98-0">New<a class="anchor" aria-label="anchor" href="#new-0-98-0"></a></h4>
+<ul><li>
+<code><a href="../reference/term_shift_jacobian.html">term_shift_jacobian()</a></code> returns, for a term of the likelihood shape, the posterior mean of the shift that it adds to its equation’s predictor and the exact derivative of that mean in the coefficients of every equation and the term’s own parameters, the posterior moving with all of them. Methods for <code><a href="../reference/regime.html">regime()</a></code> (forward mode through the forward and backward recursions) and for the marginal break-point terms (the side chain of the step kind, the posterior over the quadrature nodes of the continuous kinds).</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.97.0" id="modelterms7-0970">modelterms7 0.97.0<a class="anchor" aria-label="anchor" href="#modelterms7-0970"></a></h2>
+<div class="section level4">
+<h4 id="new-0-97-0">New<a class="anchor" aria-label="anchor" href="#new-0-97-0"></a></h4>
+<ul><li>
+<code><a href="../reference/term_kink_constraints.html">term_kink_constraints()</a></code> returns the rows of the linear constraints that hold a term’s objective on its kinks: the unit vector of a break-point’s position where the position is one coefficient, and the development’s row of the observation where the position is developed over a design, the kink then lying on a hyperplane in the position’s coefficients. Methods for the base class, <code><a href="../reference/seg.html">seg()</a></code> and <code><a href="../reference/nl.html">nl()</a></code>.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.96.0" id="modelterms7-0960">modelterms7 0.96.0<a class="anchor" aria-label="anchor" href="#modelterms7-0960"></a></h2>
 <div class="section level4">

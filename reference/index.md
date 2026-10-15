@@ -47,6 +47,8 @@ structural term implements a filter or a likelihood instead of a block.
   : Is a Term's Block the Jacobian of Its Contribution?
 - [`term_kinks()`](https://statmodels7.github.io/modelterms7/reference/term_kinks.md)
   : Where a Term's Objective Has a Kink
+- [`term_kink_constraints()`](https://statmodels7.github.io/modelterms7/reference/term_kink_constraints.md)
+  : The Linear Constraints a Kink Places on a Term's Coefficients
 - [`term_held()`](https://statmodels7.github.io/modelterms7/reference/term_held.md)
   : Coefficients Held by a Term
 - [`term_tag()`](https://statmodels7.github.io/modelterms7/reference/term_tag.md)
@@ -235,6 +237,8 @@ recursion.
   : The Observed Hessian of a Likelihood Mixed Over States
 - [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)
   : The Smoothed State Probabilities of a Latent Markov Term
+- [`term_shift_jacobian()`](https://statmodels7.github.io/modelterms7/reference/term_shift_jacobian.md)
+  : The Posterior Shift of a Term Mixed Over States, and Its Jacobian
 - [`term_levels()`](https://statmodels7.github.io/modelterms7/reference/term_levels.md)
   : The Levels of a Likelihood-Shaped Structural Term
 - [`term_latent()`](https://statmodels7.github.io/modelterms7/reference/term_latent.md)

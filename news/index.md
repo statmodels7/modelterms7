@@ -1,5 +1,35 @@
 # Changelog
 
+## modelterms7 0.98.0
+
+#### New
+
+- [`term_shift_jacobian()`](https://statmodels7.github.io/modelterms7/reference/term_shift_jacobian.md)
+  returns, for a term of the likelihood shape, the posterior mean of the
+  shift that it adds to its equation’s predictor and the exact
+  derivative of that mean in the coefficients of every equation and the
+  term’s own parameters, the posterior moving with all of them. Methods
+  for
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  (forward mode through the forward and backward recursions) and for the
+  marginal break-point terms (the side chain of the step kind, the
+  posterior over the quadrature nodes of the continuous kinds).
+
+## modelterms7 0.97.0
+
+#### New
+
+- [`term_kink_constraints()`](https://statmodels7.github.io/modelterms7/reference/term_kink_constraints.md)
+  returns the rows of the linear constraints that hold a term’s
+  objective on its kinks: the unit vector of a break-point’s position
+  where the position is one coefficient, and the development’s row of
+  the observation where the position is developed over a design, the
+  kink then lying on a hyperplane in the position’s coefficients.
+  Methods for the base class,
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  and
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md).
+
 ## modelterms7 0.96.0
 
 #### Changes

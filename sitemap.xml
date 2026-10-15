@@ -156,6 +156,9 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_is_built.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.SegTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_kink_constraints.NlTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_kink_constraints.SegTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_kink_constraints.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_kinks.NlTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_kinks.SegTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_kinks.html</loc></url>
@@ -208,6 +211,9 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_refresh.SegTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_refresh.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_search.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_shift_jacobian.MarginalBreakTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_shift_jacobian.RegimeTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_shift_jacobian.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_simulate.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_simulate.MarginalBreakTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_simulate.RegimeTerm.html</loc></url>
