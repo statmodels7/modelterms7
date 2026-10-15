@@ -2176,6 +2176,51 @@ S7::method(term_kinks, NlTerm) <- function(term, coef = NULL, ...) {
   sort(unique(as.integer(out)))
 }
 
+#' @title The Constraints of a Kinked Sub-Term, Carried to a Nonlinear Term
+#' @name term_kink_constraints.NlTerm
+#'
+#' @description
+#' The rows of [term_kink_constraints()] of every sharp [seg()] sub-term that
+#' develops a parameter, placed in the columns of the term's coefficients that
+#' the sub-term owns. Every other nonlinear term has no rows.
+#'
+#' @param term A built [NlTerm()].
+#' @param coef The term's coefficients. `NULL` reads the stored ones.
+#' @param ... Unused.
+#'
+#' @return A numeric matrix with one column per coefficient of the term and
+#'   one row per constraint.
+#'
+#' @examples
+#' d <- data.frame(t = seq(0, 10, length.out = 41), x = rep(1:2, length.out = 41))
+#' b <- term_build(nl(~ a * exp(-r * x), r ~ seg(t),
+#'                    start = list(a = 2, r = 0.5)), d)
+#' term_kink_constraints(b)
+#'
+#' @keywords internal
+S7::method(term_kink_constraints, NlTerm) <- function(term, coef = NULL, ...) {
+  bp <- term@blueprint
+  if (!length(bp)) stop("the term is not built.", call. = FALSE)
+  cf <- .nl_coef(bp, coef)
+  p <- length(cf)
+  rows <- list()
+  for (q in bp$params) {
+    if (!isTRUE(bp$mobile[[q]])) next
+    idx <- bp$index[[q]]
+    for (k in seq_along(bp$subs[[q]])) {
+      if (!bp$sub_moves[[q]][[k]]) next
+      gi <- idx[bp$sub_cols[[q]][[k]]]
+      Ak <- term_kink_constraints(bp$subs[[q]][[k]], cf[gi])
+      if (!nrow(Ak)) next
+      A <- matrix(0, nrow(Ak), p)
+      A[, gi] <- Ak
+      rows[[length(rows) + 1L]] <- A
+    }
+  }
+  if (!length(rows)) return(matrix(0, 0, p))
+  unique(do.call(rbind, rows))
+}
+
 #' @title The Contribution of a Term at Its Current Coefficients
 #'
 #' @description

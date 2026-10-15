@@ -67,3 +67,34 @@ test_that("a developed break-point names its intercept and that group's deviatio
   cf[ix[1L]] <- cf[ix[1L]] + 1e-3
   expect_identical(term_kinks(b, cf), integer(0))
 })
+
+test_that("term_kink_constraints() gives the row of the hyperplane a developed break-point sits on", {
+  d <- kink_data()
+  b <- term_build(seg(x), d)
+  expect_identical(term_kink_constraints(b, c(0.5, 2, 6)), matrix(c(0, 0, 1), 1L))
+  expect_identical(dim(term_kink_constraints(b, c(0.5, 2, 6.1))), c(0L, 3L))
+  expect_identical(dim(term_kink_constraints(term_build(linpar(~ x), d))),
+                   c(0L, 2L))
+  set.seed(1)
+  dw <- data.frame(x = runif(60, 0, 10), w = runif(60))
+  bw <- term_build(seg(x, psi ~ w), dw)
+  ix <- bw@blueprint$index$psi1
+  cf <- bw@blueprint$coef
+  cf[ix[1L]] <- dw$x[1L] - cf[ix[2L]] * dw$w[1L]
+  A <- term_kink_constraints(bw, cf)
+  expect_identical(nrow(A), 1L)
+  expect_equal(A[1L, ix], c(1, dw$w[1L]))
+  expect_true(all(A[1L, -ix] == 0))
+  # term_kinks() names both coordinates; the constraint leaves one direction
+  expect_identical(term_kinks(bw, cf), ix)
+  # a random development: the intercept and that group's deviation, together
+  set.seed(1)
+  dd <- data.frame(x = runif(90, 0, 10), id = factor(rep(1:3, each = 30)))
+  br <- term_build(seg(x, psi ~ random(~1 | id)), dd)
+  ir <- br@blueprint$index$psi1
+  cr <- br@blueprint$coef
+  cr[ir[1L]] <- dd$x[dd$id == "2"][1L] - cr[ir[3L]]
+  Ar <- term_kink_constraints(br, cr)
+  expect_identical(nrow(Ar), 1L)
+  expect_equal(Ar[1L, ir], c(1, 0, 1, 0))
+})

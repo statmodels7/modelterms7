@@ -2050,6 +2050,64 @@ S7::method(term_kinks, SegTerm) <- function(term, coef = NULL, ...) {
   sort(unique(as.integer(out)))
 }
 
+#' @title The Constraints a Break-Point on an Observation Places
+#' @name term_kink_constraints.SegTerm
+#'
+#' @description
+#' For each break-point of a sharp [seg()] that sits on an observation at the
+#' coefficients given, the row of the linear constraint that keeps it there:
+#' the unit vector of its position where the position is not developed, and
+#' the development's row \eqn{z_j} at the position's coefficients where it is,
+#' the kink lying on the hyperplane \eqn{z_j^\top\kappa = x_j}.
+#'
+#' @param term A built [seg()] term.
+#' @param coef The term's coefficients. `NULL` reads the stored ones.
+#' @param ... Unused.
+#'
+#' @return A numeric matrix with one column per coefficient of the term and
+#'   one row per distinct constraint, with no rows where no break-point sits
+#'   on an observation. A smoothed [seg()] has no rows.
+#'
+#' @examples
+#' set.seed(1)
+#' d <- data.frame(x = runif(60, 0, 10), w = runif(60))
+#' b <- term_build(seg(x, psi ~ w), d)
+#' ix <- b@blueprint$index$psi1
+#' cf <- b@blueprint$coef
+#' # the break-point of the first observation placed on it
+#' cf[ix[1L]] <- d$x[1L] - cf[ix[2L]] * d$w[1L]
+#' term_kink_constraints(b, cf)
+#'
+#' @keywords internal
+S7::method(term_kink_constraints, SegTerm) <- function(term, coef = NULL,
+                                                      ...) {
+  bp <- term@blueprint
+  if (!length(bp)) stop("the term is not built.", call. = FALSE)
+  cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
+  p <- length(cf)
+  if (!identical(bp$kind, "seg") || !is.null(bp$smooth)) return(matrix(0, 0, p))
+  n <- length(bp$xv)
+  pos <- .seg_positions(bp, cf, n)
+  tie <- .seg_tie(bp)
+  rows <- list()
+  for (k in seq_len(bp$npsi)) {
+    psi <- pos$psi[, k]
+    on <- which(abs(bp$xv - psi) <= tie &
+                  psi > bp$lim[1L] & psi < bp$lim[2L])
+    if (!length(on)) next
+    idx <- bp$index[[paste0("psi", k)]]
+    z <- bp$Z[[paste0("psi", k)]]
+    zz <- if (is.null(z)) matrix(1, length(on), 1L) else
+      as.matrix(z[on, , drop = FALSE])
+    zz <- unique(zz)
+    A <- matrix(0, nrow(zz), p)
+    A[, idx] <- zz
+    rows[[length(rows) + 1L]] <- A
+  }
+  if (!length(rows)) return(matrix(0, 0, p))
+  unique(do.call(rbind, rows))
+}
+
 #' @title The Components of a Break-Point Term
 #' @name term_components.SegTerm
 #'

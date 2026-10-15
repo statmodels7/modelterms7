@@ -43,6 +43,7 @@ reference:
   - term_coef_draw
   - term_jacobian_block
   - term_kinks
+  - term_kink_constraints
   - term_held
   - term_tag
   - term_group

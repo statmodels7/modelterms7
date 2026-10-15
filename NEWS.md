@@ -1,3 +1,14 @@
+# modelterms7 0.97.0
+
+### New
+
+* `term_kink_constraints()` returns the rows of the linear constraints that
+  hold a term's objective on its kinks: the unit vector of a break-point's
+  position where the position is one coefficient, and the development's row
+  of the observation where the position is developed over a design, the kink
+  then lying on a hyperplane in the position's coefficients. Methods for the
+  base class, `seg()` and `nl()`.
+
 # modelterms7 0.96.0
 
 ### Changes

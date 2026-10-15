@@ -1039,6 +1039,53 @@ S7::method(term_kinks, model_term) <- function(term, coef = NULL, ...) {
   integer(0)
 }
 
+#' @title The Linear Constraints a Kink Places on a Term's Coefficients
+#'
+#' @description
+#' The rows of the linear constraints that hold the term's objective on its
+#' kinks at the coefficients given: one row per constraint, one column per
+#' coefficient of the term. A perturbation \eqn{d} of the coefficients keeps
+#' the kinks where they are if and only if \eqn{A d = 0}.
+#'
+#' @details
+#' Where [term_kinks()] names a coordinate, the kink is held by holding that
+#' coordinate, and the row is the corresponding unit vector; that is the base
+#' method's answer. A break-point whose position is developed over a design,
+#' \eqn{\psi_i = z_i^\top\kappa}, sits on an observation \eqn{j} along the
+#' hyperplane \eqn{z_j^\top\kappa = x_j}, so the row of that constraint is
+#' \eqn{z_j} and the coefficients can still move along the hyperplane. The
+#' [seg()] method returns those rows and the [nl()] method carries the rows of
+#' a [seg()] sub-term to the term's coefficients. Rows that repeat are given
+#' once.
+#'
+#' @param term A built term.
+#' @param coef The term's coefficients, `NULL` for the stored ones.
+#' @param ... Passed to methods. The shipped methods do not use it.
+#'
+#' @return A numeric matrix with one column per coefficient of the term and one
+#'   row per constraint, with no rows where the term has no kink at `coef`.
+#'
+#' @seealso [term_kinks()], [seg()].
+#'
+#' @examples
+#' d <- data.frame(x = seq(0, 10, length.out = 41))
+#' term_kink_constraints(term_build(seg(x), d), c(0.5, 2, 6))
+#' term_kink_constraints(term_build(seg(x), d), c(0.5, 2, 6.1))
+#'
+#' @export
+#' @aliases term_kink_constraints.model_term
+term_kink_constraints <- S7::new_generic("term_kink_constraints", "term",
+  function(term, coef = NULL, ...) S7::S7_dispatch())
+
+S7::method(term_kink_constraints, model_term) <- function(term, coef = NULL,
+                                                         ...) {
+  p <- if (is.null(coef)) term_npar(term) else length(coef)
+  k <- term_kinks(term, coef = coef, ...)
+  A <- matrix(0, length(k), p)
+  if (length(k)) A[cbind(seq_along(k), k)] <- 1
+  A
+}
+
 #' @title The Covariance Label of a Term
 #'
 #' @description
