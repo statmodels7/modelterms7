@@ -10,6 +10,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/NlTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/RandomSmoothTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/RandomTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/SegTerm.html</loc></url>
@@ -51,6 +52,9 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_mv_ok.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_parts.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_retired.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_smooth_components.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_smooth_lhs.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_smooth_split.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-random_tag.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-resolve_sparse.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/edf.html</loc></url>
@@ -115,6 +119,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.MarginalBreakTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.NlTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.PenalizedTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.RandomSmoothTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.RandomTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.SegTerm.html</loc></url>

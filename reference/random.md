@@ -271,6 +271,52 @@ the minimizer is the best linear unbiased predictor. At \\d = 1\\ and
 \\\Sigma = \sigma_b^2\\ it is the ridge, up to the constant that makes
 \\\sigma_b\\ estimable.
 
+## Smooth random effects
+
+Where the left side of the bar is an
+[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) or a
+[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
+call, `random(~ s(x) | g)`, each level of `g` has a random curve of its
+own (a random surface for
+[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)),
+and the term is a
+[`RandomSmoothTerm()`](https://statmodels7.github.io/modelterms7/reference/RandomSmoothTerm.md).
+With the smooth's columns split into the null space of its penalty
+\\N(x)\\ and the penalized coordinates \\Z(x)\\, group \\i\\ contributes
+
+\$\$g_i(x) = a\_{0i} + N(x)a_i + Z(x)\delta_i, \qquad (a\_{0i}, a_i)
+\sim \mathrm{N}(0, \Sigma), \qquad \delta_i \sim \mathrm{N}(0, \sigma^2
+I),\$\$
+
+independently over the groups. The null space is whatever the smoother's
+operator leaves unpenalized, less the constant: a straight line for a
+second-derivative penalty, a sine and a cosine for the harmonic
+operator, nothing for a cyclic smoother. The smoother's `null_space`
+decides what it contributes: under `"keep"` its columns carry \\\Sigma\\
+with the random level, under `"shrink"` they join the penalized
+coordinates, and under `"drop"` they are absent. `~ 0 + s(x) | g`
+removes the random level.
+
+\\\Sigma\\ is the prior that `distrib` and `correlated` describe for the
+within-group columns of an ordinary random effect, here over the random
+level and the null space. With an unstructured \\\Sigma\\ the model does
+not depend on the origin and the scale of `x`, nor on the phase of a
+periodic one. The penalized coordinates are whitened, so that their
+prior is independent with one standard deviation, reported as `sigma` of
+the entry `smooth`. A smoother with several smoothing parameters (an
+adaptive smoother, an anisotropic tensor product) keeps them: the
+precision is \\\sum_k \lambda_k S_k\\ in every group, and the summary
+reports \\\lambda_k^{-1/2}\\. All the groups share these
+hyperparameters, so the curves have one roughness. The population curve
+is a separate
+[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) term
+in the same formula, as in `y ~ s(x) + random(~ s(x) | g)`.
+
+The smooth is written without `by`, `sparse`, `hyper` or `id`. The
+hyperparameters belong to the random effect, and `hyper` and `id` of
+this function name them (`sigma.smooth`, `lambda1.smooth`, ...). A
+covariance label between two bars is rejected.
+
 ## References
 
 Laird, N. M. and Ware, J. H. (1982). Random-effects models for
@@ -326,6 +372,13 @@ try(term_build(random(~ 1 | x), dd))
 #>   values are labels rather than measurements: its levels would be the
 #>   formatted numbers, one group per distinct value. Write factor(x) if
 #>   they really are labels.
+
+# A smooth random effect: one random curve per level of g.
+sd <- data.frame(x = runif(60), g = factor(rep(c("a", "b", "c"), 20)))
+rs <- term_build(random(~ s(x, smoother = basis7::bspline_smooth(k = 5)) |
+                          g), sd)
+term_group(rs)$names
+#> [1] "(Intercept)" "lin"         "z1"          "z2"          "z3"         
 
 
 # Fitted. The data are simulated from a known truth, so the

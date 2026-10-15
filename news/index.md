@@ -1,5 +1,26 @@
 # Changelog
 
+## modelterms7 0.99.0
+
+#### New
+
+- [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
+  builds a smooth random effect when the left side of the bar is an
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) or a
+  [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
+  call: `random(~ s(x) | g)` gives each level of `g` a random curve, and
+  `random(~ te(x, z) | g)` a random surface. The term is a
+  `RandomSmoothTerm`, a subclass of `RandomTerm`. The null space of the
+  smooth, less the constant, joins the random level under the prior that
+  `distrib` and `correlated` describe (an unstructured Gaussian by
+  default). The penalized coordinates are whitened and carry one
+  standard deviation, or one smoothing parameter per component, shared
+  by the groups, for an adaptive smoother or an anisotropic tensor
+  product. The `null_space` of the smoother decides what the null space
+  contributes, and `~ 0 + s(x) | g` removes the random level. The null
+  space of a tensor product is rotated out of its coordinates. Requires
+  penalties7 0.32.0.
+
 ## modelterms7 0.98.0
 
 #### New

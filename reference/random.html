@@ -15,7 +15,7 @@ coefficients, which is how a random effect enters a penalized likelihood."><meta
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.98.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -287,6 +287,43 @@ minimizer is the best linear unbiased predictor. At \(d = 1\) and
 \(\sigma_b\) estimable.</p>
     </div>
     <div class="section level2">
+    <h2 id="smooth-random-effects">Smooth random effects<a class="anchor" aria-label="anchor" href="#smooth-random-effects"></a></h2>
+
+
+<p>Where the left side of the bar is an <code><a href="s.html">s()</a></code> or a <code><a href="te.html">te()</a></code> call,
+<code>random(~ s(x) | g)</code>, each level of <code>g</code> has a random curve of its own (a
+random surface for <code><a href="te.html">te()</a></code>), and the term is a <code><a href="RandomSmoothTerm.html">RandomSmoothTerm()</a></code>. With
+the smooth's columns split into the null space of its penalty
+\(N(x)\) and the penalized coordinates \(Z(x)\), group \(i\)
+contributes</p>
+<p>$$g_i(x) = a_{0i} + N(x)a_i + Z(x)\delta_i, \qquad
+  (a_{0i}, a_i) \sim \mathrm{N}(0, \Sigma), \qquad
+  \delta_i \sim \mathrm{N}(0, \sigma^2 I),$$</p>
+<p>independently over the groups. The null space is whatever the smoother's
+operator leaves unpenalized, less the constant: a straight line for a
+second-derivative penalty, a sine and a cosine for the harmonic operator,
+nothing for a cyclic smoother. The smoother's <code>null_space</code> decides what it
+contributes: under <code>"keep"</code> its columns carry \(\Sigma\) with the random
+level, under <code>"shrink"</code> they join the penalized coordinates, and under
+<code>"drop"</code> they are absent. <code>~ 0 + s(x) | g</code> removes the random level.</p>
+<p>\(\Sigma\) is the prior that <code>distrib</code> and <code>correlated</code> describe for the
+within-group columns of an ordinary random effect, here over the random
+level and the null space. With an unstructured \(\Sigma\) the model does
+not depend on the origin and the scale of <code>x</code>, nor on the phase of a
+periodic one. The penalized coordinates are whitened, so that their prior
+is independent with one standard deviation, reported as <code>sigma</code> of the
+entry <code>smooth</code>. A smoother with several smoothing parameters (an adaptive
+smoother, an anisotropic tensor product) keeps them: the precision is
+\(\sum_k \lambda_k S_k\) in every group, and the summary reports
+\(\lambda_k^{-1/2}\). All the groups share these hyperparameters, so the
+curves have one roughness. The population curve is a separate <code><a href="s.html">s()</a></code> term
+in the same formula, as in <code>y ~ s(x) + random(~ s(x) | g)</code>.</p>
+<p>The smooth is written without <code>by</code>, <code>sparse</code>, <code>hyper</code> or <code>id</code>. The
+hyperparameters belong to the random effect, and <code>hyper</code> and <code>id</code> of this
+function name them (<code>sigma.smooth</code>, <code>lambda1.smooth</code>, ...). A covariance
+label between two bars is rejected.</p>
+    </div>
+    <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
     <p>Laird, N. M. and Ware, J. H. (1982). Random-effects models for
 longitudinal data. <em>Biometrics</em> 38, 963-974.</p>
@@ -339,6 +376,13 @@ longitudinal data. <em>Biometrics</em> 38, 963-974.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   values are labels rather than measurements: its levels would be the</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   formatted numbers, one group per distinct value. Write factor(x) if</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   they really are labels.</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># A smooth random effect: one random curve per level of g.</span></span></span>
+<span class="r-in"><span><span class="va">sd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">60</span><span class="op">)</span>, g <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span><span class="op">)</span>, <span class="fl">20</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">rs</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu">random</span><span class="op">(</span><span class="op">~</span> <span class="fu"><a href="s.html">s</a></span><span class="op">(</span><span class="va">x</span>, smoother <span class="op">=</span> <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span><span class="op">)</span> <span class="op">|</span></span></span>
+<span class="r-in"><span>                          <span class="va">g</span><span class="op">)</span>, <span class="va">sd</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="term_group.html">term_group</a></span><span class="op">(</span><span class="va">rs</span><span class="op">)</span><span class="op">$</span><span class="va">names</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "(Intercept)" "lin"         "z1"          "z2"          "z3"         </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Fitted. The data are simulated from a known truth, so the</span></span></span>

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.98.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,14 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.99.0" id="modelterms7-0990">modelterms7 0.99.0<a class="anchor" aria-label="anchor" href="#modelterms7-0990"></a></h2>
+<div class="section level4">
+<h4 id="new-0-99-0">New<a class="anchor" aria-label="anchor" href="#new-0-99-0"></a></h4>
+<ul><li>
+<code><a href="../reference/random.html">random()</a></code> builds a smooth random effect when the left side of the bar is an <code><a href="../reference/s.html">s()</a></code> or a <code><a href="../reference/te.html">te()</a></code> call: <code>random(~ s(x) | g)</code> gives each level of <code>g</code> a random curve, and <code>random(~ te(x, z) | g)</code> a random surface. The term is a <code>RandomSmoothTerm</code>, a subclass of <code>RandomTerm</code>. The null space of the smooth, less the constant, joins the random level under the prior that <code>distrib</code> and <code>correlated</code> describe (an unstructured Gaussian by default). The penalized coordinates are whitened and carry one standard deviation, or one smoothing parameter per component, shared by the groups, for an adaptive smoother or an anisotropic tensor product. The <code>null_space</code> of the smoother decides what the null space contributes, and <code>~ 0 + s(x) | g</code> removes the random level. The null space of a tensor product is rotated out of its coordinates. Requires penalties7 0.32.0.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.98.0" id="modelterms7-0980">modelterms7 0.98.0<a class="anchor" aria-label="anchor" href="#modelterms7-0980"></a></h2>
 <div class="section level4">
