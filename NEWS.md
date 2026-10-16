@@ -1,3 +1,12 @@
+# modelterms7 0.99.1
+
+* `random()` accepts a grouping variable with one level when the left side of
+  the bar yields more than one column. The effects of the term are then a
+  single draw of a vector, so that `random(~ 0 + f | g, distrib = d)` with a
+  constant `g` and a multivariate `d` over the levels of `f` (an `ar1()`
+  covariance, for example) describes a latent process. A term with a single
+  random effect (one level and one column) is still rejected.
+
 # modelterms7 0.99.0
 
 ### New

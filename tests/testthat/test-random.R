@@ -285,7 +285,11 @@ test_that("degenerate inputs are rejected", {
   expect_error(random(y ~ 1 | g), "one-sided")
   expect_error(random(~ 1 | g, correlated = NA), "TRUE or FALSE")
   expect_error(term_build(random(~ 1 | g), data.frame(g = rep("a", 4))),
-               "at least two levels")
+               "single random effect")
+  # one level with several within-group columns is one draw of a vector
+  d1 <- data.frame(f = factor(1:4), g = rep("a", 4))
+  b1 <- term_build(random(~ 0 + f | g), d1)
+  expect_identical(dim(term_matrix(b1)), c(4L, 4L))
 })
 
 test_that("the removed arguments are reported by name", {

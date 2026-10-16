@@ -891,7 +891,10 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' rows of the data are not ordered by group, the rows of the block follow the
 #' data and its columns keep this order.
 #'
-#' A grouping variable with fewer than two levels is rejected.
+#' A term with a single random effect (one level and one within-group column)
+#' is rejected. One level with several within-group columns is accepted: the
+#' effects are then a single draw of a vector, such as a latent process over
+#' the levels of a within-group factor.
 #'
 #' # The penalty, and what the build checks
 #'
@@ -943,10 +946,6 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
   parts <- .random_parts(term@formula)
   g <- .random_group(parts$group, data)
   m <- nlevels(g)
-  if (m < 2L) {
-    stop("the grouping variable must have at least two levels.",
-         call. = FALSE)
-  }
 
   wf <- stats::as.formula(call("~", parts$within),
                           env = environment(term@formula))
@@ -958,6 +957,14 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
   d <- ncol(W)
   if (d < 1L) {
     stop("the left side of the bar yields no columns.", call. = FALSE)
+  }
+  # one group is a legitimate term when it carries several effects: a latent
+  # process over the levels of a within-group factor is a single draw of a
+  # d-dimensional vector
+  if (m * d < 2L) {
+    stop(paste0(
+      "the term has a single random effect: the grouping variable has one\n",
+      "  level and the left side of the bar one column."), call. = FALSE)
   }
 
   Z <- .random_block(g, W)
