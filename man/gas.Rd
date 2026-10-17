@@ -29,8 +29,8 @@ per parameter to be developed with covariates, e.g.
 
 \item{by}{An optional grouping variable, evaluated in the data; each
 group is filtered independently, from its own starting level. A
-formula here is the shorthand giving the same subformula to every
-parameter, and then no grouping is implied.}
+formula here is the shorthand that gives the same subformula to every
+parameter, and the term then does not imply any grouping.}
 
 \item{time}{An optional ordering variable, evaluated in the data.}
 
@@ -52,9 +52,10 @@ An object of class \code{\link[=GasTerm]{GasTerm()}} (a specification; see
 \code{\link[=term_build]{term_build()}}).
 }
 \description{
-A generalized autoregressive score component (Creal et al., 2013; Harvey,
-2013): a level \eqn{f_t} added to the linear predictor, driven by the score
-of the observation density at the previous times,
+\code{gas()} constructs a generalized autoregressive score component (Creal et
+al., 2013; Harvey, 2013): a level \eqn{f_t} that is added to the linear
+predictor and driven by the score of the observation density at the
+previous times,
 \deqn{f_t = \omega + \sum_{i=1}^{p} \kappa_i s_{t-i} +
   \sum_{j=1}^{q} \xi_j f_{t-j},}
 with \eqn{s_t = \partial \ell_t / \partial \eta_t} the derivative of the
@@ -65,16 +66,16 @@ when \code{scaling} is not zero.
 \details{
 The term adds no columns. The predictor at one time depends on the
 data at the previous ones, so the contribution cannot be written as a
-block, and \code{\link[=term_filter]{term_filter()}} runs the recursion instead. That is what puts
-it on the structural branch.
+block, and \code{\link[=term_filter]{term_filter()}} runs the recursion instead. For this reason the
+term belongs to the structural branch.
 
-What drives the recursion is the score of whatever distribution the
-model carries, so the same term is a GARCH-like volatility model when
-it enters the scale of a Gaussian, a dynamic count model when it enters
-the mean of a Poisson, and a robust location filter when it enters a
-Student t: a heavy-tailed score is bounded in the observation, so an
-outlier moves the level by a bounded amount instead of in proportion to
-its size.
+The score of the distribution that the model carries drives the
+recursion, so the same term is a GARCH-like volatility model when it
+enters the scale of a Gaussian, a dynamic count model when it enters the
+mean of a Poisson, and a robust location filter when it enters a Student
+t. A heavy-tailed score is bounded in the observation, so an outlier
+moves the level by a bounded amount instead of in proportion to its
+size.
 
 \subsection{The parameters and their chart}{
 The parameters are the level \eqn{\omega}, the score loadings
@@ -82,15 +83,15 @@ The parameters are the level \eqn{\omega}, the score loadings
 unconstrained scale of a link, and \code{links} overrides any of them;
 the defaults are the following.
 
-The level carries the identity, being unconstrained. The loadings carry
-the \strong{log} link: a positive loading responds in the direction of the
-score, which is the case the score-driven literature writes, and
-positivity is then structural. A subformula develops the loading on the
+The level carries the identity link because it is unconstrained. The
+loadings carry the log link: a positive loading responds in the direction
+of the score, which is the case that the score-driven literature writes,
+and positivity is then structural. A subformula develops the loading on the
 log scale, so every group and every observation has a positive loading.
 A loading that must be free in sign takes the identity link, which is set
 with \code{links = list(kappa1 = linkfunctions7::identity_link())}.
 
-The persistence is carried by \strong{partial autocorrelations} and not by the
+The persistence is carried by partial autocorrelations and not by the
 coefficients \eqn{\xi_j} directly. The stationary region of an
 autoregression is not a box, so a collection of scalar links cannot
 represent it, whereas the partial autocorrelations each range over
@@ -106,18 +107,18 @@ is stationary at every observation.
 }
 
 \subsection{One parameter at a time}{
-The level this term drives is a scalar, so it enters the predictor of
-one distribution parameter. In the general formulation the level is a
-vector with one entry per modeled parameter, \eqn{\omega} a vector and
-the loadings \eqn{A_i} and \eqn{B_j} matrices, which lets the scale
-respond to the score of the location and the other way round. The
+The level that this term drives is a scalar, so it enters the predictor
+of one distribution parameter. In the general formulation the level is a
+vector with one entry per modeled parameter, \eqn{\omega} is a vector,
+and the loadings \eqn{A_i} and \eqn{B_j} are matrices. This lets the
+scale respond to the score of the location and the other way round. The
 recursion generalizes mechanically, and so does the derivative
-propagated with it; what is missing is a way to say that one filter
-spans several parameters, since a term written inside the formula of
-one parameter has no place to declare it. That belongs to the model
-layer. The persistence would also need a different chart: the
-partial-autocorrelation construction above is a scalar one, and the
-stationary region of a matrix autoregression is a bound on the
+propagated with it. The package has no way to declare that one filter
+spans several parameters, because a term written inside the formula of
+one parameter has no place for such a declaration. The declaration
+belongs to the model layer. The persistence would also need a different
+chart: the partial-autocorrelation construction above is a scalar one, and
+the stationary region of a matrix autoregression is a bound on the
 spectral radius of its companion matrix, which is not a box.
 }
 
@@ -168,7 +169,8 @@ and persistence, and their constants measure different quantities. The
 score has zero conditional mean, so the level fluctuates around the fixed
 point of the recursion,
 \deqn{\mathrm{E}[f_t] = \frac{\omega}{1 - \sum_{j=1}^{q} \xi_j},}
-and this is what the intercept estimates when \eqn{\omega} is held:
+and the intercept estimates this quantity when \eqn{\omega} is held.
+Therefore
 \deqn{\eta_t = c + f_t \;\text{with}\; \omega = 0
   \qquad\text{and}\qquad
   \eta_t = f_t \;\text{with}\; c = \frac{\omega}{1 - \sum_j \xi_j}}
@@ -189,14 +191,14 @@ Without \code{time} the rows are taken in the order in which they appear.
 
 \subsection{A parameter developed with covariates}{
 A two-sided formula in \code{...} whose left side names a parameter
-develops it as \eqn{\psi_{j,t} = g_j^{-1}(z_t^\top\gamma_j)}, the
-design \eqn{Z} built from the right-hand side through
-\code{\link[=interpret_formula]{interpret_formula()}}, so it takes the additive terms of the package
-whose block does not move with their coefficients:
+develops it as \eqn{\psi_{j,t} = g_j^{-1}(z_t^\top\gamma_j)}, where the
+design \eqn{Z} is built from the right-hand side through
+\code{\link[=interpret_formula]{interpret_formula()}}, so the design takes the additive terms of
+the package whose block does not move with their coefficients:
 \preformatted{gas(p = 1, q = 1, omega ~ ridge(~g), kappa1 ~ s(x),
     pacf1 ~ random(~1 | id), by = id)}
 The development acts on the unconstrained scale of the parameter's own
-link. That is what keeps every per-observation value inside the
+link, and therefore every per-observation value stays inside the
 parameter's own set whatever the coefficients are: a loading on the
 log link is positive at every observation, a persistence on the rhobit
 chart is inside \eqn{(-1, 1)} at every observation, and at \eqn{q = 1}
@@ -228,7 +230,7 @@ departures of the groups that do not need one exactly to zero.
 
 The departures act on the unconstrained scale of the parameter's chart,
 so a persistence stays inside \eqn{(-1, 1)} whatever the departure is.
-Their penalty is also what identifies them: a population value and
+The penalty on the departures also identifies them: a population value and
 \eqn{m} departures are \eqn{m+1} numbers describing \eqn{m} group
 values, so without the penalty the likelihood is flat along one
 direction per developed parameter. This is the parametrization of a
@@ -242,7 +244,7 @@ rejected by name; the subformula takes their place.
 }
 }
 \examples{
-# A level, one loading and one persistence coordinate.
+# The term has a level, one loading and one persistence coordinate.
 term_params(gas(p = 1, q = 1))
 term_params(gas(p = 2, q = 2))
 
@@ -252,7 +254,8 @@ vapply(term_links(gas(p = 1, q = 2)), function(l) l@link_name,
        character(1))
 
 # Running the filter: the term supplies the recursion and the caller
-# supplies the density's score and curvature. Here a Gaussian mean.
+# supplies the density's score and curvature. Here the predictor is a
+# Gaussian mean.
 set.seed(1)
 dd <- data.frame(t = 1:60, y = c(rnorm(30), rnorm(30, 3)))
 b <- term_build(gas(p = 1, q = 1, time = t), dd)
@@ -279,7 +282,7 @@ fd <- vapply(1:3, function(j) {
 }, numeric(1))
 max(abs(colSums(out$jacobian) - fd))
 
-# A panel: each group filtered from its own starting level.
+# A panel: the filter runs on each group from its own starting level.
 dd$id <- rep(1:3, each = 20)
 term_build(gas(p = 1, q = 1, by = id, time = t), dd)
 
@@ -291,10 +294,11 @@ term_params(gb)
 vapply(term_penalties(gb), function(e) e$name, character(1))
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The term is fitted. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
-  # drawn from the recursion the term implements, with a gaussian mean
+  # The series is drawn from the recursion that the term implements,
+  # with a gaussian mean.
   set.seed(2)
   om <- 0.05; al <- 0.3; be <- 0.9
   lev <- om / (1 - be)
@@ -306,7 +310,7 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   fd <- data.frame(t = seq_len(600), y = yy)
   ft <- statmodels7::statmod(y ~ 0 + gas(p = 1, q = 1, time = t),
                              distributions7::gaussian1_distrib(), fd)
-  # truth: omega 0.05, kappa 0.3, xi 0.9. xi is reported as the
+  # The truth is omega 0.05, kappa 0.3, xi 0.9. xi is reported as the
   # autoregressive coefficient, whereas the estimated coordinate is a
   # partial autocorrelation.
   print(round(coef(ft)$mu, 3))

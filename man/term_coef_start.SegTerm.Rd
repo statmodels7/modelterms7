@@ -15,10 +15,10 @@ observation of the build data, or \code{NULL} for the unit changes.}
 A numeric vector, one value per column of the block.
 }
 \description{
-The start \code{\link[=term_build]{term_build()}} computed: the break-points at the positions
-\code{psi} names or at the interior quantiles of the covariate, and unit
-changes. Where \code{target} is given (the response on the scale of the
-predictor) and no coefficient carries a development, the slope and the
+Returns the start that \code{\link[=term_build]{term_build()}} computed: the break-points at the
+positions that \code{psi} names or at the interior quantiles of the covariate,
+and unit changes. Where \code{target} is given (the response on the scale of the
+predictor) and the coefficients carry no development, the slope and the
 changes are instead the least-squares coefficients of \code{target} on an
 intercept and the term's exact columns at the starting positions, which
 puts the starting mean near the data whatever the scale of the covariate.

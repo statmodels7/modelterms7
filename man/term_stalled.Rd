@@ -16,26 +16,26 @@ term_stalled(term, ...)
 A single logical.
 }
 \description{
-\code{TRUE} when a term whose block is refreshed has not settled and its
+Returns \code{TRUE} when a term whose block is refreshed has not settled and its
 iteration has no means left of bringing it to rest, so further refreshes
 cannot be expected to settle it. A term with no iteration of its own
-answers \code{FALSE}.
+returns \code{FALSE}.
 }
 \details{
 The discontinuous break-point terms, \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}}, control their
 step with the scaling factor of Fasola, Muggeo and Kuchenhoff, halved
 whenever a break-point reverses direction and held at a floor derived from
 the conditioning of the working block (see \code{\link[=term_refresh]{term_refresh()}}). Once every
-break-point that has not settled sits at that floor the factor can shrink
-no further, and the iteration continues without step control. The profile
+break-point that has not settled sits at that floor, the factor cannot
+shrink further, and the iteration continues without step control. The profile
 objective of a discontinuous term is constant between two consecutive
 observations, so a break-point in that state can pass from one
 observation to the next indefinitely. A fitting layer reads this to end
 the working phase and report the fit as not converged.
 
-A term whose block is the Jacobian of its contribution, \code{\link[=seg]{seg()}} and every
-smoothed construction among them, has no scaling schedule and answers
-\code{FALSE}.
+A term whose block is the Jacobian of its contribution has no scaling
+schedule and returns \code{FALSE}; this includes \code{\link[=seg]{seg()}} and every smoothed
+construction.
 }
 \examples{
 dd <- data.frame(x = seq(0, 2, length.out = 20))

@@ -41,16 +41,16 @@ layer collects the labelled terms and declares one entry over their stacked
 columns.
 
 The blueprint records what the layer needs for that: the within-group
-dimension and the grouping's levels, beside the pieces
+dimension and the grouping's levels, beside the pieces that
 \code{\link[=term_predict.RandomTerm]{term_predict.RandomTerm()}} already reads.
 
 The function rejects \code{hyper}, \code{id} and \code{correlated = FALSE} on a labelled
 term, and a \code{distrib} that is a list or is univariate. A \code{distrib} given
-here is the \strong{class's} joint prior. Its dimension is the total over the
+here is the class's joint prior. Its dimension is the total over the
 class and cannot be checked from one term, so that check is left to the
-layer. The remaining checks, that it is a continuous \pkg{distributions7}
-object with its location held, are made here, where the message can name the
-argument.
+layer. The remaining checks, which verify that it is a continuous
+\pkg{distributions7} object whose location is held, are made here, where the
+message can name the argument.
 }
 \seealso{
 \code{\link[=term_build.RandomTerm]{term_build.RandomTerm()}}, its caller; \code{\link[=term_tag]{term_tag()}}.

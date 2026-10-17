@@ -20,13 +20,13 @@
 
 \item{blocks}{The model's derivative pieces; see \code{\link[=term_third]{term_third()}}.}
 
-\item{direction}{The direction to contract against.}
+\item{direction}{The direction against which to contract.}
 
 \item{...}{Unused.}
 
 \item{score_values, curvature_values, blocks_data}{As for
-\code{\link[=term_curvature]{term_curvature()}}; supplying all three, with \code{blocks_data} carrying the
-fourth derivatives \code{D4}, routes the recursion through the compiled
+\code{\link[=term_curvature]{term_curvature()}}. If all three are supplied and \code{blocks_data} carries
+the fourth derivatives \code{D4}, the recursion runs through the compiled
 kernel.}
 
 \item{threads}{Threads for the compiled route's group loop.}
@@ -35,14 +35,14 @@ kernel.}
 A list with \code{jacobian}, \code{dphi} and \code{curvature}.
 }
 \description{
-The second derivative of the filter's predictor differentiated once more
-along one direction, propagated beside the state exactly as the first two
-orders are.
+Differentiates the second derivative of the filter's predictor once more
+along one direction and propagates the result beside the state exactly as
+the first two orders are propagated.
 }
 \details{
 The recursion gains one state, \eqn{\Psi_t = \partial^3f_t/\partial u^3[v]},
 seeded by the third derivative of the score in the same way \eqn{\Phi} is
-seeded by its second. Everything else it needs, meaning the directional
+seeded by its second. Everything else that it needs, meaning the directional
 derivatives of \eqn{F}, \eqn{\Phi}, \eqn{\dot S} and \eqn{\ddot S}, is a
 contraction of a quantity that the second-order recursion already
 carries. The third order therefore needs no second recursion and forms no

@@ -44,7 +44,7 @@ NULL
 #' @name term_components.GasTerm
 #'
 #' @description
-#' One entry per base parameter of the filter, giving the positions in
+#' Returns one entry per base parameter of the filter, giving the positions in
 #' [term_params()] that the parameter owns and the sub-terms that develop it. A
 #' parameter with no subformula owns one position; a developed parameter owns
 #' as many positions as its design has columns.
@@ -66,14 +66,14 @@ NULL
 #'   describes.
 #'
 #' @seealso [term_components()] for the fields of an entry, [term_params()] for
-#'   the vector the indices point into.
+#'   the vector into which the indices point.
 #'
 #' @examples
 #' set.seed(1)
 #' dd <- data.frame(t = 1:40, y = rnorm(40), z = rnorm(40))
 #'
-#' # omega developed over one covariate: two positions for it, one each
-#' # for the loading and the persistence.
+#' # When omega is developed over one covariate, it has two positions, and
+#' # the loading and the persistence have one each.
 #' b <- term_build(gas(p = 1, q = 1, omega ~ z, time = t), dd)
 #' term_params(b)
 #' lapply(term_components(b), function(z) z$index)
@@ -1050,9 +1050,9 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 #' at each row of `newdata`, so that [term_continue()] can carry a score-driven
 #' filter past the end of its series. A parameter carrying a subformula is read
 #' by calling [term_predict()] on each of its sub-terms, which reapplies the
-#' blueprint each sub-term recorded at build time; a basis or a set of contrasts
-#' is therefore not relearned on the new rows. A parameter with no subformula is
-#' constant over the rows.
+#' blueprint that each sub-term recorded at build time; a basis or a set of
+#' contrasts is therefore not relearned on the new rows. A parameter with no
+#' subformula is constant over the rows.
 #'
 #' @details
 #' For a developed parameter \eqn{j} the value at row \eqn{t} is
@@ -1075,16 +1075,16 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 #'   subformula. A term without a subformula is handled by `.gas_coefs()`.
 #' @param u The term's parameter vector, in [term_params()] order, on the mixed
 #'   scale described above.
-#' @param newdata A data frame of the rows to read at, carrying every variable
-#'   the subformulas name.
+#' @param newdata A data frame of the rows at which to read the parameters,
+#'   carrying every variable that the subformulas name.
 #'
 #' @return A list with the following elements:
 #'   \describe{
 #'     \item{`om`}{numeric, one \eqn{\omega_t} per row of `newdata`.}
 #'     \item{`A`}{`nrow(newdata)` by `p`, the score loadings.}
 #'     \item{`B`}{`nrow(newdata)` by `q`, the autoregressive coefficients,
-#'       Levinson-Durbin applied row by row. A zero-column matrix at
-#'       \eqn{q = 0}.}
+#'       obtained by applying Levinson-Durbin row by row. At \eqn{q = 0} it is a
+#'       zero-column matrix.}
 #'     \item{`dom`, `dA`, `dB`}{the derivatives of `om`, of each column of
 #'       `A` and of each column of `B` with respect to `u`, each a
 #'       `nrow(newdata)` by `length(u)` matrix (`dA` and `dB` are lists of

@@ -12,9 +12,10 @@
 A character vector, usually of length one.
 }
 \description{
-\code{"omega"}, which adds a constant to the equation's predictor and is
-therefore a direction that an intercept in the same equation also spans.
-With the level developed by a subformula, the coordinates whose design
-column is constant, each of which adds a constant to the predictor.
+Returns \code{"omega"}, which adds a constant to the equation's predictor and
+is therefore a direction that an intercept in the same equation also
+spans. If a subformula develops the level, the function returns the
+coordinates whose design column is constant, and each of these coordinates
+adds a constant to the predictor.
 }
 \keyword{internal}

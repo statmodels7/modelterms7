@@ -15,15 +15,16 @@ A numeric matrix of \code{nrow(newdata)} rows and \code{term_group(term)$dim}
 columns, named as \code{term_group(term)$names}.
 }
 \description{
-The design one group's effect multiplies, at new rows: the intercept, the
-covariates of a random slope, one column per coordinate of the effect.
+Returns the design that one group's effect multiplies, at new rows: the
+intercept, the covariates of a random slope, one column per coordinate of
+the effect.
 }
 \details{
-Read from the blueprint the build recorded, so a factor keeps its levels
-and contrasts. It does not depend on the grouping, which is what lets a
-caller integrate the effect of a group the fit never saw: the effect is
-\eqn{z_i^\top b} with \eqn{z_i} this row and \eqn{b} drawn from the
-term's prior.
+The design is read from the blueprint that the build recorded, so a factor
+keeps its levels and contrasts. It does not depend on the grouping, so a
+caller can integrate the effect of a group that is absent from the fitting
+data: the effect is \eqn{z_i^\top b} with \eqn{z_i} this row and \eqn{b}
+drawn from the term's prior.
 }
 \examples{
 dd <- data.frame(x = c(0.5, 1, 2), g = factor(c("a", "b", "a")))

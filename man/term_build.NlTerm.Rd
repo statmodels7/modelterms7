@@ -6,23 +6,23 @@
 \arguments{
 \item{term}{An unbuilt or built \code{\link[=NlTerm]{NlTerm()}}.}
 
-\item{data}{A data frame carrying the covariates the function names and
-whatever the subformulas name.}
+\item{data}{A data frame carrying the covariates that the function names
+and whatever the subformulas name.}
 
 \item{...}{Unused.}
 }
 \value{
-The term with \code{X}, \code{coef_names}, \code{nl_params}, \code{links}, \code{deriv_mode}
-and \code{blueprint} filled. The penalties of the sub-terms are kept in the
-blueprint and reported by \code{\link[=term_penalties]{term_penalties()}}; the \code{penalty} property
-stays \code{NULL}.
+The term, in which \code{X}, \code{coef_names}, \code{nl_params}, \code{links},
+\code{deriv_mode} and \code{blueprint} are filled. The penalties of the sub-terms
+are kept in the blueprint and reported by \code{\link[=term_penalties]{term_penalties()}}; the
+\code{penalty} property stays \code{NULL}.
 }
 \description{
 Resolves the parameters, their links and their subformulas against the
 data, evaluates the function at the starting values, and takes the Jacobian
 there as the design block. It also chooses how each order of derivative
-will be obtained and checks that any function the caller supplied returns
-the right components.
+will be obtained and checks that any function that the caller supplied
+returns the right components.
 }
 \section{What is settled here}{
 On the formula route \code{\link[stats:deriv]{stats::deriv()}} is tried on the expression, and
@@ -45,7 +45,7 @@ are then read at the coefficients rather than stored.
 }
 
 \section{The starting point}{
-The block is the Jacobian \strong{at the starting coefficients}, so it is only
+The block is the Jacobian at the starting coefficients, so it is only
 as good as they are. A parameter that \code{start} does not name is built at
 coefficient zero. When the fitting layer supplies a response,
 \code{\link[=term_coef_start]{term_coef_start()}} estimates each such parameter over a deterministic grid

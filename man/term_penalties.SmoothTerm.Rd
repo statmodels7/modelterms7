@@ -12,9 +12,9 @@
 A list of entries, as \code{\link[=term_penalties]{term_penalties()}} documents.
 }
 \description{
-One entry over the whole block where a single roughness matrix covers it,
-which is the default; one per level of a factor \code{by} under
-\code{by_hyper = "level"}; and one over the penalized coordinates alone where
+Returns one entry over the whole block where a single roughness matrix
+covers it, which is the default; one per level of a factor \code{by} under
+\code{by_hyper = "level"}; and one over only the penalized coordinates where
 the smoother carries a penalty factory.
 }
 \details{

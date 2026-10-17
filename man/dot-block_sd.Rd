@@ -10,13 +10,13 @@
 \item{X}{A design block: a numeric matrix or a two-dimensional \pkg{Matrix}.}
 }
 \value{
-A numeric vector of length \code{ncol(X)}, every entry finite and
-strictly positive.
+A numeric vector of length \code{ncol(X)} whose entries are all finite
+and strictly positive.
 }
 \description{
-The standard deviation of each column of a design block, computed without
-densifying a \pkg{Matrix}. It is the spread that \code{standardize = TRUE} puts
-in the penalty's diagonal map, so that each coefficient is penalized as
+Computes the standard deviation of each column of a design block without
+densifying a \pkg{Matrix}. With \code{standardize = TRUE} the penalty's diagonal
+map holds these spreads, so that each coefficient is penalized as
 \eqn{s_j\beta_j}.
 }
 \details{
@@ -24,16 +24,16 @@ On a base matrix it is \code{\link[stats:sd]{stats::sd()}} column by column. On 
 is assembled from the column sums and sums of squares,
 \eqn{s_j^2 = (\sum_i x_{ij}^2 - n\bar{x}_j^2)/(n-1)}, so a sparse block is
 never expanded. The sum of squares is floored at zero before the square
-root, that expression being able to go slightly negative by rounding on a
+root, because that expression can go slightly negative by rounding on a
 nearly constant column.
 
-A column with no spread takes \eqn{s_j = 1}, which penalizes its
-coefficient on its own scale instead of dividing by zero. That covers a
-constant column, a single-row block and any column whose spread comes back
-non-finite.
+A column whose spread is not positive and finite takes \eqn{s_j = 1}, which
+penalizes its coefficient on its own scale instead of dividing by zero. That
+covers a constant column, a single-row block and any column whose spread
+comes back non-finite.
 }
 \seealso{
-\code{\link[=penalized_terms]{penalized_terms()}} for the standardization this feeds,
-\code{\link[penalties7:map_diagonal]{penalties7::map_diagonal()}} for the map it becomes.
+\code{\link[=penalized_terms]{penalized_terms()}} for the standardization that this feeds,
+\code{\link[penalties7:map_diagonal]{penalties7::map_diagonal()}} for the map that it becomes.
 }
 \keyword{internal}

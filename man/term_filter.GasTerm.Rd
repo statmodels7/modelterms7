@@ -21,10 +21,10 @@ The method applies no scaling of its own.}
 the driving score with respect to the predictor at that row:
 \eqn{\partial^2\ell/\partial\eta^2} where \code{scaling} is zero.}
 
-\item{psi}{The parameters, named as \code{\link[=term_params]{term_params()}}, each scalar
-coordinate on its parameter scale (the loading itself, the partial
+\item{psi}{The parameters, named as \code{\link[=term_params]{term_params()}}; each scalar
+coordinate is on its parameter scale (the loading itself, the partial
 autocorrelation itself). The coefficients of a development enter as they
-are, the link of the developed parameter being applied inside the
+are, because the link of the developed parameter is applied inside the
 development. The columns of the returned Jacobian refer to the same
 scale.}
 

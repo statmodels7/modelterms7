@@ -15,7 +15,7 @@ An integer vector of positions in the term's coefficients, possibly
 empty.
 }
 \description{
-The positions, within the term's own coefficient vector, of the
+Returns the positions, within the term's own coefficient vector, of the
 coefficients that move a break-point sitting on an observation strictly
 inside the confinement limits, for the continuous construction only. A
 position clamped at a limit does not move with its coefficients and is not
@@ -27,10 +27,11 @@ and otherwise every coefficient of its development whose column is not zero
 at the observations concerned. An observation counts as sitting on the
 break-point within the band in which the block's own column reads its side.
 
-A sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} answers \code{integer(0)}: its position is read off
-a product of the unknowns and it is fitted by working fits and not by a
-line search on the objective. A smoothed term answers \code{integer(0)}, having
-no kink, and so does a marginal one, which integrates the break-point out.
+For a sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} the method returns \code{integer(0)}, because
+its position is read off a product of the unknowns and the term is fitted
+by working fits and not by a line search on the objective. The method also
+returns \code{integer(0)} for a smoothed term, which has no kink, and for a
+marginal one, which integrates the break-point out.
 }
 \examples{
 d <- data.frame(x = seq(0, 10, length.out = 41))

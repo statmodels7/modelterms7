@@ -4,11 +4,11 @@ NULL
 #' @title The Posterior Shift of a Term Mixed Over States, and Its Jacobian
 #'
 #' @description
-#' For a structural term whose contribution is a likelihood mixed over
-#' latent states, the shift that the term adds to its equation's predictor
-#' at each observation, averaged over the smoothed posterior of the states,
-#' together with its exact derivative in the whole of a caller's unknown
-#' vector.
+#' Computes, for a structural term whose contribution is a likelihood mixed
+#' over latent states, the shift that the term adds to its equation's
+#' predictor at each observation, averaged over the smoothed posterior of the
+#' states, together with its exact derivative in the whole of a caller's
+#' unknown vector.
 #'
 #' @details
 #' A term of the likelihood shape reports no predictor of its own. The
@@ -41,7 +41,7 @@ NULL
 #' unconstrained scale of [term_links()], as [term_hessian()] takes them.
 #'
 #' @param term A built term of the likelihood shape.
-#' @param eta The static part of the predictor the term shifts.
+#' @param eta The static part of the predictor that the term shifts.
 #' @param y The response.
 #' @param logdens A function of a predictor value and a row index returning
 #'   the log-density there, as [term_loglik()] takes it.
@@ -56,8 +56,8 @@ NULL
 #'   columns that the term's own parameters occupy.
 #' @param cols The columns of the unknown vector that the term's own
 #'   parameters occupy, in the order of [term_params()].
-#' @param level The index, among the distribution parameters, of the one the
-#'   term shifts.
+#' @param level The index, among the distribution parameters, of the one that
+#'   the term shifts.
 #' @param ... Passed to methods.
 #'
 #' @return A list with `shift`, the `n` posterior shifts, and `jacobian`, an
@@ -129,8 +129,9 @@ S7::method(term_shift_jacobian, structural_term) <- function(term, eta, y,
 #' @title The Posterior Shift of a Regime Term, and Its Jacobian
 #' @name term_shift_jacobian.RegimeTerm
 #' @description
-#' Forward mode through the normalized forward and backward recursions of
-#' [term_posterior()], over each group in time order.
+#' Computes the shift and its Jacobian by forward mode through the normalized
+#' forward and backward recursions of [term_posterior()], over each group in
+#' time order.
 #' @param term A built [RegimeTerm()].
 #' @param eta,y,logdens,grad,psi,seed,cols,level As for
 #'   [term_shift_jacobian()].
@@ -268,13 +269,13 @@ S7::method(term_shift_jacobian, RegimeTerm) <- function(term, eta, y, logdens,
 #' @title The Posterior Shift of a Marginal Break-Point Term, and Its Jacobian
 #' @name term_shift_jacobian.MarginalBreakTerm
 #' @description
-#' For the step kind, forward mode through the forward and backward
-#' recursions of the side chain over the \eqn{2^K} side patterns, the
-#' interval masses and the survivals carrying their derivatives in the
-#' prior's parameters. For the continuous kinds, the derivative of each
-#' group's posterior over its quadrature nodes, the node weights, the node
-#' positions and the shifts carrying their derivatives in the term's own
-#' parameters.
+#' Computes the shift and its Jacobian. For the step kind, the function applies
+#' forward mode through the forward and backward recursions of the side chain
+#' over the \eqn{2^K} side patterns, and the interval masses and the survivals
+#' carry their derivatives in the prior's parameters. For the continuous kinds,
+#' it computes the derivative of each group's posterior over its quadrature
+#' nodes, and the node weights, the node positions and the shifts carry their
+#' derivatives in the term's own parameters.
 #' @param term A built [MarginalBreakTerm()].
 #' @param eta,y,logdens,grad,psi,seed,cols,level As for
 #'   [term_shift_jacobian()].

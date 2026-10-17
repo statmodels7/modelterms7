@@ -19,9 +19,9 @@ A named numeric vector on the unconstrained scale, of length
 \code{\link[=term_npar]{term_npar()}} and named as \code{\link[=term_params]{term_params()}}.
 }
 \description{
-The starting values of a structural term's parameters, on the unconstrained
-scale \code{\link[=term_links]{term_links()}} defines, one per name \code{\link[=term_params]{term_params()}} gives. A fitting
-layer reads it to begin a search.
+Returns the starting values of a structural term's parameters, on the
+unconstrained scale that \code{\link[=term_links]{term_links()}} defines, one per name that
+\code{\link[=term_params]{term_params()}} gives. A fitting layer reads it to begin a search.
 }
 \details{
 The start is supplied by the term because the meaning of a coordinate of
@@ -31,7 +31,7 @@ that is appropriate wherever zero means "the model without this term".
 
 Zero does not always have that meaning. \code{\link[=gas]{gas()}} overrides the base method:
 its score loadings ride a log chart, so a coordinate of zero is a loading of
-\strong{one}, which is a strongly driven filter and a poor place to begin. The
+one, which is a strongly driven filter and a poor place to begin. The
 method places each loading at 0.1 through the chart, \eqn{\log 0.1 = -2.303},
 and leaves every other coordinate at zero. When a loading is developed by a
 subformula, the constant start is projected onto the design of the
@@ -47,16 +47,18 @@ covariate. Both are computed when the generic is called.
 # The level and the persistence start at zero; the loading does not.
 term_start(gas(p = 1, q = 1))
 
-# Because zero on a log chart is a loading of one.
+# The loading starts at 0.1 on the parameter scale, because zero on a log
+# chart is a loading of one.
 lk <- term_links(gas(p = 1, q = 1))
 linkfunctions7::linkinv(lk$kappa1, term_start(gas(p = 1, q = 1))[["kappa1"]])
 
-# One value per parameter, whatever the order.
+# The result has one value per parameter, whatever the order.
 g <- gas(p = 2, q = 2)
 identical(names(term_start(g)), term_params(g))
 
 }
 \seealso{
-\code{\link[=term_links]{term_links()}} for the scale it is on, \code{\link[=term_params]{term_params()}} for the
-names, \code{\link[=term_coef_start]{term_coef_start()}} for the additive branch's equivalent.
+\code{\link[=term_links]{term_links()}} for the scale on which the start is expressed,
+\code{\link[=term_params]{term_params()}} for the names, \code{\link[=term_coef_start]{term_coef_start()}} for the additive
+branch's equivalent.
 }

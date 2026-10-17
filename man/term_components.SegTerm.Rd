@@ -13,16 +13,17 @@ A named list, one entry per coefficient and named by it, each with
 \code{name}, \code{index}, \code{subs} and \code{sub_index} as \code{\link[=term_components]{term_components()}} describes.
 }
 \description{
-One entry per coefficient of the term, \code{beta}, \code{gamma1} ... , \code{delta1} ... ,
-\code{psi1} ... , giving the columns that coefficient owns and the sub-terms
-developing it. A coefficient with no development owns one column; a
+Returns one entry per coefficient of the term, \code{beta}, \code{gamma1} ... ,
+\code{delta1} ... , \code{psi1} ... , and each entry gives the columns that the
+coefficient owns and the sub-terms that develop it. A coefficient with no
+development owns one column; a
 developed one owns as many as its own design has.
 }
 \details{
 It lets a consumer report a fitted break-point term coefficient by
 coefficient. The entries of \code{\link[=term_penalties]{term_penalties()}} place a sub-term's penalty on
 exactly the coordinates that it covers, using the same \code{index} vectors.
-Those coordinates are \strong{named} as a subset of the term's own parameters and
+Those coordinates are named as a subset of the term's own parameters and
 are not selected with a map: a separable penalty under a selection map is
 the generalized-lasso problem, which has no proximal operator.
 }

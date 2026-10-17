@@ -18,8 +18,8 @@ term_curvature(term, eta, y, score, curvature, psi, g, seed, blocks, ...)
 
 \item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
 
-\item{g}{The weights the second derivative is contracted against, one per
-observation.}
+\item{g}{The weights against which the second derivative is contracted,
+one per observation.}
 
 \item{seed}{The derivative of the static predictor in the caller's
 unknowns, one row per observation.}
@@ -38,10 +38,10 @@ the derivative of the predictor in the caller's unknowns, and
 contracted against \code{g}. Both are exact.
 }
 \description{
-The Jacobian of the predictor the term produces with respect to a
-caller's unknowns, and the second derivative of that predictor contracted
-against a caller's weights. This second derivative is the piece of the
-Hessian of the log-likelihood that \code{\link[=term_adjoint]{term_adjoint()}} does not give.
+Returns the Jacobian of the predictor that the term produces with respect
+to a caller's unknowns, and the second derivative of that predictor
+contracted against a caller's weights. This second derivative is the piece of
+the Hessian of the log-likelihood that \code{\link[=term_adjoint]{term_adjoint()}} does not give.
 }
 \details{
 The gradient of a model carrying a filter needs no second derivative and
@@ -58,15 +58,17 @@ e_t/\partial u \partial u^\top}, the Hessian of the log-likelihood in
   + \sum_t w_t \ell_{p,t} E_t,}
 
 and the observed information is its negative. The first sum is a weighted
-crossproduct that the caller assembles, and the second is what this
-returns, the weights \eqn{g_t = w_t\ell_{p,t}} being supplied.
+crossproduct that the caller assembles. The second sum is the value that
+this method returns, for the weights \eqn{g_t = w_t\ell_{p,t}} that the
+caller supplies.
 
 \code{seed} is \eqn{\partial \eta^{0}/\partial u}, one row per
 observation: the caller supplies how its unknowns reach the static
-predictor, and the term holds no other information about them. \code{blocks} is
-where the model's own derivatives enter, since the score that drives the
+predictor, and the term holds no other information about them. The model's
+own derivatives enter through \code{blocks}, since the score that drives the
 recursion depends on every equation, beyond the predictor at which it is
-read. It is called once per observation, with the predictor there, the
+read. The function \code{blocks} is called once per observation, with the
+predictor there, the
 index, the Jacobian row that the recursion has reached (restricted to the
 active coordinates of the group) and the indices of those coordinates, and
 it returns the two quantities that seed the first and second derivatives of
@@ -85,8 +87,8 @@ set.seed(1)
 dd <- data.frame(t = 1:20, y = rnorm(20))
 term <- term_build(gas(p = 1, q = 1, time = t), dd)
 
-# a gaussian mean of unit variance and one equation, so the model
-# contributes no cross term and no third derivative
+# The model is a gaussian mean of unit variance with one equation, so it
+# contributes no cross term and no third derivative.
 m <- 3L
 out <- term_curvature(
   term, eta = rep(0, 20), y = dd$y,

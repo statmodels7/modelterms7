@@ -9,14 +9,14 @@
 \item{...}{Unused, and accepted so that the signature matches \code{\link[=print]{print()}}'s.}
 }
 \value{
-\code{x}, invisibly. Called for the line it writes.
+\code{x}, invisibly. The function is called for the line that it writes.
 }
 \description{
 Prints one line naming the term's class, its label when it has one, and
 whether it is built. A built term reports how many coefficients its block
 carries; a specification is marked as one and names the call that would
 build it. This is the default for every term class, and several classes
-override it to add what they alone carry.
+override it to add the information that only that class carries.
 }
 \details{
 The two forms are
@@ -28,9 +28,9 @@ The two forms are
 The class name is the S7 class's own, the label comes from the \code{label}
 property and is omitted when empty, and the count is \code{ncol(x@X)}.
 
-A structural term has no \code{X} to count, so it gets the word \code{built} and no
-count. Every shipped structural term registers a method of its own, so this
-line is reached only by a structural class written outside the package.
+A structural term has no \code{X} to count, so the line shows the word \code{built} and
+no count. Every shipped structural term registers a method of its own, so
+this line is reached only by a structural class written outside the package.
 
 The classes that override this add something of their own:
 \code{\link[=print.PenalizedTerm]{print.PenalizedTerm()}} names the penalty and the standardization,
@@ -40,7 +40,7 @@ and its derivative mode, and \code{\link[=seg]{seg()}} reports its break-points.
 \examples{
 d <- data.frame(x = 1:4)
 
-# A specification, and the same term built.
+# A specification prints first, and the same term built prints second.
 linpar(~ x)
 term_build(linpar(~ x), d)
 
@@ -50,7 +50,7 @@ linpar(~ x, label = "lin")
 
 }
 \seealso{
-\code{\link[=term_is_built]{term_is_built()}} for the predicate it branches on,
+\code{\link[=term_is_built]{term_is_built()}} for the predicate on which it branches,
 \code{\link[=term_coef_names]{term_coef_names()}} for the names behind the count.
 }
 \keyword{internal}

@@ -17,9 +17,9 @@
 A list with the values and the derivative arrays.
 }
 \description{
-The level, the score loadings and the autoregressive coefficients as
-functions of the term's unconstrained parameters, with their first and
-second derivatives in those.
+Computes the level, the score loadings and the autoregressive
+coefficients as functions of the term's unconstrained parameters, with
+their first and second derivatives in those.
 }
 \details{
 The level and the loadings each reach the recursion through their own

@@ -12,8 +12,8 @@
 A numeric matrix or \code{NULL}.
 }
 \description{
-The design of \code{omega}'s development when it carries one, its
-columns named after the coordinates, so a fitting layer can compare its
-span with the equation's; \code{NULL} for a scalar level.
+Returns the design of the development of \code{omega} when it carries one, with
+the columns named after the coordinates so that a fitting layer can compare
+its span with the equation's, and \code{NULL} for a scalar level.
 }
 \keyword{internal}

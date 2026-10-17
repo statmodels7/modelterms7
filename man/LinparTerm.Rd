@@ -28,16 +28,16 @@ when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag
 \code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
 \item{hyper}{The hyperparameters of the term's penalty that the caller
-\strong{held}, as a named list keyed by the penalty's names. Empty, the
+held, as a named list keyed by the penalty's names. Empty, the
 default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
 default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the caller
-wrote out, as a named list of numeric vectors. Empty, the default, has the
-path build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values that a path visits, for each hyperparameter that
+the caller wrote out, as a named list of numeric vectors. Empty, the
+default, has the path build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink reaches, as
 a fraction of the value that empties the block: one number in \eqn{(0, 1)},
@@ -55,14 +55,14 @@ carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
 \item{X}{The design block, one row per observation: a numeric matrix or a
-two-dimensional \pkg{Matrix}. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+two-dimensional \pkg{Matrix}. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{coef_names}{The block's coefficient names, one per column, prefixed by
-\code{label} when there is one. Filled by \code{\link[=term_build]{term_build()}}.}
+\code{label} when there is one. \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{blueprint}{A named list of everything needed to reproduce the mapping
-on new rows. Its contents are the subclass's business; nothing outside the
-term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+on new rows. Its contents belong to the subclass, and only the term reads
+them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{penalty}{A \pkg{penalties7} penalty on the block's coefficients, or
 \code{NULL} when the term is unpenalized.}
@@ -81,22 +81,22 @@ the build choose. It is kept as given; the storage actually used is in
 defaults.}
 
 \item{drop_intercept}{\code{TRUE} to remove the column \code{(Intercept)} after the
-model matrix is built, so that the factors keep the coding they have in a
-formula with an intercept. \code{\link[=interpret_formula]{interpret_formula()}} sets it on a \code{linpar()}
-written in a formula that already carries an intercept; \code{FALSE} by
-default.}
+model matrix is built, so that the factors keep the coding that they have
+in a formula with an intercept. \code{\link[=interpret_formula]{interpret_formula()}} sets it on a
+\code{linpar()} written in a formula that already carries an intercept. The
+default is \code{FALSE}.}
 }
 \value{
 An S7 object of class \code{LinparTerm}, inheriting from
 \code{\link[=additive_term]{additive_term()}} and \code{\link[=model_term]{model_term()}}, with the four properties above
-beside the properties it inherits.
+beside the properties that it inherits.
 }
 \description{
-The subclass of \code{\link[=additive_term]{additive_term()}} holding an unpenalized parametric block
-built from a one-sided formula through \code{\link[stats:model.matrix]{stats::model.matrix()}}. It is what
-\code{\link[=linpar]{linpar()}} constructs, and what \code{\link[=interpret_formula]{interpret_formula()}} collects a formula's
-bare covariates into, so most models carry one whether or not the caller
-wrote it.
+\code{LinparTerm} is the subclass of \code{\link[=additive_term]{additive_term()}} that holds an unpenalized
+parametric block built from a one-sided formula through
+\code{\link[stats:model.matrix]{stats::model.matrix()}}. \code{\link[=linpar]{linpar()}} constructs it, and \code{\link[=interpret_formula]{interpret_formula()}}
+collects a formula's bare covariates into it, so most models carry one
+whether or not the caller wrote it.
 
 Beyond the additive branch's four properties it records the formula, whether
 the block is sparse, the contrasts used for the formula's factors, and
@@ -104,18 +104,19 @@ whether the column \code{(Intercept)} is dropped after the coding.
 }
 \section{The properties of its own}{
 \code{formula} is the one-sided formula, kept with its environment, so a symbol
-the data do not carry is still found where the formula was written.
+that the data do not carry is still found where the formula was written.
 
-\code{sparse} holds the value the caller gave, and \code{NULL} where none was given.
-The build leaves it alone and records the storage it settled on in
-\code{blueprint$sparse}, which is the value \code{\link[=term_predict]{term_predict()}} reads, so the block
-and a prediction from it never differ in storage. A formula naming a factor
-of many levels has one non-zero per row, and building the dense model matrix
-of it is the memory use that sparse storage avoids.
+\code{sparse} holds the value that the caller gave, and \code{NULL} where the caller
+gave no value. The build leaves it unchanged and records in
+\code{blueprint$sparse} the storage that it resolved, which is the value that
+\code{\link[=term_predict]{term_predict()}} reads, so the block and a prediction from it never differ
+in storage. A formula naming a factor of many levels has one non-zero per
+row, and building the dense model matrix of it is the memory use that
+sparse storage avoids.
 
 \code{contrasts} is a named list, one entry per factor, or empty for the
 session's own \code{options("contrasts")}. Whatever is used is recorded in the
-blueprint and reapplied, so a fit and a prediction never disagree about the
+blueprint and reapplied, so a fit and a prediction always use the same
 coding.
 
 \code{drop_intercept} is \code{FALSE} by default. When it is \code{TRUE}, the build removes
@@ -130,13 +131,13 @@ exactly.
 \examples{
 d <- data.frame(x = rnorm(20), g = factor(rep(letters[1:4], 5)))
 
-# linpar() is the constructor; the class is what it returns.
+# linpar() is the constructor and returns an object of this class.
 tm <- linpar(~ x + g)
 S7::S7_inherits(tm, LinparTerm)
 tm@formula
 
-# The property keeps the value given; the blueprint records what the
-# build settled on, and that is what a prediction reads.
+# The property keeps the value given; the blueprint records the storage
+# that the build used, and a prediction reads the blueprint.
 bt <- term_build(tm, d)
 c(sparse_is_null = is.null(bt@sparse), settled = bt@blueprint$sparse)
 term_build(linpar(~ g, sparse = TRUE), d)@blueprint$sparse

@@ -121,7 +121,7 @@ test_that("a labelled random term has no hyperparameter of its own to share", {
   # the two bars already share the whole block, and the prior over it belongs
   # to the class -- so there is nothing here for id to name
   expect_error(term_build(random(~ 1 | u | g, id = "R"), d),
-               "the covariance block it shares is")
+               "the covariance block that it shares is")
   # and the same term without a label takes it
   expect_silent(term_build(random(~ 1 | g, id = "R"), d))
 })

@@ -19,9 +19,9 @@ A numeric matrix with one column per coefficient of the term and one
 row per constraint, with no rows where the term has no kink at \code{coef}.
 }
 \description{
-The rows of the linear constraints that hold the term's objective on its
-kinks at the coefficients given: one row per constraint, one column per
-coefficient of the term. A perturbation \eqn{d} of the coefficients keeps
+Returns the rows of the linear constraints that hold the term's objective on
+its kinks at the given coefficients: one row per constraint and one column
+per coefficient of the term. A perturbation \eqn{d} of the coefficients keeps
 the kinks where they are if and only if \eqn{A d = 0}.
 }
 \details{

@@ -13,7 +13,7 @@
 A single logical.
 }
 \description{
-\code{TRUE} when \code{distrib_cross_y} comes from the family itself. The
+Returns \code{TRUE} when \code{distrib_cross_y} comes from the family itself. The
 multivariate base class rejects that generic, so the function returns
 \code{FALSE} for a family that has not overridden it.
 }

@@ -13,15 +13,16 @@
 }
 \value{
 A block of \code{nrow(newdata)} rows and \code{\link[=term_npar]{term_npar()}} columns, in the
-storage the build settled on, with the term's coefficient names as column
-names and no row names.
+storage chosen at the build, with the term's coefficient names as
+column names and no row names.
 }
 \description{
 Evaluates a built smooth's recorded basis at the covariates in \code{newdata} and
-applies the transforms the build computed: the Demmler-Reinsch basis and its
-centering and scaling for \code{\link[=s]{s()}}, the centered tensor basis for \code{\link[=te]{te()}}, then
-the \code{by} variable against the recorded levels. Nothing is derived from the
-new rows.
+applies the transforms that the build computed: the Demmler-Reinsch basis
+and its centering and scaling for \code{\link[=s]{s()}}, the centered tensor basis for
+\code{\link[=te]{te()}}, then the \code{by} variable against the recorded levels. The transforms
+are not recomputed from the new rows, which supply only the values of the
+covariates and of the \code{by} variable.
 }
 \details{
 The basis object in \code{blueprint$core} carries the knots and the transform, so
@@ -33,16 +34,16 @@ reproduces those rows of the block exactly, and rebuilding on them gives a
 different block (see the examples).
 
 A factor \code{by} is expanded against \code{blueprint$by_levels}, so \code{newdata} need
-carry only the levels its own rows use and still gets every column, and the
-block is built in the storage the build settled on. A level that was not
-present at build signals an error.
+carry only the levels that its own rows use, and the block still has every
+column and is built in the storage chosen at the build. A level that
+was not present at build signals an error.
 
-Covariate values outside the interval on which the basis was placed signal
-an error that counts the points outside it. For the default smoother this
-interval is the observed range of the covariate at build, widened by a
-thousandth of that range at each end, and a smoother can set it with \code{lower}
-and \code{upper}. Inside the interval the columns are evaluated from the
-recorded basis.
+If covariate values lie outside the interval on which the basis was placed,
+the method signals an error that counts the points outside it. For the
+default smoother this interval is the observed range of the covariate at
+build, widened by a thousandth of that range at each end, and a smoother can
+set it with \code{lower} and \code{upper}. Inside the interval the columns are
+evaluated from the recorded basis.
 }
 \examples{
 set.seed(1)
@@ -61,7 +62,7 @@ c(levels_here = nlevels(nd$g), cols = ncol(term_predict(bf, nd)))
 
 }
 \seealso{
-\code{\link[=term_predict]{term_predict()}} for the generic and the identity it satisfies,
+\code{\link[=term_predict]{term_predict()}} for the generic and the identity that it satisfies,
 \code{\link[=term_build.SmoothTerm]{term_build.SmoothTerm()}} for what recorded the transform.
 }
 \keyword{internal}

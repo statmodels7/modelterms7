@@ -25,8 +25,8 @@ R nests the bars to the left, so in \code{~ 1 + x | u | id} the outer bar has
 therefore the grouping variable and the middle one the label, which is
 \pkg{brms}'s convention and is the reading that the parser itself yields.
 
-The label is taken with \code{as.character()} on the symbol and \strong{never
-evaluated}, so a column of the data carrying that name is not read. It is
+The label is taken with \code{as.character()} on the symbol and never
+evaluated, so a column of the data carrying that name is not read. It is
 the one element of the formula that does not refer to the data.
 
 Two bars are the most that carry a meaning, so a third is rejected.

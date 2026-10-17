@@ -16,14 +16,14 @@ seg_start(spec, data, y, k = 10)
 \item{k}{The number of grid points, at least \code{npsi + 1}. Defaults to 10.}
 }
 \value{
-The specification, with \code{psi} set.
+The specification, in which \code{psi} is set.
 }
 \description{
 Chooses the starting positions of a \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}}
 or \code{\link[=jseg]{jseg()}} term by scoring an equally spaced grid between the 5th and the
 95th percentile of the covariate on the least-squares profile of the term's
-own columns, and returns the specification with \code{psi} set to the best
-combination found.
+own columns, and returns the specification in which \code{psi} is set to the
+best combination found.
 }
 \details{
 Fasola et al. (2018) recommend fixing the starting value by evaluating
@@ -50,10 +50,10 @@ several break-points.
 The grid is scored on the residual sum of squares of an intercept,
 the term's columns at each candidate position and, where the term
 carries one, the linear effect. That is the exact profile for a
-gaussian response and an adequate starting rule for any other, the
-quantity being used to place a starting value and not to fit. The
-positions found seed a development as well, each starting vector
-projecting the position onto the sub-design.
+gaussian response and an adequate starting rule for any other, since the
+quantity is used to place a starting value and not to fit. The
+positions found seed a development as well, and each starting vector
+projects the position onto the sub-design.
 }
 \examples{
 set.seed(1)

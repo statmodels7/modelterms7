@@ -15,8 +15,8 @@ all, \code{~ 0}, is rejected at build, when the empty set of column names is
 assigned to the \code{coef_names} property.}
 
 \item{label}{A single character string, \code{""} by default. When non-empty it
-is prefixed to every coefficient name as \code{label.name}, and it is the title
-\code{\link[=plot]{plot()}} uses. Any other value is rejected.}
+is prefixed to every coefficient name as \code{label.name}, and \code{\link[=plot]{plot()}} uses
+it as the title. Any other value is rejected.}
 
 \item{sparse}{\code{TRUE} to build a \code{dgCMatrix}, \code{FALSE} for a base matrix, or
 \code{NULL}, the default, to settle it from the design by the rule above. Any
@@ -24,21 +24,21 @@ other value signals the error
 \code{"'sparse' in 'linpar' must be TRUE, FALSE, or NULL to settle it from the design."}.}
 
 \item{contrasts}{A named list of contrasts for the formula's factors, of the
-kind \code{\link[stats:model.matrix]{stats::model.matrix()}}'s \code{contrasts.arg} takes, or \code{NULL}, the
+kind that \code{\link[stats:model.matrix]{stats::model.matrix()}}'s \code{contrasts.arg} takes, or \code{NULL}, the
 default, for the session's \code{options("contrasts")}. A value that is not a
 list is rejected.}
 }
 \value{
-An unbuilt \code{\link[=LinparTerm]{LinparTerm()}}: a specification, with \code{X}, \code{coef_names}
-and \code{blueprint} empty until \code{\link[=term_build]{term_build()}} fills them, and \code{penalty}
-\code{NULL} permanently.
+An unbuilt \code{\link[=LinparTerm]{LinparTerm()}}: a specification in which \code{X},
+\code{coef_names} and \code{blueprint} are empty until \code{\link[=term_build]{term_build()}} fills them,
+and \code{penalty} is \code{NULL} permanently.
 }
 \description{
 Specifies an unpenalized parametric block: the model matrix of a one-sided
 formula, with the usual \code{\link[stats:model.matrix]{stats::model.matrix()}} conventions for factors,
 contrasts, interactions and the intercept. It is the plainest term in the
-package, and the one \code{\link[=interpret_formula]{interpret_formula()}} collects a formula's bare
-covariates into.
+package, and \code{\link[=interpret_formula]{interpret_formula()}} collects a formula's bare covariates into
+it.
 
 The term's contribution to the predictor is \eqn{X\beta}, with no penalty,
 so every column costs one degree of freedom and \code{\link[=edf]{edf()}} returns the column
@@ -51,10 +51,10 @@ place and the block stays aligned with the response, and a factor level
 present in the data but used by no row still gets its column.
 
 The blueprint records the terms object, the factor levels
-(\code{\link[stats:checkMFClasses]{stats::.getXlevels()}}), the contrasts actually used, the storage settled
-on and the \code{drop_intercept} setting. \code{\link[=term_predict]{term_predict()}} reapplies each of
+(\code{\link[stats:checkMFClasses]{stats::.getXlevels()}}), the contrasts actually used, the storage chosen at
+build and the \code{drop_intercept} setting. \code{\link[=term_predict]{term_predict()}} reapplies each of
 them, so a factor column at new rows is encoded against the levels seen at
-build time. A level the blueprint does not know is rejected by
+build time. A level that the blueprint does not record is rejected by
 \code{\link[stats:model.frame]{stats::model.frame()}} with \code{"factor g has new levels zz"}.
 }
 
@@ -63,8 +63,8 @@ build time. A level the blueprint does not know is rejected by
 \code{(Intercept)}, \code{x1} and \code{x2}, but the second splits them into two blocks:
 the block that \code{\link[=interpret_formula]{interpret_formula()}} builds implicitly, which holds the
 intercept, and the block of \code{linpar()}, which holds \code{x1} and \code{x2}. The
-explicit constructor is therefore for callers wanting more than one
-parametric block with distinct labels, or wanting to set \code{sparse} or
+explicit constructor is therefore intended for callers who want more than
+one parametric block with distinct labels, or who want to set \code{sparse} or
 \code{contrasts} on a block. Arguments for the block that \code{\link[=interpret_formula]{interpret_formula()}}
 builds implicitly go through that function's own \code{linpar} argument.
 
@@ -81,7 +81,7 @@ implicit block, \code{y ~ linpar(~ x + g)} gives the columns of
 the block sparse. Building a dense matrix and compressing it would use the
 memory that the sparse route is meant to avoid.
 
-Sparse storage pays where the formula carries a \strong{factor of many levels},
+Sparse storage pays where the formula carries a factor of many levels,
 whose indicator columns hold one non-zero per row. On numeric covariates the
 block has few zero entries, and sparse storage then costs more than it saves.
 
@@ -125,8 +125,8 @@ big <- data.frame(g = factor(sample(1:200, 2000, TRUE)))
 class(term_matrix(term_build(linpar(~ g), big)))
 
 
-# Fitted. The data are simulated from a known truth, so the
-# estimates below can be read against it.
+# The data are simulated from a known truth, so the estimates
+# below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(1)
   fd <- data.frame(x = runif(200, -2, 2),
@@ -134,7 +134,7 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   fd$y <- 1 + 2 * fd$x + 0.5 * (fd$g == "b") + rnorm(200, sd = 0.4)
   ft <- statmodels7::statmod(y ~ x + g,
                              distributions7::gaussian1_distrib(), fd)
-  # truth: intercept 1, slope 2, and 0.5 for the second level
+  # The true values are intercept 1, slope 2, and 0.5 for the second level
   round(coef(ft)$mu, 2)
 }
 }

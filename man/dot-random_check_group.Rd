@@ -16,7 +16,7 @@
 }
 \description{
 Rejects a grouping expression whose value is continuous, naming it and the
-spelling that says the values really are labels.
+spelling to use when the values really are labels.
 }
 \details{
 A grouping variable's values are labels, and \code{factor()} turns any vector
@@ -24,7 +24,7 @@ into one by formatting its values, so a continuous covariate in that
 position would give one level per distinct value and a random effect with as
 many coefficients as there are rows.
 
-Only a \strong{double carrying a value that is not a whole number} is rejected.
+Only a double carrying a value that is not a whole number is rejected.
 Integer codes are the ordinary way to write a grouping variable and are
 accepted, and a caller who means the levels of a non-integer vector writes
 \code{factor()} around it, which arrives here as a factor and passes.

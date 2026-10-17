@@ -10,8 +10,8 @@ term_latent(term, eta, y, logdens, psi, ...)
 \arguments{
 \item{term}{A built structural term.}
 
-\item{eta}{The static predictor of the equation the term sits in, one value
-per observation.}
+\item{eta}{The static predictor of the equation in which the term sits, one
+value per observation.}
 
 \item{y}{The response.}
 
@@ -27,17 +27,17 @@ per observation.}
 For a marginal break-point term, a data frame with one row per
 group and break-point and four columns: \code{group}, the grouping level;
 \code{psi}, which break-point; \code{mean} and \code{sd}, the posterior moments of its
-position. \code{NA} in a moment the prior does not possess. For a regime
+position. A moment that the prior does not possess is \code{NA}. For a regime
 term, a data frame with one row per observation and one column per
 regime, \code{state1}, \code{state2}, and so on.
 }
 \description{
-A summary of the latent variable over which a structural term integrates,
-given the whole sample. For a marginal break-point term it consists of the
-posterior mean and standard deviation of each group's break-points, which
-locate each group's change and measure the uncertainty about its position.
-For a \code{\link[=regime]{regime()}} term it is the smoothed probability of each regime at each
-observation.
+Returns a summary of the latent variable over which a structural term
+integrates, given the whole sample. For a marginal break-point term it
+consists of the posterior mean and standard deviation of each group's
+break-points, which locate each group's change and measure the uncertainty
+about its position. For a \code{\link[=regime]{regime()}} term it is the smoothed probability of
+each regime at each observation.
 }
 \details{
 \code{\link[=term_posterior]{term_posterior()}} returns the component weights that Fisher's identity
@@ -48,7 +48,8 @@ mean and variance within an interval are those of the prior truncated to
 it, and under quadrature the moments of the node posterior.
 }
 \section{Priors without moments}{
-The moments are those of the prior, so a prior that lacks them gives none.
+The moments are those of the prior, so a prior that lacks them cannot give
+them.
 A Student t prior with fewer than one degree of freedom has no mean on an
 edge interval, and with fewer than two it has no variance. Where such an
 interval carries posterior weight of at least 1e-9, the corresponding
@@ -75,6 +76,6 @@ term_latent(tm, rep(0, 24), dd$y,
 
 }
 \seealso{
-\code{\link[=term_posterior]{term_posterior()}} for the component weights a fit reads,
+\code{\link[=term_posterior]{term_posterior()}} for the component weights that a fit reads,
 \code{\link[=jump]{jump()}} and \code{\link[=seg]{seg()}} for the terms that implement it.
 }

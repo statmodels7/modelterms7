@@ -46,7 +46,8 @@ gas_filter_r(
 A list with \code{eta}, \code{jacobian} and \code{curv}.
 }
 \description{
-The loop \code{gas_filter_cpp()} replaces, kept so the compiled
-route has something to be compared against that shares none of its code.
+Implements in R the loop that \code{gas_filter_cpp()} replaces, so that the
+compiled route can be compared against an implementation that shares none
+of its code.
 }
 \keyword{internal}

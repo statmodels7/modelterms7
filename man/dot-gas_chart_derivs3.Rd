@@ -16,20 +16,22 @@
 \item{vz}{The direction, in the same coordinates as \code{zeta}.}
 }
 \value{
-A list with \code{t_omega}, \code{t_a} and \code{t_b}, each a
+A list with \code{t_omega}, \code{t_a} and \code{t_b}; each is a
 matrix or a list of matrices over the term's base coordinates.
 }
 \description{
-\code{\link[=.gas_chart_derivs]{.gas_chart_derivs()}} differentiated once more and contracted
-against a single direction in the term's own coordinates: one matrix for
-the level, one per score loading and one per autoregressive coefficient.
+Differentiates \code{\link[=.gas_chart_derivs]{.gas_chart_derivs()}} once more and contracts the result
+against a single direction in the term's own coordinates, which gives one
+matrix for the level, one per score loading and one per autoregressive
+coefficient.
 }
 \details{
 The level and the loadings ride scalar links, so each of their third
-derivatives is a single diagonal entry, the link's own \eqn{h'''} times
-the direction's component there. The persistence is a composition, the
-Levinson-Durbin map read at \eqn{\rho = h^{-1}(z)}, and differentiating
-\eqn{B(z) = \xi(\rho(z))} three times and contracting the last slot gives
+derivatives is a single diagonal entry, equal to the link's own
+\eqn{h'''} times the direction's component there. The persistence is a
+composition, the Levinson-Durbin map read at \eqn{\rho = h^{-1}(z)}, and
+differentiating \eqn{B(z) = \xi(\rho(z))} three times and contracting the
+last slot gives
 \deqn{T_{kl}h'_kh'_l + H_{kl}(h''_kv_kh'_l + h'_kh''_lv_l)
   + \delta_{kl}\big((Hw)_k h''_k + P_kh'''_kv_k\big),}
 with \eqn{w_m = h'_mv_m} the direction pushed onto the partial

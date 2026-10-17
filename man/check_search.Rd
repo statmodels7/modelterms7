@@ -15,7 +15,7 @@ check_search(v, what = "this term")
 A character vector of length one, or of length zero.
 }
 \description{
-Validates the sweep a constructor was given for the term's own kinked
+Validates the sweep that a constructor was given for the term's own kinked
 hyperparameters.
 }
 \details{
@@ -24,7 +24,7 @@ are combined with each other, which is not a property of any single
 hyperparameter. It belongs to the term because a penalty with a kink is
 fitted by a scheme of its own, and the way that scheme sweeps its
 hyperparameters is part of it. A criterion is applied to every
-hyperparameter of the model, the smooth ones included, and most of them
+hyperparameter of the model, including the smooth ones, and most of them
 cannot use such an argument.
 }
 \seealso{

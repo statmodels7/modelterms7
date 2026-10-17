@@ -21,8 +21,8 @@ A list with \code{loglik} and \code{jacobian}, the latter on the
 parameter scale.
 }
 \description{
-The exact marginal likelihood of a break-point model with latent
-positions per group, with the exact derivatives in the term's own
+Computes the exact marginal likelihood of a break-point model with latent
+positions per group, together with the exact derivatives in the term's own
 parameters on the parameter scale.
 }
 \details{
@@ -31,7 +31,7 @@ of the intervals between a group's ordered observations, and the exact
 sum over it is taken by the forward recursion of the side chain: the
 monotone process of active break-points is a hidden Markov chain on the
 \eqn{2^K} side patterns whose transition factors over the coordinates,
-each flip weighted by its interval's prior mass, so the cost is
+and each flip is weighted by its interval's prior mass, so the cost is
 \eqn{n K 2^K}, against the \eqn{(n+1)^K} of the cells. The
 derivatives are propagated through the same recursion: the derivatives of
 the interval masses with respect to the parameters of the prior, and the
@@ -40,12 +40,12 @@ For the continuous kinds the conditional is smooth within an interval
 and the integral runs on Gauss-Kronrod panels
 (\code{\link[numericals7:gauss_kronrod15]{numericals7::gauss_kronrod15()}}). The interior nodes lie at fixed
 points determined by the data, so the derivatives in the parameters of the
-prior involve the prior alone. The region below the data, where the hinge
+prior involve only the prior. The region below the data, where the hinge
 keeps moving, is covered by panels that follow the bulk of the prior, and
 the derivatives carry the motion of their nodes. The region above the data,
 where the conditional is constant, contributes its closed tail mass.
 
-No panel spans more than 2.5 prior standard deviations. The region below
+Every panel spans at most 2.5 prior standard deviations. The region below
 the data carries at least four panels, and each interval between two
 consecutive distinct observations at least one, so the number of panels
 grows as \code{psi1.sd} decreases against the spacing of the covariate. A group

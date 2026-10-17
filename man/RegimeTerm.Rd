@@ -26,16 +26,16 @@ when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag
 \code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
 \item{hyper}{The hyperparameters of the term's penalty that the caller
-\strong{held}, as a named list keyed by the penalty's names. Empty, the
+held, as a named list keyed by the penalty's names. Empty, the
 default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
 default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the caller
-wrote out, as a named list of numeric vectors. Empty, the default, has the
-path build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values that a path visits, for each hyperparameter that
+the caller wrote out, as a named list of numeric vectors. Empty, the
+default, has the path build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink reaches, as
 a fraction of the value that empties the block: one number in \eqn{(0, 1)},
@@ -58,13 +58,13 @@ until \code{\link[=term_build]{term_build()}} fills it.}
 \item{k}{The number of regimes, an integer of at least 2.}
 
 \item{by}{An optional grouping expression; each group runs its own
-recursion. \code{NULL} for one group.}
+recursion. \code{NULL} means one group.}
 
-\item{time}{An optional ordering expression. \code{NULL} for row order.}
+\item{time}{An optional ordering expression. \code{NULL} means row order.}
 
 \item{chain}{A \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}} of side \code{k}.}
 
-\item{n_start}{The number of starting points a fitting layer tries, a
+\item{n_start}{The number of starting points that a fitting layer tries, a
 single whole number of at least 1, as set by \code{\link[=regime]{regime()}}.}
 }
 \value{
@@ -74,17 +74,17 @@ addition to the eight that \code{\link[=structural_term]{structural_term()}} sup
 \code{\link[=model_term]{model_term()}} and \code{blueprint}).
 }
 \description{
-The subclass of \code{\link[=structural_term]{structural_term()}} holding a latent Markov chain of
-regimes, each shifting the linear predictor by a level of its own.
-\code{\link[=regime]{regime()}} constructs it. Its contribution is a likelihood mixed over the
-unobserved state path, so it implements \code{\link[=term_loglik]{term_loglik()}} and has no
-predictor to report.
+\code{RegimeTerm} is the subclass of \code{\link[=structural_term]{structural_term()}} that holds a latent
+Markov chain of regimes, and each regime shifts the linear predictor by a
+level of its own. \code{\link[=regime]{regime()}} constructs it. Its contribution is a likelihood
+mixed over the unobserved state path, so it implements \code{\link[=term_loglik]{term_loglik()}} and
+has no predictor to report.
 }
 \section{The five properties of its own}{
 \code{k} is the number of regimes. \code{by} and \code{time} are the grouping and ordering
 expressions as written, kept unevaluated. A \code{by} of \code{NULL} means one group,
-and a \code{time} of \code{NULL} means that the rows are taken in the order they are
-given.
+and a \code{time} of \code{NULL} means that the rows are taken in the order in which
+they are given.
 
 \code{chain} is the \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}} object, whose free values
 are the additive log-ratios of each row, so every row is a probability

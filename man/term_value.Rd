@@ -11,36 +11,36 @@ term_value(term, coef = NULL, newdata = NULL, ...)
 \arguments{
 \item{term}{A built term.}
 
-\item{coef}{The coefficients. Optional for a nonlinear term, which
-carries the ones it was last refreshed at, and which rejects a vector
-with a length other than its number of coefficients.}
+\item{coef}{The coefficients. They are optional for a nonlinear term, which
+carries the coefficients at which it was last refreshed and rejects a
+vector whose length differs from its number of coefficients.}
 
 \item{newdata}{An optional data frame; the contribution is returned on
-its rows instead of on the ones the term was built from.}
+its rows instead of on the rows from which the term was built.}
 
 \item{...}{Passed to methods.}
 }
 \value{
 A numeric vector of one value per observation: \code{nrow(newdata)} of
-them where \code{newdata} was given, and as many as the term was built on
-otherwise.
+them where \code{newdata} was given, and otherwise as many as the number of
+rows on which the term was built.
 }
 \description{
-The values a term contributes to the linear predictor. For a linear term
-this is the block times the coefficients and carries no information the
-block does not. For a nonlinear one it is \eqn{f(x;\theta)}, which the
-Jacobian alone does not give and which a Gauss-Newton step needs beside
-it.
+Returns the values that a term contributes to the linear predictor. For a
+linear term this is the block times the coefficients and carries no
+information beyond the block. For a nonlinear one it is \eqn{f(x;\theta)},
+which the Jacobian does not give and which a Gauss-Newton step needs
+beside it.
 }
 \details{
-With \code{newdata} the same contribution is returned on other rows, which is
-what a predictor needs where the block is a Jacobian: there
+With \code{newdata} the same contribution is returned on other rows, which a
+predictor needs where the block is a Jacobian: there
 \code{term_predict()} times the coefficients is the linearization and
 not the contribution, and the two differ by whatever the linearization
 drops. For \code{\link[=seg]{seg()}} that difference is a step at the
 break-point in a construction that is continuous. Rows arriving here are
 treated as \code{\link[=term_predict]{term_predict()}} treats them, through the levels
-and constants the blueprint recorded, never rebuilt.
+and constants that the blueprint recorded, never rebuilt.
 }
 \examples{
 dd <- data.frame(x = seq(0, 2, length.out = 20))

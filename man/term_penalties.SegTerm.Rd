@@ -12,8 +12,9 @@
 A list of entries, as \code{\link[=term_penalties]{term_penalties()}} documents.
 }
 \description{
-One entry per penalty that the developments of the term's own coefficients
-declare, naming the coefficients that it covers. The entries of a
+Returns one entry per penalty that the developments of the term's own
+coefficients declare, and each entry names the coefficients that it
+covers. The entries of a
 subformula shared by every coefficient of one kind are pooled into one, so
 that \code{gamma ~ 0 + lasso(~1)} is a single penalized block over the changes
 under one hyperparameter. The list is empty for a term whose

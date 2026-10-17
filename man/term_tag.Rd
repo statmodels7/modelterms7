@@ -16,8 +16,9 @@ term_tag(term, ...)
 A single string, or \code{NA_character_} where the term carries no label.
 }
 \description{
-The label that marks a term whose coefficients share a covariance block with
-those of other terms, or \code{NA_character_} where the term carries none.
+Returns the label that marks a term whose coefficients share a covariance
+block with those of other terms, or \code{NA_character_} where the term carries
+no label.
 }
 \details{
 The label is written in the middle position of a bar formula,
@@ -26,8 +27,8 @@ grouping variable and the middle one the label. Terms carrying the same
 label and the same grouping describe effects that are correlated with each
 other, and a fitting layer collects them into one block.
 
-The label is a \strong{name and not data}. It is read as a symbol and never
-evaluated, so a column of the data with the same name is not looked at. A
+The label is a name and not data. It is read as a symbol and never
+evaluated, so a column of the data with the same name is not consulted. A
 term that carries a label declares no penalties through
 \code{\link[=term_penalties]{term_penalties()}}: the prior of the shared covariance block is built by the
 fitting layer.
@@ -40,7 +41,7 @@ but \code{\link[=random]{random()}}, so a term written outside this package need
 term_tag(random(~ 1 | g))
 term_tag(linpar(~ x))
 
-# A label, read from the middle of the two bars.
+# The label is read from the middle of the two bars.
 term_tag(random(~ 1 + x | u | g))
 
 # It is a name, not data: a column called `u` is not read.
@@ -51,5 +52,5 @@ identical(term_coef_names(term_build(random(~ 1 | u | g), d)),
 }
 \seealso{
 \code{\link[=random]{random()}}, the one constructor that reads a label;
-\code{\link[=term_penalties]{term_penalties()}} for the penalties a term declares on its own.
+\code{\link[=term_penalties]{term_penalties()}} for the penalties that a term declares on its own.
 }

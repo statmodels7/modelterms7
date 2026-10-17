@@ -10,7 +10,7 @@ reject_pathless_values(values, pen, what = "this term")
 \item{values}{The written-out grids, as \code{\link[=check_values]{check_values()}} returns
 them.}
 
-\item{pen}{The penalty the term will build, or \code{NULL}.}
+\item{pen}{The penalty that the term will build, or \code{NULL}.}
 
 \item{what}{The term's label, for the message.}
 }
@@ -26,7 +26,7 @@ Several values are a grid for a path to visit, and only a penalty with a
 kink is swept along one. For any other penalty the hyperparameter is
 estimated at the mode by a marginal criterion, and a vector given there
 would have no effect. Whether the penalty has a kink is read from the
-penalty at a probe value of its own hyperparameters, the kink set being
+penalty at a probe value of its own hyperparameters. The kink set is
 structural, so a ridge and a random effect under a Gaussian prior are
 covered by the same test as a family added later.
 }

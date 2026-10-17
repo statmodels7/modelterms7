@@ -33,39 +33,40 @@ apart by their labels.}
 each coefficient on the scale of its own column. See the section above.}
 
 \item{lambda}{The scale of the penalty. One number holds it, several are
-the grid the path visits as they stand, and \code{NULL}, the default, has
+the grid that the path visits as they stand, and \code{NULL}, the default, has
 the path build one. Must lie in \eqn{(0, \infty)}.}
 
 \item{a}{The shape, in the same three states and settled independently
 of \code{lambda}, defaulting to the literature's \code{3.7} rather than to
-\code{NULL}: one number holds it, several are the grid the path visits as
+\code{NULL}: one number holds it, several are the grid that the path visits as
 they stand, and \code{NULL} has the path build one. Must lie in
 \eqn{(2, \infty)}.}
 
 \item{id}{Labels sharing this term's hyperparameters with those of
 other terms carrying the same ones: each is then estimated at a
-single value, wherever in the formula they sit. A named vector,
-\code{c(a = "A")}, because the penalty has several hyperparameters and the
-name says which one is shared; \code{NULL}, the default, shares nothing. See
+single value, wherever in the formula they sit. The argument is a named
+vector, \code{c(a = "A")}, because the penalty has several hyperparameters and
+the name identifies the one that is shared; \code{NULL}, the default, shares
+nothing. See
 \code{\link[=term_ids]{term_ids()}} for the meaning of the labels and the restrictions on their
 use.}
 
-\item{n_lambda, n_a}{How many values the path visits for each, at least 2.
-The two are separate arguments because the axes differ: \eqn{\lambda}
-descends from the kink size that empties the block to \code{min_ratio} times
-that size (four decades at the default \code{min_ratio}), which takes more
-points than \eqn{a}, which spans the shape's useful range. Each signals
-an error when given explicitly for a hyperparameter that is held or
-written out, so \code{n_a} requires \code{a = NULL}.}
+\item{n_lambda, n_a}{The number of values that the path visits for each, at
+least 2. The two are separate arguments because the axes differ:
+\eqn{\lambda} descends from the kink size that empties the block to
+\code{min_ratio} times that size (four decades at the default \code{min_ratio}),
+which takes more points than \eqn{a}, which spans the shape's useful range.
+Each signals an error when given explicitly for a hyperparameter that is
+held or written out, so \code{n_a} requires \code{a = NULL}.}
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
-stops sooner. A single number in \eqn{(0, 1)}, \code{1e-4} by default.
+stops sooner. It is a single number in \eqn{(0, 1)}, \code{1e-4} by default.
 Only the sweep by kink size reads it, and it signals an error when given
 explicitly while \code{lambda} is held or written out.}
 
 \item{search}{\code{"grid"} to visit every combination of \eqn{\lambda}
-and \eqn{a}, \code{"cyclic"} to sweep one at a time with the other held.
+and \eqn{a}, \code{"cyclic"} to sweep one at a time while the other is held.
 See \code{\link[=term_search]{term_search()}}. Given explicitly while fewer than two hyperparameters
 are swept, it signals an error.}
 
@@ -80,14 +81,14 @@ an argument named after another penalty's hyperparameter:
 \code{scad(~ x, gamma = 1)} signals \code{"'scad' has no argument 'gamma'."}.}
 }
 \value{
-An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification, with \code{X},
-\code{coef_names}, \code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}}
+An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification whose \code{X},
+\code{coef_names}, \code{blueprint} and \code{penalty} are empty until \code{\link[=term_build]{term_build()}}
 fills them. The build attaches the penalty over the block's columns.
 }
 \description{
-Smoothly clipped absolute deviation: the lasso's kink at zero, so the
-term selects, and a penalty that flattens beyond a threshold, so a large
-coefficient is not shrunk at all.
+Specifies the smoothly clipped absolute deviation penalty. It has the
+lasso's kink at zero, so the term selects, and it flattens beyond a
+threshold, so a large coefficient is not shrunk at all.
 }
 \details{
 It is defined by its derivative, for \eqn{t = \lvert\beta_j\rvert \ge 0},
@@ -95,9 +96,9 @@ It is defined by its derivative, for \eqn{t = \lvert\beta_j\rvert \ge 0},
   \frac{(a\lambda - t)_+}{(a-1)\lambda}\right\},}
 summed over the coefficients. It rises like the lasso near zero, bends
 from \eqn{t = \lambda}, and is flat past \eqn{t = a\lambda}, which removes
-the bias the lasso puts on a large coefficient. Being improper it
-carries no normalizing constant, and is therefore not a log prior and not
-reachable by a marginal criterion.
+the bias that the lasso puts on a large coefficient. The penalty is
+improper, so it carries no normalizing constant, and it is therefore not a
+log prior and not reachable by a marginal criterion.
 
 The formula above is the penalty for a loss of unit curvature. In a
 \code{\link[statmodels7:statmod]{statmodels7::statmod()}} fit the penalty on coordinate \eqn{j} is scaled by
@@ -105,12 +106,12 @@ the curvature \eqn{c_j} of the likelihood in that coordinate: the slope at
 zero remains \eqn{\lambda}, the penalty bends from \eqn{\lambda/c_j} and is
 flat past \eqn{a\lambda/c_j}, so the shape keeps its meaning whatever the
 scale of the response. Rescaling a Gaussian response by \eqn{k} and
-dividing \eqn{\lambda} by \eqn{k} reproduces the fit with \eqn{a}
+dividing \eqn{\lambda} by \eqn{k} reproduces the fit, in which \eqn{a} is
 unchanged. The scaling is applied by \pkg{statmodels7}; the penalty that
 this term builds is the unscaled one.
 
-\strong{Hyperparameters.} \code{lambda} on \eqn{(0, \infty)}, swept over
-\code{n_lambda} values by kink size; \code{a} on \eqn{(2, \infty)}, the range over
+The hyperparameters are \code{lambda}, on \eqn{(0, \infty)}, swept over
+\code{n_lambda} values by kink size, and \code{a}, on \eqn{(2, \infty)}, the range over
 which the proximal operator at unit curvature is single valued. The shape
 leaves the kink at zero unchanged, so a path over the kink size cannot
 reach it. It is swept over \code{n_a} values on a geometric grid that starts just
@@ -128,8 +129,8 @@ p <- term_penalty(term_build(scad(~ x1 + x2), dd))
 p@params
 p@params_bounds
 
-# The derivative is the definition: lasso-like to lambda, then bending,
-# then flat past a * lambda.
+# The derivative is the definition: it behaves like the lasso up to
+# lambda, then bends, and is flat past a * lambda.
 rho1 <- function(t, lambda, a)
   lambda * pmin(1, pmax(a * lambda - t, 0) / ((a - 1) * lambda))
 rho1(c(0.5, 1.5, 4), lambda = 1, a = 3.7)
@@ -145,11 +146,11 @@ term_hyper(scad(~ x1 + x2))
 term_hyper(scad(~ x1 + x2, a = NULL))
 term_grid(scad(~ x1 + x2, a = NULL))
 
-# At or below 2 the shape is rejected, the bound being open.
+# At or below 2 the shape is rejected, because the bound is open.
 try(scad(~ x1 + x2, a = 2))
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The model is fitted. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(11)

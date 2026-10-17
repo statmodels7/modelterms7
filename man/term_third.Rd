@@ -31,8 +31,8 @@ term_third(
 
 \item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
 
-\item{g}{The weights the third derivative is contracted against, one per
-observation.}
+\item{g}{The weights against which the third derivative is contracted,
+one per observation.}
 
 \item{seed}{The derivative of the static predictor in the caller's
 unknowns.}
@@ -52,10 +52,10 @@ caller's unknowns; \code{dphi}, the second derivative contracted against
 third derivative contracted against both \code{g} and \code{direction}.
 }
 \description{
-The second derivative of \code{\link[=term_curvature]{term_curvature()}} differentiated once
+Returns the second derivative of \code{\link[=term_curvature]{term_curvature()}} differentiated once
 more along a single direction, and the derivative of the term's Jacobian
-along that same direction. It is what the exact gradient of a marginal
-criterion needs when a penalty covers the term's own parameters.
+along that same direction. The exact gradient of a marginal criterion
+needs this when a penalty covers the term's own parameters.
 }
 \details{
 A marginal criterion carries \eqn{-\frac{1}{2}\log|K|} at the penalized
@@ -68,26 +68,27 @@ differentiating it requires \eqn{\partial^3 e_t/\partial u^3}.
 
 The derivative is only ever contracted. The full third derivative is an
 \eqn{m^3} array per observation and is never formed: the criterion needs it
-only along the one direction in which the mode moves, so what is propagated
-is a matrix per observation, the same size as the curvature and therefore
-the same \eqn{O(nm^2)}. A caller that needs several hyperparameters calls
+only along the one direction in which the mode moves, so the method
+propagates a matrix per observation, which has the same size as the
+curvature and therefore the same \eqn{O(nm^2)}. A caller that needs several
+hyperparameters calls
 this once per direction, which is cheaper than one \eqn{O(nm^3)} assembly
 whenever the hyperparameters are fewer than the unknowns.
 
 Each order of differentiation of the predictor involves one more order of
-the family, the recursion being driven by a score read at the predictor that
-it produces: the curvature's \code{M} is built from third derivatives, and this
-method needs a fourth. \code{blocks} therefore returns two quantities beyond the
-curvature's, at an observation, from the current Jacobian row \eqn{D} and
-the direction \eqn{v}:
+the family, because the recursion is driven by a score read at the
+predictor that it produces: the curvature's \code{M} is built from third
+derivatives, and this method needs a fourth. \code{blocks} therefore returns two
+quantities beyond the curvature's, at an observation, from the current
+Jacobian row \eqn{D} and the direction \eqn{v}:
 
 \deqn{\texttt{dcurv} = \sum_r \ell_{ppr}V_r, \qquad
   \texttt{N} = \sum_{r,r'}\Big(\sum_{r''}\ell_{prr'r''}(V_{r''}\cdot v)\Big)
     V_r^\top V_{r'},}
 
-\code{dcurv} serving both the derivative of the curvature along \eqn{v},
-which is \eqn{\texttt{dcurv}\cdot v}, and the two terms differentiating
-\eqn{M}'s own \eqn{V_p}.
+where \code{dcurv} serves for both the derivative of the curvature along
+\eqn{v}, which is \eqn{\texttt{dcurv}\cdot v}, and the two terms that
+arise from differentiating \eqn{M}'s own \eqn{V_p}.
 
 The base method returns zeros, which is correct for a term whose predictor
 is a block of columns times coefficients, since the second derivative of

@@ -7,8 +7,8 @@
 \item{term}{A built \code{\link[=NlTerm]{NlTerm()}}.}
 
 \item{target}{Optional numeric vector, one per observation: the response
-on the scale of the predictor. Absent, the coefficients are those
-\code{\link[=term_build]{term_build()}} computed.}
+on the scale of the predictor. If it is absent, the coefficients are those
+that \code{\link[=term_build]{term_build()}} computed.}
 
 \item{...}{Unused.}
 }
@@ -16,7 +16,7 @@ on the scale of the predictor. Absent, the coefficients are those
 A numeric vector, one value per column of the block.
 }
 \description{
-The coefficients \code{\link[=term_build]{term_build()}} built the block at: the
+Returns the coefficients at which \code{\link[=term_build]{term_build()}} built the block: the
 starting value of each of the term's own parameters carried through its
 link, from \code{start} where the caller gave one, and coefficient zero for a
 parameter that \code{start} does not name. The block is the Jacobian at those
@@ -36,18 +36,18 @@ on the random seed. The parameters in which the function is jointly affine
 are solved by least squares at each point of the grid instead of being
 searched over. They are found with \code{\link[stats:deriv]{stats::D()}} by removing repeatedly from
 the set of parameters every one whose derivative names a member of the set
-(itself included);
+(including the parameter itself);
 for a function given as an opaque \code{fn} the set is empty. Where a parameter
 is developed over a break-point term, each break-point is then started as
 described in \code{\link[=nl]{nl()}}.
 
-The box each grid spans comes from the data: the quantiles, the standard
-deviation and the range of the response and of every covariate the formula
-names, carried through the parameter's own link and widened, because a
-parameter may be measured in the units of the response or of a covariate
+The box that each grid spans comes from the data: the quantiles, the standard
+deviation and the range of the response and of every covariate that the
+formula names, carried through the parameter's own link and widened, because
+a parameter may be measured in the units of the response or of a covariate
 and the box has to cover both.
 
 It is a starting value and is allowed to be approximate; anything that
-fails leaves the coefficients \code{\link[=term_build]{term_build()}} computed.
+fails leaves the coefficients that \code{\link[=term_build]{term_build()}} computed.
 }
 \keyword{internal}

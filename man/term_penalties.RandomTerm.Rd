@@ -12,8 +12,8 @@
 A list of entries, as \code{\link[=term_penalties]{term_penalties()}} documents.
 }
 \description{
-One entry over the whole block where the effects of a group are read
-together, and one per within-group column where they are independent. A
-term carrying a covariance label returns an empty list.
+Returns one entry over the whole block where the effects of a group are
+read together, and one per within-group column where they are independent.
+A term carrying a covariance label returns an empty list.
 }
 \keyword{internal}

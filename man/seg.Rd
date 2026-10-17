@@ -26,8 +26,8 @@ see the section above. Cannot be combined with \code{by}.}
 \item{npsi}{The number of break-points. Defaults to 1.}
 
 \item{psi}{Optional starting positions; defaults to evenly spaced
-quantiles of the covariate. Where a break-point carries a development
-they seed it, each starting vector solving \eqn{Wp_k \approx
+quantiles of the covariate. Where a break-point carries a development,
+they seed it, and each starting vector solves \eqn{Wp_k \approx
   \psi_k^{0}}.}
 
 \item{by}{A one-sided formula giving every coefficient of the term the
@@ -49,17 +49,18 @@ the quintic gives its cost under an outer criterion, where the probit
 is the recommended smoother). There is no working
 parametrization, no auxiliary coefficient and no scaling schedule
 (for \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}}, a \code{c0} that is passed is ignored with a
-message), the block is the true Jacobian
+message). The block is the true Jacobian
 and the term is fitted by Gauss-Newton like \code{\link[=nl]{nl()}}. A smoothed term
 accepts a development of any coefficient, including a break-point
 (\code{psi ~ random(~1 | id)}) and penalized developments, for every kind,
-since no read-off constrains the development. The
+since a smoothed term has no read-off that would constrain the
+development. The
 smoother's width is resolved at build from the covariate's spacing
 (the median gap between distinct values, within groups where a
 break-point development supplies a partition) unless the object
 carries one. For the quintic, which is exact outside its width, the
-width is raised to at least 0.55 times the largest gap over the range a
-break-point may take, so that a break-point cannot sit in a gap with
+width is raised to at least 0.55 times the largest gap over the range
+that a break-point may take, so that a break-point cannot sit in a gap with
 no observation within its width. The width is reported: it is the
 width of the transition (the bent-cable reading). The smoothing bias is
 zero outside the transition for the quintic, decays with the Gaussian
@@ -77,8 +78,9 @@ and returns a structural term of the likelihood shape
 (\code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}); see the section on the marginal construction in
 \code{\link[=jump]{jump()}}. For a \code{seg} term the native random-changepoint fit
 (\code{psi ~ random(~1 | g)} without \code{marginal}) estimates the break-points
-as the mode of the latent distribution and is the recommended route, the
-marginal being the exact-likelihood alternative. The marginal \code{seg} has
+as the mode of the latent distribution and is the recommended route,
+while the marginal construction is the exact-likelihood alternative. The
+marginal \code{seg} has
 one break-point: the conditional is smooth in the position, so the
 integral runs on Gauss-Kronrod panels over the intervals between a
 group's ordered observations, and several latent break-points would need
@@ -86,7 +88,7 @@ a product quadrature with a number of components that a fitting layer
 cannot carry.}
 
 \item{n_boot}{How many bootstrap restarts the fitting layer runs after
-the iteration first converges (Wood 2001, the device \code{segmented}
+the iteration first converges (Wood 2001, the device that \code{segmented}
 runs by default): each restart re-estimates on a bootstrap resample
 from the current break-points and then on the data again from where
 the resample ended, keeping the better fit. The objective has local
@@ -105,8 +107,8 @@ An object of class \code{\link[=SegTerm]{SegTerm()}} (a specification; see
 \code{marginal = TRUE}.
 }
 \description{
-A covariate whose slope changes at \eqn{K} break-points estimated with
-everything else, the relationship staying continuous
+\code{seg()} specifies a covariate whose slope changes at \eqn{K} break-points
+estimated with everything else, and the relationship stays continuous
 (Muggeo, 2003). Written in the equation of any parameter of any
 distribution, the term contributes
 
@@ -114,7 +116,7 @@ distribution, the term contributes
   \qquad (u)_{+} = \max(0, u),}
 
 to that parameter's linear predictor, so that in a model
-\eqn{g(\theta_i) = \eta_i} with the rest of the equation supplying
+\eqn{g(\theta_i) = \eta_i} in which the rest of the equation supplies
 \eqn{z_i'\alpha},
 
 \deqn{\eta_i = z_i'\alpha + \beta x_i
@@ -137,9 +139,9 @@ coefficient. The working variables \eqn{U = (x-\psi)_{+}} and
 \eqn{V = -\mathbb{1}(x>\psi)} of Muggeo (2003) are, up to the factor
 \eqn{\gamma_k} on \eqn{V}, the columns of the block for \eqn{\gamma_k} and
 \eqn{\psi_k}, so a Gauss-Newton step on the block is an iteration of his
-linearization. Refreshing the term at the current coefficients
-(\code{\link[=term_refresh]{term_refresh()}}) and fitting is one such iteration, which is the scheme
-that \code{\link[=nl]{nl()}} uses as well.
+linearization. An iteration of this scheme refreshes the term at the
+current coefficients (\code{\link[=term_refresh]{term_refresh()}}) and then fits, and \code{\link[=nl]{nl()}} uses the
+same scheme.
 
 The objective has local optima in the break-points and the iteration
 converges from within a basin around where it starts, so
@@ -160,7 +162,7 @@ does.
 }
 \section{The coefficients}{
 
-\code{beta} (present when \code{linear = TRUE}), \code{gamma1} \ldots
+The coefficients are \code{beta} (present when \code{linear = TRUE}), \code{gamma1} \ldots
 \code{gammaK} and \code{psi1} \ldots \code{psiK}, in that order. The break-points are
 coefficients of the working block here, and they are not in the sharp
 discontinuous constructions, so \code{\link[=seg_psi]{seg_psi()}} reports them under every
@@ -184,16 +186,16 @@ a fixed design block, penalized ones included. A structural term
 (\code{\link[=seg]{seg()}}, \code{\link[=nl]{nl()}}) are rejected. The hyperparameters that a sub-term
 declares are reported by \code{\link[=term_penalties]{term_penalties()}} and estimated by the fitting
 layer. The left side names either one coefficient (\code{gamma2}) or a whole kind
-(\code{gamma}, meaning every \eqn{\gamma_k}, each with coefficients of
-its own over the shared design). \code{by = ~f} is the shorthand giving
-every coefficient the same development, and does not combine with
+(\code{gamma}, meaning every \eqn{\gamma_k}, and each of them has
+coefficients of its own over the shared design). \code{by = ~f} is the shorthand
+giving every coefficient the same development, and does not combine with
 per-coefficient formulas.
 
 A developed coefficient carries one value per observation:
 \eqn{\gamma_{k,i} = w_i'a_k} and \eqn{\psi_{k,i} =
 w_i'p_k}, with \eqn{w_i} the row of the sub-design. Both
-enter the block linearly, the truncated line becoming
-\eqn{(x_i-\psi_{k,i})_{+}w_i'} and the Jacobian column
+enter the block linearly: the truncated line becomes
+\eqn{(x_i-\psi_{k,i})_{+}w_i'} and the Jacobian column becomes
 \eqn{-\gamma_{k,i}\,\mathbb{1}(x_i>\psi_{k,i})\,w_i'}, so the
 continuous construction accepts a development of any coefficient and any
 combination of them.
@@ -201,8 +203,8 @@ combination of them.
 A penalty on the changes themselves, the lasso that selects the number
 of break-points, is the development on an intercept
 alone, \code{seg(x, npsi = 4, gamma ~ 0 + lasso(~1))}: the \eqn{K}
-changes are then one penalized block under one hyperparameter, the
-entries of a subformula shared by every coefficient of a kind being
+changes are then one penalized block under one hyperparameter, because the
+entries of a subformula shared by every coefficient of a kind are
 pooled into one. A subformula follows the intercept convention of a
 formula, so \code{gamma ~ lasso(~1)} carries the subformula's own unpenalized
 intercept beside the penalized column, which for an intercept-only
@@ -231,7 +233,7 @@ term_coef_names(built)
 seg_psi(built)
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The term is fitted next. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(1)
@@ -239,7 +241,7 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   fd$y <- 1 + 0.5 * fd$x + 2 * pmax(fd$x - 6, 0) + rnorm(200, sd = 0.3)
   ft <- statmodels7::statmod(y ~ seg(x),
                              distributions7::gaussian1_distrib(), fd)
-  # truth: intercept 1, slope 0.5, change of slope 2, break-point 6
+  # The truth is intercept 1, slope 0.5, change of slope 2 and break-point 6.
   round(coef(ft)$mu, 2)
 }
 }

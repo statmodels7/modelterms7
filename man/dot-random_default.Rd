@@ -15,17 +15,18 @@
 A \pkg{distributions7} object.
 }
 \description{
-\code{gaussian1_distrib} at one within-group column, so the hyperparameter
-is the standard deviation of the effects, and the multivariate Gaussian on
-an unstructured covariance for several correlated ones.
+Returns \code{gaussian1_distrib} at one within-group column, so the
+hyperparameter is the standard deviation of the effects, and the
+multivariate Gaussian on an unstructured covariance for several correlated
+ones.
 }
 \details{
 The matrix parametrization is the family's, and the family built here is
-\code{mvgaussian1_distrib()}, so the structure is the effects' \strong{covariance}
+\code{mvgaussian1_distrib()}, so the structure is the effects' covariance
 and its hyperparameters are the log-Cholesky coordinates of that covariance:
 the logarithms of the diagonal entries of its Cholesky factor, and the
 off-diagonal entries of that factor. The precision reading is a different
-prior, the two differing in the sign of the log-determinant term, and is
-written by passing \code{mvgaussian2_distrib()} to \code{distrib} instead.
+prior, because the two differ in the sign of the log-determinant term, and
+it is written by passing \code{mvgaussian2_distrib()} to \code{distrib} instead.
 }
 \keyword{internal}

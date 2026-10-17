@@ -15,7 +15,8 @@
 A list with \code{shift} and \code{jacobian}.
 }
 \description{
-Forward mode through the normalized forward and backward recursions of
-\code{\link[=term_posterior]{term_posterior()}}, over each group in time order.
+Computes the shift and its Jacobian by forward mode through the normalized
+forward and backward recursions of \code{\link[=term_posterior]{term_posterior()}}, over each group in
+time order.
 }
 \keyword{internal}

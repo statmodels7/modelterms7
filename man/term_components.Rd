@@ -13,30 +13,31 @@ term_components(term, ...)
 \item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
-A named list, one element per own parameter and named by it, each a
-list with
+A named list with one element per own parameter, named by that
+parameter. Each element is a list with
 \describe{
 \item{\code{name}}{the parameter's name, the same as the element's.}
 \item{\code{index}}{its columns in the term's block, or its positions in
 \code{\link[=term_params]{term_params()}} for a structural term.}
-\item{\code{subs}}{the sub-terms developing it, an empty list where none do.}
+\item{\code{subs}}{the sub-terms developing it, an empty list for a parameter
+that has no sub-terms.}
 \item{\code{sub_index}}{one integer vector per sub-term, splitting \code{index}
 among them; empty where \code{subs} is.}
 }
-An empty list for a term whose columns do not divide.
+The result is an empty list for a term whose columns do not divide.
 }
 \description{
 Returns one entry per parameter in which a term is written, giving the
-columns that belong to that parameter and the sub-terms that develop it. A
-term whose columns are one block with one meaning answers with an empty
-list.
+columns that belong to that parameter and the sub-terms that develop it. The
+method returns an empty list for a term whose columns are one block with one
+meaning.
 }
 \section{Why the term supplies the division}{
 A term may be written in parameters of its own: \code{\link[=nl]{nl()}} in the parameters of
 \eqn{f}, \code{\link[=seg]{seg()}} in a slope, a change and a break-point. Any of them may be
 developed over covariates, and the block then carries several groups of
-columns meaning different things. Only the term records which group each
-column belongs to. A coefficient name is built for a reader, so a consumer
+columns meaning different things. Only the term records the group to which
+each column belongs. A coefficient name is built for a reader, so a consumer
 reads the division from this function and does not recover it by parsing
 names.
 }
@@ -47,15 +48,15 @@ unpenalized intercept and a random block, so that component's \code{subs} has tw
 entries and only the second carries a penalty. A consumer reporting a
 component therefore reports a sequence of sub-terms.
 
-\code{sub_index} splits \code{index} among those sub-terms, in the order the block
-binds them, which is \code{\link[=component_sub_index]{component_sub_index()}} applied to their coefficient
-counts.
+\code{sub_index} splits \code{index} among those sub-terms, in the order in which the
+block binds them, which is \code{\link[=component_sub_index]{component_sub_index()}} applied to their
+coefficient counts.
 }
 
 \section{Structural terms}{
 A structural term contributes no design columns, and \code{index} gives positions
-in \code{\link[=term_params]{term_params()}}: the vector its state, its readable quantities and its
-variance matrix are all indexed by. In both branches \code{index} refers to the
+in \code{\link[=term_params]{term_params()}}, which is the vector that indexes its state, its readable
+quantities and its variance matrix. In both branches \code{index} refers to the
 term's own coefficients.
 
 The base method returns an empty list, which is the answer for \code{\link[=linpar]{linpar()}},
@@ -69,22 +70,22 @@ dd <- data.frame(x = seq(0.2, 3, length.out = 20),
                  g = factor(rep(c("a", "b"), 10)))
 dd$y <- 2 * exp(-1.3 * dd$x)
 
-# nl() in two parameters, the first developed over a factor: two
-# columns for `a` and one for `r`.
+# The nl() term has two parameters, and the first is developed over a
+# factor, which gives two columns for `a` and one for `r`.
 b <- term_build(nl(~ a * exp(-r * x), a ~ 0 + g, start = list(r = 1.3)), dd)
 lapply(term_components(b), function(z) z$index)
 term_coef_names(b)
 
-# The sub-terms of the developed parameter, and its columns split
-# among them.
+# This lists the sub-terms of the developed parameter and splits its
+# columns among them.
 term_components(b)$a$sub_index
 
-# A term whose columns are one block answers with nothing.
+# A term whose columns are one block returns an empty list.
 term_components(term_build(linpar(~ x), dd))
 
 }
 \seealso{
 \code{\link[=component_sub_index]{component_sub_index()}} for the split, \code{\link[=term_penalties]{term_penalties()}} for the
-penalties those sub-terms bring, \code{\link[=term_coef_names]{term_coef_names()}} for the names of the
-columns being divided.
+penalties that those sub-terms bring, \code{\link[=term_coef_names]{term_coef_names()}} for the names of
+the columns that are divided.
 }

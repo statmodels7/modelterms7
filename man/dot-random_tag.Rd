@@ -13,7 +13,8 @@
 A single string, possibly \code{NA_character_}.
 }
 \description{
-The term's \code{tag} as a single string, \code{NA_character_} where it carries none.
+Returns the term's \code{tag} as a single string, \code{NA_character_} where it
+carries none.
 }
 \details{
 The property is a character vector and is empty on a term built before the

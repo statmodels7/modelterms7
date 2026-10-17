@@ -23,41 +23,42 @@ term_hessian(
 \arguments{
 \item{term}{A built \code{\link[=RegimeTerm]{RegimeTerm()}}.}
 
-\item{eta}{The static part of the predictor the regimes shift.}
+\item{eta}{The static part of the predictor that the regimes shift.}
 
 \item{y}{The response.}
 
-\item{logdens}{A function of a predictor value and a row index returning
+\item{logdens}{A function of a predictor value and a row index that returns
 the log-density there, one value per observation, as \code{\link[=term_loglik]{term_loglik()}}
 takes it.}
 
-\item{grad}{A function of the same two arguments returning a matrix with
-one row per observation and one column per distribution parameter, the
-derivative of the log-density in each predictor.}
+\item{grad}{A function of the same two arguments that returns a matrix with
+one row per observation and one column per distribution parameter, whose
+columns hold the derivative of the log-density in each predictor.}
 
-\item{hess}{A function of the same two arguments returning an array of
-dimension \code{c(n, p, p)}, observation first, holding the second derivatives
-of the log-density in the predictors, where \code{p} is the number of
-distribution parameters.}
+\item{hess}{A function of the same two arguments that returns an array of
+dimension \code{c(n, p, p)}, whose first index is the observation and whose
+entries are the second derivatives of the log-density in the predictors,
+where \code{p} is the number of distribution parameters.}
 
 \item{psi}{The term's parameters on the parameter scale, named as
 \code{\link[=term_params]{term_params()}}. The derivatives in the columns \code{cols} are taken in the
 unconstrained coordinates, so the derivative in a gap is taken in its
 logarithm, as it is for the scale of \code{\link[=term_links]{term_links()}}.}
 
-\item{seed}{A list with one matrix per distribution parameter, each with
-one row per observation and one column per unknown, giving the
-derivative of that predictor in the caller's unknowns with zeros in the
-columns the term's own parameters occupy.}
+\item{seed}{A list with one matrix per distribution parameter. Each matrix
+has one row per observation and one column per unknown, and holds the
+derivative of that predictor in the caller's unknowns, with zeros in the
+columns that the term's own parameters occupy.}
 
-\item{cols}{The columns of the unknown vector the term's own parameters
+\item{cols}{The columns of the unknown vector that the term's own parameters
 occupy, in the order of \code{\link[=term_params]{term_params()}}.}
 
-\item{level}{The index, among the distribution parameters, of the one the
-regimes shift.}
+\item{level}{The index, among the distribution parameters, of the one that
+the regimes shift.}
 
 \item{weights}{Optional observation weights: one number or one number per
-observation, none missing. \code{NULL} gives every observation the weight one.}
+observation, without missing values. \code{NULL} gives every observation the
+weight one.}
 
 \item{...}{Passed to methods.}
 }
@@ -68,12 +69,12 @@ the caller's whole unknown vector; and \code{hessian}, the observed Hessian of
 the weighted sum in that same vector, an \code{m} by \code{m} matrix with \code{m} its
 length. The Hessian is the mixture's own. Its negative, the observed
 information, is smaller in the Loewner order than the complete-data
-information, the difference being the information that the unobserved
+information, and the difference is the information that the unobserved
 states cost.
 }
 \description{
-The log-likelihood of a term that mixes over latent states, with its
-exact gradient and its exact Hessian in the whole of a caller's unknown
+Returns the log-likelihood of a term that mixes over latent states, with
+its exact gradient and its exact Hessian in the whole of a caller's unknown
 vector: the coefficients of every equation together with the term's own
 parameters.
 }
@@ -92,9 +93,9 @@ and a recursion carrying a second moment. This method uses a shorter
 route. The scaled forward recursion computes the observed
 log-likelihood exactly, as \eqn{\log L = \sum_t \log c_t} with \eqn{c_t}
 the normalizing constant of one step, so differentiating that arithmetic
-twice gives the observed Hessian with no identity involved. Carrying
+twice gives the observed Hessian without any identity. The recursion carries
 \eqn{a_t(k)} together with its first and second derivatives in the
-unknown vector \eqn{u},
+unknown vector \eqn{u}. The derivatives of the contribution are
 
 \deqn{\frac{\partial \log c_t}{\partial u} = \frac{\dot c_t}{c_t},
   \qquad
@@ -120,8 +121,8 @@ The computation is meant to be run once, at a fitted point.
 set.seed(1)
 dd <- data.frame(t = 1:30, y = c(rnorm(15), rnorm(15, 3)))
 term <- term_build(regime(2, time = t), dd)
-# a gaussian mean of unit variance: one predictor, one unknown besides
-# the term's own four
+# The model is a gaussian mean of unit variance: one predictor, one unknown
+# besides the term's own four.
 m <- 5L
 out <- term_hessian(
   term, eta = rep(0, 30), y = dd$y,

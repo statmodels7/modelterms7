@@ -4,12 +4,12 @@ NULL
 #' @title Log-Likelihood Contributions of a Structural Term
 #'
 #' @description
-#' The per-observation log-likelihood contributions a structural term
-#' produces, with their derivatives in the term's own parameters. This is the
-#' second shape the structural branch takes, beside [term_filter()]: a term
-#' that shifts the predictor implements the filter, and one that rewrites the
-#' likelihood itself implements this, its contribution being no predictor at
-#' all.
+#' Returns the per-observation log-likelihood contributions that a structural
+#' term produces, with their derivatives in the term's own parameters. This is
+#' the second shape that the structural branch takes, beside [term_filter()]: a
+#' term that shifts the predictor implements the filter, and a term that
+#' rewrites the likelihood itself implements this generic, because its
+#' contribution is not a predictor at all.
 #'
 #' @details
 #' # What the contributions are
@@ -32,18 +32,18 @@ NULL
 #' # How the model reaches it
 #'
 #' The term holds the chain and the levels and contains nothing about the
-#' family. The two callbacks are how the model's own density enters: `logdens`
+#' family. The model's own density enters through two callbacks: `logdens`
 #' returns the log-density at a given predictor, one value per observation, and
 #' `score` returns its derivative in that predictor. For [regime()], each is
 #' called once per regime, with the predictor shifted by that regime's level
 #' and the whole index vector of the observations, so a term of \eqn{K}
 #' regimes makes \eqn{K} calls to each.
 #'
-#' The callbacks of [term_filter()] depend on the state the recursion has
-#' reached. The callbacks of a regime term do not, because a regime shifts a
-#' predictor that is known in advance. The density and the score of every
-#' observation under every regime can therefore be computed once, vectorized,
-#' before the recursion starts.
+#' The callbacks of [term_filter()] depend on the state that the recursion has
+#' reached. The callbacks of a regime term do not depend on it, because a regime
+#' shifts a predictor that is known in advance. The density and the score of
+#' every observation under every regime can therefore be computed once,
+#' vectorized, before the recursion starts.
 #'
 #' The method on [structural_term()] signals an error that names the class. A
 #' term of the filter shape implements [term_filter()] instead, and a fitting
@@ -60,7 +60,7 @@ NULL
 #'   `i`.
 #' @param score A function `(e, i)` returning the derivative of that
 #'   log-density with respect to the predictor, one value per element of `i`.
-#' @param psi The term's parameters on the **parameter** scale, named as
+#' @param psi The term's parameters on the parameter scale, named as
 #'   [term_params()].
 #' @param ... Passed to methods.
 #'
@@ -125,19 +125,19 @@ S7::method(term_loglik, structural_term) <- function(term, eta, y, logdens,
 #' @name RegimeTerm
 #'
 #' @description
-#' The subclass of [structural_term()] holding a latent Markov chain of
-#' regimes, each shifting the linear predictor by a level of its own.
-#' [regime()] constructs it. Its contribution is a likelihood mixed over the
-#' unobserved state path, so it implements [term_loglik()] and has no
-#' predictor to report.
+#' `RegimeTerm` is the subclass of [structural_term()] that holds a latent
+#' Markov chain of regimes, and each regime shifts the linear predictor by a
+#' level of its own. [regime()] constructs it. Its contribution is a likelihood
+#' mixed over the unobserved state path, so it implements [term_loglik()] and
+#' has no predictor to report.
 #'
 #' @details
 #' # The five properties of its own
 #'
 #' `k` is the number of regimes. `by` and `time` are the grouping and ordering
 #' expressions as written, kept unevaluated. A `by` of `NULL` means one group,
-#' and a `time` of `NULL` means that the rows are taken in the order they are
-#' given.
+#' and a `time` of `NULL` means that the rows are taken in the order in which
+#' they are given.
 #'
 #' `chain` is the [parameters7::transition_matrix()] object, whose free values
 #' are the additive log-ratios of each row, so every row is a probability
@@ -154,12 +154,12 @@ S7::method(term_loglik, structural_term) <- function(term, eta, y, logdens,
 #' @inheritParams model_term
 #' @param k The number of regimes, an integer of at least 2.
 #' @param by An optional grouping expression; each group runs its own
-#'   recursion. `NULL` for one group.
-#' @param time An optional ordering expression. `NULL` for row order.
+#'   recursion. `NULL` means one group.
+#' @param time An optional ordering expression. `NULL` means row order.
 #' @param chain A [parameters7::transition_matrix()] of side `k`.
 #' @param blueprint A named list of the resolved ordering and grouping, empty
 #'   until [term_build()] fills it.
-#' @param n_start The number of starting points a fitting layer tries, a
+#' @param n_start The number of starting points that a fitting layer tries, a
 #'   single whole number of at least 1, as set by [regime()].
 #'
 #' @return An S7 object of class `RegimeTerm`, inheriting from
@@ -202,11 +202,12 @@ RegimeTerm <- S7::new_class(
 #' Markov Regime Switching
 #'
 #' @description
-#' A latent Markov chain of \eqn{K} regimes, each shifting the linear
-#' predictor by a level of its own (Hamilton, 1989). The likelihood is the
-#' mixture over the unobserved state path, evaluated by the forward recursion,
-#' and it is built from whatever density the model carries: the term supplies
-#' the chain and the levels, the distribution supplies everything else.
+#' Constructs a latent Markov chain of \eqn{K} regimes, and each regime shifts
+#' the linear predictor by a level of its own (Hamilton, 1989). The likelihood
+#' is the mixture over the unobserved state path, evaluated by the forward
+#' recursion, and it is built from any density that the model
+#' carries: the term supplies the chain and the levels, the distribution
+#' supplies everything else.
 #'
 #' @details
 #' # The forward recursion
@@ -220,9 +221,8 @@ RegimeTerm <- S7::new_class(
 #'
 #' where the predictive distribution of the first observation of each group is
 #' the chain's stationary distribution. The log-likelihood is
-#' \eqn{\sum_t \log c_t}. Those contributions are what [term_loglik()]
-#' returns, one per observation, with their exact derivatives propagated
-#' beside the state.
+#' \eqn{\sum_t \log c_t}. [term_loglik()] returns those contributions, one per
+#' observation, with their exact derivatives propagated beside the state.
 #'
 #' Normalizing at every step keeps the recursion representable. The
 #' unnormalized quantities are products of \eqn{t} densities, so they decay
@@ -232,16 +232,16 @@ RegimeTerm <- S7::new_class(
 #'
 #' [gas()] is driven by the score of the density and moves continuously, while
 #' a regime chain moves in jumps between a finite number of states. Both are
-#' built from the density itself, so both apply to any family the model
+#' built from the density itself, so both apply to any family that the model
 #' carries, and both propagate their exact derivative beside the state.
 #'
 #' @section The parameters and their charts:
-#' The levels are **ordered by construction**: `level1` is free on the
+#' The levels are ordered by construction: `level1` is free on the
 #' identity, and each of the others is the previous one plus a positive gap,
-#' `gap2` ... `gapK`, each carried on a log link. Without an ordering the
-#' regimes are exchangeable and the likelihood has \eqn{K!} identical maxima,
-#' so the estimates of the individual regimes cannot be reported without a
-#' labeling.
+#' `gap2` ... `gapK`, and every gap is carried on a log link. Without an
+#' ordering the regimes are exchangeable and the likelihood has \eqn{K!}
+#' identical maxima, so the estimates of the individual regimes cannot be
+#' reported without a labeling.
 #'
 #' The transition matrix is [parameters7::transition_matrix()], whose free
 #' values are the additive log-ratios of each row, named `alr1.1`, `alr2.1`
@@ -255,9 +255,9 @@ RegimeTerm <- S7::new_class(
 #' distribution itself.
 #'
 #' [term_level_param()] returns `"level1"`, since a constant added to it
-#' shifts every regime and is the direction an intercept in the same equation
-#' also spans. A constant leaves the gaps unchanged, because it cannot express
-#' a difference between regimes.
+#' shifts every regime and is the direction that an intercept in the same
+#' equation also spans. A constant leaves the gaps unchanged, because it cannot
+#' express a difference between regimes.
 #'
 #' @param k The number of regimes, a single finite whole number of at least 2.
 #'   Any other value signals an error.
@@ -265,21 +265,21 @@ RegimeTerm <- S7::new_class(
 #'   group runs its own recursion from the stationary distribution, so a panel
 #'   of independent series is `by = id`. `NULL`, the default, is one group.
 #' @param time An optional ordering variable, a bare expression. `NULL`, the
-#'   default, takes the rows in the order they are given. Both `by` and `time`
-#'   must evaluate to one non-missing value per row at build time. Within a
-#'   group, `time` only orders the rows: a gap between two times counts as one
+#'   default, takes the rows in the order in which they are given. Both `by` and
+#'   `time` must evaluate to one non-missing value per row at build time. Within
+#'   a group, `time` only orders the rows: a gap between two times counts as one
 #'   step of the chain.
 #' @param label A single non-empty character string naming the term,
 #'   `"regime"` by default.
-#' @param n_start The number of starting points a fitting layer tries, a
-#'   single finite whole number of at least 1. The likelihood of a regime model
-#'   has several maxima, and a fit started at one point reaches the maximum of
-#'   the basin that contains it. The first start is [term_start()]'s, which
-#'   places the levels at the quantiles of the response when the fitting layer
-#'   supplies it and at zero otherwise. Each further start displaces the first
-#'   as [term_starts()] describes, and the fit with the best criterion is kept.
-#'   `1`, the default, fits from the first start alone. The model is fitted
-#'   once from each start.
+#' @param n_start The number of starting points that a fitting layer tries, a
+#'   single finite whole number of at least 1. The likelihood of a
+#'   regime model has several maxima, and a fit started at one point reaches the
+#'   maximum of the basin that contains it. The first start is [term_start()]'s,
+#'   which places the levels at the quantiles of the response when the fitting
+#'   layer supplies it and at zero otherwise. Each further start displaces the
+#'   first as [term_starts()] describes, and the fit with the best criterion is
+#'   kept. `1`, the default, fits from the first start alone. The model is
+#'   fitted once from each start.
 #'
 #' @return An unbuilt [RegimeTerm()]: a specification, whose `blueprint` is
 #'   empty until [term_build()] resolves the ordering.
@@ -290,22 +290,23 @@ RegimeTerm <- S7::new_class(
 #' 357--384.
 #'
 #' @seealso [gas()] for the continuous dynamic term, [term_loglik()] for the
-#'   likelihood it computes, [term_posterior()] for the smoothed state
+#'   likelihood that it computes, [term_posterior()] for the smoothed state
 #'   probabilities, [term_hessian()] for the observed information.
 #'
 #' @examples
-#' # One level, one gap, and two log-ratios of a two-state chain.
+#' # The term has one level, one gap, and two log-ratios of a two-state chain.
 #' term_params(regime(2))
 #' vapply(term_links(regime(2)), function(l) l@link_name, character(1))
 #'
-#' # K + K(K-1) parameters in all.
+#' # A chain of K regimes has K + K(K-1) parameters in all.
 #' c(k3 = length(term_params(regime(3))), expected = 3 + 3 * 2)
 #'
-#' # The levels are ordered, so level1 is the one an intercept collides with.
+#' # The levels are ordered, so level1 is the one that collides with an
+#' # intercept.
 #' term_level_param(regime(2))
 #'
-#' # Fitted through a model, the term is what carries the state; on its own
-#' # it computes the mixed likelihood from a density the caller supplies.
+#' # Fitted through a model, the term carries the state; on its own it
+#' # computes the mixed likelihood from a density that the caller supplies.
 #' set.seed(1)
 #' dd <- data.frame(t = 1:40, y = c(rnorm(20), rnorm(20, 3)))
 #' b <- term_build(regime(2, time = t), dd)
@@ -315,7 +316,7 @@ RegimeTerm <- S7::new_class(
 #'                    psi = list(level1 = 0, gap2 = 3, alr1.1 = 2, alr2.1 = -2))
 #' sum(out$loglik)
 #'
-#' # And the smoothed probability of the second regime finds the change.
+#' # The smoothed probability of the second regime marks the change.
 #' pp <- term_posterior(b, rep(0, 40), dd$y,
 #'                      logdens = function(e, i) dnorm(dd$y[i], e, log = TRUE),
 #'                      psi = list(level1 = 0, gap2 = 3, alr1.1 = 2,
@@ -323,7 +324,7 @@ RegimeTerm <- S7::new_class(
 #' round(pp[c(1, 19, 20, 21, 22, 40), 2], 3)
 #'
 #'
-#' # Fitted. The data are simulated from a known truth, so the
+#' # The model is fitted. The data are simulated from a known truth, so the
 #' # estimates below can be read against it.
 #' if (requireNamespace("statmodels7", quietly = TRUE)) {
 #'   set.seed(4)
@@ -335,7 +336,8 @@ RegimeTerm <- S7::new_class(
 #'   fd <- data.frame(t = 1:200, y = c(-2, 2)[st] + rnorm(200, sd = 0.7))
 #'   ft <- statmodels7::statmod(y ~ 0 + regime(k = 2, time = t),
 #'                              distributions7::gaussian1_distrib(), fd)
-#'   # truth: levels at -2 and 2, so a first level of -2 and a gap of 4
+#'   # The truth has levels at -2 and 2, so the first level is -2 and the
+#'   # gap is 4.
 #'   round(coef(ft)$mu[1:2], 2)
 #' }
 #' @export
@@ -367,11 +369,11 @@ regime <- function(k = 2, by = NULL, time = NULL, label = "regime",
 #' @name term_params.RegimeTerm
 #'
 #' @description
-#' `"level1"`, then `"gap2"` ... `"gapK"`, then the free names of the
-#' transition matrix, `"alr1.1"` and the rest. A chain of \eqn{K} regimes has
-#' \eqn{K + K(K-1)} parameters in all: one free level, \eqn{K-1} positive gaps
-#' that order the others, and \eqn{K(K-1)} additive log-ratios, \eqn{K-1} per
-#' row of the matrix.
+#' The parameters are `"level1"`, then `"gap2"` ... `"gapK"`, then the free
+#' names of the transition matrix, `"alr1.1"` and the rest. A chain of \eqn{K}
+#' regimes has \eqn{K + K(K-1)} parameters in all: one free level, \eqn{K-1}
+#' positive gaps that order the others, and \eqn{K(K-1)} additive log-ratios,
+#' \eqn{K-1} per row of the matrix.
 #'
 #' @details
 #' The order is the one that [term_links()], [term_start()], the columns of
@@ -387,8 +389,8 @@ regime <- function(k = 2, by = NULL, time = NULL, label = "regime",
 #'
 #' @return A character vector of length \eqn{K + K(K-1)}.
 #'
-#' @seealso [term_links()] for the chart each rides, [regime()] for what they
-#'   mean.
+#' @seealso [term_links()] for the chart on which each parameter is carried,
+#'   [regime()] for what they mean.
 #'
 #' @examples
 #' term_params(regime(2))
@@ -405,11 +407,11 @@ S7::method(term_params, RegimeTerm) <- function(term, ...) {
 #' @title The Level of a Regime Term
 #' @name term_level_param.RegimeTerm
 #' @description
-#' `"level1"`. The levels are ordered by construction, each the
-#' previous plus a positive gap, so the first one shifts every regime and is
-#' the direction an intercept in the same equation also spans. A constant
-#' leaves the gaps unchanged, because it cannot express a difference between
-#' regimes.
+#' Returns `"level1"`. The levels are ordered by construction: each is the
+#' previous one plus a positive gap, so the first one shifts every regime and
+#' is the direction that an intercept in the same equation also spans. A
+#' constant leaves the gaps unchanged, because it cannot express a difference
+#' between regimes.
 #' @param term A [RegimeTerm()].
 #' @param ... Unused.
 #' @return A single string.
@@ -419,20 +421,19 @@ S7::method(term_level_param, RegimeTerm) <- function(term, ...) "level1"
 #' @title What a Fitted Regime Term Reports
 #' @name term_readable.RegimeTerm
 #' @description
-#' The first level, the gaps between consecutive levels and the transition
-#' probabilities \eqn{p_{ij} = P(S_t = j \mid S_{t-1} = i)}, with the
-#' Jacobian from the term's own parameters.
+#' Returns the first level, the gaps between consecutive levels and the
+#' transition probabilities \eqn{p_{ij} = P(S_t = j \mid S_{t-1} = i)}, with
+#' the Jacobian from the term's own parameters.
 #' @details
 #' The levels and the gaps are reported through their own links, as the base
 #' method does. The chain is estimated on the additive log-ratios of each row
 #' of the transition matrix. These are coordinates of the chain and not
 #' quantities that have a direct interpretation, so every entry of the matrix
 #' is reported in their place, \eqn{k^2} of them, row by row and named `p1.1`,
-#' `p1.2`, and so on. Entry
-#' \eqn{p_{ij}} depends on the log-ratios of row \eqn{i} alone, and its row
-#' of the Jacobian is the derivative of [parameters7::transition_matrix()]'s
-#' value. Each interval is built on the logit scale and mapped back, so it
-#' stays inside \eqn{(0, 1)}.
+#' `p1.2`, and so on. Entry \eqn{p_{ij}} depends only on the log-ratios of
+#' row \eqn{i}, and its row of the Jacobian is the derivative of the value of
+#' [parameters7::transition_matrix()]. Each interval is built on the logit
+#' scale and mapped back, so it stays inside \eqn{(0, 1)}.
 #' @param term A [RegimeTerm()].
 #' @param zeta The parameters on the unconstrained scale.
 #' @param ... Unused.
@@ -465,9 +466,9 @@ S7::method(term_readable, RegimeTerm) <- function(term, zeta, ...) {
 #' @name term_links.RegimeTerm
 #'
 #' @description
-#' The **log** link on every gap and the identity on everything else. A gap
-#' must be positive, that being what orders the levels; a level and an
-#' additive log-ratio are already unconstrained.
+#' Returns the log link for every gap and the identity link for every other
+#' parameter. A gap must be positive, and positivity orders the levels; a
+#' level and an additive log-ratio are already unconstrained.
 #'
 #' @details
 #' The log-ratios need no chart because
@@ -475,10 +476,10 @@ S7::method(term_readable, RegimeTerm) <- function(term, zeta, ...) {
 #' additive log-ratios of each row, so any real values at all give a row of
 #' probabilities summing to one.
 #'
-#' The consequence for a caller is that `psi` and `zeta` differ only in the
-#' gaps. [term_loglik()] takes the parameter scale, where `gap2 = 3` is a gap
-#' of three; [term_readable()] takes the unconstrained scale, where the same
-#' number is a gap of \eqn{e^3}.
+#' Therefore `psi` and `zeta` differ only in the gaps. [term_loglik()] takes
+#' the parameter scale, where `gap2 = 3` is a gap of three; [term_readable()]
+#' takes the unconstrained scale, where the same number is a gap of
+#' \eqn{e^3}.
 #'
 #' @param term A [RegimeTerm()].
 #' @param ... Unused.
@@ -506,8 +507,9 @@ S7::method(term_links, RegimeTerm) <- function(term, ...) {
 #' @title Where a Regime Term's Parameters Start
 #' @name term_start.RegimeTerm
 #' @description
-#' The levels at the quantiles of the response at \eqn{(2j-1)/(2k)},
-#' \eqn{j = 1, \dots, k}, and the transition matrix with every row uniform.
+#' Returns the starting values: the levels are placed at the quantiles of the
+#' response at \eqn{(2j-1)/(2k)}, \eqn{j = 1, \dots, k}, and every row of the
+#' transition matrix is uniform.
 #' @details
 #' Without the response the start is the zero vector on the unconstrained
 #' scale: the first level is zero, every gap is one and every row of the
@@ -540,10 +542,10 @@ S7::method(term_start, RegimeTerm) <- function(term, ..., target = NULL) {
 #' @title The Starting Points of a Regime Term
 #' @name term_starts.RegimeTerm
 #' @description
-#' `n_start` starting points. The first is [term_start()]'s. Each further one
-#' draws every additive log-ratio of the transition matrix from
+#' Returns `n_start` starting points. The first is [term_start()]'s. Each
+#' further one draws every additive log-ratio of the transition matrix from
 #' \eqn{N(0, 2^2)} and adds \eqn{N(0, 0.7^2)} to the logarithm of every gap,
-#' the first level staying where the first start put it.
+#' and the first level stays where the first start put it.
 #' @details
 #' A log-ratio of standard deviation 2 gives transition probabilities spread
 #' over the interval from near 0 to near 1, so the draws cover chains that stay
@@ -587,32 +589,32 @@ S7::method(term_starts, RegimeTerm) <- function(term, ..., target = NULL) {
 #'
 #' @description
 #' Resolves the grouping and the ordering against the data and records them in
-#' the blueprint. Nothing else is computed: the term has no design block, its
-#' chain structure is fixed by the constructor, and its levels are parameters
-#' supplied at each evaluation.
+#' the blueprint. The method does not compute anything else: the term has no
+#' design block, its chain structure is fixed by the constructor, and its
+#' levels are parameters supplied at each evaluation.
 #'
 #' @details
 #' `by` and `time` are evaluated in `data` with [baseenv()] as the enclosure.
-#' Each must give one value per row, and neither may be missing; both are
-#' checked here, since this is the first point at which they meet data.
+#' Each must give one non-missing value per row; both are checked here, since
+#' this is the first point at which they meet data.
 #'
 #' The blueprint holds `order`, the row indices of each group sorted by time,
 #' and `n`, the observation count. [term_loglik()] runs one forward recursion
 #' per group in that order, each from the chain's stationary distribution, so
 #' a panel of independent series is fitted by giving `by`.
 #'
-#' Without `time` the rows are taken in the order they appear. The recursion
-#' depends on that order, so a data frame that is not already sorted defines a
-#' different model. With `time`, the rows of a group are sorted by it, and
-#' `time` only orders them: a gap between two times counts as one step of the
-#' chain.
+#' Without `time` the rows are taken in the order in which they appear. The
+#' recursion depends on that order, so a data frame that is not already sorted
+#' defines a different model. With `time`, the rows of a group are sorted by it,
+#' and `time` only orders them: a gap between two times counts as one step of
+#' the chain.
 #'
 #' @param term A [RegimeTerm()].
 #' @param data A data frame carrying whatever `by` and `time` name.
 #' @param ... Unused.
 #'
-#' @return The term with `blueprint` filled. [term_is_built()] reads that
-#'   property on this branch, so it is `TRUE` for the result.
+#' @return The term, in which `blueprint` is filled. [term_is_built()] reads
+#'   that property on this branch, so it is `TRUE` for the result.
 #'
 #' @seealso [regime()], [term_loglik()].
 #'
@@ -621,12 +623,12 @@ S7::method(term_starts, RegimeTerm) <- function(term, ..., target = NULL) {
 #' dd <- data.frame(t = 1:40, id = rep(1:2, each = 20),
 #'                  y = c(rnorm(20), rnorm(20, 3)))
 #'
-#' # One group in row order.
+#' # The rows form one group in row order.
 #' b <- term_build(regime(2, time = t), dd)
 #' names(b@blueprint)
 #' lengths(b@blueprint$order)
 #'
-#' # Two independent series, each with its own recursion.
+#' # The rows form two independent series, and each has its own recursion.
 #' b2 <- term_build(regime(2, by = id, time = t), dd)
 #' lengths(b2@blueprint$order)
 #'
@@ -656,15 +658,15 @@ S7::method(term_build, RegimeTerm) <- function(term, data, ...) {
 #' The Stationary Distribution of a Chain, and Its Derivative
 #'
 #' @description
-#' The row vector \eqn{\delta} solving \eqn{\delta P = \delta} with
+#' Computes the row vector \eqn{\delta} that solves \eqn{\delta P = \delta} with
 #' \eqn{\sum_j \delta_j = 1}, together with its derivative in whatever the
 #' transition matrix depends on.
 #'
 #' @details
 #' Differentiating \eqn{\delta(I - P) = 0} under the normalization gives
 #' \eqn{d\delta\,(I - P) = \delta\,dP} with \eqn{\sum_j d\delta_j = 0}, so
-#' both the value and the derivative come from the same linear system with
-#' one column replaced by the normalization.
+#' both the value and the derivative come from the same linear system, in
+#' which one column is replaced by the normalization.
 #'
 #' Differentiating a second time gives
 #' \eqn{d^2\delta\,(I - P) = d_i\delta\,d_jP + d_j\delta\,d_iP
@@ -726,7 +728,7 @@ regime_stationary <- function(P, dP, d2P = NULL) {
 #' exact derivatives.
 #' @details
 #' The density and the score of every observation under every regime are
-#' computed first, one call of each callback per regime with the whole index
+#' computed first, by one call of each callback per regime with the whole index
 #' vector, and the recursion and its first derivatives are then run by the
 #' compiled kernel `regime_forward_cpp()`. The derivative in a gap is taken in
 #' the gap itself. A gap that is not positive and a `psi` that lacks a
@@ -735,8 +737,8 @@ regime_stationary <- function(P, dP, d2P = NULL) {
 #' @param term A built `RegimeTerm`.
 #' @param eta The static predictor.
 #' @param y The response, reaching the recursion through the two callbacks.
-#' @param logdens,score The log-density and its derivative in the predictor,
-#'   each returning one value per observation.
+#' @param logdens,score The log-density and its derivative in the predictor, as
+#'   functions that each return one value per observation.
 #' @param psi The parameters on the parameter scale, named as [term_params()].
 #' @param ... Unused.
 #' @return A list with `loglik` and `jacobian`.
@@ -821,8 +823,8 @@ S7::method(term_loglik, RegimeTerm) <- function(term, eta, y, logdens, score,
 #' @title The Smoothed State Probabilities of a Latent Markov Term
 #'
 #' @description
-#' The probability of each regime at each observation given the whole
-#' series, which is everything a model layer needs to differentiate a
+#' Returns the probability of each regime at each observation given the whole
+#' series, which is everything that a model layer needs to differentiate a
 #' likelihood mixed over states.
 #'
 #' @details
@@ -838,14 +840,14 @@ S7::method(term_loglik, RegimeTerm) <- function(term, eta, y, logdens, score,
 #'   = \sum_k \gamma_t(k)\,
 #'     \frac{\partial \ell(y_t; \theta_t(k))}{\partial \eta_q},}
 #'
-#' for every predictor the model carries, not only the one the regimes
-#' shift. A caller therefore differentiates its own likelihood \eqn{K} times,
-#' vectorized, and weights the results, with no callback per observation. This
-#' is possible because the regimes shift a predictor that is known before the
-#' recursion starts.
+#' for every predictor that the model carries, not only the one that the
+#' regimes shift. A caller therefore differentiates its own likelihood \eqn{K}
+#' times, vectorized, and weights the results, with no callback per observation.
+#' This is possible because the regimes shift a predictor that is known before
+#' the recursion starts.
 #'
 #' The probabilities come from a forward pass and a backward pass beside it,
-#' both normalized at every step. Without the normalization the
+#' and both passes are normalized at every step. Without the normalization the
 #' quantities are products of \eqn{t} densities and reach zero in double
 #' precision on a long series.
 #'
@@ -859,10 +861,11 @@ S7::method(term_loglik, RegimeTerm) <- function(term, eta, y, logdens, score,
 #'   [term_params()].
 #' @param ... Passed to methods.
 #'
-#' @return A numeric matrix of `n` rows and \eqn{K} columns, every row
-#'   summing to one, giving \eqn{P(S_t = k \mid y_1, \dots, y_n)}.
+#' @return A numeric matrix of `n` rows and \eqn{K} columns, in which every
+#'   row sums to one and the entry in row \eqn{t} and column \eqn{k} is
+#'   \eqn{P(S_t = k \mid y_1, \dots, y_n)}.
 #'
-#' @seealso [term_loglik()] for the likelihood the same recursion computes,
+#' @seealso [term_loglik()] for the likelihood that the same recursion computes,
 #'   [term_hessian()] for the observed information, [regime()] for the model.
 #'
 #' @examples
@@ -879,7 +882,7 @@ S7::method(term_loglik, RegimeTerm) <- function(term, eta, y, logdens, score,
 #' range(rowSums(g))
 #'
 #' # The data switch level at observation 20, and the smoothed
-#' # probability of the second regime finds it.
+#' # probability of the second regime marks it.
 #' round(g[c(1, 19, 20, 21, 22, 40), 2], 3)
 #'
 #' @export
@@ -896,10 +899,11 @@ S7::method(term_posterior, structural_term) <- function(term, eta, y, logdens,
 #' @title Smoothed State Probabilities of a Regime Term
 #' @name term_posterior.RegimeTerm
 #' @description
-#' A forward pass with a backward pass beside it, both normalized and computed
-#' in R by this method, giving the probability of each regime at each
-#' observation given the whole series. The recursion runs over each group in
-#' time order, from the chain's stationary distribution.
+#' Runs in R a forward pass and a backward pass, normalizes both at every step,
+#' and returns the probability of each regime at each observation given the
+#' whole series.
+#' The recursion runs over each group in time order, from the chain's
+#' stationary distribution.
 #' @param term A built [RegimeTerm()].
 #' @param eta The static predictor.
 #' @param y The response.
@@ -984,8 +988,8 @@ S7::method(term_posterior, RegimeTerm) <- function(term, eta, y, logdens,
 #' @title The Observed Hessian of a Likelihood Mixed Over States
 #'
 #' @description
-#' The log-likelihood of a term that mixes over latent states, with its
-#' exact gradient and its exact Hessian in the whole of a caller's unknown
+#' Returns the log-likelihood of a term that mixes over latent states, with
+#' its exact gradient and its exact Hessian in the whole of a caller's unknown
 #' vector: the coefficients of every equation together with the term's own
 #' parameters.
 #'
@@ -1004,9 +1008,9 @@ S7::method(term_posterior, RegimeTerm) <- function(term, eta, y, logdens,
 #' route. The scaled forward recursion computes the observed
 #' log-likelihood exactly, as \eqn{\log L = \sum_t \log c_t} with \eqn{c_t}
 #' the normalizing constant of one step, so differentiating that arithmetic
-#' twice gives the observed Hessian with no identity involved. Carrying
+#' twice gives the observed Hessian without any identity. The recursion carries
 #' \eqn{a_t(k)} together with its first and second derivatives in the
-#' unknown vector \eqn{u},
+#' unknown vector \eqn{u}. The derivatives of the contribution are
 #'
 #' \deqn{\frac{\partial \log c_t}{\partial u} = \frac{\dot c_t}{c_t},
 #'   \qquad
@@ -1029,32 +1033,33 @@ S7::method(term_posterior, RegimeTerm) <- function(term, eta, y, logdens,
 #' The computation is meant to be run once, at a fitted point.
 #'
 #' @param term A built [RegimeTerm()].
-#' @param eta The static part of the predictor the regimes shift.
+#' @param eta The static part of the predictor that the regimes shift.
 #' @param y The response.
-#' @param logdens A function of a predictor value and a row index returning
+#' @param logdens A function of a predictor value and a row index that returns
 #'   the log-density there, one value per observation, as [term_loglik()]
 #'   takes it.
-#' @param grad A function of the same two arguments returning a matrix with
-#'   one row per observation and one column per distribution parameter, the
-#'   derivative of the log-density in each predictor.
-#' @param hess A function of the same two arguments returning an array of
-#'   dimension `c(n, p, p)`, observation first, holding the second derivatives
-#'   of the log-density in the predictors, where `p` is the number of
-#'   distribution parameters.
+#' @param grad A function of the same two arguments that returns a matrix with
+#'   one row per observation and one column per distribution parameter, whose
+#'   columns hold the derivative of the log-density in each predictor.
+#' @param hess A function of the same two arguments that returns an array of
+#'   dimension `c(n, p, p)`, whose first index is the observation and whose
+#'   entries are the second derivatives of the log-density in the predictors,
+#'   where `p` is the number of distribution parameters.
 #' @param psi The term's parameters on the parameter scale, named as
 #'   [term_params()]. The derivatives in the columns `cols` are taken in the
 #'   unconstrained coordinates, so the derivative in a gap is taken in its
 #'   logarithm, as it is for the scale of [term_links()].
-#' @param seed A list with one matrix per distribution parameter, each with
-#'   one row per observation and one column per unknown, giving the
-#'   derivative of that predictor in the caller's unknowns with zeros in the
-#'   columns the term's own parameters occupy.
-#' @param cols The columns of the unknown vector the term's own parameters
+#' @param seed A list with one matrix per distribution parameter. Each matrix
+#'   has one row per observation and one column per unknown, and holds the
+#'   derivative of that predictor in the caller's unknowns, with zeros in the
+#'   columns that the term's own parameters occupy.
+#' @param cols The columns of the unknown vector that the term's own parameters
 #'   occupy, in the order of [term_params()].
-#' @param level The index, among the distribution parameters, of the one the
-#'   regimes shift.
+#' @param level The index, among the distribution parameters, of the one that
+#'   the regimes shift.
 #' @param weights Optional observation weights: one number or one number per
-#'   observation, none missing. `NULL` gives every observation the weight one.
+#'   observation, without missing values. `NULL` gives every observation the
+#'   weight one.
 #' @param ... Passed to methods.
 #'
 #' @return A list of three: `loglik`, the `n` per-observation contributions,
@@ -1063,15 +1068,15 @@ S7::method(term_posterior, RegimeTerm) <- function(term, eta, y, logdens,
 #'   the weighted sum in that same vector, an `m` by `m` matrix with `m` its
 #'   length. The Hessian is the mixture's own. Its negative, the observed
 #'   information, is smaller in the Loewner order than the complete-data
-#'   information, the difference being the information that the unobserved
+#'   information, and the difference is the information that the unobserved
 #'   states cost.
 #'
 #' @examples
 #' set.seed(1)
 #' dd <- data.frame(t = 1:30, y = c(rnorm(15), rnorm(15, 3)))
 #' term <- term_build(regime(2, time = t), dd)
-#' # a gaussian mean of unit variance: one predictor, one unknown besides
-#' # the term's own four
+#' # The model is a gaussian mean of unit variance: one predictor, one unknown
+#' # besides the term's own four.
 #' m <- 5L
 #' out <- term_hessian(
 #'   term, eta = rep(0, 30), y = dd$y,
@@ -1159,8 +1164,9 @@ S7::method(term_hessian, structural_term) <- function(term, eta, y, logdens,
 #' @title Observed Hessian of a Regime Term
 #' @name term_hessian.RegimeTerm
 #' @description
-#' Forward-mode second-order propagation through the scaled forward
-#' recursion, giving the exact Hessian of the mixed log-likelihood.
+#' Propagates the derivatives to second order, in forward mode, through the
+#' scaled forward recursion and returns the exact Hessian of the mixed
+#' log-likelihood.
 #' @details
 #' The recursion runs in R over each group in time order. The derivatives in
 #' the term's own parameters are taken on the unconstrained scale: the first
@@ -1175,10 +1181,10 @@ S7::method(term_hessian, structural_term) <- function(term, eta, y, logdens,
 #'   the predictors. The last returns an array of dimension `c(n, p, p)`.
 #' @param psi The term's parameters on the parameter scale.
 #' @param seed The derivative of each predictor in the caller's unknowns.
-#' @param cols The columns the term's own parameters occupy.
-#' @param level The distribution parameter the regimes shift.
+#' @param cols The columns that the term's own parameters occupy.
+#' @param level The distribution parameter that the regimes shift.
 #' @param weights Observation weights: one number or one per observation,
-#'   none missing.
+#'   without missing values.
 #' @param ... Unused.
 #' @return A list with `loglik`, `gradient` and `hessian`.
 #' @keywords internal
@@ -1213,7 +1219,7 @@ S7::method(term_hessian, RegimeTerm) <- function(term, eta, y, logdens, grad,
   cols <- as.integer(cols)
   level <- as.integer(level)
   if (length(cols) != length(nm) || any(cols < 1L) || any(cols > m)) {
-    stop(sprintf("'cols' must give the %d columns the term's parameters occupy.",
+    stop(sprintf("'cols' must give the %d columns that the term's parameters occupy.",
                  length(nm)), call. = FALSE)
   }
   if (length(level) != 1L || level < 1L || level > npar) {
@@ -1359,8 +1365,9 @@ S7::method(term_hessian, RegimeTerm) <- function(term, eta, y, logdens, grad,
 #'
 #' @description
 #' Prints two lines: the label and the number of regimes, followed by the
-#' term's parameters. A built term reports how many groups the recursion runs
-#' over, and a specification reports no group count.
+#' term's parameters. The first line of a built term gives the number of groups
+#' over which the recursion runs, and the first line of a specification has no
+#' group count.
 #'
 #' @details
 #' The two forms are
@@ -1374,15 +1381,17 @@ S7::method(term_hessian, RegimeTerm) <- function(term, eta, y, logdens, grad,
 #' ```
 #'
 #' The group count is `length(blueprint$order)`, which is 1 unless the term
-#' was given a `by`. The parameter list is [term_params()], the same before
-#' and after a build, `k` alone determining it.
+#' was given a `by`. The parameter list is [term_params()], which is the same
+#' before and after a build because only `k` determines it.
 #'
-#' A built term is described by its count of groups, not by the word "built".
+#' The description of a built term gives its count of groups and omits the word
+#' "built".
 #'
 #' @param x A [RegimeTerm()], built or not.
 #' @param ... Unused, and accepted so that the signature matches [print()]'s.
 #'
-#' @return `x`, invisibly. Called for the two lines it writes.
+#' @return `x`, invisibly. The function is called for the two lines that it
+#'   writes.
 #'
 #' @seealso [regime()], [term_params()].
 #'
@@ -1391,7 +1400,8 @@ S7::method(term_hessian, RegimeTerm) <- function(term, eta, y, logdens, grad,
 #' dd <- data.frame(t = 1:40, id = rep(1:2, each = 20),
 #'                  y = c(rnorm(20), rnorm(20, 3)))
 #'
-#' # A specification, and the same term built over two groups.
+#' # The first call prints a specification, and the second prints the same
+#' # term built over two groups.
 #' regime(2)
 #' term_build(regime(2, by = id, time = t), dd)
 #'
@@ -1463,21 +1473,22 @@ S7::method(print, RegimeTerm) <- function(x, ...) {
 #' @title Drawing a Regime Path
 #'
 #' @description
-#' A path of the latent chain, and the predictor each observation gets from
-#' the level of the state it lands in.
+#' Draws a path of the latent chain and returns the predictor of each
+#' observation, which is the static predictor plus the level of the state that
+#' the observation occupies.
 #'
 #' @details
 #' One chain is drawn for each group of the blueprint, in time order, and each
-#' starts from the chain's stationary distribution. This is how
-#' [term_loglik()] and [term_posterior()] read the data, and the likelihood is
-#' written with that initial law, so starting from a fixed first state or from
-#' a uniform draw would simulate a different model from the one that is
-#' fitted. The transition matrix comes from the term's own
-#' [parameters7::transition_matrix()], and the stationary law is the solution
-#' of \eqn{\delta(I - P) = 0} with \eqn{\sum_j \delta_j = 1}, solved in the
-#' method.
+#' starts from the chain's stationary distribution. [term_loglik()] and
+#' [term_posterior()] read the data in this way, and the likelihood is written
+#' with that initial law, so
+#' starting from a fixed first state or from a uniform draw would simulate a
+#' different model from the one that is fitted. The transition matrix comes
+#' from the term's own [parameters7::transition_matrix()], and the stationary
+#' law is the solution of \eqn{\delta(I - P) = 0} with
+#' \eqn{\sum_j \delta_j = 1}, which the method solves itself.
 #'
-#' The response is not drawn, because the levels do not read it, so `y` is
+#' The response is not drawn, because the levels do not depend on it, so `y` is
 #' returned as `NULL` and the caller draws at the returned predictor. An `eta`
 #' whose length differs from the number of rows of the build data signals an
 #' error.
@@ -1485,8 +1496,8 @@ S7::method(print, RegimeTerm) <- function(x, ...) {
 #' @param term A built regime term.
 #' @param psi The term's parameters, on the parameter scale.
 #' @param eta The static part of the predictor, one value per row of the
-#'   data the term was built on.
-#' @param draw Ignored: the levels do not read the response.
+#'   data on which the term was built.
+#' @param draw Ignored: the levels do not depend on the response.
 #' @param ... Ignored.
 #'
 #' @return A list with `eta`, the static predictor plus the level of each
@@ -1511,7 +1522,7 @@ S7::method(term_simulate, RegimeTerm) <- function(term, psi, eta, draw, ...) {
   A[, k] <- 1
   delta <- as.numeric(solve(t(A), c(rep(0, k - 1L), 1)))
   if (n != bp$n) {
-    stop(sprintf("'eta' must have one value per row of the data the term was built on (%d).",
+    stop(sprintf("'eta' must have one value per row of the data on which the term was built (%d).",
                  bp$n), call. = FALSE)
   }
   # one chain per group, in time order, started from the stationary law,

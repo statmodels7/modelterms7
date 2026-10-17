@@ -310,12 +310,12 @@ test_that("a smooth refuses sparse where there is nothing to build on", {
                   g = factor(rep(1:5, 10)))
   # no `by` at all: the basis is dense by construction, the Demmler-Reinsch
   # rotation making it so
-  expect_error(s(x, bspline_smooth(k = 6), sparse = TRUE), "nothing to build on")
-  expect_error(te(x, z, smooths = bspline_smooth(k = 5), sparse = TRUE), "nothing to build on")
+  expect_error(s(x, bspline_smooth(k = 6), sparse = TRUE), "nothing on which to build")
+  expect_error(te(x, z, smooths = bspline_smooth(k = 5), sparse = TRUE), "nothing on which to build")
   # a NUMERIC by multiplies the basis, so the block is as dense as it is.
   # Known only at the build, which is where it is said.
   expect_error(term_build(s(x, bspline_smooth(k = 6), by = z, sparse = TRUE), d),
-               "nothing to build on")
+               "nothing on which to build")
   expect_error(s(x, sparse = "yes"), "TRUE, FALSE, or NULL")
   # a NULL is not an explicit TRUE and so is not refused: it settles, and
   # where there is nothing to build on it settles dense

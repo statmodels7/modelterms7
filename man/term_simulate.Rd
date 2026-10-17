@@ -23,9 +23,9 @@ A list with \code{eta}, the predictor; \code{y}, the responses
 drawn or \code{NULL}; and \code{latent}, whatever the term drew.
 }
 \description{
-The predictor a structural term produces when the response is being
-generated rather than read, together with whatever latent quantity the
-term drew on the way.
+Returns the predictor that a structural term produces when the response is
+being generated rather than read, together with whatever latent quantity
+the term drew on the way.
 }
 \details{
 Simulating from a model that carries state differs from fitting one in the
@@ -39,7 +39,7 @@ drawn as the recursion runs.
 
 The same calling convention covers both. The caller supplies \code{draw}, a
 function of a predictor and a row index returning one response value, and
-the method returns the predictor it produced. A method that drew returns
+the method returns the predictor that it produced. A method that drew returns
 the responses as well, and a method that did not returns \code{NULL} there,
 leaving the caller to draw at the predictor. \code{\link[=regime]{regime()}} draws one chain per
 group, in time order and started from the stationary distribution, and

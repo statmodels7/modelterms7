@@ -18,14 +18,15 @@ term_within(term, newdata, ...)
 A numeric matrix of \code{nrow(newdata)} rows, or \code{NULL}.
 }
 \description{
-The design row each group's effect multiplies, at new rows.
+Returns, at new rows, the design row that each group's effect multiplies.
 }
 \details{
 A term whose coefficients are one effect per group, \code{\link[=random]{random()}}, builds
 its block by interacting a within-group design with the group indicators.
-This returns the first factor alone, which does not depend on the
-grouping: a caller integrating the effect of a group the fit never saw
-reads \eqn{z_i^\top b} from it with \eqn{b} drawn from the prior.
+This returns the first factor by itself, and that factor does not depend on
+the grouping: a caller who integrates the effect of a group that was absent
+from the fitting data reads \eqn{z_i^\top b} from it, where \eqn{b} is drawn
+from the prior.
 
 The base method returns \code{NULL}, which is the answer for every term but
 \code{\link[=random]{random()}}.

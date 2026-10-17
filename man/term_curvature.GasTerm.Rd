@@ -40,7 +40,7 @@ two indices, pair \verb{(r, r2)} at column \code{(r - 1) * n_par + r2}, with
 jacobian rows of the other equations) and \code{ap} (the filter's own
 parameter index), and for the third and fourth orders \code{D4} and \code{D5}, one
 column per index triple and quadruple after the filter's own, laid out
-the same way. Read only by the compiled route.}
+the same way. Only the compiled route reads it.}
 
 \item{threads}{Threads for the compiled route's group loop, as
 \code{numericals7::n_threads()} counts them; 1 is sequential.}
@@ -49,9 +49,9 @@ the same way. Read only by the compiled route.}
 A list with \code{jacobian} and \code{curvature}.
 }
 \description{
-The forward Jacobian of the filter's predictor in a caller's unknowns and
-the second derivative contracted against the caller's weights, both
-propagated through the recursion beside the state.
+Computes the forward Jacobian of the filter's predictor in a caller's
+unknowns and the second derivative contracted against the caller's
+weights, and propagates both through the recursion beside the state.
 }
 \details{
 With subformulas the general per-observation route runs instead, and
@@ -63,7 +63,7 @@ panel has ten groups or a thousand. Accumulating the square over all the
 unknowns would grow with the square of their number, and the number of
 unknowns grows with the number of groups.
 
-\code{blocks} is called as \code{blocks(e, i, v, act)}, with the row \code{v} of the
+\code{blocks} is called as \code{blocks(e, i, v, act)}, where \code{v} is the row of the
 Jacobian restricted to the active set \code{act}, and returns its pieces in the
 coordinates of that set. A callback of three arguments, \code{blocks(e, i, v)},
 is also accepted: it is given the full row and its result is subset here,

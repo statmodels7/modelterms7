@@ -12,37 +12,38 @@ term_links(term, ...)
 does not implement the generic signals the error
 \code{"the term class 'X' does not implement term_links()."}.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use these
+arguments.}
 }
 \value{
 A named list of \pkg{linkfunctions7} link objects, one per entry of
 \code{\link[=term_params]{term_params()}} and named by it.
 }
 \description{
-One \pkg{linkfunctions7} link per parameter of \code{\link[=term_params]{term_params()}}, carrying
-that parameter from its own admissible set onto the whole real line. A
-fitting layer optimizes on that unconstrained scale, so an optimizer never
-has to be told about the constraint.
+Returns one \pkg{linkfunctions7} link per parameter of \code{\link[=term_params]{term_params()}},
+carrying that parameter from its own admissible set onto the whole real
+line. A fitting layer optimizes on that unconstrained scale, so the
+optimizer needs no information about the constraint.
 }
 \details{
 The charts are chosen so that a proposal from anywhere lands somewhere
 admissible. \code{\link[=gas]{gas()}} puts its level on the identity, its score loadings on
-the \strong{log} so a loading stays positive, and its persistence coordinates on
-the \strong{rhobit} so each partial autocorrelation stays inside \eqn{(-1, 1)}
+the log so a loading stays positive, and its persistence coordinates on
+the rhobit so each partial autocorrelation stays inside \eqn{(-1, 1)}
 and the filter stays stationary. \code{\link[=regime]{regime()}} puts its first level and the
 free entries of its transition matrix on the identity and the gaps between
 levels on the log, so the levels are ordered by construction. The \code{links}
 argument of \code{\link[=gas]{gas()}} overrides the links per parameter.
 
 The persistence uses a different kind of chart from the other parameters.
-The stationary region in
-the autoregressive coefficients is not a box, so no collection of scalar
-links covers it; the partial autocorrelations are each in \eqn{(-1, 1)}
-independently, and Levinson-Durbin carries them onto the coefficients.
-That is why \code{\link[=term_readable]{term_readable()}} exists: the coordinate and the quantity a
+The stationary region in the autoregressive coefficients is not a box, so
+a collection of scalar links cannot cover it; the partial
+autocorrelations are each in \eqn{(-1, 1)} independently, and
+Levinson-Durbin carries them onto the coefficients. The function
+\code{\link[=term_readable]{term_readable()}} exists because the coordinate and the quantity that a
 reader reads are different things.
 
-Where a parameter carries a subformula the link is applied \strong{inside} the
+Where a parameter carries a subformula the link is applied inside the
 development, \eqn{\psi_{j,t} = g_j^{-1}(z_t'\gamma_j)}, so the parameter
 stays admissible at every observation and the coefficients \eqn{\gamma_j}
 are unconstrained.
@@ -50,7 +51,8 @@ are unconstrained.
 The method on \code{\link[=structural_term]{structural_term()}} signals an error that names the class.
 }
 \examples{
-# Identity for the level, log for the loading, rhobit for the persistence.
+# The level uses the identity link, the loading uses the log link and the
+# persistence uses the rhobit link.
 vapply(term_links(gas(p = 1, q = 2)), function(l) l@link_name, character(1))
 
 # Each carries its parameter's own set onto the whole line.

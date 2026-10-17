@@ -18,8 +18,8 @@ NULL
 #' [stats::model.matrix()] conventions. An `offset()` term is not among the
 #' labels that [stats::terms()] returns, so it is dropped without a message;
 #' `statmodels7::statmod()` separates offsets before calling this function.
-#' The terms come back unbuilt, so the caller decides which data each is built
-#' against.
+#' The terms are returned unbuilt, so the caller chooses the data against which
+#' each term is built.
 #'
 #' @details
 #' # Recognition by evaluation
@@ -29,22 +29,22 @@ NULL
 #' names to amend. `log(x)` evaluates to a numeric vector and stays a
 #' covariate; `s(x, basis7::bspline_smooth(k = 5))` evaluates to a `SmoothTerm`
 #' and is routed as a term. A call whose evaluation signals an error, such as a
-#' term constructor called with an argument it does not have, signals the error
-#' `"evaluating '<label>' failed: <message>"`, so the call is not treated as a
-#' covariate.
+#' term constructor called with an argument that it does not have, signals the
+#' error `"evaluating '<label>' failed: <message>"`, so the call is not treated
+#' as a covariate.
 #'
 #' Some labels are never evaluated: `:`, `*`, `^`, `%in%`, `+`, `-`, `(` and
 #' `I`. A bare interaction `x1:x2` parses as a call to `:`, which on numeric
 #' vectors is the sequence operator and would return something unrelated to the
-#' column [stats::model.matrix()] builds. Those labels go straight to the
+#' column that [stats::model.matrix()] builds. Those labels go straight to the
 #' parametric block.
 #'
-#' A call whose value is neither a term nor something a model matrix can hold
-#' signals an error that names the label and the class of the value. The
+#' A call whose value is neither a term nor something that a model matrix can
+#' hold signals an error that names the label and the class of the value. The
 #' commonest cause is a masked name. The package `mgcv` also exports `s()` and
-#' `te()`, and `segmented` exports `seg()`, so where this package exports a
-#' term of that name and the name resolves elsewhere, the message states where
-#' the function was found and suggests `modelterms7::`.
+#' `te()`, and `segmented` exports `seg()`, so where this package exports a term
+#' of that name and the name resolves elsewhere, the message states where the
+#' function was found and suggests `modelterms7::`.
 #'
 #' # The response and the intercept
 #'
@@ -58,8 +58,8 @@ NULL
 #'
 #' A [linpar()] written in a formula that carries an intercept drops its own
 #' column `(Intercept)` after its model matrix is built, so its factors keep
-#' the coding they have with an intercept and `y ~ linpar(~ x + g)` gives the
-#' columns of `lm(y ~ x + g)`. Under `0 +` it keeps the column.
+#' the coding that they have with an intercept and `y ~ linpar(~ x + g)` gives
+#' the columns of `lm(y ~ x + g)`. Under `0 +` it keeps the column.
 #'
 #' # One covariate is removed
 #'
@@ -80,7 +80,8 @@ NULL
 #'
 #' # What it does not do
 #'
-#' Nothing is built: every element of `terms` is a specification, and
+#' The function does not build any term: every element of `terms` is a
+#' specification, and
 #' [term_is_built()] is `FALSE` for all of them. `data` is read for
 #' [stats::terms()]'s variable classification and for evaluating the term calls
 #' and the response, and the term constructors themselves do not touch it.
@@ -90,17 +91,19 @@ NULL
 #' column.
 #'
 #' @param formula A two-sided or one-sided model formula. Anything else signals
-#'   the error `"'formula' must be a formula."`. Its environment is where a term call's
-#'   symbols are looked up when `data` does not carry them, and it is carried
-#'   onto the formula of the implicit `linpar` block.
+#'   the error `"'formula' must be a formula."`. The symbols of a term call are
+#'   looked up in the formula's environment when `data` does not carry them, and
+#'   that environment is carried onto the formula of the implicit `linpar`
+#'   block.
 #' @param data A data frame in which the formula's symbols are evaluated.
 #'   Anything else signals the error `"'data' must be a data frame."`.
-#' @param linpar A named list of arguments for the **implicit** [linpar()]
-#'   term, the one the bare covariates collapse into: `sparse` and `contrasts`.
-#'   This is the only place they can be given, that term never being written by
-#'   the caller. Empty by default, which leaves [linpar()]'s own defaults. A
-#'   `linpar()` term the caller writes out takes its own arguments and ignores
-#'   this one. Anything that is not a list signals an error.
+#' @param linpar A named list of arguments for the implicit [linpar()] term,
+#'   the term into which the bare covariates collapse; the arguments are
+#'   `sparse` and `contrasts`. This is the only place where they can be given,
+#'   because the caller never writes that term. The default is an empty list,
+#'   which leaves [linpar()]'s own defaults in place. A `linpar()` term that the
+#'   caller writes out takes its own arguments and ignores this one. Anything
+#'   that is not a list signals an error.
 #'
 #' @return A list with the elements:
 #'   \describe{
@@ -115,9 +118,9 @@ NULL
 #'     \item{`formula`}{The input, unchanged.}
 #'   }
 #'
-#' @seealso [linpar()] for the block the covariates collapse into, [cens()] for
-#'   the response constructor, [check_term()] for validating one of the
-#'   returned specifications, and [term_build()] for building it.
+#' @seealso [linpar()] for the block into which the covariates collapse,
+#'   [cens()] for the response constructor, [check_term()] for validating one of
+#'   the returned specifications, and [term_build()] for building it.
 #'
 #' @examples
 #' dd <- data.frame(y = rnorm(20), x1 = 1:20, x2 = runif(20),
@@ -133,7 +136,7 @@ NULL
 #' names(out2$terms)
 #' vapply(out2$terms, function(t) class(t)[1], character(1))
 #'
-#' # Nothing is built yet.
+#' # The terms are not built yet.
 #' vapply(out2$terms, term_is_built, logical(1))
 #'
 #' # The intercept convention is the formula's own.
@@ -151,7 +154,8 @@ NULL
 #' w <- interpret_formula(y ~ x1 + seg(x1), dd)
 #' w$terms$linpar@formula          # x1 is gone; the term carries it
 #'
-#' # Unless the term is told not to own it.
+#' # The bare covariate is kept when the term is told not to own the linear
+#' # effect.
 #' interpret_formula(y ~ x1 + seg(x1, linear = FALSE), dd)$terms$linpar@formula
 #'
 #' # Arguments for the implicit block go through `linpar`.
@@ -293,7 +297,7 @@ interpret_formula <- function(formula, data, linpar = list()) {
     if (length(v)) {
       warning(sprintf(paste("'%s' spans the linear effect in '%s' that '%s'",
                             "also carries, so the two are confounded along",
-                            "it. Neither is modified; write %s(%s,",
+                            "it. Both terms are left unmodified; write %s(%s,",
                             "linear = FALSE) if that is what was meant."),
                       nm, v[1L], owned[[v[1L]]], owned[[v[1L]]], v[1L]),
               call. = FALSE)

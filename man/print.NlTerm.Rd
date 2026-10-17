@@ -9,12 +9,13 @@
 \item{...}{Unused, and accepted so that the signature matches \code{\link[=print]{print()}}'s.}
 }
 \value{
-\code{x}, invisibly. Called for the lines it writes.
+\code{x}, invisibly. The method is called for the lines that it writes.
 }
 \description{
 Prints the label and, for a built term, how many coefficients it carries,
 which route its derivatives take, and the names of its parameters. A
-specification says only that it is one.
+specification prints only the label and a note that the term is a
+specification.
 }
 \details{
 The built form is
@@ -39,7 +40,8 @@ dd <- data.frame(x = seq(0, 3, length.out = 60),
                  g = factor(rep(c("u", "v"), 30)))
 dd$y <- 2 * exp(-1.3 * dd$x) + rnorm(60, sd = 0.05)
 
-# A specification, and the same term built.
+# The first call prints a specification and the second prints the same
+# term built.
 nl(~ a * exp(-r * x), start = list(a = 1, r = 1))
 term_build(nl(~ a * exp(-r * x), start = list(a = 1, r = 1)), dd)
 

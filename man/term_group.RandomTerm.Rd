@@ -12,15 +12,15 @@
 A list with \code{expr}, \code{levels}, \code{dim} and \code{names}, or \code{NULL}.
 }
 \description{
-The grouping expression, its levels, the number of within-group columns and
-their names, or \code{NULL} on an unbuilt term.
+Returns the grouping expression, its levels, the number of within-group
+columns and their names, or \code{NULL} on an unbuilt term.
 }
 \details{
 These come from the blueprint, where the build recorded them. \code{dim} is
 the within-group column count, so the block's level \eqn{i} occupies
-positions \eqn{(i-1)d + 1} to \eqn{id}, which is the group-major order the
-blockwise penalty reads. \code{names} holds the column names of the within-group
-design.
+positions \eqn{(i-1)d + 1} to \eqn{id}, which is the group-major order that
+the blockwise penalty reads. \code{names} holds the column names of the
+within-group design.
 }
 \seealso{
 \code{\link[=term_group]{term_group()}} for the generic.

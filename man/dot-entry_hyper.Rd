@@ -7,8 +7,8 @@
 .entry_hyper(entries, hyper, ids, label, what = "the effects' distribution")
 }
 \arguments{
-\item{entries}{The entries a term declares, each a list with at least
-\code{name} and \code{penalty}.}
+\item{entries}{The entries that a term declares, where each entry is a list
+with at least \code{name} and \code{penalty}.}
 
 \item{hyper}{The term's \code{hyper}, already normalized.}
 
@@ -16,7 +16,8 @@
 
 \item{label}{The term's label, for the message.}
 
-\item{what}{What the hyperparameters belong to, named in the message.}
+\item{what}{The object to which the hyperparameters belong, named in the
+message.}
 }
 \value{
 The entries, with \code{fixed}, \code{values} and \code{ids} filled in and
@@ -31,14 +32,14 @@ it. The same applies to \code{id}.
 The hyperparameters of a term are not always determined when the term is
 written. A random effect's are the effects' distribution's, and a smooth's
 are its penalty's, which may come from a factory called at a coefficient
-count that the data determine. The check is therefore made here, at the
-build, which is the first point at which the penalties exist.
+count that the data determine. This function therefore makes the check at
+the build, which is the first point at which the penalties exist.
 
-A name is qualified by the entry it belongs to where there is more than
-one: the within-group column for a random effect, the level of the factor
-for a smooth with one smoothing parameter per level. An unqualified name
-is an error that lists the names available. A value is never recycled over
-the entries, because a value applied silently to every entry would be
-wrong for those it does not belong to.
+A name is qualified by the entry to which it belongs where there is more
+than one: the within-group column for a random effect, the level of the
+factor for a smooth with one smoothing parameter per level. An unqualified
+name is an error that lists the names available. A value is never recycled
+over the entries, because a value applied silently to every entry would be
+wrong for the entries to which it does not belong.
 }
 \keyword{internal}

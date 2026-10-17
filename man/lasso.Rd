@@ -30,7 +30,7 @@ apart by their labels.}
 each coefficient on the scale of its own column. See the section above.}
 
 \item{lambda}{The rate of the prior. One number holds it, several are the
-grid the path visits as they stand, and \code{NULL}, the default, has the
+grid that the path visits as they stand, and \code{NULL}, the default, has the
 path build one. Must lie in \eqn{(0, \infty)}.}
 
 \item{id}{A label sharing this term's hyperparameter with those of
@@ -39,15 +39,15 @@ single value, wherever in the formula they sit. \code{NULL}, the
 default, shares nothing. See \code{\link[=term_ids]{term_ids()}} for the meaning of the labels
 and the restrictions on their use.}
 
-\item{n_lambda}{How many values the path visits, a whole number of at
-least 2, \code{25} by default. The axis descends from the kink size that
+\item{n_lambda}{The number of values that the path visits, a whole number
+of at least 2, \code{25} by default. The axis descends from the kink size that
 empties the block to \code{min_ratio} times that size, which is four decades
 at the default \code{min_ratio}. Given explicitly while \code{lambda} is held or
 written out, it signals an error.}
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
-stops sooner. A single number in \eqn{(0, 1)}, \code{1e-4} by default.
+stops sooner. It is a single number in \eqn{(0, 1)}, \code{1e-4} by default.
 Only the sweep by kink size reads it, and it signals an error when given
 explicitly while \code{lambda} is held or written out.}
 
@@ -62,13 +62,14 @@ an argument named after another penalty's hyperparameter:
 \code{scad(~ x, gamma = 1)} signals \code{"'scad' has no argument 'gamma'."}.}
 }
 \value{
-An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification, with \code{X},
-\code{coef_names}, \code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}}
+An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification whose \code{X},
+\code{coef_names}, \code{blueprint} and \code{penalty} are empty until \code{\link[=term_build]{term_build()}}
 fills them. The build attaches the penalty over the block's columns.
 }
 \description{
-A block of coefficients under a Laplace prior at zero: the penalty has a
-kink there, so coefficients are set exactly to zero and the term selects.
+Specifies a block of coefficients under a Laplace prior at zero. The
+penalty has a kink there, so coefficients are set exactly to zero and the
+term selects.
 }
 \details{
 \deqn{\rho(\beta) = \lambda\lVert\beta\rVert_1
@@ -78,12 +79,13 @@ zero with rate \eqn{\lambda}, and a larger \eqn{\lambda} shrinks harder
 and keeps fewer coefficients.
 
 The kink is at zero, so the block is fitted by a proximal method or by a
-coordinate descent with the other terms held, and \eqn{\lambda} is chosen
-by a path over its own values, scored by \code{\link[statmodels7:aic]{statmodels7::bic()}} by default
-or by \code{\link[statmodels7:aic]{statmodels7::aic()}} or \code{\link[statmodels7:cv]{statmodels7::cv()}}. A marginal criterion
-cannot be used: it is a Laplace expansion at a mode that sits on the kink.
+coordinate descent while the other terms are held, and \eqn{\lambda} is
+chosen by a path over its own values, scored by \code{\link[statmodels7:aic]{statmodels7::bic()}} by
+default or by \code{\link[statmodels7:aic]{statmodels7::aic()}} or \code{\link[statmodels7:cv]{statmodels7::cv()}}. A marginal
+criterion cannot be used: it is a Laplace expansion at a mode that sits on
+the kink.
 
-\strong{Hyperparameter.} \code{lambda}, admissible on \eqn{(0, \infty)},
+The hyperparameter is \code{lambda}, admissible on \eqn{(0, \infty)}. It is
 swept over \code{n_lambda} values from the one that empties the block
 down to \code{min_ratio} of it.
 }
@@ -102,13 +104,13 @@ beta <- c(0.4, -1.1)
 all.equal(penalties7::penalty_value(p, beta, list(lambda = 2)),
           2 * sum(abs(beta)) - 2 * log(2 / 2))
 
-# The path's length and depth, at the defaults and set.
+# The path's length and depth are shown at the defaults and when set.
 term_grid(lasso(~ x1 + x2))
 term_grid(lasso(~ x1 + x2, n_lambda = 60))
 term_path_min(lasso(~ x1 + x2, min_ratio = 1e-3))
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The model is fitted. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(11)

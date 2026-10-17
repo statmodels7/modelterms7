@@ -19,16 +19,16 @@ used only to read the names.}
 A named list of grid sizes.
 }
 \description{
-Validates the number of values the constructor was given per
-hyperparameter, and returns them as a named list with the \code{NULL}
-entries dropped.
+Validates the number of values that the constructor was given per
+hyperparameter, and returns them as a named list from which the \code{NULL}
+entries are dropped.
 }
 \details{
 How finely a hyperparameter is swept belongs to the term for the same
 reason as whether it is swept at all: a penalized block of four columns
-and one of four hundred want different grids, and a criterion is applied to
-every term of the model at once. Where a term gives no size, the path of the
-fitting layer uses its own default.
+and one of four hundred need different grids, and a criterion is
+applied to every term of the model at once. Where a term gives no size,
+the path of the fitting layer uses its own default.
 
 The smallest grid has two values. There is no upper limit; each point of a
 path is a whole fit, so the cost grows linearly in the number of values on

@@ -19,26 +19,28 @@ NULL
 #' @details
 #' # The three rules
 #'
-#' **A parameter outside every penalty counts one**, exactly. A term with no
-#' penalties at all therefore returns `term_npar(term)` and reads none of the
-#' other arguments.
+#' A parameter outside every penalty counts one, exactly. A term with no
+#' penalties at all therefore returns `term_npar(term)` and does not read any
+#' of the other arguments.
 #'
-#' **A parameter under a non-smooth penalty counts one when it is away from
-#' zero and nothing when it is at it.** For the lasso that count is an unbiased
-#' estimator of the degrees of freedom (Zou, Hastie and Tibshirani, 2007). A
-#' penalty is treated as non-smooth when [penalties7::penalty_kinks()] reports
-#' any point at a probe value of its hyperparameters. The lasso, SCAD, MCP and
-#' the elastic net are therefore counted by this rule, and the ridge is not.
+#' A parameter under a non-smooth penalty counts one when it is away from
+#' zero and counts zero when it is at zero. For the lasso that count is an
+#' unbiased estimator of the degrees of freedom (Zou, Hastie and Tibshirani,
+#' 2007). A penalty is treated as non-smooth when [penalties7::penalty_kinks()]
+#' reports any point at a probe value of its hyperparameters. The lasso, SCAD,
+#' MCP and the elastic net are therefore counted by this rule, and the ridge is
+#' not.
 #'
-#' **Everything else is counted together by one trace.** Over the parameters
-#' that remain, meaning those unpenalized and those under a smooth penalty,
+#' Everything else is counted together by one trace. Over the parameters
+#' that remain, meaning those that are unpenalized and those under a smooth
+#' penalty, the count is
 #'
 #' \deqn{\mathrm{edf} = \mathrm{tr}\{(H + S)^{-1} H\},}
 #'
 #' where \eqn{H} is `hessian` restricted to those rows and columns and \eqn{S}
 #' carries each smooth penalty's Hessian in the coefficients, evaluated at
 #' `coef` and at the estimated hyperparameters and placed at the parameters
-#' that penalty covers. An unpenalized parameter contributes a zero row and
+#' that the penalty covers. An unpenalized parameter contributes a zero row and
 #' column to \eqn{S}, so the trace returns its one. As a smoothing parameter
 #' grows, the trace falls toward the dimension of the penalty's null space.
 #' For [s()] with the B-spline, P-spline or Legendre smoother that limit is 1,
@@ -55,9 +57,9 @@ NULL
 #' over which the trace runs. It is not needed when every penalty of the term
 #' is non-smooth, since the count is then read from `coef` alone, and `coef` is
 #' not needed when the term carries no penalty. An argument that the rule in
-#' force does not read may be left `NULL`. An argument that the rule reads and
-#' that is missing signals an error, and the message names the arguments the
-#' rule needs.
+#' force does not read may be left `NULL`. If an argument that the rule reads
+#' is missing, `edf()` signals an error, and the message names the arguments
+#' that the rule needs.
 #'
 #' @param term A built term (see [term_build()]). An unbuilt term signals an
 #'   error.
@@ -71,24 +73,25 @@ NULL
 #'   is allowed unless the trace runs.
 #' @param theta The estimated hyperparameters. A term carrying one penalty
 #'   takes that penalty's own named list, `list(lambda = 0.25)`. A term
-#'   carrying several takes a list of such lists, keyed by the names
+#'   carrying several takes a list of such lists, keyed by the names that
 #'   [term_penalties()] gives; an unkeyed list signals an error that lists the
-#'   names. The two spellings are distinguished by the value being a list, since
-#'   a hyperparameter is never a list.
+#'   names. The two spellings are distinguished by whether the value is a list,
+#'   since a hyperparameter is never a list.
 #' @param tol The magnitude below which a coefficient counts as zero under a
 #'   non-smooth penalty, `1e-8` by default. A proximal step returns exact
 #'   zeros, so the threshold matters only for coefficients that a different
 #'   route left small.
 #' @param ... Passed to methods.
 #'
-#' @return A single number, between 0 and `term_npar(term)`. Not an integer in
-#'   general: only the unpenalized and the non-smooth rules give whole numbers.
+#' @return A single number, between 0 and `term_npar(term)`. The number is not
+#'   an integer in general: only the unpenalized and the non-smooth rules give
+#'   whole numbers.
 #'
 #' @references
 #' Zou, H., Hastie, T. and Tibshirani, R. (2007). On the "degrees of freedom"
 #' of the lasso. *The Annals of Statistics*, 35(5), 2173--2192.
 #'
-#' @seealso [term_penalties()] for the entries the count runs over,
+#' @seealso [term_penalties()] for the entries over which the count runs,
 #'   [term_npar()] for the ceiling, [term_smooth()] for whether a term's
 #'   penalized objective is twice differentiable, and
 #'   [penalties7::penalty_hessian()] for the \eqn{S} block.
@@ -97,7 +100,8 @@ NULL
 #' set.seed(2)
 #' dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20), x3 = rnorm(20))
 #'
-#' # No penalty: the coefficient count, and nothing else is read.
+#' # Without a penalty, edf() returns the coefficient count and ignores the
+#' # other arguments.
 #' edf(term_build(linpar(~ x1 + x2), dd))
 #'
 #' # For a ridge the count falls from 2 toward 0 as lambda grows.
@@ -220,7 +224,7 @@ S7::method(edf, model_term) <- function(term, coef = NULL, hessian = NULL,
 #' Prints one line describing a [ridge()], [lasso()], [enet()], [scad()] or
 #' [mcp()] term. An unbuilt specification reports its label and whether it will
 #' standardize; a built one reports the number of coefficients, the penalty's
-#' name and the hyperparameters that penalty carries, and, when the term is
+#' name and the hyperparameters that the penalty carries, and, when the term is
 #' standardized, adds a second line giving the spread by which each column is
 #' standardized.
 #'
@@ -232,15 +236,15 @@ S7::method(edf, model_term) <- function(term, coef = NULL, hessian = NULL,
 #'
 #' The standardization line is needed to read a fitted hyperparameter. With
 #' `standardize = TRUE` the penalty is evaluated at the coefficients multiplied
-#' by those spreads, which are the coefficients of the columns divided by the
-#' spreads. The spreads are computed once at build time and recorded in the
-#' blueprint. They enter the penalty only: the design block is not rescaled, so
-#' prediction at new rows does not use them.
+#' by those spreads; these products are the coefficients of the columns after
+#' each is divided by its spread. The spreads are computed once at build time
+#' and recorded in the blueprint. They enter the penalty only: the design block
+#' is not rescaled, so prediction at new rows does not use them.
 #'
 #' @param x A [PenalizedTerm()], built or not.
 #' @param ... Unused, and accepted so that the signature matches [print()]'s.
 #'
-#' @return `x`, invisibly. Called for the line it writes.
+#' @return `x`, invisibly. The method is called for the line that it writes.
 #'
 #' @seealso [penalized_terms()] for the five constructors and what they share.
 #'
@@ -248,7 +252,7 @@ S7::method(edf, model_term) <- function(term, coef = NULL, hessian = NULL,
 #' set.seed(5)
 #' d <- data.frame(x1 = rnorm(30), x2 = rnorm(30) * 20)
 #'
-#' # A specification says only what it is.
+#' # A specification prints what it is, without any quantity from data.
 #' ridge(~ x1 + x2)
 #' lasso(~ x1 + x2, standardize = TRUE)
 #'
@@ -289,7 +293,8 @@ S7::method(print, PenalizedTerm) <- function(x, ...) {
 #' per coefficient against its position in the block, a stem down to zero, a
 #' dotted line at zero, and the coefficient names rotated along the horizontal
 #' axis. It shows which coefficients a penalty has driven to zero and how large
-#' the survivors are, so it reads a lasso or a smooth at a glance.
+#' the survivors are, so the effect of a lasso or a smooth is visible at a
+#' glance.
 #'
 #' The coefficients are supplied by the caller. A term holds a design block and
 #' no fit, so there is nothing to display without them, and `coef = NULL` is
@@ -318,7 +323,7 @@ S7::method(print, PenalizedTerm) <- function(x, ...) {
 #'   `xlab`, `ylab`, `main` and `pch` itself, and passing any of them signals an
 #'   error.
 #'
-#' @return `x`, invisibly. Called for the plot.
+#' @return `x`, invisibly. The method is called for the plot.
 #'
 #' @seealso [term_coef_names()] for the axis labels, [edf()] for what the same
 #'   coefficients cost in degrees of freedom.
@@ -328,7 +333,7 @@ S7::method(print, PenalizedTerm) <- function(x, ...) {
 #' d <- data.frame(x1 = rnorm(30), x2 = rnorm(30), x3 = rnorm(30))
 #' b <- term_build(lasso(~ x1 + x2 + x3), d)
 #'
-#' # Two survivors and one coefficient at exactly zero.
+#' # The plot shows two survivors and one coefficient at exactly zero.
 #' plot(b, coef = c(0.8, 0, -0.35))
 #'
 #' # A smooth's block runs from least to most wiggly.

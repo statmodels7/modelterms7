@@ -9,13 +9,13 @@
 \item{...}{Unused, and accepted so that the signature matches \code{\link[=print]{print()}}'s.}
 }
 \value{
-\code{x}, invisibly. Called for the line it writes.
+\code{x}, invisibly. The method is called for the line that it writes.
 }
 \description{
 Prints one line describing a \code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}}, \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}} or
 \code{\link[=mcp]{mcp()}} term. An unbuilt specification reports its label and whether it will
 standardize; a built one reports the number of coefficients, the penalty's
-name and the hyperparameters that penalty carries, and, when the term is
+name and the hyperparameters that the penalty carries, and, when the term is
 standardized, adds a second line giving the spread by which each column is
 standardized.
 }
@@ -27,16 +27,16 @@ names: \code{lambda} for a ridge or a lasso, \verb{lambda, alpha} for the elasti
 
 The standardization line is needed to read a fitted hyperparameter. With
 \code{standardize = TRUE} the penalty is evaluated at the coefficients multiplied
-by those spreads, which are the coefficients of the columns divided by the
-spreads. The spreads are computed once at build time and recorded in the
-blueprint. They enter the penalty only: the design block is not rescaled, so
-prediction at new rows does not use them.
+by those spreads; these products are the coefficients of the columns after
+each is divided by its spread. The spreads are computed once at build time
+and recorded in the blueprint. They enter the penalty only: the design block
+is not rescaled, so prediction at new rows does not use them.
 }
 \examples{
 set.seed(5)
 d <- data.frame(x1 = rnorm(30), x2 = rnorm(30) * 20)
 
-# A specification says only what it is.
+# A specification prints what it is, without any quantity from data.
 ridge(~ x1 + x2)
 lasso(~ x1 + x2, standardize = TRUE)
 

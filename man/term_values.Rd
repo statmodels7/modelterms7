@@ -3,7 +3,7 @@
 \name{term_values}
 \alias{term_values}
 \alias{term_values.model_term}
-\title{The Hyperparameter Values a Term Writes Out}
+\title{The Hyperparameter Values That a Term Writes Out}
 \usage{
 term_values(term, ...)
 }
@@ -15,20 +15,20 @@ term_values(term, ...)
 \value{
 A named list, one entry per penalty of the term, each a named list
 of numeric vectors keyed by hyperparameter, sorted and without
-duplicates. Empty where the term wrote nothing out.
+duplicates. The list is empty where the term wrote nothing out.
 }
 \description{
-Reports the values a path visits, for each hyperparameter the caller wrote
-out as a vector instead of leaving to be built. It is the third state of a
-constructor's hyperparameter argument, beside \code{NULL} for a built grid and
-one number for a held value.
+Reports the values that a path visits, for each hyperparameter that the
+caller wrote out as a vector instead of leaving to be built. It is the
+third state of a constructor's hyperparameter argument, beside \code{NULL} for a
+built grid and one number for a held value.
 }
 \details{
 A written-out grid is used as it stands. The value that empties the block
 does not cap it and \code{\link[=term_path_min]{term_path_min()}} does not extend it: those two
 construct a grid, and here there is nothing to construct.
 
-A hyperparameter written out is still \strong{estimated}. The caller supplies the
+A hyperparameter written out is still estimated. The caller supplies the
 values to search and not the estimate, so a fit reports the hyperparameter as
 chosen by the criterion, and \code{\link[=term_hyper]{term_hyper()}} does not carry it.
 
@@ -41,10 +41,10 @@ The keys are \code{\link[=term_penalties]{term_penalties()}}'s entry names, \cod
 whole term.
 }
 \examples{
-# Written out, and reported as the grid to visit.
+# A grid that is written out is reported as the grid to visit.
 term_values(lasso(~ x, lambda = c(0.1, 1, 10)))
 
-# Sorted and deduplicated at construction.
+# The values are sorted and deduplicated at construction.
 term_values(lasso(~ x, lambda = c(10, 0.1, 1, 1)))
 
 # One number is a held value, and belongs to the other reporter.
@@ -57,5 +57,5 @@ try(ridge(~ x, lambda = c(1, 2)))
 }
 \seealso{
 \code{\link[=term_hyper]{term_hyper()}} for a held value, \code{\link[=term_grid]{term_grid()}} for a grid to be
-built, \code{\link[=term_penalties]{term_penalties()}} for the entries this is keyed by.
+built, \code{\link[=term_penalties]{term_penalties()}} for the entry names that key the result.
 }

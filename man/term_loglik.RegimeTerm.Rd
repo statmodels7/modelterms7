@@ -10,8 +10,8 @@
 
 \item{y}{The response, reaching the recursion through the two callbacks.}
 
-\item{logdens, score}{The log-density and its derivative in the predictor,
-each returning one value per observation.}
+\item{logdens, score}{The log-density and its derivative in the predictor, as
+functions that each return one value per observation.}
 
 \item{psi}{The parameters on the parameter scale, named as \code{\link[=term_params]{term_params()}}.}
 
@@ -27,7 +27,7 @@ exact derivatives.
 }
 \details{
 The density and the score of every observation under every regime are
-computed first, one call of each callback per regime with the whole index
+computed first, by one call of each callback per regime with the whole index
 vector, and the recursion and its first derivatives are then run by the
 compiled kernel \code{regime_forward_cpp()}. The derivative in a gap is taken in
 the gap itself. A gap that is not positive and a \code{psi} that lacks a

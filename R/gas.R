@@ -5,11 +5,11 @@ NULL
 #' @name GasTerm
 #'
 #' @description
-#' The subclass of [structural_term()] holding a generalized autoregressive
-#' score component: a time-varying level driven by the score of the
-#' observation density, added to the predictor of one distribution parameter.
-#' [gas()] constructs it. Its contribution is a state, so it implements
-#' [term_filter()] and has no [term_matrix()] method at all.
+#' `GasTerm` is the subclass of [structural_term()] that holds a generalized
+#' autoregressive score component: a time-varying level driven by the score of
+#' the observation density and added to the predictor of one distribution
+#' parameter. [gas()] constructs it. Its contribution is a state, so it
+#' implements [term_filter()] and has no [term_matrix()] method at all.
 #'
 #' @details
 #' # The properties of the class
@@ -46,14 +46,16 @@ NULL
 #' @param p The number of score lags, an integer of at least 1.
 #' @param q The number of autoregressive lags, an integer of at least 0.
 #' @param by An optional grouping expression; each group is filtered
-#'   independently. `NULL` for one series.
-#' @param time An optional ordering expression. `NULL` for row order.
-#' @param scaling The power \eqn{d} of the expected information, the score
-#'   being multiplied by \eqn{\mathcal{I}^{-d}}; zero for the score as it is.
-#' @param links A named list of \pkg{linkfunctions7} links overriding the
-#'   defaults, empty where none was given.
+#'   independently. `NULL` means one series.
+#' @param time An optional ordering expression. `NULL` means row order.
+#' @param scaling The power \eqn{d} of the expected information in the factor
+#'   \eqn{\mathcal{I}^{-d}} that multiplies the score; zero for the score as
+#'   it is.
+#' @param links A named list of \pkg{linkfunctions7} links that override the
+#'   defaults, empty when the caller overrides no default.
 #' @param submodels A named list of one-sided formulas, one per parameter
-#'   developed over covariates. Empty where none is.
+#'   developed over covariates. The list is empty if no parameter is
+#'   developed.
 #' @param blueprint A named list of the resolved ordering, grouping and
 #'   sub-term designs, empty until [term_build()] fills it.
 #'
@@ -73,7 +75,7 @@ NULL
 #' S7::S7_inherits(tm, GasTerm)
 #' c(p = tm@p, q = tm@q)
 #'
-#' # 1 + p + q parameters, and one chart each.
+#' # The term has 1 + p + q parameters, and each has its own chart.
 #' term_params(tm)
 #' vapply(term_links(tm), function(l) l@link_name, character(1))
 #'
@@ -100,9 +102,10 @@ GasTerm <- S7::new_class(
 #' Score-Driven Dynamics
 #'
 #' @description
-#' A generalized autoregressive score component (Creal et al., 2013; Harvey,
-#' 2013): a level \eqn{f_t} added to the linear predictor, driven by the score
-#' of the observation density at the previous times,
+#' `gas()` constructs a generalized autoregressive score component (Creal et
+#' al., 2013; Harvey, 2013): a level \eqn{f_t} that is added to the linear
+#' predictor and driven by the score of the observation density at the
+#' previous times,
 #' \deqn{f_t = \omega + \sum_{i=1}^{p} \kappa_i s_{t-i} +
 #'   \sum_{j=1}^{q} \xi_j f_{t-j},}
 #' with \eqn{s_t = \partial \ell_t / \partial \eta_t} the derivative of the
@@ -113,16 +116,16 @@ GasTerm <- S7::new_class(
 #' @details
 #' The term adds no columns. The predictor at one time depends on the
 #' data at the previous ones, so the contribution cannot be written as a
-#' block, and [term_filter()] runs the recursion instead. That is what puts
-#' it on the structural branch.
+#' block, and [term_filter()] runs the recursion instead. For this reason the
+#' term belongs to the structural branch.
 #'
-#' What drives the recursion is the score of whatever distribution the
-#' model carries, so the same term is a GARCH-like volatility model when
-#' it enters the scale of a Gaussian, a dynamic count model when it enters
-#' the mean of a Poisson, and a robust location filter when it enters a
-#' Student t: a heavy-tailed score is bounded in the observation, so an
-#' outlier moves the level by a bounded amount instead of in proportion to
-#' its size.
+#' The score of the distribution that the model carries drives the
+#' recursion, so the same term is a GARCH-like volatility model when it
+#' enters the scale of a Gaussian, a dynamic count model when it enters the
+#' mean of a Poisson, and a robust location filter when it enters a Student
+#' t. A heavy-tailed score is bounded in the observation, so an outlier
+#' moves the level by a bounded amount instead of in proportion to its
+#' size.
 #'
 #' \subsection{The parameters and their chart}{
 #' The parameters are the level \eqn{\omega}, the score loadings
@@ -130,15 +133,15 @@ GasTerm <- S7::new_class(
 #' unconstrained scale of a link, and `links` overrides any of them;
 #' the defaults are the following.
 #'
-#' The level carries the identity, being unconstrained. The loadings carry
-#' the **log** link: a positive loading responds in the direction of the
-#' score, which is the case the score-driven literature writes, and
-#' positivity is then structural. A subformula develops the loading on the
+#' The level carries the identity link because it is unconstrained. The
+#' loadings carry the log link: a positive loading responds in the direction
+#' of the score, which is the case that the score-driven literature writes,
+#' and positivity is then structural. A subformula develops the loading on the
 #' log scale, so every group and every observation has a positive loading.
 #' A loading that must be free in sign takes the identity link, which is set
 #' with `links = list(kappa1 = linkfunctions7::identity_link())`.
 #'
-#' The persistence is carried by **partial autocorrelations** and not by the
+#' The persistence is carried by partial autocorrelations and not by the
 #' coefficients \eqn{\xi_j} directly. The stationary region of an
 #' autoregression is not a box, so a collection of scalar links cannot
 #' represent it, whereas the partial autocorrelations each range over
@@ -154,18 +157,18 @@ GasTerm <- S7::new_class(
 #' }
 #'
 #' \subsection{One parameter at a time}{
-#' The level this term drives is a scalar, so it enters the predictor of
-#' one distribution parameter. In the general formulation the level is a
-#' vector with one entry per modeled parameter, \eqn{\omega} a vector and
-#' the loadings \eqn{A_i} and \eqn{B_j} matrices, which lets the scale
-#' respond to the score of the location and the other way round. The
+#' The level that this term drives is a scalar, so it enters the predictor
+#' of one distribution parameter. In the general formulation the level is a
+#' vector with one entry per modeled parameter, \eqn{\omega} is a vector,
+#' and the loadings \eqn{A_i} and \eqn{B_j} are matrices. This lets the
+#' scale respond to the score of the location and the other way round. The
 #' recursion generalizes mechanically, and so does the derivative
-#' propagated with it; what is missing is a way to say that one filter
-#' spans several parameters, since a term written inside the formula of
-#' one parameter has no place to declare it. That belongs to the model
-#' layer. The persistence would also need a different chart: the
-#' partial-autocorrelation construction above is a scalar one, and the
-#' stationary region of a matrix autoregression is a bound on the
+#' propagated with it. The package has no way to declare that one filter
+#' spans several parameters, because a term written inside the formula of
+#' one parameter has no place for such a declaration. The declaration
+#' belongs to the model layer. The persistence would also need a different
+#' chart: the partial-autocorrelation construction above is a scalar one, and
+#' the stationary region of a matrix autoregression is a bound on the
 #' spectral radius of its companion matrix, which is not a box.
 #' }
 #'
@@ -216,7 +219,8 @@ GasTerm <- S7::new_class(
 #' score has zero conditional mean, so the level fluctuates around the fixed
 #' point of the recursion,
 #' \deqn{\mathrm{E}[f_t] = \frac{\omega}{1 - \sum_{j=1}^{q} \xi_j},}
-#' and this is what the intercept estimates when \eqn{\omega} is held:
+#' and the intercept estimates this quantity when \eqn{\omega} is held.
+#' Therefore
 #' \deqn{\eta_t = c + f_t \;\text{with}\; \omega = 0
 #'   \qquad\text{and}\qquad
 #'   \eta_t = f_t \;\text{with}\; c = \frac{\omega}{1 - \sum_j \xi_j}}
@@ -237,14 +241,14 @@ GasTerm <- S7::new_class(
 #'
 #' \subsection{A parameter developed with covariates}{
 #' A two-sided formula in `...` whose left side names a parameter
-#' develops it as \eqn{\psi_{j,t} = g_j^{-1}(z_t^\top\gamma_j)}, the
-#' design \eqn{Z} built from the right-hand side through
-#' [interpret_formula()], so it takes the additive terms of the package
-#' whose block does not move with their coefficients:
+#' develops it as \eqn{\psi_{j,t} = g_j^{-1}(z_t^\top\gamma_j)}, where the
+#' design \eqn{Z} is built from the right-hand side through
+#' [interpret_formula()], so the design takes the additive terms of
+#' the package whose block does not move with their coefficients:
 #' \preformatted{gas(p = 1, q = 1, omega ~ ridge(~g), kappa1 ~ s(x),
 #'     pacf1 ~ random(~1 | id), by = id)}
 #' The development acts on the unconstrained scale of the parameter's own
-#' link. That is what keeps every per-observation value inside the
+#' link, and therefore every per-observation value stays inside the
 #' parameter's own set whatever the coefficients are: a loading on the
 #' log link is positive at every observation, a persistence on the rhobit
 #' chart is inside \eqn{(-1, 1)} at every observation, and at \eqn{q = 1}
@@ -276,7 +280,7 @@ GasTerm <- S7::new_class(
 #'
 #' The departures act on the unconstrained scale of the parameter's chart,
 #' so a persistence stays inside \eqn{(-1, 1)} whatever the departure is.
-#' Their penalty is also what identifies them: a population value and
+#' The penalty on the departures also identifies them: a population value and
 #' \eqn{m} departures are \eqn{m+1} numbers describing \eqn{m} group
 #' values, so without the penalty the likelihood is flat along one
 #' direction per developed parameter. This is the parametrization of a
@@ -299,8 +303,8 @@ GasTerm <- S7::new_class(
 #'   `p` or `q` is rejected.
 #' @param by An optional grouping variable, evaluated in the data; each
 #'   group is filtered independently, from its own starting level. A
-#'   formula here is the shorthand giving the same subformula to every
-#'   parameter, and then no grouping is implied.
+#'   formula here is the shorthand that gives the same subformula to every
+#'   parameter, and the term then does not imply any grouping.
 #' @param time An optional ordering variable, evaluated in the data.
 #' @param scaling A single finite number \eqn{d}: the score is multiplied by
 #'   the expected information to the power \eqn{-d}. Defaults to 0, the score
@@ -329,7 +333,7 @@ GasTerm <- S7::new_class(
 #'   their charts, [term_readable()] for what a fitted one reports.
 #'
 #' @examples
-#' # A level, one loading and one persistence coordinate.
+#' # The term has a level, one loading and one persistence coordinate.
 #' term_params(gas(p = 1, q = 1))
 #' term_params(gas(p = 2, q = 2))
 #'
@@ -339,7 +343,8 @@ GasTerm <- S7::new_class(
 #'        character(1))
 #'
 #' # Running the filter: the term supplies the recursion and the caller
-#' # supplies the density's score and curvature. Here a Gaussian mean.
+#' # supplies the density's score and curvature. Here the predictor is a
+#' # Gaussian mean.
 #' set.seed(1)
 #' dd <- data.frame(t = 1:60, y = c(rnorm(30), rnorm(30, 3)))
 #' b <- term_build(gas(p = 1, q = 1, time = t), dd)
@@ -366,7 +371,7 @@ GasTerm <- S7::new_class(
 #' }, numeric(1))
 #' max(abs(colSums(out$jacobian) - fd))
 #'
-#' # A panel: each group filtered from its own starting level.
+#' # A panel: the filter runs on each group from its own starting level.
 #' dd$id <- rep(1:3, each = 20)
 #' term_build(gas(p = 1, q = 1, by = id, time = t), dd)
 #'
@@ -378,10 +383,11 @@ GasTerm <- S7::new_class(
 #' vapply(term_penalties(gb), function(e) e$name, character(1))
 #'
 #'
-#' # Fitted. The data are simulated from a known truth, so the
+#' # The term is fitted. The data are simulated from a known truth, so the
 #' # estimates below can be read against it.
 #' if (requireNamespace("statmodels7", quietly = TRUE)) {
-#'   # drawn from the recursion the term implements, with a gaussian mean
+#'   # The series is drawn from the recursion that the term implements,
+#'   # with a gaussian mean.
 #'   set.seed(2)
 #'   om <- 0.05; al <- 0.3; be <- 0.9
 #'   lev <- om / (1 - be)
@@ -393,7 +399,7 @@ GasTerm <- S7::new_class(
 #'   fd <- data.frame(t = seq_len(600), y = yy)
 #'   ft <- statmodels7::statmod(y ~ 0 + gas(p = 1, q = 1, time = t),
 #'                              distributions7::gaussian1_distrib(), fd)
-#'   # truth: omega 0.05, kappa 0.3, xi 0.9. xi is reported as the
+#'   # The truth is omega 0.05, kappa 0.3, xi 0.9. xi is reported as the
 #'   # autoregressive coefficient, whereas the estimated coordinate is a
 #'   # partial autocorrelation.
 #'   print(round(coef(ft)$mu, 3))
@@ -530,10 +536,11 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
 #' @name term_params.GasTerm
 #'
 #' @description
-#' `"omega"`, then `"kappa1"` ... `"kappap"`, then `"pacf1"` ... `"pacfq"`:
-#' the level, one loading per score lag, and one partial autocorrelation per
-#' autoregressive lag. A parameter carrying a subformula is **expanded in
-#' place** into its coefficients, named `parameter.coefficient`.
+#' Returns the names `"omega"`, then `"kappa1"` ... `"kappap"`, then
+#' `"pacf1"` ... `"pacfq"`: the level, one loading per score lag, and one
+#' partial autocorrelation per autoregressive lag. A parameter carrying a
+#' subformula is expanded in place into its coefficients, named
+#' `parameter.coefficient`.
 #'
 #' @details
 #' The persistence coordinates are named after the chart on which they are
@@ -545,8 +552,8 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
 #' The order is the one by which [term_links()], [term_start()], the Jacobian
 #' columns of [term_filter()] and the joint variance matrix are indexed.
 #'
-#' @param term A [GasTerm()]. Unbuilt, the subformulas have not been resolved,
-#'   so a developed parameter still appears as itself.
+#' @param term A [GasTerm()]. If the term is unbuilt, its subformulas have not
+#'   been resolved, so a developed parameter still appears as itself.
 #' @param ... Unused.
 #'
 #' @return A character vector of length [term_npar()].
@@ -574,10 +581,11 @@ S7::method(term_params, GasTerm) <- function(term, ...) {
 #' @title The Level of a Score-Driven Term
 #' @name term_level_param.GasTerm
 #' @description
-#' `"omega"`, which adds a constant to the equation's predictor and is
-#' therefore a direction that an intercept in the same equation also spans.
-#' With the level developed by a subformula, the coordinates whose design
-#' column is constant, each of which adds a constant to the predictor.
+#' Returns `"omega"`, which adds a constant to the equation's predictor and
+#' is therefore a direction that an intercept in the same equation also
+#' spans. If a subformula develops the level, the function returns the
+#' coordinates whose design column is constant, and each of these coordinates
+#' adds a constant to the predictor.
 #' @param term A [GasTerm()].
 #' @param ... Unused.
 #' @return A character vector, usually of length one.
@@ -600,9 +608,9 @@ S7::method(term_level_param, GasTerm) <- function(term, ...) {
 #' @title The Design of a Developed Level
 #' @name term_level_design.GasTerm
 #' @description
-#' The design of `omega`'s development when it carries one, its
-#' columns named after the coordinates, so a fitting layer can compare its
-#' span with the equation's; `NULL` for a scalar level.
+#' Returns the design of the development of `omega` when it carries one, with
+#' the columns named after the coordinates so that a fitting layer can compare
+#' its span with the equation's, and `NULL` for a scalar level.
 #' @param term A built [GasTerm()].
 #' @param ... Unused.
 #' @return A numeric matrix or `NULL`.
@@ -618,31 +626,33 @@ S7::method(term_level_design, GasTerm) <- function(term, ...) {
 #' @title What a Fitted Score-Driven Term Reports
 #' @name term_readable.GasTerm
 #' @description
-#' The level, the score loadings and the autoregressive coefficients of the
-#' literature, `omega`, `kappa1` and `xi1`, with the
+#' Returns the level, the score loadings and the autoregressive coefficients
+#' of the literature, `omega`, `kappa1` and `xi1`, with the
 #' Jacobian from the term's own parameters.
 #' @details
-#' The level and the loadings are reported through their own links, each a
-#' function of its own coordinate alone, as the base method does. The
+#' The level and the loadings are reported through their own links, and each
+#' of them is a function of only its own coordinate, as in the base method. The
 #' persistence is not: it is carried on partial autocorrelations, and the
 #' coefficients come from the Levinson-Durbin recursion, which the term
 #' already differentiates for the filter. Each partial autocorrelation is
-#' mapped through its own link, the rhobit unless `links` gives another, and
-#' the Jacobian of the recursion is chained onto these links, which is what a
-#' delta-method standard error for \eqn{\xi_j} needs. At \eqn{q = 1} the two
-#' coincide and the chain factor is the link's alone; above it they do not.
+#' mapped through its own link, the rhobit unless `links` gives another. The
+#' Jacobian of the recursion is chained onto these links, and a
+#' delta-method standard error for \eqn{\xi_j} needs that chain. At
+#' \eqn{q = 1} the two coincide and the chain factor reduces to the link's
+#' derivative; above it they differ.
 #'
-#' The scale an interval is built on follows the same split. At \eqn{q = 1}
+#' The scale on which an interval is built follows the same split. At
+#' \eqn{q = 1}
 #' it is the link of the partial autocorrelation, so the interval stays
 #' inside the coordinate's range. Above it the coefficients range over the
 #' stationary region, which is not a box, and the interval is built on the
 #' identity scale.
 #'
-#' The coefficients of a development are reported as they stand, being
-#' unconstrained and acting on the scale of the link of the developed
+#' The coefficients of a development are reported as they stand, because
+#' they are unconstrained and act on the scale of the link of the developed
 #' parameter. If any partial autocorrelation is developed, the autoregressive
-#' coefficients vary by observation, no single \eqn{\xi_j} exists, and the
-#' persistence coordinates are reported as the base method gives them.
+#' coefficients vary by observation, so a single \eqn{\xi_j} does not exist,
+#' and the persistence coordinates are reported as the base method gives them.
 #' @param term A [GasTerm()].
 #' @param zeta The parameters on the unconstrained scale.
 #' @param ... Unused.
@@ -695,10 +705,11 @@ S7::method(term_readable, GasTerm) <- function(term, zeta, ...) {
 #' @name term_links.GasTerm
 #'
 #' @description
-#' The identity on the level, the **log** on every loading and the **rhobit**
-#' on every partial autocorrelation, unless the `links` argument of [gas()]
-#' overrode one. Each default carries its parameter's admissible set onto the
-#' whole real line, so every value that an optimizer proposes gives an
+#' The default links are the identity on the level, the log on every loading
+#' and the rhobit on every partial autocorrelation, unless the `links`
+#' argument of [gas()] overrides one. Each default carries its parameter's
+#' admissible set onto the whole real line, so every value that an optimizer
+#' proposes gives an
 #' admissible filter.
 #'
 #' @details
@@ -712,7 +723,7 @@ S7::method(term_readable, GasTerm) <- function(term, zeta, ...) {
 #' The chart is used because the stationary region in the coefficients is not
 #' a box, so a collection of scalar links cannot represent it.
 #'
-#' Where a parameter carries a subformula the link is applied **inside** the
+#' Where a parameter carries a subformula the link is applied inside the
 #' development, so the parameter is admissible at every observation and its
 #' coefficients are unconstrained on the identity.
 #'
@@ -727,11 +738,11 @@ S7::method(term_readable, GasTerm) <- function(term, zeta, ...) {
 #' @examples
 #' vapply(term_links(gas(p = 2, q = 2)), function(l) l@link_name, character(1))
 #'
-#' # Each carries its own set onto the line, so nothing is out of range.
+#' # Each carries its own set onto the line, so every value stays in range.
 #' lk <- term_links(gas(p = 1, q = 1))
 #' vapply(lk, function(l) paste(l@link_bounds, collapse = ", "), character(1))
 #'
-#' # Overridden: a loading free in sign.
+#' # Overriding the default gives a loading that is free in sign.
 #' vapply(term_links(gas(p = 1, q = 1,
 #'                       links = list(kappa1 = linkfunctions7::identity_link()))),
 #'        function(l) l@link_name, character(1))
@@ -755,9 +766,9 @@ S7::method(term_links, GasTerm) <- function(term, ...) {
 #' @title Where a Score-Driven Term's Parameters Start
 #' @name term_start.GasTerm
 #' @description
-#' Zero on the unconstrained scale of every parameter except the score
-#' loadings, which start at \eqn{0.1} on the parameter scale, through
-#' whatever link each one carries.
+#' Returns zero on the unconstrained scale for every parameter except the
+#' score loadings, which start at \eqn{0.1} on the parameter scale, through
+#' the link that each one carries.
 #' @details
 #' Zero is the natural point of every other chart: a level of zero and no
 #' persistence. The term therefore starts as near the model without it as its
@@ -799,9 +810,10 @@ S7::method(term_start, GasTerm) <- function(term, ...) {
 #' @title Penalties of a Score-Driven Term
 #' @name term_penalties.GasTerm
 #' @description
-#' The penalties that the subformulas' sub-terms declare, each under the key
-#' `parameter::subterm` and covering that sub-term's coefficients in
-#' the term's own numbering. The scalar parameters are unpenalized, and
+#' Returns the penalties that the subformulas' sub-terms declare. Each
+#' penalty is under the key `parameter::subterm` and covers that
+#' sub-term's coefficients in the term's own numbering. The scalar parameters
+#' are unpenalized, and
 #' the list is empty for a specification, whose developments do not exist
 #' until the term is built.
 #' @param term A built [GasTerm()].
@@ -828,9 +840,9 @@ S7::method(term_penalties, GasTerm) <- function(term, ...) {
 #' The Autoregressive Coefficients Behind the Partial Autocorrelations
 #'
 #' @description
-#' The Levinson-Durbin recursion carrying partial autocorrelations onto
-#' the coefficients of a stationary autoregression, with the Jacobian of
-#' that map propagated alongside.
+#' Computes the Levinson-Durbin recursion, which carries partial
+#' autocorrelations onto the coefficients of a stationary autoregression, and
+#' propagates the Jacobian of that map alongside.
 #'
 #' @param pacf A numeric vector of partial autocorrelations in
 #'   \eqn{(-1, 1)}.
@@ -864,8 +876,8 @@ gas_levinson <- function(pacf) {
 #' The Second Derivative of the Levinson-Durbin Map
 #'
 #' @description
-#' [gas_levinson()] with the second derivatives of the
-#' coefficients in the partial autocorrelations propagated as well.
+#' Computes [gas_levinson()] and propagates the second derivatives of the
+#' coefficients in the partial autocorrelations as well.
 #'
 #' @details
 #' The recursion is
@@ -873,22 +885,23 @@ gas_levinson <- function(pacf) {
 #'   \xi^{(k)}_i = \xi^{(k-1)}_i - \rho_k\xi^{(k-1)}_{k-i},}
 #' which is bilinear: \eqn{\rho_k} multiplies quantities that do not depend
 #' on it. Differentiating twice therefore adds no new kind of term, only the
-#' two places the product rule puts the first derivative,
+#' two places where the product rule puts the first derivative,
 #' \deqn{H^{(k)}_i = H^{(k-1)}_i - \rho_k H^{(k-1)}_{k-i}
 #'   - e_k \left(J^{(k-1)}_{k-i}\right)^{\!\top}
 #'   - J^{(k-1)}_{k-i} e_k^{\top},}
-#' and the last coefficient's second derivative is zero at every order, it
-#' being \eqn{\rho_k} itself.
+#' and the last coefficient's second derivative is zero at every order,
+#' because that coefficient is \eqn{\rho_k} itself.
 #'
-#' It is wanted because the observed information of a model carrying this
-#' term needs the second derivative of the predictor in the term's own
-#' parameters, and the persistence reaches the predictor through this map.
+#' The second derivative is supplied because the observed information of a
+#' model carrying this term needs the second derivative of the predictor in the
+#' term's own parameters, and the persistence reaches the predictor through
+#' this map.
 #'
 #' @param pacf A numeric vector of partial autocorrelations in
 #'   \eqn{(-1, 1)}.
 #'
-#' @return A list with `phi`, `jacobian` and `hessian`, the
-#'   last a list of one symmetric matrix per coefficient.
+#' @return A list with `phi`, `jacobian` and `hessian`; `hessian` is a list
+#'   of one symmetric matrix per coefficient.
 #'
 #' @seealso [gas_levinson()]
 #'
@@ -931,8 +944,9 @@ gas_levinson2 <- function(pacf) {
 #' The Third Derivative of the Levinson-Durbin Map, in One Direction
 #'
 #' @description
-#' [gas_levinson2()]'s second derivatives differentiated once more
-#' and contracted against a single direction, one matrix per coefficient.
+#' Differentiates the second derivatives of [gas_levinson2()] once more and
+#' contracts them against a single direction, which gives one matrix per
+#' coefficient.
 #'
 #' @details
 #' The exact gradient of a marginal criterion over a penalty on this term's
@@ -940,28 +954,28 @@ gas_levinson2 <- function(pacf) {
 #' persistence reaches the predictor through this map. It is needed only
 #' contracted: the criterion needs \eqn{\mathrm{tr}(M\,\partial K/\partial
 #' u[v])}, a derivative along the single direction in which the penalized
-#' mode moves, so that a matrix per coefficient is propagated and no
-#' three-index array is formed.
+#' mode moves, so that a matrix per coefficient is propagated instead of a
+#' three-index array.
 #'
 #' Differentiating the hessian recursion of [gas_levinson2()] once
-#' more along \eqn{w} adds no new kind of term, the map being bilinear:
+#' more along \eqn{w} adds no new kind of term, because the map is bilinear:
 #' \deqn{T^{(k)}_i = T^{(k-1)}_i - \rho_k T^{(k-1)}_{k-i}
 #'   - w_k H^{(k-1)}_{k-i}
 #'   - e_k\left(H^{(k-1)}_{k-i}w\right)^{\!\top}
 #'   - \left(H^{(k-1)}_{k-i}w\right)e_k^{\top},}
-#' and the last coefficient's third derivative is zero at every order, it
-#' being \eqn{\rho_k} itself.
+#' and the last coefficient's third derivative is zero at every order,
+#' because that coefficient is \eqn{\rho_k} itself.
 #'
 #' Each coefficient \eqn{\xi^{(k)}_i} is a polynomial of degree at most
 #' \eqn{k} in the first \eqn{k} partial autocorrelations, multilinear in
 #' them, so the result is identically zero for \eqn{q \le 2}: at
 #' \eqn{q = 2} the only non-trivial coefficient is
-#' \eqn{\xi_1 = \rho_1(1-\rho_2)}, which is bilinear. A comparison with a
-#' reference therefore needs \eqn{q \ge 3}.
+#' \eqn{\xi_1 = \rho_1(1-\rho_2)}, which is bilinear. Therefore the result
+#' can be compared with a reference only if \eqn{q \ge 3}.
 #'
 #' @param pacf A numeric vector of partial autocorrelations in
 #'   \eqn{(-1, 1)}.
-#' @param w The direction to contract against, as long as `pacf`.
+#' @param w The direction against which to contract, as long as `pacf`.
 #'
 #' @return A list of one `q` by `q` matrix per coefficient.
 #'
@@ -1011,19 +1025,20 @@ gas_levinson3 <- function(pacf, w) {
 #' The Fourth Derivative of the Levinson-Durbin Map, in Two Directions
 #'
 #' @description
-#' [gas_levinson3()]'s third derivatives differentiated once more and
-#' contracted against a second direction, one matrix per coefficient.
+#' Differentiates the third derivatives of [gas_levinson3()] once more and
+#' contracts them against a second direction, which gives one matrix per
+#' coefficient.
 #'
 #' @details
 #' The second derivative of a marginal criterion in a pair of hyperparameters
 #' reads the fourth derivative of the predictor along the two directions in
 #' which the mode moves, and the persistence reaches the predictor through
 #' this map.
-#' As at the third order it is needed only contracted, so what is propagated
-#' is a matrix per coefficient and never a four-index array.
+#' As at the third order it is needed only contracted, so the recursion
+#' propagates a matrix per coefficient instead of a four-index array.
 #'
 #' Differentiating the third-order recursion of [gas_levinson3()] once
-#' more adds no new kind of term, the map being bilinear at every step. The
+#' more adds no new kind of term, because the map is bilinear at every step. The
 #' full fourth derivative obeys
 #' \deqn{Q^{(k)}_i = Q^{(k-1)}_i - \rho_k Q^{(k-1)}_{k-i}
 #'   - \sum_{\text{4 slots}} \delta_{\cdot k}T^{(k-1)}_{k-i}[\text{the rest}],}
@@ -1042,12 +1057,12 @@ gas_levinson3 <- function(pacf, w) {
 #' \eqn{k} in the first \eqn{k} partial autocorrelations, multilinear in
 #' them, so the result is identically zero for \eqn{q \le 3}. The first
 #' coefficient carrying a monomial of degree four is \eqn{\xi^{(4)}_2}, which
-#' needs \eqn{q = 4}. A comparison with a reference therefore needs
-#' \eqn{q \ge 4}.
+#' needs \eqn{q = 4}. Therefore the result can be compared with a reference
+#' only if \eqn{q \ge 4}.
 #'
 #' @param pacf A numeric vector of partial autocorrelations in
 #'   \eqn{(-1, 1)}.
-#' @param v,w The two directions to contract against, each as long as
+#' @param v,w The two directions against which to contract, each as long as
 #'   `pacf`. The result is symmetric in the two.
 #'
 #' @return A list of one `q` by `q` matrix per coefficient.
@@ -1142,7 +1157,7 @@ gas_levinson4 <- function(pacf, v, w) {
 #'   name.
 #' @param ... Unused.
 #'
-#' @return The term with `blueprint` filled. [term_is_built()] reads that
+#' @return The term, whose `blueprint` is filled. [term_is_built()] reads that
 #'   property on this branch, so it is `TRUE` for the result.
 #'
 #' @seealso [gas()], [term_filter()], [term_penalties()].
@@ -1152,7 +1167,7 @@ gas_levinson4 <- function(pacf, v, w) {
 #' dd <- data.frame(t = 1:60, y = rnorm(60), id = rep(1:3, each = 20),
 #'                  g = factor(rep(c("u", "v"), 30)))
 #'
-#' # One series, then a panel of three.
+#' # The first term filters one series, and the second a panel of three.
 #' lengths(term_build(gas(p = 1, q = 1, time = t), dd)@blueprint$order)
 #' lengths(term_build(gas(p = 1, q = 1, by = id, time = t), dd)@blueprint$order)
 #'
@@ -1255,10 +1270,10 @@ S7::method(term_build, GasTerm) <- function(term, data, ...) {
 #' @param curvature A function `function(e, i)` returning the derivative of
 #'   the driving score with respect to the predictor at that row:
 #'   \eqn{\partial^2\ell/\partial\eta^2} where `scaling` is zero.
-#' @param psi The parameters, named as [term_params()], each scalar
-#'   coordinate on its parameter scale (the loading itself, the partial
+#' @param psi The parameters, named as [term_params()]; each scalar
+#'   coordinate is on its parameter scale (the loading itself, the partial
 #'   autocorrelation itself). The coefficients of a development enter as they
-#'   are, the link of the developed parameter being applied inside the
+#'   are, because the link of the developed parameter is applied inside the
 #'   development. The columns of the returned Jacobian refer to the same
 #'   scale.
 #' @param ... Unused.
@@ -1409,9 +1424,9 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' The Chart's Derivatives in the Unconstrained Parameters
 #'
 #' @description
-#' The level, the score loadings and the autoregressive coefficients as
-#' functions of the term's unconstrained parameters, with their first and
-#' second derivatives in those.
+#' Computes the level, the score loadings and the autoregressive
+#' coefficients as functions of the term's unconstrained parameters, with
+#' their first and second derivatives in those.
 #'
 #' @details
 #' The level and the loadings each reach the recursion through their own
@@ -1497,16 +1512,18 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' The Chart's Third Derivatives, in One Direction
 #'
 #' @description
-#' [.gas_chart_derivs()] differentiated once more and contracted
-#' against a single direction in the term's own coordinates: one matrix for
-#' the level, one per score loading and one per autoregressive coefficient.
+#' Differentiates [.gas_chart_derivs()] once more and contracts the result
+#' against a single direction in the term's own coordinates, which gives one
+#' matrix for the level, one per score loading and one per autoregressive
+#' coefficient.
 #'
 #' @details
 #' The level and the loadings ride scalar links, so each of their third
-#' derivatives is a single diagonal entry, the link's own \eqn{h'''} times
-#' the direction's component there. The persistence is a composition, the
-#' Levinson-Durbin map read at \eqn{\rho = h^{-1}(z)}, and differentiating
-#' \eqn{B(z) = \xi(\rho(z))} three times and contracting the last slot gives
+#' derivatives is a single diagonal entry, equal to the link's own
+#' \eqn{h'''} times the direction's component there. The persistence is a
+#' composition, the Levinson-Durbin map read at \eqn{\rho = h^{-1}(z)}, and
+#' differentiating \eqn{B(z) = \xi(\rho(z))} three times and contracting the
+#' last slot gives
 #' \deqn{T_{kl}h'_kh'_l + H_{kl}(h''_kv_kh'_l + h'_kh''_lv_l)
 #'   + \delta_{kl}\big((Hw)_k h''_k + P_kh'''_kv_k\big),}
 #' with \eqn{w_m = h'_mv_m} the direction pushed onto the partial
@@ -1518,7 +1535,7 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' @param links The links, as [term_links()] gives them.
 #' @param vz The direction, in the same coordinates as `zeta`.
 #'
-#' @return A list with `t_omega`, `t_a` and `t_b`, each a
+#' @return A list with `t_omega`, `t_a` and `t_b`; each is a
 #'   matrix or a list of matrices over the term's base coordinates.
 #'
 #' @seealso [.gas_chart_derivs()], [gas_levinson3()]
@@ -1577,18 +1594,18 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' The Chart's Fourth Derivatives, in Two Directions
 #'
 #' @description
-#' [.gas_chart_derivs3()] differentiated once more and contracted
-#' against a second direction: one matrix for the level, one per score
-#' loading and one per autoregressive coefficient.
+#' Differentiates [.gas_chart_derivs3()] once more and contracts the result
+#' against a second direction, which gives one matrix for the level, one per
+#' score loading and one per autoregressive coefficient.
 #'
 #' @details
 #' The level and the loadings ride scalar links, so each of their fourth
-#' derivatives is a single diagonal entry, the link's own \eqn{h''''} times
-#' the two directions' components there. The persistence is a composition,
-#' the Levinson-Durbin map read at \eqn{\rho = h^{-1}(z)}, whose inner map is
-#' diagonal. Differentiating \eqn{B(z) = \xi(\rho(z))} four times and
-#' contracting two slots leaves, with \eqn{p_v = h'v} and \eqn{p_w = h'w} the
-#' directions pushed onto the partial autocorrelations,
+#' derivatives is a single diagonal entry, equal to the link's own
+#' \eqn{h''''} times the two directions' components there. The persistence is
+#' a composition, the Levinson-Durbin map read at \eqn{\rho = h^{-1}(z)}, whose
+#' inner map is diagonal. Differentiating \eqn{B(z) = \xi(\rho(z))} four times
+#' and contracting two slots leaves, with \eqn{p_v = h'v} and \eqn{p_w = h'w}
+#' the directions pushed onto the partial autocorrelations,
 #' \deqn{Q[p_v,p_w]h'h'^{\top}
 #'   + T[p_v]\big(h''w\,h'^{\top} + h'\,h''w^{\top}\big)
 #'   + T[p_w]\big(h''v\,h'^{\top} + h'\,h''v^{\top}\big)
@@ -1605,7 +1622,7 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' @param links The links, as [term_links()] gives them.
 #' @param vz,wz The two directions, in the same coordinates as `zeta`.
 #'
-#' @return A list with `q_omega`, `q_a` and `q_b`, each a
+#' @return A list with `q_omega`, `q_a` and `q_b`; each is a
 #'   matrix or a list of matrices over the term's base coordinates.
 #'
 #' @seealso [.gas_chart_derivs3()], [gas_levinson4()]
@@ -1681,9 +1698,9 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' @title Second Derivatives of a Score-Driven Predictor
 #' @name term_curvature.GasTerm
 #' @description
-#' The forward Jacobian of the filter's predictor in a caller's unknowns and
-#' the second derivative contracted against the caller's weights, both
-#' propagated through the recursion beside the state.
+#' Computes the forward Jacobian of the filter's predictor in a caller's
+#' unknowns and the second derivative contracted against the caller's
+#' weights, and propagates both through the recursion beside the state.
 #' @details
 #' With subformulas the general per-observation route runs instead, and
 #' the second derivative is accumulated on each group's active set rather
@@ -1694,7 +1711,7 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #' unknowns would grow with the square of their number, and the number of
 #' unknowns grows with the number of groups.
 #'
-#' `blocks` is called as `blocks(e, i, v, act)`, with the row `v` of the
+#' `blocks` is called as `blocks(e, i, v, act)`, where `v` is the row of the
 #' Jacobian restricted to the active set `act`, and returns its pieces in the
 #' coordinates of that set. A callback of three arguments, `blocks(e, i, v)`,
 #' is also accepted: it is given the full row and its result is subset here,
@@ -1726,7 +1743,7 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #'   jacobian rows of the other equations) and `ap` (the filter's own
 #'   parameter index), and for the third and fourth orders `D4` and `D5`, one
 #'   column per index triple and quadruple after the filter's own, laid out
-#'   the same way. Read only by the compiled route.
+#'   the same way. Only the compiled route reads it.
 #' @param threads Threads for the compiled route's group loop, as
 #'   `numericals7::n_threads()` counts them; 1 is sequential.
 #' @return A list with `jacobian` and `curvature`.
@@ -1747,13 +1764,13 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
 #' @title Third Derivatives of a Score-Driven Predictor
 #' @name term_third.GasTerm
 #' @description
-#' The second derivative of the filter's predictor differentiated once more
-#' along one direction, propagated beside the state exactly as the first two
-#' orders are.
+#' Differentiates the second derivative of the filter's predictor once more
+#' along one direction and propagates the result beside the state exactly as
+#' the first two orders are propagated.
 #' @details
 #' The recursion gains one state, \eqn{\Psi_t = \partial^3f_t/\partial u^3[v]},
 #' seeded by the third derivative of the score in the same way \eqn{\Phi} is
-#' seeded by its second. Everything else it needs, meaning the directional
+#' seeded by its second. Everything else that it needs, meaning the directional
 #' derivatives of \eqn{F}, \eqn{\Phi}, \eqn{\dot S} and \eqn{\ddot S}, is a
 #' contraction of a quantity that the second-order recursion already
 #' carries. The third order therefore needs no second recursion and forms no
@@ -1771,11 +1788,11 @@ S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,
 #' @param g The weights against which the third derivative is contracted.
 #' @param seed The derivative of the static predictor in the unknowns.
 #' @param blocks The model's derivative pieces; see [term_third()].
-#' @param direction The direction to contract against.
+#' @param direction The direction against which to contract.
 #' @param ... Unused.
 #' @param score_values,curvature_values,blocks_data As for
-#'   [term_curvature()]; supplying all three, with `blocks_data` carrying the
-#'   fourth derivatives `D4`, routes the recursion through the compiled
+#'   [term_curvature()]. If all three are supplied and `blocks_data` carries
+#'   the fourth derivatives `D4`, the recursion runs through the compiled
 #'   kernel.
 #' @param threads Threads for the compiled route's group loop.
 #' @return A list with `jacobian`, `dphi` and `curvature`.
@@ -1797,9 +1814,9 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
 #' @name term_fourth.GasTerm
 #'
 #' @description
-#' The fourth derivative of the filtered predictor in the caller's unknowns,
-#' contracted against the caller's weights and against two directions, and
-#' the lower orders' contractions beside it.
+#' Computes the fourth derivative of the filtered predictor in the caller's
+#' unknowns, contracted against the caller's weights and against two
+#' directions, together with the lower orders' contractions.
 #'
 #' @details
 #' The recursion carries five states, \eqn{F_t}, \eqn{\Phi_t}, the two
@@ -1822,11 +1839,11 @@ S7::method(term_third, GasTerm) <- function(term, eta, y, score, curvature,
 #' @param g The weights against which the fourth derivative is contracted.
 #' @param seed The derivative of the static predictor in the unknowns.
 #' @param blocks The model's derivative pieces; see [term_fourth()].
-#' @param directions A list of two directions to contract against.
+#' @param directions A list of two directions against which to contract.
 #' @param ... Unused.
 #' @param score_values,curvature_values,blocks_data As for
-#'   [term_curvature()]; supplying all three, with `blocks_data` carrying the
-#'   fourth and fifth derivatives `D4` and `D5`, routes the recursion
+#'   [term_curvature()]. If all three are supplied and `blocks_data` carries
+#'   the fourth and fifth derivatives `D4` and `D5`, the recursion runs
 #'   through the compiled kernel.
 #' @param threads Threads for the compiled route's group loop.
 #' @return A list with `jacobian`, `dphi`, `dpsi` and
@@ -1852,10 +1869,10 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
 #' The Score-Driven Recursion's Second, Third and Fourth Derivatives
 #'
 #' @description
-#' The body that [term_curvature()], [term_third()] and [term_fourth()]
-#' share. With `direction` `NULL` it propagates the first two derivatives
-#' of the predictor. With one direction it propagates the third as well,
-#' contracted against that direction, and with a list of two directions it
+#' Implements the body that [term_curvature()], [term_third()] and
+#' [term_fourth()] share. With `direction` `NULL` it propagates the first two
+#' derivatives of the predictor. With one direction it propagates the third as
+#' well, contracted against that direction, and with a list of two directions it
 #' propagates the fourth, contracted against both.
 #'
 #' @details
@@ -2361,19 +2378,20 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
 #' The Fourth Derivative of a Product, in Two Directions
 #'
 #' @description
-#' Sixteen terms, one per way of distributing four differentiations between
-#' two factors, with two of the four slots contracted against the directions.
+#' Computes the fourth derivative of a product as a sum of sixteen terms, one
+#' for each way of distributing four differentiations between two factors,
+#' where two of the four slots are contracted against the directions.
 #'
 #' @details
 #' The recursion forms products of three kinds: a loading times a lagged
 #' score, \eqn{\kappa_i s_{t-i}}, a persistence times a lagged level,
 #' \eqn{\xi_j f_{t-j}}, and the starting level, which is the fixed point
 #' \eqn{f_0 = \omega + Sf_0}. The rule is therefore written
-#' once here. Writing \eqn{S} for the set of slots that go to the first
-#' factor, the sixteen subsets of \eqn{\{m,n,b,c\}} give, after contracting
-#' \eqn{m} against \eqn{v} and \eqn{n} against \eqn{w}, the terms this
-#' returns. The sum is symmetric in the two factors, each term mapping onto
-#' another under the swap.
+#' once here. Let \eqn{S} be the set of slots that go to the first factor.
+#' Once \eqn{m} is contracted against \eqn{v} and \eqn{n} against \eqn{w}, the
+#' sixteen subsets of \eqn{\{m,n,b,c\}} give the terms that this function
+#' returns. The sum is symmetric in the two factors, because the swap maps
+#' each term onto another term.
 #'
 #' @param A,B The two factors' jets, as [.gas_jet()] builds them.
 #'
@@ -2420,7 +2438,8 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
 #' @param x A [GasTerm()], built or not.
 #' @param ... Unused, and accepted so that the signature matches [print()]'s.
 #'
-#' @return `x`, invisibly. Called for the lines that it writes.
+#' @return `x`, invisibly. The function is called for the lines that it
+#'   writes.
 #'
 #' @seealso [gas()], [term_params()].
 #'
@@ -2429,7 +2448,8 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
 #' dd <- data.frame(t = 1:60, y = rnorm(60), id = rep(1:3, each = 20),
 #'                  g = factor(rep(c("u", "v"), 30)))
 #'
-#' # A specification, and the same term built over three groups.
+#' # The first call shows a specification, and the second the same term built
+#' # over three groups.
 #' gas(p = 1, q = 2)
 #' term_build(gas(p = 1, q = 1, by = id, time = t), dd)
 #'
@@ -2458,8 +2478,9 @@ S7::method(print, GasTerm) <- function(x, ...) {
 #' The Score-Driven Recursion in R
 #'
 #' @description
-#' The loop `gas_filter_cpp()` replaces, kept so the compiled
-#' route has something to be compared against that shares none of its code.
+#' Implements in R the loop that `gas_filter_cpp()` replaces, so that the
+#' compiled route can be compared against an implementation that shares none
+#' of its code.
 #'
 #' @param eta The static predictor.
 #' @param order A list of row indices, one entry per group, in time order.
@@ -2528,16 +2549,16 @@ gas_filter_r <- function(eta, order, p, q, omega, a, b, db, f0, df0,
 #' @title The Filter's Sensitivity to Its Own Equation's Coefficients
 #'
 #' @description
-#' The forward recursion of [term_static_deriv()] for a
+#' Computes the forward recursion of [term_static_deriv()] for a
 #' score-driven term.
 #'
 #' @details
-#' The recursion is the filter's own with the seed replaced: the starting
-#' level depends on the term's parameters, never on the static predictor,
-#' so the propagated derivative starts at zero and everything after it comes
-#' from the scores. The autoregressive and loading coefficients are read at
-#' each row, which covers a term whose parameters carry submodels of their
-#' own as well as one whose parameters are constant.
+#' The recursion is the filter's own, except that the seed is replaced: the
+#' starting level depends on the term's parameters, never on the static
+#' predictor, so the propagated derivative starts at zero and everything after
+#' it comes from the scores. The autoregressive and loading coefficients are
+#' read at each row, which covers a term whose parameters carry submodels of
+#' their own as well as one whose parameters are constant.
 #'
 #' It is written in R, evaluates no callback, and makes one pass over the
 #' data, carrying all the columns of `X` together.
@@ -2611,45 +2632,46 @@ S7::method(term_static_deriv, GasTerm) <- function(term, curv, X, psi, ...) {
 #' @title Continuing a Score-Driven Filter Past the Series
 #'
 #' @description
-#' The level the recursion reaches at rows that come after the observed
-#' ones.
+#' Computes the level that the recursion reaches at rows that come after the
+#' observed ones.
 #'
 #' @details
 #' The recursion is the filter's own, started from the levels and scores of
 #' the observed part. A lag that falls before the first observed row of a
 #' group takes the first observed level, which equals the starting level.
-#' What changes past the data is the score: it has zero conditional mean by
-#' construction, the model's own defining property, so at a row whose
-#' response is not observed the driving term is its expectation and the
-#' continuation is the deterministic recursion
+#' Past the data the score is the quantity that changes: it has zero
+#' conditional mean by construction, the model's own defining property, so
+#' at a row whose response is not observed the driving term is its
+#' expectation and the continuation is the deterministic recursion
 #' \deqn{f_{n+h} = \omega + \sum_i \kappa_i s_{n+h-i} +
 #'   \sum_j \xi_j f_{n+h-j},}
-#' the loadings contributing only while \eqn{n+h-i} is still an observed
+#' where the loadings contribute only while \eqn{n+h-i} is still an observed
 #' time. The continuation involves no simulation and no integration.
 #'
 #' The new rows of a group are ordered by their own time and must come after
 #' every observed time of that group. The continuation treats them as
 #' consecutive steps whatever the spacing of the times, so that a gap between
-#' two times counts as one step, as in the sample. A row falling inside the
-#' series re-reads observed data, where the response is known, so the filter
-#' must be run on it and not continued; such a row is rejected, and the rows
-#' are named. A group that the fit never saw is rejected for the same reason:
-#' there is no state to continue. The term must have been built with `time`.
+#' two times counts as one step, as in the sample. A row that falls inside
+#' the series belongs to the observed data, where the response is known, so
+#' the filter must be run on it and not continued; such a row is rejected, and
+#' the rows are named. A group that was not in the data of the fit is rejected
+#' for the same reason: there is no state to continue. The term must have
+#' been built with `time`.
 #'
 #' @param term A built score-driven term.
 #' @param psi The term's parameters, named as [term_params()].
 #' @param f_past The level at each observed row.
 #' @param s_past The score at each observed row.
-#' @param newdata The rows to continue onto, carrying the variables that `by`
-#'   and `time` name.
+#' @param newdata The rows onto which to continue, carrying the variables that
+#'   `by` and `time` name.
 #' @param ... Ignored.
 #' @param deriv `NULL`, or a list giving the derivatives of the inputs in a
 #'   vector of `m` coordinates of the caller's choosing: `df_past` and
 #'   `ds_past`, one row per observed row and `m` columns, the derivatives of
 #'   `f_past` and `s_past`; and `dpsi`, `length(psi)` rows and `m` columns,
 #'   the derivative of `psi`. The continuation is then differentiated along
-#'   with its value, by the same recursion run on derivative rows, the score
-#'   past the data and its derivative being zero.
+#'   with its value, by the same recursion run on derivative rows, because the
+#'   score past the data and its derivative are zero.
 #'
 #' @return A numeric vector of `nrow(newdata)` levels. With `deriv`, it
 #'   carries the attribute `"jacobian"`, a `nrow(newdata)` by `m` matrix:
@@ -2680,11 +2702,12 @@ S7::method(term_continue, GasTerm) <- function(term, psi, f_past, s_past,
   if (is.null(term@time)) {
     stop("continuing a score-driven term past the series needs its `time`: ",
          "without one, a row's place in the series is its position in the ",
-         "data frame, which says nothing about new rows.", call. = FALSE)
+         "data frame, which gives no information about new rows.",
+         call. = FALSE)
   }
   if (anyNA(gf)) {
-    stop(sprintf(paste0("rows %s name a group the fit never saw, so there ",
-                        "is no state to continue."),
+    stop(sprintf(paste0("rows %s name a group that was not in the data of ",
+                        "the fit, so there is no state to continue."),
                  paste(utils::head(which(is.na(gf)), 5L), collapse = ", ")),
          call. = FALSE)
   }
@@ -2736,8 +2759,8 @@ S7::method(term_continue, GasTerm) <- function(term, psi, f_past, s_past,
   for (lv in sort(unique(gi))) {
     rows_old <- bp$order[[as.character(lv)]]
     if (is.null(rows_old)) {
-      stop("a group of the new data has no observed rows to continue from.",
-           call. = FALSE)
+      stop(paste0("a group of the new data has no observed rows from which",
+                  " to continue."), call. = FALSE)
     }
     new <- which(gi == lv)
     new <- new[order(tv[new])]

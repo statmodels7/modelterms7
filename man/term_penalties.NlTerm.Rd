@@ -12,8 +12,8 @@
 A list of entries, as \code{\link[=term_penalties]{term_penalties()}} documents.
 }
 \description{
-The penalties the sub-terms of the subformulas declare. The list is
-unnamed: each entry carries its label in \code{name}, of the form
+Returns the penalties that the sub-terms of the subformulas declare. The
+list is unnamed: each entry carries its label in \code{name}, of the form
 \code{parameter::subterm}, and covers that sub-term's coefficients in the
 term's own numbering. The list is empty when there are none, and for a term
 that has not been built.

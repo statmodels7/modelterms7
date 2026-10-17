@@ -456,7 +456,7 @@ test_that("term_hessian rejects what it cannot use", {
   expect_error(term_hessian(tm, rep(0, 20), d2$y, ld, gr, he, psi,
                             list(matrix(0, 19, 5)), 2:5, 1L), "19 by 5|20 by")
   expect_error(term_hessian(tm, rep(0, 20), d2$y, ld, gr, he, psi, sd,
-                            2:4, 1L), "columns the term")
+                            2:4, 1L), "columns that the term")
   expect_error(term_hessian(tm, rep(0, 20), d2$y, ld, gr, he, psi, sd,
                             2:5, 3L), "index one of")
   # a filter is not a mixture and says so rather than answering

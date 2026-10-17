@@ -38,14 +38,14 @@ of zeros.
 
 Each subformula's right-hand side goes through \code{\link[=interpret_formula]{interpret_formula()}} and its
 terms are built, so their blueprints are recorded and reapplied at
-prediction. What a development may carry depends on \code{kind}. The continuous
-construction takes any of them. A sharp \code{\link[=jump]{jump()}} takes a development of the
-break-point with a scalar change of level on any design, or one development
-shared by the change of level and the break-point on a design that
-partitions the rows; a sharp \code{\link[=jseg]{jseg()}} takes only the shared partition
-development, the read-off being a product of two unknowns. A smoothed term
-takes any development. A design that carries the intercept twice, the
-subformula's own and a constant column of a sub-term, as in
+prediction. The developments that a term may carry depend on \code{kind}. The
+continuous construction takes any of them. A sharp \code{\link[=jump]{jump()}} takes a
+development of the break-point with a scalar change of level on any design,
+or one development shared by the change of level and the break-point on a
+design that partitions the rows; a sharp \code{\link[=jseg]{jseg()}} takes only the shared
+partition development, because the read-off is a product of two unknowns. A
+smoothed term takes any development. A design that carries the intercept
+twice, the subformula's own and a constant column of a sub-term, as in
 \code{gamma ~ lasso(~1)}, is rejected, and \code{gamma ~ 0 + lasso(~1)} is the
 spelling of an intercept-only penalized development.
 }

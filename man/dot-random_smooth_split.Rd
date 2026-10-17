@@ -33,7 +33,7 @@ components normalized to a unit largest entry and does not move with the
 smoothing parameters.
 
 Where the smoother has already placed the null space in its leading columns
-with a zero border in every component, which is what every \pkg{basis7}
+with a zero border in every component, as every \pkg{basis7}
 smoother does under \code{null_space = "keep"}, the map keeps those columns and
 their names. Otherwise, as for a tensor product, an orthonormal basis of
 the null space and one of its complement are taken from the eigenvectors

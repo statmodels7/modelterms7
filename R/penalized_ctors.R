@@ -10,8 +10,9 @@ NULL
 #' Ridge Penalty on a Block of Coefficients
 #'
 #' @description
-#' A block of coefficients under a Gaussian prior at zero. Each coefficient of
-#' the block is shrunk towards zero, and none is set exactly to zero.
+#' Specifies a block of coefficients under a Gaussian prior at zero. Each
+#' coefficient of the block is shrunk towards zero, and the penalty does not
+#' set any coefficient exactly to zero.
 #'
 #' @details
 #' Writing \eqn{\beta} for the block's coefficients and \eqn{p} for their
@@ -28,7 +29,7 @@ NULL
 #' estimated by [statmodels7::reml()] or by another marginal criterion instead
 #' of being swept along a path.
 #'
-#' **Hyperparameter.** `lambda`, admissible on \eqn{(0, \infty)}.
+#' The hyperparameter is `lambda`, admissible on \eqn{(0, \infty)}.
 #'
 #' @inheritParams penalized_terms
 #' @param label A single non-empty character string prefixed to the
@@ -37,15 +38,15 @@ NULL
 #'   apart by their labels.
 #' @param lambda The precision of the prior. One number holds it and
 #'   `NULL`, the default, has it estimated. A ridge has no kink and no
-#'   path, so several numbers are rejected: they would form a grid that
-#'   nothing visits. Must lie in \eqn{(0, \infty)}.
+#'   path, so several numbers are rejected: they would form a grid that is
+#'   never visited. Must lie in \eqn{(0, \infty)}.
 #' @param id A label sharing this term's hyperparameter with those of
 #'   other terms carrying the same one: they are then estimated at a
 #'   single value, wherever in the formula they sit. `NULL`, the
 #'   default, shares nothing. See [term_ids()] for the meaning of the labels
 #'   and the restrictions on their use.
-#' @return An unbuilt [PenalizedTerm()]: a specification, with `X`,
-#'   `coef_names`, `blueprint` and `penalty` empty until [term_build()]
+#' @return An unbuilt [PenalizedTerm()]: a specification whose `X`,
+#'   `coef_names`, `blueprint` and `penalty` are empty until [term_build()]
 #'   fills them. The build attaches the penalty over the block's columns.
 #'
 #' @examples
@@ -53,7 +54,8 @@ NULL
 #' dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
 #' b <- term_build(ridge(~ x1 + x2), dd)
 #'
-#' # One hyperparameter, positive, on the log scale for an optimizer.
+#' # The penalty has one hyperparameter, which is positive and is presented to
+#' # an optimizer on the log scale.
 #' p <- term_penalty(b)
 #' p@params
 #' p@params_bounds
@@ -63,16 +65,18 @@ NULL
 #' all.equal(penalties7::penalty_value(p, beta, list(lambda = 2.5)),
 #'           -sum(dnorm(beta, 0, 1 / sqrt(2.5), log = TRUE)))
 #'
-#' # No kink, so the block is smooth and lambda is estimated at the mode.
+#' # The penalty has no kink, so the block is smooth and lambda is estimated
+#' # at the mode.
 #' c(smooth = term_smooth(b),
 #'   kinks = length(penalties7::penalty_kinks(p, list(lambda = 1))))
 #'
-#' # Holding it, and the rejection of a grid it has no path to visit.
+#' # The hyperparameter can be held, and a grid is rejected because the ridge
+#' # has no path to visit it.
 #' term_hyper(ridge(~ x1 + x2, lambda = 2))
 #' try(ridge(~ x1 + x2, lambda = c(1, 2)))
 #'
 #'
-#' # Fitted. The data are simulated from a known truth, so the
+#' # The model is fitted. The data are simulated from a known truth, so the
 #' # estimates below can be read against it.
 #' if (requireNamespace("statmodels7", quietly = TRUE)) {
 #'   set.seed(11)
@@ -107,8 +111,9 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #' Lasso Penalty on a Block of Coefficients
 #'
 #' @description
-#' A block of coefficients under a Laplace prior at zero: the penalty has a
-#' kink there, so coefficients are set exactly to zero and the term selects.
+#' Specifies a block of coefficients under a Laplace prior at zero. The
+#' penalty has a kink there, so coefficients are set exactly to zero and the
+#' term selects.
 #'
 #' @details
 #' \deqn{\rho(\beta) = \lambda\lVert\beta\rVert_1
@@ -118,12 +123,13 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #' and keeps fewer coefficients.
 #'
 #' The kink is at zero, so the block is fitted by a proximal method or by a
-#' coordinate descent with the other terms held, and \eqn{\lambda} is chosen
-#' by a path over its own values, scored by [statmodels7::bic()] by default
-#' or by [statmodels7::aic()] or [statmodels7::cv()]. A marginal criterion
-#' cannot be used: it is a Laplace expansion at a mode that sits on the kink.
+#' coordinate descent while the other terms are held, and \eqn{\lambda} is
+#' chosen by a path over its own values, scored by [statmodels7::bic()] by
+#' default or by [statmodels7::aic()] or [statmodels7::cv()]. A marginal
+#' criterion cannot be used: it is a Laplace expansion at a mode that sits on
+#' the kink.
 #'
-#' **Hyperparameter.** `lambda`, admissible on \eqn{(0, \infty)},
+#' The hyperparameter is `lambda`, admissible on \eqn{(0, \infty)}. It is
 #' swept over `n_lambda` values from the one that empties the block
 #' down to `min_ratio` of it.
 #'
@@ -133,25 +139,25 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #'   over `x1` reads `lasso.x1`. Two penalized terms in one formula stay
 #'   apart by their labels.
 #' @param lambda The rate of the prior. One number holds it, several are the
-#'   grid the path visits as they stand, and `NULL`, the default, has the
+#'   grid that the path visits as they stand, and `NULL`, the default, has the
 #'   path build one. Must lie in \eqn{(0, \infty)}.
 #' @param id A label sharing this term's hyperparameter with those of
 #'   other terms carrying the same one: they are then estimated at a
 #'   single value, wherever in the formula they sit. `NULL`, the
 #'   default, shares nothing. See [term_ids()] for the meaning of the labels
 #'   and the restrictions on their use.
-#' @param n_lambda How many values the path visits, a whole number of at
-#'   least 2, `25` by default. The axis descends from the kink size that
+#' @param n_lambda The number of values that the path visits, a whole number
+#'   of at least 2, `25` by default. The axis descends from the kink size that
 #'   empties the block to `min_ratio` times that size, which is four decades
 #'   at the default `min_ratio`. Given explicitly while `lambda` is held or
 #'   written out, it signals an error.
 #' @param min_ratio How far down the path reaches, as a fraction of the
 #'   kink that empties the block: smaller reaches a denser fit, larger
-#'   stops sooner. A single number in \eqn{(0, 1)}, `1e-4` by default.
+#'   stops sooner. It is a single number in \eqn{(0, 1)}, `1e-4` by default.
 #'   Only the sweep by kink size reads it, and it signals an error when given
 #'   explicitly while `lambda` is held or written out.
-#' @return An unbuilt [PenalizedTerm()]: a specification, with `X`,
-#'   `coef_names`, `blueprint` and `penalty` empty until [term_build()]
+#' @return An unbuilt [PenalizedTerm()]: a specification whose `X`,
+#'   `coef_names`, `blueprint` and `penalty` are empty until [term_build()]
 #'   fills them. The build attaches the penalty over the block's columns.
 #'
 #' @examples
@@ -169,13 +175,13 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #' all.equal(penalties7::penalty_value(p, beta, list(lambda = 2)),
 #'           2 * sum(abs(beta)) - 2 * log(2 / 2))
 #'
-#' # The path's length and depth, at the defaults and set.
+#' # The path's length and depth are shown at the defaults and when set.
 #' term_grid(lasso(~ x1 + x2))
 #' term_grid(lasso(~ x1 + x2, n_lambda = 60))
 #' term_path_min(lasso(~ x1 + x2, min_ratio = 1e-3))
 #'
 #'
-#' # Fitted. The data are simulated from a known truth, so the
+#' # The model is fitted. The data are simulated from a known truth, so the
 #' # estimates below can be read against it.
 #' if (requireNamespace("statmodels7", quietly = TRUE)) {
 #'   set.seed(11)
@@ -214,15 +220,15 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #' Elastic Net Penalty on a Block of Coefficients
 #'
 #' @description
-#' The lasso and the ridge mixed: a kink at zero, so the term still selects,
-#' and a quadratic part that keeps correlated coefficients together instead
-#' of choosing arbitrarily among them.
+#' Mixes the lasso and the ridge. The penalty has a kink at zero, so the term
+#' still selects, and it has a quadratic part that keeps correlated
+#' coefficients together instead of choosing arbitrarily among them.
 #'
 #' @details
 #' \deqn{\rho(\beta) = \lambda\left\{\alpha\lVert\beta\rVert_1
 #'   + \frac{1-\alpha}{2}\lVert\beta\rVert_2^2\right\}
 #'   + p\log Z(\lambda, \alpha),}
-#' the normalizing constant being that of the product of a Laplace and a
+#' where the normalizing constant is that of the product of a Laplace and a
 #' Gaussian at zero
 #' ([distributions7::enet_distrib()]). The constant depends on both
 #' hyperparameters and is kept, so the value is minus the log density of that
@@ -234,11 +240,11 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #' the lasso and at \eqn{\alpha \to 0} the ridge, and the kink at zero has
 #' half-width \eqn{\lambda\alpha}, so both hyperparameters scale it.
 #'
-#' **Hyperparameters.** `lambda` on \eqn{(0, \infty)}, swept over
-#' `n_lambda` values by kink size; `alpha` on \eqn{(0, 1)}, swept
-#' over `n_alpha` values across that interval, the ends excluded
-#' because the penalty there is one of the other two. Every combination of
-#' the two is visited, `n_lambda * n_alpha` fits, unless
+#' The hyperparameters are `lambda`, on \eqn{(0, \infty)}, swept over
+#' `n_lambda` values by kink size, and `alpha`, on \eqn{(0, 1)}, swept
+#' over `n_alpha` values across that interval. The ends of the interval are
+#' excluded because the penalty there is one of the other two. Every
+#' combination of the two is visited, `n_lambda * n_alpha` fits, unless
 #' `search = "cyclic"` sweeps one at a time instead.
 #'
 #' @inheritParams penalized_terms
@@ -247,36 +253,37 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #'   over `x1` reads `enet.x1`. Two penalized terms in one formula stay
 #'   apart by their labels.
 #' @param lambda The overall rate. One number holds it, several are the grid
-#'   the path visits as they stand, and `NULL`, the default, has the path
+#'   that the path visits as they stand, and `NULL`, the default, has the path
 #'   build one. Must lie in \eqn{(0, \infty)}.
 #' @param alpha The mixing weight, in the same three states and settled
 #'   independently of `lambda`. Must lie in \eqn{(0, 1)}.
 #' @param id Labels sharing this term's hyperparameters with those of
 #'   other terms carrying the same ones: each is then estimated at a
-#'   single value, wherever in the formula they sit. A named vector,
-#'   `c(alpha = "A")`, because the penalty has several hyperparameters and the
-#'   name says which one is shared; `NULL`, the default, shares nothing. See
+#'   single value, wherever in the formula they sit. The argument is a named
+#'   vector, `c(alpha = "A")`, because the penalty has several hyperparameters
+#'   and the name identifies the one that is shared; `NULL`, the default,
+#'   shares nothing. See
 #'   [term_ids()] for the meaning of the labels and the restrictions on their
 #'   use.
-#' @param n_lambda,n_alpha How many values the path visits for each, at
-#'   least 2. The two are separate arguments because the axes differ:
+#' @param n_lambda,n_alpha The number of values that the path visits for each,
+#'   at least 2. The two are separate arguments because the axes differ:
 #'   \eqn{\lambda} descends from the kink size that empties the block to
 #'   `min_ratio` times that size (four decades at the default `min_ratio`),
 #'   which takes more points than \eqn{\alpha}, which spans one bounded
 #'   interval. Each signals an error when given explicitly for a
 #'   hyperparameter that is held or written out.
 #' @param search `"grid"` to visit every combination of \eqn{\lambda}
-#'   and \eqn{\alpha}, `"cyclic"` to sweep one at a time with the other
+#'   and \eqn{\alpha}, `"cyclic"` to sweep one at a time while the other is
 #'   held. See [term_search()]. Given explicitly while fewer than two
 #'   hyperparameters are swept, it signals an error.
 #'
 #' @param min_ratio How far down the path reaches, as a fraction of the
 #'   kink that empties the block: smaller reaches a denser fit, larger
-#'   stops sooner. A single number in \eqn{(0, 1)}, `1e-4` by default.
+#'   stops sooner. It is a single number in \eqn{(0, 1)}, `1e-4` by default.
 #'   Only the sweep by kink size reads it, and it signals an error when given
 #'   explicitly while `lambda` is held or written out.
-#' @return An unbuilt [PenalizedTerm()]: a specification, with `X`,
-#'   `coef_names`, `blueprint` and `penalty` empty until [term_build()]
+#' @return An unbuilt [PenalizedTerm()]: a specification whose `X`,
+#'   `coef_names`, `blueprint` and `penalty` are empty until [term_build()]
 #'   fills them. The build attaches the penalty over the block's columns.
 #'
 #' @examples
@@ -295,7 +302,7 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #' all.equal(penalties7::penalty_value(pe, beta, list(lambda = 2, alpha = 1e-9)),
 #'           penalties7::penalty_value(pr, beta, list(lambda = 2)))
 #'
-#' # alpha held at the halfway mixture, lambda still estimated.
+#' # alpha is held at the halfway mixture, and lambda is still estimated.
 #' term_hyper(enet(~ x1 + x2, alpha = 0.5))
 #'
 #' # The grid is 25 by 5 by default; cyclic sweeps one axis at a time.
@@ -306,7 +313,7 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #' try(enet(~ x1 + x2, alpha = 1))
 #'
 #'
-#' # Fitted. The data are simulated from a known truth, so the
+#' # The model is fitted. The data are simulated from a known truth, so the
 #' # estimates below can be read against it.
 #' if (requireNamespace("statmodels7", quietly = TRUE)) {
 #'   set.seed(11)
@@ -350,9 +357,9 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #' SCAD Penalty on a Block of Coefficients
 #'
 #' @description
-#' Smoothly clipped absolute deviation: the lasso's kink at zero, so the
-#' term selects, and a penalty that flattens beyond a threshold, so a large
-#' coefficient is not shrunk at all.
+#' Specifies the smoothly clipped absolute deviation penalty. It has the
+#' lasso's kink at zero, so the term selects, and it flattens beyond a
+#' threshold, so a large coefficient is not shrunk at all.
 #'
 #' @details
 #' It is defined by its derivative, for \eqn{t = \lvert\beta_j\rvert \ge 0},
@@ -360,9 +367,9 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #'   \frac{(a\lambda - t)_+}{(a-1)\lambda}\right\},}
 #' summed over the coefficients. It rises like the lasso near zero, bends
 #' from \eqn{t = \lambda}, and is flat past \eqn{t = a\lambda}, which removes
-#' the bias the lasso puts on a large coefficient. Being improper it
-#' carries no normalizing constant, and is therefore not a log prior and not
-#' reachable by a marginal criterion.
+#' the bias that the lasso puts on a large coefficient. The penalty is
+#' improper, so it carries no normalizing constant, and it is therefore not a
+#' log prior and not reachable by a marginal criterion.
 #'
 #' The formula above is the penalty for a loss of unit curvature. In a
 #' [statmodels7::statmod()] fit the penalty on coordinate \eqn{j} is scaled by
@@ -370,12 +377,12 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #' zero remains \eqn{\lambda}, the penalty bends from \eqn{\lambda/c_j} and is
 #' flat past \eqn{a\lambda/c_j}, so the shape keeps its meaning whatever the
 #' scale of the response. Rescaling a Gaussian response by \eqn{k} and
-#' dividing \eqn{\lambda} by \eqn{k} reproduces the fit with \eqn{a}
+#' dividing \eqn{\lambda} by \eqn{k} reproduces the fit, in which \eqn{a} is
 #' unchanged. The scaling is applied by \pkg{statmodels7}; the penalty that
 #' this term builds is the unscaled one.
 #'
-#' **Hyperparameters.** `lambda` on \eqn{(0, \infty)}, swept over
-#' `n_lambda` values by kink size; `a` on \eqn{(2, \infty)}, the range over
+#' The hyperparameters are `lambda`, on \eqn{(0, \infty)}, swept over
+#' `n_lambda` values by kink size, and `a`, on \eqn{(2, \infty)}, the range over
 #' which the proximal operator at unit curvature is single valued. The shape
 #' leaves the kink at zero unchanged, so a path over the kink size cannot
 #' reach it. It is swept over `n_a` values on a geometric grid that starts just
@@ -392,39 +399,40 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #'   over `x1` reads `scad.x1`. Two penalized terms in one formula stay
 #'   apart by their labels.
 #' @param lambda The scale of the penalty. One number holds it, several are
-#'   the grid the path visits as they stand, and `NULL`, the default, has
+#'   the grid that the path visits as they stand, and `NULL`, the default, has
 #'   the path build one. Must lie in \eqn{(0, \infty)}.
 #' @param a The shape, in the same three states and settled independently
 #'   of `lambda`, defaulting to the literature's `3.7` rather than to
-#'   `NULL`: one number holds it, several are the grid the path visits as
+#'   `NULL`: one number holds it, several are the grid that the path visits as
 #'   they stand, and `NULL` has the path build one. Must lie in
 #'   \eqn{(2, \infty)}.
 #' @param id Labels sharing this term's hyperparameters with those of
 #'   other terms carrying the same ones: each is then estimated at a
-#'   single value, wherever in the formula they sit. A named vector,
-#'   `c(a = "A")`, because the penalty has several hyperparameters and the
-#'   name says which one is shared; `NULL`, the default, shares nothing. See
+#'   single value, wherever in the formula they sit. The argument is a named
+#'   vector, `c(a = "A")`, because the penalty has several hyperparameters and
+#'   the name identifies the one that is shared; `NULL`, the default, shares
+#'   nothing. See
 #'   [term_ids()] for the meaning of the labels and the restrictions on their
 #'   use.
-#' @param n_lambda,n_a How many values the path visits for each, at least 2.
-#'   The two are separate arguments because the axes differ: \eqn{\lambda}
-#'   descends from the kink size that empties the block to `min_ratio` times
-#'   that size (four decades at the default `min_ratio`), which takes more
-#'   points than \eqn{a}, which spans the shape's useful range. Each signals
-#'   an error when given explicitly for a hyperparameter that is held or
-#'   written out, so `n_a` requires `a = NULL`.
+#' @param n_lambda,n_a The number of values that the path visits for each, at
+#'   least 2. The two are separate arguments because the axes differ:
+#'   \eqn{\lambda} descends from the kink size that empties the block to
+#'   `min_ratio` times that size (four decades at the default `min_ratio`),
+#'   which takes more points than \eqn{a}, which spans the shape's useful range.
+#'   Each signals an error when given explicitly for a hyperparameter that is
+#'   held or written out, so `n_a` requires `a = NULL`.
 #' @param search `"grid"` to visit every combination of \eqn{\lambda}
-#'   and \eqn{a}, `"cyclic"` to sweep one at a time with the other held.
+#'   and \eqn{a}, `"cyclic"` to sweep one at a time while the other is held.
 #'   See [term_search()]. Given explicitly while fewer than two hyperparameters
 #'   are swept, it signals an error.
 #'
 #' @param min_ratio How far down the path reaches, as a fraction of the
 #'   kink that empties the block: smaller reaches a denser fit, larger
-#'   stops sooner. A single number in \eqn{(0, 1)}, `1e-4` by default.
+#'   stops sooner. It is a single number in \eqn{(0, 1)}, `1e-4` by default.
 #'   Only the sweep by kink size reads it, and it signals an error when given
 #'   explicitly while `lambda` is held or written out.
-#' @return An unbuilt [PenalizedTerm()]: a specification, with `X`,
-#'   `coef_names`, `blueprint` and `penalty` empty until [term_build()]
+#' @return An unbuilt [PenalizedTerm()]: a specification whose `X`,
+#'   `coef_names`, `blueprint` and `penalty` are empty until [term_build()]
 #'   fills them. The build attaches the penalty over the block's columns.
 #'
 #' @examples
@@ -434,8 +442,8 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #' p@params
 #' p@params_bounds
 #'
-#' # The derivative is the definition: lasso-like to lambda, then bending,
-#' # then flat past a * lambda.
+#' # The derivative is the definition: it behaves like the lasso up to
+#' # lambda, then bends, and is flat past a * lambda.
 #' rho1 <- function(t, lambda, a)
 #'   lambda * pmin(1, pmax(a * lambda - t, 0) / ((a - 1) * lambda))
 #' rho1(c(0.5, 1.5, 4), lambda = 1, a = 3.7)
@@ -451,11 +459,11 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #' term_hyper(scad(~ x1 + x2, a = NULL))
 #' term_grid(scad(~ x1 + x2, a = NULL))
 #'
-#' # At or below 2 the shape is rejected, the bound being open.
+#' # At or below 2 the shape is rejected, because the bound is open.
 #' try(scad(~ x1 + x2, a = 2))
 #'
 #'
-#' # Fitted. The data are simulated from a known truth, so the
+#' # The model is fitted. The data are simulated from a known truth, so the
 #' # estimates below can be read against it.
 #' if (requireNamespace("statmodels7", quietly = TRUE)) {
 #'   set.seed(11)
@@ -499,12 +507,13 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #' MCP Penalty on a Block of Coefficients
 #'
 #' @description
-#' The minimax concave penalty: like SCAD it selects and then flattens, and
-#' it begins to flatten immediately, whereas SCAD keeps the slope of the lasso
-#' up to \eqn{t = \lambda}.
+#' Specifies the minimax concave penalty. Like SCAD it selects and then
+#' flattens, and it begins to flatten immediately, whereas SCAD keeps the slope
+#' of the lasso up to \eqn{t = \lambda}.
 #'
 #' @details
-#' Defined by its derivative, for \eqn{t = \lvert\beta_j\rvert \ge 0},
+#' The penalty is defined by its derivative, for
+#' \eqn{t = \lvert\beta_j\rvert \ge 0},
 #' \deqn{\rho'(t) = \left(\lambda - \frac{t}{\gamma}\right)_+ ,}
 #' summed over the coefficients: it starts at \eqn{\lambda}, falls linearly,
 #' and is flat past \eqn{t = \gamma\lambda}. The penalty is improper, so it
@@ -517,13 +526,13 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #' zero remains \eqn{\lambda}, and the penalty is flat past
 #' \eqn{\gamma\lambda/c_j}, so the shape keeps its meaning whatever the scale
 #' of the response. Rescaling a Gaussian response by \eqn{k} and dividing
-#' \eqn{\lambda} by \eqn{k} reproduces the fit with \eqn{\gamma} unchanged.
-#' The scaling is applied by \pkg{statmodels7}; the penalty that this term
-#' builds is the unscaled one.
+#' \eqn{\lambda} by \eqn{k} reproduces the fit, in which \eqn{\gamma} is
+#' unchanged. The scaling is applied by \pkg{statmodels7}; the penalty that
+#' this term builds is the unscaled one.
 #'
-#' **Hyperparameters.** `lambda` on \eqn{(0, \infty)}, swept over
-#' `n_lambda` values by kink size; `gamma` on \eqn{(1, \infty)}, at or below
-#' which the penalized objective need not be convex even for an orthogonal
+#' The hyperparameters are `lambda`, on \eqn{(0, \infty)}, swept over
+#' `n_lambda` values by kink size, and `gamma`, on \eqn{(1, \infty)}. At or
+#' below 1 the penalized objective need not be convex even for an orthogonal
 #' design. The shape leaves the kink at zero unchanged, so a path over the
 #' kink size cannot reach it. It is swept over `n_gamma` values on a geometric
 #' grid that starts just above the smallest shape at which the block can be
@@ -540,22 +549,22 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #'   over `x1` reads `mcp.x1`. Two penalized terms in one formula stay
 #'   apart by their labels.
 #' @param lambda The scale of the penalty. One number holds it, several are
-#'   the grid the path visits as they stand, and `NULL`, the default, has
+#'   the grid that the path visits as they stand, and `NULL`, the default, has
 #'   the path build one. Must lie in \eqn{(0, \infty)}.
 #' @param gamma The shape, in the same three states and settled
 #'   independently of `lambda`, defaulting to the literature's `3` rather
-#'   than to `NULL`: one number holds it, several are the grid the path
+#'   than to `NULL`: one number holds it, several are the grid that the path
 #'   visits as they stand, and `NULL` has the path build one. Must lie in
 #'   \eqn{(1, \infty)}.
 #' @param id Labels sharing this term's hyperparameters with those of
 #'   other terms carrying the same ones: each is then estimated at a
-#'   single value, wherever in the formula they sit. A named vector,
-#'   `c(gamma = "A")`, because the penalty has several hyperparameters and
-#'   the name says which one is shared; `NULL`, the default, shares nothing.
-#'   See [term_ids()] for the meaning of the labels and the restrictions on
-#'   their use.
-#' @param n_lambda,n_gamma How many values the path visits for each, at
-#'   least 2. The two are separate arguments because the axes differ:
+#'   single value, wherever in the formula they sit. The argument is a named
+#'   vector, `c(gamma = "A")`, because the penalty has several hyperparameters
+#'   and the name identifies the one that is shared; `NULL`, the default,
+#'   shares nothing. See [term_ids()] for the meaning of the labels and the
+#'   restrictions on their use.
+#' @param n_lambda,n_gamma The number of values that the path visits for each,
+#'   at least 2. The two are separate arguments because the axes differ:
 #'   \eqn{\lambda} descends from the kink size that empties the block to
 #'   `min_ratio` times that size (four decades at the default `min_ratio`),
 #'   which takes more points than \eqn{\gamma}, which spans the shape's
@@ -563,17 +572,17 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #'   hyperparameter that is held or written out, so `n_gamma` requires
 #'   `gamma = NULL`.
 #' @param search `"grid"` to visit every combination of \eqn{\lambda}
-#'   and \eqn{\gamma}, `"cyclic"` to sweep one at a time with the other
+#'   and \eqn{\gamma}, `"cyclic"` to sweep one at a time while the other is
 #'   held. See [term_search()]. Given explicitly while fewer than two
 #'   hyperparameters are swept, it signals an error.
 #'
 #' @param min_ratio How far down the path reaches, as a fraction of the
 #'   kink that empties the block: smaller reaches a denser fit, larger
-#'   stops sooner. A single number in \eqn{(0, 1)}, `1e-4` by default.
+#'   stops sooner. It is a single number in \eqn{(0, 1)}, `1e-4` by default.
 #'   Only the sweep by kink size reads it, and it signals an error when given
 #'   explicitly while `lambda` is held or written out.
-#' @return An unbuilt [PenalizedTerm()]: a specification, with `X`,
-#'   `coef_names`, `blueprint` and `penalty` empty until [term_build()]
+#' @return An unbuilt [PenalizedTerm()]: a specification whose `X`,
+#'   `coef_names`, `blueprint` and `penalty` are empty until [term_build()]
 #'   fills them. The build attaches the penalty over the block's columns.
 #'
 #' @examples
@@ -588,7 +597,8 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #' rho1 <- function(t, lambda, gamma) pmax(lambda - t / gamma, 0)
 #' rho1(c(0, 1, 2, 3), lambda = 1, gamma = 2)
 #'
-#' # The kink at zero, and the pair where the second derivative breaks.
+#' # penalty_kinks() reports the kink at zero and the pair where the second
+#' # derivative breaks.
 #' penalties7::penalty_kinks(p, list(lambda = 1, gamma = 2))
 #'
 #' # The literature's shape is held by default, and `gamma = NULL` estimates it
@@ -601,7 +611,7 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #' try(mcp(~ x1 + x2, gamma = 1))
 #'
 #'
-#' # Fitted. The data are simulated from a known truth, so the
+#' # The model is fitted. The data are simulated from a known truth, so the
 #' # estimates below can be read against it.
 #' if (requireNamespace("statmodels7", quietly = TRUE)) {
 #'   set.seed(11)

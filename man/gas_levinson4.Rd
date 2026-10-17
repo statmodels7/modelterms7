@@ -10,26 +10,27 @@ gas_levinson4(pacf, v, w)
 \item{pacf}{A numeric vector of partial autocorrelations in
 \eqn{(-1, 1)}.}
 
-\item{v, w}{The two directions to contract against, each as long as
+\item{v, w}{The two directions against which to contract, each as long as
 \code{pacf}. The result is symmetric in the two.}
 }
 \value{
 A list of one \code{q} by \code{q} matrix per coefficient.
 }
 \description{
-\code{\link[=gas_levinson3]{gas_levinson3()}}'s third derivatives differentiated once more and
-contracted against a second direction, one matrix per coefficient.
+Differentiates the third derivatives of \code{\link[=gas_levinson3]{gas_levinson3()}} once more and
+contracts them against a second direction, which gives one matrix per
+coefficient.
 }
 \details{
 The second derivative of a marginal criterion in a pair of hyperparameters
 reads the fourth derivative of the predictor along the two directions in
 which the mode moves, and the persistence reaches the predictor through
 this map.
-As at the third order it is needed only contracted, so what is propagated
-is a matrix per coefficient and never a four-index array.
+As at the third order it is needed only contracted, so the recursion
+propagates a matrix per coefficient instead of a four-index array.
 
 Differentiating the third-order recursion of \code{\link[=gas_levinson3]{gas_levinson3()}} once
-more adds no new kind of term, the map being bilinear at every step. The
+more adds no new kind of term, because the map is bilinear at every step. The
 full fourth derivative obeys
 \deqn{Q^{(k)}_i = Q^{(k-1)}_i - \rho_k Q^{(k-1)}_{k-i}
   - \sum_{\text{4 slots}} \delta_{\cdot k}T^{(k-1)}_{k-i}[\text{the rest}],}
@@ -48,8 +49,8 @@ Each coefficient \eqn{\xi^{(k)}_i} is a polynomial of degree at most
 \eqn{k} in the first \eqn{k} partial autocorrelations, multilinear in
 them, so the result is identically zero for \eqn{q \le 3}. The first
 coefficient carrying a monomial of degree four is \eqn{\xi^{(4)}_2}, which
-needs \eqn{q = 4}. A comparison with a reference therefore needs
-\eqn{q \ge 4}.
+needs \eqn{q = 4}. Therefore the result can be compared with a reference
+only if \eqn{q \ge 4}.
 }
 \seealso{
 \code{\link[=gas_levinson3]{gas_levinson3()}}, \code{\link[=gas_levinson2]{gas_levinson2()}}

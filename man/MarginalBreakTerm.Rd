@@ -28,16 +28,16 @@ when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag
 \code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
 \item{hyper}{The hyperparameters of the term's penalty that the caller
-\strong{held}, as a named list keyed by the penalty's names. Empty, the
+held, as a named list keyed by the penalty's names. Empty, the
 default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
 default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the caller
-wrote out, as a named list of numeric vectors. Empty, the default, has the
-path build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values that a path visits, for each hyperparameter that
+the caller wrote out, as a named list of numeric vectors. Empty, the
+default, has the path build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink reaches, as
 a fraction of the value that empties the block: one number in \eqn{(0, 1)},
@@ -54,9 +54,9 @@ term's own hyperparameters, or \code{character(0)} for none. The terms
 carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
-\item{blueprint}{A named list recording the number of rows, the covariate,
-the rows of each group and the group labels, empty until \code{\link[=term_build]{term_build()}}
-fills it.}
+\item{blueprint}{A named list that records the number of rows, the
+covariate, the rows of each group and the group labels. It is empty until
+\code{\link[=term_build]{term_build()}} fills it.}
 
 \item{kind}{One of \code{"jump"}, \code{"seg"} or \code{"jseg"}.}
 
@@ -72,7 +72,7 @@ parameter, \code{beta}. It is \code{FALSE} for \code{"jump"}.}
 subformula.}
 
 \item{prior}{The latent's distribution: \code{NULL} for the Gaussian, or a
-\pkg{distributions7} object with its location held at zero.}
+\pkg{distributions7} object whose location is held at zero.}
 
 \item{spec}{A named list of the resolved construction settings.}
 }
@@ -82,8 +82,8 @@ An S7 object of class \code{MarginalBreakTerm}, inheriting from
 beside the inherited ones.
 }
 \description{
-The subclass of \code{\link[=structural_term]{structural_term()}} holding break-points that vary by group
-as latent variables \strong{integrated out} of the likelihood.
+\code{MarginalBreakTerm} is the subclass of \code{\link[=structural_term]{structural_term()}} for break-points
+that vary by group as latent variables integrated out of the likelihood.
 \code{\link[=jump]{jump()}}, \code{\link[=seg]{seg()}} and \code{\link[=jseg]{jseg()}} construct it when given \code{marginal = TRUE}
 together with a \code{psi ~ random(~ 1 | g)} subformula.
 
@@ -129,9 +129,9 @@ A step term takes at most eight break-points per group. The forward
 recursion of the step kind costs \eqn{n K 2^K} operations for \eqn{n}
 observations and \eqn{K} break-points. The fitting layer reads a posterior
 over the \eqn{2^K} side patterns and evaluates the family once per pattern,
-and the number of patterns therefore limits \eqn{K}. The continuous kinds take one break-point, because
-a product quadrature over several would need a node set whose size grows as
-a power of their number.
+and the number of patterns therefore limits \eqn{K}. The continuous kinds
+take one break-point, because a product quadrature over several would need
+a node set whose size grows as a power of their number.
 }
 
 \examples{
@@ -143,11 +143,12 @@ tm <- term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd)
 S7::S7_inherits(tm, MarginalBreakTerm)
 c(kind = tm@kind, npsi = tm@npsi, linear = tm@linear)
 
-# Numbered parameters: the prior's location and scale, and the change.
+# The parameters are numbered: the prior's location and scale, and the
+# change.
 term_params(tm)
 vapply(term_links(tm), function(l) l@link_name, character(1))
 
-# The prior is part of the likelihood, so nothing is declared penalized.
+# The prior is part of the likelihood, so the term declares no penalty.
 length(term_penalties(tm))
 
 # A continuous kind adds the linear effect and the change of slope.

@@ -14,10 +14,11 @@ rejected with the error \code{"'term' must inherit from 'model_term'."}.}
 A single logical, never \code{NA}.
 }
 \description{
-\code{TRUE} for a term that \code{\link[=term_build]{term_build()}} has filled, \code{FALSE} for a bare
-specification. It is the test \code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_npar]{term_npar()}},
-\code{\link[=term_coef_names]{term_coef_names()}}, \code{\link[=term_predict]{term_predict()}} and \code{\link[=plot]{plot()}} apply before reading a
-design block, so it decides which error a caller gets from those.
+Returns \code{TRUE} for a term that \code{\link[=term_build]{term_build()}} has filled and \code{FALSE} for a
+bare specification. \code{\link[=term_matrix]{term_matrix()}}, \code{\link[=term_npar]{term_npar()}}, \code{\link[=term_coef_names]{term_coef_names()}},
+\code{\link[=term_predict]{term_predict()}} and \code{\link[=plot]{plot()}} apply this test before reading a design block,
+so the result determines which error a caller receives from those
+functions.
 }
 \details{
 The two branches record being built in different places, so the predicate
@@ -26,23 +27,23 @@ coefficient names, \code{length(term@coef_names) > 0L}; a structural term
 contributes no design columns and so has none to count, and is built when
 its blueprint is filled, \code{length(term@blueprint) > 0L}.
 
-\strong{A built additive term with no columns would give \code{FALSE}.} The shipped
+A built additive term with no columns would give \code{FALSE}. The shipped
 constructors do not produce one: a formula that gives no columns, such as
 \code{~ 0}, is rejected when \code{\link[=term_build]{term_build()}} runs.
 
-\strong{\code{blueprint} is read directly.} It is declared on \code{\link[=additive_term]{additive_term()}} and on
-the abstract \code{\link[=structural_term]{structural_term()}}, which the three shipped structural classes
-inherit, so every term inheriting from \code{\link[=model_term]{model_term()}} has one. A structural
-class written outside the package inherits an empty blueprint, which reads
-as not built until \code{\link[=term_build]{term_build()}} fills it, and the predicate returns a
-logical for such a term as well.
+The \code{blueprint} property is read directly. It is declared on
+\code{\link[=additive_term]{additive_term()}} and on the abstract \code{\link[=structural_term]{structural_term()}}, which the
+three shipped structural classes inherit, so every term inheriting from
+\code{\link[=model_term]{model_term()}} has one. A structural class written outside the package
+inherits an empty blueprint, which reads as not built until \code{\link[=term_build]{term_build()}}
+fills it, and the predicate returns a logical for such a term as well.
 }
 \examples{
 d <- data.frame(x = 1:4)
 term_is_built(linpar(~ x))
 term_is_built(term_build(linpar(~ x), d))
 
-# It is what the accessors test, so it predicts the error.
+# The accessors apply this test, so it predicts their error.
 try(term_matrix(linpar(~ x)))
 
 # A structural term carries no design block, so the predicate reads its

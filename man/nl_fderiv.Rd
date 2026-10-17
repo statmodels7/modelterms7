@@ -11,9 +11,10 @@ nl_fderiv(term, coef = NULL, order = 1L)
 error \code{"'term' must be a built nl() term."}, and an unbuilt term with
 \code{"the term is not built."}.}
 
-\item{coef}{The coefficients to read at, one per coefficient of the term, or
-\code{NULL} for the ones the term currently carries, which \code{\link[=term_refresh]{term_refresh()}}
-last committed. A vector of another length is rejected.}
+\item{coef}{The coefficients at which to evaluate the derivatives, one per
+coefficient of the term, or \code{NULL} for the coefficients that the term
+currently carries, which \code{\link[=term_refresh]{term_refresh()}} last committed. A vector of
+another length is rejected.}
 
 \item{order}{1, 2, 3 or 4. Any other value is rejected.}
 }
@@ -24,18 +25,18 @@ so on, the parameter names joined by \code{"_"} in the term's own parameter
 order.
 }
 \description{
-\eqn{\partial^k f/\partial\theta^k} at the given coefficients, one named
-component per index multiset, keyed as \pkg{distributions7} keys its own
-derivative surfaces.
+Returns \eqn{\partial^k f/\partial\theta^k} at the given coefficients, with
+one named component per index multiset, keyed as \pkg{distributions7} keys
+its own derivative surfaces.
 }
 \details{
 The route is chosen for each order separately, in this priority: a function
 supplied to \code{\link[=nl]{nl()}} where there is one, then the symbolic route where the
 expression can be differentiated, and otherwise one stencil applied to the
-highest analytic order below the one wanted (a supplied one included), or
-to the value of \eqn{f} where no lower order is analytic. A supplied Hessian
-therefore serves the third and fourth orders, which are then one difference
-away from an exact second order.
+highest analytic order below the order wanted (a supplied order is
+included), or to the value of \eqn{f} if every lower order is computed
+numerically. A supplied Hessian therefore serves the third and fourth
+orders, which are then one difference away from an exact second order.
 
 In each parameter the difference is a single stencil of the order required,
 so a derivative of order four in one parameter is never built from nested
@@ -50,7 +51,7 @@ dd <- data.frame(x = seq(0.2, 3, length.out = 20))
 dd$y <- 2 * exp(-1.3 * dd$x)
 b <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3)), dd)
 
-# One component per index multiset, at every order.
+# Each order has one component per index multiset.
 names(nl_fderiv(b, order = 1))
 names(nl_fderiv(b, order = 2))
 names(nl_fderiv(b, order = 3))

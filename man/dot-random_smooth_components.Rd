@@ -18,8 +18,8 @@ smoothing parameter: one matrix for a single penalty, several for an
 adaptive smoother or an anisotropic tensor product.
 }
 \details{
-A smoother carrying a penalty factory has no roughness matrix, its penalty
-being declared over the penalized coordinates by the factory, and it
-signals an error here.
+A smoother carrying a penalty factory has no roughness matrix, because the
+factory declares its penalty over the penalized coordinates, and the
+function signals an error for such a smoother.
 }
 \keyword{internal}

@@ -13,7 +13,8 @@ as_hyper(x, what = "this term")
 }
 \value{
 A named list, one entry per hyperparameter named, each a numeric
-vector of length one or more. Empty for \code{NULL} or a zero-length input.
+vector of length one or more. The list is empty for \code{NULL} or a
+zero-length input.
 }
 \description{
 Accepts a named vector or a named list and returns a named list, checking
@@ -30,8 +31,7 @@ therefore known only when the term is built. The shape is checked here and
 the names against the penalty by \code{\link[=check_hyper]{check_hyper()}} at that point.
 
 A vector entry is a written-out grid, exactly as it is in the constructors
-that name their hyperparameters, so the length is not
-checked here either; \code{\link[=.hyper_parts]{.hyper_parts()}} splits the two once the penalty
-exists.
+that name their hyperparameters, so the length is not checked here either;
+\code{\link[=.hyper_parts]{.hyper_parts()}} splits the two once the penalty exists.
 }
 \keyword{internal}

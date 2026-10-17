@@ -12,11 +12,11 @@
 A character vector of length \eqn{K + K(K-1)}.
 }
 \description{
-\code{"level1"}, then \code{"gap2"} ... \code{"gapK"}, then the free names of the
-transition matrix, \code{"alr1.1"} and the rest. A chain of \eqn{K} regimes has
-\eqn{K + K(K-1)} parameters in all: one free level, \eqn{K-1} positive gaps
-that order the others, and \eqn{K(K-1)} additive log-ratios, \eqn{K-1} per
-row of the matrix.
+The parameters are \code{"level1"}, then \code{"gap2"} ... \code{"gapK"}, then the free
+names of the transition matrix, \code{"alr1.1"} and the rest. A chain of \eqn{K}
+regimes has \eqn{K + K(K-1)} parameters in all: one free level, \eqn{K-1}
+positive gaps that order the others, and \eqn{K(K-1)} additive log-ratios,
+\eqn{K-1} per row of the matrix.
 }
 \details{
 The order is the one that \code{\link[=term_links]{term_links()}}, \code{\link[=term_start]{term_start()}}, the columns of
@@ -34,7 +34,7 @@ vapply(2:4, function(k) length(term_params(regime(k))), integer(1))
 
 }
 \seealso{
-\code{\link[=term_links]{term_links()}} for the chart each rides, \code{\link[=regime]{regime()}} for what they
-mean.
+\code{\link[=term_links]{term_links()}} for the chart on which each parameter is carried,
+\code{\link[=regime]{regime()}} for what they mean.
 }
 \keyword{internal}

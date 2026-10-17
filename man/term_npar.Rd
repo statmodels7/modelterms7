@@ -19,12 +19,12 @@ signals the error
 A single whole number.
 }
 \description{
-How many parameters of its own a built term carries: the number of columns
-of the design block for an additive term, and the number of entries of
-\code{\link[=term_params]{term_params()}} for a structural one, which has no block. It is the length
-of the vector into which a \code{\link[=term_penalties]{term_penalties()}} entry indexes, the length
-against which \code{\link[=edf]{edf()}} is measured, and the length that a fit reserves for
-the term.
+Returns the number of parameters of its own that a built term carries: the
+number of columns of the design block for an additive term, and the number
+of entries of \code{\link[=term_params]{term_params()}} for a structural one, which has no block. It
+is the length of the vector into which a \code{\link[=term_penalties]{term_penalties()}} entry indexes,
+the length against which \code{\link[=edf]{edf()}} is measured, and the length that a fit
+reserves for the term.
 }
 \details{
 The two methods are the two branches. On \code{\link[=additive_term]{additive_term()}} it is

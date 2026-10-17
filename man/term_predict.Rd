@@ -11,37 +11,38 @@ term_predict(term, newdata, ...)
 signals the error
 \code{"the term has not been built; call term_build(term, data) first."}.}
 
-\item{newdata}{A data frame carrying every variable the term names, with any
-number of rows. Any other object is rejected by the generic, before
+\item{newdata}{A data frame carrying every variable that the term names, with
+any number of rows. Any other object is rejected by the generic, before
 dispatch, with the error \code{"'newdata' must be a data frame."}. A factor here
 need carry only the levels that its own rows use; the rest come from the
 blueprint.}
 
-\item{...}{Passed to methods. The method for \code{\link[=random]{random()}} reads \code{unseen},
-which is \code{"error"} by default and rejects a grouping level that was absent
-at the build and a missing grouping value; with \code{unseen = "zero"} such a
-row receives a row of zeros. The other shipped methods do not use it.}
+\item{...}{Passed to methods. The method for \code{\link[=random]{random()}} reads \code{unseen}. Its
+default \code{"error"} rejects a grouping level that was absent at the build
+and a missing grouping value; with \code{unseen = "zero"} such a row receives a
+row of zeros. The other shipped methods do not use it.}
 }
 \value{
 A block of \code{nrow(newdata)} rows and \code{\link[=term_npar]{term_npar()}} columns, in the
-same storage the term built: a numeric matrix, or a \pkg{Matrix} object
-where the block is sparse.
+same storage that the term built: a numeric matrix, or a \pkg{Matrix}
+object where the block is sparse.
 }
 \description{
-Applies a built term's recorded mapping to new rows, returning the block the
-term would have produced had those rows been in the data on which it was built.
-Factor levels, contrasts, spline knots and a Demmler-Reinsch
+Applies a built term's recorded mapping to new rows, returning the block that
+the term would have produced had those rows been in the data on which it was
+built. Factor levels, contrasts, spline knots and a Demmler-Reinsch
 reparametrization come from the blueprint and are reused; the spreads of a
-standardization enter the penalty only and are not applied to the block. A factor level that the blueprint does not contain is rejected,
-except for the grouping levels of a \code{\link[=random]{random()}} term with \code{unseen = "zero"}.
+standardization enter the penalty only and are not applied to the block. A
+factor level that the blueprint does not contain is rejected, except for the
+grouping levels of a \code{\link[=random]{random()}} term with \code{unseen = "zero"}.
 }
 \section{The identity that makes it useful}{
 The block returned is \eqn{\tilde{X}_t} such that
 \eqn{\tilde{\eta} = \tilde{X}_t \beta_t} is the term's contribution at the
-new rows, at the coefficients the model already carries. The identity holds
-because the mapping is reused. A rebuilt encoding gives a block
-of the same shape multiplying the same coefficients and meaning something
-else: a factor whose new rows omit a level loses a column, and a basis
+new rows, at the coefficients that the model already carries. The identity
+holds because the mapping is reused. A rebuilt encoding gives a block of the
+same shape that multiplies the same coefficients but means something else: a
+factor whose new rows omit a level loses a column, and a basis
 rebuilt on a narrower range is a different set of functions.
 
 For a smooth, predicting on a subset of the fitting rows reproduces the
@@ -65,7 +66,7 @@ there.
 d <- data.frame(x = 1:6, g = factor(rep(c("a", "b", "c"), 2)))
 b <- term_build(linpar(~ x + g), d)
 
-# New rows, the same mapping.
+# New rows go through the same mapping as the fitting rows.
 term_predict(b, data.frame(x = c(0.5, 2.5), g = factor(c("a", "c"))))
 
 # On the fitting data it returns the block itself.
@@ -90,6 +91,6 @@ max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 6)), d2[sub, , dr
 }
 \seealso{
 \code{\link[=term_matrix]{term_matrix()}} for the block on the fitting data, \code{\link[=term_build]{term_build()}}
-for what records the blueprint, \code{\link[=check_term]{check_term()}} for the check this identity
-is the subject of, and \code{\link[=term_continue]{term_continue()}} for a structural term.
+for what records the blueprint, \code{\link[=check_term]{check_term()}} for the check that takes
+this identity as its subject, and \code{\link[=term_continue]{term_continue()}} for a structural term.
 }

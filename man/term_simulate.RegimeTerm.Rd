@@ -9,9 +9,9 @@
 \item{psi}{The term's parameters, on the parameter scale.}
 
 \item{eta}{The static part of the predictor, one value per row of the
-data the term was built on.}
+data on which the term was built.}
 
-\item{draw}{Ignored: the levels do not read the response.}
+\item{draw}{Ignored: the levels do not depend on the response.}
 
 \item{...}{Ignored.}
 }
@@ -21,21 +21,22 @@ observation's state; \code{y} (\code{NULL}); and \code{latent}, the state of eac
 observation, in the order of the data.
 }
 \description{
-A path of the latent chain, and the predictor each observation gets from
-the level of the state it lands in.
+Draws a path of the latent chain and returns the predictor of each
+observation, which is the static predictor plus the level of the state that
+the observation occupies.
 }
 \details{
 One chain is drawn for each group of the blueprint, in time order, and each
-starts from the chain's stationary distribution. This is how
-\code{\link[=term_loglik]{term_loglik()}} and \code{\link[=term_posterior]{term_posterior()}} read the data, and the likelihood is
-written with that initial law, so starting from a fixed first state or from
-a uniform draw would simulate a different model from the one that is
-fitted. The transition matrix comes from the term's own
-\code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}}, and the stationary law is the solution
-of \eqn{\delta(I - P) = 0} with \eqn{\sum_j \delta_j = 1}, solved in the
-method.
+starts from the chain's stationary distribution. \code{\link[=term_loglik]{term_loglik()}} and
+\code{\link[=term_posterior]{term_posterior()}} read the data in this way, and the likelihood is written
+with that initial law, so
+starting from a fixed first state or from a uniform draw would simulate a
+different model from the one that is fitted. The transition matrix comes
+from the term's own \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}}, and the stationary
+law is the solution of \eqn{\delta(I - P) = 0} with
+\eqn{\sum_j \delta_j = 1}, which the method solves itself.
 
-The response is not drawn, because the levels do not read it, so \code{y} is
+The response is not drawn, because the levels do not depend on it, so \code{y} is
 returned as \code{NULL} and the caller draws at the returned predictor. An \code{eta}
 whose length differs from the number of rows of the build data signals an
 error.

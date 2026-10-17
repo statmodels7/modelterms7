@@ -17,12 +17,12 @@ the predictors. The last returns an array of dimension \code{c(n, p, p)}.}
 
 \item{seed}{The derivative of each predictor in the caller's unknowns.}
 
-\item{cols}{The columns the term's own parameters occupy.}
+\item{cols}{The columns that the term's own parameters occupy.}
 
-\item{level}{The distribution parameter the regimes shift.}
+\item{level}{The distribution parameter that the regimes shift.}
 
 \item{weights}{Observation weights: one number or one per observation,
-none missing.}
+without missing values.}
 
 \item{...}{Unused.}
 }
@@ -30,8 +30,9 @@ none missing.}
 A list with \code{loglik}, \code{gradient} and \code{hessian}.
 }
 \description{
-Forward-mode second-order propagation through the scaled forward
-recursion, giving the exact Hessian of the mixed log-likelihood.
+Propagates the derivatives to second order, in forward mode, through the
+scaled forward recursion and returns the exact Hessian of the mixed
+log-likelihood.
 }
 \details{
 The recursion runs in R over each group in time order. The derivatives in

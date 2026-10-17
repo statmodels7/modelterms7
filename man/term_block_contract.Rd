@@ -13,7 +13,7 @@ term_block_contract(term, coef = NULL, A, ...)
 \item{term}{A built term.}
 
 \item{coef}{The coefficients, one per coefficient of the term, or \code{NULL} for
-the ones it carries.}
+the coefficients that the term carries.}
 
 \item{A}{A numeric matrix, one row per observation and one column per
 coefficient of the term.}
@@ -24,9 +24,9 @@ coefficient of the term.}
 A numeric vector as long as the term's coefficients.
 }
 \description{
-\eqn{\sum_{i,j} A_{ij}\,\partial X_{ij}/\partial\beta_c}, one entry per
-coefficient of the term: the block's own derivative contracted against a
-weight the caller supplies.
+Returns \eqn{\sum_{i,j} A_{ij}\,\partial X_{ij}/\partial\beta_c}, one entry
+per coefficient of the term: the block's own derivative contracted against a
+weight that the caller supplies.
 }
 \details{
 A term whose block is a fixed design does not move, and the base method
@@ -37,8 +37,9 @@ marginal criterion reads \eqn{\log|K|} with
 \eqn{\partial K/\partial\beta} gains everything coming from
 \eqn{\partial X/\partial\beta}.
 
-\strong{Only the contraction is computed.} \eqn{\partial X/\partial\beta} is
-\eqn{n \times m \times m} and nothing needs it whole. For \code{\link[=nl]{nl()}} it is
+Only the contraction is computed. \eqn{\partial X/\partial\beta} is
+\eqn{n \times m \times m} and consumers need only its contractions. For
+\code{\link[=nl]{nl()}} it is
 closed form at \eqn{O(nm)}:
 writing \eqn{X_{i,c} = w_{p}(i) Z_p[i,c]} with
 \eqn{w_p = (\partial f/\partial\theta_p)\,h_p'},
@@ -64,9 +65,9 @@ A sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} keeps the bas
 Its position is read off a product of the unknowns, \eqn{\psi = -g/\delta},
 so a column's derivative runs through that read-off instead of through a
 development's design, and the weight \eqn{W = 1/(2\lvert\tilde x-\psi\rvert)}
-it carries has an unbounded derivative in the break-point. Its block is a
-working linearization with a frozen weight, which is the reason that
-\code{\link[=term_jacobian_block]{term_jacobian_block()}} answers \code{FALSE} for it. A break-point term with
+that it carries has an unbounded derivative in the break-point. Its block is
+a working linearization with a frozen weight, which is the reason that
+\code{\link[=term_jacobian_block]{term_jacobian_block()}} returns \code{FALSE} for it. A break-point term with
 \verb{smoothed =} has a block that is a true Jacobian, and its contraction is
 written out from the smoother's derivatives.
 }

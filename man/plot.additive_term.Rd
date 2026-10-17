@@ -19,14 +19,15 @@ other usual graphical arguments are accepted. The method sets \code{xaxt},
 error.}
 }
 \value{
-\code{x}, invisibly. Called for the plot.
+\code{x}, invisibly. The method is called for the plot.
 }
 \description{
 Draws the coefficients of a built additive term as a stem plot: one point
 per coefficient against its position in the block, a stem down to zero, a
 dotted line at zero, and the coefficient names rotated along the horizontal
 axis. It shows which coefficients a penalty has driven to zero and how large
-the survivors are, so it reads a lasso or a smooth at a glance.
+the survivors are, so the effect of a lasso or a smooth is visible at a
+glance.
 
 The coefficients are supplied by the caller. A term holds a design block and
 no fit, so there is nothing to display without them, and \code{coef = NULL} is
@@ -48,7 +49,7 @@ set.seed(5)
 d <- data.frame(x1 = rnorm(30), x2 = rnorm(30), x3 = rnorm(30))
 b <- term_build(lasso(~ x1 + x2 + x3), d)
 
-# Two survivors and one coefficient at exactly zero.
+# The plot shows two survivors and one coefficient at exactly zero.
 plot(b, coef = c(0.8, 0, -0.35))
 
 # A smooth's block runs from least to most wiggly.

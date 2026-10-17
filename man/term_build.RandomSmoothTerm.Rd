@@ -23,17 +23,19 @@ to the penalized coordinates.
 }
 \section{The within-group design}{
 The design that the effect of one group multiplies is the constant (unless
-the left side carries \code{0}), then the null space of the smooth's penalty without the
-constant, which every smoother removes, then the penalized coordinates, as
+the left side carries \code{0}), then the null space of the smooth's penalty
+without the constant, which every smoother removes, then the penalized
+coordinates, as
 \code{\link[=.random_smooth_split]{.random_smooth_split()}} defines them. The null space is whatever the
 smoother's operator leaves unpenalized: a straight line for a second
 derivative, a sine and a cosine for the harmonic operator, an exponential
 for \eqn{D^2 + aD}, nothing for a cyclic smoother.
 
-The smoother's \code{null_space} decides what the null space contributes. Under
-\code{"keep"} its columns are there and carry the null-space prior together with
-the constant; under \code{"shrink"} they are penalized with the rest and belong
-to the penalized coordinates; under \code{"drop"} they are absent.
+The argument \code{null_space} of the smoother determines what the null space
+contributes. Under \code{"keep"} its columns are there and carry the null-space
+prior together with the constant; under \code{"shrink"} they are penalized with
+the rest and belong to the penalized coordinates; under \code{"drop"} they are
+absent.
 }
 
 \section{The two priors}{
@@ -46,7 +48,7 @@ scale of the covariate, and to the phase of a periodic one.
 
 The penalized coordinates of every group have the prior of the smooth's own
 penalty. With one component that is an independent centered Gaussian with
-one standard deviation, the coordinates having been whitened, and its
+one standard deviation, because the coordinates have been whitened, and its
 hyperparameter is \code{sigma.smooth}. With several components it is the sum
 \eqn{\sum_k \lambda_k (I_m \otimes S_k)}, with hyperparameters
 \code{lambda1.smooth}, \code{lambda2.smooth} and so on. The groups share these

@@ -23,9 +23,9 @@ A list of two: \code{sparse} unchanged, and \code{contrasts} as given or an
 empty list.
 }
 \description{
-Validates the \code{sparse} and \code{contrasts} arguments the design-building
+Validates the \code{sparse} and \code{contrasts} arguments that the design-building
 constructors share, and normalizes \code{contrasts = NULL} to an empty list so
-that the class property is always a list. Called from the constructor, so an
+that the class property is always a list. The constructor calls it, so an
 invalid value is rejected at the call that wrote it.
 }
 \seealso{

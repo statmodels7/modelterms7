@@ -17,15 +17,15 @@ smooth_hyper(hyper, names, what = "this smooth")
 A named list of held values.
 }
 \description{
-Carries the \code{hyper} argument of \code{\link[=s]{s()}} or \code{\link[=te]{te()}} onto the names its penalty
-uses, and checks that every held smoothing parameter is finite and strictly
-positive.
+Carries the \code{hyper} argument of \code{\link[=s]{s()}} or \code{\link[=te]{te()}} onto the names that its
+penalty uses, and checks that every held smoothing parameter is finite and
+strictly positive.
 }
 \details{
 A one-dimensional smooth and an isotropic tensor product carry one
 smoothing parameter, named \code{lambda}; an anisotropic tensor product
-carries one per margin, \code{lambda1}, \code{lambda2} and so on, which is
-what \code{\link[penalties7:additive_penalty]{penalties7::additive_penalty()}} names them. An unnamed
+carries one per margin, \code{lambda1}, \code{lambda2} and so on, as
+\code{\link[penalties7:additive_penalty]{penalties7::additive_penalty()}} names them. An unnamed
 vector is read in that order and must be as long as there are margins; a
 named one may hold some and leave the others to be estimated.
 }

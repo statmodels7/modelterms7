@@ -12,9 +12,9 @@
 A named numeric vector on the unconstrained scale.
 }
 \description{
-Zero on the unconstrained scale of every parameter except the score
-loadings, which start at \eqn{0.1} on the parameter scale, through
-whatever link each one carries.
+Returns zero on the unconstrained scale for every parameter except the
+score loadings, which start at \eqn{0.1} on the parameter scale, through
+the link that each one carries.
 }
 \details{
 Zero is the natural point of every other chart: a level of zero and no

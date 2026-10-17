@@ -21,7 +21,7 @@ Checks a caller-supplied effects distribution where the term is built and
 names what is wrong with it.
 }
 \details{
-What is rejected is a free location. It is confounded with the intercept of
+A free location is rejected. It is confounded with the intercept of
 the equation in which the term sits, leaving a flat direction in the
 objective.
 
@@ -29,7 +29,7 @@ A location held at a value is identified whatever that value is, and it is
 not policed: it shrinks the effects toward that value, which is a modeling
 statement. Nor could the value be policed in general. Where the prior is a
 transformation of another family, the parameter interpreted as its mean is
-the mean on the original scale, and holding the mean of a gamma at one is
-what centers its logarithm.
+the mean on the original scale, and holding the mean of a gamma at one
+centers its logarithm.
 }
 \keyword{internal}

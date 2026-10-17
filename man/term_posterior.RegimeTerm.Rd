@@ -23,9 +23,10 @@ A numeric matrix, one row per observation and one column per
 regime.
 }
 \description{
-A forward pass with a backward pass beside it, both normalized and computed
-in R by this method, giving the probability of each regime at each
-observation given the whole series. The recursion runs over each group in
-time order, from the chain's stationary distribution.
+Runs in R a forward pass and a backward pass, normalizes both at every step,
+and returns the probability of each regime at each observation given the
+whole series.
+The recursion runs over each group in time order, from the chain's
+stationary distribution.
 }
 \keyword{internal}

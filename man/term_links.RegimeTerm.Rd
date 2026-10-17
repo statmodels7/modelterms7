@@ -13,9 +13,9 @@ A named list of \pkg{linkfunctions7} links, one per entry of
 \code{\link[=term_params]{term_params()}}.
 }
 \description{
-The \strong{log} link on every gap and the identity on everything else. A gap
-must be positive, that being what orders the levels; a level and an
-additive log-ratio are already unconstrained.
+Returns the log link for every gap and the identity link for every other
+parameter. A gap must be positive, and positivity orders the levels; a
+level and an additive log-ratio are already unconstrained.
 }
 \details{
 The log-ratios need no chart because
@@ -23,10 +23,10 @@ The log-ratios need no chart because
 additive log-ratios of each row, so any real values at all give a row of
 probabilities summing to one.
 
-The consequence for a caller is that \code{psi} and \code{zeta} differ only in the
-gaps. \code{\link[=term_loglik]{term_loglik()}} takes the parameter scale, where \code{gap2 = 3} is a gap
-of three; \code{\link[=term_readable]{term_readable()}} takes the unconstrained scale, where the same
-number is a gap of \eqn{e^3}.
+Therefore \code{psi} and \code{zeta} differ only in the gaps. \code{\link[=term_loglik]{term_loglik()}} takes
+the parameter scale, where \code{gap2 = 3} is a gap of three; \code{\link[=term_readable]{term_readable()}}
+takes the unconstrained scale, where the same number is a gap of
+\eqn{e^3}.
 }
 \examples{
 vapply(term_links(regime(3)), function(l) l@link_name, character(1))

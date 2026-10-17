@@ -12,8 +12,8 @@ term_coef_start(term, target = NULL, ...)
 error through \code{\link[=term_npar]{term_npar()}}.}
 
 \item{target}{Optional numeric vector, one value per observation: the
-response on the scale of the predictor, \code{NULL} by default. Supplied only
-where \code{params_interpretation} records that the response reads the
+response on the scale of the predictor, \code{NULL} by default. It is supplied
+only where \code{params_interpretation} records that the response reads the
 parameter directly, so a term in a scale's equation receives \code{NULL}.}
 
 \item{...}{Passed to methods. The shipped methods do not use it.}
@@ -23,10 +23,10 @@ A numeric vector of length \code{\link[=term_npar]{term_npar()}}, in the block's
 order.
 }
 \description{
-The starting coefficients of a built term, one per column of its block. The
-base method returns zero everywhere, which is an admissible start for a term
-whose block is a fixed design, since that block does not depend on the
-coefficients.
+Returns the starting coefficients of a built term, one per column of its
+block. The base method returns zero everywhere, which is an admissible start
+for a term whose block is a fixed design, since that block does not depend on
+the coefficients.
 }
 \section{Why a term supplies a start of its own}{
 A term that recomputes its block from its coefficients (\code{\link[=term_refresh]{term_refresh()}})
@@ -37,28 +37,28 @@ than one break-point the columns of the block coincide. In \code{\link[=seg]{seg
 Jacobian column is \eqn{-\gamma_k \mathbb{1}(x > \psi_k)} and vanishes
 identically at \eqn{\gamma_k = 0}.
 
-Without a \code{target}, the break-point terms return the start \code{\link[=term_build]{term_build()}}
-computed: unit changes, and the break-points at the interior quantiles of
-the covariate or at the positions \code{psi} names. With a \code{target} of the right
-length and no developed coefficient, the slope and the changes are instead
-the least-squares coefficients of the target on an intercept and the term's
-columns at the starting positions. \code{\link[=nl]{nl()}} returns the starting values of its
-own parameters carried through their links.
+Without a \code{target}, the break-point terms return the start that
+\code{\link[=term_build]{term_build()}} computed: unit changes, and the break-points at the interior
+quantiles of the covariate or at the positions that \code{psi} names. With a
+\code{target} of the right length and no developed coefficient, the slope and the
+changes are instead the least-squares coefficients of the target on an
+intercept and the term's columns at the starting positions. \code{\link[=nl]{nl()}} returns
+the starting values of its own parameters carried through their links.
 
-What a coefficient of zero means depends on the block that the term builds,
-which is why this start belongs to the term, as \code{\link[=term_start]{term_start()}} does for a
+A coefficient of zero has a meaning that depends on the block that the term
+builds, so this start belongs to the term, as \code{\link[=term_start]{term_start()}} does for a
 structural term.
 }
 
-\section{What \code{target} is for}{
-\code{target} is the response carried onto the scale of the predictor the term
-contributes to. A term cannot work it out for itself: the term holds its
-formula and its charts, and the fitting layer holds the distribution, the
-link and the equation. \code{\link[=nl]{nl()}} uses it to estimate its own parameters from
-the data, over a deterministic grid on each free parameter's chart, and the
-break-point terms use it for the least-squares coefficients described
-above. Every other term ignores it. The argument is optional; without it
-each term returns the start that does not depend on the response.
+\section{The role of \code{target}}{
+\code{target} is the response carried onto the scale of the predictor to which the
+term contributes. A term cannot compute it, because the term holds its
+formula and its charts but not the distribution, the link or the equation,
+which the fitting layer holds. \code{\link[=nl]{nl()}} uses it to estimate its own
+parameters from the data, over a deterministic grid on each free parameter's
+chart, and the break-point terms use it for the least-squares coefficients
+described above. Every other term ignores it. The argument is optional;
+without it each term returns the start that does not depend on the response.
 }
 
 \examples{
@@ -81,6 +81,6 @@ range(dd$x)
 }
 \seealso{
 \code{\link[=term_start]{term_start()}} for a structural term's own parameters,
-\code{\link[=term_refresh]{term_refresh()}} for the terms this exists for, \code{\link[=seg_start]{seg_start()}} for the grid
-rule behind a break-point start.
+\code{\link[=term_refresh]{term_refresh()}} for the terms for which this function exists,
+\code{\link[=seg_start]{seg_start()}} for the grid rule behind a break-point start.
 }

@@ -11,7 +11,7 @@
 \item{...}{Unused.}
 }
 \value{
-The term with \code{blueprint} filled. \code{\link[=term_is_built]{term_is_built()}} reads that
+The term in which \code{blueprint} is filled. \code{\link[=term_is_built]{term_is_built()}} reads that
 property on this branch, so it is \code{TRUE} for the result.
 }
 \description{
@@ -31,12 +31,12 @@ of the data (\code{x}), for each group the row indices ordered by the covariate
 which the likelihood decomposes are the gaps between a group's ordered
 observations, so they follow from that ordering.
 
-No starting values are computed here: \code{\link[=term_start]{term_start()}} computes them when it
-is called. A start with every change at zero is degenerate for this term.
-With \code{delta = 0} the intervals are indistinguishable, every mass derivative
-sums to the derivative of a constant, and the surface is exactly flat in the
-location and scale of the prior. A fitting layer therefore supplies a
-target to \code{\link[=term_start]{term_start()}}, from which the changes are estimated.
+This function does not compute starting values; \code{\link[=term_start]{term_start()}} computes
+them when it is called. A start with every change at zero is degenerate for
+this term. With \code{delta = 0} the intervals are indistinguishable, every mass
+derivative sums to the derivative of a constant, and the surface is exactly
+flat in the location and scale of the prior. A fitting layer therefore
+supplies a target to \code{\link[=term_start]{term_start()}}, from which the changes are estimated.
 }
 \examples{
 set.seed(1)

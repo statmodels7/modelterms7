@@ -11,9 +11,9 @@ term_refresh(term, coef, ...)
 \arguments{
 \item{term}{A built term.}
 
-\item{coef}{The coefficients to refresh at, as long as the term's block is
-wide. For a nonlinear term these are the coefficients of its parameters'
-submodels, not the parameters themselves.}
+\item{coef}{The coefficients at which to refresh, one per column of the
+term's block. For a nonlinear term these are the coefficients of its
+parameters' submodels, not the parameters themselves.}
 
 \item{...}{Passed to methods.}
 }
@@ -23,10 +23,11 @@ with the coefficients, recomputed at \code{coef}. The base method returns
 \code{term} unchanged.
 }
 \description{
-Recomputes whatever a term's design block depends on when the coefficients
-move. For every ordinary term this is the identity, the block being a
-function of the data alone. For a nonlinear term the block is the Jacobian
-of its contribution, which depends on where the parameters currently are.
+Recomputes the quantities on which a term's design block depends, when the
+coefficients move. For every ordinary term this is
+the identity, because the block is a function of the data only. For a
+nonlinear term the block is the Jacobian of its contribution, which depends
+on where the parameters currently are.
 }
 \details{
 A term whose contribution \eqn{f(x; \theta)} is nonlinear in its
@@ -37,17 +38,18 @@ parameters is carried by the linearization
     = \frac{\partial f(x_i; \theta)}{\partial \theta_j},}
 
 so the design block at the current \eqn{\theta} is \eqn{J(\theta)} and
-the coefficient it multiplies is the increment \eqn{h}. Refreshing at
+the coefficient that it multiplies is the increment \eqn{h}. Refreshing at
 the new \eqn{\theta} and solving the linear problem again is the
 Gauss-Newton iteration. \code{\link[=term_value]{term_value()}} reports \eqn{f(x; \theta)} itself,
-which is the other half a step needs.
+which is the other half that a step needs.
 
 A break-point term has the same shape with a different block: the Jacobian
 for \code{\link[=seg]{seg()}}, and for \code{\link[=jump]{jump()}} the frozen-weight columns, from which the
 break-point is read off two coefficients instead of being incremented.
-\code{\link[=term_jacobian_block]{term_jacobian_block()}} is what tells the two apart.
+\code{\link[=term_jacobian_block]{term_jacobian_block()}} distinguishes the two.
 
-The refresh is committed once per sweep, never per trial point. A
+The fitting layer commits the refresh once per sweep and not at each trial
+point. A
 discontinuous term's rescaling factor halves whenever the break-point
 reverses direction, and is not allowed below a floor derived from the
 conditioning of the working block, which the refresh records. The factor
@@ -67,7 +69,7 @@ max(abs(term_matrix(r1) - term_matrix(built))) > 0
 }
 \seealso{
 \code{\link[=nl]{nl()}} and \code{\link[=seg]{seg()}} for the terms that implement it,
-\code{\link[=term_value]{term_value()}} for the contribution a step needs beside the block,
+\code{\link[=term_value]{term_value()}} for the contribution that a step needs beside the block,
 \code{\link[=term_jacobian_block]{term_jacobian_block()}} for which kind of block came back,
 \code{\link[=term_converged]{term_converged()}} for the verdict on such a term.
 }

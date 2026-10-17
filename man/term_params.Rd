@@ -12,19 +12,19 @@ term_params(term, ...)
 does not implement the generic signals the error
 \code{"the term class 'X' does not implement term_params()."}.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use these
+arguments.}
 }
 \value{
 A character vector, one name per parameter, of length
 \code{\link[=term_npar]{term_npar()}}.
 }
 \description{
-The names of a structural term's own parameters, in the order that its
-filter, its likelihood and their derivatives expect. A structural term
+Returns the names of a structural term's own parameters, in the order that
+its filter, its likelihood and their derivatives use. A structural term
 contributes no design block, so these are not coefficients: they are
-estimated beside the
-distribution's, on the unconstrained scale \code{\link[=term_links]{term_links()}} defines, and
-\code{\link[=term_npar]{term_npar()}} counts them.
+estimated beside the distribution's, on the unconstrained scale that
+\code{\link[=term_links]{term_links()}} defines, and \code{\link[=term_npar]{term_npar()}} counts them.
 }
 \details{
 The names are the term's own vocabulary. \code{\link[=gas]{gas()}} gives \code{omega} for the
@@ -34,10 +34,10 @@ for the persistence. \code{\link[=regime]{regime()}} gives \code{level1}, the ga
 transition matrix. A marginal break-point term gives the names listed in
 \code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}. The names index everything else about the
 term: \code{\link[=term_start]{term_start()}} returns one value per name, \code{\link[=term_readable]{term_readable()}} maps
-them onto the quantities a reader reads, and the \code{index} of a
+them onto the quantities that a reader reads, and the \code{index} of a
 \code{\link[=term_penalties]{term_penalties()}} entry gives positions in this vector.
 
-A \strong{subformula} expands in place the parameter that it develops, so
+A subformula expands in place the parameter that it develops, so
 \code{gas(p = 1, q = 1)} has three parameters and
 \code{gas(p = 1, q = 1, omega ~ z)} has four: \code{omega.(Intercept)} and \code{omega.z}
 where the level was.
@@ -46,16 +46,17 @@ The method on \code{\link[=structural_term]{structural_term()}} signals an error
 A structural class supplies its own method.
 }
 \examples{
-# The score-driven vocabulary: a level, a loading, a persistence.
+# The score-driven vocabulary consists of a level, a loading and a
+# persistence.
 term_params(gas(p = 1, q = 1))
 term_params(gas(p = 2, q = 2))
 
-# A subformula expands the parameter it develops, in place.
+# A subformula expands the parameter that it develops, in place.
 set.seed(1)
 d <- data.frame(y = rnorm(30), z = rnorm(30), t = 1:30)
 term_params(term_build(gas(p = 1, q = 1, omega ~ z, time = t), d))
 
-# It is what term_npar() counts on this branch.
+# On this branch term_npar() counts the names that term_params() returns.
 g <- gas(p = 1, q = 2)
 c(npar = term_npar(g), names = length(term_params(g)))
 

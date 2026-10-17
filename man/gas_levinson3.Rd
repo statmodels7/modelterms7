@@ -10,14 +10,15 @@ gas_levinson3(pacf, w)
 \item{pacf}{A numeric vector of partial autocorrelations in
 \eqn{(-1, 1)}.}
 
-\item{w}{The direction to contract against, as long as \code{pacf}.}
+\item{w}{The direction against which to contract, as long as \code{pacf}.}
 }
 \value{
 A list of one \code{q} by \code{q} matrix per coefficient.
 }
 \description{
-\code{\link[=gas_levinson2]{gas_levinson2()}}'s second derivatives differentiated once more
-and contracted against a single direction, one matrix per coefficient.
+Differentiates the second derivatives of \code{\link[=gas_levinson2]{gas_levinson2()}} once more and
+contracts them against a single direction, which gives one matrix per
+coefficient.
 }
 \details{
 The exact gradient of a marginal criterion over a penalty on this term's
@@ -25,24 +26,24 @@ own parameters needs the third derivative of the predictor, and the
 persistence reaches the predictor through this map. It is needed only
 contracted: the criterion needs \eqn{\mathrm{tr}(M\,\partial K/\partial
 u[v])}, a derivative along the single direction in which the penalized
-mode moves, so that a matrix per coefficient is propagated and no
-three-index array is formed.
+mode moves, so that a matrix per coefficient is propagated instead of a
+three-index array.
 
 Differentiating the hessian recursion of \code{\link[=gas_levinson2]{gas_levinson2()}} once
-more along \eqn{w} adds no new kind of term, the map being bilinear:
+more along \eqn{w} adds no new kind of term, because the map is bilinear:
 \deqn{T^{(k)}_i = T^{(k-1)}_i - \rho_k T^{(k-1)}_{k-i}
   - w_k H^{(k-1)}_{k-i}
   - e_k\left(H^{(k-1)}_{k-i}w\right)^{\!\top}
   - \left(H^{(k-1)}_{k-i}w\right)e_k^{\top},}
-and the last coefficient's third derivative is zero at every order, it
-being \eqn{\rho_k} itself.
+and the last coefficient's third derivative is zero at every order,
+because that coefficient is \eqn{\rho_k} itself.
 
 Each coefficient \eqn{\xi^{(k)}_i} is a polynomial of degree at most
 \eqn{k} in the first \eqn{k} partial autocorrelations, multilinear in
 them, so the result is identically zero for \eqn{q \le 2}: at
 \eqn{q = 2} the only non-trivial coefficient is
-\eqn{\xi_1 = \rho_1(1-\rho_2)}, which is bilinear. A comparison with a
-reference therefore needs \eqn{q \ge 3}.
+\eqn{\xi_1 = \rho_1(1-\rho_2)}, which is bilinear. Therefore the result
+can be compared with a reference only if \eqn{q \ge 3}.
 }
 \seealso{
 \code{\link[=gas_levinson2]{gas_levinson2()}}

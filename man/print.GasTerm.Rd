@@ -9,7 +9,8 @@
 \item{...}{Unused, and accepted so that the signature matches \code{\link[=print]{print()}}'s.}
 }
 \value{
-\code{x}, invisibly. Called for the lines that it writes.
+\code{x}, invisibly. The function is called for the lines that it
+writes.
 }
 \description{
 Prints the label, the two orders and, for a built term, over how many groups
@@ -35,7 +36,8 @@ set.seed(1)
 dd <- data.frame(t = 1:60, y = rnorm(60), id = rep(1:3, each = 20),
                  g = factor(rep(c("u", "v"), 30)))
 
-# A specification, and the same term built over three groups.
+# The first call shows a specification, and the second the same term built
+# over three groups.
 gas(p = 1, q = 2)
 term_build(gas(p = 1, q = 1, by = id, time = t), dd)
 

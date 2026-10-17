@@ -13,19 +13,20 @@
 A matrix, the contracted fourth derivative of the product.
 }
 \description{
-Sixteen terms, one per way of distributing four differentiations between
-two factors, with two of the four slots contracted against the directions.
+Computes the fourth derivative of a product as a sum of sixteen terms, one
+for each way of distributing four differentiations between two factors,
+where two of the four slots are contracted against the directions.
 }
 \details{
 The recursion forms products of three kinds: a loading times a lagged
 score, \eqn{\kappa_i s_{t-i}}, a persistence times a lagged level,
 \eqn{\xi_j f_{t-j}}, and the starting level, which is the fixed point
 \eqn{f_0 = \omega + Sf_0}. The rule is therefore written
-once here. Writing \eqn{S} for the set of slots that go to the first
-factor, the sixteen subsets of \eqn{\{m,n,b,c\}} give, after contracting
-\eqn{m} against \eqn{v} and \eqn{n} against \eqn{w}, the terms this
-returns. The sum is symmetric in the two factors, each term mapping onto
-another under the swap.
+once here. Let \eqn{S} be the set of slots that go to the first factor.
+Once \eqn{m} is contracted against \eqn{v} and \eqn{n} against \eqn{w}, the
+sixteen subsets of \eqn{\{m,n,b,c\}} give the terms that this function
+returns. The sum is symmetric in the two factors, because the swap maps
+each term onto another term.
 }
 \seealso{
 \code{\link[=.gas_jet]{.gas_jet()}}

@@ -6,8 +6,8 @@
 \arguments{
 \item{term}{A built \code{\link[=SegTerm]{SegTerm()}}.}
 
-\item{coef}{Optional coefficients to evaluate at; \code{NULL}, the default,
-uses the ones \code{\link[=term_refresh]{term_refresh()}} last committed.}
+\item{coef}{Optional coefficients at which to evaluate; \code{NULL}, the
+default, uses the ones that \code{\link[=term_refresh]{term_refresh()}} last committed.}
 
 \item{newdata}{An optional data frame; the contribution comes back on its
 rows instead of the fitting ones.}
@@ -18,18 +18,18 @@ rows instead of the fitting ones.}
 A numeric vector of one value per observation.
 }
 \description{
-The values that the term contributes to the linear predictor at its current
-break-points: the broken line for \code{\link[=seg]{seg()}}, the step for \code{\link[=jump]{jump()}}, both for
-\code{\link[=jseg]{jseg()}}. It is what a Gauss-Newton step needs beside the block, and for
-\code{\link[=seg]{seg()}} and for a smoothed term it is \strong{not} the block times the
-coefficients.
+Returns the values that the term contributes to the linear predictor at its
+current break-points: the broken line for \code{\link[=seg]{seg()}}, the step for \code{\link[=jump]{jump()}},
+both for \code{\link[=jseg]{jseg()}}. A Gauss-Newton step needs these values beside the block,
+and for \code{\link[=seg]{seg()}} and for a smoothed term they do not equal the block times
+the coefficients.
 }
 \details{
 For \code{seg} the block is the Jacobian, so \eqn{X\beta} is the linearization
 and the two differ by whatever that drops: a step at the break-point, in a
 construction that is continuous. The same holds for a smoothed term. For a
-sharp \code{jump} the columns satisfy \eqn{X\beta = } the contribution, the
-identity behind the read-off making them so, and the two agree to rounding
+sharp \code{jump} the columns satisfy \eqn{X\beta = } the contribution, because
+of the identity behind the read-off, and the two agree to rounding
 error.
 
 With \code{newdata} the contribution is returned on those rows, at the

@@ -21,11 +21,12 @@ where the construction reads its position off one. For a held term
 \code{coef} is the argument unchanged, and \code{index} and \code{scale} are empty.
 }
 \description{
-The break-points drawn on the covariate's own axis and written back
-through whichever route the construction reads them by, with every other
-coefficient left as it arrived. A term held by \code{\link[=seg_hold]{seg_hold()}} draws nothing:
-the coefficients are returned unchanged, with an empty \code{index} and an
-empty \code{scale}, the positions being held.
+Draws the break-points on the covariate's own axis and writes them back
+through the route by which the construction reads them, whichever it is,
+and every other coefficient is left as it arrived. A term held by
+\code{\link[=seg_hold]{seg_hold()}} draws nothing: the coefficients are returned unchanged, with
+an empty \code{index} and an
+empty \code{scale}, because the positions are held.
 }
 \details{
 A break-point is a position on the covariate and is the only coefficient
@@ -35,20 +36,20 @@ plus a normal of the width that \code{\link[=term_coef_draw]{term_coef_draw()}} 
 interval between the 5th and the 95th percentile.
 
 The draw spreads from these quantiles and not from the positions that the
-term currently holds. The quantiles are where \code{\link[=term_build]{term_build()}} places a
-break-point that has not been named, and they depend on the covariate
-alone. A term handed over by a caller may hold positions chosen elsewhere:
+term currently holds. \code{\link[=term_build]{term_build()}} places a break-point that has not
+been named at these quantiles, and they depend only on the covariate.
+A term handed over by a caller may hold positions chosen elsewhere:
 a simulation builds its specification against a placeholder response, and a
 break-point chosen on a least-squares profile of noise lands against a
 confinement limit as readily as anywhere, so a draw spreading from there
 would inherit that position.
 
 A continuous or smoothed construction holds the position, so it is written
-where it stands. A sharp discontinuous one reads it off
-\eqn{-g_k/\delta_k}, so what is written is \eqn{-\delta_k \psi_k}, with
-\eqn{\delta_k} taken from the rest of the draw, which is the rule of
-\code{\link[=seg_relocate]{seg_relocate()}} and is exact for a
-pure step, its read-off being memoryless. The joint construction reads a
+where it stands. A sharp discontinuous one reads the position off
+\eqn{-g_k/\delta_k}, so the method writes \eqn{-\delta_k \psi_k}, taking
+\eqn{\delta_k} from the rest of the draw. This is the rule of
+\code{\link[=seg_relocate]{seg_relocate()}}, and it is exact for a pure step because the read-off of
+a pure step is memoryless. The joint construction reads a
 quadratic that also carries the change of slope and the increment left by
 the previous position, so there the placement is the linear reading of it
 and the realized position is near the drawn one and not equal to it.
@@ -63,7 +64,7 @@ set.seed(1)
 d <- data.frame(x = sort(runif(300, 0, 10)))
 b <- term_build(seg(x, npsi = 1), d)
 
-# Drawn on the covariate's scale, inside the confinement.
+# The positions are drawn on the covariate's scale, inside the confinement.
 p <- replicate(50, {
   cf <- term_coef_draw(b, stats::rnorm(term_npar(b)))$coef
   seg_psi(term_refresh(b, cf))

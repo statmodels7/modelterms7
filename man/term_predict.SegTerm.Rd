@@ -17,20 +17,20 @@ A block of \code{nrow(newdata)} rows and \code{\link[=term_npar]{term_npar()}} c
 term's coefficient names as column names.
 }
 \description{
-The working block evaluated at \code{newdata}, at the break-points and the
-coefficients that the term currently carries. The positions are not re-derived
-from the new rows, and any development of a coefficient is reapplied through
-its sub-terms' own blueprints.
+Returns the working block evaluated at \code{newdata}, at the break-points and
+the coefficients that the term currently carries. The positions are not
+re-derived from the new rows, and any development of a coefficient is
+reapplied through its sub-terms' own blueprints.
 }
 \details{
 Re-deriving the break-points would give a different model at every set of
-rows, which is the general reason \code{\link[=term_predict]{term_predict()}} reapplies instead of
-rebuilding. For a break-point term it is sharper than usual: the positions
-are what the fit estimated, and a subset of the data may not even contain
-one.
+rows, which is the general reason why \code{\link[=term_predict]{term_predict()}} reapplies instead of
+rebuilding. For a break-point term the argument holds more strongly,
+because the positions are the values that the fit estimated, and a subset
+of the data may not even contain one.
 
-\code{\link[=term_value]{term_value()}} with \code{newdata} is what gives the contribution there. For
-\code{seg} the two differ, the block being a Jacobian.
+\code{\link[=term_value]{term_value()}} with \code{newdata} gives the contribution there. For
+\code{seg} the two differ, because the block is a Jacobian.
 }
 \examples{
 set.seed(1)

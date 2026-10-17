@@ -4,16 +4,16 @@ NULL
 #' @title The Levels of a Likelihood-Shaped Structural Term
 #'
 #' @description
-#' The shifts that a term of the likelihood shape adds to its equation's
-#' predictor, one per mixture component, in the order in which the columns of
-#' [term_posterior()] carry the components. A fitting layer reads the two
-#' together to assemble Fisher's identity.
+#' Returns the shifts that a term of the likelihood shape adds to its
+#' equation's predictor, one per mixture component, in the order in which the
+#' columns of [term_posterior()] carry the components. A fitting layer reads
+#' the two together to assemble Fisher's identity.
 #'
 #' @details
 #' By Fisher's identity the derivative of a likelihood mixed over latent
-#' states, in **any** predictor the model carries, is the posterior-weighted
-#' derivative of the ordinary one, each component read at the predictor
-#' shifted by its own level:
+#' states, in any predictor that the model carries, is the posterior-weighted
+#' derivative of the ordinary one, in which each component is read at the
+#' predictor shifted by its own level:
 #'
 #' \deqn{\frac{\partial L}{\partial \eta_{q,t}}
 #'   = \sum_k \gamma_t(k)\,
@@ -31,7 +31,7 @@ NULL
 #' # A shift may vary by observation
 #'
 #' The quadrature nodes of a marginal [seg()] or [jseg()] term shift each
-#' observation by its own hinge value, so the method may return a **matrix**
+#' observation by its own hinge value, so the method may return a matrix
 #' of one row per observation and one column per component. A caller reads a
 #' column of it wherever it would read a constant level, and must accept both
 #' shapes.
@@ -53,11 +53,12 @@ NULL
 #'   likelihood, [regime()] and [jump()] for the two implementations.
 #'
 #' @examples
-#' # A two-regime chain: the first level and the cumulated gap.
+#' # A two-regime chain has the first level and the cumulated gap as its
+#' # levels.
 #' term_levels(regime(2), list(level1 = 0, gap2 = 3, alr1.1 = 2, alr2.1 = -2))
 #'
-#' # A one-break-point step term: no shift where no break-point is active,
-#' # and the change of level where one is.
+#' # For a one-break-point step term, the shift is zero where the break-point
+#' # is inactive and equals the change of level where it is active.
 #' set.seed(1)
 #' dd <- data.frame(id = rep(1:3, each = 8), x = rep(1:8, 3))
 #' dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
@@ -79,8 +80,8 @@ S7::method(term_levels, structural_term) <- function(term, psi, ...) {
 #' @title Levels of a Regime Term
 #' @name term_levels.RegimeTerm
 #' @description
-#' The regime means, ordered by construction: the first level and the
-#' cumulative sums of the positive gaps.
+#' Returns the regime means, which are ordered by construction: the first
+#' level and the cumulative sums of the positive gaps.
 #' @param term A [RegimeTerm()].
 #' @param psi The term's parameters.
 #' @param ... Unused.
@@ -98,12 +99,12 @@ S7::method(term_levels, RegimeTerm) <- function(term, psi, ...) {
 #' @title The Posterior of a Structural Term's Latent Variable
 #'
 #' @description
-#' A summary of the latent variable over which a structural term integrates,
-#' given the whole sample. For a marginal break-point term it consists of the
-#' posterior mean and standard deviation of each group's break-points, which
-#' locate each group's change and measure the uncertainty about its position.
-#' For a [regime()] term it is the smoothed probability of each regime at each
-#' observation.
+#' Returns a summary of the latent variable over which a structural term
+#' integrates, given the whole sample. For a marginal break-point term it
+#' consists of the posterior mean and standard deviation of each group's
+#' break-points, which locate each group's change and measure the uncertainty
+#' about its position. For a [regime()] term it is the smoothed probability of
+#' each regime at each observation.
 #'
 #' @details
 #' [term_posterior()] returns the component weights that Fisher's identity
@@ -115,7 +116,8 @@ S7::method(term_levels, RegimeTerm) <- function(term, psi, ...) {
 #'
 #' # Priors without moments
 #'
-#' The moments are those of the prior, so a prior that lacks them gives none.
+#' The moments are those of the prior, so a prior that lacks them cannot give
+#' them.
 #' A Student t prior with fewer than one degree of freedom has no mean on an
 #' edge interval, and with fewer than two it has no variance. Where such an
 #' interval carries posterior weight of at least 1e-9, the corresponding
@@ -128,8 +130,8 @@ S7::method(term_levels, RegimeTerm) <- function(term, psi, ...) {
 #' computes, labeled by regime.
 #'
 #' @param term A built structural term.
-#' @param eta The static predictor of the equation the term sits in, one value
-#'   per observation.
+#' @param eta The static predictor of the equation in which the term sits, one
+#'   value per observation.
 #' @param y The response.
 #' @param logdens A function `(e, i)` returning the log-density of observation
 #'   `i` at predictor `e`, as [term_loglik()] takes it.
@@ -140,11 +142,11 @@ S7::method(term_levels, RegimeTerm) <- function(term, psi, ...) {
 #' @return For a marginal break-point term, a data frame with one row per
 #'   group and break-point and four columns: `group`, the grouping level;
 #'   `psi`, which break-point; `mean` and `sd`, the posterior moments of its
-#'   position. `NA` in a moment the prior does not possess. For a regime
+#'   position. A moment that the prior does not possess is `NA`. For a regime
 #'   term, a data frame with one row per observation and one column per
 #'   regime, `state1`, `state2`, and so on.
 #'
-#' @seealso [term_posterior()] for the component weights a fit reads,
+#' @seealso [term_posterior()] for the component weights that a fit reads,
 #'   [jump()] and [seg()] for the terms that implement it.
 #'
 #' @examples
@@ -173,13 +175,13 @@ S7::method(term_latent, structural_term) <- function(term, eta, y, logdens,
 #' @title The Smoothed States of a Regime Term
 #' @name term_latent.RegimeTerm
 #' @description
-#' The probability of each regime at each observation given the whole series,
-#' \eqn{P(S_t = j \mid y_1, \dots, y_n)}, as a data frame.
+#' Returns the probability of each regime at each observation given the whole
+#' series, \eqn{P(S_t = j \mid y_1, \dots, y_n)}, as a data frame.
 #' @details
 #' The probabilities are those of [term_posterior()], computed by the forward
 #' and backward recursions, and this method adds the column labels. The rows
-#' are in the order of the data on which the term was built, whatever `by` and
-#' `time` say, so the result can be bound to that data directly.
+#' are in the order of the data on which the term was built, regardless of `by`
+#' and `time`, so the result can be bound to that data directly.
 #' @param term A built [RegimeTerm()].
 #' @param eta The static predictor.
 #' @param y The response.
@@ -203,8 +205,8 @@ S7::method(term_latent, RegimeTerm) <- function(term, eta, y, logdens, psi,
 #' @name MarginalBreakTerm
 #'
 #' @description
-#' The subclass of [structural_term()] holding break-points that vary by group
-#' as latent variables **integrated out** of the likelihood.
+#' `MarginalBreakTerm` is the subclass of [structural_term()] for break-points
+#' that vary by group as latent variables integrated out of the likelihood.
 #' [jump()], [seg()] and [jseg()] construct it when given `marginal = TRUE`
 #' together with a `psi ~ random(~ 1 | g)` subformula.
 #'
@@ -252,9 +254,9 @@ S7::method(term_latent, RegimeTerm) <- function(term, eta, y, logdens, psi,
 #' recursion of the step kind costs \eqn{n K 2^K} operations for \eqn{n}
 #' observations and \eqn{K} break-points. The fitting layer reads a posterior
 #' over the \eqn{2^K} side patterns and evaluates the family once per pattern,
-#' and the number of patterns therefore limits \eqn{K}. The continuous kinds take one break-point, because
-#' a product quadrature over several would need a node set whose size grows as
-#' a power of their number.
+#' and the number of patterns therefore limits \eqn{K}. The continuous kinds
+#' take one break-point, because a product quadrature over several would need
+#' a node set whose size grows as a power of their number.
 #'
 #' @inheritParams model_term
 #' @param kind One of `"jump"`, `"seg"` or `"jseg"`.
@@ -266,11 +268,11 @@ S7::method(term_latent, RegimeTerm) <- function(term, eta, y, logdens, psi,
 #' @param group The grouping expression, from the break-point's `random()`
 #'   subformula.
 #' @param prior The latent's distribution: `NULL` for the Gaussian, or a
-#'   \pkg{distributions7} object with its location held at zero.
+#'   \pkg{distributions7} object whose location is held at zero.
 #' @param spec A named list of the resolved construction settings.
-#' @param blueprint A named list recording the number of rows, the covariate,
-#'   the rows of each group and the group labels, empty until [term_build()]
-#'   fills it.
+#' @param blueprint A named list that records the number of rows, the
+#'   covariate, the rows of each group and the group labels. It is empty until
+#'   [term_build()] fills it.
 #'
 #' @return An S7 object of class `MarginalBreakTerm`, inheriting from
 #'   [structural_term()] and [model_term()], with the properties listed above
@@ -289,11 +291,12 @@ S7::method(term_latent, RegimeTerm) <- function(term, eta, y, logdens, psi,
 #' S7::S7_inherits(tm, MarginalBreakTerm)
 #' c(kind = tm@kind, npsi = tm@npsi, linear = tm@linear)
 #'
-#' # Numbered parameters: the prior's location and scale, and the change.
+#' # The parameters are numbered: the prior's location and scale, and the
+#' # change.
 #' term_params(tm)
 #' vapply(term_links(tm), function(l) l@link_name, character(1))
 #'
-#' # The prior is part of the likelihood, so nothing is declared penalized.
+#' # The prior is part of the likelihood, so the term declares no penalty.
 #' length(term_penalties(tm))
 #'
 #' # A continuous kind adds the linear effect and the change of slope.
@@ -375,8 +378,8 @@ MarginalBreakTerm <- S7::new_class(
 
   need <- paste("marginal = TRUE requires the break-point to carry the",
                 "latent, psi ~ random(~1 | g): the marginal likelihood",
-                "integrates over it, and without one there is nothing to",
-                "integrate.")
+                "integrates over it, and a break-point without it has no",
+                "variable over which to integrate.")
   if (!length(dots)) stop(need, call. = FALSE)
   nms <- names(dots)
   sub <- NULL
@@ -503,19 +506,19 @@ MarginalBreakTerm <- S7::new_class(
 #' @name term_params.MarginalBreakTerm
 #'
 #' @description
-#' Numbered, one set per break-point, in a fixed order: the linear effect
-#' `beta` where the term carries one, then the prior's parameters for each
-#' break-point, then the changes of slope `gamma1` ... and the changes of
-#' level `delta1` ....
+#' The parameters are numbered, one set per break-point, in a fixed order: the
+#' linear effect `beta` where the term carries one, then the prior's
+#' parameters for each break-point, then the changes of slope `gamma1` ... and
+#' the changes of level `delta1` ....
 #'
 #' @details
 #' The prior's parameters are `psik.mean` and `psik.sd` under the default
 #' Gaussian, the mean and the standard deviation of the positions of
 #' break-point \eqn{k} in the population. Where `random(distrib = )` names
 #' another family, the parameters are `psi1.mean` for the position and the
-#' free parameters of that family under its own names, with its location fixed
-#' at zero. A Student t prior therefore gives `psi1.mean`, `sigma` and `nu` in
-#' place of `psi1.mean` and `psi1.sd`.
+#' free parameters of that family under its own names, and the location of
+#' that family is fixed at zero. A Student t prior therefore gives `psi1.mean`,
+#' `sigma` and `nu` in place of `psi1.mean` and `psi1.sd`.
 #'
 #' The kind determines which of `gamma` and `delta` appear: `"seg"` has the
 #' changes of slope, `"jump"` the changes of level and `"jseg"` both. `beta`
@@ -527,15 +530,16 @@ MarginalBreakTerm <- S7::new_class(
 #'
 #' @return A character vector, of length [term_npar()].
 #'
-#' @seealso [term_links()] for the chart each rides, [MarginalBreakTerm()] for
-#'   what they mean.
+#' @seealso [term_links()] for the chart that each parameter rides,
+#'   [MarginalBreakTerm()] for what they mean.
 #'
 #' @examples
 #' set.seed(1)
 #' dd <- data.frame(id = rep(1:3, each = 8), x = rep(1:8, 3))
 #' dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
 #'
-#' # A step term: the prior's location and scale, and the change of level.
+#' # For a step term, the parameters are the prior's location and scale, and
+#' # the change of level.
 #' term_params(term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd))
 #'
 #' # A continuous one adds the linear effect and the change of slope.
@@ -556,10 +560,10 @@ S7::method(term_params, MarginalBreakTerm) <- function(term, ...) {
 #' @name term_links.MarginalBreakTerm
 #'
 #' @description
-#' The **log** link on every `psik.sd`, the prior's own link on any parameter
-#' that the prior contributes, and the identity on everything else. A prior
-#' scale must be positive; a position, a change of level and a change of slope
-#' are already unconstrained.
+#' Assigns the log link to every `psik.sd`, the prior's own link to any
+#' parameter that the prior contributes, and the identity to everything else. A
+#' prior scale must be positive; a position, a change of level and a change of
+#' slope are already unconstrained.
 #'
 #' @details
 #' Where `random(distrib = )` names a family other than the Gaussian, the
@@ -618,18 +622,18 @@ S7::method(term_links, MarginalBreakTerm) <- function(term, ...) {
 #' which the likelihood decomposes are the gaps between a group's ordered
 #' observations, so they follow from that ordering.
 #'
-#' No starting values are computed here: [term_start()] computes them when it
-#' is called. A start with every change at zero is degenerate for this term.
-#' With `delta = 0` the intervals are indistinguishable, every mass derivative
-#' sums to the derivative of a constant, and the surface is exactly flat in the
-#' location and scale of the prior. A fitting layer therefore supplies a
-#' target to [term_start()], from which the changes are estimated.
+#' This function does not compute starting values; [term_start()] computes
+#' them when it is called. A start with every change at zero is degenerate for
+#' this term. With `delta = 0` the intervals are indistinguishable, every mass
+#' derivative sums to the derivative of a constant, and the surface is exactly
+#' flat in the location and scale of the prior. A fitting layer therefore
+#' supplies a target to [term_start()], from which the changes are estimated.
 #'
 #' @param term A [MarginalBreakTerm()].
 #' @param data A data frame carrying the covariate and the grouping variable.
 #' @param ... Unused.
 #'
-#' @return The term with `blueprint` filled. [term_is_built()] reads that
+#' @return The term in which `blueprint` is filled. [term_is_built()] reads that
 #'   property on this branch, so it is `TRUE` for the result.
 #'
 #' @seealso [jump()], [term_loglik()], [term_start()].
@@ -1041,8 +1045,8 @@ S7::method(term_build, MarginalBreakTerm) <- function(term, data, ...) {
 #' @title Log-Likelihood of a Marginal Break-Point Term
 #' @name term_loglik.MarginalBreakTerm
 #' @description
-#' The exact marginal likelihood of a break-point model with latent
-#' positions per group, with the exact derivatives in the term's own
+#' Computes the exact marginal likelihood of a break-point model with latent
+#' positions per group, together with the exact derivatives in the term's own
 #' parameters on the parameter scale.
 #' @details
 #' For the step kind the conditional is constant on the product partition
@@ -1050,7 +1054,7 @@ S7::method(term_build, MarginalBreakTerm) <- function(term, data, ...) {
 #' sum over it is taken by the forward recursion of the side chain: the
 #' monotone process of active break-points is a hidden Markov chain on the
 #' \eqn{2^K} side patterns whose transition factors over the coordinates,
-#' each flip weighted by its interval's prior mass, so the cost is
+#' and each flip is weighted by its interval's prior mass, so the cost is
 #' \eqn{n K 2^K}, against the \eqn{(n+1)^K} of the cells. The
 #' derivatives are propagated through the same recursion: the derivatives of
 #' the interval masses with respect to the parameters of the prior, and the
@@ -1059,12 +1063,12 @@ S7::method(term_build, MarginalBreakTerm) <- function(term, data, ...) {
 #' and the integral runs on Gauss-Kronrod panels
 #' ([numericals7::gauss_kronrod15()]). The interior nodes lie at fixed
 #' points determined by the data, so the derivatives in the parameters of the
-#' prior involve the prior alone. The region below the data, where the hinge
+#' prior involve only the prior. The region below the data, where the hinge
 #' keeps moving, is covered by panels that follow the bulk of the prior, and
 #' the derivatives carry the motion of their nodes. The region above the data,
 #' where the conditional is constant, contributes its closed tail mass.
 #'
-#' No panel spans more than 2.5 prior standard deviations. The region below
+#' Every panel spans at most 2.5 prior standard deviations. The region below
 #' the data carries at least four panels, and each interval between two
 #' consecutive distinct observations at least one, so the number of panels
 #' grows as `psi1.sd` decreases against the spacing of the covariate. A group
@@ -1458,12 +1462,13 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
 #' @title Posterior Components of a Marginal Break-Point Term
 #' @name term_posterior.MarginalBreakTerm
 #' @description
-#' The component weights Fisher's identity takes at every observation: for
-#' the step kind, the posterior probability of each side pattern given the
-#' whole sample, one column per pattern of active break-points; for the
-#' continuous kinds, each group's posterior over its quadrature nodes,
-#' repeated down the group's rows and zero-padded to the widest group. For the
-#' continuous kinds the columns of different groups index different nodes.
+#' Returns the component weights that Fisher's identity takes at every
+#' observation: for the step kind, the posterior probability of each side
+#' pattern given the whole sample, one column per pattern of active
+#' break-points; for the continuous kinds, each group's posterior over its
+#' quadrature nodes, repeated down the group's rows and zero-padded to the
+#' widest group. For the continuous kinds the columns of different groups index
+#' different nodes.
 #' @param term A built [MarginalBreakTerm()].
 #' @param eta The static predictor.
 #' @param y The response.
@@ -1660,12 +1665,12 @@ S7::method(term_posterior, MarginalBreakTerm) <- function(term, eta, y,
 #' @title Levels of a Marginal Break-Point Term
 #' @name term_levels.MarginalBreakTerm
 #' @description
-#' For the step kind, the constant shift of each side pattern, the sums of
-#' the changes of level over the active break-points. For the continuous
-#' kinds the shift varies by observation, each node contributing its own
-#' hinge value, and a matrix is returned, aligned with [term_posterior()]'s
-#' columns. The node set depends on the term's parameters alone, so the
-#' family is not evaluated.
+#' Returns, for the step kind, the constant shift of each side pattern, which
+#' is the sum of the changes of level over the active break-points of that
+#' pattern. For the continuous kinds each node contributes its own hinge
+#' value to the shift, so the shift varies by observation and the method
+#' returns a matrix aligned with [term_posterior()]'s columns. The node set
+#' depends only on the term's parameters, so the family is not evaluated.
 #' @param term A built [MarginalBreakTerm()].
 #' @param psi The term's parameters.
 #' @param eta,y,logdens Accepted for the interface of [term_levels()] and
@@ -1687,15 +1692,15 @@ S7::method(term_levels, MarginalBreakTerm) <- function(term, psi, eta = NULL,
 #' @title Posterior Break-Points of a Marginal Term
 #' @name term_latent.MarginalBreakTerm
 #' @description
-#' The posterior mean and standard deviation of each group's break-points.
-#' For the step kind under the gaussian prior these are mixtures of
-#' truncated-normal moments over the interval posterior, the edge
-#' intervals read through [numericals7::mills_ratio()]; under an
-#' explicit prior the truncated moments come from
+#' Returns the posterior mean and standard deviation of each group's
+#' break-points. For the step kind under the gaussian prior these are mixtures
+#' of truncated-normal moments over the interval posterior, and the moments of
+#' the edge intervals are computed through [numericals7::mills_ratio()]; under
+#' an explicit prior the truncated moments come from
 #' [distributions7::truncated()] and
 #' [distributions7::expectation()], one interval at a time. For
-#' the continuous kinds they are the moments of the node posterior, the
-#' closed upper tail entering through its truncated-normal moments.
+#' the continuous kinds they are the moments of the node posterior, and the
+#' closed upper tail enters through its truncated-normal moments.
 #' @param term A built [MarginalBreakTerm()].
 #' @param eta The static predictor.
 #' @param y The response.
@@ -1821,12 +1826,13 @@ S7::method(term_latent, MarginalBreakTerm) <- function(term, eta, y, logdens,
 #' @title Where a Marginal Break-Point Term Starts
 #' @name term_start.MarginalBreakTerm
 #' @description
-#' Given a target (the response on the scale of the predictor, which the
-#' fitting layer supplies), a least-squares profile in two stages. The first
-#' stage chooses common positions, with a free intercept for each group, and
-#' estimates the linear effect and the changes of level and slope on all groups
-#' pooled. The second stage moves the positions of each group one at a time,
-#' with the pooled coefficients held. Without a target, the starting positions
+#' Computes the starting values from a target (the response on the scale of
+#' the predictor, which the fitting layer supplies) by a least-squares profile
+#' in two stages. In the first stage, common positions are selected,
+#' with a free intercept for each group, and the linear effect and the changes
+#' of level and slope are estimated on all groups pooled. In the second stage,
+#' the positions of each group are moved one at a time, while the pooled
+#' coefficients are held fixed. Without a target, the starting positions
 #' are quantiles of the covariate, the scale is derived from its spread, and the
 #' changes are zero.
 #'
@@ -2116,21 +2122,24 @@ S7::method(term_start, MarginalBreakTerm) <- function(term, ...,
 #' @title Observed Hessian of a Marginal Break-Point Term
 #' @name term_hessian.MarginalBreakTerm
 #' @description
-#' The exact observed Hessian of the marginal log-likelihood over a
+#' Computes the exact observed Hessian of the marginal log-likelihood over a
 #' caller's unknowns, the coefficients of every equation together with the
 #' term's own parameters on the unconstrained scale.
 #' @details
-#' Analytic throughout. The step kind propagates first and second
-#' derivatives through the side chain's forward recursion, the prior's
-#' interval-mass derivatives closed for the gaussian and read off the cdf
-#' surface of \pkg{distributions7} for an explicit prior. The column of an
-#' explicit prior's degrees of freedom comes from a single finite-difference
-#' stencil of that surface, the one piece that is not in closed form. The
-#' continuous kinds differentiate the node sum twice; the moving panels below
-#' the data are affine in the parameters of the prior, so their motion enters
-#' the chain rule with no curvature of its own. The one-break-point gaussian
-#' step uses an interval sum that shares no arithmetic with the propagation,
-#' and the tests compare the two.
+#' The method takes no finite differences of its own. The step kind
+#' propagates first and second derivatives through the side chain's forward
+#' recursion; the prior's interval-mass derivatives are closed for the
+#' gaussian and are read off the cdf surface of \pkg{distributions7} for an
+#' explicit prior. For a Student t prior that package integrates the exact
+#' derivatives of the density by a compiled rule, so the column of the
+#' degrees of freedom is exact to the accuracy of the quadrature. A prior
+#' family without derivatives of its cdf receives the numerical fallbacks of
+#' \pkg{distributions7}, and the columns of its own parameters are then
+#' finite-difference approximations. The continuous kinds differentiate the node
+#' sum twice; the moving panels below the data are affine in the parameters of
+#' the prior, so their motion enters the chain rule with no curvature of its
+#' own. The one-break-point gaussian step uses an interval sum that shares no
+#' arithmetic with the propagation, and the tests compare the two.
 #'
 #' The marginal likelihood of a group does not factorize over its
 #' observations, so an observation weight has a meaning only when it is
@@ -2145,9 +2154,9 @@ S7::method(term_start, MarginalBreakTerm) <- function(term, ...,
 #'   one column per distribution parameter, and `hess` an array of dimensions
 #'   observations by parameters by parameters.
 #' @param psi The term's parameters.
-#' @param seed A list with one matrix per distribution parameter, each of one
-#'   row per observation, holding the derivative of that parameter's predictor
-#'   in the caller's unknowns.
+#' @param seed A list with one matrix per distribution parameter; each matrix
+#'   has one row per observation and holds the derivative of that parameter's
+#'   predictor in the caller's unknowns.
 #' @param cols The columns of the `seed` matrices that the term's own
 #'   parameters occupy, in the order of [term_params()].
 #' @param level The index of the distribution parameter that the term shifts.
@@ -2660,7 +2669,7 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
 #' @param x A [MarginalBreakTerm()], built or not.
 #' @param ... Unused, and accepted so that the signature matches [print()]'s.
 #'
-#' @return `x`, invisibly. Called for the lines it writes.
+#' @return `x`, invisibly. The method is called for the lines that it writes.
 #'
 #' @seealso [jump()], [term_params()].
 #'
@@ -2669,7 +2678,8 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
 #' dd <- data.frame(id = rep(1:3, each = 8), x = rep(1:8, 3))
 #' dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
 #'
-#' # A specification, and the same term built over three groups.
+#' # The first call prints a specification, and the second prints the same
+#' # term built over three groups.
 #' jump(x, psi ~ random(~ 1 | id), marginal = TRUE)
 #' term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd)
 #'
@@ -2695,8 +2705,9 @@ S7::method(print, MarginalBreakTerm) <- function(x, ...) {
 #' @title Drawing Break-Points From Their Prior
 #'
 #' @description
-#' One set of latent positions per group, drawn from the prior that the term
-#' declares, and the predictor that each observation receives from them.
+#' Draws one set of latent positions per group from the prior that the term
+#' declares, and returns the predictor that each observation receives from
+#' them.
 #'
 #' @details
 #' The latent positions are integrated out of the likelihood and never
@@ -2704,7 +2715,7 @@ S7::method(print, MarginalBreakTerm) <- function(x, ...) {
 #' group, and then evaluating the term at the drawn positions. Under the
 #' gaussian prior the draw is \eqn{N(m_k, \tau_k^2)}, where \eqn{m_k} is
 #' `psik.mean` and \eqn{\tau_k} is `psik.sd`. Under an explicit prior it is a
-#' draw from that family with its location fixed at zero, shifted by
+#' draw from that family, whose location is fixed at zero, shifted by
 #' `psi1.mean`, which is the convention of the likelihood.
 #'
 #' The shift is the term's own construction evaluated at the drawn positions: a
@@ -2718,7 +2729,7 @@ S7::method(print, MarginalBreakTerm) <- function(x, ...) {
 #' @param term A built [MarginalBreakTerm()].
 #' @param psi The term's parameters, on the parameter scale.
 #' @param eta The static part of the predictor.
-#' @param draw Ignored: the positions do not read the response.
+#' @param draw Ignored: the positions do not depend on the response.
 #' @param ... Ignored.
 #'
 #' @return A list with `eta`, `y` (`NULL`) and
@@ -2736,7 +2747,7 @@ S7::method(term_simulate, MarginalBreakTerm) <- function(term, psi, eta,
   x <- bp$x
   out <- as.numeric(eta)
   if (length(out) != bp$n) {
-    stop(sprintf("'eta' must have one value per row of the data the term was built on (%d).",
+    stop(sprintf("'eta' must have one value per row of the data on which the term was built (%d).",
                  bp$n), call. = FALSE)
   }
   if (term@linear) out <- out + v[["beta"]] * x

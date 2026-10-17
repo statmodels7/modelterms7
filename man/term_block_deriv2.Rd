@@ -13,7 +13,7 @@ term_block_deriv2(term, coef = NULL, v, u, ...)
 \item{term}{A built term.}
 
 \item{coef}{The coefficients, one per coefficient of the term, or \code{NULL} for
-the ones it carries.}
+the coefficients that the term carries.}
 
 \item{v, u}{Numeric vectors as long as the term's coefficients.}
 
@@ -24,36 +24,38 @@ A numeric matrix, one row per observation and one column per
 coefficient of the term.
 }
 \description{
+Returns
 \eqn{\sum_{q,r} v_q u_r\,\partial^2 X_{ij}/\partial\beta_q\partial\beta_r},
 one entry per observation and column of the block: the block's second
-derivative contracted in two directions the caller supplies.
+derivative contracted in two directions that the caller supplies.
 }
 \details{
 It stands one order above \code{\link[=term_block_deriv]{term_block_deriv()}}, and it is
-contracted, never returned as an array, for the reason \code{\link[=term_third]{term_third()}} is
-contracted in the structural branch: the full
+contracted, never returned as an array, for the same reason as
+\code{\link[=term_third]{term_third()}} in the structural branch: the full
 object has \eqn{m} coefficient indices twice over beside the \eqn{n} rows
 and \eqn{m} columns of the block, and only its contraction in the two
-directions the penalized mode moves is ever read.
+directions in which the penalized mode moves is ever read.
 
 The quantity enters the Hessian of a marginal criterion and nothing else.
 It is absent from the criterion's value, from its gradient and from the
 fit, so the coefficients, the log-likelihood, the effective degrees of
-freedom and the coefficients' own variance matrix do not depend on it; what
-does depend on it is the standard error of a hyperparameter and the Newton
-direction of an outer search.
+freedom and the coefficients' own variance matrix do not depend on it; the
+standard error of a hyperparameter and the Newton direction of an outer
+search do depend on it.
 
-The result is symmetric in \code{v} and \code{u}, mixed partial derivatives
-being equal, and an implementation that pairs a direction with the wrong
+The result is symmetric in \code{v} and \code{u} because mixed partial derivatives
+are equal, and an implementation that pairs a direction with the wrong
 parameter loses that symmetry.
 
 The base method returns zeros, and that is exact. A design that does not
 move with its coefficients has a second derivative that is identically
 zero, which covers \code{\link[=linpar]{linpar()}},
-\code{\link[=s]{s()}}, \code{\link[=te]{te()}}, \code{\link[=random]{random()}} and the five
-penalized constructors without a method of their own.
+\code{\link[=s]{s()}}, \code{\link[=te]{te()}}, \code{\link[=random]{random()}} and the five penalized constructors \code{\link[=ridge]{ridge()}},
+\code{\link[=lasso]{lasso()}}, \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}} and \code{\link[=mcp]{mcp()}}, when they have no method of
+their own.
 
-For \code{\link[=nl]{nl()}} the closed form is one order above the one
+For \code{\link[=nl]{nl()}} the closed form is one order above the one that
 \code{\link[=term_block_deriv]{term_block_deriv()}} carries. With \eqn{\theta_p = h_p(z_p)} and
 \eqn{z_p = Z_p\beta_{(p)}}, writing \eqn{\tilde v_p = Z_p v_{(p)}} and
 \eqn{\tilde u_p = Z_p u_{(p)}} for the directions carried onto each
@@ -69,43 +71,43 @@ parameter's own scale,
 The five addends come from differentiating the two addends of
 \code{term_block_deriv}'s \eqn{q_{p_1p_2}} once more: the first from
 \eqn{f_{p_1p_2}}, the second and third from \eqn{h'_{p_1}} and
-\eqn{h'_{p_2}}, the fourth from \eqn{f_{p_1}} inside the term the Kronecker
-delta carries, and the fifth from \eqn{h''_{p_1}}. Exchanging \eqn{p_2} and
-\eqn{p_3} sends the second addend to the fourth and leaves the other three
-where they are, which is the symmetry in \code{v} and \code{u}.
+\eqn{h'_{p_2}}, the fourth from \eqn{f_{p_1}} inside the term that the
+Kronecker delta carries, and the fifth from \eqn{h''_{p_1}}. Exchanging
+\eqn{p_2} and \eqn{p_3} sends the second addend to the fourth and leaves the
+other three where they are, which is the symmetry in \code{v} and \code{u}.
 
-Nothing new is derived: \eqn{f_{p_1p_2p_3}} is the third order of
+This order needs no new derivation: \eqn{f_{p_1p_2p_3}} is the third order of
 \code{\link[=nl_fderiv]{nl_fderiv()}}, served by the same routes as the lower
 orders, and \eqn{h'''} is \code{\link[linkfunctions7:d3linkinv]{linkfunctions7::d3linkinv()}}, exact for
 every shipped link and numerical for a user-defined one. The cost is
-\eqn{O(nP^3)} in the number \eqn{P} of the term's own parameters, and the
-call is made once per pair of hyperparameters rather than once per
+\eqn{O(nP^3)}, where \eqn{P} is the number of the term's own parameters, and
+the method is called once per pair of hyperparameters rather than once per
 observation.
 
-A break-point term answers according to its construction. With
-\code{smoothed} set to an \code{\link[numericals7:abs_smoother]{numericals7::abs_smoother()}} the block is the
-true Jacobian and the closed forms are the smoother's own one order further
-up than \code{\link[=term_block_deriv]{term_block_deriv()}} reads them: with \eqn{u = x - \psi},
+The result for a break-point term depends on its construction. If
+\code{smoothed} is set to an \code{\link[numericals7:abs_smoother]{numericals7::abs_smoother()}}, the block is the
+true Jacobian and the closed forms are those of the smoother, taken one
+order higher than \code{\link[=term_block_deriv]{term_block_deriv()}} reads them: with \eqn{u = x - \psi},
 \eqn{P = s''/2}, \eqn{T = s'''/2} and \eqn{Q = s''''/2}, the change columns
 carry \eqn{P} (for \eqn{\gamma}) and \eqn{T} (for \eqn{\delta}) times the
 product of the two break-point directions in their own entries, and the
 break-point column carries the two mixed pieces and
 \eqn{-(\gamma T + \delta Q)} times that product.
-The sharp constructions answer zeros: for \code{\link[=seg]{seg()}} the second
-derivative is genuinely zero away from the break-points, the truncated
-line's derivative in the position being an indicator and the position
-column being linear in the change, while for \code{\link[=jump]{jump()}} and
+The sharp constructions return zeros: for \code{\link[=seg]{seg()}} the second
+derivative is genuinely zero away from the break-points, because the
+truncated line's derivative in the position is an indicator and the position
+column is linear in the change, while for \code{\link[=jump]{jump()}} and
 \code{\link[=jseg]{jseg()}} the block is a working linearization with a frozen
 weight, which is why the first-order generics
-already answer zeros there.
+already return zeros there.
 
-Two properties of the smoothed branch are exact. Where a break-point sits
-against its confinement limit the whole contribution is zero, because every
+In the smoothed branch, where a break-point sits against its confinement
+limit, the whole contribution is exactly zero, because every
 addend carries a direction in the break-point and the confinement gates
 that direction; \code{\link[=term_block_deriv]{term_block_deriv()}} is zero there for the same reason.
 Under \code{\link[numericals7:smooth_quintic]{numericals7::smooth_quintic()}}, which is exact outside
-\eqn{[-h, h]}, the answer is zero on every observation further than the
-width from a break-point. That smoother is \eqn{C^3}, so its fourth
+\eqn{[-h, h]}, the answer is exactly zero on every observation further than
+the width from a break-point. That smoother is \eqn{C^3}, so its fourth
 derivative jumps at \eqn{\pm h}, and the answer is exact at every
 observation that is not at distance \eqn{h} from a break-point.
 }
@@ -115,7 +117,7 @@ dd$y <- 2 * exp(-1.3 * dd$x)
 b <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3)), dd)
 dim(term_block_deriv2(b, v = c(1, 0), u = c(0, 1)))
 
-# symmetric in the two directions
+# The result is symmetric in the two directions.
 max(abs(term_block_deriv2(b, v = c(1, 0), u = c(0, 1)) -
         term_block_deriv2(b, v = c(0, 1), u = c(1, 0))))
 

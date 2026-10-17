@@ -7,27 +7,29 @@
 \item{term}{A built \code{\link[=LinparTerm]{LinparTerm()}}. An unbuilt one signals the error
 \code{"the term has not been built; call term_build(term, data) first."}.}
 
-\item{newdata}{A data frame carrying every variable the formula names.}
+\item{newdata}{A data frame carrying every variable that the formula names.}
 
 \item{...}{Unused.}
 }
 \value{
 A block of \code{nrow(newdata)} rows and \code{\link[=term_npar]{term_npar()}} columns, in the
-storage the build settled on, with the term's coefficient names as column
+storage chosen at build, with the term's coefficient names as column
 names.
 }
 \description{
 Rebuilds the model frame at \code{newdata} against the levels recorded at build
 time, then the model matrix with the recorded contrasts and in the recorded
-storage, and labels the columns with the term's coefficient names. Nothing
-is re-derived from the new rows.
+storage, and labels the columns with the term's coefficient names. The
+terms object, the levels, the contrasts, the storage and the intercept
+setting are all read from the blueprint, and the new rows supply only the
+values of the variables.
 }
 \details{
 The levels come from \code{blueprint$xlev}, so a factor in \code{newdata} need carry
-only the levels its own rows use and still gets the full set of columns. A
-level the blueprint does not know is rejected by \code{\link[stats:model.frame]{stats::model.frame()}} with
-\code{"factor g has new levels zz"}, because no coefficient was fitted for that
-level.
+only the levels that its own rows use and still gets the full set of
+columns. A level that the blueprint does not record is rejected by
+\code{\link[stats:model.frame]{stats::model.frame()}} with \code{"factor g has new levels zz"}, because the fit
+did not estimate a coefficient for that level.
 
 The storage comes from \code{blueprint$sparse} rather than being decided again,
 so a prediction builds the same kind of block as the fit and does not
@@ -46,14 +48,14 @@ nd <- droplevels(dd[dd$g \%in\% c("a", "b"), ])
 levels(nd$g)
 dim(term_predict(b, nd))
 
-# A level the fit never saw is rejected.
+# A level that is absent from the fitting data is rejected.
 bad <- dd
 levels(bad$g) <- c("a", "b", "c", "zz")
 try(term_predict(b, bad))
 
 }
 \seealso{
-\code{\link[=term_predict]{term_predict()}} for the generic and the identity it satisfies,
+\code{\link[=term_predict]{term_predict()}} for the generic and the identity that it satisfies,
 \code{\link[=term_build.LinparTerm]{term_build.LinparTerm()}} for what recorded the blueprint.
 }
 \keyword{internal}

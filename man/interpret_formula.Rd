@@ -8,19 +8,21 @@ interpret_formula(formula, data, linpar = list())
 }
 \arguments{
 \item{formula}{A two-sided or one-sided model formula. Anything else signals
-the error \code{"'formula' must be a formula."}. Its environment is where a term call's
-symbols are looked up when \code{data} does not carry them, and it is carried
-onto the formula of the implicit \code{linpar} block.}
+the error \code{"'formula' must be a formula."}. The symbols of a term call are
+looked up in the formula's environment when \code{data} does not carry them, and
+that environment is carried onto the formula of the implicit \code{linpar}
+block.}
 
 \item{data}{A data frame in which the formula's symbols are evaluated.
 Anything else signals the error \code{"'data' must be a data frame."}.}
 
-\item{linpar}{A named list of arguments for the \strong{implicit} \code{\link[=linpar]{linpar()}}
-term, the one the bare covariates collapse into: \code{sparse} and \code{contrasts}.
-This is the only place they can be given, that term never being written by
-the caller. Empty by default, which leaves \code{\link[=linpar]{linpar()}}'s own defaults. A
-\code{linpar()} term the caller writes out takes its own arguments and ignores
-this one. Anything that is not a list signals an error.}
+\item{linpar}{A named list of arguments for the implicit \code{\link[=linpar]{linpar()}} term,
+the term into which the bare covariates collapse; the arguments are
+\code{sparse} and \code{contrasts}. This is the only place where they can be given,
+because the caller never writes that term. The default is an empty list,
+which leaves \code{\link[=linpar]{linpar()}}'s own defaults in place. A \code{linpar()} term that the
+caller writes out takes its own arguments and ignores this one. Anything
+that is not a list signals an error.}
 }
 \value{
 A list with the elements:
@@ -45,8 +47,8 @@ is collected into a single \code{\link[=linpar]{linpar()}} block with the usual
 \code{\link[stats:model.matrix]{stats::model.matrix()}} conventions. An \code{offset()} term is not among the
 labels that \code{\link[stats:terms]{stats::terms()}} returns, so it is dropped without a message;
 \code{statmodels7::statmod()} separates offsets before calling this function.
-The terms come back unbuilt, so the caller decides which data each is built
-against.
+The terms are returned unbuilt, so the caller chooses the data against which
+each term is built.
 }
 \section{Recognition by evaluation}{
 A term constructor is identified by what its call returns, so a term class
@@ -54,22 +56,22 @@ defined outside the package works in a formula without a list of special
 names to amend. \code{log(x)} evaluates to a numeric vector and stays a
 covariate; \code{s(x, basis7::bspline_smooth(k = 5))} evaluates to a \code{SmoothTerm}
 and is routed as a term. A call whose evaluation signals an error, such as a
-term constructor called with an argument it does not have, signals the error
-\code{"evaluating '<label>' failed: <message>"}, so the call is not treated as a
-covariate.
+term constructor called with an argument that it does not have, signals the
+error \code{"evaluating '<label>' failed: <message>"}, so the call is not treated
+as a covariate.
 
 Some labels are never evaluated: \code{:}, \code{*}, \code{^}, \code{\%in\%}, \code{+}, \code{-}, \code{(} and
 \code{I}. A bare interaction \code{x1:x2} parses as a call to \code{:}, which on numeric
 vectors is the sequence operator and would return something unrelated to the
-column \code{\link[stats:model.matrix]{stats::model.matrix()}} builds. Those labels go straight to the
+column that \code{\link[stats:model.matrix]{stats::model.matrix()}} builds. Those labels go straight to the
 parametric block.
 
-A call whose value is neither a term nor something a model matrix can hold
-signals an error that names the label and the class of the value. The
+A call whose value is neither a term nor something that a model matrix can
+hold signals an error that names the label and the class of the value. The
 commonest cause is a masked name. The package \code{mgcv} also exports \code{s()} and
-\code{te()}, and \code{segmented} exports \code{seg()}, so where this package exports a
-term of that name and the name resolves elsewhere, the message states where
-the function was found and suggests \verb{modelterms7::}.
+\code{te()}, and \code{segmented} exports \code{seg()}, so where this package exports a term
+of that name and the name resolves elsewhere, the message states where the
+function was found and suggests \verb{modelterms7::}.
 }
 
 \section{The response and the intercept}{
@@ -83,8 +85,8 @@ parametric block. \code{y ~ ridge(~ g)} still produces an intercept-only
 
 A \code{\link[=linpar]{linpar()}} written in a formula that carries an intercept drops its own
 column \code{(Intercept)} after its model matrix is built, so its factors keep
-the coding they have with an intercept and \code{y ~ linpar(~ x + g)} gives the
-columns of \code{lm(y ~ x + g)}. Under \verb{0 +} it keeps the column.
+the coding that they have with an intercept and \code{y ~ linpar(~ x + g)} gives
+the columns of \code{lm(y ~ x + g)}. Under \verb{0 +} it keeps the column.
 }
 
 \section{One covariate is removed}{
@@ -105,7 +107,8 @@ modify another term.
 }
 
 \section{What it does not do}{
-Nothing is built: every element of \code{terms} is a specification, and
+The function does not build any term: every element of \code{terms} is a
+specification, and
 \code{\link[=term_is_built]{term_is_built()}} is \code{FALSE} for all of them. \code{data} is read for
 \code{\link[stats:terms]{stats::terms()}}'s variable classification and for evaluating the term calls
 and the response, and the term constructors themselves do not touch it.
@@ -129,7 +132,7 @@ out2 <- interpret_formula(y ~ x1 + s(x2, basis7::bspline_smooth(k = 5)) + ridge(
 names(out2$terms)
 vapply(out2$terms, function(t) class(t)[1], character(1))
 
-# Nothing is built yet.
+# The terms are not built yet.
 vapply(out2$terms, term_is_built, logical(1))
 
 # The intercept convention is the formula's own.
@@ -147,7 +150,8 @@ interpret_formula(y ~ x1:x2 + g, dd)$terms$linpar@formula
 w <- interpret_formula(y ~ x1 + seg(x1), dd)
 w$terms$linpar@formula          # x1 is gone; the term carries it
 
-# Unless the term is told not to own it.
+# The bare covariate is kept when the term is told not to own the linear
+# effect.
 interpret_formula(y ~ x1 + seg(x1, linear = FALSE), dd)$terms$linpar@formula
 
 # Arguments for the implicit block go through `linpar`.
@@ -163,7 +167,7 @@ try(interpret_formula(f, dd))
 
 }
 \seealso{
-\code{\link[=linpar]{linpar()}} for the block the covariates collapse into, \code{\link[=cens]{cens()}} for
-the response constructor, \code{\link[=check_term]{check_term()}} for validating one of the
-returned specifications, and \code{\link[=term_build]{term_build()}} for building it.
+\code{\link[=linpar]{linpar()}} for the block into which the covariates collapse,
+\code{\link[=cens]{cens()}} for the response constructor, \code{\link[=check_term]{check_term()}} for validating one of
+the returned specifications, and \code{\link[=term_build]{term_build()}} for building it.
 }

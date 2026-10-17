@@ -31,7 +31,7 @@ the log-likelihood when the scaling is zero.}
 \item{...}{Passed to methods.}
 }
 \value{
-A list with \code{eta}, the predictor the term produces,
+A list with \code{eta}, the predictor that the term produces,
 \code{jacobian}, an \code{n} by \code{length(psi)} matrix of its
 derivatives with respect to \code{psi}, and \code{curv}, the value of
 \code{curvature} at each predictor. That last one is returned because the
@@ -40,9 +40,9 @@ the same point, as \code{\link[=term_adjoint]{term_adjoint()}} does, reads it in
 evaluating the callback again.
 }
 \description{
-Runs the term's recursion over the data and returns the predictor it
+Runs the term's recursion over the data and returns the predictor that it
 produces, together with the derivative of that predictor with respect
-to the term's own parameters. This is the operation that defines a
+to the term's own parameters. This operation defines a
 filter-shaped structural term such as \code{\link[=gas]{gas()}}: the predictor at one
 observation depends on the others, so it cannot be written as a block of
 columns. The structural terms of the likelihood shape, \code{\link[=regime]{regime()}} and the
@@ -60,19 +60,20 @@ where \eqn{f_t} is the term's own recursion, driven by
 \code{score} and \code{curvature} evaluated at the predictor already
 produced. Both are read at \eqn{\eta_t}, so \code{curvature} is the second
 derivative \eqn{\partial^{2} \ell_t / \partial \eta^{2}} and is negative at
-an ordinary observation. Its sign matters: the predictor does not depend
-on \code{curvature}, but the Jacobian does, so passing the information, which is
-the negative of the curvature, returns the correct predictor together with a
-Jacobian that is not its derivative, and no error is signaled.
+an ordinary observation. The sign of \code{curvature} matters: the predictor
+does not depend on \code{curvature}, but the Jacobian does, so passing the
+information, which is the negative of the curvature, returns the correct
+predictor together with a Jacobian that is not its derivative, and the
+filter does not signal an error.
 
 The filter applies no scaling of its own. The callbacks supplied are the
 driving sequence of the recursion, and a fitting layer that uses the
 \code{scaling} of \code{\link[=gas]{gas()}} builds callbacks that return the scaled score and its
 derivative.
 
-The derivative is returned because the recursion is the only place it can
-be computed. Propagating it beside the state costs one extra vector per
-parameter and is exact; a model layer differencing the filter instead
+The derivative is returned because the recursion is the only place in which
+it can be computed. Propagating it beside the state costs one extra vector
+per parameter and is exact; a model layer differencing the filter instead
 would pay one pass per parameter and inherit the error of the difference.
 }
 \examples{
@@ -80,7 +81,8 @@ set.seed(1)
 dd <- data.frame(t = 1:20, y = rnorm(20))
 term <- term_build(gas(p = 1, q = 1, time = t), dd)
 
-# the score and curvature a Gaussian mean would supply
+# The callbacks return the score and the curvature that a Gaussian mean
+# would supply.
 out <- term_filter(term, eta = rep(0, 20), y = dd$y,
                    score = function(e, i) dd$y[i] - e,
                    curvature = function(e, i) -1,

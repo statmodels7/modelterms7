@@ -27,15 +27,15 @@ an argument named after another penalty's hyperparameter:
 \code{scad(~ x, gamma = 1)} signals \code{"'scad' has no argument 'gamma'."}.}
 }
 \value{
-An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification, with \code{X},
-\code{coef_names}, \code{blueprint} and \code{penalty} all empty until \code{\link[=term_build]{term_build()}}
+An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification in which \code{X},
+\code{coef_names}, \code{blueprint} and \code{penalty} are all empty until \code{\link[=term_build]{term_build()}}
 fills them.
 }
 \description{
-The input handling, the storage, the standardization and the prediction of
-the five penalized terms, documented once. \code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}}, \code{\link[=enet]{enet()}},
-\code{\link[=scad]{scad()}} and \code{\link[=mcp]{mcp()}} each have a page of their own carrying the penalty's
-formula, its hyperparameters and where those may lie.
+This page documents once, for the five penalized terms, the input handling,
+the storage, the standardization and the prediction. \code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}},
+\code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}} and \code{\link[=mcp]{mcp()}} each have a page of their own carrying the
+penalty's formula, its hyperparameters and where those may lie.
 
 Each takes its block as a one-sided formula or as a numeric matrix, and
 attaches the corresponding \pkg{penalties7} object to the block's
@@ -44,27 +44,28 @@ derivatives and the kink set are the penalty's and are never restated by the
 term.
 }
 \section{The two inputs}{
-A \strong{formula} goes through the \code{\link[stats:model.matrix]{stats::model.matrix()}} machinery with the
-intercept removed: a penalized block does not penalize an intercept, and the
-model's intercept lives in the parametric block. Its blueprint records the
-terms, the factor levels and the contrasts, exactly as \code{\link[=linpar]{linpar()}} does, so
-\code{~ g} and \code{~ 0 + g} give the same four columns for a four-level factor.
+A formula goes through the \code{\link[stats:model.matrix]{stats::model.matrix()}} machinery after its
+intercept is removed: a penalized block does not penalize an intercept, and
+the model's intercept lives in the parametric block. Its blueprint records
+the terms, the factor levels and the contrasts, exactly as \code{\link[=linpar]{linpar()}} does,
+so \code{~ g} and \code{~ 0 + g} give the same four columns for a four-level factor.
 
-The exception is a formula whose intercept is all it has. \code{ridge(~ 1)} is a
-block of that one column under the penalty, removing it leaving no block at
-all. That is the form a subformula on another term's parameter uses:
-\code{gamma ~ 0 + lasso(~ 1)} means that the parameter itself carries a lasso,
-there being no parametric block of its own to hold an unpenalized intercept.
+The exception is a formula that has an intercept and nothing else.
+\code{ridge(~ 1)} is a block of that one column under the penalty, because
+removing the intercept would leave no block at all. That is the form that a
+subformula on another term's parameter uses: \code{gamma ~ 0 + lasso(~ 1)} means
+that the parameter itself carries a lasso, because there is no parametric
+block of its own to hold an unpenalized intercept.
 A formula with neither an intercept nor a term, such as \code{ridge(~ 0)}, has no
 columns, and the term is rejected when it is built.
 
-A \strong{matrix} is used as given, and its columns are named after its own
+A matrix is used as given, and its columns are named after its own
 column names, or numbered \code{1}, \code{2}, ... when it has none.
 }
 
 \section{Predicting a matrix input}{
-Prediction re-evaluates the expression that produced the matrix \strong{in the new
-data, and only there}. So the intended use is a matrix column of the model
+Prediction re-evaluates the expression that produced the matrix in the new
+data, and only there. So the intended use is a matrix column of the model
 data frame:
 
 \if{html}{\out{<div class="sourceCode r">}}\preformatted{dd$R <- R
@@ -72,34 +73,35 @@ ridge(R)      # in the formula
 }\if{html}{\out{</div>}}
 
 A subset of \code{dd} then carries the matching rows of \code{R}. A free-standing
-matrix from the calling environment can be used to build the term, its value
-being captured, but prediction signals an error that names the expression.
+matrix from the calling environment can be used to build the term, and its
+value is captured, but prediction signals an error that names the
+expression.
 Resolving the name outside the new data would reuse the build-time rows
 whenever the row counts agree.
 }
 
 \section{Sparse storage}{
 
-A \strong{matrix} input is kept in whatever storage it arrives in, so a
-\code{dgCMatrix} passed to any of the five stays one and nothing needs to be
-said.
+A matrix input is kept in the storage in which it arrives, so a
+\code{dgCMatrix} passed to any of the five stays a \code{dgCMatrix} without any
+further argument.
 
-\code{sparse} governs the \strong{formula} route, where the model matrix would
+\code{sparse} governs the formula route, where the model matrix would
 otherwise be built dense whatever the columns look like. \code{TRUE} goes through
 \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}}, which builds the block sparse; building a
-dense one and compressing it would cost the memory the choice exists to
-avoid.
+dense one and compressing it would cost the memory that sparse storage is
+meant to save.
 
 It pays where the formula carries a factor of many levels, whose indicator
 columns hold one non-zero per row, and \code{lasso(~ 0 + g)} over hundreds of
 groups is the case. On numeric covariates the block has no zeros to exploit,
-and the sparse storage then costs more than it saves. Left
+and the sparse storage then costs more than it saves. If \code{sparse} is left
 \code{NULL}, the default, the storage is settled at build by \code{\link[=.resolve_sparse]{.resolve_sparse()}}:
 the dense indicator part holds \code{n} times its column count in cells against
 one non-zero per row, and the two routes cross at about \eqn{10^5} of those
 cells.
 
-Standardization does not interfere. It is a diagonal map on the \strong{penalty}
+Standardization does not interfere. It is a diagonal map on the penalty
 and never an operation on the design, so a sparse block stays sparse under
 it.
 }
@@ -121,12 +123,13 @@ the coefficients satisfy \eqn{\beta_{z,j} = s_j\beta_{x,j}}, so
   = \lambda\sum_j s_j\lvert\beta_{x,j}\rvert
   = \rho(S\beta_x), \qquad S = \mathrm{diag}(s),}
 
-which is the standardized penalty read on the original scale. Three things
-follow. The design is never rescaled, so a sparse block stays sparse.
-\eqn{\lambda} stays one number, and the coefficients are already on the
-scale the data came in, with nothing to map back. And centering, which is
-what would destroy sparsity, is not needed: the fit is invariant to a
-translation of a penalized column wherever an intercept is free.
+which is the standardized penalty read on the original scale. This has three
+consequences. First, the design is never rescaled, so a sparse block stays
+sparse. Second, \eqn{\lambda} stays one number, and the coefficients are
+already on the scale of the original data, so they need no mapping back.
+Third, centering, which would destroy sparsity, is not needed, because the
+fit is invariant to a translation of a penalized column wherever an
+intercept is free.
 
 The spread is computed from the built block by \code{\link[=.block_sd]{.block_sd()}} and frozen in
 \code{blueprint$standardize}, so the same term standardizes identically in every
@@ -134,7 +137,7 @@ equation of a distributional model and does not move with the working
 weights of a fit. A constant column takes \eqn{s_j = 1}. \code{\link[=print]{print()}} shows the
 values, because a change of scale changes the meaning of \eqn{\lambda}.
 
-For SCAD and MCP the map is not a rescaling of \eqn{\lambda} alone. The
+For SCAD and MCP the map does more than rescale \eqn{\lambda}. The
 penalty of the \eqn{j}-th coefficient is the original penalty evaluated at
 \eqn{s_j\lvert\beta_j\rvert}, with the same \eqn{\lambda} and \eqn{a} (or
 \eqn{\gamma}) for every coordinate, so that the map acts on the argument of
@@ -142,10 +145,10 @@ the penalty and leaves the hyperparameters unchanged. The penalty of
 coordinate \eqn{j} becomes flat at \eqn{\lvert\beta_j\rvert = a\lambda/s_j}
 (at \eqn{\gamma\lambda/s_j} for MCP). For MCP this equals an MCP on
 \eqn{\beta_j} with \eqn{\lambda_j = \lambda s_j} and
-\eqn{\gamma_j = \gamma/s_j^2}. For SCAD no pair \eqn{(\lambda_j, a_j)}
-reproduces it, because the slope at the origin, \eqn{s_j\lambda}, and the
-end of the first segment, \eqn{\lambda/s_j}, would both have to equal
-\eqn{\lambda_j}.
+\eqn{\gamma_j = \gamma/s_j^2}. For SCAD, any pair \eqn{(\lambda_j, a_j)}
+fails to reproduce it, because the slope at the origin, \eqn{s_j\lambda},
+and the end of the first segment, \eqn{\lambda/s_j}, would both have to
+equal \eqn{\lambda_j}.
 
 \code{\link[=random]{random()}} does not standardize and takes no such argument. Its columns are
 the grouping indicators, multiplied by the covariate of a random slope, and
@@ -163,7 +166,7 @@ built <- term_build(lasso(~ x1 + x2), dd)
 term_coef_names(built)
 term_coef_names(term_build(lasso(~ g), dd))
 
-# Unless the intercept is all the formula has.
+# The intercept is kept if the formula has nothing else.
 term_coef_names(term_build(ridge(~ 1), dd))
 
 # The hyperparameters and the kink are the penalty's.

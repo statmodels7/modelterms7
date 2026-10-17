@@ -29,16 +29,16 @@ when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag
 \code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
 \item{hyper}{The hyperparameters of the term's penalty that the caller
-\strong{held}, as a named list keyed by the penalty's names. Empty, the
+held, as a named list keyed by the penalty's names. Empty, the
 default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
 default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the caller
-wrote out, as a named list of numeric vectors. Empty, the default, has the
-path build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values that a path visits, for each hyperparameter that
+the caller wrote out, as a named list of numeric vectors. Empty, the
+default, has the path build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink reaches, as
 a fraction of the value that empties the block: one number in \eqn{(0, 1)},
@@ -56,14 +56,14 @@ carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
 \item{X}{The design block, one row per observation: a numeric matrix or a
-two-dimensional \pkg{Matrix}. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+two-dimensional \pkg{Matrix}. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{coef_names}{The block's coefficient names, one per column, prefixed by
-\code{label} when there is one. Filled by \code{\link[=term_build]{term_build()}}.}
+\code{label} when there is one. \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{blueprint}{A named list of everything needed to reproduce the mapping
-on new rows. Its contents are the subclass's business; nothing outside the
-term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+on new rows. Its contents belong to the subclass, and only the term reads
+them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{penalty}{A \pkg{penalties7} penalty on the block's coefficients, or
 \code{NULL} when the term is unpenalized.}
@@ -80,7 +80,7 @@ diagonal map as a second argument when \code{standardize = TRUE}.}
 
 \item{standardize}{A single logical: whether each coefficient is penalized
 on the scale of its own column, through the penalty's diagonal map.
-\code{FALSE} by default.}
+The default is \code{FALSE}.}
 
 \item{sparse}{\code{TRUE}, \code{FALSE} or \code{NULL} for the formula route's storage;
 see \code{\link[=linpar]{linpar()}} for the rule by which \code{NULL} is settled. A matrix input
@@ -92,12 +92,13 @@ An S7 object of class \code{PenalizedTerm}, inheriting from
 beside those that the two parent classes supply.
 }
 \description{
-The subclass of \code{\link[=additive_term]{additive_term()}} for a parametric block whose coefficients
-carry a \pkg{penalties7} penalty. \code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}}, \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}}
-and \code{\link[=mcp]{mcp()}} all construct it. The five differ in the penalty that their
-factory attaches at build time and in the hyperparameter arguments that
-their constructors take, so every derivative, hyperparameter, bound, link
-and kink belongs to the penalty object and none of it is restated here.
+\code{PenalizedTerm} is the subclass of \code{\link[=additive_term]{additive_term()}} for a parametric block
+whose coefficients carry a \pkg{penalties7} penalty. \code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}},
+\code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}} and \code{\link[=mcp]{mcp()}} all construct it. The five differ in the
+penalty that their factory attaches at build time and in the hyperparameter
+arguments that their constructors take, so every derivative,
+hyperparameter, bound, link and kink belongs to the penalty object and is
+not restated here.
 }
 \section{The five properties of its own}{
 \code{input} is the block as it was given, a one-sided formula or a matrix.
@@ -105,21 +106,21 @@ and kink belongs to the penalty object and none of it is restated here.
 formula input as well, and it is read only for a matrix input, so that
 \code{\link[=term_predict]{term_predict()}} can re-evaluate it in new data.
 
-\code{factory} maps a coefficient count to the penalty. It is called at build,
-when the count is known, and with the diagonal map as a second argument when
-\code{standardize = TRUE}, so a factory that is never used with standardization
-may take the count alone.
+\code{factory} maps a coefficient count to the penalty. The build calls it with
+the count, once the count is known, and with the diagonal map as a second
+argument when \code{standardize = TRUE}, so a factory that is never used with
+standardization may take only the count.
 
 \code{standardize} is a single logical on the specification; after a build the
 spreads themselves are in \code{blueprint$standardize}, one per column.
 
-\code{sparse} governs the formula route only, a matrix input being kept in
-whatever storage it arrives in. The property stays as the caller wrote it,
-\code{NULL} by default, and the storage that the build settles on is recorded in
+\code{sparse} governs the formula route only, because a matrix input is kept in
+the storage in which it arrives. The property stays as the caller wrote it,
+\code{NULL} by default, and the storage that the build settles is recorded in
 \code{blueprint$sparse}.
 }
 
-\section{What the class does not decide}{
+\section{What the class does not fix}{
 Which hyperparameters are estimated, over what grid and how far down a path
 are recorded in \code{\link[=model_term]{model_term()}}'s own properties, read through
 \code{\link[=term_hyper]{term_hyper()}}, \code{\link[=term_grid]{term_grid()}}, \code{\link[=term_values]{term_values()}}, \code{\link[=term_path_min]{term_path_min()}} and

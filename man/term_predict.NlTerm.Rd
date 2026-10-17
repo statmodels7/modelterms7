@@ -7,8 +7,8 @@
 \item{term}{A built \code{\link[=NlTerm]{NlTerm()}}. An unbuilt one is rejected with the error
 \code{"the term has not been built; call term_build(term, data) first."}.}
 
-\item{newdata}{A data frame carrying the covariates the function names and
-whatever the subformulas name.}
+\item{newdata}{A data frame carrying the covariates that the function names
+and whatever the subformulas name.}
 
 \item{...}{Unused.}
 }
@@ -17,19 +17,19 @@ A block of \code{nrow(newdata)} rows and \code{\link[=term_npar]{term_npar()}} c
 term's coefficient names as column names.
 }
 \description{
-The Jacobian of \eqn{f} evaluated at the new rows, at the coefficients the
-term currently carries. Each parameter's subformula is reapplied through
-its sub-terms' own blueprints, so a basis or a set of contrasts inside a
-submodel is not relearned.
+Returns the Jacobian of \eqn{f} evaluated at the new rows, at the
+coefficients that the term currently carries. Each parameter's subformula is
+reapplied through its sub-terms' own blueprints, so a basis or a set of
+contrasts inside a submodel is not relearned.
 }
 \details{
-The coefficients are the ones \code{\link[=term_refresh]{term_refresh()}} last committed, not new
-ones: the block a prediction returns must multiply the same coefficients
-the fit reached, or \eqn{\tilde{X}\beta} is not the fitted contribution.
-\code{\link[=term_value]{term_value()}} is what reports \eqn{f} itself at new rows.
+The coefficients are the ones that \code{\link[=term_refresh]{term_refresh()}} last committed, not new
+ones: the block that a prediction returns must multiply the same
+coefficients that the fit reached, or \eqn{\tilde{X}\beta} is not the fitted
+contribution. \code{\link[=term_value]{term_value()}} reports \eqn{f} itself at new rows.
 
-Reading the block on its own is rarely what a caller wants for a nonlinear
-term. \eqn{\tilde{X}\beta} is the \strong{linearization} of \eqn{f}: the two
+For a nonlinear term, a caller rarely wants to read the block on its own.
+\eqn{\tilde{X}\beta} is the linearization of \eqn{f}: the two
 agree in the increment that a Gauss-Newton step takes, and in general they
 differ in value. \code{term_value(term, newdata = ...)} returns the
 contribution.
@@ -47,7 +47,8 @@ all.equal(term_predict(b, dd), term_matrix(b))
 nd <- data.frame(x = c(0.5, 1.5, 2.5))
 term_predict(b, nd)
 
-# Which is the linearization, not the function: read the value for that.
+# The product of the block and the coefficients is the linearization, not
+# the function: the value is the function.
 cbind(linear = as.numeric(term_predict(b, nd) \%*\% b@blueprint$coef),
       value = term_value(b, newdata = nd),
       truth = 2 * exp(-1.3 * nd$x))

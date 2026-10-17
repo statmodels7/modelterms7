@@ -13,10 +13,10 @@ A named list of \pkg{linkfunctions7} links, one per entry of
 \code{\link[=term_params]{term_params()}}.
 }
 \description{
-The \strong{log} link on every \code{psik.sd}, the prior's own link on any parameter
-that the prior contributes, and the identity on everything else. A prior
-scale must be positive; a position, a change of level and a change of slope
-are already unconstrained.
+Assigns the log link to every \code{psik.sd}, the prior's own link to any
+parameter that the prior contributes, and the identity to everything else. A
+prior scale must be positive; a position, a change of level and a change of
+slope are already unconstrained.
 }
 \details{
 Where \code{random(distrib = )} names a family other than the Gaussian, the

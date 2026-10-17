@@ -74,8 +74,8 @@ reference:
   - PenalizedTerm
 - title: The random-effect term
   desc: >
-    Grouped intercepts, slopes and smooth curves, with the effects'
-    distribution attached as the penalty, which is how a random effect
+    Grouped intercepts, slopes and smooth curves, in which the distribution
+    of the effects is attached as the penalty. This is how a random effect
     enters a penalized likelihood.
   contents:
   - random
@@ -132,8 +132,8 @@ reference:
   desc: >
     Terms that rewrite the likelihood instead of adding to the
     predictor: score-driven dynamics, a latent Markov chain and
-    break-points integrated out of the likelihood, each carrying its exact
-    derivatives through its recursion.
+    break-points integrated out of the likelihood. Each of these terms carries
+    its exact derivatives through its recursion.
   contents:
   - gas
   - GasTerm
@@ -172,8 +172,8 @@ reference:
   - interpret_formula
 - title: The response
   desc: >
-    Marking a censored response on the left side of a formula, with the
-    status of each observation derived from the values given.
+    Marking a censored response on the left side of a formula and deriving
+    the status of each observation from the values that are given.
     statmodels7::statmod() rejects a censored response.
   contents:
   - cens

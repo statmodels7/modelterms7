@@ -10,7 +10,7 @@ seg_polish(term, y, k = 50, sweeps = 10, weights = NULL)
 \item{term}{A built break-point term (see \code{\link[=term_build]{term_build()}}).}
 
 \item{y}{A numeric vector of finite values, one per observation of the
-build data: the response, net of whatever the caller wants held.}
+build data: the response, net of whatever the caller wants to hold fixed.}
 
 \item{k}{How many grid points per sweep. Defaults to 50.}
 
@@ -24,10 +24,11 @@ profile is then weighted least squares.}
 The term at the polished positions.
 }
 \description{
-Coordinate descent over the break-point positions on the exact profile:
-one position at a time is swept over a grid with the others held, the
-least-squares fit at fixed positions being an ordinary linear model, and
-the sweeps repeat until no position moves. The grid has \code{k} quantiles of
+Performs coordinate descent over the break-point positions on the exact
+profile: one position at a time is swept over a grid while the others are
+held (the least-squares fit at fixed positions is an ordinary linear
+model), and the sweeps repeat until a full sweep leaves every position
+unchanged. The grid has \code{k} quantiles of
 the covariate, from the 2nd to the 98th percentile and confined to the
 term's limits. The term comes back relocated (\code{\link[=seg_relocate]{seg_relocate()}}) at the best
 positions found.
@@ -36,18 +37,19 @@ positions found.
 This is the device of \code{\link[=seg_start]{seg_start()}} made conditional on the current
 positions, and it addresses the failure that a start cannot fix: with
 several break-points the iteration can capture two of them on one feature
-and press the third against its confinement limit, and neither a
-bootstrap excursion, whose perturbation is of order \eqn{1/\sqrt{n}}, nor
-a random relocation escapes it, the basin of the right configuration being
-narrow. A grid sweep of one position with the others held reaches the
-missing feature, since the profile at fixed positions is exact.
+and press the third against its confinement limit, and a bootstrap
+excursion, whose perturbation is of order \eqn{1/\sqrt{n}}, and a random
+relocation both fail to escape it, because the basin of the right
+configuration is narrow. A grid sweep of one position, while the others
+are held, reaches the missing feature, since the profile at fixed positions
+is exact.
 
 The profile is least squares of \code{y} on an intercept, the linear column
 where the term has one, and the term's own columns at
 fixed positions, so it is exact for a gaussian response and a starting
 rule for any other, the argument that \code{\link[=seg_start]{seg_start()}} already makes.
 A term whose per-break-point coefficients carry a development is
-rejected, its positions being one per observation.
+rejected, because its positions are one per observation.
 
 With \code{weights}, the profile is weighted least squares. A restarting loop
 can sweep the profile of a bootstrap resample in this way, using the

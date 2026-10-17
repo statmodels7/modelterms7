@@ -20,13 +20,13 @@
 
 \item{blocks}{The model's derivative pieces; see \code{\link[=term_fourth]{term_fourth()}}.}
 
-\item{directions}{A list of two directions to contract against.}
+\item{directions}{A list of two directions against which to contract.}
 
 \item{...}{Unused.}
 
 \item{score_values, curvature_values, blocks_data}{As for
-\code{\link[=term_curvature]{term_curvature()}}; supplying all three, with \code{blocks_data} carrying the
-fourth and fifth derivatives \code{D4} and \code{D5}, routes the recursion
+\code{\link[=term_curvature]{term_curvature()}}. If all three are supplied and \code{blocks_data} carries
+the fourth and fifth derivatives \code{D4} and \code{D5}, the recursion runs
 through the compiled kernel.}
 
 \item{threads}{Threads for the compiled route's group loop.}
@@ -36,9 +36,9 @@ A list with \code{jacobian}, \code{dphi}, \code{dpsi} and
 \code{curvature}.
 }
 \description{
-The fourth derivative of the filtered predictor in the caller's unknowns,
-contracted against the caller's weights and against two directions, and
-the lower orders' contractions beside it.
+Computes the fourth derivative of the filtered predictor in the caller's
+unknowns, contracted against the caller's weights and against two
+directions, together with the lower orders' contractions.
 }
 \details{
 The recursion carries five states, \eqn{F_t}, \eqn{\Phi_t}, the two

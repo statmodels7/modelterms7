@@ -27,8 +27,8 @@ see the section above. Cannot be combined with \code{by}.}
 \item{npsi}{The number of break-points. Defaults to 1.}
 
 \item{psi}{Optional starting positions; defaults to evenly spaced
-quantiles of the covariate. Where a break-point carries a development
-they seed it, each starting vector solving \eqn{Wp_k \approx
+quantiles of the covariate. Where a break-point carries a development,
+they seed it, and each starting vector solves \eqn{Wp_k \approx
   \psi_k^{0}}.}
 
 \item{by}{A one-sided formula giving every coefficient of the term the
@@ -41,7 +41,7 @@ Defaults to \code{TRUE}.}
 \item{c0}{The starting value of the scaling factor that separates the
 observations from the break-point, as a fraction of the distance to
 the ends of the range. Defaults to \code{0.05}, the value
-Fasola et al. (2018) recommend; see Details.}
+that Fasola et al. (2018) recommend; see Details.}
 
 \item{smoothed}{\code{NULL} (the default: the construction exactly as
 documented above) or a \pkg{numericals7}
@@ -55,17 +55,18 @@ the quintic gives its cost under an outer criterion, where the probit
 is the recommended smoother). There is no working
 parametrization, no auxiliary coefficient and no scaling schedule
 (for \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}}, a \code{c0} that is passed is ignored with a
-message), the block is the true Jacobian
+message). The block is the true Jacobian
 and the term is fitted by Gauss-Newton like \code{\link[=nl]{nl()}}. A smoothed term
 accepts a development of any coefficient, including a break-point
 (\code{psi ~ random(~1 | id)}) and penalized developments, for every kind,
-since no read-off constrains the development. The
+since a smoothed term has no read-off that would constrain the
+development. The
 smoother's width is resolved at build from the covariate's spacing
 (the median gap between distinct values, within groups where a
 break-point development supplies a partition) unless the object
 carries one. For the quintic, which is exact outside its width, the
-width is raised to at least 0.55 times the largest gap over the range a
-break-point may take, so that a break-point cannot sit in a gap with
+width is raised to at least 0.55 times the largest gap over the range
+that a break-point may take, so that a break-point cannot sit in a gap with
 no observation within its width. The width is reported: it is the
 width of the transition (the bent-cable reading). The smoothing bias is
 zero outside the transition for the quintic, decays with the Gaussian
@@ -83,8 +84,9 @@ and returns a structural term of the likelihood shape
 (\code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}); see the section on the marginal construction in
 \code{\link[=jump]{jump()}}. For a \code{seg} term the native random-changepoint fit
 (\code{psi ~ random(~1 | g)} without \code{marginal}) estimates the break-points
-as the mode of the latent distribution and is the recommended route, the
-marginal being the exact-likelihood alternative. The marginal \code{seg} has
+as the mode of the latent distribution and is the recommended route,
+while the marginal construction is the exact-likelihood alternative. The
+marginal \code{seg} has
 one break-point: the conditional is smooth in the position, so the
 integral runs on Gauss-Kronrod panels over the intervals between a
 group's ordered observations, and several latent break-points would need
@@ -92,7 +94,7 @@ a product quadrature with a number of components that a fitting layer
 cannot carry.}
 
 \item{n_boot}{How many bootstrap restarts the fitting layer runs after
-the iteration first converges (Wood 2001, the device \code{segmented}
+the iteration first converges (Wood 2001, the device that \code{segmented}
 runs by default): each restart re-estimates on a bootstrap resample
 from the current break-points and then on the data again from where
 the resample ended, keeping the better fit. The objective has local
@@ -111,9 +113,9 @@ An object of class \code{\link[=SegTerm]{SegTerm()}} (a specification; see
 with \code{marginal = TRUE}.
 }
 \description{
-A covariate whose slope \emph{and} level both change at \eqn{K}
-break-points estimated with everything else, the union of
-\code{\link[=seg]{seg()}} and \code{\link[=jump]{jump()}} at the same points. Written in
+\code{jseg()} specifies a covariate whose slope \emph{and} level both change at
+\eqn{K} break-points estimated with everything else, and the term is the
+union of \code{\link[=seg]{seg()}} and \code{\link[=jump]{jump()}} at the same points. Written in
 the equation of any parameter of any distribution, the term contributes
 
 \deqn{\beta x_i + \sum_{k=1}^{K}
@@ -121,7 +123,7 @@ the equation of any parameter of any distribution, the term contributes
         + \gamma_k\,(x_i - \psi_k)_{+}\bigr]}
 
 to that parameter's linear predictor, so that in a model
-\eqn{g(\theta_i) = \eta_i} with the rest of the equation supplying
+\eqn{g(\theta_i) = \eta_i} in which the rest of the equation supplies
 \eqn{z_i'\alpha},
 
 \deqn{\eta_i = z_i'\alpha + \beta x_i + \sum_{k=1}^{K}
@@ -136,12 +138,12 @@ level there.
 Both devices of the two constructions are used at once: the truncated
 line is differentiable in the break-point and the step is linearized by
 the identity of Fasola et al. (2018), on the rescaled covariate that its
-scaling schedule provides (see \code{\link[=jump]{jump()}}). What is particular to the
-joint term is the read-off, since the truncated line depends on the
-break-point as well and reading only the step's pair would discard what
-the change of slope says about it. Linearizing both parts about the
-previous position, and writing \eqn{h} for the increment, \eqn{U} for
-the truncated line and \eqn{I = Z - \psi^{0}W} for the indicator,
+scaling schedule provides (see \code{\link[=jump]{jump()}}). The read-off is particular to
+the joint term, because the truncated line depends on the break-point as
+well, and a read-off from only the step's pair would discard the information
+that the change of slope carries about the break-point. Linearizing both
+parts about the previous position, and writing \eqn{h} for the increment,
+\eqn{U} for the truncated line and \eqn{I = Z - \psi^{0}W} for the indicator,
 
 \deqn{\gamma\,(x-\psi)_{+} \approx \gamma U - \gamma h I,
   \qquad \delta\,\mathbb{1}(x>\psi)
@@ -157,13 +159,13 @@ the root of smaller modulus. At \eqn{\gamma = 0} the quadratic
 degenerates to \eqn{h = -(b + a\psi^{0})/a}, that is \eqn{\psi = -b/a},
 so the pure step is a special case of this reading.
 
-Everything \code{\link[=jump]{jump()}} documents about the scaling schedule, the
+Everything that \code{\link[=jump]{jump()}} documents about the scaling schedule, the
 confinement of a break-point and the choice of starting positions
 applies here unchanged.
 }
 \section{The coefficients}{
 
-\code{beta} (present when \code{linear = TRUE}), \code{gamma1} \ldots
+The coefficients are \code{beta} (present when \code{linear = TRUE}), \code{gamma1} \ldots
 \code{gammaK}, the changes of slope, then \code{delta1} \ldots
 \code{deltaK}, the changes of level, then \code{g1} \ldots \code{gK},
 the auxiliary coefficients from which the break-points are read;
@@ -194,8 +196,8 @@ development of any coefficient.
 
 \code{jseg(x, psi ~ random(~1 | g), marginal = TRUE)} integrates a
 latent break-point per group out of the likelihood exactly, on the
-Gauss-Kronrod panels of \code{\link[=seg]{seg()}}'s marginal with the change of
-level entering each interval's conditional as a constant. The mode-based
+Gauss-Kronrod panels of \code{\link[=seg]{seg()}}'s marginal, where the change of
+level enters each interval's conditional as a constant. The mode-based
 routes approximate the integral over the latent break-points by a Laplace
 approximation, and the marginal construction evaluates it by quadrature.
 }
@@ -210,7 +212,7 @@ built <- term_build(jseg(x), dd)
 term_coef_names(built)
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The term is fitted next. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(3)
@@ -219,8 +221,8 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
     rnorm(300, sd = 0.3)
   ft <- statmodels7::statmod(y ~ jseg(x),
                              distributions7::gaussian1_distrib(), fd)
-  # truth: intercept 1, slope 0.3, and at 6 a jump of 1.5 with a change
-  # of slope of 1.2
+  # The truth is intercept 1, slope 0.3, and at 6 a jump of 1.5 with a
+  # change of slope of 1.2.
   round(coef(ft)$mu, 2)
 }
 }

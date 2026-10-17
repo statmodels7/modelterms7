@@ -9,15 +9,15 @@
 \item{...}{Unused, and accepted so that the signature matches \code{\link[=print]{print()}}'s.}
 }
 \value{
-\code{x}, invisibly. Called for the line it writes to the console.
+\code{x}, invisibly. The function is called for the line that it writes
+to the console.
 }
 \description{
 Prints one line giving the number of observations and how many carry each
 status, in the fixed order \code{observed}, \code{left}, \code{right}, \code{interval}. A status
-that no observation has is left out, so a response with no censoring at all
-prints as \verb{<censored_response> 20 observations: 20 observed}. The values and
-the bounds are not shown; read them from the \code{y}, \code{lwr} and \code{upr}
-properties.
+that does not occur among the observations is left out, so a response with
+no censoring at all prints as \verb{<censored_response> 20 observations: 20 observed}. The values and the bounds are not shown; read them from the \code{y},
+\code{lwr} and \code{upr} properties.
 }
 \examples{
 cens(c(0, 1, 5, NA), lwr = 0, upr = 5)

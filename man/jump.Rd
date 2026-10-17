@@ -26,8 +26,8 @@ see the section above. Cannot be combined with \code{by}.}
 \item{npsi}{The number of break-points. Defaults to 1.}
 
 \item{psi}{Optional starting positions; defaults to evenly spaced
-quantiles of the covariate. Where a break-point carries a development
-they seed it, each starting vector solving \eqn{Wp_k \approx
+quantiles of the covariate. Where a break-point carries a development,
+they seed it, and each starting vector solves \eqn{Wp_k \approx
   \psi_k^{0}}.}
 
 \item{by}{A one-sided formula giving every coefficient of the term the
@@ -37,7 +37,7 @@ level of a factor. A bare variable is rejected; write the formula.}
 \item{c0}{The starting value of the scaling factor that separates the
 observations from the break-point, as a fraction of the distance to
 the ends of the range. Defaults to \code{0.05}, the value
-Fasola et al. (2018) recommend; see Details.}
+that Fasola et al. (2018) recommend; see Details.}
 
 \item{smoothed}{\code{NULL} (the default: the construction exactly as
 documented above) or a \pkg{numericals7}
@@ -51,17 +51,18 @@ the quintic gives its cost under an outer criterion, where the probit
 is the recommended smoother). There is no working
 parametrization, no auxiliary coefficient and no scaling schedule
 (for \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}}, a \code{c0} that is passed is ignored with a
-message), the block is the true Jacobian
+message). The block is the true Jacobian
 and the term is fitted by Gauss-Newton like \code{\link[=nl]{nl()}}. A smoothed term
 accepts a development of any coefficient, including a break-point
 (\code{psi ~ random(~1 | id)}) and penalized developments, for every kind,
-since no read-off constrains the development. The
+since a smoothed term has no read-off that would constrain the
+development. The
 smoother's width is resolved at build from the covariate's spacing
 (the median gap between distinct values, within groups where a
 break-point development supplies a partition) unless the object
 carries one. For the quintic, which is exact outside its width, the
-width is raised to at least 0.55 times the largest gap over the range a
-break-point may take, so that a break-point cannot sit in a gap with
+width is raised to at least 0.55 times the largest gap over the range
+that a break-point may take, so that a break-point cannot sit in a gap with
 no observation within its width. The width is reported: it is the
 width of the transition (the bent-cable reading). The smoothing bias is
 zero outside the transition for the quintic, decays with the Gaussian
@@ -78,7 +79,7 @@ carries the latents. Defaults to \code{FALSE}, the construction
 documented above.}
 
 \item{n_boot}{How many bootstrap restarts the fitting layer runs after
-the iteration first converges (Wood 2001, the device \code{segmented}
+the iteration first converges (Wood 2001, the device that \code{segmented}
 runs by default): each restart re-estimates on a bootstrap resample
 from the current break-points and then on the data again from where
 the resample ended, keeping the better fit. The objective has local
@@ -97,23 +98,23 @@ An object of class \code{\link[=SegTerm]{SegTerm()}} (a specification; see
 with \code{marginal = TRUE}.
 }
 \description{
-A covariate whose effect is a constant that steps to a new value at
-\eqn{K} break-points estimated with everything else
+\code{jump()} specifies a covariate whose effect is a constant that steps to a
+new value at \eqn{K} break-points estimated with everything else
 (Fasola, Muggeo and Kuchenhoff, 2018). Written in the equation of any
 parameter of any distribution, the term contributes
 
 \deqn{\sum_{k=1}^{K} \delta_k\,\mathbb{1}(x_i \geq \psi_k)}
 
 to that parameter's linear predictor, so that in a model
-\eqn{g(\theta_i) = \eta_i} with the rest of the equation supplying
+\eqn{g(\theta_i) = \eta_i} in which the rest of the equation supplies
 \eqn{z_i'\alpha},
 
 \deqn{\eta_i = z_i'\alpha
   + \sum_{k=1}^{K} \delta_k\,\mathbb{1}(x_i \geq \psi_k).}
 
 There is no linear effect: the relationship between \eqn{x} and the
-predictor is a step function, the intercept of the equation being its
-level before the first break-point and \eqn{\delta_k} the change of
+predictor is a step function; the intercept of the equation is its
+level before the first break-point, and \eqn{\delta_k} is the change of
 level at \eqn{\psi_k}. A model that is linear in \eqn{x} \emph{and}
 steps is written by putting the covariate in the equation as well,
 \code{y ~ x + jump(x)}, or by \code{\link[=jseg]{jseg()}} where the slope is to
@@ -126,13 +127,13 @@ A step is not differentiable in \eqn{\psi}, and the identity
   + \frac{x-\psi}{2\lvert x-\psi \rvert}}
 holds exactly for \eqn{x \neq \psi} and is linear in \eqn{\psi} once the
 weight \eqn{1/(2\lvert x-\psi^{0}\rvert)} is held at the previous
-iterate, so no search over candidate positions is needed. Writing
+iterate, so a search over candidate positions is unnecessary. Writing
 \eqn{W = 1/(2\lvert x-\psi^{0}\rvert)} and \eqn{Z = xW
 + 1/2}, a step of size \eqn{\delta} at \eqn{\psi} is \eqn{\delta Z + gW}
 with \eqn{g = -\delta\psi}, so a linear fit on \eqn{(Z, W)} returns the
 break-point as \eqn{\psi = -g/\delta} (Fasola et al., 2018). The
 break-point is therefore not a coefficient here but a quantity read off
-two of them, which is why refreshing the term recovers it before
+two of them, which is why \code{\link[=term_refresh]{term_refresh()}} recovers it before
 rebuilding the weights, and why \code{\link[=seg_psi]{seg_psi()}} exists.
 }
 
@@ -172,8 +173,8 @@ chosen on a grid by \code{\link[=seg_start]{seg_start()}}.
 }
 \section{The coefficients}{
 
-\code{delta1} \ldots \code{deltaK}, the changes of level, followed by
-\code{g1} \ldots \code{gK}, the auxiliary coefficients of the identity
+The coefficients are \code{delta1} \ldots \code{deltaK}, the changes of level,
+followed by \code{g1} \ldots \code{gK}, the auxiliary coefficients of the identity
 above, from which \eqn{\psi_k = -g_k/\delta_k} is read. For a sharp term
 the break-points are not coefficients, and \code{\link[=seg_psi]{seg_psi()}} reports them. A
 smoothed term holds them directly, and its coefficients are \code{delta1}
@@ -190,22 +191,22 @@ coefficient the same development. The right side goes through
 structural terms and terms whose block moves with its coefficients are
 rejected.
 
-What the sharp discontinuous construction can carry is narrower than what
-the continuous one can, because of the read-off. The auxiliary
+The sharp discontinuous construction can carry a narrower set of
+developments than the continuous one, because of the read-off. The auxiliary
 coefficient is \eqn{g_k = -\delta_k\psi_k}, a
 product of the two quantities, so it stays linear in the unknowns only
 when one of the two factors is a single number:
 \itemize{
-\item \strong{the break-point developed}, the change of level a single
-number: exact for any design, \eqn{g_k = -\delta_k p_k} being
-linear in \eqn{p_k}. \code{jump(x, psi ~ id)} is a break-point
-per subject with a shared step size.
-\item \strong{a development on group indicators}, where the design has
+\item The break-point is developed and the change of level is a single
+number: the read-off is exact for any design, because
+\eqn{g_k = -\delta_k p_k} is linear in \eqn{p_k}. \code{jump(x, psi ~ id)}
+is a break-point per subject with a shared step size.
+\item A development on group indicators, where the design has
 one column per group and each observation belongs to one: the
 product collapses group by group and the read-off is exact within
 each. \code{jump(x, by = ~0 + g)} is an independent step and
 break-point per level.
-\item \strong{anything else} is rejected and is not approximated, since the
+\item Anything else is rejected and is not approximated, since the
 product of two developments needs the outer product of their designs,
 and an unconstrained fit cannot return that as one set of coefficients.
 }
@@ -230,14 +231,15 @@ u_{ik}} with independent \eqn{u_{ik} \sim N(0, \tau_k^2)}, and
 integrates them out of the likelihood exactly. The parameters \eqn{m_k}
 and \eqn{\tau_k} are named \code{psik.mean} and \code{psik.sd}. The conditional is
 constant on the product partition of the intervals between a group's
-ordered covariate values, giving \eqn{(n_i+1)^K} cells, but the sum is
-never taken over the cells: the side process \eqn{S_t = \{k : \psi_k
+ordered covariate values, giving \eqn{(n_i+1)^K} cells. The sum is
+never taken over the cells. The side process \eqn{S_t = \{k : \psi_k
 \le x_{(t)}\}} is monotone on the subset lattice with independent
 coordinates, so it is a hidden Markov chain on the \eqn{2^K} side
 patterns whose transition factors over the coordinates, and the exact
-forward recursion costs \eqn{n K 2^K}: a coordinate that flips at a
-step contributes its interval's prior mass as the transition weight,
-one that never flips its upper-tail mass at the end. Up to eight
+forward recursion costs \eqn{n K 2^K}. In this recursion a coordinate
+that flips at a step contributes its interval's prior mass as the
+transition weight, and a coordinate that never flips contributes its
+upper-tail mass at the end. Up to eight
 break-points are covered. The cost of more lies in the \eqn{2^K}
 components at which a fitting layer evaluates the family.
 
@@ -246,8 +248,8 @@ The prior is part of the likelihood: \eqn{(m_k, \tau_k, \delta_k)}, named
 maximum likelihood, with no penalty, no marginal criterion and no
 smoothing constant, and the term is itself structural
 (\code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}}, of the likelihood shape). With one break-point the
-prior may be any continuous \pkg{distributions7} distribution with its
-location fixed at zero, through \code{random(distrib = )}: the interval masses
+prior may be any continuous \pkg{distributions7} distribution whose
+location is fixed at zero, through \code{random(distrib = )}: the interval masses
 are differences of its cdf and their derivatives come from the cdf surface
 built for the censored likelihoods, with that surface's own caveats
 (closed for the gaussian and, in location and scale, for the t).
@@ -269,7 +271,7 @@ term_coef_names(built)
 seg_psi(built)
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The term is fitted next. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(2)
@@ -277,7 +279,7 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   fd$y <- 1 + 2 * (fd$x > 6) + rnorm(200, sd = 0.3)
   ft <- statmodels7::statmod(y ~ jump(x),
                              distributions7::gaussian1_distrib(), fd)
-  # truth: intercept 1, a jump of 2, and the break-point at 6
+  # The truth is intercept 1, a jump of 2 and the break-point at 6.
   round(coef(ft)$mu, 2)
 }
 }

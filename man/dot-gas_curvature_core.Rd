@@ -54,10 +54,10 @@ has \code{dphi}, a matrix, and with two directions it has \code{dphi}, a list of
 two matrices, and \code{dpsi}.
 }
 \description{
-The body that \code{\link[=term_curvature]{term_curvature()}}, \code{\link[=term_third]{term_third()}} and \code{\link[=term_fourth]{term_fourth()}}
-share. With \code{direction} \code{NULL} it propagates the first two derivatives
-of the predictor. With one direction it propagates the third as well,
-contracted against that direction, and with a list of two directions it
+Implements the body that \code{\link[=term_curvature]{term_curvature()}}, \code{\link[=term_third]{term_third()}} and
+\code{\link[=term_fourth]{term_fourth()}} share. With \code{direction} \code{NULL} it propagates the first two
+derivatives of the predictor. With one direction it propagates the third as
+well, contracted against that direction, and with a list of two directions it
 propagates the fourth, contracted against both.
 }
 \details{

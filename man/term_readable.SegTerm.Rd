@@ -12,44 +12,44 @@
 }
 \value{
 A list with \code{name}, \code{value}, \code{jacobian} and
-\code{scale}, as \code{\link[=term_readable]{term_readable()}} documents, or \code{NULL} where no quantity
-is reported.
+\code{scale}, as \code{\link[=term_readable]{term_readable()}} documents, or \code{NULL} if the list of
+quantities is empty.
 }
 \description{
-The quantities of the model that the term defines, in place of the
-coefficients of the working block it is fitted through: the linear
+Returns the quantities of the model that the term defines, in place of the
+coefficients of the working block through which it is fitted: the linear
 effect \eqn{\beta} where the term carries one, the changes of slope
 \eqn{\gamma_k} and of level \eqn{\delta_k}, and the break-points
-\eqn{\psi_k}, with the Jacobian from the coefficients so that a caller
-holding their variance matrix can carry it across.
+\eqn{\psi_k}, together with the Jacobian from the coefficients so that a
+caller holding their variance matrix can carry it across.
 }
 \details{
 A continuous or smoothed term holds every one of those as a coefficient,
 and the Jacobian is a selection, as it is for a held term. A sharp
 discontinuous term does not hold the
 break-point as a coefficient: it is read off the auxiliary pair as
-\eqn{\psi_k = -g_k/\delta_k}, which the joint construction reaches too, its
-quadratic degenerating to that reading once the increment has vanished. The
-Jacobian rows are then
+\eqn{\psi_k = -g_k/\delta_k}, which the joint construction reaches too,
+because its quadratic degenerates to that reading once the increment has
+vanished. The Jacobian rows are then
 
 \deqn{\frac{\partial \psi_k}{\partial g_k} = -\frac{1}{\delta_k},
   \qquad
   \frac{\partial \psi_k}{\partial \delta_k} = \frac{g_k}{\delta_k^{2}},}
 
-which is the delta method \code{segmented} reports a break-point's
-standard error by. The joint construction reads its position from a
+which is the delta method by which \code{segmented} reports a break-point's
+standard error. The joint construction reads its position from a
 quadratic that also carries the change of slope, and the two readings
 differ by the increment that the iteration has left: the value reported is
 the one that the term holds, so that this and \code{\link[=seg_psi]{seg_psi()}} give the same
-number for one quantity, and the Jacobian is the fixed
-point's, which the quadratic degenerates to once the increment has
+number for one quantity, and the Jacobian is that of the fixed
+point, to which the quadratic degenerates once the increment has
 vanished.
 
 Every quantity is on the identity scale: a change is unbounded and a
 break-point is a position on the covariate's own scale, held inside the
 interval between the 5th and the 95th percentile. Where a coefficient
-carries a development there is no single number to report, a
-break-point then having one value per observation, and the method
+carries a development there is no single number to report, because a
+break-point then has one value per observation, and the method
 leaves that coefficient to the caller to report. The exception is the
 position of a held \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}}: its slot holds the development's
 coefficients \eqn{p} in \eqn{\psi_i = w_i'p}, and they are reported as

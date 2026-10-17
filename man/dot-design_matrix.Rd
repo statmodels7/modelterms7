@@ -10,8 +10,8 @@
 \item{tt}{A terms object, from \code{\link[stats:model.frame]{stats::model.frame()}} or
 \code{\link[stats:delete.response]{stats::delete.response()}}.}
 
-\item{mf}{The model frame \code{tt} was built from, or one built against the same
-levels.}
+\item{mf}{The model frame from which \code{tt} was built, or one built against
+the same levels.}
 
 \item{contrasts}{A named list of contrasts, or \code{NULL} for the session's.}
 
@@ -19,8 +19,9 @@ levels.}
 }
 \value{
 A list of two: \code{X}, the block, and \code{contrasts}, the named list
-\code{\link[stats:model.matrix]{stats::model.matrix()}} recorded. On the dense route it is \code{NULL} when no
-factor was coded, and on the sparse route it is an empty named list.
+that \code{\link[stats:model.matrix]{stats::model.matrix()}} recorded. On the dense route it is \code{NULL}
+if \code{\link[stats:model.matrix]{stats::model.matrix()}} coded no factor, and on the sparse route it is
+an empty named list.
 }
 \description{
 Runs \code{\link[stats:model.matrix]{stats::model.matrix()}} or \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}} on the same
@@ -28,12 +29,12 @@ terms object and model frame, strips the \code{assign} and \code{contrasts}
 attributes, and returns the block beside the contrasts that were used.
 }
 \details{
-The two routes give identical numbers; what differs is the storage and the
+The two routes give identical numbers and differ in the storage and in the
 cost of producing it. The sparse route builds the matrix sparse and never
 forms a dense intermediate.
 
-The contrasts come back beside the block instead of staying on it: the block
-is what a consumer reads, and the contrasts are what the blueprint records.
+The contrasts are returned beside the block and are not kept on it. A
+consumer reads the block, and the blueprint records the contrasts.
 }
 \seealso{
 \code{\link[=linpar]{linpar()}}, whose build and prediction both call this;

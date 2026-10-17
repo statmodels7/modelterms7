@@ -14,12 +14,13 @@
 A named numeric vector on the unconstrained scale.
 }
 \description{
-Given a target (the response on the scale of the predictor, which the
-fitting layer supplies), a least-squares profile in two stages. The first
-stage chooses common positions, with a free intercept for each group, and
-estimates the linear effect and the changes of level and slope on all groups
-pooled. The second stage moves the positions of each group one at a time,
-with the pooled coefficients held. Without a target, the starting positions
+Computes the starting values from a target (the response on the scale of
+the predictor, which the fitting layer supplies) by a least-squares profile
+in two stages. In the first stage, common positions are selected,
+with a free intercept for each group, and the linear effect and the changes
+of level and slope are estimated on all groups pooled. In the second stage,
+the positions of each group are moved one at a time, while the pooled
+coefficients are held fixed. Without a target, the starting positions
 are quantiles of the covariate, the scale is derived from its spread, and the
 changes are zero.
 }

@@ -28,16 +28,16 @@ when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag
 \code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
 \item{hyper}{The hyperparameters of the term's penalty that the caller
-\strong{held}, as a named list keyed by the penalty's names. Empty, the
+held, as a named list keyed by the penalty's names. Empty, the
 default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
 default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the caller
-wrote out, as a named list of numeric vectors. Empty, the default, has the
-path build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values that a path visits, for each hyperparameter that
+the caller wrote out, as a named list of numeric vectors. Empty, the
+default, has the path build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink reaches, as
 a fraction of the value that empties the block: one number in \eqn{(0, 1)},
@@ -62,18 +62,20 @@ sub-term designs, empty until \code{\link[=term_build]{term_build()}} fills it.}
 \item{q}{The number of autoregressive lags, an integer of at least 0.}
 
 \item{by}{An optional grouping expression; each group is filtered
-independently. \code{NULL} for one series.}
+independently. \code{NULL} means one series.}
 
-\item{time}{An optional ordering expression. \code{NULL} for row order.}
+\item{time}{An optional ordering expression. \code{NULL} means row order.}
 
-\item{links}{A named list of \pkg{linkfunctions7} links overriding the
-defaults, empty where none was given.}
+\item{links}{A named list of \pkg{linkfunctions7} links that override the
+defaults, empty when the caller overrides no default.}
 
 \item{submodels}{A named list of one-sided formulas, one per parameter
-developed over covariates. Empty where none is.}
+developed over covariates. The list is empty if no parameter is
+developed.}
 
-\item{scaling}{The power \eqn{d} of the expected information, the score
-being multiplied by \eqn{\mathcal{I}^{-d}}; zero for the score as it is.}
+\item{scaling}{The power \eqn{d} of the expected information in the factor
+\eqn{\mathcal{I}^{-d}} that multiplies the score; zero for the score as
+it is.}
 }
 \value{
 An S7 object of class \code{GasTerm}, inheriting from
@@ -81,11 +83,11 @@ An S7 object of class \code{GasTerm}, inheriting from
 above beside those that \code{\link[=structural_term]{structural_term()}} supplies.
 }
 \description{
-The subclass of \code{\link[=structural_term]{structural_term()}} holding a generalized autoregressive
-score component: a time-varying level driven by the score of the
-observation density, added to the predictor of one distribution parameter.
-\code{\link[=gas]{gas()}} constructs it. Its contribution is a state, so it implements
-\code{\link[=term_filter]{term_filter()}} and has no \code{\link[=term_matrix]{term_matrix()}} method at all.
+\code{GasTerm} is the subclass of \code{\link[=structural_term]{structural_term()}} that holds a generalized
+autoregressive score component: a time-varying level driven by the score of
+the observation density and added to the predictor of one distribution
+parameter. \code{\link[=gas]{gas()}} constructs it. Its contribution is a state, so it
+implements \code{\link[=term_filter]{term_filter()}} and has no \code{\link[=term_matrix]{term_matrix()}} method at all.
 }
 \section{The properties of the class}{
 \code{p} is the number of score lags and \code{q} the number of autoregressive ones,
@@ -125,7 +127,7 @@ tm <- gas(p = 1, q = 2, time = t)
 S7::S7_inherits(tm, GasTerm)
 c(p = tm@p, q = tm@q)
 
-# 1 + p + q parameters, and one chart each.
+# The term has 1 + p + q parameters, and each has its own chart.
 term_params(tm)
 vapply(term_links(tm), function(l) l@link_name, character(1))
 

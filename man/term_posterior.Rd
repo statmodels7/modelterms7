@@ -24,12 +24,13 @@ observation.}
 \item{...}{Passed to methods.}
 }
 \value{
-A numeric matrix of \code{n} rows and \eqn{K} columns, every row
-summing to one, giving \eqn{P(S_t = k \mid y_1, \dots, y_n)}.
+A numeric matrix of \code{n} rows and \eqn{K} columns, in which every
+row sums to one and the entry in row \eqn{t} and column \eqn{k} is
+\eqn{P(S_t = k \mid y_1, \dots, y_n)}.
 }
 \description{
-The probability of each regime at each observation given the whole
-series, which is everything a model layer needs to differentiate a
+Returns the probability of each regime at each observation given the whole
+series, which is everything that a model layer needs to differentiate a
 likelihood mixed over states.
 }
 \details{
@@ -45,14 +46,14 @@ observation \eqn{t} under regime \eqn{k},
   = \sum_k \gamma_t(k)\,
     \frac{\partial \ell(y_t; \theta_t(k))}{\partial \eta_q},}
 
-for every predictor the model carries, not only the one the regimes
-shift. A caller therefore differentiates its own likelihood \eqn{K} times,
-vectorized, and weights the results, with no callback per observation. This
-is possible because the regimes shift a predictor that is known before the
-recursion starts.
+for every predictor that the model carries, not only the one that the
+regimes shift. A caller therefore differentiates its own likelihood \eqn{K}
+times, vectorized, and weights the results, with no callback per observation.
+This is possible because the regimes shift a predictor that is known before
+the recursion starts.
 
 The probabilities come from a forward pass and a backward pass beside it,
-both normalized at every step. Without the normalization the
+and both passes are normalized at every step. Without the normalization the
 quantities are products of \eqn{t} densities and reach zero in double
 precision on a long series.
 }
@@ -70,11 +71,11 @@ dim(g)
 range(rowSums(g))
 
 # The data switch level at observation 20, and the smoothed
-# probability of the second regime finds it.
+# probability of the second regime marks it.
 round(g[c(1, 19, 20, 21, 22, 40), 2], 3)
 
 }
 \seealso{
-\code{\link[=term_loglik]{term_loglik()}} for the likelihood the same recursion computes,
+\code{\link[=term_loglik]{term_loglik()}} for the likelihood that the same recursion computes,
 \code{\link[=term_hessian]{term_hessian()}} for the observed information, \code{\link[=regime]{regime()}} for the model.
 }

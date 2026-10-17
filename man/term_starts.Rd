@@ -20,9 +20,9 @@ A non-empty list of named numeric vectors on the unconstrained
 scale, each of length \code{\link[=term_npar]{term_npar()}} and named as \code{\link[=term_params]{term_params()}}.
 }
 \description{
-The starting points a fitting layer tries for a structural term's own
-parameters, as a list of vectors of the kind \code{\link[=term_start]{term_start()}} returns. The
-layer fits from each and keeps the best.
+Returns the starting points that a fitting layer tries for a structural
+term's own parameters, as a list of vectors of the kind that
+\code{\link[=term_start]{term_start()}} returns. The layer fits from each and keeps the best.
 }
 \details{
 The base method returns the single start that \code{\link[=term_start]{term_start()}} gives, so a

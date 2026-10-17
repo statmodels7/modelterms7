@@ -16,17 +16,17 @@ used only to read the names and the bounds.}
 \item{what}{The constructor's name, for the message.}
 }
 \value{
-A named list of numeric vectors, one entry per hyperparameter the
-caller wrote out.
+A named list of numeric vectors, one entry per hyperparameter that
+the caller wrote out.
 }
 \description{
-Validates the hyperparameter values a constructor was given as a vector,
-which a path visits as they stand.
+Validates the hyperparameter values that a constructor was given as a
+vector, which a path visits as they stand.
 }
 \details{
 Several values are neither a held hyperparameter nor a request to build a
 grid: they are the grid. Each is checked against the penalty's bounds as a
-held value would be. No other rule is applied to them: the value that
+held value would be, and the bounds are the only check. The value that
 empties the block does not cap them and the depth of the path does not
 apply to them, since the values to visit are given.
 

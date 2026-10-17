@@ -15,8 +15,8 @@ A list with \code{phi}, the coefficients, and \code{jacobian},
 the matrix of their derivatives with respect to \code{pacf}.
 }
 \description{
-The Levinson-Durbin recursion carrying partial autocorrelations onto
-the coefficients of a stationary autoregression, with the Jacobian of
-that map propagated alongside.
+Computes the Levinson-Durbin recursion, which carries partial
+autocorrelations onto the coefficients of a stationary autoregression, and
+propagates the Jacobian of that map alongside.
 }
 \keyword{internal}

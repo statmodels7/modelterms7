@@ -12,8 +12,8 @@
 
 \item{s_past}{The score at each observed row.}
 
-\item{newdata}{The rows to continue onto, carrying the variables that \code{by}
-and \code{time} name.}
+\item{newdata}{The rows onto which to continue, carrying the variables that
+\code{by} and \code{time} name.}
 
 \item{...}{Ignored.}
 
@@ -22,8 +22,8 @@ vector of \code{m} coordinates of the caller's choosing: \code{df_past} and
 \code{ds_past}, one row per observed row and \code{m} columns, the derivatives of
 \code{f_past} and \code{s_past}; and \code{dpsi}, \code{length(psi)} rows and \code{m} columns,
 the derivative of \code{psi}. The continuation is then differentiated along
-with its value, by the same recursion run on derivative rows, the score
-past the data and its derivative being zero.}
+with its value, by the same recursion run on derivative rows, because the
+score past the data and its derivative are zero.}
 }
 \value{
 A numeric vector of \code{nrow(newdata)} levels. With \code{deriv}, it
@@ -31,30 +31,31 @@ carries the attribute \code{"jacobian"}, a \code{nrow(newdata)} by \code{m} matr
 the derivative of each level in the caller's coordinates.
 }
 \description{
-The level the recursion reaches at rows that come after the observed
-ones.
+Computes the level that the recursion reaches at rows that come after the
+observed ones.
 }
 \details{
 The recursion is the filter's own, started from the levels and scores of
 the observed part. A lag that falls before the first observed row of a
 group takes the first observed level, which equals the starting level.
-What changes past the data is the score: it has zero conditional mean by
-construction, the model's own defining property, so at a row whose
-response is not observed the driving term is its expectation and the
-continuation is the deterministic recursion
+Past the data the score is the quantity that changes: it has zero
+conditional mean by construction, the model's own defining property, so
+at a row whose response is not observed the driving term is its
+expectation and the continuation is the deterministic recursion
 \deqn{f_{n+h} = \omega + \sum_i \kappa_i s_{n+h-i} +
   \sum_j \xi_j f_{n+h-j},}
-the loadings contributing only while \eqn{n+h-i} is still an observed
+where the loadings contribute only while \eqn{n+h-i} is still an observed
 time. The continuation involves no simulation and no integration.
 
 The new rows of a group are ordered by their own time and must come after
 every observed time of that group. The continuation treats them as
 consecutive steps whatever the spacing of the times, so that a gap between
-two times counts as one step, as in the sample. A row falling inside the
-series re-reads observed data, where the response is known, so the filter
-must be run on it and not continued; such a row is rejected, and the rows
-are named. A group that the fit never saw is rejected for the same reason:
-there is no state to continue. The term must have been built with \code{time}.
+two times counts as one step, as in the sample. A row that falls inside
+the series belongs to the observed data, where the response is known, so
+the filter must be run on it and not continued; such a row is rejected, and
+the rows are named. A group that was not in the data of the fit is rejected
+for the same reason: there is no state to continue. The term must have
+been built with \code{time}.
 }
 \seealso{
 \code{\link[=term_continue]{term_continue()}}, \code{\link[=term_filter]{term_filter()}}

@@ -11,11 +11,12 @@
 within-group covariates. Its grouping factor need carry only the levels
 its own rows use.}
 
-\item{unseen}{What a row of a level the term never saw, or of a missing
-grouping value, gets: \code{"error"} (the default) signals the error described
-above, and \code{"zero"} gives the row zeros, which is the prediction with that
-group's effect at zero. It is the value that \code{statmodels7}'s
-\code{predict(random = "zero")} and \code{predict(random = "marginal")} pass.}
+\item{unseen}{How to treat a row with a level that was not present at build
+time, or with a missing grouping value: \code{"error"} (the default) signals the
+error described above, and \code{"zero"} gives the row zeros, which is the
+prediction with that group's effect at zero. The calls
+\code{predict(random = "zero")} and \code{predict(random = "marginal")} of
+\code{statmodels7} pass this value.}
 
 \item{...}{Unused.}
 }
@@ -25,13 +26,13 @@ with the term's coefficient names as column names.
 }
 \description{
 Rebuilds the within-group design at \code{newdata} and interacts it with the
-group indicators \strong{of the levels recorded at build time}, so the block has
+group indicators of the levels recorded at build time, so the block has
 the same columns in the same order however few levels the new rows happen to
-use. By default, a level that the term never saw is rejected.
+use. By default, a level that was not present at build time is rejected.
 }
 \details{
-No coefficient was fitted for an unseen group, so there is nothing to
-predict with. The message names the level. A missing grouping value is
+An unseen group has no fitted coefficient, so the prediction for it cannot
+use one. The message names the level. A missing grouping value is
 rejected in the same way. Predicting a new group's response means predicting
 at the population value, which is the model without this term's
 contribution.
@@ -50,7 +51,8 @@ c(levels_here = nlevels(nd$g), cols = ncol(term_predict(b, nd)))
 # On the fitting data it returns the block itself.
 all.equal(term_predict(b, dd), term_matrix(b))
 
-# A level the fit never saw has no coefficient, so it is rejected.
+# A level absent from the fitting data has no coefficient, so it is
+# rejected.
 bad <- dd
 levels(bad$g) <- c("a", "b", "zz")
 try(term_predict(b, bad))

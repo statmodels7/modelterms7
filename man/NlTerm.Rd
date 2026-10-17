@@ -30,16 +30,16 @@ when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag
 \code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
 \item{hyper}{The hyperparameters of the term's penalty that the caller
-\strong{held}, as a named list keyed by the penalty's names. Empty, the
+held, as a named list keyed by the penalty's names. Empty, the
 default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
 default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the caller
-wrote out, as a named list of numeric vectors. Empty, the default, has the
-path build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values that a path visits, for each hyperparameter that
+the caller wrote out, as a named list of numeric vectors. Empty, the
+default, has the path build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink reaches, as
 a fraction of the value that empties the block: one number in \eqn{(0, 1)},
@@ -57,14 +57,14 @@ carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
 \item{X}{The design block, one row per observation: a numeric matrix or a
-two-dimensional \pkg{Matrix}. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+two-dimensional \pkg{Matrix}. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{coef_names}{The block's coefficient names, one per column, prefixed by
-\code{label} when there is one. Filled by \code{\link[=term_build]{term_build()}}.}
+\code{label} when there is one. \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{blueprint}{A named list of everything needed to reproduce the mapping
-on new rows. Its contents are the subclass's business; nothing outside the
-term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+on new rows. Its contents belong to the subclass, and only the term reads
+them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{penalty}{A \pkg{penalties7} penalty on the block's coefficients, or
 \code{NULL} when the term is unpenalized.}
@@ -72,13 +72,14 @@ term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 \item{fn}{The function or formula defining the contribution, as given.}
 
 \item{nl_params}{A character vector of the parameter names, in the order
-the derivative components are keyed by.}
+used to key the derivative components.}
 
 \item{links}{A named list of \pkg{linkfunctions7} links, one per parameter
 once the term is built.}
 
 \item{subformulas}{A named list of one-sided formulas, one per parameter
-developed over covariates. Empty where none is.}
+developed over covariates. The list is empty if the term develops no
+parameter over covariates.}
 
 \item{deriv_mode}{One of \code{"symbolic"}, \code{"formula_fd"} or \code{"numeric"}.}
 
@@ -90,22 +91,22 @@ and \code{\link[=model_term]{model_term()}}, with the properties described above
 those of \code{\link[=additive_term]{additive_term()}}.
 }
 \description{
-The subclass of \code{\link[=additive_term]{additive_term()}} holding a parametric function that is
-nonlinear in its own parameters. Its design block is the \strong{Jacobian} of
-that function, so the term is linear in the sense that a fitting layer needs
-while the function is not. The block depends on the current values of the
-parameters, and \code{\link[=term_refresh]{term_refresh()}} recomputes it as they move.
+\code{NlTerm} is the subclass of \code{\link[=additive_term]{additive_term()}} that holds a parametric
+function that is nonlinear in its own parameters. Its design block is the
+Jacobian of that function, so the term is linear in the sense that a fitting
+layer needs while the function is not. The block depends on the current
+values of the parameters, and \code{\link[=term_refresh]{term_refresh()}} recomputes it as they move.
 }
 \section{Properties of its own}{
 \code{fn} is the function or formula as given, and \code{spec$is_formula} records
 which. \code{nl_params} names the parameters: \code{\link[=nl]{nl()}} sets it from \code{params} for a
 function, and \code{\link[=term_build]{term_build()}} sets it for a formula, from the names that the
-formula uses and the data do not supply.
+formula uses and that the data do not supply.
 
 \code{links} holds the links given in the call. After \code{\link[=term_build]{term_build()}} it holds one
-\pkg{linkfunctions7} link per parameter, the identity where none was named.
-\code{subformulas} holds one right-hand side per parameter developed over
-covariates, and is empty otherwise.
+\pkg{linkfunctions7} link per parameter, the identity link for each parameter
+without a named link. \code{subformulas} holds one right-hand side per parameter
+developed over covariates, and is empty otherwise.
 
 \code{deriv_mode} is \code{"symbolic"} where \code{\link[stats:deriv]{stats::deriv()}} could read the
 expression of a formula, \code{"formula_fd"} where it could not and the first

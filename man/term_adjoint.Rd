@@ -19,8 +19,8 @@ term_adjoint(term, eta, y, score, curvature, psi, g, ...)
 
 \item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
 
-\item{g}{The direct derivative of the objective in the predictor the term
-produced, one value per observation.}
+\item{g}{The direct derivative of the objective in the predictor that the
+term produced, one value per observation.}
 
 \item{...}{Passed to methods.}
 }
@@ -32,14 +32,14 @@ caller multiplies \code{dscore} by a mixed second derivative of its
 log-density to obtain the derivative in another equation's predictor.
 }
 \description{
-The derivative of a caller's objective with respect to the static
-predictor the term was handed, and with respect to the sequence of scores
-it was given, both accounting for the recursion.
+Returns the derivative of a caller's objective with respect to the static
+predictor that the term was handed, and with respect to the sequence of
+scores that it was given. Both derivatives account for the recursion.
 }
 \details{
 \code{\link[=term_filter]{term_filter()}} returns the derivative of the predictor in the
-term's own parameters, which is the piece that the estimation of those
-parameters needs. Estimating the coefficients of the same equation needs a
+term's own parameters, which is the piece that is needed to estimate those
+parameters. Estimating the coefficients of the same equation needs a
 different derivative: the level at one time is driven by the scores at
 earlier times, which are read at predictors that those coefficients also
 enter, so the derivative of the predictor in a coefficient carries a term
@@ -50,8 +50,8 @@ their number, and is exact.
 Two derivatives are returned because the score that the caller supplies
 depends on more than the predictor at which it is read. Writing
 \eqn{s_t} for that score and \eqn{\bar{s}_t} for
-\code{dscore}, the derivative of the objective in anything the score
-depends on is
+\code{dscore}, the derivative of the objective in any quantity on which the
+score depends is
 
 \deqn{\frac{\partial L}{\partial \theta}
   = \left.\frac{\partial L}{\partial \theta}\right|_{\mathrm{direct}}
@@ -59,7 +59,7 @@ depends on is
 
 so a model layer whose score is the derivative of its log-likelihood in
 one distribution parameter obtains the derivative in the predictor of
-\strong{another} by multiplying \code{dscore} by the mixed second derivative of
+another by multiplying \code{dscore} by the mixed second derivative of
 that log-likelihood. \code{deta} is that formula applied to the term's own
 equation, where the second factor is the curvature.
 }

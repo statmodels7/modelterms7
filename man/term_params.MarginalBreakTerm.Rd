@@ -12,19 +12,19 @@
 A character vector, of length \code{\link[=term_npar]{term_npar()}}.
 }
 \description{
-Numbered, one set per break-point, in a fixed order: the linear effect
-\code{beta} where the term carries one, then the prior's parameters for each
-break-point, then the changes of slope \code{gamma1} ... and the changes of
-level \code{delta1} ....
+The parameters are numbered, one set per break-point, in a fixed order: the
+linear effect \code{beta} where the term carries one, then the prior's
+parameters for each break-point, then the changes of slope \code{gamma1} ... and
+the changes of level \code{delta1} ....
 }
 \details{
 The prior's parameters are \code{psik.mean} and \code{psik.sd} under the default
 Gaussian, the mean and the standard deviation of the positions of
 break-point \eqn{k} in the population. Where \code{random(distrib = )} names
 another family, the parameters are \code{psi1.mean} for the position and the
-free parameters of that family under its own names, with its location fixed
-at zero. A Student t prior therefore gives \code{psi1.mean}, \code{sigma} and \code{nu} in
-place of \code{psi1.mean} and \code{psi1.sd}.
+free parameters of that family under its own names, and the location of
+that family is fixed at zero. A Student t prior therefore gives \code{psi1.mean},
+\code{sigma} and \code{nu} in place of \code{psi1.mean} and \code{psi1.sd}.
 
 The kind determines which of \code{gamma} and \code{delta} appear: \code{"seg"} has the
 changes of slope, \code{"jump"} the changes of level and \code{"jseg"} both. \code{beta}
@@ -36,7 +36,8 @@ set.seed(1)
 dd <- data.frame(id = rep(1:3, each = 8), x = rep(1:8, 3))
 dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
 
-# A step term: the prior's location and scale, and the change of level.
+# For a step term, the parameters are the prior's location and scale, and
+# the change of level.
 term_params(term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd))
 
 # A continuous one adds the linear effect and the change of slope.
@@ -44,7 +45,7 @@ term_params(term_build(seg(x, psi ~ random(~ 1 | id), marginal = TRUE), dd))
 
 }
 \seealso{
-\code{\link[=term_links]{term_links()}} for the chart each rides, \code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}} for
-what they mean.
+\code{\link[=term_links]{term_links()}} for the chart that each parameter rides,
+\code{\link[=MarginalBreakTerm]{MarginalBreakTerm()}} for what they mean.
 }
 \keyword{internal}

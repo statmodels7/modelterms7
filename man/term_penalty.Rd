@@ -26,13 +26,12 @@ hyperparameters belong to the penalty object; the term only carries it.
 \section{A penalty over the whole block}{
 A term whose penalty reaches part of its parameters returns \code{NULL} here and
 declares that penalty through \code{\link[=term_penalties]{term_penalties()}}, which names the parameters
-it covers. A \code{\link[=seg]{seg()}} term and an \code{\link[=nl]{nl()}} term carry a penalty only where a
-subformula on one of their parameters declares one, as in
-\code{gamma ~ 0 + lasso(~ 1)} over the changes of slope of a \code{\link[=seg]{seg()}}, and their
-other parameters stay free; \code{\link[=gas]{gas()}} declares its penalties through
+that it covers. A \code{\link[=seg]{seg()}} term and an \code{\link[=nl]{nl()}} term carry a penalty only where
+a subformula on one of their parameters declares one, as in \code{gamma ~ 0 + lasso(~ 1)} over the changes of slope of a \code{\link[=seg]{seg()}}, and their other
+parameters stay free; \code{\link[=gas]{gas()}} declares its penalties through
 \code{\link[=term_penalties]{term_penalties()}} in the same way. Reporting one of those penalties here
-would state that it covers the whole block, so this generic answers only
-where that holds.
+would state that it covers the whole block, so this generic returns a penalty
+only where that holds.
 
 \code{\link[=term_penalties]{term_penalties()}} is therefore the general function, and a fitting layer
 enumerates penalties through it. This one is the shortcut for the common
@@ -40,8 +39,8 @@ case.
 }
 
 \section{A specification carries no penalty}{
-The penalty is attached at \code{\link[=term_build]{term_build()}}, its width being the number of
-columns the data produce, so \code{term_penalty(ridge(~ x))} is \code{NULL} and
+The penalty is attached at \code{\link[=term_build]{term_build()}}, and its width is the number of
+columns that the data produce, so \code{term_penalty(ridge(~ x))} is \code{NULL} and
 \code{term_penalty(term_build(ridge(~ x), d))} is the quadratic penalty. The same
 holds for \code{\link[=term_penalties]{term_penalties()}} and, through it, for \code{\link[=term_smooth]{term_smooth()}}.
 
@@ -61,7 +60,7 @@ term_penalty(ridge(~ x))
 p <- term_penalty(term_build(ridge(~ x), d))
 c(name = p@penalty_name, params = p@params, n_coef = p@n_coef)
 
-# A term whose penalty covers part of its parameters answers NULL here
+# A term whose penalty covers part of its parameters returns NULL here
 # and declares it through term_penalties() instead: a lasso on the
 # change of slope of a break-point term.
 sb <- term_build(seg(x, npsi = 1, gamma ~ 0 + lasso(~ 1)),

@@ -20,16 +20,16 @@ when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag
 \code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
 \item{hyper}{The hyperparameters of the term's penalty that the caller
-\strong{held}, as a named list keyed by the penalty's names. Empty, the
+held, as a named list keyed by the penalty's names. Empty, the
 default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
 default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the caller
-wrote out, as a named list of numeric vectors. Empty, the default, has the
-path build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values that a path visits, for each hyperparameter that
+the caller wrote out, as a named list of numeric vectors. Empty, the
+default, has the path build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink reaches, as
 a fraction of the value that empties the block: one number in \eqn{(0, 1)},
@@ -51,16 +51,16 @@ Nothing: the class is abstract and cannot be instantiated. As a type
 it is the parent of every term, with the properties above.
 }
 \description{
-The abstract root of the term hierarchy. A term records what a formula
-names: the recipe turning a data frame into a contribution to the model,
-together with the metadata a fit reads. A term written in a formula is a
-\strong{specification}, carrying only what the call said; \code{\link[=term_build]{term_build()}} turns it
-into a \strong{built} term carrying the design block or the state the recipe
-produces on given data.
+\code{model_term} is the abstract root of the term hierarchy. A term records what
+a formula names: the recipe turning a data frame into a contribution to the
+model, together with the metadata that a fit reads. A term written in a
+formula is a specification that carries only what is written in the call;
+\code{\link[=term_build]{term_build()}} turns it into a built term that carries the design block or
+the state that the recipe produces on given data.
 
 \code{\link[=interpret_formula]{interpret_formula()}} recognizes a term by this class. Any call on the right
 of a formula whose value inherits from \code{model_term} becomes a term, so a
-term class defined outside the package works in a formula the day it is
+term class defined outside the package works in a formula as soon as it is
 written, with nothing to register.
 }
 \section{The two branches}{
@@ -72,12 +72,13 @@ consumer may call, so \code{\link[statmodels7:statmod]{statmodels7::statmod()}} 
 }
 
 \section{The properties of the root}{
-Beyond \code{label} the properties all describe a hyperparameter path. The term
-alone determines which hyperparameters are estimated: the term is where the
-penalty is named, so a held value, a grid size, a written-out set of values,
-the depth of the path and the way several hyperparameters are combined all
-belong to it. An outer criterion applies to every hyperparameter of a model,
-smooth ones included, and records none of this.
+Beyond \code{label} the properties all describe a hyperparameter path. Only the
+term determines which hyperparameters are estimated, because the penalty is
+named in the term, so a held value, a grid size, a written-out set of
+values, the depth of the path and the way in which several hyperparameters
+are combined all belong to it. An outer criterion applies to every
+hyperparameter of a model, including the smooth ones, and records none of
+this.
 
 Each of \code{hyper}, \code{grid} and \code{values} is a named list keyed by the penalty's
 own hyperparameter names, and each is empty by default. \code{min_ratio} and
@@ -97,15 +98,16 @@ serves as a parent when writing a term class, and as the test
 A class inheriting from it supplies \code{\link[=term_build]{term_build()}} at the very least: the
 method registered here signals an error that names the class that did not
 implement it. Most other generics have a usable default, so a new term class
-starts from a working object and overrides what it has reason to.
+starts from a working object and overrides the defaults that it has reason
+to change.
 }
 
 \examples{
-# Every term inherits from this class, whichever branch it is on.
+# Every term inherits from this class, on either branch.
 vapply(list(linpar(~ 1), ridge(~ x), s(x, basis7::bspline_smooth(k = 5)), gas(p = 1, q = 1)),
        function(t) S7::S7_inherits(t, model_term), logical(1))
 
-# The branch is what a consumer routes on.
+# A consumer routes on the branch of a term.
 c(additive = S7::S7_inherits(s(x, basis7::bspline_smooth(k = 5)), additive_term),
   structural = S7::S7_inherits(s(x, basis7::bspline_smooth(k = 5)), structural_term))
 c(additive = S7::S7_inherits(gas(p = 1, q = 1), additive_term),

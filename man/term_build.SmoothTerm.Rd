@@ -11,16 +11,16 @@
 \item{...}{Unused.}
 }
 \value{
-The term with \code{X}, \code{coef_names} and \code{blueprint} filled, and with
-\code{penalty} filled except where the term declares penalties of its own (a
+The term, in which \code{X}, \code{coef_names} and \code{blueprint} are filled, and
+\code{penalty} is filled except where the term declares penalties of its own (a
 penalty factory on the smoother, or \code{by_hyper = "level"}), in which case
 \code{penalty} is \code{NULL} and \code{\link[=term_penalties]{term_penalties()}} returns them.
 }
 \description{
 Builds the basis of an \code{\link[=s]{s()}} or \code{\link[=te]{te()}} term at the observed covariates,
-applies the reparametrization that construction calls for, multiplies by a
+applies the reparametrization that the construction requires, multiplies by a
 \code{by} variable where there is one, and attaches the roughness penalty. Two
-quantities are computed \strong{from the data} here and recorded in the
+quantities are computed from the data here and recorded in the
 blueprint, so that \code{\link[=term_predict]{term_predict()}} reapplies them instead of deriving them
 again: the Demmler-Reinsch transform for \code{\link[=s]{s()}}, and the centering constraint
 for \code{\link[=te]{te()}}.
@@ -35,20 +35,22 @@ end so that the extreme observations are strictly inside.
 \section{One covariate}{
 The block is built by \code{\link[basis7:smoother_build]{basis7::smoother_build()}}, which takes the
 Demmler-Reinsch inner product at the observed values. With the default
-\code{\link[basis7:bspline_smooth]{basis7::bspline_smooth()}} (\code{null_space = "keep"}) a column \eqn{(x - \bar{x})/s_x} is prepended and the
-penalty is \eqn{\mathrm{diag}(0, 1, \dots, 1)}; the center and the scale go
-into the blueprint with the transform. With \code{null_space = "drop"} that
+\code{\link[basis7:bspline_smooth]{basis7::bspline_smooth()}} (\code{null_space = "keep"}) a column
+\eqn{(x - \bar{x})/s_x} is prepended and the penalty is
+\eqn{\mathrm{diag}(0, 1, \dots, 1)}; the center and the scale go into the
+blueprint with the transform. With \code{null_space = "drop"} that
 column is absent and the penalty is the identity.
 }
 
 \section{Several covariates}{
 \code{\link[basis7:tensor_basis]{basis7::tensor_basis()}} combines the margins, and one penalty component per
 margin is carried into the product as \eqn{I \otimes \cdots \otimes P_v
-\otimes \cdots \otimes I}, each \eqn{P_v} the margin's roughness matrix at
-the order and the measure that its smoother carries (the second-derivative
-Gram at the defaults), normalized to a maximum entry of one.
+\otimes \cdots \otimes I}, where each \eqn{P_v} is the margin's roughness
+matrix at the order and the measure that its smoother carries (the
+second-derivative Gram at the defaults), normalized to a maximum entry of
+one.
 
-The Kronecker product is taken over the \strong{reversed} blocks, because
+The Kronecker product is taken over the reversed blocks, because
 \code{\link[basis7:tensor_basis]{basis7::tensor_basis()}} varies the first margin fastest. The block is then
 centered by \code{\link[basis7:constrain_basis]{basis7::constrain_basis()}} over the observed covariates, so it
 has one column fewer than the product of the marginal dimensions.
@@ -60,20 +62,20 @@ copies of the block and a penalty repeated blockwise; the levels are
 recorded so a prediction uses the same set. A numeric \code{by} multiplies the
 basis after an unpenalized constant column, named \code{const}, has been put in
 front of it, and the block is not centered. The storage is settled here and
-recorded, an explicit \code{sparse = TRUE} being rejected where there is no factor
-\code{by}.
+recorded, and an explicit \code{sparse = TRUE} is rejected where there is no
+factor \code{by}.
 }
 
 \examples{
 set.seed(1)
 dd <- data.frame(x = sort(runif(80)), z = runif(80))
 
-# What the build records for a one-covariate smooth.
+# The build records the following for a one-covariate smooth.
 b <- term_build(s(x, basis7::bspline_smooth(k = 8)), dd)
 names(b@blueprint)
 b@blueprint$core$kind
 
-# And for a tensor product: one column fewer than 4 x 4.
+# For a tensor product, the block has one column fewer than 4 x 4.
 bt <- term_build(te(x, z, smooths = basis7::bspline_smooth(k = 4)), dd)
 term_npar(bt)
 

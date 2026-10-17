@@ -15,10 +15,10 @@ An integer vector of positions in the term's coefficients, possibly
 empty.
 }
 \description{
-The coefficients of the term that move a break-point sitting on an
+Returns the coefficients of the term that move a break-point sitting on an
 observation, where a parameter is developed over a sharp \code{\link[=seg]{seg()}}: the
-answer of that sub-term's own \code{\link[=term_kinks]{term_kinks()}} carried to the term's
-coefficients. Every other nonlinear term answers \code{integer(0)}.
+result of that sub-term's own \code{\link[=term_kinks]{term_kinks()}} carried to the term's
+coefficients. Every other nonlinear term returns \code{integer(0)}.
 }
 \examples{
 d <- data.frame(t = seq(0, 10, length.out = 41), x = rep(1:2, length.out = 41))

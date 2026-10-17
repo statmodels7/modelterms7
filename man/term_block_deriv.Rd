@@ -13,7 +13,7 @@ term_block_deriv(term, coef = NULL, v, ...)
 \item{term}{A built term.}
 
 \item{coef}{The coefficients, one per coefficient of the term, or \code{NULL} for
-the ones it carries.}
+the coefficients that the term carries.}
 
 \item{v}{A numeric vector as long as the term's coefficients.}
 
@@ -24,20 +24,21 @@ A numeric matrix, one row per observation and one column per
 coefficient of the term.
 }
 \description{
-\eqn{\sum_c v_c\,\partial X_{ij}/\partial\beta_c}, one entry per observation
-and column of the block: the block's own derivative taken along a direction
-the caller supplies.
+Returns \eqn{\sum_c v_c\,\partial X_{ij}/\partial\beta_c}, one entry per
+observation and column of the block: the block's own derivative taken along
+a direction that the caller supplies.
 }
 \details{
-It is the adjoint of \code{\link[=term_block_contract]{term_block_contract()}} and neither computes
-the other. That one contracts over the observations and the columns and
-answers per coefficient, as the gradient of a marginal criterion
-needs; this one contracts over the coefficients and answers per entry of
-the block, as its Hessian needs, \eqn{\partial K/\partial\beta} being
-required there in the direction the mode moves instead of traced.
+It is the adjoint of \code{\link[=term_block_contract]{term_block_contract()}}, and each of the two is
+computed without the other. That one contracts over the observations and the
+columns and returns one entry per coefficient, as the gradient of a marginal
+criterion needs; this one contracts over the coefficients and returns one
+entry per entry of the block, as its Hessian needs, because
+\eqn{\partial K/\partial\beta} is required there in the direction in which
+the mode moves instead of being traced.
 
-Both are \eqn{O(nm)} and read the same closed form, so this needs no
-derivative the other did not: for \code{\link[=nl]{nl()}}, writing
+Both are \eqn{O(nm)} and read the same closed form, so this one needs only
+the derivatives that the other needs: for \code{\link[=nl]{nl()}}, writing
 \eqn{q_{p_1p_2} = f_{p_1p_2}h_{p_1}'h_{p_2}' + \delta_{p_1p_2}f_{p_1}h_{p_1}''},
 \deqn{\Big(\frac{\partial X}{\partial\beta}v\Big)[i, c_1] =
   Z_{p_1}[i,c_1]\sum_{p_2} q_{p_1p_2}(i)\,(Z_{p_2}v_{p_2})[i],}

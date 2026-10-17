@@ -12,11 +12,12 @@
 A single logical.
 }
 \description{
-\code{TRUE} for an unheld sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} term when at least one
-break-point has not settled and every break-point that has not settled sits
-at the floor of its scaling factor, which \code{\link[=term_refresh]{term_refresh()}} records at each
-refresh. Always \code{FALSE} for \code{\link[=seg]{seg()}} and for a smoothed construction, which
-have no scaling schedule, for a term held by \code{\link[=seg_hold]{seg_hold()}}, and for a term
-not yet refreshed twice, whose step has not been measured.
+Returns \code{TRUE} for a sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} term that \code{\link[=seg_hold]{seg_hold()}} does
+not hold, when at least one break-point has not settled and every
+break-point that has not settled sits at the floor of its scaling factor,
+which \code{\link[=term_refresh]{term_refresh()}} records at each refresh. The method always returns
+\code{FALSE} for \code{\link[=seg]{seg()}} and for a smoothed construction, which have no scaling
+schedule, for a term held by \code{\link[=seg_hold]{seg_hold()}}, and for a term not yet refreshed
+twice, whose step has not been measured.
 }
 \keyword{internal}

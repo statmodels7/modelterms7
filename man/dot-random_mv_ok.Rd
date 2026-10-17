@@ -13,9 +13,9 @@
 A single logical.
 }
 \description{
-\code{TRUE} for a family with a location block as long as its dimension and a
-matrix parameter, which together are what a centered prior on \eqn{R^d}
-needs.
+Returns \code{TRUE} for a family with a location block as long as its dimension
+and a matrix parameter, both of which a centered prior on \eqn{R^d}
+requires.
 }
 \details{
 This is a property of the family, so a multivariate family added later is

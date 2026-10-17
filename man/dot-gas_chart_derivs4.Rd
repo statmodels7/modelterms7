@@ -16,22 +16,22 @@
 \item{vz, wz}{The two directions, in the same coordinates as \code{zeta}.}
 }
 \value{
-A list with \code{q_omega}, \code{q_a} and \code{q_b}, each a
+A list with \code{q_omega}, \code{q_a} and \code{q_b}; each is a
 matrix or a list of matrices over the term's base coordinates.
 }
 \description{
-\code{\link[=.gas_chart_derivs3]{.gas_chart_derivs3()}} differentiated once more and contracted
-against a second direction: one matrix for the level, one per score
-loading and one per autoregressive coefficient.
+Differentiates \code{\link[=.gas_chart_derivs3]{.gas_chart_derivs3()}} once more and contracts the result
+against a second direction, which gives one matrix for the level, one per
+score loading and one per autoregressive coefficient.
 }
 \details{
 The level and the loadings ride scalar links, so each of their fourth
-derivatives is a single diagonal entry, the link's own \eqn{h''''} times
-the two directions' components there. The persistence is a composition,
-the Levinson-Durbin map read at \eqn{\rho = h^{-1}(z)}, whose inner map is
-diagonal. Differentiating \eqn{B(z) = \xi(\rho(z))} four times and
-contracting two slots leaves, with \eqn{p_v = h'v} and \eqn{p_w = h'w} the
-directions pushed onto the partial autocorrelations,
+derivatives is a single diagonal entry, equal to the link's own
+\eqn{h''''} times the two directions' components there. The persistence is
+a composition, the Levinson-Durbin map read at \eqn{\rho = h^{-1}(z)}, whose
+inner map is diagonal. Differentiating \eqn{B(z) = \xi(\rho(z))} four times
+and contracting two slots leaves, with \eqn{p_v = h'v} and \eqn{p_w = h'w}
+the directions pushed onto the partial autocorrelations,
 \deqn{Q[p_v,p_w]h'h'^{\top}
   + T[p_v]\big(h''w\,h'^{\top} + h'\,h''w^{\top}\big)
   + T[p_w]\big(h''v\,h'^{\top} + h'\,h''v^{\top}\big)

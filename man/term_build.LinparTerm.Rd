@@ -6,21 +6,21 @@
 \arguments{
 \item{term}{An unbuilt or built \code{\link[=LinparTerm]{LinparTerm()}}.}
 
-\item{data}{A data frame carrying every variable the formula names.}
+\item{data}{A data frame carrying every variable that the formula names.}
 
 \item{...}{Unused.}
 }
 \value{
-The term with \code{X}, \code{coef_names} and \code{blueprint} filled, so that
-\code{\link[=term_is_built]{term_is_built()}} is \code{TRUE}. The block has \code{nrow(data)} rows, and its
+The term, in which \code{X}, \code{coef_names} and \code{blueprint} are filled, so
+that \code{\link[=term_is_built]{term_is_built()}} is \code{TRUE}. The block has \code{nrow(data)} rows, and its
 column names are the coefficient names.
 }
 \description{
 Builds the model matrix of a \code{\link[=linpar]{linpar()}} term's formula against \code{data},
 prefixes the coefficient names with the term's label, and records the
-blueprint \code{\link[=term_predict]{term_predict()}} will reapply: the terms object with the response
-deleted, the factor levels, the contrasts used, the storage settled on and
-\code{drop_intercept}.
+blueprint that \code{\link[=term_predict]{term_predict()}} will reapply: the terms object from which the
+response is deleted, the factor levels, the contrasts used, the storage
+chosen at build and \code{drop_intercept}.
 }
 \section{The model frame}{
 \code{\link[stats:model.frame]{stats::model.frame()}} is called with \code{na.action = na.pass}, so a row with a
@@ -35,8 +35,9 @@ columns of the block aligned with the coefficients of the fit.
 Where the constructor left \code{sparse = NULL}, \code{\link[=.resolve_sparse]{.resolve_sparse()}} settles it
 from \code{n} times the indicator column count. The value settled on goes into
 \code{blueprint$sparse} and the \code{sparse} property is left as the caller wrote it,
-because new rows may be any number and a prediction deciding again could
-build a block of a different kind from the fitted one.
+because new data may have any number of rows, and if a prediction settled
+the storage again, it could build a block of a different kind from the
+fitted one.
 }
 
 \examples{

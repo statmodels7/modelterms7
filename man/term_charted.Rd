@@ -17,8 +17,8 @@ term_charted(term, ...)
 }
 \value{
 A character vector for a structural term, an integer vector for
-\code{\link[=nl]{nl()}} named by parameter (\code{integer(0)} when no parameter is charted), and
-\code{character(0)} otherwise.
+\code{\link[=nl]{nl()}} named by parameter (\code{integer(0)} when the term has no charted
+parameter), and \code{character(0)} otherwise.
 }
 \description{
 Names the free values of a term that are coordinates of a chart onto a
@@ -31,15 +31,15 @@ derivative on the free scale vanishes there whatever the derivative on the
 bounded scale is.
 }
 \details{
-For a structural term the answer is a character vector of names from
+For a structural term the result is a character vector of names from
 \code{\link[=term_params]{term_params()}}: every parameter whose link in \code{\link[=term_links]{term_links()}} is not the
 identity, and for \code{\link[=regime]{regime()}} also the additive log-ratios of the
-transition matrix, whose chart is the one
+transition matrix, whose chart is the one that
 \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}} provides and which \code{\link[=term_links]{term_links()}}
 therefore reports as the identity. For \code{\link[=nl]{nl()}} it is an integer vector of
 positions in the term's block, named by parameter: the scalar parameters
-(those with no subformula) whose link is not the identity. Every other
-term answers with an empty vector.
+(those with no subformula) whose link is not the identity. For every other
+term the result is an empty vector.
 }
 \examples{
 term_charted(regime(2))

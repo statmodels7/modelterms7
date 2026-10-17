@@ -9,14 +9,15 @@
 \item{...}{Unused, and accepted so that the signature matches \code{\link[=print]{print()}}'s.}
 }
 \value{
-\code{x}, invisibly. Called for the lines that it writes.
+\code{x}, invisibly. The function is called for the lines that it writes.
 }
 \description{
 For a built term, prints the label, the construction and how many
 break-points the term has, followed by where they currently sit. A term
 that has not been built prints its label and construction followed by
-\code{(specification)}. A smoothed term adds a line naming its smoother and the
-transition width, and a term with a developed coefficient says which one.
+\code{(specification)}. For a smoothed term the output adds a line naming its
+smoother and the transition width, and for a term with a developed
+coefficient the output names the developed coefficient.
 }
 \details{
 The form is
@@ -27,18 +28,19 @@ The form is
 
 The positions come from \code{\link[=seg_psi]{seg_psi()}}, so they are the current ones and move
 with every \code{\link[=term_refresh]{term_refresh()}}. Where a break-point carries a development
-there is no single number, a position then being one value per observation,
-and the range is printed instead.
+there is no single number, because a position is then one value per
+observation, and the range is printed instead.
 
-The smoother line reports the width because the width changes what the
-term means: a fit at one width is a different model from a fit at another.
+The smoother line reports the width because fits at different widths are
+different models.
 }
 \examples{
 set.seed(1)
 d <- data.frame(x = sort(runif(120, 0, 10)), id = factor(rep(1:4, each = 30)))
 d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0) + rnorm(120, sd = 0.4)
 
-# A specification, and the same term built at its starting quantile.
+# A specification prints as below, and the same term prints again once it
+# is built at its starting quantile.
 seg(x, npsi = 2)
 term_build(seg(x, npsi = 2), d)
 

@@ -10,7 +10,7 @@ seg_profile_intervals(term, y, k = 1L, weights = NULL)
 \item{term}{A built break-point term (see \code{\link[=term_build]{term_build()}}).}
 
 \item{y}{A numeric vector of finite values, one per observation of the
-build data: the response, net of whatever the caller wants held.}
+build data: the response, net of whatever the caller wants to hold fixed.}
 
 \item{k}{Which break-point, an integer.}
 
@@ -20,19 +20,19 @@ profile is then weighted least squares.}
 \value{
 A data frame with columns \code{psi}, the position in each interval,
 and \code{rss}, the profile there (\code{Inf} where the design is singular). The
-data frame has no rows when no interval lies inside the confinement
+data frame has no rows when there is no interval inside the confinement
 limits.
 }
 \description{
 Returns the least-squares profile of a sharp \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}}
-term in one of its break-points, the others held at their current
+term in one of its break-points, while the others are held at their current
 positions. The profile is the residual sum of squares in every interval
 between consecutive distinct values of the covariate inside the confinement
 limits, evaluated at the midpoint of the interval for a \code{\link[=jump]{jump()}} or a
 \code{\link[=jseg]{jseg()}} and at the minimizing position inside the interval for a \code{\link[=seg]{seg()}}.
 This is the quantity that \code{\link[=seg_polish_exact]{seg_polish_exact()}} minimizes. It is returned
-whole so that a caller whose objective the profile only approximates can
-take several candidates from it.
+whole so that a caller can take several candidates from it when the profile
+only approximates the objective of that caller.
 }
 \examples{
 set.seed(1)

@@ -15,24 +15,23 @@ seg_relocate(term, psi)
 The term at the new positions.
 }
 \description{
-The term with its break-points placed at \code{psi}, the changes kept,
-the scaling schedule fresh and the block rebuilt, ready to iterate
-from there. A restart proposal needs it: a bootstrap resample perturbs
-the objective by \eqn{1/\sqrt{n}} and stops escaping a deep basin as the
-sample grows, so the restarting loop also proposes fresh positions
-outright, and this function performs that operation.
+Returns the term in which the break-points are placed at \code{psi}, the changes
+are kept, the scaling schedule is reset and the block is rebuilt, so that
+the term is ready to iterate from there. A restart proposal needs this
+function: a bootstrap resample perturbs the objective by \eqn{1/\sqrt{n}} and
+stops escaping a deep basin as the sample grows, so the restarting loop also
+proposes fresh positions outright, and this function places the term at them.
 }
 \details{
 The positions are sorted and confined to the term's own interval. For a
 sharp \code{jump()} or \code{jseg()} the auxiliary coefficients are set to
-\eqn{g_k = -\delta_k\psi_k}, a change of level smaller than \eqn{10^{-8}}
-in absolute value being replaced by one first, so the read-off returns
-exactly the positions given. A continuous or smoothed term stores the
-positions themselves. On a term held by \code{\link[=seg_hold]{seg_hold()}} it moves the held
-positions. A term whose
-per-break-point coefficients carry a development is rejected: its
-positions are one per observation and a single vector does not place
-them.
+\eqn{g_k = -\delta_k\psi_k}, where a change of level smaller than
+\eqn{10^{-8}} in absolute value is replaced by one first, so that the
+read-off returns exactly the positions given. A continuous or smoothed
+term stores the positions themselves. On a term held by \code{\link[=seg_hold]{seg_hold()}} it
+moves the held positions. A term whose per-break-point coefficients carry
+a development is rejected: its positions are one per observation and a
+single vector does not place them.
 }
 \examples{
 set.seed(1)

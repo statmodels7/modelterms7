@@ -8,12 +8,12 @@ cens(y, lwr = -Inf, upr = Inf)
 }
 \arguments{
 \item{y}{A numeric vector of responses, \code{NA} at an interval-censored
-observation. Coerced with \code{\link[=as.numeric]{as.numeric()}}, so an integer vector is accepted;
-a factor is rejected.}
+observation. The vector is coerced with \code{\link[=as.numeric]{as.numeric()}}, so an integer
+vector is accepted; a factor is rejected.}
 
 \item{lwr}{A numeric lower bound, of length 1 or \code{length(y)}, recycled to
-\code{length(y)}. \code{-Inf} by default, which is no left censoring. A factor is
-rejected. Any other length signals the error
+\code{length(y)}. The default is \code{-Inf}, which means that there is no left
+censoring. A factor is rejected. Any other length signals the error
 \code{"'lwr' must have length 1 or length(y)."}, and an \code{NA} entry signals
 \code{"'lwr' must not contain NA."}.}
 
@@ -22,9 +22,9 @@ rejected. Any other length signals the error
 class validator.}
 }
 \value{
-A \code{\link[=censored_response]{censored_response()}} object holding \code{length(y)} observations,
-carrying \code{y} unchanged (\code{NA} included), the recycled \code{lwr} and \code{upr}, and the derived
-\code{status}.
+A \code{\link[=censored_response]{censored_response()}} object with \code{length(y)} observations. It
+carries \code{y} unchanged (\code{NA} included), the recycled \code{lwr} and \code{upr}, and
+the derived \code{status}.
 }
 \description{
 Builds a \code{\link[=censored_response]{censored_response()}} from a vector of values and one or two
@@ -37,7 +37,7 @@ two finite bounds is interval-censored.
 \section{The rule that assigns a status}{
 The bounds are recycled to \code{length(y)} first, so a scalar applies to every
 observation and a vector gives one bound per observation. Each entry is then
-classified by where it sits, with the bounds inclusive:\tabular{lll}{
+classified by where it sits, and the bounds are inclusive:\tabular{lll}{
    condition \tab status \tab what is known \cr
    \code{y <= lwr} \tab \code{"left"} \tab \eqn{Y \le} \code{lwr} \cr
    \code{y >= upr} \tab \code{"right"} \tab \eqn{Y \ge} \code{upr} \cr
@@ -49,7 +49,7 @@ classified by where it sits, with the bounds inclusive:\tabular{lll}{
 The left test is applied first and the right test second, and the later
 assignment overrides the earlier one, so a value that met both conditions
 would receive the status \code{"right"}. The class validator rejects
-\code{lwr >= upr}, so no value meets both. An \code{NA} value without two finite
+\code{lwr >= upr}, so a value cannot meet both. An \code{NA} value without two finite
 bounds carries no information about \eqn{Y}, and \code{cens()} signals an error.
 
 At the defaults \code{lwr = -Inf} and \code{upr = Inf}, every finite value has the
@@ -59,12 +59,12 @@ status \code{"left"} and the value \code{Inf} the status \code{"right"}.
 }
 
 \section{Where it can be used}{
-On the left of a formula passed to \code{\link[=interpret_formula]{interpret_formula()}}, which returns the
-object as its \code{response} element. \code{statmodels7::statmod()} and
-\code{statmodels7::rstatmod()} reject that response with an error message: the
-toolkit marks censoring and does not assemble a censored likelihood from it.
-See \code{\link[=censored_response]{censored_response()}} for the four contributions that such an assembler
-would need.
+A call to \code{cens()} goes on the left of a formula passed to
+\code{\link[=interpret_formula]{interpret_formula()}}, which returns the object as its \code{response} element.
+\code{statmodels7::statmod()} and \code{statmodels7::rstatmod()} reject that response
+with an error message: the toolkit marks censoring and does not assemble a
+censored likelihood from it. See \code{\link[=censored_response]{censored_response()}} for the four
+contributions that such an assembler would need.
 }
 
 \examples{
@@ -73,7 +73,8 @@ would need.
 r <- cens(c(0, 0.7, 2.4), lwr = 0)
 r@status
 
-# One of each status. The NA is interval-censored between the bounds.
+# The call produces one of each status. The NA is interval-censored between
+# the bounds.
 r2 <- cens(c(0, 1, 5, NA), lwr = 0, upr = 5)
 r2
 data.frame(y = r2@y, lwr = r2@lwr, upr = r2@upr, status = r2@status)
@@ -81,7 +82,7 @@ data.frame(y = r2@y, lwr = r2@lwr, upr = r2@upr, status = r2@status)
 # Per-observation bounds: only the rows whose own bound binds are censored.
 cens(c(1, 2, 3), lwr = c(-Inf, 2, -Inf), upr = c(Inf, Inf, 3))@status
 
-# With no bounds given, every observation is exact.
+# If no bounds are given, every observation is exact.
 all(cens(rnorm(20))@status == "observed")
 
 # An NA with no finite pair of bounds carries no information.
@@ -94,7 +95,7 @@ names(interpret_formula(cens(t, upr = 8) ~ x, d))
 }
 \seealso{
 \code{\link[=censored_response]{censored_response()}} for the class and the four likelihood
-contributions; \code{\link[=interpret_formula]{interpret_formula()}} for the formula it goes into;
+contributions; \code{\link[=interpret_formula]{interpret_formula()}} for the formula in which it is used;
 \code{distributions7::distrib_grad_cdf()} for the distribution-function
-derivatives a censored likelihood is built from.
+derivatives from which a censored likelihood is built.
 }

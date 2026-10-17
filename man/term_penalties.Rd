@@ -3,19 +3,19 @@
 \name{term_penalties}
 \alias{term_penalties}
 \alias{term_penalties.model_term}
-\title{Every Penalty a Term Carries}
+\title{Every Penalty That a Term Carries}
 \usage{
 term_penalties(term, ...)
 }
 \arguments{
-\item{term}{A built term. An unbuilt one is accepted and reports what it has,
-which is usually nothing.}
+\item{term}{A built term. An unbuilt one is accepted, and the result lists
+the entries that it already declares, usually none.}
 
 \item{...}{Passed to methods. The shipped methods do not use it.}
 }
 \value{
 An unnamed list, possibly empty, one element per declared penalty.
-Every element is a list with the same nine fields, an empty value standing
+Every element is a list with the same nine fields; an empty value stands
 for a field that is not set:
 \describe{
 \item{\code{name}}{a character label unique within the term, \code{""} for a
@@ -32,59 +32,63 @@ specified about the path over this penalty's hyperparameters, taken
 from the term's properties \code{grid}, \code{values}, \code{min_ratio} and
 \code{search}.}
 \item{\code{ids}}{the sharing labels of this penalty's hyperparameters, a
-named character vector, empty where none is shared.}
+named character vector, empty where the penalty shares none of its
+hyperparameters.}
 }
 An entry that a term carries up from one of its sub-terms keeps the values
 and the search that the sub-term holds.
 }
 \description{
-Returns the penalties a term declares: a list of entries, each naming a
-subset of the term's own parameters, the penalty over them, and the
-hyperparameters that the caller held for that penalty. A fitting layer
+Returns the penalties that a term declares: a list of entries, where each
+entry names a subset of the term's own parameters, the penalty over them, and
+the hyperparameters that the caller held for that penalty. A fitting layer
 enumerates penalties through this list, and \code{\link[=term_smooth]{term_smooth()}} and \code{\link[=edf]{edf()}} read
 it.
 }
-\section{Two ways it generalizes \code{\link[=term_penalty]{term_penalty()}}}{
-\strong{A term may carry more than one penalty}, over different parameters of its
+\section{Two ways in which it generalizes \code{\link[=term_penalty]{term_penalty()}}}{
+A term may carry more than one penalty, over different parameters of its
 own. A panel model with a population value and a departure per group leaves
 the population value free and shrinks the departures, which is one penalty
-over part of the parameters and none over the rest. \code{nl()} developing two of
-its parameters by two different penalized sub-terms carries two entries.
+over part of the parameters and no penalty over the rest. An \code{nl()} term that
+develops two of its parameters by two different penalized sub-terms carries
+two entries.
 
-\strong{The parameters need not be coefficients of a design block.} The
+The parameters need not be coefficients of a design block. The
 persistence of a score-driven term, the nonlinear parameters of \code{\link[=nl]{nl()}} and
 the break-point of \code{\link[=seg]{seg()}} are parameters of the term and of nothing else,
-and all a penalty needs from them is a vector of numbers and their
+and a penalty needs from them only a vector of numbers and their
 positions. For a structural term \code{index} gives positions in
 \code{\link[=term_params]{term_params()}}; for an additive one, columns of the block.
 }
 
 \section{The base method, and the name of an entry}{
-The method on \code{\link[=model_term]{model_term()}} answers from \code{\link[=term_penalty]{term_penalty()}}, so a term
-carrying one penalty over its whole block needs no method of its own. Its
-single entry is named \code{""}, meaning the whole term.
+The method on \code{\link[=model_term]{model_term()}} derives its result from \code{\link[=term_penalty]{term_penalty()}}, so a
+term carrying one penalty over its whole block needs no method of its own.
+Its single entry is named \code{""}, meaning the whole term.
 
-A name is unique \strong{within} the term and is not the term's own name. Two
+A name is unique within the term and is not the term's own name. Two
 \code{ridge()} terms in one formula are two terms with their own
 hyperparameters, told apart by their names in the formula;
-\code{\link[statmodels7:statmod]{statmodels7::statmod()}} files a hyperparameter under the key \code{term} for a
+\code{\link[statmodels7:statmod]{statmodels7::statmod()}} records a hyperparameter under the key \code{term} for a
 term with one entry and \code{term::entry} for a term with several.
 
-The list itself is \strong{unnamed}: the key of an entry is its \code{name} field,
+The list itself is unnamed: the key of an entry is its \code{name} field,
 read as \code{e$name}, and \code{names(entries)} is \code{NULL}.
 }
 
 \section{A specification carries no entries}{
 The penalty is attached at \code{\link[=term_build]{term_build()}}, so \code{term_penalties()} on an
-unbuilt penalized term is an empty list. That is why \code{\link[=term_smooth]{term_smooth()}}, which
-reads this, answers \code{TRUE} for \code{lasso(~ x)} and \code{FALSE} once it is built.
+unbuilt penalized term is an empty list. Consequently \code{\link[=term_smooth]{term_smooth()}}, which
+reads this list, returns \code{TRUE} for \code{lasso(~ x)} and \code{FALSE} once the term is
+built.
 }
 
 \examples{
 set.seed(1)
 d <- data.frame(x = sort(runif(50, 0, 10)), g = factor(rep(c("a", "b"), 25)))
 
-# One penalty over the whole block: one entry, named with the empty string.
+# A penalty over the whole block gives one entry, named with the empty
+# string.
 e <- term_penalties(term_build(ridge(~ x), d))
 length(e)
 str(e[[1]][c("name", "index")])
@@ -113,5 +117,5 @@ term_penalties(lasso(~ x))
 \seealso{
 \code{\link[=term_penalty]{term_penalty()}} for the single-penalty case, \code{\link[=term_components]{term_components()}}
 for how a term's columns divide among its own parameters, \code{\link[=term_hyper]{term_hyper()}}
-for the held values alone, and \code{\link[=edf]{edf()}} for what the entries cost.
+for only the held values, and \code{\link[=edf]{edf()}} for what the entries cost.
 }

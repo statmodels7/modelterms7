@@ -10,7 +10,7 @@ term_shift_jacobian(term, eta, y, logdens, grad, psi, seed, cols, level, ...)
 \arguments{
 \item{term}{A built term of the likelihood shape.}
 
-\item{eta}{The static part of the predictor the term shifts.}
+\item{eta}{The static part of the predictor that the term shifts.}
 
 \item{y}{The response.}
 
@@ -32,8 +32,8 @@ columns that the term's own parameters occupy.}
 \item{cols}{The columns of the unknown vector that the term's own
 parameters occupy, in the order of \code{\link[=term_params]{term_params()}}.}
 
-\item{level}{The index, among the distribution parameters, of the one the
-term shifts.}
+\item{level}{The index, among the distribution parameters, of the one that
+the term shifts.}
 
 \item{...}{Passed to methods.}
 }
@@ -42,11 +42,11 @@ A list with \code{shift}, the \code{n} posterior shifts, and \code{jacobian}, an
 \code{n} by \code{m} matrix with \code{m} the length of the unknown vector.
 }
 \description{
-For a structural term whose contribution is a likelihood mixed over
-latent states, the shift that the term adds to its equation's predictor
-at each observation, averaged over the smoothed posterior of the states,
-together with its exact derivative in the whole of a caller's unknown
-vector.
+Computes, for a structural term whose contribution is a likelihood mixed
+over latent states, the shift that the term adds to its equation's
+predictor at each observation, averaged over the smoothed posterior of the
+states, together with its exact derivative in the whole of a caller's
+unknown vector.
 }
 \details{
 A term of the likelihood shape reports no predictor of its own. The

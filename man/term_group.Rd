@@ -3,7 +3,7 @@
 \name{term_group}
 \alias{term_group}
 \alias{term_group.model_term}
-\title{The Grouping a Term's Coefficients Are Indexed By}
+\title{The Grouping by Which a Term's Coefficients Are Indexed}
 \usage{
 term_group(term, ...)
 }
@@ -19,16 +19,17 @@ vector), \code{dim} (a single integer) and \code{names} (\code{dim} column names
 }
 \description{
 For a term whose coefficients are one set per level of a grouping variable,
-the expression that defines that variable, its levels, and the number of
-columns that each level carries. \code{NULL} for every other term.
+returns the expression that defines that variable, its levels, and the
+number of columns that each level carries. The result is \code{NULL} for every
+other term.
 }
 \details{
-Two labelled terms belong to the same covariance block only if they share a
-grouping, and deciding that needs both halves: the expression alone is not
-enough, since \code{droplevels(id)} and \code{id} are different expressions for the
-same grouping and \code{id} under two subsets is the same expression for two
-different ones. The levels settle it, and the expression makes a message
-readable.
+Two labeled terms belong to the same covariance block only if they share a
+grouping, and deciding that requires both the expression and the levels: the
+expression by itself is not enough, since \code{droplevels(id)} and \code{id} are
+different expressions for the same grouping and \code{id} under two subsets is the
+same expression for two different ones. The levels settle it, and the
+expression makes a message readable.
 
 \code{dim} is the number of columns that one level carries, which together with
 the levels gives the layout of the block: the coefficients are group-major,
@@ -55,5 +56,5 @@ term_group(term_build(linpar(~ x), d))
 }
 \seealso{
 \code{\link[=term_tag]{term_tag()}} for the label that, with this, identifies a
-covariance block; \code{\link[=random]{random()}} for the formula both are read from.
+covariance block; \code{\link[=random]{random()}} for the formula from which both are read.
 }

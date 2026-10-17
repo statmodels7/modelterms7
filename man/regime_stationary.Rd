@@ -21,15 +21,15 @@ length \eqn{K} per element of \code{dP}; and, when \code{d2P} is given, \code{d2
 a list with one square matrix per state, each of size \code{length(dP)}.
 }
 \description{
-The row vector \eqn{\delta} solving \eqn{\delta P = \delta} with
+Computes the row vector \eqn{\delta} that solves \eqn{\delta P = \delta} with
 \eqn{\sum_j \delta_j = 1}, together with its derivative in whatever the
 transition matrix depends on.
 }
 \details{
 Differentiating \eqn{\delta(I - P) = 0} under the normalization gives
 \eqn{d\delta\,(I - P) = \delta\,dP} with \eqn{\sum_j d\delta_j = 0}, so
-both the value and the derivative come from the same linear system with
-one column replaced by the normalization.
+both the value and the derivative come from the same linear system, in
+which one column is replaced by the normalization.
 
 Differentiating a second time gives
 \eqn{d^2\delta\,(I - P) = d_i\delta\,d_jP + d_j\delta\,d_iP

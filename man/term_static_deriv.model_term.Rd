@@ -15,7 +15,7 @@
 }
 \description{
 The base method returns \code{NULL}: an ordinary term's contribution at
-one observation reads that observation alone.
+one observation reads only that observation.
 }
 \seealso{
 \code{\link[=term_static_deriv]{term_static_deriv()}}

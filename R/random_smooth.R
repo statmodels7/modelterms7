@@ -5,10 +5,10 @@ NULL
 #' @name RandomSmoothTerm
 #'
 #' @description
-#' The subclass of [RandomTerm()] whose within-group design is a smooth: one
-#' random curve or surface per level of the grouping variable. [random()]
-#' constructs it when the left side of the bar is an [s()] or a [te()] call,
-#' as in `random(~ s(x) | g)`.
+#' `RandomSmoothTerm` is the subclass of [RandomTerm()] whose within-group
+#' design is a smooth: one random curve or surface per level of the grouping
+#' variable. [random()] constructs it when the left side of the bar is an [s()]
+#' or a [te()] call, as in `random(~ s(x) | g)`.
 #'
 #' @details
 #' # The two properties of its own
@@ -19,10 +19,10 @@ NULL
 #' a random level: `TRUE` for `~ s(x) | g` and `FALSE` for `~ 0 + s(x) | g`.
 #'
 #' Every other property, and every generic that [RandomTerm()] implements,
-#' has the meaning documented there: the block is sparse and ordered group by group,
-#' a level that the build did not see is predicted at a zero effect on
-#' request, and [term_within()] returns the design that one group's effect
-#' multiplies.
+#' has the meaning documented there: the block is sparse and ordered group by
+#' group, a level that was not present at build time is predicted at a zero
+#' effect on request, and [term_within()] returns the design that one group's
+#' effect multiplies.
 #'
 #' @inheritParams RandomTerm
 #' @param smooth The unbuilt [SmoothTerm()] of the left side of the bar.
@@ -119,7 +119,7 @@ RandomSmoothTerm <- S7::new_class(
     }
     stop(sprintf(paste0(
       "the left side of the bar holds '%s' beside a smooth. A smooth random\n",
-      "  effect holds the smooth alone, with 1 or 0 for the intercept; write\n",
+      "  effect holds only the smooth, with 1 or 0 for the intercept; write\n",
       "  another covariate as random(~ %s | g), a term of its own."),
       deparse1(e), deparse1(e)), call. = FALSE)
   }
@@ -158,9 +158,9 @@ RandomSmoothTerm <- S7::new_class(
 #' adaptive smoother or an anisotropic tensor product.
 #'
 #' @details
-#' A smoother carrying a penalty factory has no roughness matrix, its penalty
-#' being declared over the penalized coordinates by the factory, and it
-#' signals an error here.
+#' A smoother carrying a penalty factory has no roughness matrix, because the
+#' factory declares its penalty over the penalized coordinates, and the
+#' function signals an error for such a smoother.
 #'
 #' @param sb A built [SmoothTerm()] without a `by` variable.
 #'
@@ -197,7 +197,7 @@ RandomSmoothTerm <- S7::new_class(
 #' smoothing parameters.
 #'
 #' Where the smoother has already placed the null space in its leading columns
-#' with a zero border in every component, which is what every \pkg{basis7}
+#' with a zero border in every component, as every \pkg{basis7}
 #' smoother does under `null_space = "keep"`, the map keeps those columns and
 #' their names. Otherwise, as for a tensor product, an orthonormal basis of
 #' the null space and one of its complement are taken from the eigenvectors
@@ -269,17 +269,19 @@ RandomSmoothTerm <- S7::new_class(
 #' # The within-group design
 #'
 #' The design that the effect of one group multiplies is the constant (unless
-#' the left side carries `0`), then the null space of the smooth's penalty without the
-#' constant, which every smoother removes, then the penalized coordinates, as
+#' the left side carries `0`), then the null space of the smooth's penalty
+#' without the constant, which every smoother removes, then the penalized
+#' coordinates, as
 #' [.random_smooth_split()] defines them. The null space is whatever the
 #' smoother's operator leaves unpenalized: a straight line for a second
 #' derivative, a sine and a cosine for the harmonic operator, an exponential
 #' for \eqn{D^2 + aD}, nothing for a cyclic smoother.
 #'
-#' The smoother's `null_space` decides what the null space contributes. Under
-#' `"keep"` its columns are there and carry the null-space prior together with
-#' the constant; under `"shrink"` they are penalized with the rest and belong
-#' to the penalized coordinates; under `"drop"` they are absent.
+#' The argument `null_space` of the smoother determines what the null space
+#' contributes. Under `"keep"` its columns are there and carry the null-space
+#' prior together with the constant; under `"shrink"` they are penalized with
+#' the rest and belong to the penalized coordinates; under `"drop"` they are
+#' absent.
 #'
 #' # The two priors
 #'
@@ -292,7 +294,7 @@ RandomSmoothTerm <- S7::new_class(
 #'
 #' The penalized coordinates of every group have the prior of the smooth's own
 #' penalty. With one component that is an independent centered Gaussian with
-#' one standard deviation, the coordinates having been whitened, and its
+#' one standard deviation, because the coordinates have been whitened, and its
 #' hyperparameter is `sigma.smooth`. With several components it is the sum
 #' \eqn{\sum_k \lambda_k (I_m \otimes S_k)}, with hyperparameters
 #' `lambda1.smooth`, `lambda2.smooth` and so on. The groups share these

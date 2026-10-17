@@ -10,7 +10,7 @@
 
 \item{eta}{The static part of the predictor.}
 
-\item{draw}{Ignored: the positions do not read the response.}
+\item{draw}{Ignored: the positions do not depend on the response.}
 
 \item{...}{Ignored.}
 }
@@ -20,8 +20,9 @@ A list with \code{eta}, \code{y} (\code{NULL}) and
 \code{psi} (the break-point) and \code{value}.
 }
 \description{
-One set of latent positions per group, drawn from the prior that the term
-declares, and the predictor that each observation receives from them.
+Draws one set of latent positions per group from the prior that the term
+declares, and returns the predictor that each observation receives from
+them.
 }
 \details{
 The latent positions are integrated out of the likelihood and never
@@ -29,7 +30,7 @@ estimated, so simulating from the model consists of drawing them, once per
 group, and then evaluating the term at the drawn positions. Under the
 gaussian prior the draw is \eqn{N(m_k, \tau_k^2)}, where \eqn{m_k} is
 \code{psik.mean} and \eqn{\tau_k} is \code{psik.sd}. Under an explicit prior it is a
-draw from that family with its location fixed at zero, shifted by
+draw from that family, whose location is fixed at zero, shifted by
 \code{psi1.mean}, which is the convention of the likelihood.
 
 The shift is the term's own construction evaluated at the drawn positions: a

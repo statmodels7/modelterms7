@@ -4,7 +4,7 @@
 \alias{term_jacobian_block.SegTerm}
 \title{Whether a Break-Point Term's Block Is a Jacobian}
 \arguments{
-\item{term}{A \code{\link[=SegTerm]{SegTerm()}}, built or not. The answer depends on the
+\item{term}{A \code{\link[=SegTerm]{SegTerm()}}, built or not. The value returned depends on the
 construction and, for a built term, on whether it is held.}
 
 \item{...}{Unused.}
@@ -13,11 +13,11 @@ construction and, for a built term, on whether it is held.}
 A single logical.
 }
 \description{
-\code{TRUE} for \code{\link[=seg]{seg()}}, for any smoothed construction and for a term held by
-\code{\link[=seg_hold]{seg_hold()}}; \code{FALSE} for a sharp, unheld \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}}. It is the
-predicate that a fitting layer routes on: a Jacobian licenses a
-Gauss-Newton step and a line search on the model's own objective, and a
-working linearization does not.
+Returns \code{TRUE} for \code{\link[=seg]{seg()}}, for any smoothed construction and for a term
+held by \code{\link[=seg_hold]{seg_hold()}}, and \code{FALSE} for a sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} that is
+not held. It is the predicate on which a fitting layer routes: a Jacobian
+licenses a Gauss-Newton step and a line search on the model's own
+objective, and a working linearization does not.
 }
 \details{
 \code{\link[=seg]{seg()}} is differentiable in its break-points away from them, so its block
@@ -26,14 +26,14 @@ is the exact derivative. A sharp \code{\link[=jump]{jump()}} or \code{\link[=jse
 the break-point off two coefficients, so its block is a working
 linearization: the fixed-point iteration on it is not a descent method on
 the model's objective, its early steps can go uphill under a large
-scaling factor, and forcing a sufficient decrease stalls it.
+scaling factor, and the iteration stalls if a sufficient decrease is forced.
 
-\code{smoothed} changes the answer for all three. Replacing the step and the
-hinge by the smooth versions of an \code{\link[numericals7:abs_smoother]{numericals7::abs_smoother()}} makes every
-break-point an ordinary parameter with a true derivative, so a smoothed
-\code{jump} answers \code{TRUE} and is routed like an \code{\link[=nl]{nl()}} term. A term held by
-\code{\link[=seg_hold]{seg_hold()}} answers \code{TRUE} as well, its block being the exact design at
-the held positions.
+\code{smoothed} changes the value returned for all three. When the step and the
+hinge are replaced by the smooth versions of an
+\code{\link[numericals7:abs_smoother]{numericals7::abs_smoother()}}, every break-point is an ordinary parameter
+with a true derivative, so a smoothed \code{jump} returns \code{TRUE} and is routed
+like an \code{\link[=nl]{nl()}} term. A term held by \code{\link[=seg_hold]{seg_hold()}} returns \code{TRUE} as well,
+because its block is the exact design at the held positions.
 }
 \examples{
 # The continuous construction differentiates; the two discontinuous
@@ -49,8 +49,8 @@ vapply(list(seg = seg(x, smoothed = numericals7::smooth_probit()),
 
 }
 \seealso{
-\code{\link[=term_jacobian_block]{term_jacobian_block()}} for the generic and what the answer
-decides, \code{\link[=term_converged]{term_converged()}} for the verdict a working linearization gets
-instead of a score.
+\code{\link[=term_jacobian_block]{term_jacobian_block()}} for the generic and for what its value
+determines, \code{\link[=term_converged]{term_converged()}} for the verdict that is returned for a
+working linearization instead of a score.
 }
 \keyword{internal}

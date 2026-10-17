@@ -30,16 +30,17 @@ same length). The class has a \code{\link[=print]{print()}} method and no other 
 }
 \description{
 Holds a response whose observations are not all exact: the values, a lower
-and an upper bound for each of them, and a status saying which of the four
-cases the observation is. \code{\link[=cens]{cens()}} is the usual constructor and derives the
-statuses from the values and the bounds. The raw S7 constructor documented
-here takes all four vectors and validates them (equal lengths, bounds that
-are not missing, each lower bound strictly below its upper bound, and status
-names), so it is the form to use when the statuses are already known.
+and an upper bound for each of them, and a status that indicates which of
+the four cases applies to the observation. \code{\link[=cens]{cens()}} is the usual constructor
+and derives the statuses from the values and the bounds. The raw S7
+constructor documented here takes all four vectors and validates them (equal
+lengths, bounds that are not missing, each lower bound strictly below its
+upper bound, and status names), so it is the form to use when the statuses
+are already known.
 }
-\section{The four statuses and what each asserts}{
+\section{The four statuses and what each indicates}{
 Writing \eqn{Y} for the unobserved response, \eqn{L} for \code{lwr} and \eqn{U}
-for \code{upr}, the four values of \code{status} assert\tabular{lll}{
+for \code{upr}, the four values of \code{status} indicate the following.\tabular{lll}{
    status \tab what is known \tab likelihood contribution \cr
    \code{"observed"} \tab \eqn{Y = y} \tab \eqn{f(y)} \cr
    \code{"left"} \tab \eqn{Y \le L} \tab \eqn{F(L)} \cr
@@ -49,25 +50,25 @@ for \code{upr}, the four values of \code{status} assert\tabular{lll}{
 
 
 with \eqn{f} and \eqn{F} the density and the distribution function of the
-fitted family. \code{y} is \code{NA} for an interval-censored observation, its value
-being unknown; every other status carries a number.
+fitted family. \code{y} is \code{NA} for an interval-censored observation because its
+value is unknown; every other status carries a number.
 }
 
 \section{Use in fitting}{
 \code{\link[=interpret_formula]{interpret_formula()}} accepts \code{cens(...)} on the left of a formula and
-returns the object as the \code{response} element of its result. No function
-assembles the four contributions above into a likelihood:
+returns the object as the \code{response} element of its result. The toolkit
+does not assemble the four contributions above into a likelihood:
 \code{statmodels7::statmod()} and \code{statmodels7::rstatmod()} reject a censored
-response with an error message, and no other function in the toolkit reads
-the class. The derivatives of \eqn{F} in the parameters are available from
-\code{distributions7::distrib_grad_cdf()} and \code{distrib_hess_cdf()}. Without an
-assembler the class records what is known about each observation and nothing
-more.
+response with an error message, and the other functions of the toolkit do
+not read the class. The derivatives of \eqn{F} in the parameters are
+available from \code{distributions7::distrib_grad_cdf()} and
+\code{distrib_hess_cdf()}. Without an assembler, the class stores the values,
+the bounds and the statuses, and it holds no other information.
 }
 
 \section{What the validator enforces}{
 \code{y}, \code{lwr}, \code{upr} and \code{status} must be the same length; \code{lwr} and \code{upr} must
-not be missing; every lower bound must be \strong{strictly} below its upper bound,
+not be missing; every lower bound must be strictly below its upper bound,
 so \code{lwr = upr} is rejected; and every status must be one of the four names.
 A failure signals an error that quotes the violated rule. The validator does
 not check that a status agrees with the values: a status of \code{"interval"} with
@@ -75,7 +76,7 @@ a non-missing \code{y} is accepted, and so is a missing \code{y} with another st
 }
 
 \examples{
-# Built through cens(), which is the ordinary route.
+# The object is built through cens(), which is the ordinary route.
 r <- cens(c(0, 1, 5, NA), lwr = 0, upr = 5)
 r@status
 r@y                       # NA survives on the interval-censored row
@@ -85,7 +86,7 @@ cbind(lwr = r@lwr, upr = r@upr)
 censored_response(y = c(2, 9), lwr = c(-Inf, -Inf), upr = c(Inf, 9),
                   status = c("observed", "right"))
 
-# Four ways to fail the validator.
+# The next four calls fail the validator in four different ways.
 try(censored_response(y = 1, lwr = NA_real_, upr = 1, status = "observed"))
 try(censored_response(y = 1, lwr = 2, upr = 1, status = "observed"))
 try(censored_response(y = 1, lwr = 0, upr = 2, status = "cut"))

@@ -3,7 +3,7 @@
 \name{term_readable}
 \alias{term_readable}
 \alias{term_readable.model_term}
-\title{The Quantities a Fitted Term Reports}
+\title{The Quantities That a Fitted Term Reports}
 \usage{
 term_readable(term, zeta, ...)
 }
@@ -18,22 +18,22 @@ term_readable(term, zeta, ...)
 \value{
 A list with \code{name}, \code{value}, \code{jacobian} (one row
 per quantity and one column per parameter) and \code{scale}, the link
-an interval for each quantity is built on.
+on which the interval for each quantity is built.
 }
 \description{
-What a reader reads, with the Jacobian from the term's own parameters on
-the unconstrained scale, so that a caller holding their variance matrix
-can carry it across by the delta method.
+Returns the quantities that a reader reads, with the Jacobian from the
+term's own parameters on the unconstrained scale, so that a caller who
+holds their variance matrix can carry it across by the delta method.
 }
 \details{
 A term's parameters are the coordinates on which it is estimated, chosen so
 that a search runs unconstrained, and they are not always the quantities
-the model is about. The clearest case is a score-driven persistence,
+of interest in the model. The clearest case is a score-driven persistence,
 which rides a partial autocorrelation because the stationary region is
 not a box: the autoregressive coefficient \eqn{\xi_1} is a function of the
 whole chart and coincides with the coordinate only at \eqn{q = 1}.
-Reporting the coordinate under the coefficient's name would promise one
-quantity and print another. \code{\link[=gas]{gas()}} therefore reports \code{xi1}, ..., and
+Reporting the coordinate under the coefficient's name would label one
+quantity with the name of another. \code{\link[=gas]{gas()}} therefore reports \code{xi1}, ..., and
 \code{\link[=regime]{regime()}} reports the transition probabilities \code{p1.1}, \code{p1.2}, ... row by
 row.
 

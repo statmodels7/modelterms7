@@ -12,9 +12,10 @@
 A list of entries, as \code{\link[=term_penalties]{term_penalties()}} documents.
 }
 \description{
-The penalties that the subformulas' sub-terms declare, each under the key
-\code{parameter::subterm} and covering that sub-term's coefficients in
-the term's own numbering. The scalar parameters are unpenalized, and
+Returns the penalties that the subformulas' sub-terms declare. Each
+penalty is under the key \code{parameter::subterm} and covers that
+sub-term's coefficients in the term's own numbering. The scalar parameters
+are unpenalized, and
 the list is empty for a specification, whose developments do not exist
 until the term is built.
 }

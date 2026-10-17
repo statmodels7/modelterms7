@@ -15,10 +15,10 @@ A list of \code{term@n_start} named numeric vectors on the
 unconstrained scale.
 }
 \description{
-\code{n_start} starting points. The first is \code{\link[=term_start]{term_start()}}'s. Each further one
-draws every additive log-ratio of the transition matrix from
+Returns \code{n_start} starting points. The first is \code{\link[=term_start]{term_start()}}'s. Each
+further one draws every additive log-ratio of the transition matrix from
 \eqn{N(0, 2^2)} and adds \eqn{N(0, 0.7^2)} to the logarithm of every gap,
-the first level staying where the first start put it.
+and the first level stays where the first start put it.
 }
 \details{
 A log-ratio of standard deviation 2 gives transition probabilities spread

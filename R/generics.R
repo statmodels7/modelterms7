@@ -8,8 +8,8 @@ NULL
 #' design block from `data`, assigns the coefficient names and records the
 #' blueprint that will reproduce the mapping on other rows; a structural term
 #' records whatever its recursion needs, its grouping and its ordering. The
-#' returned object is a copy of the specification with those properties filled,
-#' and the specification is unchanged.
+#' returned object is a copy of the specification in which those properties are
+#' filled, and the specification is unchanged.
 #'
 #' @details
 #' # What building produces
@@ -21,24 +21,24 @@ NULL
 #'   \qquad \text{penalized objective} \quad
 #'   -\ell(\beta) + \sum_{t} \rho_t(\beta_t; \theta_t).}
 #'
-#' Building is what produces \eqn{X_t} from the data and attaches
+#' Building produces \eqn{X_t} from the data and attaches
 #' \eqn{\rho_t}. [term_matrix()] then reads the block, [term_penalties()] the
 #' penalties, and [term_predict()] reproduces \eqn{X_t} at other rows through
 #' the blueprint.
 #'
-#' A structural term has no such block. [gas()] records the group each row
-#' belongs to and its place in that group's series; [regime()] and the marginal
-#' break-point terms record what their forward recursion reads. They report
-#' themselves through [term_filter()] or [term_loglik()], and [term_matrix()]
-#' has no method for them.
+#' A structural term has no such block. [gas()] records the group to which each
+#' row belongs and its place in that group's series; [regime()] and the marginal
+#' break-point terms record the quantities that their forward recursion reads.
+#' They report themselves through [term_filter()] or [term_loglik()], and
+#' [term_matrix()] has no method for them.
 #'
 #' # Building twice, and building on other data
 #'
 #' Building is not idempotent in general: a term built again on new data
-#' re-derives its factor levels and its knots from those rows. That is what
-#' [term_predict()] exists to avoid, and what [check_term()]'s subset check
-#' tests for. A term is therefore built once and applied to other rows with
-#' [term_predict()].
+#' re-derives its factor levels and its knots from those rows.
+#' [term_predict()] exists to avoid this re-derivation, and the subset check of
+#' [check_term()] tests for it. A term is therefore built once and applied to
+#' other rows with [term_predict()].
 #'
 #' # The default
 #'
@@ -50,16 +50,16 @@ NULL
 #'
 #' @param term An object inheriting from [model_term()], built or not. A built
 #'   term is rebuilt.
-#' @param data A data frame carrying every variable the term names. Any other
-#'   object is rejected by the generic, before dispatch, with the error
+#' @param data A data frame carrying every variable that the term names. Any
+#'   other object is rejected by the generic, before dispatch, with the error
 #'   `"'data' must be a data frame."`.
 #' @param ... Passed to methods. The shipped methods do not use it.
 #'
 #' @return A built term of the same class as `term`. For an additive term the
 #'   `X`, `coef_names` and `blueprint` properties are filled, and `penalty` is
-#'   where the term is penalized; for a structural term the `blueprint` is.
-#'   [term_is_built()] is `TRUE` either way, reading whichever of the two the
-#'   branch fills.
+#'   filled where the term is penalized; for a structural term the `blueprint`
+#'   is filled. [term_is_built()] is `TRUE` either way, because it reads the
+#'   one of the two records that the branch fills.
 #'
 #' @seealso [term_predict()] for the block at other rows, [term_matrix()] and
 #'   [term_coef_names()] for what a build filled, [term_refresh()] for a block
@@ -112,10 +112,11 @@ S7::method(term_build, model_term) <- function(term, data, ...) {
 #' @title Whether a Term Has Been Built
 #'
 #' @description
-#' `TRUE` for a term that [term_build()] has filled, `FALSE` for a bare
-#' specification. It is the test [term_matrix()], [term_npar()],
-#' [term_coef_names()], [term_predict()] and [plot()] apply before reading a
-#' design block, so it decides which error a caller gets from those.
+#' Returns `TRUE` for a term that [term_build()] has filled and `FALSE` for a
+#' bare specification. [term_matrix()], [term_npar()], [term_coef_names()],
+#' [term_predict()] and [plot()] apply this test before reading a design block,
+#' so the result determines which error a caller receives from those
+#' functions.
 #'
 #' @details
 #' The two branches record being built in different places, so the predicate
@@ -124,16 +125,16 @@ S7::method(term_build, model_term) <- function(term, data, ...) {
 #' contributes no design columns and so has none to count, and is built when
 #' its blueprint is filled, `length(term@blueprint) > 0L`.
 #'
-#' **A built additive term with no columns would give `FALSE`.** The shipped
+#' A built additive term with no columns would give `FALSE`. The shipped
 #' constructors do not produce one: a formula that gives no columns, such as
 #' `~ 0`, is rejected when [term_build()] runs.
 #'
-#' **`blueprint` is read directly.** It is declared on [additive_term()] and on
-#' the abstract [structural_term()], which the three shipped structural classes
-#' inherit, so every term inheriting from [model_term()] has one. A structural
-#' class written outside the package inherits an empty blueprint, which reads
-#' as not built until [term_build()] fills it, and the predicate returns a
-#' logical for such a term as well.
+#' The `blueprint` property is read directly. It is declared on
+#' [additive_term()] and on the abstract [structural_term()], which the
+#' three shipped structural classes inherit, so every term inheriting from
+#' [model_term()] has one. A structural class written outside the package
+#' inherits an empty blueprint, which reads as not built until [term_build()]
+#' fills it, and the predicate returns a logical for such a term as well.
 #'
 #' @param term An object inheriting from [model_term()]. Any other object is
 #'   rejected with the error `"'term' must inherit from 'model_term'."`.
@@ -148,7 +149,7 @@ S7::method(term_build, model_term) <- function(term, data, ...) {
 #' term_is_built(linpar(~ x))
 #' term_is_built(term_build(linpar(~ x), d))
 #'
-#' # It is what the accessors test, so it predicts the error.
+#' # The accessors apply this test, so it predicts their error.
 #' try(term_matrix(linpar(~ x)))
 #'
 #' # A structural term carries no design block, so the predicate reads its
@@ -189,20 +190,21 @@ term_is_built <- function(term) {
 #' @title Design Block of a Built Term
 #'
 #' @description
-#' Returns the \eqn{n \times k} block a built additive term contributes to the
-#' linear predictor, with the term's coefficient names as column names and one
-#' row per observation of the data on which it was built. The block is the term's `X`
-#' property, returned as it is stored.
+#' Returns the \eqn{n \times k} block that a built additive term contributes to
+#' the linear predictor, with the term's coefficient names as column names and
+#' one row per observation of the data on which it was built. The block is the
+#' term's `X` property, returned as it is stored.
 #'
 #' @details
-#' The block is **not necessarily a base matrix**. [random()] builds a grouping
+#' The block is not necessarily a base matrix. [random()] builds a grouping
 #' indicator as a `dgCMatrix`, since a row belongs to one group and the
 #' fraction of nonzero entries is \eqn{1/m} for \eqn{m} groups, and [linpar()],
 #' the penalized terms and a smooth with a factor `by` build a sparse block
 #' where their `sparse` argument selects it. Code that reads a block therefore
-#' tests `is.matrix(x) && is.numeric(x)` or a two-dimensional S4 object;
-#' `is.matrix()` alone is `FALSE` for every \pkg{Matrix} class and would reject
-#' a block merely for being stored sparsely.
+#' tests `is.matrix(x) && is.numeric(x)` or a two-dimensional S4 object. A test
+#' that consisted of `is.matrix()` only would reject a block merely for being
+#' stored sparsely, because `is.matrix()` is `FALSE` for every \pkg{Matrix}
+#' class.
 #'
 #' For a term whose block moves with its own coefficients, [nl()] and [seg()],
 #' this returns the block at the coefficients last committed by
@@ -218,8 +220,9 @@ term_is_built <- function(term) {
 #' @param ... Passed to methods. The shipped methods do not use it.
 #'
 #' @return The design block: a numeric matrix, or a two-dimensional
-#'   \pkg{Matrix} object where the term built one, with `nrow` the number of
-#'   observations the term was built on and `ncol` equal to [term_npar()].
+#'   \pkg{Matrix} object where the term built one, with `nrow` equal to the
+#'   number of observations on which the term was built and `ncol` equal to
+#'   [term_npar()].
 #'
 #' @seealso [term_predict()] for the same mapping at other rows,
 #'   [term_coef_names()] for the column names, [term_npar()] for the count,
@@ -264,13 +267,13 @@ S7::method(term_matrix, additive_term) <- function(term, ...) {
 #'
 #' A term whose penalty reaches part of its parameters returns `NULL` here and
 #' declares that penalty through [term_penalties()], which names the parameters
-#' it covers. A [seg()] term and an [nl()] term carry a penalty only where a
-#' subformula on one of their parameters declares one, as in
-#' `gamma ~ 0 + lasso(~ 1)` over the changes of slope of a [seg()], and their
-#' other parameters stay free; [gas()] declares its penalties through
+#' that it covers. A [seg()] term and an [nl()] term carry a penalty only where
+#' a subformula on one of their parameters declares one, as in `gamma ~ 0 +
+#' lasso(~ 1)` over the changes of slope of a [seg()], and their other
+#' parameters stay free; [gas()] declares its penalties through
 #' [term_penalties()] in the same way. Reporting one of those penalties here
-#' would state that it covers the whole block, so this generic answers only
-#' where that holds.
+#' would state that it covers the whole block, so this generic returns a penalty
+#' only where that holds.
 #'
 #' [term_penalties()] is therefore the general function, and a fitting layer
 #' enumerates penalties through it. This one is the shortcut for the common
@@ -278,8 +281,8 @@ S7::method(term_matrix, additive_term) <- function(term, ...) {
 #'
 #' # A specification carries no penalty
 #'
-#' The penalty is attached at [term_build()], its width being the number of
-#' columns the data produce, so `term_penalty(ridge(~ x))` is `NULL` and
+#' The penalty is attached at [term_build()], and its width is the number of
+#' columns that the data produce, so `term_penalty(ridge(~ x))` is `NULL` and
 #' `term_penalty(term_build(ridge(~ x), d))` is the quadratic penalty. The same
 #' holds for [term_penalties()] and, through it, for [term_smooth()].
 #'
@@ -309,7 +312,7 @@ S7::method(term_matrix, additive_term) <- function(term, ...) {
 #' p <- term_penalty(term_build(ridge(~ x), d))
 #' c(name = p@penalty_name, params = p@params, n_coef = p@n_coef)
 #'
-#' # A term whose penalty covers part of its parameters answers NULL here
+#' # A term whose penalty covers part of its parameters returns NULL here
 #' # and declares it through term_penalties() instead: a lasso on the
 #' # change of slope of a break-point term.
 #' sb <- term_build(seg(x, npsi = 1, gamma ~ 0 + lasso(~ 1)),
@@ -326,58 +329,60 @@ S7::method(term_penalty, additive_term) <- function(term, ...) {
   term@penalty
 }
 
-#' @title Every Penalty a Term Carries
+#' @title Every Penalty That a Term Carries
 #'
 #' @description
-#' Returns the penalties a term declares: a list of entries, each naming a
-#' subset of the term's own parameters, the penalty over them, and the
-#' hyperparameters that the caller held for that penalty. A fitting layer
+#' Returns the penalties that a term declares: a list of entries, where each
+#' entry names a subset of the term's own parameters, the penalty over them, and
+#' the hyperparameters that the caller held for that penalty. A fitting layer
 #' enumerates penalties through this list, and [term_smooth()] and [edf()] read
 #' it.
 #'
 #' @details
-#' # Two ways it generalizes [term_penalty()]
+#' # Two ways in which it generalizes [term_penalty()]
 #'
-#' **A term may carry more than one penalty**, over different parameters of its
+#' A term may carry more than one penalty, over different parameters of its
 #' own. A panel model with a population value and a departure per group leaves
 #' the population value free and shrinks the departures, which is one penalty
-#' over part of the parameters and none over the rest. `nl()` developing two of
-#' its parameters by two different penalized sub-terms carries two entries.
+#' over part of the parameters and no penalty over the rest. An `nl()` term that
+#' develops two of its parameters by two different penalized sub-terms carries
+#' two entries.
 #'
-#' **The parameters need not be coefficients of a design block.** The
+#' The parameters need not be coefficients of a design block. The
 #' persistence of a score-driven term, the nonlinear parameters of [nl()] and
 #' the break-point of [seg()] are parameters of the term and of nothing else,
-#' and all a penalty needs from them is a vector of numbers and their
+#' and a penalty needs from them only a vector of numbers and their
 #' positions. For a structural term `index` gives positions in
 #' [term_params()]; for an additive one, columns of the block.
 #'
 #' # The base method, and the name of an entry
 #'
-#' The method on [model_term()] answers from [term_penalty()], so a term
-#' carrying one penalty over its whole block needs no method of its own. Its
-#' single entry is named `""`, meaning the whole term.
+#' The method on [model_term()] derives its result from [term_penalty()], so a
+#' term carrying one penalty over its whole block needs no method of its own.
+#' Its single entry is named `""`, meaning the whole term.
 #'
-#' A name is unique **within** the term and is not the term's own name. Two
+#' A name is unique within the term and is not the term's own name. Two
 #' `ridge()` terms in one formula are two terms with their own
 #' hyperparameters, told apart by their names in the formula;
-#' [statmodels7::statmod()] files a hyperparameter under the key `term` for a
+#' [statmodels7::statmod()] records a hyperparameter under the key `term` for a
 #' term with one entry and `term::entry` for a term with several.
 #'
-#' The list itself is **unnamed**: the key of an entry is its `name` field,
+#' The list itself is unnamed: the key of an entry is its `name` field,
 #' read as `e$name`, and `names(entries)` is `NULL`.
 #'
 #' # A specification carries no entries
 #'
 #' The penalty is attached at [term_build()], so `term_penalties()` on an
-#' unbuilt penalized term is an empty list. That is why [term_smooth()], which
-#' reads this, answers `TRUE` for `lasso(~ x)` and `FALSE` once it is built.
+#' unbuilt penalized term is an empty list. Consequently [term_smooth()], which
+#' reads this list, returns `TRUE` for `lasso(~ x)` and `FALSE` once the term is
+#' built.
 #'
-#' @param term A built term. An unbuilt one is accepted and reports what it has,
-#'   which is usually nothing.
+#' @param term A built term. An unbuilt one is accepted, and the result lists
+#'   the entries that it already declares, usually none.
 #' @param ... Passed to methods. The shipped methods do not use it.
 #'
 #' @return An unnamed list, possibly empty, one element per declared penalty.
-#'   Every element is a list with the same nine fields, an empty value standing
+#'   Every element is a list with the same nine fields; an empty value stands
 #'   for a field that is not set:
 #'   \describe{
 #'     \item{`name`}{a character label unique within the term, `""` for a
@@ -394,20 +399,22 @@ S7::method(term_penalty, additive_term) <- function(term, ...) {
 #'       from the term's properties `grid`, `values`, `min_ratio` and
 #'       `search`.}
 #'     \item{`ids`}{the sharing labels of this penalty's hyperparameters, a
-#'       named character vector, empty where none is shared.}
+#'       named character vector, empty where the penalty shares none of its
+#'       hyperparameters.}
 #'   }
 #'   An entry that a term carries up from one of its sub-terms keeps the values
 #'   and the search that the sub-term holds.
 #'
 #' @seealso [term_penalty()] for the single-penalty case, [term_components()]
 #'   for how a term's columns divide among its own parameters, [term_hyper()]
-#'   for the held values alone, and [edf()] for what the entries cost.
+#'   for only the held values, and [edf()] for what the entries cost.
 #'
 #' @examples
 #' set.seed(1)
 #' d <- data.frame(x = sort(runif(50, 0, 10)), g = factor(rep(c("a", "b"), 25)))
 #'
-#' # One penalty over the whole block: one entry, named with the empty string.
+#' # A penalty over the whole block gives one entry, named with the empty
+#' # string.
 #' e <- term_penalties(term_build(ridge(~ x), d))
 #' length(e)
 #' str(e[[1]][c("name", "index")])
@@ -480,22 +487,23 @@ S7::method(term_penalties, model_term) <- function(term, ...) {
 #' The hyperparameters of a term are not always determined when the term is
 #' written. A random effect's are the effects' distribution's, and a smooth's
 #' are its penalty's, which may come from a factory called at a coefficient
-#' count that the data determine. The check is therefore made here, at the
-#' build, which is the first point at which the penalties exist.
+#' count that the data determine. This function therefore makes the check at
+#' the build, which is the first point at which the penalties exist.
 #'
-#' A name is qualified by the entry it belongs to where there is more than
-#' one: the within-group column for a random effect, the level of the factor
-#' for a smooth with one smoothing parameter per level. An unqualified name
-#' is an error that lists the names available. A value is never recycled over
-#' the entries, because a value applied silently to every entry would be
-#' wrong for those it does not belong to.
+#' A name is qualified by the entry to which it belongs where there is more
+#' than one: the within-group column for a random effect, the level of the
+#' factor for a smooth with one smoothing parameter per level. An unqualified
+#' name is an error that lists the names available. A value is never recycled
+#' over the entries, because a value applied silently to every entry would be
+#' wrong for the entries to which it does not belong.
 #'
-#' @param entries The entries a term declares, each a list with at least
-#'   `name` and `penalty`.
+#' @param entries The entries that a term declares, where each entry is a list
+#'   with at least `name` and `penalty`.
 #' @param hyper The term's `hyper`, already normalized.
 #' @param ids The term's `ids`, which are checked against the same names.
 #' @param label The term's label, for the message.
-#' @param what What the hyperparameters belong to, named in the message.
+#' @param what The object to which the hyperparameters belong, named in the
+#'   message.
 #'
 #' @return The entries, with `fixed`, `values` and `ids` filled in and
 #'   checked.
@@ -548,9 +556,9 @@ S7::method(term_penalties, model_term) <- function(term, ...) {
 #'
 #' @description
 #' Returns one entry per parameter in which a term is written, giving the
-#' columns that belong to that parameter and the sub-terms that develop it. A
-#' term whose columns are one block with one meaning answers with an empty
-#' list.
+#' columns that belong to that parameter and the sub-terms that develop it. The
+#' method returns an empty list for a term whose columns are one block with one
+#' meaning.
 #'
 #' @details
 #' # Why the term supplies the division
@@ -558,8 +566,8 @@ S7::method(term_penalties, model_term) <- function(term, ...) {
 #' A term may be written in parameters of its own: [nl()] in the parameters of
 #' \eqn{f}, [seg()] in a slope, a change and a break-point. Any of them may be
 #' developed over covariates, and the block then carries several groups of
-#' columns meaning different things. Only the term records which group each
-#' column belongs to. A coefficient name is built for a reader, so a consumer
+#' columns meaning different things. Only the term records the group to which
+#' each column belongs. A coefficient name is built for a reader, so a consumer
 #' reads the division from this function and does not recover it by parsing
 #' names.
 #'
@@ -570,15 +578,15 @@ S7::method(term_penalties, model_term) <- function(term, ...) {
 #' entries and only the second carries a penalty. A consumer reporting a
 #' component therefore reports a sequence of sub-terms.
 #'
-#' `sub_index` splits `index` among those sub-terms, in the order the block
-#' binds them, which is [component_sub_index()] applied to their coefficient
-#' counts.
+#' `sub_index` splits `index` among those sub-terms, in the order in which the
+#' block binds them, which is [component_sub_index()] applied to their
+#' coefficient counts.
 #'
 #' # Structural terms
 #'
 #' A structural term contributes no design columns, and `index` gives positions
-#' in [term_params()]: the vector its state, its readable quantities and its
-#' variance matrix are all indexed by. In both branches `index` refers to the
+#' in [term_params()], which is the vector that indexes its state, its readable
+#' quantities and its variance matrix. In both branches `index` refers to the
 #' term's own coefficients.
 #'
 #' The base method returns an empty list, which is the answer for [linpar()],
@@ -588,21 +596,22 @@ S7::method(term_penalties, model_term) <- function(term, ...) {
 #' @param term A built term. An unbuilt one returns an empty list.
 #' @param ... Passed to methods. The shipped methods do not use it.
 #'
-#' @return A named list, one element per own parameter and named by it, each a
-#'   list with
+#' @return A named list with one element per own parameter, named by that
+#'   parameter. Each element is a list with
 #'   \describe{
 #'     \item{`name`}{the parameter's name, the same as the element's.}
 #'     \item{`index`}{its columns in the term's block, or its positions in
 #'       [term_params()] for a structural term.}
-#'     \item{`subs`}{the sub-terms developing it, an empty list where none do.}
+#'     \item{`subs`}{the sub-terms developing it, an empty list for a parameter
+#'       that has no sub-terms.}
 #'     \item{`sub_index`}{one integer vector per sub-term, splitting `index`
 #'       among them; empty where `subs` is.}
 #'   }
-#'   An empty list for a term whose columns do not divide.
+#'   The result is an empty list for a term whose columns do not divide.
 #'
 #' @seealso [component_sub_index()] for the split, [term_penalties()] for the
-#'   penalties those sub-terms bring, [term_coef_names()] for the names of the
-#'   columns being divided.
+#'   penalties that those sub-terms bring, [term_coef_names()] for the names of
+#'   the columns that are divided.
 #'
 #' @examples
 #' set.seed(1)
@@ -610,17 +619,17 @@ S7::method(term_penalties, model_term) <- function(term, ...) {
 #'                  g = factor(rep(c("a", "b"), 10)))
 #' dd$y <- 2 * exp(-1.3 * dd$x)
 #'
-#' # nl() in two parameters, the first developed over a factor: two
-#' # columns for `a` and one for `r`.
+#' # The nl() term has two parameters, and the first is developed over a
+#' # factor, which gives two columns for `a` and one for `r`.
 #' b <- term_build(nl(~ a * exp(-r * x), a ~ 0 + g, start = list(r = 1.3)), dd)
 #' lapply(term_components(b), function(z) z$index)
 #' term_coef_names(b)
 #'
-#' # The sub-terms of the developed parameter, and its columns split
-#' # among them.
+#' # This lists the sub-terms of the developed parameter and splits its
+#' # columns among them.
 #' term_components(b)$a$sub_index
 #'
-#' # A term whose columns are one block answers with nothing.
+#' # A term whose columns are one block returns an empty list.
 #' term_components(term_build(linpar(~ x), dd))
 #'
 #' @export
@@ -633,14 +642,14 @@ S7::method(term_components, model_term) <- function(term, ...) list()
 #'
 #' @description
 #' Splits a developed parameter's columns among the sub-terms developing it, in
-#' the order the block binds them. It is what fills the `sub_index` field of a
-#' [term_components()] entry.
+#' the order in which the block binds them. The result fills the `sub_index`
+#' field of a [term_components()] entry.
 #'
 #' @details
 #' A developed parameter's block is its sub-terms' blocks bound side by side in
-#' the order they were given, so the division is their coefficient counts
-#' cumulated: with counts \eqn{k_1, \dots, k_m} the \eqn{i}-th sub-term takes
-#' `index` at positions \eqn{k_1 + \dots + k_{i-1} + 1} to
+#' the order in which they were given, so the division is their coefficient
+#' counts cumulated: with counts \eqn{k_1, \dots, k_m} the \eqn{i}-th sub-term
+#' takes `index` at positions \eqn{k_1 + \dots + k_{i-1} + 1} to
 #' \eqn{k_1 + \dots + k_i}. The counts come from [term_npar()], so every
 #' sub-term must be built.
 #'
@@ -648,15 +657,15 @@ S7::method(term_components, model_term) <- function(term, ...) list()
 #' on how the block was assembled.
 #'
 #' @param index An integer vector: the component's columns in the term's block,
-#'   as long as the sub-terms' coefficient counts sum to.
+#'   whose length is the sum of the sub-terms' coefficient counts.
 #' @param subs A list of built sub-terms developing the parameter, in the order
-#'   their blocks were bound.
+#'   in which their blocks were bound.
 #'
 #' @return A list of integer vectors, one per sub-term, partitioning `index` in
-#'   order. An empty list when `subs` is empty.
+#'   order. The result is an empty list when `subs` is empty.
 #'
 #' @seealso [term_components()], whose methods are its only callers;
-#'   [term_npar()] for the counts it divides by.
+#'   [term_npar()] for the counts by which it divides the columns.
 #'
 #' @keywords internal
 component_sub_index <- function(index, subs) {
@@ -671,12 +680,12 @@ component_sub_index <- function(index, subs) {
 #' @title Number of Parameters of a Built Term
 #'
 #' @description
-#' How many parameters of its own a built term carries: the number of columns
-#' of the design block for an additive term, and the number of entries of
-#' [term_params()] for a structural one, which has no block. It is the length
-#' of the vector into which a [term_penalties()] entry indexes, the length
-#' against which [edf()] is measured, and the length that a fit reserves for
-#' the term.
+#' Returns the number of parameters of its own that a built term carries: the
+#' number of columns of the design block for an additive term, and the number
+#' of entries of [term_params()] for a structural one, which has no block. It
+#' is the length of the vector into which a [term_penalties()] entry indexes,
+#' the length against which [edf()] is measured, and the length that a fit
+#' reserves for the term.
 #'
 #' @details
 #' The two methods are the two branches. On [additive_term()] it is
@@ -732,10 +741,10 @@ S7::method(term_npar, structural_term) <- function(term, ...) {
 #' @title Where a Term's Own Coefficients Begin
 #'
 #' @description
-#' The starting coefficients of a built term, one per column of its block. The
-#' base method returns zero everywhere, which is an admissible start for a term
-#' whose block is a fixed design, since that block does not depend on the
-#' coefficients.
+#' Returns the starting coefficients of a built term, one per column of its
+#' block. The base method returns zero everywhere, which is an admissible start
+#' for a term whose block is a fixed design, since that block does not depend on
+#' the coefficients.
 #'
 #' @details
 #' # Why a term supplies a start of its own
@@ -748,34 +757,34 @@ S7::method(term_npar, structural_term) <- function(term, ...) {
 #' Jacobian column is \eqn{-\gamma_k \mathbb{1}(x > \psi_k)} and vanishes
 #' identically at \eqn{\gamma_k = 0}.
 #'
-#' Without a `target`, the break-point terms return the start [term_build()]
-#' computed: unit changes, and the break-points at the interior quantiles of
-#' the covariate or at the positions `psi` names. With a `target` of the right
-#' length and no developed coefficient, the slope and the changes are instead
-#' the least-squares coefficients of the target on an intercept and the term's
-#' columns at the starting positions. [nl()] returns the starting values of its
-#' own parameters carried through their links.
+#' Without a `target`, the break-point terms return the start that
+#' [term_build()] computed: unit changes, and the break-points at the interior
+#' quantiles of the covariate or at the positions that `psi` names. With a
+#' `target` of the right length and no developed coefficient, the slope and the
+#' changes are instead the least-squares coefficients of the target on an
+#' intercept and the term's columns at the starting positions. [nl()] returns
+#' the starting values of its own parameters carried through their links.
 #'
-#' What a coefficient of zero means depends on the block that the term builds,
-#' which is why this start belongs to the term, as [term_start()] does for a
+#' A coefficient of zero has a meaning that depends on the block that the term
+#' builds, so this start belongs to the term, as [term_start()] does for a
 #' structural term.
 #'
-#' # What `target` is for
+#' # The role of `target`
 #'
-#' `target` is the response carried onto the scale of the predictor the term
-#' contributes to. A term cannot work it out for itself: the term holds its
-#' formula and its charts, and the fitting layer holds the distribution, the
-#' link and the equation. [nl()] uses it to estimate its own parameters from
-#' the data, over a deterministic grid on each free parameter's chart, and the
-#' break-point terms use it for the least-squares coefficients described
-#' above. Every other term ignores it. The argument is optional; without it
-#' each term returns the start that does not depend on the response.
+#' `target` is the response carried onto the scale of the predictor to which the
+#' term contributes. A term cannot compute it, because the term holds its
+#' formula and its charts but not the distribution, the link or the equation,
+#' which the fitting layer holds. [nl()] uses it to estimate its own
+#' parameters from the data, over a deterministic grid on each free parameter's
+#' chart, and the break-point terms use it for the least-squares coefficients
+#' described above. Every other term ignores it. The argument is optional;
+#' without it each term returns the start that does not depend on the response.
 #'
 #' @param term A built term (see [term_build()]). An unbuilt one signals an
 #'   error through [term_npar()].
 #' @param target Optional numeric vector, one value per observation: the
-#'   response on the scale of the predictor, `NULL` by default. Supplied only
-#'   where `params_interpretation` records that the response reads the
+#'   response on the scale of the predictor, `NULL` by default. It is supplied
+#'   only where `params_interpretation` records that the response reads the
 #'   parameter directly, so a term in a scale's equation receives `NULL`.
 #' @param ... Passed to methods. The shipped methods do not use it.
 #'
@@ -783,8 +792,8 @@ S7::method(term_npar, structural_term) <- function(term, ...) {
 #'   order.
 #'
 #' @seealso [term_start()] for a structural term's own parameters,
-#'   [term_refresh()] for the terms this exists for, [seg_start()] for the grid
-#'   rule behind a break-point start.
+#'   [term_refresh()] for the terms for which this function exists,
+#'   [seg_start()] for the grid rule behind a break-point start.
 #'
 #' @examples
 #' set.seed(1)
@@ -813,7 +822,7 @@ S7::method(term_coef_start, model_term) <- function(term, target = NULL, ...) {
 }
 
 
-#' @title Coefficients a Term Draws for Itself
+#' @title Coefficients That a Term Draws for Itself
 #'
 #' @description
 #' Replaces, in a draw of the term's block coefficients, the coefficients whose
@@ -832,15 +841,15 @@ S7::method(term_coef_start, model_term) <- function(term, target = NULL, ...) {
 #' the data. A draw from a standard normal falls outside the range of a
 #' covariate that is measured on another scale, and the confinement then moves
 #' the position to the edge of the interval, where one of the two segments
-#' holds a twentieth of the rows and no break is visible. The break-point
-#' terms therefore draw their own positions on the covariate's axis.
+#' holds a twentieth of the rows and the data do not reveal a break. The
+#' break-point terms therefore draw their own positions on the covariate's axis.
 #' [term_draw()] applies the same division to the own parameters of a
-#' structural term: the term that defines a quantity draws it.
+#' structural term, and each quantity is drawn by the term that defines it.
 #'
 #' # The width
 #'
-#' The width follows from the spacing of the positions that the draw spreads
-#' from. Writing \eqn{w} for the width of the confinement interval (from the
+#' The width follows from the spacing of the positions from which the draw
+#' spreads. Writing \eqn{w} for the width of the confinement interval (from the
 #' 5th to the 95th percentile of the covariate) and \eqn{K} for the number of
 #' break-points, those positions are the \eqn{j/(K+1)} quantiles of the
 #' covariate. For a covariate spread evenly over the interval, consecutive
@@ -868,10 +877,10 @@ S7::method(term_coef_start, model_term) <- function(term, target = NULL, ...) {
 #' For [jseg()] the position read from the written coefficient is near the
 #' drawn one and not equal to it.
 #'
-#' Where the break-point carries a development the drawn positions are
+#' Where the break-point carries a development, the drawn positions are
 #' projected onto that development's own design by least squares, so any
-#' subformula is served and the spread the design induces is the one a group
-#' actually gets.
+#' subformula is served and the spread that the design induces is the spread
+#' that a group actually receives.
 #'
 #' @param term A built term (see [term_build()]).
 #' @param coef The coefficients drawn so far, of length [term_npar()], in the
@@ -880,15 +889,15 @@ S7::method(term_coef_start, model_term) <- function(term, target = NULL, ...) {
 #'   width above.
 #' @param ... Passed to methods. The shipped methods do not use it.
 #'
-#' @return A list with `coef`, the coefficients with the term's own replaced;
-#'   `index`, the positions that were replaced, empty where none were; and
-#'   `scale`, one width per replaced position. A caller that reports the truth
-#'   of a prior over those coordinates reads `scale`, since the values there
-#'   are no longer a draw from that prior.
+#' @return A list with `coef`, the coefficients in which the term's own have
+#'   been replaced; `index`, the positions that were replaced, empty if the
+#'   term replaced no coefficient; and `scale`, one width per replaced position.
+#'   A caller that reports the truth of a prior over those coordinates reads
+#'   `scale`, since the values there are no longer a draw from that prior.
 #'
 #' @seealso [term_draw()] for a structural term's own parameters,
-#'   [term_coef_start()] for the point this spreads from, [seg_psi()] for the
-#'   positions that it produces.
+#'   [term_coef_start()] for the point from which this draw spreads, [seg_psi()]
+#'   for the positions that it produces.
 #'
 #' @examples
 #' set.seed(1)
@@ -917,30 +926,30 @@ S7::method(term_coef_draw, model_term) <- function(term, coef, sd = 1, ...) {
 #' @title Is a Term's Block the Jacobian of Its Contribution?
 #'
 #' @description
-#' `TRUE` when the block a term reports is the exact derivative of its
-#' contribution in its own coefficients, `FALSE` when it is a working
-#' linearization with quantities frozen at the previous iterate. The base
-#' method returns `TRUE`, which a fixed design satisfies trivially and which
-#' [nl()] and [seg()] satisfy by construction. A sharp [jump()] or [jseg()]
-#' answers `FALSE` unless it is smoothed or held by [seg_hold()].
+#' Returns `TRUE` when the block that a term reports is the exact derivative of
+#' its contribution in its own coefficients and `FALSE` when it is a working
+#' linearization in which quantities are frozen at the previous iterate. The
+#' base method returns `TRUE`, which a fixed design satisfies trivially and
+#' which [nl()] and [seg()] satisfy by construction. A sharp [jump()] or
+#' [jseg()] returns `FALSE` unless it is smoothed or held by [seg_hold()].
 #'
 #' @details
-#' # What the answer decides
+#' # Use of the result
 #'
 #' Where the block is a Jacobian, a scoring step on it is a Gauss-Newton step,
-#' a line search on the model's own objective is licensed, and the term is
-#' fitted inside the same system as everything else.
+#' the fitting layer can run a line search on the model's own objective, and
+#' the term is fitted inside the same system as everything else.
 #'
 #' Where it is a working linearization the fixed-point iteration of Fasola,
 #' Muggeo and Kuchenhoff (2018) is not a descent method on the model's
-#' objective. Its early steps go uphill on purpose, under a scaling factor that
-#' anneals, so forcing a sufficient decrease on it stalls the iteration.
-#' Such a term is fitted by alternating exact working fits at the frozen block
-#' with [term_refresh()], and its convergence is what [term_converged()]
-#' answers instead of a score.
+#' objective. Its early steps increase the objective by design, under a scaling
+#' factor that anneals, so forcing a sufficient decrease on it stalls the
+#' iteration. Such a term is fitted by alternating exact working fits at the
+#' frozen block with [term_refresh()], and [term_converged()] reports its
+#' convergence instead of a score.
 #'
-#' The two discontinuous constructions, when sharp and not held, are the ones
-#' that answer `FALSE`. Their weight
+#' The terms that return `FALSE` are the discontinuous constructions [jump()]
+#' and [jseg()], when sharp and not held. Their weight
 #' \eqn{W = 1/(2\lvert\tilde x - \psi\rvert)} is held at the previous
 #' break-point, and the position is read off two coefficients and is not one
 #' itself.
@@ -949,8 +958,8 @@ S7::method(term_coef_draw, model_term) <- function(term, coef, sd = 1, ...) {
 #'
 #' `jump(x, smoothed = ...)` replaces the step by a smooth surrogate, and the
 #' break-point becomes an ordinary parameter with a true Jacobian, so a
-#' smoothed break-point term answers `TRUE`. A term put in its held state by
-#' [seg_hold()] also answers `TRUE`, because its positions are fixed and its
+#' smoothed break-point term returns `TRUE`. A term put in its held state by
+#' [seg_hold()] also returns `TRUE`, because its positions are fixed and its
 #' block is the exact design at them. A fitting layer therefore routes these
 #' terms without a special case.
 #'
@@ -965,9 +974,9 @@ S7::method(term_coef_draw, model_term) <- function(term, coef, sd = 1, ...) {
 #' iterative algorithm for change-point detection in abrupt change models.
 #' *Computational Statistics*, 33, 997--1015.
 #'
-#' @seealso [term_refresh()] for the block being recomputed,
-#' [term_converged()] for the verdict on such a term, [seg()], [jump()] and
-#' [jseg()].
+#' @seealso [term_refresh()] for the block that is recomputed,
+#'   [term_converged()] for the verdict on such a term, [seg()], [jump()] and
+#'   [jseg()].
 #'
 #' @examples
 #' # The continuous construction has a Jacobian block; the two sharp
@@ -992,21 +1001,22 @@ S7::method(term_jacobian_block, model_term) <- function(term, ...) TRUE
 #' @title Where a Term's Objective Has a Kink
 #'
 #' @description
-#' The positions, among the term's own coefficients, of those in which the
-#' term's contribution to the objective is not differentiable at the
-#' coefficients given. A fitting layer reads them where a line search rejects
-#' every step along a Newton or Gauss-Newton direction: holding those
-#' coordinates at their values and solving for the rest is the step at a kink,
-#' as holding a coordinate at a bound is the step at a boundary.
+#' Returns the positions, among the term's own coefficients, of those
+#' coefficients in which the term's contribution to the objective is not
+#' differentiable at the given coefficients. A fitting layer reads them where a
+#' line search rejects every step along a Newton or Gauss-Newton direction:
+#' holding those coordinates at their values and solving for the rest is the
+#' step at a kink, as holding a coordinate at a bound is the step at a
+#' boundary.
 #'
 #' @details
 #' A term whose contribution is a smooth function of its coefficients has no
-#' kink, and that is the base method's answer. Two shipped terms answer
-#' otherwise: the continuous break-point construction, [seg()], whose truncated
+#' kink, and that is the base method's answer. Two shipped terms report kinks:
+#' the continuous break-point construction, [seg()], whose truncated
 #' line \eqn{(x-\psi)_+} is not differentiable in \eqn{\psi} at an
 #' observation, and [nl()], which reports the kinks of a [seg()] sub-term that
 #' develops one of its parameters. A smoothed [seg()] and the discontinuous
-#' [jump()] and [jseg()] answer `integer(0)`. The kinks of a penalty are not
+#' [jump()] and [jseg()] return `integer(0)`. The kinks of a penalty are not
 #' reported here; [term_smooth()] reports them.
 #'
 #' In a penalized fit of `seg(x, psi ~ random(~ 1 | id))`, the mode can put one
@@ -1042,9 +1052,9 @@ S7::method(term_kinks, model_term) <- function(term, coef = NULL, ...) {
 #' @title The Linear Constraints a Kink Places on a Term's Coefficients
 #'
 #' @description
-#' The rows of the linear constraints that hold the term's objective on its
-#' kinks at the coefficients given: one row per constraint, one column per
-#' coefficient of the term. A perturbation \eqn{d} of the coefficients keeps
+#' Returns the rows of the linear constraints that hold the term's objective on
+#' its kinks at the given coefficients: one row per constraint and one column
+#' per coefficient of the term. A perturbation \eqn{d} of the coefficients keeps
 #' the kinks where they are if and only if \eqn{A d = 0}.
 #'
 #' @details
@@ -1089,8 +1099,9 @@ S7::method(term_kink_constraints, model_term) <- function(term, coef = NULL,
 #' @title The Covariance Label of a Term
 #'
 #' @description
-#' The label that marks a term whose coefficients share a covariance block with
-#' those of other terms, or `NA_character_` where the term carries none.
+#' Returns the label that marks a term whose coefficients share a covariance
+#' block with those of other terms, or `NA_character_` where the term carries
+#' no label.
 #'
 #' @details
 #' The label is written in the middle position of a bar formula,
@@ -1099,8 +1110,8 @@ S7::method(term_kink_constraints, model_term) <- function(term, coef = NULL,
 #' label and the same grouping describe effects that are correlated with each
 #' other, and a fitting layer collects them into one block.
 #'
-#' The label is a **name and not data**. It is read as a symbol and never
-#' evaluated, so a column of the data with the same name is not looked at. A
+#' The label is a name and not data. It is read as a symbol and never
+#' evaluated, so a column of the data with the same name is not consulted. A
 #' term that carries a label declares no penalties through
 #' [term_penalties()]: the prior of the shared covariance block is built by the
 #' fitting layer.
@@ -1114,14 +1125,14 @@ S7::method(term_kink_constraints, model_term) <- function(term, coef = NULL,
 #' @return A single string, or `NA_character_` where the term carries no label.
 #'
 #' @seealso [random()], the one constructor that reads a label;
-#'   [term_penalties()] for the penalties a term declares on its own.
+#'   [term_penalties()] for the penalties that a term declares on its own.
 #'
 #' @examples
 #' # No label: the effects of this term correlate with nothing outside it.
 #' term_tag(random(~ 1 | g))
 #' term_tag(linpar(~ x))
 #'
-#' # A label, read from the middle of the two bars.
+#' # The label is read from the middle of the two bars.
 #' term_tag(random(~ 1 + x | u | g))
 #'
 #' # It is a name, not data: a column called `u` is not read.
@@ -1136,20 +1147,21 @@ term_tag <- S7::new_generic("term_tag", "term",
 
 S7::method(term_tag, model_term) <- function(term, ...) NA_character_
 
-#' @title The Grouping a Term's Coefficients Are Indexed By
+#' @title The Grouping by Which a Term's Coefficients Are Indexed
 #'
 #' @description
 #' For a term whose coefficients are one set per level of a grouping variable,
-#' the expression that defines that variable, its levels, and the number of
-#' columns that each level carries. `NULL` for every other term.
+#' returns the expression that defines that variable, its levels, and the
+#' number of columns that each level carries. The result is `NULL` for every
+#' other term.
 #'
 #' @details
-#' Two labelled terms belong to the same covariance block only if they share a
-#' grouping, and deciding that needs both halves: the expression alone is not
-#' enough, since `droplevels(id)` and `id` are different expressions for the
-#' same grouping and `id` under two subsets is the same expression for two
-#' different ones. The levels settle it, and the expression makes a message
-#' readable.
+#' Two labeled terms belong to the same covariance block only if they share a
+#' grouping, and deciding that requires both the expression and the levels: the
+#' expression by itself is not enough, since `droplevels(id)` and `id` are
+#' different expressions for the same grouping and `id` under two subsets is the
+#' same expression for two different ones. The levels settle it, and the
+#' expression makes a message readable.
 #'
 #' `dim` is the number of columns that one level carries, which together with
 #' the levels gives the layout of the block: the coefficients are group-major,
@@ -1171,7 +1183,7 @@ S7::method(term_tag, model_term) <- function(term, ...) NA_character_
 #'   `NULL`.
 #'
 #' @seealso [term_tag()] for the label that, with this, identifies a
-#'   covariance block; [random()] for the formula both are read from.
+#'   covariance block; [random()] for the formula from which both are read.
 #'
 #' @examples
 #' d <- data.frame(x = rnorm(6), g = factor(rep(c("a", "b", "c"), 2)))
@@ -1193,14 +1205,15 @@ S7::method(term_group, model_term) <- function(term, ...) NULL
 #' @title The Within-Group Design of a Term With Grouped Effects
 #'
 #' @description
-#' The design row each group's effect multiplies, at new rows.
+#' Returns, at new rows, the design row that each group's effect multiplies.
 #'
 #' @details
 #' A term whose coefficients are one effect per group, [random()], builds
 #' its block by interacting a within-group design with the group indicators.
-#' This returns the first factor alone, which does not depend on the
-#' grouping: a caller integrating the effect of a group the fit never saw
-#' reads \eqn{z_i^\top b} from it with \eqn{b} drawn from the prior.
+#' This returns the first factor by itself, and that factor does not depend on
+#' the grouping: a caller who integrates the effect of a group that was absent
+#' from the fitting data reads \eqn{z_i^\top b} from it, where \eqn{b} is drawn
+#' from the prior.
 #'
 #' The base method returns `NULL`, which is the answer for every term but
 #' [random()].
@@ -1229,18 +1242,18 @@ S7::method(term_within, model_term) <- function(term, newdata, ...) NULL
 #' @title Which of a Term's Hyperparameters Are Shared
 #'
 #' @description
-#' The sharing labels a term carries. Each element of the answer is a named
-#' character vector whose names are the hyperparameters of one penalty entry and
-#' whose values are the labels. The terms carrying the same label for the same
-#' hyperparameter estimate **one** value.
+#' Returns the sharing labels that a term carries. Each element of the answer is
+#' a named character vector whose names are the hyperparameters of one penalty
+#' entry and whose values are the labels. The terms carrying the same label for
+#' the same hyperparameter estimate one value.
 #'
 #' @details
 #' # What sharing is, and what it is not
 #'
 #' Sharing does not merge the penalties. They stay two objects with the same
 #' number in them, so each keeps its own block, its own coefficients and its own
-#' effective degrees of freedom; what is shared is the value that a criterion
-#' estimates. Two smooths with one label are one smoothing parameter over two
+#' effective degrees of freedom, and only the value that a criterion estimates
+#' is shared. Two smooths with one label are one smoothing parameter over two
 #' curves, which is \pkg{mgcv}'s `id`, and two lassos with one label are one
 #' threshold swept along one path.
 #'
@@ -1262,29 +1275,30 @@ S7::method(term_within, model_term) <- function(term, newdata, ...) NULL
 #'
 #' The shape is that of [term_hyper()]: one element of the answer for each entry
 #' of [term_penalties()] that shares anything, keyed by the name of the entry,
-#' so the two functions read alike. A built term answers from its entries,
-#' which allows a structural term to report what the terms of its subformulas
-#' share without a method of its own, and an unbuilt term answers from its own
-#' property.
+#' so the two functions read alike. A built term derives its result from its
+#' entries, which allows a structural term to report what the terms of its
+#' subformulas share without a method of its own, and an unbuilt term derives
+#' its result from its own property.
 #'
 #' @param term A term, built or not.
 #' @param ... Passed to methods. The shipped methods do not use it.
 #'
 #' @return A list, one named character vector per penalty entry that shares
-#'   anything, keyed by that entry's name. Empty where the term shares
-#'   nothing.
+#'   anything, keyed by that entry's name. The list is empty where the term
+#'   shares nothing.
 #'
 #' @seealso [term_hyper()] for holding a hyperparameter instead of sharing it,
-#'   [term_penalties()] for the entries the labels belong to.
+#'   [term_penalties()] for the entries to which the labels belong.
 #'
 #' @examples
 #' # One hyperparameter, so the label needs no name.
 #' term_ids(s(x, id = "L"))
 #'
-#' # Several, so it does: this shares the mixing and leaves the strength free.
+#' # With several hyperparameters the label needs a name: this shares the
+#' # mixing and leaves the strength free.
 #' term_ids(enet(~ x, id = c(alpha = "A")))
 #'
-#' # A term sharing nothing answers with an empty list.
+#' # A term sharing nothing returns an empty list.
 #' term_ids(s(x))
 #' term_ids(linpar(~ x))
 #'
@@ -1312,9 +1326,9 @@ S7::method(term_ids, model_term) <- function(term, ...) {
 #' @title Coefficient Names of a Built Term
 #'
 #' @description
-#' The names of a built additive term's coefficients, one per column of its
-#' block and in the block's own order. They are the names a fit reports, so a
-#' coefficient table is readable without knowing which term produced which row.
+#' Returns the names of a built additive term's coefficients, one per column of
+#' its block and in the block's own order. A fit reports these names, so that a
+#' reader of a coefficient table can tell which term produced which row.
 #'
 #' @details
 #' A term with a non-empty `label` prefixes every name with it and a dot, so
@@ -1324,8 +1338,8 @@ S7::method(term_ids, model_term) <- function(term, ...) {
 #' and so on; [linpar()] sets none, so its names are
 #' [stats::model.matrix()]'s unchanged.
 #'
-#' The names are assigned at build time and recorded, so they are also what
-#' [term_predict()] labels its columns with at other rows. Uniqueness is not
+#' The names are assigned at build time and recorded, so [term_predict()] also
+#' labels its columns with them at other rows. Uniqueness is not
 #' enforced here; [check_term()] checks it.
 #'
 #' @param term A built additive term (see [term_build()]). A specification
@@ -1335,7 +1349,7 @@ S7::method(term_ids, model_term) <- function(term, ...) {
 #'
 #' @return A character vector of length [term_npar()], in column order.
 #'
-#' @seealso [term_npar()] for the count, [term_matrix()] for the block they
+#' @seealso [term_npar()] for the count, [term_matrix()] for the block that they
 #'   name, [term_params()] for a structural term's parameter names instead.
 #'
 #' @examples
@@ -1367,10 +1381,10 @@ S7::method(term_coef_names, additive_term) <- function(term, ...) {
 #' @title Whether a Term's Penalized Objective Is Smooth
 #'
 #' @description
-#' `TRUE` when the term's contribution to the penalized objective is
-#' differentiable in the coefficients. A fitting layer reads it to split the
-#' coefficient vector into the block a classical optimizer handles and the
-#' block that needs a proximal step or a coordinate descent.
+#' Returns `TRUE` when the term's contribution to the penalized objective is
+#' differentiable in the coefficients. A fitting layer reads the result to split
+#' the coefficient vector into the block that a classical optimizer handles and
+#' the block that needs a proximal step or a coordinate descent.
 #'
 #' @details
 #' # The answer comes from the penalties
@@ -1383,22 +1397,22 @@ S7::method(term_coef_names, additive_term) <- function(term, ...) {
 #' and the elastic net are not. The answer always agrees with the penalties
 #' that the term carries.
 #'
-#' The probe is any admissible value, the kink set being structural: the
+#' The probe is any admissible value, because the kink set is structural: the
 #' midpoint of a bounded interval, one step inside a half-bounded one, zero
 #' where the interval is the whole line.
 #'
 #' # The answer covers the whole term
 #'
-#' A term carrying a penalty over part of its parameters and none over the rest
-#' answers from the part that is penalized. `nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g))` is not
-#' smooth: the coefficients developing `a` sit at a kink, although `r` is
-#' unpenalized.
+#' For a term that carries a penalty over part of its parameters and no penalty
+#' over the rest, the result is determined by the part that is penalized.
+#' `nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g))` is not smooth: the coefficients
+#' developing `a` sit at a kink, although `r` is unpenalized.
 #'
 #' # A specification is always smooth
 #'
 #' The penalty is attached at [term_build()], so `term_penalties()` on an
-#' unbuilt term is empty and this answers `TRUE` whatever penalty the term will
-#' carry. `term_smooth(lasso(~ x))` is `TRUE` and
+#' unbuilt term is empty and this function returns `TRUE` whatever penalty the
+#' term will carry. `term_smooth(lasso(~ x))` is `TRUE` and
 #' `term_smooth(term_build(lasso(~ x), d))` is `FALSE`. The function is
 #' therefore applied to a built term.
 #'
@@ -1464,7 +1478,7 @@ term_smooth <- S7::new_generic("term_smooth", "term",
   if (S7::S7_inherits(kind, penalties7::penalty)) {
     return(function(k) .penalty_check(kind, k, "the penalty"))
   }
-  stop(sprintf("unknown penalty '%s'.", as.character(kind)[1L]),
+  stop(sprintf("'%s' is not a known penalty.", as.character(kind)[1L]),
        call. = FALSE)
 }
 
@@ -1537,22 +1551,23 @@ S7::method(term_smooth, model_term) <- function(term, ...) {
 #' @title Design Block on New Data
 #'
 #' @description
-#' Applies a built term's recorded mapping to new rows, returning the block the
-#' term would have produced had those rows been in the data on which it was built.
-#' Factor levels, contrasts, spline knots and a Demmler-Reinsch
+#' Applies a built term's recorded mapping to new rows, returning the block that
+#' the term would have produced had those rows been in the data on which it was
+#' built. Factor levels, contrasts, spline knots and a Demmler-Reinsch
 #' reparametrization come from the blueprint and are reused; the spreads of a
-#' standardization enter the penalty only and are not applied to the block. A factor level that the blueprint does not contain is rejected,
-#' except for the grouping levels of a [random()] term with `unseen = "zero"`.
+#' standardization enter the penalty only and are not applied to the block. A
+#' factor level that the blueprint does not contain is rejected, except for the
+#' grouping levels of a [random()] term with `unseen = "zero"`.
 #'
 #' @details
 #' # The identity that makes it useful
 #'
 #' The block returned is \eqn{\tilde{X}_t} such that
 #' \eqn{\tilde{\eta} = \tilde{X}_t \beta_t} is the term's contribution at the
-#' new rows, at the coefficients the model already carries. The identity holds
-#' because the mapping is reused. A rebuilt encoding gives a block
-#' of the same shape multiplying the same coefficients and meaning something
-#' else: a factor whose new rows omit a level loses a column, and a basis
+#' new rows, at the coefficients that the model already carries. The identity
+#' holds because the mapping is reused. A rebuilt encoding gives a block of the
+#' same shape that multiplies the same coefficients but means something else: a
+#' factor whose new rows omit a level loses a column, and a basis
 #' rebuilt on a narrower range is a different set of functions.
 #'
 #' For a smooth, predicting on a subset of the fitting rows reproduces the
@@ -1574,29 +1589,29 @@ S7::method(term_smooth, model_term) <- function(term, ...) {
 #' @param term A built additive term (see [term_build()]). A specification
 #'   signals the error
 #'   `"the term has not been built; call term_build(term, data) first."`.
-#' @param newdata A data frame carrying every variable the term names, with any
-#'   number of rows. Any other object is rejected by the generic, before
+#' @param newdata A data frame carrying every variable that the term names, with
+#'   any number of rows. Any other object is rejected by the generic, before
 #'   dispatch, with the error `"'newdata' must be a data frame."`. A factor here
 #'   need carry only the levels that its own rows use; the rest come from the
 #'   blueprint.
-#' @param ... Passed to methods. The method for [random()] reads `unseen`,
-#'   which is `"error"` by default and rejects a grouping level that was absent
-#'   at the build and a missing grouping value; with `unseen = "zero"` such a
-#'   row receives a row of zeros. The other shipped methods do not use it.
+#' @param ... Passed to methods. The method for [random()] reads `unseen`. Its
+#'   default `"error"` rejects a grouping level that was absent at the build
+#'   and a missing grouping value; with `unseen = "zero"` such a row receives a
+#'   row of zeros. The other shipped methods do not use it.
 #'
 #' @return A block of `nrow(newdata)` rows and [term_npar()] columns, in the
-#'   same storage the term built: a numeric matrix, or a \pkg{Matrix} object
-#'   where the block is sparse.
+#'   same storage that the term built: a numeric matrix, or a \pkg{Matrix}
+#'   object where the block is sparse.
 #'
 #' @seealso [term_matrix()] for the block on the fitting data, [term_build()]
-#'   for what records the blueprint, [check_term()] for the check this identity
-#'   is the subject of, and [term_continue()] for a structural term.
+#'   for what records the blueprint, [check_term()] for the check that takes
+#'   this identity as its subject, and [term_continue()] for a structural term.
 #'
 #' @examples
 #' d <- data.frame(x = 1:6, g = factor(rep(c("a", "b", "c"), 2)))
 #' b <- term_build(linpar(~ x + g), d)
 #'
-#' # New rows, the same mapping.
+#' # New rows go through the same mapping as the fitting rows.
 #' term_predict(b, data.frame(x = c(0.5, 2.5), g = factor(c("a", "c"))))
 #'
 #' # On the fitting data it returns the block itself.
@@ -1637,7 +1652,7 @@ term_predict <- S7::new_generic("term_predict", "term",
 #' whether it is built. A built term reports how many coefficients its block
 #' carries; a specification is marked as one and names the call that would
 #' build it. This is the default for every term class, and several classes
-#' override it to add what they alone carry.
+#' override it to add the information that only that class carries.
 #'
 #' @details
 #' The two forms are
@@ -1650,9 +1665,9 @@ term_predict <- S7::new_generic("term_predict", "term",
 #' The class name is the S7 class's own, the label comes from the `label`
 #' property and is omitted when empty, and the count is `ncol(x@X)`.
 #'
-#' A structural term has no `X` to count, so it gets the word `built` and no
-#' count. Every shipped structural term registers a method of its own, so this
-#' line is reached only by a structural class written outside the package.
+#' A structural term has no `X` to count, so the line shows the word `built` and
+#' no count. Every shipped structural term registers a method of its own, so
+#' this line is reached only by a structural class written outside the package.
 #'
 #' The classes that override this add something of their own:
 #' [print.PenalizedTerm()] names the penalty and the standardization,
@@ -1662,15 +1677,15 @@ term_predict <- S7::new_generic("term_predict", "term",
 #' @param x A term, built or not.
 #' @param ... Unused, and accepted so that the signature matches [print()]'s.
 #'
-#' @return `x`, invisibly. Called for the line it writes.
+#' @return `x`, invisibly. The function is called for the line that it writes.
 #'
-#' @seealso [term_is_built()] for the predicate it branches on,
+#' @seealso [term_is_built()] for the predicate on which it branches,
 #'   [term_coef_names()] for the names behind the count.
 #'
 #' @examples
 #' d <- data.frame(x = 1:4)
 #'
-#' # A specification, and the same term built.
+#' # A specification prints first, and the same term built prints second.
 #' linpar(~ x)
 #' term_build(linpar(~ x), d)
 #'

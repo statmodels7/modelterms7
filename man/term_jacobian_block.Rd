@@ -17,28 +17,28 @@ construction.}
 A single logical.
 }
 \description{
-\code{TRUE} when the block a term reports is the exact derivative of its
-contribution in its own coefficients, \code{FALSE} when it is a working
-linearization with quantities frozen at the previous iterate. The base
-method returns \code{TRUE}, which a fixed design satisfies trivially and which
-\code{\link[=nl]{nl()}} and \code{\link[=seg]{seg()}} satisfy by construction. A sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}}
-answers \code{FALSE} unless it is smoothed or held by \code{\link[=seg_hold]{seg_hold()}}.
+Returns \code{TRUE} when the block that a term reports is the exact derivative of
+its contribution in its own coefficients and \code{FALSE} when it is a working
+linearization in which quantities are frozen at the previous iterate. The
+base method returns \code{TRUE}, which a fixed design satisfies trivially and
+which \code{\link[=nl]{nl()}} and \code{\link[=seg]{seg()}} satisfy by construction. A sharp \code{\link[=jump]{jump()}} or
+\code{\link[=jseg]{jseg()}} returns \code{FALSE} unless it is smoothed or held by \code{\link[=seg_hold]{seg_hold()}}.
 }
-\section{What the answer decides}{
+\section{Use of the result}{
 Where the block is a Jacobian, a scoring step on it is a Gauss-Newton step,
-a line search on the model's own objective is licensed, and the term is
-fitted inside the same system as everything else.
+the fitting layer can run a line search on the model's own objective, and
+the term is fitted inside the same system as everything else.
 
 Where it is a working linearization the fixed-point iteration of Fasola,
 Muggeo and Kuchenhoff (2018) is not a descent method on the model's
-objective. Its early steps go uphill on purpose, under a scaling factor that
-anneals, so forcing a sufficient decrease on it stalls the iteration.
-Such a term is fitted by alternating exact working fits at the frozen block
-with \code{\link[=term_refresh]{term_refresh()}}, and its convergence is what \code{\link[=term_converged]{term_converged()}}
-answers instead of a score.
+objective. Its early steps increase the objective by design, under a scaling
+factor that anneals, so forcing a sufficient decrease on it stalls the
+iteration. Such a term is fitted by alternating exact working fits at the
+frozen block with \code{\link[=term_refresh]{term_refresh()}}, and \code{\link[=term_converged]{term_converged()}} reports its
+convergence instead of a score.
 
-The two discontinuous constructions, when sharp and not held, are the ones
-that answer \code{FALSE}. Their weight
+The terms that return \code{FALSE} are the discontinuous constructions \code{\link[=jump]{jump()}}
+and \code{\link[=jseg]{jseg()}}, when sharp and not held. Their weight
 \eqn{W = 1/(2\lvert\tilde x - \psi\rvert)} is held at the previous
 break-point, and the position is read off two coefficients and is not one
 itself.
@@ -47,8 +47,8 @@ itself.
 \section{Smoothing and holding change the answer}{
 \code{jump(x, smoothed = ...)} replaces the step by a smooth surrogate, and the
 break-point becomes an ordinary parameter with a true Jacobian, so a
-smoothed break-point term answers \code{TRUE}. A term put in its held state by
-\code{\link[=seg_hold]{seg_hold()}} also answers \code{TRUE}, because its positions are fixed and its
+smoothed break-point term returns \code{TRUE}. A term put in its held state by
+\code{\link[=seg_hold]{seg_hold()}} also returns \code{TRUE}, because its positions are fixed and its
 block is the exact design at them. A fitting layer therefore routes these
 terms without a special case.
 }
@@ -73,7 +73,7 @@ iterative algorithm for change-point detection in abrupt change models.
 \emph{Computational Statistics}, 33, 997--1015.
 }
 \seealso{
-\code{\link[=term_refresh]{term_refresh()}} for the block being recomputed,
+\code{\link[=term_refresh]{term_refresh()}} for the block that is recomputed,
 \code{\link[=term_converged]{term_converged()}} for the verdict on such a term, \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}} and
 \code{\link[=jseg]{jseg()}}.
 }

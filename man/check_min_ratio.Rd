@@ -15,7 +15,7 @@ check_min_ratio(v, what = "this term")
 A numeric vector of length one, or of length zero.
 }
 \description{
-Validates the fraction of the emptying value a path descends to.
+Validates the fraction of the emptying value to which a path descends.
 }
 \details{
 The fraction is one number per term, because only the path over the size of

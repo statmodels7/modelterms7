@@ -30,16 +30,16 @@ when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag
 \code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
 \item{hyper}{The hyperparameters of the term's penalty that the caller
-\strong{held}, as a named list keyed by the penalty's names. Empty, the
+held, as a named list keyed by the penalty's names. Empty, the
 default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
 default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the caller
-wrote out, as a named list of numeric vectors. Empty, the default, has the
-path build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values that a path visits, for each hyperparameter that
+the caller wrote out, as a named list of numeric vectors. Empty, the
+default, has the path build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink reaches, as
 a fraction of the value that empties the block: one number in \eqn{(0, 1)},
@@ -57,14 +57,14 @@ carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
 \item{X}{The design block, one row per observation: a numeric matrix or a
-two-dimensional \pkg{Matrix}. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+two-dimensional \pkg{Matrix}. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{coef_names}{The block's coefficient names, one per column, prefixed by
-\code{label} when there is one. Filled by \code{\link[=term_build]{term_build()}}.}
+\code{label} when there is one. \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{blueprint}{A named list of everything needed to reproduce the mapping
-on new rows. Its contents are the subclass's business; nothing outside the
-term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+on new rows. Its contents belong to the subclass, and only the term reads
+them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{penalty}{A \pkg{penalties7} penalty on the block's coefficients, or
 \code{NULL} when the term is unpenalized.}
@@ -78,7 +78,7 @@ term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 \item{linear}{Whether the block carries the linear effect.}
 
 \item{subformulas}{A named list of one-sided formulas, one per developed
-coefficient. Empty where none is.}
+coefficient. The list is empty when the term develops no coefficient.}
 
 \item{spec}{A named list of the resolved construction settings.}
 }
@@ -88,10 +88,10 @@ and \code{\link[=model_term]{model_term()}}, with the properties above beside th
 classes supply.
 }
 \description{
-The subclass of \code{\link[=additive_term]{additive_term()}} for a covariate whose effect changes at
-estimated break-points: a change of slope (\code{\link[=seg]{seg()}}), a change of level
-(\code{\link[=jump]{jump()}}), or both at the same points (\code{\link[=jseg]{jseg()}}). Its design block is the
-\strong{working} block of the iteration that estimates the break-points, and
+\code{SegTerm} is the subclass of \code{\link[=additive_term]{additive_term()}} for a covariate whose effect
+changes at estimated break-points: a change of slope (\code{\link[=seg]{seg()}}), a change of
+level (\code{\link[=jump]{jump()}}), or both at the same points (\code{\link[=jseg]{jseg()}}). Its design block is
+the working block of the iteration that estimates the break-points, and
 \code{\link[=term_refresh]{term_refresh()}} recomputes it as they move.
 }
 \section{The properties of its own}{
@@ -112,17 +112,17 @@ scaling factor \code{c0}, the restart budget \code{n_boot} and any smoother.
 For \code{\link[=seg]{seg()}} the block is the exact Jacobian: the contribution is
 differentiable in \eqn{\psi_k} away from the break-point, so the
 break-point is an ordinary coefficient and a linear fit on the block is a
-Gauss-Newton step. \code{\link[=term_jacobian_block]{term_jacobian_block()}} answers \code{TRUE}.
+Gauss-Newton step. \code{\link[=term_jacobian_block]{term_jacobian_block()}} returns \code{TRUE}.
 
 For a sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} the block is a working linearization with
 the weight \eqn{W = 1/(2\lvert\tilde{x} - \psi\rvert)} frozen at the
-previous break-point, and the break-point is \strong{read off} two coefficients
-and is not incremented. \code{\link[=term_jacobian_block]{term_jacobian_block()}} answers \code{FALSE}, and a
+previous break-point, and the break-point is read off two coefficients
+and is not incremented. \code{\link[=term_jacobian_block]{term_jacobian_block()}} returns \code{FALSE}, and a
 fitting layer routes such a term to exact working fits alternating with
 committed read-offs. Smoothing the step (the \code{smoothed} argument of
-\code{\link[=seg]{seg()}}) makes the break-point an ordinary parameter again, and the answer
-becomes \code{TRUE}. A term held by \code{\link[=seg_hold]{seg_hold()}} also answers \code{TRUE}, its block
-being the exact design at the held positions.
+\code{\link[=seg]{seg()}}) makes the break-point an ordinary parameter again, and the value
+becomes \code{TRUE}. A term held by \code{\link[=seg_hold]{seg_hold()}} also returns \code{TRUE}, because its
+block is the exact design at the held positions.
 
 \code{\link[=seg_psi]{seg_psi()}} reports the position under every construction.
 }
@@ -135,11 +135,12 @@ d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0) + rnorm(120, sd = 0.4)
 # All three constructions are this class, and differ in `kind`.
 vapply(list(seg(x), jump(x), jseg(x)), function(t) t@kind, character(1))
 
-# which determines the coefficients that the term carries.
+# The kind determines the coefficients that the term carries.
 lapply(list(seg = seg(x), jump = jump(x), jseg = jseg(x)),
        function(t) term_coef_names(term_build(t, d)))
 
-# And whether its block is a Jacobian or a working linearization.
+# term_jacobian_block() reports whether the block is a Jacobian or a
+# working linearization.
 vapply(list(seg = seg(x), jump = jump(x), jseg = jseg(x)),
        term_jacobian_block, logical(1))
 

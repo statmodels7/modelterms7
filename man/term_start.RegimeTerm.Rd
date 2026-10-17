@@ -14,8 +14,9 @@
 A named numeric vector on the unconstrained scale.
 }
 \description{
-The levels at the quantiles of the response at \eqn{(2j-1)/(2k)},
-\eqn{j = 1, \dots, k}, and the transition matrix with every row uniform.
+Returns the starting values: the levels are placed at the quantiles of the
+response at \eqn{(2j-1)/(2k)}, \eqn{j = 1, \dots, k}, and every row of the
+transition matrix is uniform.
 }
 \details{
 Without the response the start is the zero vector on the unconstrained

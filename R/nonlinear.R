@@ -5,11 +5,11 @@ NULL
 #' @name NlTerm
 #'
 #' @description
-#' The subclass of [additive_term()] holding a parametric function that is
-#' nonlinear in its own parameters. Its design block is the **Jacobian** of
-#' that function, so the term is linear in the sense that a fitting layer needs
-#' while the function is not. The block depends on the current values of the
-#' parameters, and [term_refresh()] recomputes it as they move.
+#' `NlTerm` is the subclass of [additive_term()] that holds a parametric
+#' function that is nonlinear in its own parameters. Its design block is the
+#' Jacobian of that function, so the term is linear in the sense that a fitting
+#' layer needs while the function is not. The block depends on the current
+#' values of the parameters, and [term_refresh()] recomputes it as they move.
 #'
 #' @details
 #' # Properties of its own
@@ -17,12 +17,12 @@ NULL
 #' `fn` is the function or formula as given, and `spec$is_formula` records
 #' which. `nl_params` names the parameters: [nl()] sets it from `params` for a
 #' function, and [term_build()] sets it for a formula, from the names that the
-#' formula uses and the data do not supply.
+#' formula uses and that the data do not supply.
 #'
 #' `links` holds the links given in the call. After [term_build()] it holds one
-#' \pkg{linkfunctions7} link per parameter, the identity where none was named.
-#' `subformulas` holds one right-hand side per parameter developed over
-#' covariates, and is empty otherwise.
+#' \pkg{linkfunctions7} link per parameter, the identity link for each parameter
+#' without a named link. `subformulas` holds one right-hand side per parameter
+#' developed over covariates, and is empty otherwise.
 #'
 #' `deriv_mode` is `"symbolic"` where [stats::deriv()] could read the
 #' expression of a formula, `"formula_fd"` where it could not and the first
@@ -52,11 +52,12 @@ NULL
 #' @inheritParams additive_term
 #' @param fn The function or formula defining the contribution, as given.
 #' @param nl_params A character vector of the parameter names, in the order
-#'   the derivative components are keyed by.
+#'   used to key the derivative components.
 #' @param links A named list of \pkg{linkfunctions7} links, one per parameter
 #'   once the term is built.
 #' @param subformulas A named list of one-sided formulas, one per parameter
-#'   developed over covariates. Empty where none is.
+#'   developed over covariates. The list is empty if the term develops no
+#'   parameter over covariates.
 #' @param deriv_mode One of `"symbolic"`, `"formula_fd"` or `"numeric"`.
 #' @param spec A named list of the resolved construction settings.
 #'
@@ -106,9 +107,9 @@ NlTerm <- S7::new_class(
 #' Nonlinear Parametric Term
 #'
 #' @description
-#' A contribution \eqn{f(x; \theta)} that is nonlinear in its own
-#' parameters, given either as a formula in the covariates and the
-#' parameters or as a function of both. Each parameter may carry a link,
+#' Constructs a term for a contribution \eqn{f(x; \theta)} that is nonlinear
+#' in its own parameters and is given either as a formula in the covariates and
+#' the parameters or as a function of both. Each parameter may carry a link,
 #' and, when the term is given as a formula, may itself be modeled with
 #' covariates.
 #'
@@ -118,17 +119,17 @@ NlTerm <- S7::new_class(
 #' \deqn{f(x;\theta(\beta)) \approx f(x;\theta(\beta_0))
 #'   + J(\beta_0)\,(\beta - \beta_0), \qquad
 #'   J = \frac{\partial f}{\partial \beta},}
-#' so the design block is the Jacobian. What separates the term from a linear
-#' one is that the block is recomputed as the parameters move:
-#' [term_refresh()] does that, and [term_value()] reports the contribution
-#' itself, which is the second quantity that a Gauss-Newton step needs.
+#' so the design block is the Jacobian. The term differs from a linear one in
+#' that the block is recomputed as the parameters move: [term_refresh()] does
+#' that, and [term_value()] reports the contribution itself, which is the
+#' second quantity that a Gauss-Newton step needs.
 #'
 #' \subsection{Two ways to give the function}{
-#' A **formula** such as `~ theta1 * exp(theta2 * x)` is read
-#' symbolically: the names it uses that are not columns of the data are
+#' A formula such as `~ theta1 * exp(theta2 * x)` is read
+#' symbolically: the names in the formula that are not columns of the data are
 #' the parameters, and the derivatives come from
 #' [stats::deriv()] and [stats::D()] where those succeed and from a central
-#' difference where they do not. A **function** `f(x, theta)`,
+#' difference where they do not. A function `f(x, theta)`,
 #' vectorized in both, is treated as opaque: its derivatives are the ones
 #' supplied in `gradient`, `hessian`, `deriv3` and `deriv4` and are otherwise
 #' differenced, and its parameters must be named in `params`.
@@ -163,7 +164,7 @@ NlTerm <- S7::new_class(
 #' intercept) plus shrunken departures, `theta1 ~ s(z)` lets the
 #' parameter move smoothly with a covariate, and
 #' `theta1 ~ random(~1 | g)` is a random intercept on the
-#' parameter's unconstrained scale. The penalties the sub-terms carry are
+#' parameter's unconstrained scale. The penalties that the sub-terms carry are
 #' reported through [term_penalties()], each entry named
 #' `parameter::subterm`, so a fitting layer estimates their
 #' hyperparameters as it does those of any other term. A structural term is
@@ -184,8 +185,8 @@ NlTerm <- S7::new_class(
 #' and its derivatives in the coefficients add the sub-term's own
 #' [term_block_deriv()], [term_block_contract()] and [term_block_deriv2()]
 #' where \eqn{X_s} moves, so a fitting layer's exact outer derivatives reach
-#' it unchanged. The position is confined to the sub-term's own interval, as
-#' it is where the term stands alone.
+#' it unchanged. The position is confined to the sub-term's own interval, as it
+#' is when the sub-term is used as a term by itself.
 #'
 #' A sharp [jump()] or [jseg()] is rejected, naming `smoothed =`: its block is
 #' a working linearization with a frozen weight and a position read off a
@@ -222,9 +223,9 @@ NlTerm <- S7::new_class(
 #' separately, by the first of three routes that applies: a function supplied
 #' here, symbolic differentiation of the expression, and one stencil applied
 #' to the highest analytic order below the one wanted, or to the value of
-#' \eqn{f} where no lower order is analytic. A function given without
-#' derivatives, and a formula that [stats::deriv()] and [stats::D()] cannot
-#' differentiate, therefore have every order differenced from the value.
+#' \eqn{f} if every lower order is computed numerically. A function given
+#' without derivatives, and a formula that [stats::deriv()] and [stats::D()]
+#' cannot differentiate, therefore have every order differenced from the value.
 #'
 #' `gradient`, `hessian`, `deriv3` and `deriv4` may be supplied independently
 #' of one another. A supplied order is the starting point of the stencil for
@@ -242,11 +243,11 @@ NlTerm <- S7::new_class(
 #' `a_a_a`, `a_a_r`, `a_r_r`, `r_r_r`.
 #'
 #' The names are normalized here, so `r_a` and `a_r` are the same
-#' component and the order in which they are returned does not matter; what is
-#' checked is the set. A name that is not a component of this term, a missing
-#' component, a repeated one or a component of a length other than 1 or `n` is
-#' an error at [term_build()]. The term does not fall back to the numerical
-#' route in these cases.
+#' component and the order in which they are returned does not matter; the
+#' check compares the set of names. A name that is not a component of this term,
+#' a missing component, a repeated one or a component of a length other than 1
+#' or `n` is an error at [term_build()]. The term does not fall back to the
+#' numerical route in these cases.
 #'
 #' The derivatives are taken in the parameters \eqn{\theta} and not in the
 #' coefficients. The term applies the chain rule onto the coefficients,
@@ -258,18 +259,18 @@ NlTerm <- S7::new_class(
 #'   a function of `(x, theta)` vectorized in both.
 #' @param ... Two-sided formulas whose left side names a parameter, one
 #'   per parameter to be modeled with covariates, e.g.
-#'   `theta1 ~ s(z)`. Formula input only; the same as naming the
-#'   right-hand side in `subformulas`.
-#' @param params The parameter names. Required when `fn` is a
-#'   function, and rejected when `fn` is a formula, whose parameters are read
+#'   `theta1 ~ s(z)`. They apply to formula input only and have the same
+#'   effect as naming the right-hand side in `subformulas`.
+#' @param params The parameter names. They are required when `fn` is a
+#'   function and rejected when `fn` is a formula, whose parameters are read
 #'   from it.
 #' @param x The covariate expression handed to a function `fn`,
-#'   evaluated in the data. Unused for a formula.
+#'   evaluated in the data. A formula does not use it.
 #' @param links An optional named list of \pkg{linkfunctions7} links, one
 #'   per parameter. Parameters without one carry the identity.
 #' @param subformulas An optional named list of one-sided formulas, the
-#'   programmatic spelling of the formulas of `...`. Formula input
-#'   only.
+#'   programmatic spelling of the formulas of `...`. It applies to formula
+#'   input only.
 #' @param start An optional named list of starting values for the
 #'   parameters, on the parameter scale. A parameter that is not named starts
 #'   at the inverse link of zero. A name that is not a parameter is rejected
@@ -290,7 +291,7 @@ NlTerm <- S7::new_class(
 #' dd <- data.frame(x = seq(0, 3, length.out = 60))
 #' dd$y <- 2 * exp(-1.3 * dd$x) + rnorm(60, sd = 0.05)
 #'
-#' # an exponential decay, with the rate held positive by a log link
+#' # The term is an exponential decay, and a log link holds the rate positive.
 #' spec <- nl(~ a * exp(-r * x),
 #'            links = list(r = linkfunctions7::log_link()),
 #'            start = list(a = 1, r = 1))
@@ -298,14 +299,14 @@ NlTerm <- S7::new_class(
 #' term_coef_names(built)
 #' dim(term_matrix(built))
 #'
-#' # the amplitude developed by group: a population value plus shrunken
-#' # departures, whose hyperparameter a fitting layer estimates
+#' # The amplitude is developed by group: a population value plus shrunken
+#' # departures, whose hyperparameter a fitting layer estimates.
 #' dd$g <- factor(rep(c("u", "v"), 30))
 #' sub <- term_build(nl(~ a * exp(-r * x), a ~ ridge(~g),
 #'                      start = list(a = 1, r = 1)), dd)
 #' vapply(term_penalties(sub), function(e) e$name, character(1))
 #'
-#' # the first two orders written out by hand
+#' # The first two orders are written out by hand.
 #' g <- function(theta, data) {
 #'   e <- exp(-theta$r * data$x)
 #'   list(a = e, r = -theta$a * data$x * e)
@@ -325,7 +326,7 @@ NlTerm <- S7::new_class(
 #'                      hessian = h, start = list(a = 1, r = 1)), dd)
 #' max(abs(nl_fderiv(exf, order = 3)$r_r_r + dd$x^3 * exp(-dd$x)))
 #'
-#' # Fitted. The data are simulated from a known truth, so the
+#' # The model is fitted to data simulated from a known truth, so the
 #' # estimates below can be read against it.
 #' if (requireNamespace("statmodels7", quietly = TRUE)) {
 #'   set.seed(8)
@@ -334,7 +335,7 @@ NlTerm <- S7::new_class(
 #'   ft <- statmodels7::statmod(
 #'     y ~ 0 + nl(~ a * exp(-r * x), start = list(a = 1, r = 1)),
 #'     distributions7::gaussian1_distrib(), fd)
-#'   # truth: a = 3 and r = 0.8
+#'   # The true values are a = 3 and r = 0.8.
 #'   round(coef(ft)$mu, 2)
 #' }
 #' @seealso [s()], [te()], [random()]
@@ -396,7 +397,7 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
     }
     if (length(formals(f)) < 2L) {
       stop(sprintf(paste("'%s' must take (theta, data): a named list of the",
-                         "parameters and\n  the data the formula names."), nm),
+                         "parameters and\n  the data that the formula names."), nm),
            call. = FALSE)
     }
   }
@@ -457,8 +458,8 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
   called <- setdiff(fns, nms)
   out <- setdiff(nms, c(names(data), called))
   if (!length(out)) {
-    stop(paste("the formula uses no name the data do not supply, so it has",
-               "no parameters to estimate."), call. = FALSE)
+    stop(paste("the data supply every name that the formula uses, so the",
+               "formula has no parameters to estimate."), call. = FALSE)
   }
   out
 }
@@ -663,7 +664,7 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
   unknown <- setdiff(names(out), names(map))
   if (length(unknown)) {
     stop(sprintf(paste("'%s' returned the component '%s', which is not one of",
-                       "this term's.\n  Expected: %s."),
+                       "this term's.\n  The components of this order are: %s."),
                  .nl_arg_name(order), unknown[1L],
                  paste(want, collapse = ", ")), call. = FALSE)
   }
@@ -793,18 +794,18 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
 #' The Derivatives of a Nonlinear Term in Its Own Parameters
 #'
 #' @description
-#' \eqn{\partial^k f/\partial\theta^k} at the given coefficients, one named
-#' component per index multiset, keyed as \pkg{distributions7} keys its own
-#' derivative surfaces.
+#' Returns \eqn{\partial^k f/\partial\theta^k} at the given coefficients, with
+#' one named component per index multiset, keyed as \pkg{distributions7} keys
+#' its own derivative surfaces.
 #'
 #' @details
 #' The route is chosen for each order separately, in this priority: a function
 #' supplied to [nl()] where there is one, then the symbolic route where the
 #' expression can be differentiated, and otherwise one stencil applied to the
-#' highest analytic order below the one wanted (a supplied one included), or
-#' to the value of \eqn{f} where no lower order is analytic. A supplied Hessian
-#' therefore serves the third and fourth orders, which are then one difference
-#' away from an exact second order.
+#' highest analytic order below the order wanted (a supplied order is
+#' included), or to the value of \eqn{f} if every lower order is computed
+#' numerically. A supplied Hessian therefore serves the third and fourth
+#' orders, which are then one difference away from an exact second order.
 #'
 #' In each parameter the difference is a single stencil of the order required,
 #' so a derivative of order four in one parameter is never built from nested
@@ -817,9 +818,10 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
 #' @param term A built [NlTerm()]. Any other object is rejected with the
 #'   error `"'term' must be a built nl() term."`, and an unbuilt term with
 #'   `"the term is not built."`.
-#' @param coef The coefficients to read at, one per coefficient of the term, or
-#'   `NULL` for the ones the term currently carries, which [term_refresh()]
-#'   last committed. A vector of another length is rejected.
+#' @param coef The coefficients at which to evaluate the derivatives, one per
+#'   coefficient of the term, or `NULL` for the coefficients that the term
+#'   currently carries, which [term_refresh()] last committed. A vector of
+#'   another length is rejected.
 #' @param order 1, 2, 3 or 4. Any other value is rejected.
 #'
 #' @return A named list of numeric vectors of length `n`, one per component of
@@ -836,7 +838,7 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
 #' dd$y <- 2 * exp(-1.3 * dd$x)
 #' b <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3)), dd)
 #'
-#' # One component per index multiset, at every order.
+#' # Each order has one component per index multiset.
 #' names(nl_fderiv(b, order = 1))
 #' names(nl_fderiv(b, order = 2))
 #' names(nl_fderiv(b, order = 3))
@@ -1015,8 +1017,8 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
 #' Resolves the parameters, their links and their subformulas against the
 #' data, evaluates the function at the starting values, and takes the Jacobian
 #' there as the design block. It also chooses how each order of derivative
-#' will be obtained and checks that any function the caller supplied returns
-#' the right components.
+#' will be obtained and checks that any function that the caller supplied
+#' returns the right components.
 #'
 #' @details
 #' # What is settled here
@@ -1041,7 +1043,7 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
 #'
 #' # The starting point
 #'
-#' The block is the Jacobian **at the starting coefficients**, so it is only
+#' The block is the Jacobian at the starting coefficients, so it is only
 #' as good as they are. A parameter that `start` does not name is built at
 #' coefficient zero. When the fitting layer supplies a response,
 #' [term_coef_start()] estimates each such parameter over a deterministic grid
@@ -1049,14 +1051,14 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
 #' nonlinear function.
 #'
 #' @param term An unbuilt or built [NlTerm()].
-#' @param data A data frame carrying the covariates the function names and
-#'   whatever the subformulas name.
+#' @param data A data frame carrying the covariates that the function names
+#'   and whatever the subformulas name.
 #' @param ... Unused.
 #'
-#' @return The term with `X`, `coef_names`, `nl_params`, `links`, `deriv_mode`
-#'   and `blueprint` filled. The penalties of the sub-terms are kept in the
-#'   blueprint and reported by [term_penalties()]; the `penalty` property
-#'   stays `NULL`.
+#' @return The term, in which `X`, `coef_names`, `nl_params`, `links`,
+#'   `deriv_mode` and `blueprint` are filled. The penalties of the sub-terms
+#'   are kept in the blueprint and reported by [term_penalties()]; the
+#'   `penalty` property stays `NULL`.
 #'
 #' @seealso [nl()], [term_refresh()] for the block at other coefficients,
 #'   [term_predict.NlTerm()] for it at other rows.
@@ -1327,8 +1329,8 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
 #' @title Penalties of a Nonlinear Term
 #' @name term_penalties.NlTerm
 #' @description
-#' The penalties the sub-terms of the subformulas declare. The list is
-#' unnamed: each entry carries its label in `name`, of the form
+#' Returns the penalties that the sub-terms of the subformulas declare. The
+#' list is unnamed: each entry carries its label in `name`, of the form
 #' `parameter::subterm`, and covers that sub-term's coefficients in the
 #' term's own numbering. The list is empty when there are none, and for a term
 #' that has not been built.
@@ -1376,27 +1378,27 @@ S7::method(term_penalties, NlTerm) <- function(term, ...) {
 #' @name term_predict.NlTerm
 #'
 #' @description
-#' The Jacobian of \eqn{f} evaluated at the new rows, at the coefficients the
-#' term currently carries. Each parameter's subformula is reapplied through
-#' its sub-terms' own blueprints, so a basis or a set of contrasts inside a
-#' submodel is not relearned.
+#' Returns the Jacobian of \eqn{f} evaluated at the new rows, at the
+#' coefficients that the term currently carries. Each parameter's subformula is
+#' reapplied through its sub-terms' own blueprints, so a basis or a set of
+#' contrasts inside a submodel is not relearned.
 #'
 #' @details
-#' The coefficients are the ones [term_refresh()] last committed, not new
-#' ones: the block a prediction returns must multiply the same coefficients
-#' the fit reached, or \eqn{\tilde{X}\beta} is not the fitted contribution.
-#' [term_value()] is what reports \eqn{f} itself at new rows.
+#' The coefficients are the ones that [term_refresh()] last committed, not new
+#' ones: the block that a prediction returns must multiply the same
+#' coefficients that the fit reached, or \eqn{\tilde{X}\beta} is not the fitted
+#' contribution. [term_value()] reports \eqn{f} itself at new rows.
 #'
-#' Reading the block on its own is rarely what a caller wants for a nonlinear
-#' term. \eqn{\tilde{X}\beta} is the **linearization** of \eqn{f}: the two
+#' For a nonlinear term, a caller rarely wants to read the block on its own.
+#' \eqn{\tilde{X}\beta} is the linearization of \eqn{f}: the two
 #' agree in the increment that a Gauss-Newton step takes, and in general they
 #' differ in value. `term_value(term, newdata = ...)` returns the
 #' contribution.
 #'
 #' @param term A built [NlTerm()]. An unbuilt one is rejected with the error
 #'   `"the term has not been built; call term_build(term, data) first."`.
-#' @param newdata A data frame carrying the covariates the function names and
-#'   whatever the subformulas name.
+#' @param newdata A data frame carrying the covariates that the function names
+#'   and whatever the subformulas name.
 #' @param ... Unused.
 #'
 #' @return A block of `nrow(newdata)` rows and [term_npar()] columns, with the
@@ -1419,7 +1421,8 @@ S7::method(term_penalties, NlTerm) <- function(term, ...) {
 #' nd <- data.frame(x = c(0.5, 1.5, 2.5))
 #' term_predict(b, nd)
 #'
-#' # Which is the linearization, not the function: read the value for that.
+#' # The product of the block and the coefficients is the linearization, not
+#' # the function: the value is the function.
 #' cbind(linear = as.numeric(term_predict(b, nd) %*% b@blueprint$coef),
 #'       value = term_value(b, newdata = nd),
 #'       truth = 2 * exp(-1.3 * nd$x))
@@ -1435,10 +1438,11 @@ S7::method(term_predict, NlTerm) <- function(term, newdata, ...) {
 #' @title Refresh a Term at New Coefficients
 #'
 #' @description
-#' Recomputes whatever a term's design block depends on when the coefficients
-#' move. For every ordinary term this is the identity, the block being a
-#' function of the data alone. For a nonlinear term the block is the Jacobian
-#' of its contribution, which depends on where the parameters currently are.
+#' Recomputes the quantities on which a term's design block depends, when the
+#' coefficients move. For every ordinary term this is
+#' the identity, because the block is a function of the data only. For a
+#' nonlinear term the block is the Jacobian of its contribution, which depends
+#' on where the parameters currently are.
 #'
 #' @details
 #' A term whose contribution \eqn{f(x; \theta)} is nonlinear in its
@@ -1449,17 +1453,18 @@ S7::method(term_predict, NlTerm) <- function(term, newdata, ...) {
 #'     = \frac{\partial f(x_i; \theta)}{\partial \theta_j},}
 #'
 #' so the design block at the current \eqn{\theta} is \eqn{J(\theta)} and
-#' the coefficient it multiplies is the increment \eqn{h}. Refreshing at
+#' the coefficient that it multiplies is the increment \eqn{h}. Refreshing at
 #' the new \eqn{\theta} and solving the linear problem again is the
 #' Gauss-Newton iteration. [term_value()] reports \eqn{f(x; \theta)} itself,
-#' which is the other half a step needs.
+#' which is the other half that a step needs.
 #'
 #' A break-point term has the same shape with a different block: the Jacobian
 #' for [seg()], and for [jump()] the frozen-weight columns, from which the
 #' break-point is read off two coefficients instead of being incremented.
-#' [term_jacobian_block()] is what tells the two apart.
+#' [term_jacobian_block()] distinguishes the two.
 #'
-#' The refresh is committed once per sweep, never per trial point. A
+#' The fitting layer commits the refresh once per sweep and not at each trial
+#' point. A
 #' discontinuous term's rescaling factor halves whenever the break-point
 #' reverses direction, and is not allowed below a floor derived from the
 #' conditioning of the working block, which the refresh records. The factor
@@ -1471,9 +1476,9 @@ S7::method(term_predict, NlTerm) <- function(term, newdata, ...) {
 #' a vector of another length is rejected.
 #'
 #' @param term A built term.
-#' @param coef The coefficients to refresh at, as long as the term's block is
-#'   wide. For a nonlinear term these are the coefficients of its parameters'
-#'   submodels, not the parameters themselves.
+#' @param coef The coefficients at which to refresh, one per column of the
+#'   term's block. For a nonlinear term these are the coefficients of its
+#'   parameters' submodels, not the parameters themselves.
 #' @param ... Passed to methods.
 #'
 #' @return A term of the same class with its block, and whatever else moves
@@ -1481,7 +1486,7 @@ S7::method(term_predict, NlTerm) <- function(term, newdata, ...) {
 #'   `term` unchanged.
 #'
 #' @seealso [nl()] and [seg()] for the terms that implement it,
-#'   [term_value()] for the contribution a step needs beside the block,
+#'   [term_value()] for the contribution that a step needs beside the block,
 #'   [term_jacobian_block()] for which kind of block came back,
 #'   [term_converged()] for the verdict on such a term.
 #'
@@ -1502,9 +1507,9 @@ S7::method(term_refresh, model_term) <- function(term, coef, ...) term
 #' How a Term's Block Moves With Its Coefficients
 #'
 #' @description
-#' \eqn{\sum_{i,j} A_{ij}\,\partial X_{ij}/\partial\beta_c}, one entry per
-#' coefficient of the term: the block's own derivative contracted against a
-#' weight the caller supplies.
+#' Returns \eqn{\sum_{i,j} A_{ij}\,\partial X_{ij}/\partial\beta_c}, one entry
+#' per coefficient of the term: the block's own derivative contracted against a
+#' weight that the caller supplies.
 #'
 #' @details
 #' A term whose block is a fixed design does not move, and the base method
@@ -1515,8 +1520,9 @@ S7::method(term_refresh, model_term) <- function(term, coef, ...) term
 #' \eqn{\partial K/\partial\beta} gains everything coming from
 #' \eqn{\partial X/\partial\beta}.
 #'
-#' **Only the contraction is computed.** \eqn{\partial X/\partial\beta} is
-#' \eqn{n \times m \times m} and nothing needs it whole. For [nl()] it is
+#' Only the contraction is computed. \eqn{\partial X/\partial\beta} is
+#' \eqn{n \times m \times m} and consumers need only its contractions. For
+#' [nl()] it is
 #' closed form at \eqn{O(nm)}:
 #' writing \eqn{X_{i,c} = w_{p}(i) Z_p[i,c]} with
 #' \eqn{w_p = (\partial f/\partial\theta_p)\,h_p'},
@@ -1542,15 +1548,15 @@ S7::method(term_refresh, model_term) <- function(term, coef, ...) term
 #' Its position is read off a product of the unknowns, \eqn{\psi = -g/\delta},
 #' so a column's derivative runs through that read-off instead of through a
 #' development's design, and the weight \eqn{W = 1/(2\lvert\tilde x-\psi\rvert)}
-#' it carries has an unbounded derivative in the break-point. Its block is a
-#' working linearization with a frozen weight, which is the reason that
-#' [term_jacobian_block()] answers `FALSE` for it. A break-point term with
+#' that it carries has an unbounded derivative in the break-point. Its block is
+#' a working linearization with a frozen weight, which is the reason that
+#' [term_jacobian_block()] returns `FALSE` for it. A break-point term with
 #' `smoothed =` has a block that is a true Jacobian, and its contraction is
 #' written out from the smoother's derivatives.
 #'
 #' @param term A built term.
 #' @param coef The coefficients, one per coefficient of the term, or `NULL` for
-#'   the ones it carries.
+#'   the coefficients that the term carries.
 #' @param A A numeric matrix, one row per observation and one column per
 #'   coefficient of the term.
 #' @param ... Passed to methods.
@@ -1579,20 +1585,21 @@ S7::method(term_block_contract, model_term) <- function(term, coef = NULL, A,
 #' How a Term's Block Moves Along One Direction
 #'
 #' @description
-#' \eqn{\sum_c v_c\,\partial X_{ij}/\partial\beta_c}, one entry per observation
-#' and column of the block: the block's own derivative taken along a direction
-#' the caller supplies.
+#' Returns \eqn{\sum_c v_c\,\partial X_{ij}/\partial\beta_c}, one entry per
+#' observation and column of the block: the block's own derivative taken along
+#' a direction that the caller supplies.
 #'
 #' @details
-#' It is the adjoint of [term_block_contract()] and neither computes
-#' the other. That one contracts over the observations and the columns and
-#' answers per coefficient, as the gradient of a marginal criterion
-#' needs; this one contracts over the coefficients and answers per entry of
-#' the block, as its Hessian needs, \eqn{\partial K/\partial\beta} being
-#' required there in the direction the mode moves instead of traced.
+#' It is the adjoint of [term_block_contract()], and each of the two is
+#' computed without the other. That one contracts over the observations and the
+#' columns and returns one entry per coefficient, as the gradient of a marginal
+#' criterion needs; this one contracts over the coefficients and returns one
+#' entry per entry of the block, as its Hessian needs, because
+#' \eqn{\partial K/\partial\beta} is required there in the direction in which
+#' the mode moves instead of being traced.
 #'
-#' Both are \eqn{O(nm)} and read the same closed form, so this needs no
-#' derivative the other did not: for [nl()], writing
+#' Both are \eqn{O(nm)} and read the same closed form, so this one needs only
+#' the derivatives that the other needs: for [nl()], writing
 #' \eqn{q_{p_1p_2} = f_{p_1p_2}h_{p_1}'h_{p_2}' + \delta_{p_1p_2}f_{p_1}h_{p_1}''},
 #' \deqn{\Big(\frac{\partial X}{\partial\beta}v\Big)[i, c_1] =
 #'   Z_{p_1}[i,c_1]\sum_{p_2} q_{p_1p_2}(i)\,(Z_{p_2}v_{p_2})[i],}
@@ -1604,7 +1611,7 @@ S7::method(term_block_contract, model_term) <- function(term, coef = NULL, A,
 #'
 #' @param term A built term.
 #' @param coef The coefficients, one per coefficient of the term, or `NULL` for
-#'   the ones it carries.
+#'   the coefficients that the term carries.
 #' @param v A numeric vector as long as the term's coefficients.
 #' @param ... Passed to methods.
 #'
@@ -1740,36 +1747,38 @@ S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
 #' @title The Second Derivative of a Design Block in the Coefficients
 #'
 #' @description
+#' Returns
 #' \eqn{\sum_{q,r} v_q u_r\,\partial^2 X_{ij}/\partial\beta_q\partial\beta_r},
 #' one entry per observation and column of the block: the block's second
-#' derivative contracted in two directions the caller supplies.
+#' derivative contracted in two directions that the caller supplies.
 #'
 #' @details
 #' It stands one order above [term_block_deriv()], and it is
-#' contracted, never returned as an array, for the reason [term_third()] is
-#' contracted in the structural branch: the full
+#' contracted, never returned as an array, for the same reason as
+#' [term_third()] in the structural branch: the full
 #' object has \eqn{m} coefficient indices twice over beside the \eqn{n} rows
 #' and \eqn{m} columns of the block, and only its contraction in the two
-#' directions the penalized mode moves is ever read.
+#' directions in which the penalized mode moves is ever read.
 #'
 #' The quantity enters the Hessian of a marginal criterion and nothing else.
 #' It is absent from the criterion's value, from its gradient and from the
 #' fit, so the coefficients, the log-likelihood, the effective degrees of
-#' freedom and the coefficients' own variance matrix do not depend on it; what
-#' does depend on it is the standard error of a hyperparameter and the Newton
-#' direction of an outer search.
+#' freedom and the coefficients' own variance matrix do not depend on it; the
+#' standard error of a hyperparameter and the Newton direction of an outer
+#' search do depend on it.
 #'
-#' The result is symmetric in `v` and `u`, mixed partial derivatives
-#' being equal, and an implementation that pairs a direction with the wrong
+#' The result is symmetric in `v` and `u` because mixed partial derivatives
+#' are equal, and an implementation that pairs a direction with the wrong
 #' parameter loses that symmetry.
 #'
 #' The base method returns zeros, and that is exact. A design that does not
 #' move with its coefficients has a second derivative that is identically
 #' zero, which covers [linpar()],
-#' [s()], [te()], [random()] and the five
-#' penalized constructors without a method of their own.
+#' [s()], [te()], [random()] and the five penalized constructors [ridge()],
+#' [lasso()], [enet()], [scad()] and [mcp()], when they have no method of
+#' their own.
 #'
-#' For [nl()] the closed form is one order above the one
+#' For [nl()] the closed form is one order above the one that
 #' [term_block_deriv()] carries. With \eqn{\theta_p = h_p(z_p)} and
 #' \eqn{z_p = Z_p\beta_{(p)}}, writing \eqn{\tilde v_p = Z_p v_{(p)}} and
 #' \eqn{\tilde u_p = Z_p u_{(p)}} for the directions carried onto each
@@ -1785,49 +1794,49 @@ S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
 #' The five addends come from differentiating the two addends of
 #' `term_block_deriv`'s \eqn{q_{p_1p_2}} once more: the first from
 #' \eqn{f_{p_1p_2}}, the second and third from \eqn{h'_{p_1}} and
-#' \eqn{h'_{p_2}}, the fourth from \eqn{f_{p_1}} inside the term the Kronecker
-#' delta carries, and the fifth from \eqn{h''_{p_1}}. Exchanging \eqn{p_2} and
-#' \eqn{p_3} sends the second addend to the fourth and leaves the other three
-#' where they are, which is the symmetry in `v` and `u`.
+#' \eqn{h'_{p_2}}, the fourth from \eqn{f_{p_1}} inside the term that the
+#' Kronecker delta carries, and the fifth from \eqn{h''_{p_1}}. Exchanging
+#' \eqn{p_2} and \eqn{p_3} sends the second addend to the fourth and leaves the
+#' other three where they are, which is the symmetry in `v` and `u`.
 #'
-#' Nothing new is derived: \eqn{f_{p_1p_2p_3}} is the third order of
+#' This order needs no new derivation: \eqn{f_{p_1p_2p_3}} is the third order of
 #' [nl_fderiv()], served by the same routes as the lower
 #' orders, and \eqn{h'''} is [linkfunctions7::d3linkinv()], exact for
 #' every shipped link and numerical for a user-defined one. The cost is
-#' \eqn{O(nP^3)} in the number \eqn{P} of the term's own parameters, and the
-#' call is made once per pair of hyperparameters rather than once per
+#' \eqn{O(nP^3)}, where \eqn{P} is the number of the term's own parameters, and
+#' the method is called once per pair of hyperparameters rather than once per
 #' observation.
 #'
-#' A break-point term answers according to its construction. With
-#' `smoothed` set to an [numericals7::abs_smoother()] the block is the
-#' true Jacobian and the closed forms are the smoother's own one order further
-#' up than [term_block_deriv()] reads them: with \eqn{u = x - \psi},
+#' The result for a break-point term depends on its construction. If
+#' `smoothed` is set to an [numericals7::abs_smoother()], the block is the
+#' true Jacobian and the closed forms are those of the smoother, taken one
+#' order higher than [term_block_deriv()] reads them: with \eqn{u = x - \psi},
 #' \eqn{P = s''/2}, \eqn{T = s'''/2} and \eqn{Q = s''''/2}, the change columns
 #' carry \eqn{P} (for \eqn{\gamma}) and \eqn{T} (for \eqn{\delta}) times the
 #' product of the two break-point directions in their own entries, and the
 #' break-point column carries the two mixed pieces and
 #' \eqn{-(\gamma T + \delta Q)} times that product.
-#' The sharp constructions answer zeros: for [seg()] the second
-#' derivative is genuinely zero away from the break-points, the truncated
-#' line's derivative in the position being an indicator and the position
-#' column being linear in the change, while for [jump()] and
+#' The sharp constructions return zeros: for [seg()] the second
+#' derivative is genuinely zero away from the break-points, because the
+#' truncated line's derivative in the position is an indicator and the position
+#' column is linear in the change, while for [jump()] and
 #' [jseg()] the block is a working linearization with a frozen
 #' weight, which is why the first-order generics
-#' already answer zeros there.
+#' already return zeros there.
 #'
-#' Two properties of the smoothed branch are exact. Where a break-point sits
-#' against its confinement limit the whole contribution is zero, because every
+#' In the smoothed branch, where a break-point sits against its confinement
+#' limit, the whole contribution is exactly zero, because every
 #' addend carries a direction in the break-point and the confinement gates
 #' that direction; [term_block_deriv()] is zero there for the same reason.
 #' Under [numericals7::smooth_quintic()], which is exact outside
-#' \eqn{[-h, h]}, the answer is zero on every observation further than the
-#' width from a break-point. That smoother is \eqn{C^3}, so its fourth
+#' \eqn{[-h, h]}, the answer is exactly zero on every observation further than
+#' the width from a break-point. That smoother is \eqn{C^3}, so its fourth
 #' derivative jumps at \eqn{\pm h}, and the answer is exact at every
 #' observation that is not at distance \eqn{h} from a break-point.
 #'
 #' @param term A built term.
 #' @param coef The coefficients, one per coefficient of the term, or `NULL` for
-#'   the ones it carries.
+#'   the coefficients that the term carries.
 #' @param v,u Numeric vectors as long as the term's coefficients.
 #' @param ... Passed to methods.
 #'
@@ -1840,7 +1849,7 @@ S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
 #' b <- term_build(nl(~ a * exp(-r * x), start = list(a = 2, r = 1.3)), dd)
 #' dim(term_block_deriv2(b, v = c(1, 0), u = c(0, 1)))
 #'
-#' # symmetric in the two directions
+#' # The result is symmetric in the two directions.
 #' max(abs(term_block_deriv2(b, v = c(1, 0), u = c(0, 1)) -
 #'         term_block_deriv2(b, v = c(0, 1), u = c(1, 0))))
 #'
@@ -1957,14 +1966,14 @@ S7::method(term_block_deriv2, NlTerm) <- function(term, coef = NULL, v, u,
   out
 }
 
-#' @title The Columns Each Parameter of a Nonlinear Term Owns
+#' @title The Columns That Each Parameter of a Nonlinear Term Owns
 #' @name term_components.NlTerm
 #'
 #' @description
-#' One entry per parameter of \eqn{f}, giving the columns of the block that
-#' parameter owns and the sub-terms developing it. A parameter with no
-#' subformula owns one column; a developed one owns as many as its own design
-#' has.
+#' Returns one entry per parameter of \eqn{f}, giving the columns of the block
+#' that belong to the parameter and the sub-terms that develop it. A parameter
+#' with no subformula owns one column; a developed one owns as many as its own
+#' design has.
 #'
 #' @details
 #' A consumer reads it to report a fitted nonlinear term parameter by
@@ -1980,7 +1989,7 @@ S7::method(term_block_deriv2, NlTerm) <- function(term, coef = NULL, v, u,
 #'   [term_components()] describes.
 #'
 #' @seealso [term_components()] for the structure of an entry,
-#'   [term_penalties()] for the penalties those sub-terms bring.
+#'   [term_penalties()] for the penalties that those sub-terms bring.
 #'
 #' @examples
 #' set.seed(1)
@@ -1988,7 +1997,8 @@ S7::method(term_block_deriv2, NlTerm) <- function(term, coef = NULL, v, u,
 #'                  g = factor(rep(c("a", "b"), 10)))
 #' dd$y <- 2 * exp(-1.3 * dd$x)
 #'
-#' # `a` developed over a two-level factor, `r` scalar: two columns and one.
+#' # `a` is developed over a two-level factor and `r` is a scalar, which gives
+#' # two columns and one.
 #' b <- term_build(nl(~ a * exp(-r * x), a ~ 0 + g,
 #'                    start = list(a = 1, r = 1.3)), dd)
 #' term_coef_names(b)
@@ -2030,13 +2040,14 @@ S7::method(term_components, NlTerm) <- function(term, ...) {
 #' @title Has a Term's Own Iteration Settled?
 #'
 #' @description
-#' `TRUE` when the iteration that a term carries on its own account has
-#' settled, that is, when its own parameters no longer move. A term with no
+#' Returns `TRUE` when the iteration that a term carries on its own account
+#' has settled, that is, when its own parameters no longer move. A term with no
 #' such iteration, including every term whose block does not move and [nl()],
-#' answers `TRUE` through the base method.
+#' returns `TRUE` through the base method.
 #'
 #' @details
-#' It exists because a score cannot always answer the question. Where the
+#' The generic is needed because the score does not always determine whether
+#' the iteration has settled. Where the
 #' block is the Jacobian of the contribution, as it is for [nl()] and
 #' [seg()], the gradient of the model's objective is the transpose of the block
 #' applied to the derivative of the log-likelihood in the predictor, and the
@@ -2045,11 +2056,11 @@ S7::method(term_components, NlTerm) <- function(term, ...) {
 #' Where the block is a working linearization with a frozen weight, as it is
 #' for a sharp [jump()] or [jseg()], there is no such gradient: the profile
 #' objective of a discontinuous term is a step function in the break-point.
-#' What the iteration drives to zero there is the movement of the break-point
-#' itself.
-#' A break-point term of any construction answers through [seg_converged()],
-#' which reads that movement, and a held term answers `TRUE`. A fitting layer
-#' calls this generic for each refreshed term, whatever its construction.
+#' The iteration drives the movement of the break-point itself to zero.
+#' A break-point term of any construction returns the result of
+#' [seg_converged()], which reads that movement, and a held term returns
+#' `TRUE`. A fitting layer calls this generic for each refreshed term, whatever
+#' its construction.
 #'
 #' @param term A built term.
 #' @param ... Passed to methods.
@@ -2071,26 +2082,26 @@ S7::method(term_converged, model_term) <- function(term, ...) TRUE
 #' @title Has a Term's Own Iteration Run Out of Step Control?
 #'
 #' @description
-#' `TRUE` when a term whose block is refreshed has not settled and its
+#' Returns `TRUE` when a term whose block is refreshed has not settled and its
 #' iteration has no means left of bringing it to rest, so further refreshes
 #' cannot be expected to settle it. A term with no iteration of its own
-#' answers `FALSE`.
+#' returns `FALSE`.
 #'
 #' @details
 #' The discontinuous break-point terms, [jump()] and [jseg()], control their
 #' step with the scaling factor of Fasola, Muggeo and Kuchenhoff, halved
 #' whenever a break-point reverses direction and held at a floor derived from
 #' the conditioning of the working block (see [term_refresh()]). Once every
-#' break-point that has not settled sits at that floor the factor can shrink
-#' no further, and the iteration continues without step control. The profile
+#' break-point that has not settled sits at that floor, the factor cannot
+#' shrink further, and the iteration continues without step control. The profile
 #' objective of a discontinuous term is constant between two consecutive
 #' observations, so a break-point in that state can pass from one
 #' observation to the next indefinitely. A fitting layer reads this to end
 #' the working phase and report the fit as not converged.
 #'
-#' A term whose block is the Jacobian of its contribution, [seg()] and every
-#' smoothed construction among them, has no scaling schedule and answers
-#' `FALSE`.
+#' A term whose block is the Jacobian of its contribution has no scaling
+#' schedule and returns `FALSE`; this includes [seg()] and every smoothed
+#' construction.
 #'
 #' @param term A built term.
 #' @param ... Passed to methods.
@@ -2140,10 +2151,10 @@ S7::method(term_refresh, NlTerm) <- function(term, coef, ...) {
 #' @name term_kinks.NlTerm
 #'
 #' @description
-#' The coefficients of the term that move a break-point sitting on an
+#' Returns the coefficients of the term that move a break-point sitting on an
 #' observation, where a parameter is developed over a sharp [seg()]: the
-#' answer of that sub-term's own [term_kinks()] carried to the term's
-#' coefficients. Every other nonlinear term answers `integer(0)`.
+#' result of that sub-term's own [term_kinks()] carried to the term's
+#' coefficients. Every other nonlinear term returns `integer(0)`.
 #'
 #' @param term A built [NlTerm()].
 #' @param coef The term's coefficients. `NULL` reads the stored ones.
@@ -2180,9 +2191,9 @@ S7::method(term_kinks, NlTerm) <- function(term, coef = NULL, ...) {
 #' @name term_kink_constraints.NlTerm
 #'
 #' @description
-#' The rows of [term_kink_constraints()] of every sharp [seg()] sub-term that
-#' develops a parameter, placed in the columns of the term's coefficients that
-#' the sub-term owns. Every other nonlinear term has no rows.
+#' Returns the rows of [term_kink_constraints()] of every sharp [seg()]
+#' sub-term that develops a parameter, placed in the columns of the term's
+#' coefficients that the sub-term owns. Every other nonlinear term has no rows.
 #'
 #' @param term A built [NlTerm()].
 #' @param coef The term's coefficients. `NULL` reads the stored ones.
@@ -2224,33 +2235,33 @@ S7::method(term_kink_constraints, NlTerm) <- function(term, coef = NULL, ...) {
 #' @title The Contribution of a Term at Its Current Coefficients
 #'
 #' @description
-#' The values a term contributes to the linear predictor. For a linear term
-#' this is the block times the coefficients and carries no information the
-#' block does not. For a nonlinear one it is \eqn{f(x;\theta)}, which the
-#' Jacobian alone does not give and which a Gauss-Newton step needs beside
-#' it.
+#' Returns the values that a term contributes to the linear predictor. For a
+#' linear term this is the block times the coefficients and carries no
+#' information beyond the block. For a nonlinear one it is \eqn{f(x;\theta)},
+#' which the Jacobian does not give and which a Gauss-Newton step needs
+#' beside it.
 #'
 #' @details
-#' With `newdata` the same contribution is returned on other rows, which is
-#' what a predictor needs where the block is a Jacobian: there
+#' With `newdata` the same contribution is returned on other rows, which a
+#' predictor needs where the block is a Jacobian: there
 #' `term_predict()` times the coefficients is the linearization and
 #' not the contribution, and the two differ by whatever the linearization
 #' drops. For [seg()] that difference is a step at the
 #' break-point in a construction that is continuous. Rows arriving here are
 #' treated as [term_predict()] treats them, through the levels
-#' and constants the blueprint recorded, never rebuilt.
+#' and constants that the blueprint recorded, never rebuilt.
 #'
 #' @param term A built term.
-#' @param coef The coefficients. Optional for a nonlinear term, which
-#'   carries the ones it was last refreshed at, and which rejects a vector
-#'   with a length other than its number of coefficients.
+#' @param coef The coefficients. They are optional for a nonlinear term, which
+#'   carries the coefficients at which it was last refreshed and rejects a
+#'   vector whose length differs from its number of coefficients.
 #' @param newdata An optional data frame; the contribution is returned on
-#'   its rows instead of on the ones the term was built from.
+#'   its rows instead of on the rows from which the term was built.
 #' @param ... Passed to methods.
 #'
 #' @return A numeric vector of one value per observation: `nrow(newdata)` of
-#'   them where `newdata` was given, and as many as the term was built on
-#'   otherwise.
+#'   them where `newdata` was given, and otherwise as many as the number of
+#'   rows on which the term was built.
 #'
 #' @seealso [term_refresh()] for the block at the same coefficients,
 #'   [term_predict()] for the block at other rows, [seg_psi()] for a
@@ -2296,7 +2307,8 @@ S7::method(term_value, NlTerm) <- function(term, coef = NULL, newdata = NULL,
 #' @description
 #' Prints the label and, for a built term, how many coefficients it carries,
 #' which route its derivatives take, and the names of its parameters. A
-#' specification says only that it is one.
+#' specification prints only the label and a note that the term is a
+#' specification.
 #'
 #' @details
 #' The built form is
@@ -2319,7 +2331,7 @@ S7::method(term_value, NlTerm) <- function(term, coef = NULL, newdata = NULL,
 #' @param x An [NlTerm()], built or not.
 #' @param ... Unused, and accepted so that the signature matches [print()]'s.
 #'
-#' @return `x`, invisibly. Called for the lines it writes.
+#' @return `x`, invisibly. The method is called for the lines that it writes.
 #'
 #' @seealso [nl()], [nl_fderiv()].
 #'
@@ -2329,7 +2341,8 @@ S7::method(term_value, NlTerm) <- function(term, coef = NULL, newdata = NULL,
 #'                  g = factor(rep(c("u", "v"), 30)))
 #' dd$y <- 2 * exp(-1.3 * dd$x) + rnorm(60, sd = 0.05)
 #'
-#' # A specification, and the same term built.
+#' # The first call prints a specification and the second prints the same
+#' # term built.
 #' nl(~ a * exp(-r * x), start = list(a = 1, r = 1))
 #' term_build(nl(~ a * exp(-r * x), start = list(a = 1, r = 1)), dd)
 #'
@@ -2357,7 +2370,7 @@ S7::method(print, NlTerm) <- function(x, ...) {
 #' @title Where a Nonlinear Term's Coefficients Begin
 #' @name term_coef_start.NlTerm
 #' @description
-#' The coefficients [term_build()] built the block at: the
+#' Returns the coefficients at which [term_build()] built the block: the
 #' starting value of each of the term's own parameters carried through its
 #' link, from `start` where the caller gave one, and coefficient zero for a
 #' parameter that `start` does not name. The block is the Jacobian at those
@@ -2377,24 +2390,24 @@ S7::method(print, NlTerm) <- function(x, ...) {
 #' are solved by least squares at each point of the grid instead of being
 #' searched over. They are found with [stats::D()] by removing repeatedly from
 #' the set of parameters every one whose derivative names a member of the set
-#' (itself included);
+#' (including the parameter itself);
 #' for a function given as an opaque `fn` the set is empty. Where a parameter
 #' is developed over a break-point term, each break-point is then started as
 #' described in [nl()].
 #'
-#' The box each grid spans comes from the data: the quantiles, the standard
-#' deviation and the range of the response and of every covariate the formula
-#' names, carried through the parameter's own link and widened, because a
-#' parameter may be measured in the units of the response or of a covariate
+#' The box that each grid spans comes from the data: the quantiles, the standard
+#' deviation and the range of the response and of every covariate that the
+#' formula names, carried through the parameter's own link and widened, because
+#' a parameter may be measured in the units of the response or of a covariate
 #' and the box has to cover both.
 #'
 #' It is a starting value and is allowed to be approximate; anything that
-#' fails leaves the coefficients [term_build()] computed.
+#' fails leaves the coefficients that [term_build()] computed.
 #'
 #' @param term A built [NlTerm()].
 #' @param target Optional numeric vector, one per observation: the response
-#'   on the scale of the predictor. Absent, the coefficients are those
-#'   [term_build()] computed.
+#'   on the scale of the predictor. If it is absent, the coefficients are those
+#'   that [term_build()] computed.
 #' @param ... Unused.
 #' @return A numeric vector, one value per column of the block.
 #' @keywords internal

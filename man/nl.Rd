@@ -25,22 +25,22 @@ a function of \verb{(x, theta)} vectorized in both.}
 
 \item{...}{Two-sided formulas whose left side names a parameter, one
 per parameter to be modeled with covariates, e.g.
-\code{theta1 ~ s(z)}. Formula input only; the same as naming the
-right-hand side in \code{subformulas}.}
+\code{theta1 ~ s(z)}. They apply to formula input only and have the same
+effect as naming the right-hand side in \code{subformulas}.}
 
-\item{params}{The parameter names. Required when \code{fn} is a
-function, and rejected when \code{fn} is a formula, whose parameters are read
+\item{params}{The parameter names. They are required when \code{fn} is a
+function and rejected when \code{fn} is a formula, whose parameters are read
 from it.}
 
 \item{x}{The covariate expression handed to a function \code{fn},
-evaluated in the data. Unused for a formula.}
+evaluated in the data. A formula does not use it.}
 
 \item{links}{An optional named list of \pkg{linkfunctions7} links, one
 per parameter. Parameters without one carry the identity.}
 
 \item{subformulas}{An optional named list of one-sided formulas, the
-programmatic spelling of the formulas of \code{...}. Formula input
-only.}
+programmatic spelling of the formulas of \code{...}. It applies to formula
+input only.}
 
 \item{start}{An optional named list of starting values for the
 parameters, on the parameter scale. A parameter that is not named starts
@@ -61,9 +61,9 @@ An object of class \code{\link[=NlTerm]{NlTerm()}} (a specification; see
 \code{\link[=term_build]{term_build()}}).
 }
 \description{
-A contribution \eqn{f(x; \theta)} that is nonlinear in its own
-parameters, given either as a formula in the covariates and the
-parameters or as a function of both. Each parameter may carry a link,
+Constructs a term for a contribution \eqn{f(x; \theta)} that is nonlinear
+in its own parameters and is given either as a formula in the covariates and
+the parameters or as a function of both. Each parameter may carry a link,
 and, when the term is given as a formula, may itself be modeled with
 covariates.
 }
@@ -73,17 +73,17 @@ every point. The contribution is linearized as
 \deqn{f(x;\theta(\beta)) \approx f(x;\theta(\beta_0))
   + J(\beta_0)\,(\beta - \beta_0), \qquad
   J = \frac{\partial f}{\partial \beta},}
-so the design block is the Jacobian. What separates the term from a linear
-one is that the block is recomputed as the parameters move:
-\code{\link[=term_refresh]{term_refresh()}} does that, and \code{\link[=term_value]{term_value()}} reports the contribution
-itself, which is the second quantity that a Gauss-Newton step needs.
+so the design block is the Jacobian. The term differs from a linear one in
+that the block is recomputed as the parameters move: \code{\link[=term_refresh]{term_refresh()}} does
+that, and \code{\link[=term_value]{term_value()}} reports the contribution itself, which is the
+second quantity that a Gauss-Newton step needs.
 
 \subsection{Two ways to give the function}{
-A \strong{formula} such as \code{~ theta1 * exp(theta2 * x)} is read
-symbolically: the names it uses that are not columns of the data are
+A formula such as \code{~ theta1 * exp(theta2 * x)} is read
+symbolically: the names in the formula that are not columns of the data are
 the parameters, and the derivatives come from
 \code{\link[stats:deriv]{stats::deriv()}} and \code{\link[stats:deriv]{stats::D()}} where those succeed and from a central
-difference where they do not. A \strong{function} \code{f(x, theta)},
+difference where they do not. A function \code{f(x, theta)},
 vectorized in both, is treated as opaque: its derivatives are the ones
 supplied in \code{gradient}, \code{hessian}, \code{deriv3} and \code{deriv4} and are otherwise
 differenced, and its parameters must be named in \code{params}.
@@ -118,7 +118,7 @@ package: \code{theta1 ~ ridge(~g)} is a population value (the
 intercept) plus shrunken departures, \code{theta1 ~ s(z)} lets the
 parameter move smoothly with a covariate, and
 \code{theta1 ~ random(~1 | g)} is a random intercept on the
-parameter's unconstrained scale. The penalties the sub-terms carry are
+parameter's unconstrained scale. The penalties that the sub-terms carry are
 reported through \code{\link[=term_penalties]{term_penalties()}}, each entry named
 \code{parameter::subterm}, so a fitting layer estimates their
 hyperparameters as it does those of any other term. A structural term is
@@ -138,8 +138,8 @@ rule through the sub-term's own block,
 and its derivatives in the coefficients add the sub-term's own
 \code{\link[=term_block_deriv]{term_block_deriv()}}, \code{\link[=term_block_contract]{term_block_contract()}} and \code{\link[=term_block_deriv2]{term_block_deriv2()}}
 where \eqn{X_s} moves, so a fitting layer's exact outer derivatives reach
-it unchanged. The position is confined to the sub-term's own interval, as
-it is where the term stands alone.
+it unchanged. The position is confined to the sub-term's own interval, as it
+is when the sub-term is used as a term by itself.
 
 A sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} is rejected, naming \verb{smoothed =}: its block is
 a working linearization with a frozen weight and a position read off a
@@ -176,9 +176,9 @@ orders where the block moves with the coefficients. Each order is obtained
 separately, by the first of three routes that applies: a function supplied
 here, symbolic differentiation of the expression, and one stencil applied
 to the highest analytic order below the one wanted, or to the value of
-\eqn{f} where no lower order is analytic. A function given without
-derivatives, and a formula that \code{\link[stats:deriv]{stats::deriv()}} and \code{\link[stats:deriv]{stats::D()}} cannot
-differentiate, therefore have every order differenced from the value.
+\eqn{f} if every lower order is computed numerically. A function given
+without derivatives, and a formula that \code{\link[stats:deriv]{stats::deriv()}} and \code{\link[stats:deriv]{stats::D()}}
+cannot differentiate, therefore have every order differenced from the value.
 
 \code{gradient}, \code{hessian}, \code{deriv3} and \code{deriv4} may be supplied independently
 of one another. A supplied order is the starting point of the stencil for
@@ -196,11 +196,11 @@ derivative surfaces: the parameter names joined by \code{"_"}. Order two of
 \code{a_a_a}, \code{a_a_r}, \code{a_r_r}, \code{r_r_r}.
 
 The names are normalized here, so \code{r_a} and \code{a_r} are the same
-component and the order in which they are returned does not matter; what is
-checked is the set. A name that is not a component of this term, a missing
-component, a repeated one or a component of a length other than 1 or \code{n} is
-an error at \code{\link[=term_build]{term_build()}}. The term does not fall back to the numerical
-route in these cases.
+component and the order in which they are returned does not matter; the
+check compares the set of names. A name that is not a component of this term,
+a missing component, a repeated one or a component of a length other than 1
+or \code{n} is an error at \code{\link[=term_build]{term_build()}}. The term does not fall back to the
+numerical route in these cases.
 
 The derivatives are taken in the parameters \eqn{\theta} and not in the
 coefficients. The term applies the chain rule onto the coefficients,
@@ -213,7 +213,7 @@ set.seed(1)
 dd <- data.frame(x = seq(0, 3, length.out = 60))
 dd$y <- 2 * exp(-1.3 * dd$x) + rnorm(60, sd = 0.05)
 
-# an exponential decay, with the rate held positive by a log link
+# The term is an exponential decay, and a log link holds the rate positive.
 spec <- nl(~ a * exp(-r * x),
            links = list(r = linkfunctions7::log_link()),
            start = list(a = 1, r = 1))
@@ -221,14 +221,14 @@ built <- term_build(spec, dd)
 term_coef_names(built)
 dim(term_matrix(built))
 
-# the amplitude developed by group: a population value plus shrunken
-# departures, whose hyperparameter a fitting layer estimates
+# The amplitude is developed by group: a population value plus shrunken
+# departures, whose hyperparameter a fitting layer estimates.
 dd$g <- factor(rep(c("u", "v"), 30))
 sub <- term_build(nl(~ a * exp(-r * x), a ~ ridge(~g),
                      start = list(a = 1, r = 1)), dd)
 vapply(term_penalties(sub), function(e) e$name, character(1))
 
-# the first two orders written out by hand
+# The first two orders are written out by hand.
 g <- function(theta, data) {
   e <- exp(-theta$r * data$x)
   list(a = e, r = -theta$a * data$x * e)
@@ -248,7 +248,7 @@ exf <- term_build(nl(f, params = c("a", "r"), x = x, gradient = g,
                      hessian = h, start = list(a = 1, r = 1)), dd)
 max(abs(nl_fderiv(exf, order = 3)$r_r_r + dd$x^3 * exp(-dd$x)))
 
-# Fitted. The data are simulated from a known truth, so the
+# The model is fitted to data simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(8)
@@ -257,7 +257,7 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   ft <- statmodels7::statmod(
     y ~ 0 + nl(~ a * exp(-r * x), start = list(a = 1, r = 1)),
     distributions7::gaussian1_distrib(), fd)
-  # truth: a = 3 and r = 0.8
+  # The true values are a = 3 and r = 0.8.
   round(coef(ft)$mu, 2)
 }
 }

@@ -7,7 +7,7 @@
 .resolve_sparse(sparse, n, ncol_ind)
 }
 \arguments{
-\item{sparse}{\code{TRUE}, \code{FALSE}, or \code{NULL} to decide here.}
+\item{sparse}{\code{TRUE}, \code{FALSE}, or \code{NULL} to settle the storage here.}
 
 \item{n}{The number of rows.}
 
@@ -19,14 +19,14 @@ A single logical, never \code{NA}. A non-finite \code{n} or \code{ncol_ind} give
 \code{FALSE}.
 }
 \description{
-Passes an explicit \code{TRUE} or \code{FALSE} through, and where the caller left
-\code{NULL} decides from the size of the indicator part: sparse when
-\code{n * ncol_ind} exceeds \eqn{10^5}.
+Returns an explicit \code{TRUE} or \code{FALSE} unchanged. Where the caller left
+\code{NULL}, it settles the storage from the size of the indicator part: sparse
+when \code{n * ncol_ind} exceeds \eqn{10^5}.
 }
 \details{
 The dense indicator part holds \code{n * ncol_ind} cells where the sparse one
-holds one non-zero per row, so that product is what separates the two
-routes, and the threshold is read off it rather than off a count of levels.
+holds one non-zero per row, so that product separates the two routes, and
+the threshold is read off it rather than off a count of levels.
 
 Below about \eqn{10^5} cells the sparse route is slightly slower than the
 dense route, and above it the sparse route is faster, so the threshold is
@@ -36,7 +36,7 @@ A design carrying no factor has no indicator part, so the product is zero
 and the block is built dense, which suits a purely continuous design.
 }
 \seealso{
-\code{\link[=.indicator_cols]{.indicator_cols()}} for the count it reads, \code{\link[=linpar]{linpar()}} for the
-argument it settles.
+\code{\link[=.indicator_cols]{.indicator_cols()}} for the count that it reads, \code{\link[=linpar]{linpar()}} for the
+argument that it settles.
 }
 \keyword{internal}

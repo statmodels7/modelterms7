@@ -25,8 +25,8 @@ be empty.
 Validates each against the penalty and files it as held or as a grid.
 }
 \details{
-The validation is one body because the two states differ in length alone:
-the name must be one the penalty carries and every value must lie strictly
-inside its bounds, whether there is one of them or twenty.
+The validation is one body because the two states differ only in length:
+the name must be one that the penalty carries and every value must lie
+strictly inside its bounds, whether there is one of them or twenty.
 }
 \keyword{internal}

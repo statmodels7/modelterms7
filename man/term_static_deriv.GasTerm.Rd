@@ -18,16 +18,16 @@
 A matrix of \code{X}'s dimensions.
 }
 \description{
-The forward recursion of \code{\link[=term_static_deriv]{term_static_deriv()}} for a
+Computes the forward recursion of \code{\link[=term_static_deriv]{term_static_deriv()}} for a
 score-driven term.
 }
 \details{
-The recursion is the filter's own with the seed replaced: the starting
-level depends on the term's parameters, never on the static predictor,
-so the propagated derivative starts at zero and everything after it comes
-from the scores. The autoregressive and loading coefficients are read at
-each row, which covers a term whose parameters carry submodels of their
-own as well as one whose parameters are constant.
+The recursion is the filter's own, except that the seed is replaced: the
+starting level depends on the term's parameters, never on the static
+predictor, so the propagated derivative starts at zero and everything after
+it comes from the scores. The autoregressive and loading coefficients are
+read at each row, which covers a term whose parameters carry submodels of
+their own as well as one whose parameters are constant.
 
 It is written in R, evaluates no callback, and makes one pass over the
 data, carrying all the columns of \code{X} together.

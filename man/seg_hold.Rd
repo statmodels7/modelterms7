@@ -13,7 +13,7 @@ seg_hold(term, hold = TRUE)
 that is not held returns it unchanged.}
 }
 \value{
-The term in the requested state, its block rebuilt.
+The term in the requested state, whose block is rebuilt.
 }
 \description{
 Puts a sharp \code{\link[=jump]{jump()}} or \code{\link[=jseg]{jseg()}} term in its held state, or releases it
@@ -29,7 +29,7 @@ The working construction of Fasola, Muggeo and Kuchenhoff (2018) reaches
 its break-points through a block whose weight is frozen at the previous
 iterate. At the fixed point of that iteration the coefficients are therefore
 those of the working model, and not the least-squares coefficients at the
-positions reached. With the positions held, the term contributes a linear
+positions reached. When the positions are held, the term contributes a linear
 function of its remaining coefficients, and a fit of those coefficients is
 an ordinary fit, which is how \code{segmented} and \code{stepmented} report their
 coefficients. For a held term, \code{\link[=term_held]{term_held()}} returns the slots that are
@@ -42,13 +42,14 @@ positions are then the values \eqn{w_i'p_k} of the development at the
 current coefficients \eqn{p_k}.
 
 Releasing the term writes the position back into the slot as
-\eqn{g_k = -\delta_k\psi_k}, with the coefficient vector \eqn{p_k} of the
-development in place of \eqn{\psi_k} for a developed position. The read-off
-of the working construction then returns the held positions, and the
-iteration can continue from them.
+\eqn{g_k = -\delta_k\psi_k}, where the coefficient vector \eqn{p_k} of the
+development replaces \eqn{\psi_k} for a developed position. When the
+iteration then reads off the working construction, the result is the held
+positions, and the iteration can continue from them.
 
 A continuous \code{\link[=seg]{seg()}} and a smoothed term are rejected, since their
-positions are ordinary coefficients, each with a column of its own.
+positions are ordinary coefficients and each position has a column of its
+own.
 }
 \examples{
 set.seed(1)

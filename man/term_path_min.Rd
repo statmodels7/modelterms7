@@ -14,21 +14,21 @@ term_path_min(term, ...)
 }
 \value{
 A named list, one entry per penalty of the term, each a single
-number in \eqn{(0, 1)}. Empty where no penalty of the term has a swept
-hyperparameter and a recorded depth.
+number in \eqn{(0, 1)}. The list is empty where every penalty of the term
+lacks a swept hyperparameter or a recorded depth.
 }
 \description{
-Reports the fraction of the emptying value the path descends to. The path
-runs from the kink that leaves every coefficient of the block at zero down
-to that fraction of it, so a smaller number reaches a denser fit and a
+Reports the fraction of the emptying value to which the path descends. The
+path runs from the kink that leaves every coefficient of the block at zero
+down to that fraction of it, so a smaller number reaches a denser fit and a
 larger one stops sooner.
 }
 \details{
-It belongs to the term for the same reason the grid size does: how far the
-useful range of a hyperparameter extends is a property of the block, and a
-criterion is applied to every term of the model at once.
+It belongs to the term for the same reason that the grid size does: how far
+the useful range of a hyperparameter extends is a property of the block, and
+a criterion is applied to every term of the model at once.
 
-It is \strong{one number per penalty}, because only the path over the size of
+It is one number per penalty, because only the path over the size of
 the kink uses it. A bounded hyperparameter is swept over its own interval,
 and a shape that does not move the kink over a geometric grid above its
 lower bound; a fraction of an emptying value has no meaning on either axis.
@@ -44,11 +44,12 @@ The keys are \code{\link[=term_penalties]{term_penalties()}}'s entry names, \cod
 whole term.
 }
 \examples{
-# The default, and a deeper path.
+# The first call shows the default, and the second a deeper path.
 term_path_min(lasso(~ x))
 term_path_min(lasso(~ x, min_ratio = 1e-6))
 
-# No path, or no swept hyperparameter, so nothing to report.
+# A term with no path, or with no swept hyperparameter, has nothing to
+# report.
 term_path_min(ridge(~ x))
 term_path_min(lasso(~ x, lambda = 2))
 

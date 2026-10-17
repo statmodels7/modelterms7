@@ -15,9 +15,9 @@ A numeric matrix with one column per coefficient of the term and
 one row per constraint.
 }
 \description{
-The rows of \code{\link[=term_kink_constraints]{term_kink_constraints()}} of every sharp \code{\link[=seg]{seg()}} sub-term that
-develops a parameter, placed in the columns of the term's coefficients that
-the sub-term owns. Every other nonlinear term has no rows.
+Returns the rows of \code{\link[=term_kink_constraints]{term_kink_constraints()}} of every sharp \code{\link[=seg]{seg()}}
+sub-term that develops a parameter, placed in the columns of the term's
+coefficients that the sub-term owns. Every other nonlinear term has no rows.
 }
 \examples{
 d <- data.frame(t = seq(0, 10, length.out = 41), x = rep(1:2, length.out = 41))

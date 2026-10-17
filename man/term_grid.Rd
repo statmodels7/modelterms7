@@ -14,8 +14,8 @@ term_grid(term, ...)
 }
 \value{
 A named list, one entry per penalty of the term, each a named list
-of single whole numbers keyed by hyperparameter. Empty where no
-hyperparameter of the term has a recorded grid size.
+of single whole numbers keyed by hyperparameter. The list is empty where
+the term records no grid size for any hyperparameter.
 }
 \description{
 Reports the number of values that a path visits for each hyperparameter of
@@ -26,15 +26,15 @@ layer.
 }
 \details{
 How finely a hyperparameter is swept belongs to the term because the term is
-where the penalty is named: a block of four columns and one of four hundred
-want different grids, and an outer criterion applies to every
+where the penalty is named: a block of four columns and one of four
+hundred need different grids, and an outer criterion applies to every
 hyperparameter of the model alike, so a size set there could not
 distinguish between them.
 
-Only a hyperparameter with a \strong{path} has a grid, and a held
+Only a hyperparameter with a path has a grid, and a held
 hyperparameter has none. \code{\link[=ridge]{ridge()}}, \code{\link[=s]{s()}} and \code{\link[=te]{te()}} with their default
 penalty, and \code{\link[=random]{random()}} with its default Gaussian prior, report nothing,
-their hyperparameters being estimated at the mode by a marginal criterion.
+because a marginal criterion estimates their hyperparameters at the mode.
 A smoother whose penalty factory has a kink is swept by a path but reports
 nothing either, and the path uses its default size. \code{\link[=lasso]{lasso()}} reports its
 \code{n_lambda}, \code{\link[=enet]{enet()}} reports \code{n_lambda} and \code{n_alpha}, and \code{\link[=scad]{scad()}} and
@@ -53,15 +53,15 @@ whole term.
 term_grid(lasso(~ x))
 term_grid(lasso(~ x, n_lambda = 50))
 
-# Two axes, and their two sizes: the kink axis is swept more finely.
+# The two axes have two sizes, and the kink axis is swept more finely.
 term_grid(enet(~ x))
 
-# A held hyperparameter has no grid, and neither has the held shape of SCAD.
+# A held hyperparameter has no grid, and the held shape of SCAD has none.
 term_grid(enet(~ x, alpha = 0.5))
 term_grid(scad(~ x))
 term_grid(scad(~ x, a = NULL))
 
-# A penalty with no kink has no path, so nothing to count.
+# A penalty with no kink has no path, so there is nothing to count.
 term_grid(ridge(~ x))
 term_grid(s(x, basis7::bspline_smooth(k = 5)))
 

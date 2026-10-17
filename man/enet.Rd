@@ -33,7 +33,7 @@ apart by their labels.}
 each coefficient on the scale of its own column. See the section above.}
 
 \item{lambda}{The overall rate. One number holds it, several are the grid
-the path visits as they stand, and \code{NULL}, the default, has the path
+that the path visits as they stand, and \code{NULL}, the default, has the path
 build one. Must lie in \eqn{(0, \infty)}.}
 
 \item{alpha}{The mixing weight, in the same three states and settled
@@ -41,14 +41,15 @@ independently of \code{lambda}. Must lie in \eqn{(0, 1)}.}
 
 \item{id}{Labels sharing this term's hyperparameters with those of
 other terms carrying the same ones: each is then estimated at a
-single value, wherever in the formula they sit. A named vector,
-\code{c(alpha = "A")}, because the penalty has several hyperparameters and the
-name says which one is shared; \code{NULL}, the default, shares nothing. See
+single value, wherever in the formula they sit. The argument is a named
+vector, \code{c(alpha = "A")}, because the penalty has several hyperparameters
+and the name identifies the one that is shared; \code{NULL}, the default,
+shares nothing. See
 \code{\link[=term_ids]{term_ids()}} for the meaning of the labels and the restrictions on their
 use.}
 
-\item{n_lambda, n_alpha}{How many values the path visits for each, at
-least 2. The two are separate arguments because the axes differ:
+\item{n_lambda, n_alpha}{The number of values that the path visits for each,
+at least 2. The two are separate arguments because the axes differ:
 \eqn{\lambda} descends from the kink size that empties the block to
 \code{min_ratio} times that size (four decades at the default \code{min_ratio}),
 which takes more points than \eqn{\alpha}, which spans one bounded
@@ -57,12 +58,12 @@ hyperparameter that is held or written out.}
 
 \item{min_ratio}{How far down the path reaches, as a fraction of the
 kink that empties the block: smaller reaches a denser fit, larger
-stops sooner. A single number in \eqn{(0, 1)}, \code{1e-4} by default.
+stops sooner. It is a single number in \eqn{(0, 1)}, \code{1e-4} by default.
 Only the sweep by kink size reads it, and it signals an error when given
 explicitly while \code{lambda} is held or written out.}
 
 \item{search}{\code{"grid"} to visit every combination of \eqn{\lambda}
-and \eqn{\alpha}, \code{"cyclic"} to sweep one at a time with the other
+and \eqn{\alpha}, \code{"cyclic"} to sweep one at a time while the other is
 held. See \code{\link[=term_search]{term_search()}}. Given explicitly while fewer than two
 hyperparameters are swept, it signals an error.}
 
@@ -77,20 +78,20 @@ an argument named after another penalty's hyperparameter:
 \code{scad(~ x, gamma = 1)} signals \code{"'scad' has no argument 'gamma'."}.}
 }
 \value{
-An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification, with \code{X},
-\code{coef_names}, \code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}}
+An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification whose \code{X},
+\code{coef_names}, \code{blueprint} and \code{penalty} are empty until \code{\link[=term_build]{term_build()}}
 fills them. The build attaches the penalty over the block's columns.
 }
 \description{
-The lasso and the ridge mixed: a kink at zero, so the term still selects,
-and a quadratic part that keeps correlated coefficients together instead
-of choosing arbitrarily among them.
+Mixes the lasso and the ridge. The penalty has a kink at zero, so the term
+still selects, and it has a quadratic part that keeps correlated
+coefficients together instead of choosing arbitrarily among them.
 }
 \details{
 \deqn{\rho(\beta) = \lambda\left\{\alpha\lVert\beta\rVert_1
   + \frac{1-\alpha}{2}\lVert\beta\rVert_2^2\right\}
   + p\log Z(\lambda, \alpha),}
-the normalizing constant being that of the product of a Laplace and a
+where the normalizing constant is that of the product of a Laplace and a
 Gaussian at zero
 (\code{\link[distributions7:enet_distrib]{distributions7::enet_distrib()}}). The constant depends on both
 hyperparameters and is kept, so the value is minus the log density of that
@@ -102,11 +103,11 @@ both hyperparameters are chosen along a path and scored by
 the lasso and at \eqn{\alpha \to 0} the ridge, and the kink at zero has
 half-width \eqn{\lambda\alpha}, so both hyperparameters scale it.
 
-\strong{Hyperparameters.} \code{lambda} on \eqn{(0, \infty)}, swept over
-\code{n_lambda} values by kink size; \code{alpha} on \eqn{(0, 1)}, swept
-over \code{n_alpha} values across that interval, the ends excluded
-because the penalty there is one of the other two. Every combination of
-the two is visited, \code{n_lambda * n_alpha} fits, unless
+The hyperparameters are \code{lambda}, on \eqn{(0, \infty)}, swept over
+\code{n_lambda} values by kink size, and \code{alpha}, on \eqn{(0, 1)}, swept
+over \code{n_alpha} values across that interval. The ends of the interval are
+excluded because the penalty there is one of the other two. Every
+combination of the two is visited, \code{n_lambda * n_alpha} fits, unless
 \code{search = "cyclic"} sweeps one at a time instead.
 }
 \examples{
@@ -125,7 +126,7 @@ all.equal(penalties7::penalty_value(pe, beta, list(lambda = 2, alpha = 1 - 1e-9)
 all.equal(penalties7::penalty_value(pe, beta, list(lambda = 2, alpha = 1e-9)),
           penalties7::penalty_value(pr, beta, list(lambda = 2)))
 
-# alpha held at the halfway mixture, lambda still estimated.
+# alpha is held at the halfway mixture, and lambda is still estimated.
 term_hyper(enet(~ x1 + x2, alpha = 0.5))
 
 # The grid is 25 by 5 by default; cyclic sweeps one axis at a time.
@@ -136,7 +137,7 @@ term_search(enet(~ x1 + x2, search = "cyclic"))
 try(enet(~ x1 + x2, alpha = 1))
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The model is fitted. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(11)

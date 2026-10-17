@@ -21,13 +21,13 @@ A data frame with one row per observation and one column per
 regime, \code{state1}, \code{state2}, and so on; every row sums to one.
 }
 \description{
-The probability of each regime at each observation given the whole series,
-\eqn{P(S_t = j \mid y_1, \dots, y_n)}, as a data frame.
+Returns the probability of each regime at each observation given the whole
+series, \eqn{P(S_t = j \mid y_1, \dots, y_n)}, as a data frame.
 }
 \details{
 The probabilities are those of \code{\link[=term_posterior]{term_posterior()}}, computed by the forward
 and backward recursions, and this method adds the column labels. The rows
-are in the order of the data on which the term was built, whatever \code{by} and
-\code{time} say, so the result can be bound to that data directly.
+are in the order of the data on which the term was built, regardless of \code{by}
+and \code{time}, so the result can be bound to that data directly.
 }
 \keyword{internal}

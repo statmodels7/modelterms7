@@ -13,7 +13,8 @@ term_draw(term, sd = 1, ...)
 \item{sd}{The width of the draw, \code{1} by default. The standard deviation
 applied is \code{sd / 2}, for the reason given in the details.}
 
-\item{...}{Passed to methods. No shipped method reads anything here.}
+\item{...}{Passed to methods. The shipped methods do not use these
+arguments.}
 }
 \value{
 A named numeric vector on the unconstrained scale, of length
@@ -21,9 +22,10 @@ A named numeric vector on the unconstrained scale, of length
 returns.
 }
 \description{
-A point drawn from the region a structural term's parameters plausibly
-occupy: the values \code{\link[=term_start]{term_start()}} gives, displaced by normal noise on the
-unconstrained scale \code{\link[=term_links]{term_links()}} defines.
+Draws a point from the region that a structural term's parameters
+plausibly occupy. The point consists of the values that \code{\link[=term_start]{term_start()}}
+gives, displaced by normal noise on the unconstrained scale that
+\code{\link[=term_links]{term_links()}} defines.
 }
 \details{
 Simulating from a model that carries state requires values for the term's
@@ -63,7 +65,7 @@ those coordinates, and \pkg{penalties7}'s \code{penalty_draw()} draws them.
 set.seed(1)
 g <- gas(p = 1, q = 1)
 
-# The same names and the same scale as term_start(), drawn.
+# The draw has the same names and the same scale as term_start().
 identical(names(term_draw(g)), term_params(g))
 
 # Read on the parameters' own charts, a loading stays positive and a
@@ -73,12 +75,12 @@ z <- term_draw(g)
 c(kappa1 = linkfunctions7::linkinv(lk$kappa1, z[["kappa1"]]),
   pacf1 = linkfunctions7::linkinv(lk$pacf1, z[["pacf1"]]))
 
-# A wider draw is a wider model.
+# A larger sd widens the draws, and with them the range of models.
 stats::sd(replicate(200, term_draw(g, sd = 2)[["omega"]]))
 
 }
 \seealso{
-\code{\link[=term_start]{term_start()}} for the point it spreads from, \code{\link[=term_links]{term_links()}} for
-the scale it is on, \code{\link[=term_simulate]{term_simulate()}} for the response drawn once these
-are chosen.
+\code{\link[=term_start]{term_start()}} for the point from which the draw spreads,
+\code{\link[=term_links]{term_links()}} for the scale on which the draw is expressed,
+\code{\link[=term_simulate]{term_simulate()}} for the response drawn once these are chosen.
 }

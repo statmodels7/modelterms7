@@ -9,8 +9,8 @@ seg_psi(term, coef = NULL)
 \arguments{
 \item{term}{A built \code{\link[=SegTerm]{SegTerm()}}.}
 
-\item{coef}{Optional coefficients; defaults to the ones that the term was
-last refreshed at.}
+\item{coef}{Optional coefficients; defaults to the coefficients at which
+the term was last refreshed.}
 }
 \value{
 A numeric vector with one entry per break-point, or, where a
@@ -18,7 +18,7 @@ break-point carries a development, a matrix with one row per
 observation and one column per break-point.
 }
 \description{
-The estimated positions of the break-points. For a continuous or a
+Returns the estimated positions of the break-points. For a continuous or a
 smoothed term these are coefficients; for a sharp \code{jump()} they are
 read off two coefficients as \eqn{-g_k/\delta_k}, and for a sharp
 \code{jseg()} off a quadratic in \eqn{g_k}, \eqn{\delta_k}, \eqn{\gamma_k}

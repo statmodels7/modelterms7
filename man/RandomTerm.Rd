@@ -28,16 +28,16 @@ when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag
 \code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
 \item{hyper}{The hyperparameters of the term's penalty that the caller
-\strong{held}, as a named list keyed by the penalty's names. Empty, the
+held, as a named list keyed by the penalty's names. Empty, the
 default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
 default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the caller
-wrote out, as a named list of numeric vectors. Empty, the default, has the
-path build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values that a path visits, for each hyperparameter that
+the caller wrote out, as a named list of numeric vectors. Empty, the
+default, has the path build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink reaches, as
 a fraction of the value that empties the block: one number in \eqn{(0, 1)},
@@ -55,14 +55,14 @@ carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
 \item{X}{The design block, one row per observation: a numeric matrix or a
-two-dimensional \pkg{Matrix}. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+two-dimensional \pkg{Matrix}. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{coef_names}{The block's coefficient names, one per column, prefixed by
-\code{label} when there is one. Filled by \code{\link[=term_build]{term_build()}}.}
+\code{label} when there is one. \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{blueprint}{A named list of everything needed to reproduce the mapping
-on new rows. Its contents are the subclass's business; nothing outside the
-term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+on new rows. Its contents belong to the subclass, and only the term reads
+them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{penalty}{A \pkg{penalties7} penalty on the block's coefficients, or
 \code{NULL} when the term is unpenalized.}
@@ -86,15 +86,15 @@ An S7 object of class \code{RandomTerm}, inheriting from
 addition to those of the two parent classes.
 }
 \description{
-The subclass of \code{\link[=additive_term]{additive_term()}} holding grouped coefficients with a
-distribution attached to them: the within-group design interacted with the
-group indicators, one coefficient per group and per within-group column,
-and a penalty carrying that distribution's negative log-density. \code{\link[=random]{random()}}
-constructs it.
+\code{RandomTerm} is the subclass of \code{\link[=additive_term]{additive_term()}} that holds grouped
+coefficients with a distribution attached to them: the within-group design
+interacted with the group indicators, one coefficient per group and per
+within-group column, and a penalty that carries that distribution's negative
+log-density. \code{\link[=random]{random()}} constructs it.
 }
 \section{The properties of its own}{
 \code{formula} is the bar formula as given, \code{~ 1 | g} or \code{~ x | g}, kept with its
-environment. \code{correlated} states whether the \strong{default} Gaussian lets the
+environment. \code{correlated} indicates whether the default Gaussian lets the
 within-group effects depend on each other. It is read only where \code{distrib}
 is \code{NULL}, since a distribution given in \code{distrib} determines the same
 thing.
@@ -135,7 +135,7 @@ term_penalty(b)@params
 
 }
 \seealso{
-\code{\link[=random]{random()}}, the constructor; \code{\link[=term_penalties]{term_penalties()}} for the entries a
-built one declares; \code{\link[=edf]{edf()}} for the effective degrees of freedom of a
-fitted random effect.
+\code{\link[=random]{random()}}, the constructor; \code{\link[=term_penalties]{term_penalties()}} for the entries
+that a built one declares; \code{\link[=edf]{edf()}} for the effective degrees of freedom of
+a fitted random effect.
 }

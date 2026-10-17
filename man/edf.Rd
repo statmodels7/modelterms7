@@ -23,10 +23,10 @@ is allowed unless the trace runs.}
 
 \item{theta}{The estimated hyperparameters. A term carrying one penalty
 takes that penalty's own named list, \code{list(lambda = 0.25)}. A term
-carrying several takes a list of such lists, keyed by the names
+carrying several takes a list of such lists, keyed by the names that
 \code{\link[=term_penalties]{term_penalties()}} gives; an unkeyed list signals an error that lists the
-names. The two spellings are distinguished by the value being a list, since
-a hyperparameter is never a list.}
+names. The two spellings are distinguished by whether the value is a list,
+since a hyperparameter is never a list.}
 
 \item{tol}{The magnitude below which a coefficient counts as zero under a
 non-smooth penalty, \code{1e-8} by default. A proximal step returns exact
@@ -36,8 +36,9 @@ route left small.}
 \item{...}{Passed to methods.}
 }
 \value{
-A single number, between 0 and \code{term_npar(term)}. Not an integer in
-general: only the unpenalized and the non-smooth rules give whole numbers.
+A single number, between 0 and \code{term_npar(term)}. The number is not
+an integer in general: only the unpenalized and the non-smooth rules give
+whole numbers.
 }
 \description{
 Computes the effective degrees of freedom of a built term from the
@@ -53,26 +54,28 @@ term declares through \code{\link[=term_penalties]{term_penalties()}}, so a term
 the package is counted by the same rules without registering a method.
 }
 \section{The three rules}{
-\strong{A parameter outside every penalty counts one}, exactly. A term with no
-penalties at all therefore returns \code{term_npar(term)} and reads none of the
-other arguments.
+A parameter outside every penalty counts one, exactly. A term with no
+penalties at all therefore returns \code{term_npar(term)} and does not read any
+of the other arguments.
 
-\strong{A parameter under a non-smooth penalty counts one when it is away from
-zero and nothing when it is at it.} For the lasso that count is an unbiased
-estimator of the degrees of freedom (Zou, Hastie and Tibshirani, 2007). A
-penalty is treated as non-smooth when \code{\link[penalties7:penalty_kinks]{penalties7::penalty_kinks()}} reports
-any point at a probe value of its hyperparameters. The lasso, SCAD, MCP and
-the elastic net are therefore counted by this rule, and the ridge is not.
+A parameter under a non-smooth penalty counts one when it is away from
+zero and counts zero when it is at zero. For the lasso that count is an
+unbiased estimator of the degrees of freedom (Zou, Hastie and Tibshirani,
+2007). A penalty is treated as non-smooth when \code{\link[penalties7:penalty_kinks]{penalties7::penalty_kinks()}}
+reports any point at a probe value of its hyperparameters. The lasso, SCAD,
+MCP and the elastic net are therefore counted by this rule, and the ridge is
+not.
 
-\strong{Everything else is counted together by one trace.} Over the parameters
-that remain, meaning those unpenalized and those under a smooth penalty,
+Everything else is counted together by one trace. Over the parameters
+that remain, meaning those that are unpenalized and those under a smooth
+penalty, the count is
 
 \deqn{\mathrm{edf} = \mathrm{tr}\{(H + S)^{-1} H\},}
 
 where \eqn{H} is \code{hessian} restricted to those rows and columns and \eqn{S}
 carries each smooth penalty's Hessian in the coefficients, evaluated at
 \code{coef} and at the estimated hyperparameters and placed at the parameters
-that penalty covers. An unpenalized parameter contributes a zero row and
+that the penalty covers. An unpenalized parameter contributes a zero row and
 column to \eqn{S}, so the trace returns its one. As a smoothing parameter
 grows, the trace falls toward the dimension of the penalty's null space.
 For \code{\link[=s]{s()}} with the B-spline, P-spline or Legendre smoother that limit is 1,
@@ -89,16 +92,17 @@ non-smooth, and the number of coefficients if there is no penalty.
 over which the trace runs. It is not needed when every penalty of the term
 is non-smooth, since the count is then read from \code{coef} alone, and \code{coef} is
 not needed when the term carries no penalty. An argument that the rule in
-force does not read may be left \code{NULL}. An argument that the rule reads and
-that is missing signals an error, and the message names the arguments the
-rule needs.
+force does not read may be left \code{NULL}. If an argument that the rule reads
+is missing, \code{edf()} signals an error, and the message names the arguments
+that the rule needs.
 }
 
 \examples{
 set.seed(2)
 dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20), x3 = rnorm(20))
 
-# No penalty: the coefficient count, and nothing else is read.
+# Without a penalty, edf() returns the coefficient count and ignores the
+# other arguments.
 edf(term_build(linpar(~ x1 + x2), dd))
 
 # For a ridge the count falls from 2 toward 0 as lambda grows.
@@ -143,7 +147,7 @@ Zou, H., Hastie, T. and Tibshirani, R. (2007). On the "degrees of freedom"
 of the lasso. \emph{The Annals of Statistics}, 35(5), 2173--2192.
 }
 \seealso{
-\code{\link[=term_penalties]{term_penalties()}} for the entries the count runs over,
+\code{\link[=term_penalties]{term_penalties()}} for the entries over which the count runs,
 \code{\link[=term_npar]{term_npar()}} for the ceiling, \code{\link[=term_smooth]{term_smooth()}} for whether a term's
 penalized objective is twice differentiable, and
 \code{\link[penalties7:penalty_gradient]{penalties7::penalty_hessian()}} for the \eqn{S} block.

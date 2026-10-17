@@ -30,16 +30,16 @@ when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag
 \code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
 \item{hyper}{The hyperparameters of the term's penalty that the caller
-\strong{held}, as a named list keyed by the penalty's names. Empty, the
+held, as a named list keyed by the penalty's names. Empty, the
 default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
 default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the caller
-wrote out, as a named list of numeric vectors. Empty, the default, has the
-path build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values that a path visits, for each hyperparameter that
+the caller wrote out, as a named list of numeric vectors. Empty, the
+default, has the path build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink reaches, as
 a fraction of the value that empties the block: one number in \eqn{(0, 1)},
@@ -57,14 +57,14 @@ carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
 \item{X}{The design block, one row per observation: a numeric matrix or a
-two-dimensional \pkg{Matrix}. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+two-dimensional \pkg{Matrix}. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{coef_names}{The block's coefficient names, one per column, prefixed by
-\code{label} when there is one. Filled by \code{\link[=term_build]{term_build()}}.}
+\code{label} when there is one. \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{blueprint}{A named list of everything needed to reproduce the mapping
-on new rows. Its contents are the subclass's business; nothing outside the
-term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+on new rows. Its contents belong to the subclass, and only the term reads
+them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{penalty}{A \pkg{penalties7} penalty on the block's coefficients, or
 \code{NULL} when the term is unpenalized.}
@@ -91,10 +91,10 @@ An S7 object of class \code{RandomSmoothTerm}, inheriting from
 \code{\link[=RandomTerm]{RandomTerm()}}, \code{\link[=additive_term]{additive_term()}} and \code{\link[=model_term]{model_term()}}.
 }
 \description{
-The subclass of \code{\link[=RandomTerm]{RandomTerm()}} whose within-group design is a smooth: one
-random curve or surface per level of the grouping variable. \code{\link[=random]{random()}}
-constructs it when the left side of the bar is an \code{\link[=s]{s()}} or a \code{\link[=te]{te()}} call,
-as in \code{random(~ s(x) | g)}.
+\code{RandomSmoothTerm} is the subclass of \code{\link[=RandomTerm]{RandomTerm()}} whose within-group
+design is a smooth: one random curve or surface per level of the grouping
+variable. \code{\link[=random]{random()}} constructs it when the left side of the bar is an \code{\link[=s]{s()}}
+or a \code{\link[=te]{te()}} call, as in \code{random(~ s(x) | g)}.
 }
 \section{The two properties of its own}{
 \code{smooth} is the unbuilt \code{\link[=SmoothTerm]{SmoothTerm()}} read from the left side of the bar,
@@ -103,10 +103,10 @@ its \pkg{basis7} smoother. \code{intercept} records whether each group also has
 a random level: \code{TRUE} for \code{~ s(x) | g} and \code{FALSE} for \code{~ 0 + s(x) | g}.
 
 Every other property, and every generic that \code{\link[=RandomTerm]{RandomTerm()}} implements,
-has the meaning documented there: the block is sparse and ordered group by group,
-a level that the build did not see is predicted at a zero effect on
-request, and \code{\link[=term_within]{term_within()}} returns the design that one group's effect
-multiplies.
+has the meaning documented there: the block is sparse and ordered group by
+group, a level that was not present at build time is predicted at a zero
+effect on request, and \code{\link[=term_within]{term_within()}} returns the design that one group's
+effect multiplies.
 }
 
 \examples{

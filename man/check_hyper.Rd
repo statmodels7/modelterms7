@@ -16,20 +16,23 @@ used only to read the names and the bounds.}
 \item{what}{The constructor's name, for the message.}
 }
 \value{
-A named list, keyed by the penalty's own hyperparameter names, of
-the values given exactly one number. Empty where every hyperparameter
-was left \code{NULL} or written out as a grid.
+A named list, keyed by the penalty's own hyperparameter names, that
+holds the single value of each hyperparameter that was given exactly one
+number.
+The list is empty where every hyperparameter was left \code{NULL} or written
+out as a grid.
 }
 \description{
-Validates the values a constructor was given against the names and the
-bounds of the penalty the term will build, and returns them as a named
-list, dropping the \code{NULL} entries, which are the ones to be estimated.
+Validates the values that a constructor was given against the names and the
+bounds of the penalty that the term will build, and returns them as a named
+list. The \code{NULL} entries, which are the hyperparameters to be estimated, are
+dropped.
 }
 \details{
 The check is made at construction and not at the fit. A name that the
-penalty does not carry is an error that lists the names it does carry. In
-the penalized constructors, an argument written for another penalty, such as
-\code{mcp(x, a = 3)}, which gives SCAD's shape to an MCP whose own shape is
+penalty does not carry is an error that lists the names that it does carry.
+In the penalized constructors, an argument written for another penalty, such
+as \code{mcp(x, a = 3)}, which gives SCAD's shape to an MCP whose own shape is
 \code{gamma}, is rejected earlier, as an argument that the constructor does not
 have (see \code{\link[=penalized_terms]{penalized_terms()}}).
 

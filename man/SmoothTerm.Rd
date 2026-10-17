@@ -28,16 +28,16 @@ when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag
 \code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
 \item{hyper}{The hyperparameters of the term's penalty that the caller
-\strong{held}, as a named list keyed by the penalty's names. Empty, the
+held, as a named list keyed by the penalty's names. Empty, the
 default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
 default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the caller
-wrote out, as a named list of numeric vectors. Empty, the default, has the
-path build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values that a path visits, for each hyperparameter that
+the caller wrote out, as a named list of numeric vectors. Empty, the
+default, has the path build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink reaches, as
 a fraction of the value that empties the block: one number in \eqn{(0, 1)},
@@ -55,14 +55,14 @@ carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
 \item{X}{The design block, one row per observation: a numeric matrix or a
-two-dimensional \pkg{Matrix}. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+two-dimensional \pkg{Matrix}. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{coef_names}{The block's coefficient names, one per column, prefixed by
-\code{label} when there is one. Filled by \code{\link[=term_build]{term_build()}}.}
+\code{label} when there is one. \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{blueprint}{A named list of everything needed to reproduce the mapping
-on new rows. Its contents are the subclass's business; nothing outside the
-term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+on new rows. Its contents belong to the subclass, and only the term reads
+them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{penalty}{A \pkg{penalties7} penalty on the block's coefficients, or
 \code{NULL} when the term is unpenalized.}
@@ -72,9 +72,9 @@ term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
 \item{by}{The expression of the variable over which the smooth varies, or
 \code{NULL}.}
 
-\item{spec}{A named list of what the build reads: \code{smoothers}, one
-\pkg{basis7} smoother per covariate; \code{by_hyper}; \code{default_label}, saying
-whether the label was built from the call; and for \code{\link[=te]{te()}} the
+\item{spec}{A named list of the settings that the build uses: \code{smoothers},
+one \pkg{basis7} smoother per covariate; \code{by_hyper}; \code{default_label}, which
+records whether the label was built from the call; and, for \code{\link[=te]{te()}}, the
 \code{anisotropic} flag.}
 
 \item{sparse}{\code{TRUE}, \code{FALSE} or \code{NULL} for the block's storage; only a
@@ -86,11 +86,11 @@ An S7 object of class \code{SmoothTerm}, inheriting from
 beside those of the two parent classes.
 }
 \description{
-The subclass of \code{\link[=additive_term]{additive_term()}} for a penalized smooth: a \pkg{basis7}
-expansion of one or more covariates with a roughness penalty on its
-coefficients. \code{\link[=s]{s()}} constructs it for one covariate and \code{\link[=te]{te()}} for several,
-and the two differ in the basis they build and the penalty they attach, not
-in the class.
+\code{SmoothTerm} is the subclass of \code{\link[=additive_term]{additive_term()}} for a penalized smooth: a
+\pkg{basis7} expansion of one or more covariates with a roughness penalty on
+its coefficients. \code{\link[=s]{s()}} constructs it for one covariate and \code{\link[=te]{te()}} for
+several, and the two differ in the basis that they build and the penalty
+that they attach, not in the class.
 }
 \section{The four properties of its own}{
 \code{vars} holds the covariate expressions, one for \code{\link[=s]{s()}} and two or more for
@@ -98,18 +98,19 @@ in the class.
 given. \code{by} is the expression of the variable over which the smooth varies,
 or \code{NULL}.
 
-\code{spec} carries what the build reads: the \pkg{basis7} smoothers, one per
-covariate, which hold the whole construction; \code{by_hyper}, saying whether
-the levels of a factor \code{by} share a smoothing parameter or carry one each;
-\code{default_label}, saying whether the label was built from the call; and for
-\code{\link[=te]{te()}} whether the penalty is anisotropic. What a build then computes from
-the data goes into the blueprint instead: the Demmler-Reinsch transform, the
-centering constraint, the \code{by} levels and the penalties the term declares.
+\code{spec} carries the settings that the build uses: the \pkg{basis7} smoothers,
+one per covariate, which hold the whole construction; \code{by_hyper}, which
+records whether the levels of a factor \code{by} share a smoothing parameter or
+carry one each; \code{default_label}, which records whether the label was built
+from the call; and, for \code{\link[=te]{te()}}, whether the penalty is anisotropic. What a
+build then computes from the data goes into the blueprint instead: the
+Demmler-Reinsch transform, the centering constraint, the \code{by} levels and the
+penalties that the term declares.
 
 \code{sparse} is \code{NULL} until the build settles it. A smooth's block is sparse
-only under a \strong{factor} \code{by}, where each row sits in the block of its own
-level: the basis itself is dense by construction, the Demmler-Reinsch
-rotation making it so, and a numeric \code{by} merely multiplies it.
+only under a factor \code{by}, where each row sits in the block of its own
+level: the basis itself is dense by construction because of the
+Demmler-Reinsch rotation, and a numeric \code{by} merely multiplies it.
 }
 
 \examples{
@@ -120,7 +121,8 @@ dd <- data.frame(x = sort(runif(80)), z = runif(80))
 c(s = S7::S7_inherits(s(x), SmoothTerm),
   te = S7::S7_inherits(te(x, z), SmoothTerm))
 
-# The settings are on `spec`; what the data decide is in the blueprint.
+# The settings are on `spec`, and the quantities computed from the data are
+# in the blueprint.
 tm <- s(x, basis7::bspline_smooth(k = 8))
 names(tm@spec)
 names(term_build(tm, dd)@blueprint)

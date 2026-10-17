@@ -12,8 +12,8 @@ term_build(term, data, ...)
 \item{term}{An object inheriting from \code{\link[=model_term]{model_term()}}, built or not. A built
 term is rebuilt.}
 
-\item{data}{A data frame carrying every variable the term names. Any other
-object is rejected by the generic, before dispatch, with the error
+\item{data}{A data frame carrying every variable that the term names. Any
+other object is rejected by the generic, before dispatch, with the error
 \code{"'data' must be a data frame."}.}
 
 \item{...}{Passed to methods. The shipped methods do not use it.}
@@ -21,17 +21,17 @@ object is rejected by the generic, before dispatch, with the error
 \value{
 A built term of the same class as \code{term}. For an additive term the
 \code{X}, \code{coef_names} and \code{blueprint} properties are filled, and \code{penalty} is
-where the term is penalized; for a structural term the \code{blueprint} is.
-\code{\link[=term_is_built]{term_is_built()}} is \code{TRUE} either way, reading whichever of the two the
-branch fills.
+filled where the term is penalized; for a structural term the \code{blueprint}
+is filled. \code{\link[=term_is_built]{term_is_built()}} is \code{TRUE} either way, because it reads the
+one of the two records that the branch fills.
 }
 \description{
 Turns a term specification into a built term: an additive term computes its
 design block from \code{data}, assigns the coefficient names and records the
 blueprint that will reproduce the mapping on other rows; a structural term
 records whatever its recursion needs, its grouping and its ordering. The
-returned object is a copy of the specification with those properties filled,
-and the specification is unchanged.
+returned object is a copy of the specification in which those properties are
+filled, and the specification is unchanged.
 }
 \section{What building produces}{
 An additive term contributes to the linear predictor through a block, and
@@ -41,24 +41,24 @@ through a penalty on that block's coefficients when it is penalized:
   \qquad \text{penalized objective} \quad
   -\ell(\beta) + \sum_{t} \rho_t(\beta_t; \theta_t).}
 
-Building is what produces \eqn{X_t} from the data and attaches
+Building produces \eqn{X_t} from the data and attaches
 \eqn{\rho_t}. \code{\link[=term_matrix]{term_matrix()}} then reads the block, \code{\link[=term_penalties]{term_penalties()}} the
 penalties, and \code{\link[=term_predict]{term_predict()}} reproduces \eqn{X_t} at other rows through
 the blueprint.
 
-A structural term has no such block. \code{\link[=gas]{gas()}} records the group each row
-belongs to and its place in that group's series; \code{\link[=regime]{regime()}} and the marginal
-break-point terms record what their forward recursion reads. They report
-themselves through \code{\link[=term_filter]{term_filter()}} or \code{\link[=term_loglik]{term_loglik()}}, and \code{\link[=term_matrix]{term_matrix()}}
-has no method for them.
+A structural term has no such block. \code{\link[=gas]{gas()}} records the group to which each
+row belongs and its place in that group's series; \code{\link[=regime]{regime()}} and the marginal
+break-point terms record the quantities that their forward recursion reads.
+They report themselves through \code{\link[=term_filter]{term_filter()}} or \code{\link[=term_loglik]{term_loglik()}}, and
+\code{\link[=term_matrix]{term_matrix()}} has no method for them.
 }
 
 \section{Building twice, and building on other data}{
 Building is not idempotent in general: a term built again on new data
-re-derives its factor levels and its knots from those rows. That is what
-\code{\link[=term_predict]{term_predict()}} exists to avoid, and what \code{\link[=check_term]{check_term()}}'s subset check
-tests for. A term is therefore built once and applied to other rows with
-\code{\link[=term_predict]{term_predict()}}.
+re-derives its factor levels and its knots from those rows.
+\code{\link[=term_predict]{term_predict()}} exists to avoid this re-derivation, and the subset check of
+\code{\link[=check_term]{check_term()}} tests for it. A term is therefore built once and applied to
+other rows with \code{\link[=term_predict]{term_predict()}}.
 }
 
 \section{The default}{

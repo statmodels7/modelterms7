@@ -13,9 +13,10 @@ seg_reheat(term)
 The term, ready to iterate afresh from its current positions.
 }
 \description{
-The term with its scaling factors back at \code{c0}, the directions and
-the step record cleared, and the break-points where they are. A restart
-needs it: the schedule is a state of the iteration that only ever
+Returns the term in which the scaling factors are reset to \code{c0}, the
+directions and the step record are cleared, and the break-points are
+unchanged. A restart requires
+this reset: the schedule is a state of the iteration that only ever
 tightens, so an iteration resumed from a converged fit inherits factors
 at their floor and cannot travel.
 }

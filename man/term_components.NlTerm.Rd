@@ -2,7 +2,7 @@
 % Please edit documentation in R/nonlinear.R
 \name{term_components.NlTerm}
 \alias{term_components.NlTerm}
-\title{The Columns Each Parameter of a Nonlinear Term Owns}
+\title{The Columns That Each Parameter of a Nonlinear Term Owns}
 \arguments{
 \item{term}{A built \code{\link[=NlTerm]{NlTerm()}}. An unbuilt one gives an empty list.}
 
@@ -14,10 +14,10 @@ each with \code{name}, \code{index}, \code{subs} and \code{sub_index} as
 \code{\link[=term_components]{term_components()}} describes.
 }
 \description{
-One entry per parameter of \eqn{f}, giving the columns of the block that
-parameter owns and the sub-terms developing it. A parameter with no
-subformula owns one column; a developed one owns as many as its own design
-has.
+Returns one entry per parameter of \eqn{f}, giving the columns of the block
+that belong to the parameter and the sub-terms that develop it. A parameter
+with no subformula owns one column; a developed one owns as many as its own
+design has.
 }
 \details{
 A consumer reads it to report a fitted nonlinear term parameter by
@@ -31,7 +31,8 @@ dd <- data.frame(x = seq(0.2, 3, length.out = 20),
                  g = factor(rep(c("a", "b"), 10)))
 dd$y <- 2 * exp(-1.3 * dd$x)
 
-# `a` developed over a two-level factor, `r` scalar: two columns and one.
+# `a` is developed over a two-level factor and `r` is a scalar, which gives
+# two columns and one.
 b <- term_build(nl(~ a * exp(-r * x), a ~ 0 + g,
                    start = list(a = 1, r = 1.3)), dd)
 term_coef_names(b)
@@ -40,6 +41,6 @@ lapply(term_components(b), function(z) z$index)
 }
 \seealso{
 \code{\link[=term_components]{term_components()}} for the structure of an entry,
-\code{\link[=term_penalties]{term_penalties()}} for the penalties those sub-terms bring.
+\code{\link[=term_penalties]{term_penalties()}} for the penalties that those sub-terms bring.
 }
 \keyword{internal}

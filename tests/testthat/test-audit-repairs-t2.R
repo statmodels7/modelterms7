@@ -231,5 +231,5 @@ test_that("term_simulate() of a marginal term checks the length of eta", {
   mt <- term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), md)
   psi <- list(psi1.mean = 4.5, psi1.sd = 0.5, delta1 = 2)
   expect_error(term_simulate(mt, psi, rep(0, 5), draw = FALSE),
-               "one value per row of the data the term was built on")
+               "one value per row of the data on which the term was built")
 })

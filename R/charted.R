@@ -14,22 +14,22 @@ NULL
 #' bounded scale is.
 #'
 #' @details
-#' For a structural term the answer is a character vector of names from
+#' For a structural term the result is a character vector of names from
 #' [term_params()]: every parameter whose link in [term_links()] is not the
 #' identity, and for [regime()] also the additive log-ratios of the
-#' transition matrix, whose chart is the one
+#' transition matrix, whose chart is the one that
 #' [parameters7::transition_matrix()] provides and which [term_links()]
 #' therefore reports as the identity. For [nl()] it is an integer vector of
 #' positions in the term's block, named by parameter: the scalar parameters
-#' (those with no subformula) whose link is not the identity. Every other
-#' term answers with an empty vector.
+#' (those with no subformula) whose link is not the identity. For every other
+#' term the result is an empty vector.
 #'
 #' @param term A model term. For [nl()] it must have been built.
 #' @param ... Unused.
 #'
 #' @return A character vector for a structural term, an integer vector for
-#'   [nl()] named by parameter (`integer(0)` when no parameter is charted), and
-#'   `character(0)` otherwise.
+#'   [nl()] named by parameter (`integer(0)` when the term has no charted
+#'   parameter), and `character(0)` otherwise.
 #'
 #' @seealso [term_links()] for the charts, [statmodels7::statmod_certificate()]
 #'   for the check that reads this.

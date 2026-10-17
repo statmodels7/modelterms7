@@ -18,9 +18,9 @@ signals the error
 A character vector of length \code{\link[=term_npar]{term_npar()}}, in column order.
 }
 \description{
-The names of a built additive term's coefficients, one per column of its
-block and in the block's own order. They are the names a fit reports, so a
-coefficient table is readable without knowing which term produced which row.
+Returns the names of a built additive term's coefficients, one per column of
+its block and in the block's own order. A fit reports these names, so that a
+reader of a coefficient table can tell which term produced which row.
 }
 \details{
 A term with a non-empty \code{label} prefixes every name with it and a dot, so
@@ -30,8 +30,8 @@ default, which is why a ridge over \code{x} and \code{g} reads \code{ridge.x}, \
 and so on; \code{\link[=linpar]{linpar()}} sets none, so its names are
 \code{\link[stats:model.matrix]{stats::model.matrix()}}'s unchanged.
 
-The names are assigned at build time and recorded, so they are also what
-\code{\link[=term_predict]{term_predict()}} labels its columns with at other rows. Uniqueness is not
+The names are assigned at build time and recorded, so \code{\link[=term_predict]{term_predict()}} also
+labels its columns with them at other rows. Uniqueness is not
 enforced here; \code{\link[=check_term]{check_term()}} checks it.
 }
 \examples{
@@ -52,6 +52,6 @@ identical(term_coef_names(b), colnames(term_matrix(b)))
 
 }
 \seealso{
-\code{\link[=term_npar]{term_npar()}} for the count, \code{\link[=term_matrix]{term_matrix()}} for the block they
+\code{\link[=term_npar]{term_npar()}} for the count, \code{\link[=term_matrix]{term_matrix()}} for the block that they
 name, \code{\link[=term_params]{term_params()}} for a structural term's parameter names instead.
 }

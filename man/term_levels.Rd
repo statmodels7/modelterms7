@@ -21,16 +21,16 @@ A numeric vector of one level per component, or a numeric matrix of
 observation. The order matches \code{\link[=term_posterior]{term_posterior()}}'s columns.
 }
 \description{
-The shifts that a term of the likelihood shape adds to its equation's
-predictor, one per mixture component, in the order in which the columns of
-\code{\link[=term_posterior]{term_posterior()}} carry the components. A fitting layer reads the two
-together to assemble Fisher's identity.
+Returns the shifts that a term of the likelihood shape adds to its
+equation's predictor, one per mixture component, in the order in which the
+columns of \code{\link[=term_posterior]{term_posterior()}} carry the components. A fitting layer reads
+the two together to assemble Fisher's identity.
 }
 \details{
 By Fisher's identity the derivative of a likelihood mixed over latent
-states, in \strong{any} predictor the model carries, is the posterior-weighted
-derivative of the ordinary one, each component read at the predictor
-shifted by its own level:
+states, in any predictor that the model carries, is the posterior-weighted
+derivative of the ordinary one, in which each component is read at the
+predictor shifted by its own level:
 
 \deqn{\frac{\partial L}{\partial \eta_{q,t}}
   = \sum_k \gamma_t(k)\,
@@ -47,7 +47,7 @@ side pattern.
 }
 \section{A shift may vary by observation}{
 The quadrature nodes of a marginal \code{\link[=seg]{seg()}} or \code{\link[=jseg]{jseg()}} term shift each
-observation by its own hinge value, so the method may return a \strong{matrix}
+observation by its own hinge value, so the method may return a matrix
 of one row per observation and one column per component. A caller reads a
 column of it wherever it would read a constant level, and must accept both
 shapes.
@@ -58,11 +58,12 @@ A term of the filter shape contributes a predictor and not components, and
 }
 
 \examples{
-# A two-regime chain: the first level and the cumulated gap.
+# A two-regime chain has the first level and the cumulated gap as its
+# levels.
 term_levels(regime(2), list(level1 = 0, gap2 = 3, alr1.1 = 2, alr2.1 = -2))
 
-# A one-break-point step term: no shift where no break-point is active,
-# and the change of level where one is.
+# For a one-break-point step term, the shift is zero where the break-point
+# is inactive and equals the change of level where it is active.
 set.seed(1)
 dd <- data.frame(id = rep(1:3, each = 8), x = rep(1:8, 3))
 dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)

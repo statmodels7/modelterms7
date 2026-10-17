@@ -23,7 +23,7 @@ argument is passed for methods that need it directly.}
 \item{score}{A function \verb{(e, i)} returning the derivative of that
 log-density with respect to the predictor, one value per element of \code{i}.}
 
-\item{psi}{The term's parameters on the \strong{parameter} scale, named as
+\item{psi}{The term's parameters on the parameter scale, named as
 \code{\link[=term_params]{term_params()}}.}
 
 \item{...}{Passed to methods.}
@@ -37,12 +37,12 @@ computed exactly by propagation through the recursion. The columns follow
 not in its logarithm.
 }
 \description{
-The per-observation log-likelihood contributions a structural term
-produces, with their derivatives in the term's own parameters. This is the
-second shape the structural branch takes, beside \code{\link[=term_filter]{term_filter()}}: a term
-that shifts the predictor implements the filter, and one that rewrites the
-likelihood itself implements this, its contribution being no predictor at
-all.
+Returns the per-observation log-likelihood contributions that a structural
+term produces, with their derivatives in the term's own parameters. This is
+the second shape that the structural branch takes, beside \code{\link[=term_filter]{term_filter()}}: a
+term that shifts the predictor implements the filter, and a term that
+rewrites the likelihood itself implements this generic, because its
+contribution is not a predictor at all.
 }
 \section{What the contributions are}{
 The contribution of observation \eqn{t} is the logarithm of its one-step
@@ -63,18 +63,18 @@ the filtered distribution, never differenced.
 
 \section{How the model reaches it}{
 The term holds the chain and the levels and contains nothing about the
-family. The two callbacks are how the model's own density enters: \code{logdens}
+family. The model's own density enters through two callbacks: \code{logdens}
 returns the log-density at a given predictor, one value per observation, and
 \code{score} returns its derivative in that predictor. For \code{\link[=regime]{regime()}}, each is
 called once per regime, with the predictor shifted by that regime's level
 and the whole index vector of the observations, so a term of \eqn{K}
 regimes makes \eqn{K} calls to each.
 
-The callbacks of \code{\link[=term_filter]{term_filter()}} depend on the state the recursion has
-reached. The callbacks of a regime term do not, because a regime shifts a
-predictor that is known in advance. The density and the score of every
-observation under every regime can therefore be computed once, vectorized,
-before the recursion starts.
+The callbacks of \code{\link[=term_filter]{term_filter()}} depend on the state that the recursion has
+reached. The callbacks of a regime term do not depend on it, because a regime
+shifts a predictor that is known in advance. The density and the score of
+every observation under every regime can therefore be computed once,
+vectorized, before the recursion starts.
 
 The method on \code{\link[=structural_term]{structural_term()}} signals an error that names the class. A
 term of the filter shape implements \code{\link[=term_filter]{term_filter()}} instead, and a fitting

@@ -19,9 +19,9 @@ by a constant, \code{"level1"} for a regime, \code{"omega"} for an undeveloped
 design column is constant.
 }
 \description{
-The name of the parameter, if any, that shifts the term's contribution by
-a constant, and is therefore the same direction as an intercept in the
-equation the term sits in.
+Returns the name of the parameter, if any, that shifts the term's
+contribution by a constant and is therefore the same direction as an
+intercept in the equation in which the term sits.
 }
 \details{
 It exists so that a fitting layer can resolve the confounding instead of
@@ -29,15 +29,16 @@ rejecting the model. A score-driven level \eqn{\omega} and a regime's first
 level both add a constant to their equation's predictor: with an
 intercept there too, adding \eqn{c} to one and subtracting the matching
 amount from the other leaves every predictor unchanged, and the
-likelihood is flat along that direction. The layer decides which of the two
-is dropped, because only the layer has the full list of terms in the
-equation.
+likelihood is flat along that direction. Which of the two is dropped is
+determined in the layer, because only the layer has the full list of terms
+in the equation.
 
-The base method returns \code{character(0)}, meaning the term shifts
-nothing by a constant and no such question arises. The method for \code{\link[=regime]{regime()}}
-returns \code{"level1"}. The method for \code{\link[=gas]{gas()}} returns \code{"omega"} when the level
-is not developed and otherwise every coordinate of the development whose
-design column is constant, which can be more than one.
+The base method returns \code{character(0)}, which means that the term does not
+shift its contribution by a constant and the question does not arise. The
+method for \code{\link[=regime]{regime()}} returns \code{"level1"}. The method for \code{\link[=gas]{gas()}} returns
+\code{"omega"} when the level is not developed and otherwise every coordinate of
+the development whose design column is constant, which can be more than
+one.
 }
 \examples{
 term_level_param(gas(p = 1, q = 1))

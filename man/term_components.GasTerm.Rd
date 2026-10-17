@@ -14,7 +14,7 @@ with \code{name}, \code{index}, \code{subs} and \code{sub_index} as \code{\link[
 describes.
 }
 \description{
-One entry per base parameter of the filter, giving the positions in
+Returns one entry per base parameter of the filter, giving the positions in
 \code{\link[=term_params]{term_params()}} that the parameter owns and the sub-terms that develop it. A
 parameter with no subformula owns one position; a developed parameter owns
 as many positions as its design has columns.
@@ -32,8 +32,8 @@ place each sub-term's penalty on the coordinates that the sub-term covers.
 set.seed(1)
 dd <- data.frame(t = 1:40, y = rnorm(40), z = rnorm(40))
 
-# omega developed over one covariate: two positions for it, one each
-# for the loading and the persistence.
+# When omega is developed over one covariate, it has two positions, and
+# the loading and the persistence have one each.
 b <- term_build(gas(p = 1, q = 1, omega ~ z, time = t), dd)
 term_params(b)
 lapply(term_components(b), function(z) z$index)
@@ -41,6 +41,6 @@ lapply(term_components(b), function(z) z$index)
 }
 \seealso{
 \code{\link[=term_components]{term_components()}} for the fields of an entry, \code{\link[=term_params]{term_params()}} for
-the vector the indices point into.
+the vector into which the indices point.
 }
 \keyword{internal}

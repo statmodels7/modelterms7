@@ -4,8 +4,8 @@
 \alias{term_params.GasTerm}
 \title{The Parameters of a Score-Driven Term}
 \arguments{
-\item{term}{A \code{\link[=GasTerm]{GasTerm()}}. Unbuilt, the subformulas have not been resolved,
-so a developed parameter still appears as itself.}
+\item{term}{A \code{\link[=GasTerm]{GasTerm()}}. If the term is unbuilt, its subformulas have not
+been resolved, so a developed parameter still appears as itself.}
 
 \item{...}{Unused.}
 }
@@ -13,10 +13,11 @@ so a developed parameter still appears as itself.}
 A character vector of length \code{\link[=term_npar]{term_npar()}}.
 }
 \description{
-\code{"omega"}, then \code{"kappa1"} ... \code{"kappap"}, then \code{"pacf1"} ... \code{"pacfq"}:
-the level, one loading per score lag, and one partial autocorrelation per
-autoregressive lag. A parameter carrying a subformula is \strong{expanded in
-place} into its coefficients, named \code{parameter.coefficient}.
+Returns the names \code{"omega"}, then \code{"kappa1"} ... \code{"kappap"}, then
+\code{"pacf1"} ... \code{"pacfq"}: the level, one loading per score lag, and one
+partial autocorrelation per autoregressive lag. A parameter carrying a
+subformula is expanded in place into its coefficients, named
+\code{parameter.coefficient}.
 }
 \details{
 The persistence coordinates are named after the chart on which they are

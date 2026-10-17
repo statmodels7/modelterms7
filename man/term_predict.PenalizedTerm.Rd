@@ -8,35 +8,35 @@
 \code{"the term has not been built; call term_build(term, data) first."}.}
 
 \item{newdata}{A data frame. For a matrix input it must carry the matrix as
-a column of the same name the term was written with.}
+a column under the name used in the written term.}
 
 \item{...}{Unused.}
 }
 \value{
 A block of \code{nrow(newdata)} rows and \code{\link[=term_npar]{term_npar()}} columns, in the
-storage the build used, with the term's coefficient names as column names
-and no row names.
+storage that the build used, with the term's coefficient names as column
+names and no row names.
 }
 \description{
 Reproduces a built penalized block at \code{newdata}. A formula input is
 reapplied through the recorded terms, levels, contrasts and storage, exactly
-as \code{\link[=linpar]{linpar()}}'s is. A matrix input has its expression re-evaluated \strong{in
-\code{newdata} alone}, and the result is checked to have the right number of
+as \code{\link[=linpar]{linpar()}}'s is. A matrix input has its expression re-evaluated only in
+\code{newdata}, and the result is checked to have the right number of
 rows and columns before it is returned.
 }
 \details{
 The matrix branch evaluates \code{blueprint$expr} with \code{newdata} as the data and
 \code{\link[=baseenv]{baseenv()}} as the enclosure, so the calling environment is not on the
 search path. A free-standing matrix therefore cannot be found, and the error
-names the expression and advises supplying it as a column of the data. That
-is deliberate: resolving the name outside \code{newdata} would return the
-build-time rows whenever the row counts agreed, and the result would then be
-wrong without any error.
+message contains the expression and the instruction to supply it as a column
+of the data. That is deliberate: resolving the name outside \code{newdata} would
+return the build-time rows whenever the row counts agreed, and the result
+would then be wrong without any error.
 
 Two shape checks follow the evaluation, because an expression that resolves
-in \code{newdata} may still give the wrong block: a row count differing from
-\code{nrow(newdata)} and a column count differing from the build's each signal
-an error that reports both numbers.
+in \code{newdata} may still give the wrong block. A row count that differs from
+\code{nrow(newdata)} signals an error that reports both numbers, and so does a
+column count that differs from the build's.
 }
 \examples{
 set.seed(3)
@@ -60,7 +60,7 @@ try(term_predict(bf, dd[1:5, ]))
 
 }
 \seealso{
-\code{\link[=term_predict]{term_predict()}} for the generic and the identity it satisfies,
+\code{\link[=term_predict]{term_predict()}} for the generic and the identity that it satisfies,
 \code{\link[=penalized_terms]{penalized_terms()}} for why a matrix input belongs in the data frame.
 }
 \keyword{internal}

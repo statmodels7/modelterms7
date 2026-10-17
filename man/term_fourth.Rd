@@ -31,8 +31,8 @@ term_fourth(
 
 \item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
 
-\item{g}{The weights the fourth derivative is contracted against, one per
-observation.}
+\item{g}{The weights against which the fourth derivative is contracted,
+one per observation.}
 
 \item{seed}{The derivative of the static predictor in the caller's
 unknowns.}
@@ -56,8 +56,8 @@ observation; and \code{curvature}, the fourth derivative contracted
 against \code{g} and both directions.
 }
 \description{
-\code{\link[=term_third]{term_third()}} differentiated once more along a second direction. It
-is what the exact Hessian of a marginal criterion needs when the model
+Returns \code{\link[=term_third]{term_third()}} differentiated once more along a second direction.
+The exact Hessian of a marginal criterion needs this when the model
 carries a term that bends the predictor.
 }
 \details{
@@ -71,10 +71,10 @@ produces it, \eqn{K} carries \eqn{\sum_t w_t \ell_{p,t}E_t} as well, and
 differentiating that twice requires \eqn{\partial^4 e_t/\partial u^4}.
 
 The derivative is contracted in two directions only. The full fourth
-derivative is an \eqn{m^4} array per observation and is never formed: what
-is propagated is a matrix per observation, the same size as the curvature
-and therefore the same \eqn{O(nm^2)}. A caller that needs a Hessian over
-\eqn{n_h} hyperparameters calls this once per pair.
+derivative is an \eqn{m^4} array per observation and is never formed: the
+method propagates a matrix per observation, which has the same size as the
+curvature and therefore the same \eqn{O(nm^2)}. A caller that needs a
+Hessian over \eqn{n_h} hyperparameters calls this once per pair.
 
 The recursion carries five states, \eqn{F_t}, \eqn{\Phi_t},
 \eqn{\Psi^{(v)}_t}, \eqn{\Psi^{(w)}_t} and \eqn{\Omega_t}. Both third
@@ -91,12 +91,12 @@ an observation,
     (V_s\cdot v)(V_{s'}\cdot w)\Big)V_r^\top V_{r'},}
 
 with \code{cppp} \eqn{= \ell_{ppp}} beside them, and \code{N} a list of
-two, one per direction. \code{P} is the only place where the family's fifth
-derivative enters. The scalar \code{cppp} is not recovered by any contraction;
+two, one per direction. The family's fifth derivative enters only through
+\code{P}. The scalar \code{cppp} is not recovered by any contraction;
 it is the amount by which the level's own curvature moves.
 
-The base method returns zeros, so an additive term is covered without
-writing anything. A structural term signals an error, for the reason
+The base method returns zeros, so an additive term is covered and its
+author writes no method. A structural term signals an error, for the reason
 that \code{\link[=term_third]{term_third()}} gives: a zero fourth derivative would misstate it.
 }
 \examples{

@@ -18,7 +18,8 @@ te(
 }
 \arguments{
 \item{...}{The covariates, bare expressions evaluated in the data, at least
-two of them. A single covariate signals the error \code{"'te' needs at least two covariates; use s() for one."}.}
+two of them. With a single covariate, \code{te()} signals the error
+\code{"'te' needs at least two covariates; use s() for one."}.}
 
 \item{smooths}{How each margin is built: one \pkg{basis7} smoother used
 for every covariate, or a list of one per covariate.
@@ -27,13 +28,12 @@ factory is rejected: a tensor product's penalty is the sum of the
 marginal roughnesses, and a factory does not specify how it composes with
 that sum.
 
-What the product reads from a margin is its \strong{basis} and its
-\strong{roughness matrix}, so \code{k}, \code{degree}, \code{order}, \code{measure}, \code{lower} and
-\code{upper} all act. The constraint, the null space and the
-reparametrization are the product's own and not a margin's: the tensor
-contains the constant whatever its margins do, and it is the product
-that is centered. A margin that sets one of those is rejected and not
-ignored.}
+The product reads the basis and the roughness matrix of a margin, so
+\code{k}, \code{degree}, \code{order}, \code{measure}, \code{lower} and \code{upper} all act. The
+constraint, the null space and the reparametrization are the product's
+own and not a margin's: the tensor contains the constant whatever its
+margins do, and the centering is applied to the product. A margin that
+sets one of those is rejected and not ignored.}
 
 \item{by}{An optional factor or numeric variable, as in \code{\link[=s]{s()}}, with the same
 two readings and the same sparsity rule.}
@@ -44,18 +44,18 @@ smoothing parameters (\code{"shared"}, the default) or carry a set each
 margin, so \code{"level"} gives one per margin per level.}
 
 \item{anisotropic}{\code{TRUE}, the default, for one smoothing parameter per
-margin; \code{FALSE} for one over their sum. An argument that is not a single
-non-missing logical signals an error.}
+margin; \code{FALSE} for one over their sum. \code{te()} signals an error for an
+argument that is not a single non-missing logical.}
 
-\item{hyper}{The hyperparameters to hold, as a named numeric vector, with
-anything left out \strong{estimated}. An anisotropic product carries one per
-margin, so a vector of that length, or a named one holding some of
-them. A held value must be finite.}
+\item{hyper}{The hyperparameters to hold, as a named numeric vector; any
+hyperparameter that is left out is estimated. An anisotropic product
+carries one per margin, so the value is a vector of that length, or a
+named vector that holds some of them. A held value must be finite.}
 
 \item{id}{Labels sharing this term's smoothing parameters with those of
 other terms carrying the same ones. An anisotropic product carries
 one per margin, so the labels are named after them,
-\code{c(lambda1 = "A")}; an isotropic one carries \code{lambda} alone and a
+\code{c(lambda1 = "A")}; an isotropic one carries only \code{lambda} and a
 single unnamed string will do. \code{NULL}, the default, shares nothing.
 See \code{\link[=term_ids]{term_ids()}}.}
 
@@ -70,16 +70,16 @@ An unbuilt \code{\link[=SmoothTerm]{SmoothTerm()}}: a specification, with \code{
 \code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}} fills them.
 }
 \description{
-A tensor-product smooth: a \pkg{basis7} basis in each covariate, combined by
-\code{\link[basis7:tensor_basis]{basis7::tensor_basis()}}, with a roughness penalty on the product
-coefficients. By default each margin keeps a smoothing parameter of its own,
-so the surface may be rough in one direction and smooth in another.
+Constructs a tensor-product smooth: a \pkg{basis7} basis in each covariate,
+combined by \code{\link[basis7:tensor_basis]{basis7::tensor_basis()}}, with a roughness penalty on the
+product coefficients. By default each margin keeps a smoothing parameter of
+its own, so the surface may be rough in one direction and smooth in another.
 }
 \section{The block and its penalty}{
 The block is the tensor basis evaluated at the covariates, and the penalty
 is built from the marginal roughness penalties carried into the product,
-\eqn{P_v = I \otimes \cdots \otimes P_v \otimes \cdots \otimes I}, each
-penalizing curvature in one direction.
+\eqn{P_v = I \otimes \cdots \otimes P_v \otimes \cdots \otimes I}. Each
+component penalizes curvature in one direction.
 
 With \code{anisotropic = TRUE}, the default, those components go to
 \code{\link[penalties7:additive_penalty]{penalties7::additive_penalty()}} and keep one smoothing parameter each,
@@ -96,17 +96,18 @@ a largest entry many orders of magnitude smaller than that of a covariate on
 \code{anisotropic = TRUE} the normalization is a reparametrization and the fit is
 the same: the component's own \code{lambda} absorbs the factor, so the
 normalization makes the reported parameters of two margins comparable with
-each other. Under \code{anisotropic = FALSE} it is part of the model, since one
-\code{lambda} weights a sum whose terms it fixes, and margins on very different
-ranges then contribute comparably, where otherwise the margin on the widest
-range would contribute almost nothing.
+each other. Under \code{anisotropic = FALSE} the normalization is part of the
+model, since one \code{lambda} weights a sum and the normalization fixes the
+scale of the terms of that sum, so that margins on very different ranges
+contribute comparably, where otherwise the margin on the widest range would
+contribute almost nothing.
 
-The marginal bases are \strong{not} reparametrized, so the marginal linear
+The marginal bases are not reparametrized, so the marginal linear
 effects are not separated out as \code{\link[=s]{s()}} separates its one. With the default
 second-derivative roughness they lie in the null space of the tensor
 penalty, together with their product, so a strongly penalized fit is shrunk
-toward the bilinear surface (the centered columns for \eqn{x}, \eqn{z} and \eqn{xz})
-and not toward zero.
+toward the bilinear surface (the centered columns for \eqn{x}, \eqn{z} and
+\eqn{xz}) and not toward zero.
 }
 
 \section{Centering}{
@@ -117,13 +118,13 @@ would be rank deficient by exactly one and the penalty would not cover the
 deficiency.
 
 The block therefore carries the sum-to-zero constraint over the observed
-covariates (\code{\link[basis7:constrain_basis]{basis7::constrain_basis()}}). The term has \strong{one column fewer}
+covariates (\code{\link[basis7:constrain_basis]{basis7::constrain_basis()}}). The term has one column fewer
 than the product of its marginal dimensions, so
 \code{te(x, z, smooths = bspline_smooth(k = 4))} gives 15
-and not 16; every column sums to zero over the data it was built on, to
-machine precision;
-and the penalty follows by congruence with its rank unchanged, the direction
-removed having been one of its null directions.
+and not 16; every column sums to zero over the data on which it was built,
+to machine precision;
+and the penalty follows by congruence and keeps its rank, because the
+direction that was removed was one of its null directions.
 
 The transform is stored in the blueprint and reapplied by \code{\link[=term_predict]{term_predict()}},
 as the Demmler-Reinsch transform of \code{\link[=s]{s()}} is.
@@ -145,14 +146,15 @@ c(npar = term_npar(b), product = 4 * 4)
 # Every column sums to zero over the data, to machine precision.
 max(abs(colSums(term_matrix(b))))
 
-# Anisotropic by default: one smoothing parameter per margin.
+# By default the term is anisotropic, with one smoothing parameter per
+# margin.
 term_penalty(b)@penalty_name
 term_penalty(b)@params
 ti <- te(x, z, smooths = basis7::bspline_smooth(k = 4),
           anisotropic = FALSE)
 term_penalty(term_build(ti, dd))@params
 
-# Holding both of them.
+# Both smoothing parameters are held.
 term_hyper(te(x, z, smooths = basis7::bspline_smooth(k = 4), hyper = c(1, 5)))
 
 # The centering transform is reapplied, not recomputed.
@@ -162,15 +164,16 @@ max(abs(term_predict(b, dd[1:10, ]) - term_matrix(b)[1:10, ]))
 try(te(x, smooths = basis7::bspline_smooth(k = 4)))
 
 
-# Fitted. The data are simulated from a known truth, so the
-# estimates below can be read against it.
+# The tensor smooth is fitted. The data are simulated from a known truth, so
+# the estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(5)
   fd <- data.frame(a = runif(300, -2, 2), b = runif(300, -2, 2))
   fd$y <- sin(fd$a) * cos(fd$b) + rnorm(300, sd = 0.3)
   ft <- statmodels7::statmod(y ~ te(a, b, smooths = basis7::bspline_smooth(k = 5)),
                              distributions7::gaussian1_distrib(), fd)
-  # one smoothing parameter per margin, against a truth of sin(a) cos(b)
+  # The fit has one smoothing parameter per margin, and its error is
+  # measured against the truth sin(a) cos(b).
   round(sqrt(mean((fitted(ft) - sin(fd$a) * cos(fd$b))^2)), 3)
 }
 }

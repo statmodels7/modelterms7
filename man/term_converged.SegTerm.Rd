@@ -15,7 +15,7 @@ A single logical.
 Applies \code{\link[=seg_converged]{seg_converged()}} through the generic, so that a fitting layer can
 test the stopping rule of the iteration without inspecting the class of the
 term. A term that has not been refreshed has not moved and reports \code{FALSE},
-the first refresh being the one that measures nothing. A term held by
-\code{\link[=seg_hold]{seg_hold()}} reports \code{TRUE}, its positions being fixed.
+because the first refresh is the one that measures nothing. A term held by
+\code{\link[=seg_hold]{seg_hold()}} reports \code{TRUE}, because its positions are fixed.
 }
 \keyword{internal}

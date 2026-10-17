@@ -29,8 +29,8 @@ each coefficient on the scale of its own column. See the section above.}
 
 \item{lambda}{The precision of the prior. One number holds it and
 \code{NULL}, the default, has it estimated. A ridge has no kink and no
-path, so several numbers are rejected: they would form a grid that
-nothing visits. Must lie in \eqn{(0, \infty)}.}
+path, so several numbers are rejected: they would form a grid that is
+never visited. Must lie in \eqn{(0, \infty)}.}
 
 \item{id}{A label sharing this term's hyperparameter with those of
 other terms carrying the same one: they are then estimated at a
@@ -49,13 +49,14 @@ an argument named after another penalty's hyperparameter:
 \code{scad(~ x, gamma = 1)} signals \code{"'scad' has no argument 'gamma'."}.}
 }
 \value{
-An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification, with \code{X},
-\code{coef_names}, \code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}}
+An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification whose \code{X},
+\code{coef_names}, \code{blueprint} and \code{penalty} are empty until \code{\link[=term_build]{term_build()}}
 fills them. The build attaches the penalty over the block's columns.
 }
 \description{
-A block of coefficients under a Gaussian prior at zero. Each coefficient of
-the block is shrunk towards zero, and none is set exactly to zero.
+Specifies a block of coefficients under a Gaussian prior at zero. Each
+coefficient of the block is shrunk towards zero, and the penalty does not
+set any coefficient exactly to zero.
 }
 \details{
 Writing \eqn{\beta} for the block's coefficients and \eqn{p} for their
@@ -72,14 +73,15 @@ fitted in the same system as the unpenalized terms, and \eqn{\lambda} is
 estimated by \code{\link[statmodels7:reml]{statmodels7::reml()}} or by another marginal criterion instead
 of being swept along a path.
 
-\strong{Hyperparameter.} \code{lambda}, admissible on \eqn{(0, \infty)}.
+The hyperparameter is \code{lambda}, admissible on \eqn{(0, \infty)}.
 }
 \examples{
 set.seed(3)
 dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
 b <- term_build(ridge(~ x1 + x2), dd)
 
-# One hyperparameter, positive, on the log scale for an optimizer.
+# The penalty has one hyperparameter, which is positive and is presented to
+# an optimizer on the log scale.
 p <- term_penalty(b)
 p@params
 p@params_bounds
@@ -89,16 +91,18 @@ beta <- c(0.4, -1.1)
 all.equal(penalties7::penalty_value(p, beta, list(lambda = 2.5)),
           -sum(dnorm(beta, 0, 1 / sqrt(2.5), log = TRUE)))
 
-# No kink, so the block is smooth and lambda is estimated at the mode.
+# The penalty has no kink, so the block is smooth and lambda is estimated
+# at the mode.
 c(smooth = term_smooth(b),
   kinks = length(penalties7::penalty_kinks(p, list(lambda = 1))))
 
-# Holding it, and the rejection of a grid it has no path to visit.
+# The hyperparameter can be held, and a grid is rejected because the ridge
+# has no path to visit it.
 term_hyper(ridge(~ x1 + x2, lambda = 2))
 try(ridge(~ x1 + x2, lambda = c(1, 2)))
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The model is fitted. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(11)

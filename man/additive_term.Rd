@@ -24,16 +24,16 @@ when non-empty, and used as the title of \code{\link[=plot]{plot()}} and the tag
 \code{\link[=print]{print()}}. The empty string \code{""} means no label.}
 
 \item{hyper}{The hyperparameters of the term's penalty that the caller
-\strong{held}, as a named list keyed by the penalty's names. Empty, the
+held, as a named list keyed by the penalty's names. Empty, the
 default, means every one of them is estimated. See \code{\link[=term_hyper]{term_hyper()}}.}
 
 \item{grid}{How many values a path visits for each of the term's
 hyperparameters, as a named list of single whole numbers. Empty, the
 default, leaves the number to the fitting layer. See \code{\link[=term_grid]{term_grid()}}.}
 
-\item{values}{The values a path visits, for each hyperparameter the caller
-wrote out, as a named list of numeric vectors. Empty, the default, has the
-path build them. See \code{\link[=term_values]{term_values()}}.}
+\item{values}{The values that a path visits, for each hyperparameter that
+the caller wrote out, as a named list of numeric vectors. Empty, the
+default, has the path build them. See \code{\link[=term_values]{term_values()}}.}
 
 \item{min_ratio}{How far down the path over the size of the kink reaches, as
 a fraction of the value that empties the block: one number in \eqn{(0, 1)},
@@ -51,14 +51,14 @@ carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
 \item{X}{The design block, one row per observation: a numeric matrix or a
-two-dimensional \pkg{Matrix}. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+two-dimensional \pkg{Matrix}. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{coef_names}{The block's coefficient names, one per column, prefixed by
-\code{label} when there is one. Filled by \code{\link[=term_build]{term_build()}}.}
+\code{label} when there is one. \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{blueprint}{A named list of everything needed to reproduce the mapping
-on new rows. Its contents are the subclass's business; nothing outside the
-term reads them. Empty until \code{\link[=term_build]{term_build()}} fills it.}
+on new rows. Its contents belong to the subclass, and only the term reads
+them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{penalty}{A \pkg{penalties7} penalty on the block's coefficients, or
 \code{NULL} when the term is unpenalized.}
@@ -70,13 +70,13 @@ every term that contributes design columns, carrying the four properties
 above beside those of \code{\link[=model_term]{model_term()}}.
 }
 \description{
-The branch of \code{\link[=model_term]{model_term()}} whose terms contribute a block of design
-columns \eqn{X_j \beta_j} to the linear predictor of one distribution
-parameter. Everything a formula can write that is not a filter or a latent
-mixture is on this branch: \code{\link[=linpar]{linpar()}}, the five penalized terms, \code{\link[=random]{random()}},
-\code{\link[=s]{s()}} and \code{\link[=te]{te()}}, \code{\link[=nl]{nl()}} and the break-point terms \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}} and
-\code{\link[=jseg]{jseg()}}. With \code{marginal = TRUE} the break-point terms are structural
-terms instead.
+\code{additive_term} is the branch of \code{\link[=model_term]{model_term()}} whose terms contribute a
+block of design columns \eqn{X_j \beta_j} to the linear predictor of one
+distribution parameter. Every term that a formula can write and that is not
+a filter or a latent mixture is on this branch: \code{\link[=linpar]{linpar()}}, the five
+penalized terms, \code{\link[=random]{random()}}, \code{\link[=s]{s()}} and \code{\link[=te]{te()}}, \code{\link[=nl]{nl()}} and the break-point
+terms \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}} and \code{\link[=jseg]{jseg()}}. With \code{marginal = TRUE} the break-point
+terms are structural terms instead.
 
 A built term on this branch carries four things beyond the root's
 properties: the block itself, the coefficient names, the blueprint that
@@ -85,8 +85,8 @@ reproduces the block on new rows, and the penalty on its coefficients.
 \section{The build}{
 A specification has \code{X} empty and \code{blueprint} an empty list; \code{\link[=term_build]{term_build()}}
 fills \code{X}, \code{coef_names} and \code{blueprint}, and \code{penalty} as well for a term
-that carries a penalty. The blueprint is the reason \code{\link[=term_predict]{term_predict()}} can
-\strong{reapply} the mapping instead of rebuilding it: the factor levels, the
+that carries a penalty. The blueprint allows \code{\link[=term_predict]{term_predict()}} to reapply
+the mapping instead of rebuilding it: the factor levels, the
 contrasts, the knots on which a basis was placed and the spreads that a
 standardization used are recorded there at build time. \code{\link[=check_term]{check_term()}}'s
 subset check tests that they are.
@@ -100,7 +100,7 @@ reaches part of its parameters or which carries several.
 \section{The methods of this branch}{
 \code{\link[=term_matrix]{term_matrix()}} returns \code{X}, \code{\link[=term_coef_names]{term_coef_names()}} returns \code{coef_names},
 \code{\link[=term_npar]{term_npar()}} counts the columns and \code{\link[=term_penalty]{term_penalty()}} returns \code{penalty}, all
-from the properties, so a subclass gets them without writing anything. A
+from the properties, so a subclass inherits them without writing anything. A
 subclass must supply \code{\link[=term_build]{term_build()}} and \code{\link[=term_predict]{term_predict()}}.
 
 A term whose block moves with its own coefficients, as \code{\link[=nl]{nl()}} and \code{\link[=seg]{seg()}}

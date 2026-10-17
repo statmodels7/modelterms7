@@ -12,15 +12,15 @@
 A single string, or \code{NA_character_}.
 }
 \description{
-The label written between two bars, or \code{NA_character_} where the formula
-carries one bar.
+Returns the label written between two bars, or \code{NA_character_} where the
+formula carries one bar.
 }
 \details{
 It is recorded by the constructor, from the middle position of
 \code{~ lhs | tag | g}, and is a name that is never evaluated.
 }
 \seealso{
-\code{\link[=term_tag]{term_tag()}} for the generic, \code{\link[=random]{random()}} for the formula it is
-read from.
+\code{\link[=term_tag]{term_tag()}} for the generic, \code{\link[=random]{random()}} for the formula from which
+it is read.
 }
 \keyword{internal}

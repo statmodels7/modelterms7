@@ -13,10 +13,11 @@ A named list of \pkg{linkfunctions7} links, one per entry of
 \code{\link[=term_params]{term_params()}}.
 }
 \description{
-The identity on the level, the \strong{log} on every loading and the \strong{rhobit}
-on every partial autocorrelation, unless the \code{links} argument of \code{\link[=gas]{gas()}}
-overrode one. Each default carries its parameter's admissible set onto the
-whole real line, so every value that an optimizer proposes gives an
+The default links are the identity on the level, the log on every loading
+and the rhobit on every partial autocorrelation, unless the \code{links}
+argument of \code{\link[=gas]{gas()}} overrides one. Each default carries its parameter's
+admissible set onto the whole real line, so every value that an optimizer
+proposes gives an
 admissible filter.
 }
 \details{
@@ -30,18 +31,18 @@ Levinson-Durbin then maps the whole chart onto a stationary autoregression.
 The chart is used because the stationary region in the coefficients is not
 a box, so a collection of scalar links cannot represent it.
 
-Where a parameter carries a subformula the link is applied \strong{inside} the
+Where a parameter carries a subformula the link is applied inside the
 development, so the parameter is admissible at every observation and its
 coefficients are unconstrained on the identity.
 }
 \examples{
 vapply(term_links(gas(p = 2, q = 2)), function(l) l@link_name, character(1))
 
-# Each carries its own set onto the line, so nothing is out of range.
+# Each carries its own set onto the line, so every value stays in range.
 lk <- term_links(gas(p = 1, q = 1))
 vapply(lk, function(l) paste(l@link_bounds, collapse = ", "), character(1))
 
-# Overridden: a loading free in sign.
+# Overriding the default gives a loading that is free in sign.
 vapply(term_links(gas(p = 1, q = 1,
                       links = list(kappa1 = linkfunctions7::identity_link()))),
        function(l) l@link_name, character(1))

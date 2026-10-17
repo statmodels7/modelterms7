@@ -12,8 +12,8 @@ term_static_deriv(term, curv, X, psi, ...)
 \item{curv}{The curvature at each predictor, as \code{term_filter}
 returns it.}
 
-\item{X}{The directions to propagate, one column each. Ordinarily the
-equation's design, so the result is one row per observation and one
+\item{X}{The directions to propagate, one column each. Ordinarily \code{X} is
+the equation's design, so the result has one row per observation and one
 column per coefficient.}
 
 \item{psi}{The term's parameters, on the parameter scale, named as
@@ -24,13 +24,13 @@ column per coefficient.}
 \value{
 A matrix of \code{X}'s dimensions, holding the full derivative
 \eqn{\partial \eta_t/\partial \beta = x_t + \partial f_t/\partial \beta}
-for each column of \code{X}, so that the design is already included. \code{NULL} for
-a term that carries no state.
+for each column of \code{X}, so that the design is already included. The
+value is \code{NULL} for a term that carries no state.
 }
 \description{
-How the predictor a structural term produces moves when the static part
-of the predictor moves, one row per observation and one column per
-direction the caller supplies.
+Returns how the predictor that a structural term produces moves when the
+static part of the predictor moves, one row per observation and one column
+per direction that the caller supplies.
 }
 \details{
 A score-driven term's level is driven by scores read at the predictor that
@@ -46,8 +46,8 @@ and the second piece obeys the recursion that the filter already runs,
   \sum_j \xi_j \frac{\partial f_{t-j}}{\partial \beta},}
 with \eqn{\kappa_i} the score loadings, \eqn{\xi_j} the autoregressive
 coefficients and \eqn{\ell''_t} the curvature. The curvature is the one
-that \code{\link[=term_filter]{term_filter()}} returns, so no callback is evaluated here and the pass
-is arithmetic alone.
+that \code{\link[=term_filter]{term_filter()}} returns, so this pass does not evaluate any callback
+and consists only of arithmetic.
 
 Without this derivative, the standard error of the predictor accounts for
 the static part only and leaves out the part that runs through the filter.

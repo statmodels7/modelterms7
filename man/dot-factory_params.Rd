@@ -2,7 +2,7 @@
 % Please edit documentation in R/hyper.R
 \name{.factory_params}
 \alias{.factory_params}
-\title{The Hyperparameter Names a Penalty Factory Produces}
+\title{The Hyperparameter Names That a Penalty Factory Produces}
 \usage{
 .factory_params(factory)
 }
@@ -19,12 +19,12 @@ Builds the penalty at a probe size and reads its \code{params}, returning \code{
 where it cannot be built.
 }
 \details{
-A factory is a function of the coefficient count, and the names it produces
-do not depend on that count, so one coefficient is enough to read them. The
-probe is wrapped because a factory may reject a size of one, and the two
-outcomes are kept apart: \code{NULL} marks a penalty whose names cannot be read
-here, and an empty vector marks a penalty with no hyperparameter. Every
-shipped factory returns a penalty, so \code{NULL} arises only from a factory
-written by a caller.
+A factory is a function of the coefficient count, and the names that it
+produces do not depend on that count, so one coefficient is enough to read
+them. The probe is wrapped because a factory may reject a size of one, and
+the two outcomes are kept apart: \code{NULL} marks a penalty whose names cannot
+be read here, and an empty vector marks a penalty with no hyperparameter.
+Every shipped factory returns a penalty, so \code{NULL} arises only from a
+factory written by a caller.
 }
 \keyword{internal}

@@ -18,9 +18,9 @@ empty.
 }
 \description{
 Returns the positions, among the coefficients of a term, of those that the
-term holds fixed. The fitting layer excludes these coefficients from the
-solve, from the information matrix that is inverted and from the reading of
-the mode. The base method returns an empty vector, since all the
+term holds fixed. The fitting layer leaves these coefficients out when it
+solves, when it inverts the information matrix and when it reads the mode.
+The base method returns an empty vector, since all the
 coefficients of an ordinary term are estimated from the derivative of the
 objective.
 }

@@ -15,7 +15,7 @@ term_continue(term, psi, f_past, s_past, newdata, ...)
 
 \item{s_past}{The driving quantity at each observed row.}
 
-\item{newdata}{The rows to continue onto.}
+\item{newdata}{The rows onto which the recursion continues.}
 
 \item{...}{Passed to methods.}
 }
@@ -23,16 +23,17 @@ term_continue(term, psi, f_past, s_past, newdata, ...)
 A numeric vector of \code{nrow(newdata)} contributions.
 }
 \description{
-The contribution a structural term makes at rows that come after the ones
-it was built on, continuing its recursion rather than restarting it.
+Returns the contribution that a structural term makes at rows that come
+after the rows on which it was built, continuing its recursion rather than
+restarting it.
 }
 \details{
 A structural term's contribution at one observation is not a function of
-that observation: it is the state a recursion has reached, so predicting
-past the series means carrying the state forward. What makes it possible
-without simulation is that the quantity driving the recursion has zero
-conditional mean, the score itself for a score-driven term, so beyond the
-data the recursion is deterministic.
+that observation: it is the state that a recursion has reached, so
+predicting past the series means carrying the state forward. This is
+possible without simulation because the quantity driving the recursion has
+zero conditional mean, the score itself for a score-driven term, so beyond
+the data the recursion is deterministic.
 
 Among the shipped classes, \code{\link[=gas]{gas()}} implements the generic. Its method needs
 \code{time}, rejects rows that fall inside the observed series and rows of a

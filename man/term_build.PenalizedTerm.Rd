@@ -7,31 +7,31 @@
 \item{term}{An unbuilt or built \code{\link[=PenalizedTerm]{PenalizedTerm()}}.}
 
 \item{data}{A data frame with as many rows as a matrix input has, carrying
-every variable a formula input names.}
+every variable that a formula input names.}
 
 \item{...}{Unused.}
 }
 \value{
-The term with \code{X}, \code{coef_names}, \code{blueprint} and \code{penalty} filled.
-\code{penalty@n_coef} equals \code{ncol(X)}.
+The term whose \code{X}, \code{coef_names}, \code{blueprint} and \code{penalty} are
+filled. \code{penalty@n_coef} equals \code{ncol(X)}.
 }
 \description{
 Builds the block of a \code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}}, \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}} or \code{\link[=mcp]{mcp()}}
 term, names its coefficients, records the blueprint, and calls the term's
 factory to produce the \pkg{penalties7} penalty over exactly that many
 coefficients. The penalty exists only after this: a specification's
-\code{penalty} property is \code{NULL}, its width being unknown until the data are
-seen.
+\code{penalty} property is \code{NULL}, because its width is unknown until the data
+are seen.
 }
 \section{Two input routes, two blueprints}{
-A \strong{formula} is built through \code{\link[stats:model.frame]{stats::model.frame()}} and
-\code{\link[=.design_matrix]{.design_matrix()}} with the intercept removed by
-\code{update(formula, ~ . - 1)}, unless the intercept is all the formula has, in
-which case it is kept and is the block. The blueprint records
-\code{kind = "formula"}, the terms object, the levels, the contrasts and the
-settled storage.
+A formula is built through \code{\link[stats:model.frame]{stats::model.frame()}} and
+\code{\link[=.design_matrix]{.design_matrix()}} after its intercept is removed by
+\code{update(formula, ~ . - 1)}, unless the formula has an intercept and nothing
+else, in which case the intercept is kept and is the block. The blueprint
+records \code{kind = "formula"}, the terms object, the levels, the contrasts and
+the settled storage.
 
-A \strong{matrix} is used as it stands, and its row count must equal
+A matrix is used as it stands, and its row count must equal
 \code{nrow(data)}; any other row count is an error that gives both numbers. Its
 columns take the matrix's own names, or \code{1}, \code{2}, ... where it has none. The
 blueprint records \code{kind = "matrix"}, the expression that produced it and
@@ -47,9 +47,9 @@ With \code{standardize = TRUE} the column spreads come from \code{\link[=.block_
 into \code{blueprint$standardize} and become a \code{\link[Matrix:Diagonal]{Matrix::Diagonal()}} map. The
 design is not touched, so a sparse block stays sparse.
 
-The map is passed to the factory \strong{as a second argument, and only when there
-is one}. A factory written before standardization existed takes the count
-alone and goes on working, provided it is never standardized.
+The map is passed to the factory as a second argument, and only when there
+is one. A factory written before standardization existed takes only the
+count and goes on working, provided it is never standardized.
 }
 
 \examples{
