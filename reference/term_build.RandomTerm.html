@@ -13,7 +13,7 @@ recorded, so term_predict() maps new rows onto the same ones."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,7 +83,10 @@ three levels gives <code>random.a.(Intercept)</code>, <code>random.a.x</code>,
 <code>random(~ 1 | g)</code> gives <code>random.a</code>, <code>random.b</code> and <code>random.c</code>. When the
 rows of the data are not ordered by group, the rows of the block follow the
 data and its columns keep this order.</p>
-<p>A grouping variable with fewer than two levels is rejected.</p>
+<p>A term with a single random effect (one level and one within-group column)
+is rejected. One level with several within-group columns is accepted: the
+effects are then a single draw of a vector, such as a latent process over
+the levels of a within-group factor.</p>
     </div>
     <div class="section level2">
     <h2 id="the-penalty-and-what-the-build-checks">The penalty, and what the build checks<a class="anchor" aria-label="anchor" href="#the-penalty-and-what-the-build-checks"></a></h2>

@@ -44,7 +44,10 @@ order, and `random(~ 1 | g)` gives `random.a`, `random.b` and
 `random.c`. When the rows of the data are not ordered by group, the rows
 of the block follow the data and its columns keep this order.
 
-A grouping variable with fewer than two levels is rejected.
+A term with a single random effect (one level and one within-group
+column) is rejected. One level with several within-group columns is
+accepted: the effects are then a single draw of a vector, such as a
+latent process over the levels of a within-group factor.
 
 ## The penalty, and what the build checks
 
