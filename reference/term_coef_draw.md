@@ -1,4 +1,4 @@
-# Coefficients a Term Draws for Itself
+# Coefficients That a Term Draws for Itself
 
 Replaces, in a draw of the term's block coefficients, the coefficients
 whose scale the term determines. Every other coefficient is left as it
@@ -35,11 +35,11 @@ term_coef_draw(term, coef, sd = 1, ...)
 
 ## Value
 
-A list with `coef`, the coefficients with the term's own replaced;
-`index`, the positions that were replaced, empty where none were; and
-`scale`, one width per replaced position. A caller that reports the
-truth of a prior over those coordinates reads `scale`, since the values
-there are no longer a draw from that prior.
+A list with `coef`, the coefficients in which the term's own have been
+replaced; `index`, the positions that were replaced, empty if the term
+replaced no coefficient; and `scale`, one width per replaced position. A
+caller that reports the truth of a prior over those coordinates reads
+`scale`, since the values there are no longer a draw from that prior.
 
 ## Why a term draws at all
 
@@ -51,18 +51,18 @@ covariate's own axis, so a draw made without reading the covariate has
 no reason to fall inside the data. A draw from a standard normal falls
 outside the range of a covariate that is measured on another scale, and
 the confinement then moves the position to the edge of the interval,
-where one of the two segments holds a twentieth of the rows and no break
-is visible. The break-point terms therefore draw their own positions on
-the covariate's axis.
+where one of the two segments holds a twentieth of the rows and the data
+do not reveal a break. The break-point terms therefore draw their own
+positions on the covariate's axis.
 [`term_draw()`](https://statmodels7.github.io/modelterms7/reference/term_draw.md)
-applies the same division to the own parameters of a structural term:
-the term that defines a quantity draws it.
+applies the same division to the own parameters of a structural term,
+and each quantity is drawn by the term that defines it.
 
 ## The width
 
-The width follows from the spacing of the positions that the draw
-spreads from. Writing \\w\\ for the width of the confinement interval
-(from the 5th to the 95th percentile of the covariate) and \\K\\ for the
+The width follows from the spacing of the positions from which the draw
+spreads. Writing \\w\\ for the width of the confinement interval (from
+the 5th to the 95th percentile of the covariate) and \\K\\ for the
 number of break-points, those positions are the \\j/(K+1)\\ quantiles of
 the covariate. For a covariate spread evenly over the interval,
 consecutive positions are \\w/(K+1)\\ apart. Requiring three standard
@@ -91,17 +91,17 @@ anywhere. For
 the position read from the written coefficient is near the drawn one and
 not equal to it.
 
-Where the break-point carries a development the drawn positions are
+Where the break-point carries a development, the drawn positions are
 projected onto that development's own design by least squares, so any
-subformula is served and the spread the design induces is the one a
-group actually gets.
+subformula is served and the spread that the design induces is the
+spread that a group actually receives.
 
 ## See also
 
 [`term_draw()`](https://statmodels7.github.io/modelterms7/reference/term_draw.md)
 for a structural term's own parameters,
 [`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)
-for the point this spreads from,
+for the point from which this draw spreads,
 [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
 for the positions that it produces.
 

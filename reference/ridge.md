@@ -1,7 +1,8 @@
 # Ridge Penalty on a Block of Coefficients
 
-A block of coefficients under a Gaussian prior at zero. Each coefficient
-of the block is shrunk towards zero, and none is set exactly to zero.
+Specifies a block of coefficients under a Gaussian prior at zero. Each
+coefficient of the block is shrunk towards zero, and the penalty does
+not set any coefficient exactly to zero.
 
 ## Usage
 
@@ -41,8 +42,8 @@ ridge(
 
   The precision of the prior. One number holds it and `NULL`, the
   default, has it estimated. A ridge has no kink and no path, so several
-  numbers are rejected: they would form a grid that nothing visits. Must
-  lie in \\(0, \infty)\\.
+  numbers are rejected: they would form a grid that is never visited.
+  Must lie in \\(0, \infty)\\.
 
 - id:
 
@@ -72,8 +73,8 @@ ridge(
 
 An unbuilt
 [`PenalizedTerm()`](https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.md):
-a specification, with `X`, `coef_names`, `blueprint` and `penalty` empty
-until
+a specification whose `X`, `coef_names`, `blueprint` and `penalty` are
+empty until
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 fills them. The build attaches the penalty over the block's columns.
 
@@ -93,7 +94,7 @@ estimated by
 [`statmodels7::reml()`](https://statmodels7.github.io/statmodels7/reference/reml.html)
 or by another marginal criterion instead of being swept along a path.
 
-**Hyperparameter.** `lambda`, admissible on \\(0, \infty)\\.
+The hyperparameter is `lambda`, admissible on \\(0, \infty)\\.
 
 ## References
 
@@ -117,7 +118,8 @@ set.seed(3)
 dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
 b <- term_build(ridge(~ x1 + x2), dd)
 
-# One hyperparameter, positive, on the log scale for an optimizer.
+# The penalty has one hyperparameter, which is positive and is presented to
+# an optimizer on the log scale.
 p <- term_penalty(b)
 p@params
 #> [1] "lambda"
@@ -132,13 +134,15 @@ all.equal(penalties7::penalty_value(p, beta, list(lambda = 2.5)),
           -sum(dnorm(beta, 0, 1 / sqrt(2.5), log = TRUE)))
 #> [1] TRUE
 
-# No kink, so the block is smooth and lambda is estimated at the mode.
+# The penalty has no kink, so the block is smooth and lambda is estimated
+# at the mode.
 c(smooth = term_smooth(b),
   kinks = length(penalties7::penalty_kinks(p, list(lambda = 1))))
 #> smooth  kinks 
 #>      1      0 
 
-# Holding it, and the rejection of a grid it has no path to visit.
+# The hyperparameter can be held, and a grid is rejected because the ridge
+# has no path to visit it.
 term_hyper(ridge(~ x1 + x2, lambda = 2))
 #> [[1]]
 #> [[1]]$lambda
@@ -151,7 +155,7 @@ try(ridge(~ x1 + x2, lambda = c(1, 2)))
 #>   criterion at the mode. Give one number to hold it, or NULL to estimate it.
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The model is fitted. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(11)

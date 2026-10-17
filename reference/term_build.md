@@ -4,8 +4,8 @@ Turns a term specification into a built term: an additive term computes
 its design block from `data`, assigns the coefficient names and records
 the blueprint that will reproduce the mapping on other rows; a
 structural term records whatever its recursion needs, its grouping and
-its ordering. The returned object is a copy of the specification with
-those properties filled, and the specification is unchanged.
+its ordering. The returned object is a copy of the specification in
+which those properties are filled, and the specification is unchanged.
 
 ## Usage
 
@@ -23,8 +23,8 @@ term_build(term, data, ...)
 
 - data:
 
-  A data frame carrying every variable the term names. Any other object
-  is rejected by the generic, before dispatch, with the error
+  A data frame carrying every variable that the term names. Any other
+  object is rejected by the generic, before dispatch, with the error
   `"'data' must be a data frame."`.
 
 - ...:
@@ -35,9 +35,11 @@ term_build(term, data, ...)
 
 A built term of the same class as `term`. For an additive term the `X`,
 `coef_names` and `blueprint` properties are filled, and `penalty` is
-where the term is penalized; for a structural term the `blueprint` is.
+filled where the term is penalized; for a structural term the
+`blueprint` is filled.
 [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
-is `TRUE` either way, reading whichever of the two the branch fills.
+is `TRUE` either way, because it reads the one of the two records that
+the branch fills.
 
 ## What building produces
 
@@ -47,7 +49,7 @@ and through a penalty on that block's coefficients when it is penalized:
 \$\$\eta = \sum\_{t} X_t \beta_t, \qquad \text{penalized objective}
 \quad -\ell(\beta) + \sum\_{t} \rho_t(\beta_t; \theta_t).\$\$
 
-Building is what produces \\X_t\\ from the data and attaches \\\rho_t\\.
+Building produces \\X_t\\ from the data and attaches \\\rho_t\\.
 [`term_matrix()`](https://statmodels7.github.io/modelterms7/reference/term_matrix.md)
 then reads the block,
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
@@ -57,11 +59,11 @@ reproduces \\X_t\\ at other rows through the blueprint.
 
 A structural term has no such block.
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
-records the group each row belongs to and its place in that group's
-series;
+records the group to which each row belongs and its place in that
+group's series;
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
-and the marginal break-point terms record what their forward recursion
-reads. They report themselves through
+and the marginal break-point terms record the quantities that their
+forward recursion reads. They report themselves through
 [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
 or
 [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md),
@@ -72,12 +74,12 @@ has no method for them.
 ## Building twice, and building on other data
 
 Building is not idempotent in general: a term built again on new data
-re-derives its factor levels and its knots from those rows. That is what
+re-derives its factor levels and its knots from those rows.
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-exists to avoid, and what
-[`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)'s
-subset check tests for. A term is therefore built once and applied to
-other rows with
+exists to avoid this re-derivation, and the subset check of
+[`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
+tests for it. A term is therefore built once and applied to other rows
+with
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md).
 
 ## The default

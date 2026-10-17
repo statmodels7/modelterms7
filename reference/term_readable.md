@@ -1,8 +1,8 @@
-# The Quantities a Fitted Term Reports
+# The Quantities That a Fitted Term Reports
 
-What a reader reads, with the Jacobian from the term's own parameters on
-the unconstrained scale, so that a caller holding their variance matrix
-can carry it across by the delta method.
+Returns the quantities that a reader reads, with the Jacobian from the
+term's own parameters on the unconstrained scale, so that a caller who
+holds their variance matrix can carry it across by the delta method.
 
 ## Usage
 
@@ -28,19 +28,19 @@ term_readable(term, zeta, ...)
 ## Value
 
 A list with `name`, `value`, `jacobian` (one row per quantity and one
-column per parameter) and `scale`, the link an interval for each
-quantity is built on.
+column per parameter) and `scale`, the link on which the interval for
+each quantity is built.
 
 ## Details
 
 A term's parameters are the coordinates on which it is estimated, chosen
 so that a search runs unconstrained, and they are not always the
-quantities the model is about. The clearest case is a score-driven
+quantities of interest in the model. The clearest case is a score-driven
 persistence, which rides a partial autocorrelation because the
 stationary region is not a box: the autoregressive coefficient \\\xi_1\\
 is a function of the whole chart and coincides with the coordinate only
 at \\q = 1\\. Reporting the coordinate under the coefficient's name
-would promise one quantity and print another.
+would label one quantity with the name of another.
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
 therefore reports `xi1`, ..., and
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)

@@ -21,7 +21,7 @@ themselves are listed on the last line.
 
 ## Value
 
-`x`, invisibly. Called for the lines that it writes.
+`x`, invisibly. The function is called for the lines that it writes.
 
 ## Details
 
@@ -48,7 +48,8 @@ set.seed(1)
 dd <- data.frame(t = 1:60, y = rnorm(60), id = rep(1:3, each = 20),
                  g = factor(rep(c("u", "v"), 30)))
 
-# A specification, and the same term built over three groups.
+# The first call shows a specification, and the second the same term built
+# over three groups.
 gas(p = 1, q = 2)
 #> <GasTerm> 'gas': score-driven, p = 1, q = 2 (specification)
 #>   parameters: omega, kappa1, pacf1, pacf2

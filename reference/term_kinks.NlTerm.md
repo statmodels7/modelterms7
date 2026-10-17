@@ -1,11 +1,11 @@
 # Where a Nonlinear Term's Objective Has a Kink
 
-The coefficients of the term that move a break-point sitting on an
-observation, where a parameter is developed over a sharp
+Returns the coefficients of the term that move a break-point sitting on
+an observation, where a parameter is developed over a sharp
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md):
-the answer of that sub-term's own
+the result of that sub-term's own
 [`term_kinks()`](https://statmodels7.github.io/modelterms7/reference/term_kinks.md)
-carried to the term's coefficients. Every other nonlinear term answers
+carried to the term's coefficients. Every other nonlinear term returns
 `integer(0)`.
 
 ## Arguments

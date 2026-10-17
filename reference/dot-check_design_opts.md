@@ -1,9 +1,10 @@
 # Check a Term's Storage and Contrasts
 
-Validates the `sparse` and `contrasts` arguments the design-building
-constructors share, and normalizes `contrasts = NULL` to an empty list
-so that the class property is always a list. Called from the
-constructor, so an invalid value is rejected at the call that wrote it.
+Validates the `sparse` and `contrasts` arguments that the
+design-building constructors share, and normalizes `contrasts = NULL` to
+an empty list so that the class property is always a list. The
+constructor calls it, so an invalid value is rejected at the call that
+wrote it.
 
 ## Usage
 

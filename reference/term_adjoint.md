@@ -1,8 +1,9 @@
 # Differentiate a Structural Term Backwards
 
-The derivative of a caller's objective with respect to the static
-predictor the term was handed, and with respect to the sequence of
-scores it was given, both accounting for the recursion.
+Returns the derivative of a caller's objective with respect to the
+static predictor that the term was handed, and with respect to the
+sequence of scores that it was given. Both derivatives account for the
+recursion.
 
 ## Usage
 
@@ -38,7 +39,7 @@ term_adjoint(term, eta, y, score, curvature, psi, g, ...)
 
 - g:
 
-  The direct derivative of the objective in the predictor the term
+  The direct derivative of the objective in the predictor that the term
   produced, one value per observation.
 
 - ...:
@@ -57,7 +58,7 @@ log-density to obtain the derivative in another equation's predictor.
 
 [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
 returns the derivative of the predictor in the term's own parameters,
-which is the piece that the estimation of those parameters needs.
+which is the piece that is needed to estimate those parameters.
 Estimating the coefficients of the same equation needs a different
 derivative: the level at one time is driven by the scores at earlier
 times, which are read at predictors that those coefficients also enter,
@@ -69,7 +70,7 @@ whatever their number, and is exact.
 Two derivatives are returned because the score that the caller supplies
 depends on more than the predictor at which it is read. Writing \\s_t\\
 for that score and \\\bar{s}\_t\\ for `dscore`, the derivative of the
-objective in anything the score depends on is
+objective in any quantity on which the score depends is
 
 \$\$\frac{\partial L}{\partial \theta} = \left.\frac{\partial
 L}{\partial \theta}\right\|\_{\mathrm{direct}} + \sum_t \bar{s}\_t
@@ -77,8 +78,8 @@ L}{\partial \theta}\right\|\_{\mathrm{direct}} + \sum_t \bar{s}\_t
 
 so a model layer whose score is the derivative of its log-likelihood in
 one distribution parameter obtains the derivative in the predictor of
-**another** by multiplying `dscore` by the mixed second derivative of
-that log-likelihood. `deta` is that formula applied to the term's own
+another by multiplying `dscore` by the mixed second derivative of that
+log-likelihood. `deta` is that formula applied to the term's own
 equation, where the second factor is the curvature.
 
 ## See also

@@ -1,9 +1,9 @@
 # Column Standard Deviations of a Block, in Either Storage
 
-The standard deviation of each column of a design block, computed
-without densifying a Matrix. It is the spread that `standardize = TRUE`
-puts in the penalty's diagonal map, so that each coefficient is
-penalized as \\s_j\beta_j\\.
+Computes the standard deviation of each column of a design block without
+densifying a Matrix. With `standardize = TRUE` the penalty's diagonal
+map holds these spreads, so that each coefficient is penalized as
+\\s_j\beta_j\\.
 
 ## Usage
 
@@ -19,8 +19,8 @@ penalized as \\s_j\beta_j\\.
 
 ## Value
 
-A numeric vector of length `ncol(X)`, every entry finite and strictly
-positive.
+A numeric vector of length `ncol(X)` whose entries are all finite and
+strictly positive.
 
 ## Details
 
@@ -28,17 +28,17 @@ On a base matrix it is [`stats::sd()`](https://rdrr.io/r/stats/sd.html)
 column by column. On a Matrix it is assembled from the column sums and
 sums of squares, \\s_j^2 = (\sum_i x\_{ij}^2 - n\bar{x}\_j^2)/(n-1)\\,
 so a sparse block is never expanded. The sum of squares is floored at
-zero before the square root, that expression being able to go slightly
+zero before the square root, because that expression can go slightly
 negative by rounding on a nearly constant column.
 
-A column with no spread takes \\s_j = 1\\, which penalizes its
-coefficient on its own scale instead of dividing by zero. That covers a
-constant column, a single-row block and any column whose spread comes
-back non-finite.
+A column whose spread is not positive and finite takes \\s_j = 1\\,
+which penalizes its coefficient on its own scale instead of dividing by
+zero. That covers a constant column, a single-row block and any column
+whose spread comes back non-finite.
 
 ## See also
 
 [`penalized_terms()`](https://statmodels7.github.io/modelterms7/reference/penalized_terms.md)
-for the standardization this feeds,
+for the standardization that this feeds,
 [`penalties7::map_diagonal()`](https://statmodels7.github.io/penalties7/reference/map_diagonal.html)
-for the map it becomes.
+for the map that it becomes.

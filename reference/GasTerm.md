@@ -1,9 +1,9 @@
 # S7 Class for Score-Driven Dynamics
 
-The subclass of
+`GasTerm` is the subclass of
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
-holding a generalized autoregressive score component: a time-varying
-level driven by the score of the observation density, added to the
+that holds a generalized autoregressive score component: a time-varying
+level driven by the score of the observation density and added to the
 predictor of one distribution parameter.
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
 constructs it. Its contribution is a state, so it implements
@@ -46,8 +46,8 @@ GasTerm(
 
 - hyper:
 
-  The hyperparameters of the term's penalty that the caller **held**, as
-  a named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller held, as a
+  named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -60,9 +60,9 @@ GasTerm(
 
 - values:
 
-  The values a path visits, for each hyperparameter the caller wrote
-  out, as a named list of numeric vectors. Empty, the default, has the
-  path build them. See
+  The values that a path visits, for each hyperparameter that the caller
+  wrote out, as a named list of numeric vectors. Empty, the default, has
+  the path build them. See
   [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md).
 
 - min_ratio:
@@ -105,26 +105,27 @@ GasTerm(
 - by:
 
   An optional grouping expression; each group is filtered independently.
-  `NULL` for one series.
+  `NULL` means one series.
 
 - time:
 
-  An optional ordering expression. `NULL` for row order.
+  An optional ordering expression. `NULL` means row order.
 
 - links:
 
-  A named list of linkfunctions7 links overriding the defaults, empty
-  where none was given.
+  A named list of linkfunctions7 links that override the defaults, empty
+  when the caller overrides no default.
 
 - submodels:
 
   A named list of one-sided formulas, one per parameter developed over
-  covariates. Empty where none is.
+  covariates. The list is empty if no parameter is developed.
 
 - scaling:
 
-  The power \\d\\ of the expected information, the score being
-  multiplied by \\\mathcal{I}^{-d}\\; zero for the score as it is.
+  The power \\d\\ of the expected information in the factor
+  \\\mathcal{I}^{-d}\\ that multiplies the score; zero for the score as
+  it is.
 
 ## Value
 
@@ -193,7 +194,7 @@ c(p = tm@p, q = tm@q)
 #> p q 
 #> 1 2 
 
-# 1 + p + q parameters, and one chart each.
+# The term has 1 + p + q parameters, and each has its own chart.
 term_params(tm)
 #> [1] "omega"  "kappa1" "pacf1"  "pacf2" 
 vapply(term_links(tm), function(l) l@link_name, character(1))

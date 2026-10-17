@@ -13,7 +13,7 @@ to the penalized coordinates."><meta property="og:image" content="https://statmo
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,16 +72,18 @@ covariates.</p></dd>
     <div class="section level2">
     <h2 id="the-within-group-design">The within-group design<a class="anchor" aria-label="anchor" href="#the-within-group-design"></a></h2>
     <p>The design that the effect of one group multiplies is the constant (unless
-the left side carries <code>0</code>), then the null space of the smooth's penalty without the
-constant, which every smoother removes, then the penalized coordinates, as
+the left side carries <code>0</code>), then the null space of the smooth's penalty
+without the constant, which every smoother removes, then the penalized
+coordinates, as
 <code><a href="dot-random_smooth_split.html">.random_smooth_split()</a></code> defines them. The null space is whatever the
 smoother's operator leaves unpenalized: a straight line for a second
 derivative, a sine and a cosine for the harmonic operator, an exponential
 for \(D^2 + aD\), nothing for a cyclic smoother.</p>
-<p>The smoother's <code>null_space</code> decides what the null space contributes. Under
-<code>"keep"</code> its columns are there and carry the null-space prior together with
-the constant; under <code>"shrink"</code> they are penalized with the rest and belong
-to the penalized coordinates; under <code>"drop"</code> they are absent.</p>
+<p>The argument <code>null_space</code> of the smoother determines what the null space
+contributes. Under <code>"keep"</code> its columns are there and carry the null-space
+prior together with the constant; under <code>"shrink"</code> they are penalized with
+the rest and belong to the penalized coordinates; under <code>"drop"</code> they are
+absent.</p>
     </div>
     <div class="section level2">
     <h2 id="the-two-priors">The two priors<a class="anchor" aria-label="anchor" href="#the-two-priors"></a></h2>
@@ -93,7 +95,7 @@ given. A full covariance makes the model invariant to the origin and the
 scale of the covariate, and to the phase of a periodic one.</p>
 <p>The penalized coordinates of every group have the prior of the smooth's own
 penalty. With one component that is an independent centered Gaussian with
-one standard deviation, the coordinates having been whitened, and its
+one standard deviation, because the coordinates have been whitened, and its
 hyperparameter is <code>sigma.smooth</code>. With several components it is the sum
 \(\sum_k \lambda_k (I_m \otimes S_k)\), with hyperparameters
 <code>lambda1.smooth</code>, <code>lambda2.smooth</code> and so on. The groups share these

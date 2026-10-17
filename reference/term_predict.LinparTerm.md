@@ -3,7 +3,9 @@
 Rebuilds the model frame at `newdata` against the levels recorded at
 build time, then the model matrix with the recorded contrasts and in the
 recorded storage, and labels the columns with the term's coefficient
-names. Nothing is re-derived from the new rows.
+names. The terms object, the levels, the contrasts, the storage and the
+intercept setting are all read from the blueprint, and the new rows
+supply only the values of the variables.
 
 ## Arguments
 
@@ -16,7 +18,7 @@ names. Nothing is re-derived from the new rows.
 
 - newdata:
 
-  A data frame carrying every variable the formula names.
+  A data frame carrying every variable that the formula names.
 
 - ...:
 
@@ -26,17 +28,17 @@ names. Nothing is re-derived from the new rows.
 
 A block of `nrow(newdata)` rows and
 [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
-columns, in the storage the build settled on, with the term's
-coefficient names as column names.
+columns, in the storage chosen at build, with the term's coefficient
+names as column names.
 
 ## Details
 
 The levels come from `blueprint$xlev`, so a factor in `newdata` need
-carry only the levels its own rows use and still gets the full set of
-columns. A level the blueprint does not know is rejected by
+carry only the levels that its own rows use and still gets the full set
+of columns. A level that the blueprint does not record is rejected by
 [`stats::model.frame()`](https://rdrr.io/r/stats/model.frame.html) with
-`"factor g has new levels zz"`, because no coefficient was fitted for
-that level.
+`"factor g has new levels zz"`, because the fit did not estimate a
+coefficient for that level.
 
 The storage comes from `blueprint$sparse` rather than being decided
 again, so a prediction builds the same kind of block as the fit and does
@@ -46,7 +48,7 @@ keeps every row.
 ## See also
 
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-for the generic and the identity it satisfies,
+for the generic and the identity that it satisfies,
 [`term_build.LinparTerm()`](https://statmodels7.github.io/modelterms7/reference/term_build.LinparTerm.md)
 for what recorded the blueprint.
 
@@ -67,7 +69,7 @@ levels(nd$g)
 dim(term_predict(b, nd))
 #> [1] 4 5
 
-# A level the fit never saw is rejected.
+# A level that is absent from the fitting data is rejected.
 bad <- dd
 levels(bad$g) <- c("a", "b", "c", "zz")
 try(term_predict(b, bad))

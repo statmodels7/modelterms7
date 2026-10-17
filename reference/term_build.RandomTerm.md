@@ -32,12 +32,12 @@ The term with `X` (a `dgCMatrix` of \\md\\ columns), `coef_names`,
 
 With \\m\\ levels and a within-group design \\Z_i\\ of \\d\\ columns,
 the block is \\\mathrm{diag}(Z_1, \dots, Z_m)\\ for data ordered by
-group, with the columns ordered **group-major**, so the \\d\\
+group, and its columns are ordered group-major, so the \\d\\
 coefficients of one group are adjacent. It is built as a `dgCMatrix`: a
 row belongs to one group, so the density is \\1/m\\.
 
 The coefficient names are `label.level.column`, or `label.level` when
-the within-group design is the intercept alone. The term
+the within-group design consists only of the intercept. The term
 `random(~ x | g)` over three levels gives `random.a.(Intercept)`,
 `random.a.x`, `random.b.(Intercept)` and so on, which is the group-major
 order, and `random(~ 1 | g)` gives `random.a`, `random.b` and
@@ -56,15 +56,15 @@ Where `distrib` is `NULL` the default is chosen here: a centered
 centered multivariate Gaussian on an unstructured covariance for several
 correlated ones.
 
-Whatever the distribution, its location parameters must be **held**. A
-free location is confounded with the intercept of the equation in which
-the term sits, and the build rejects it with a message naming the
-parameter and the remedy. A multivariate distribution must also match
-the within-group dimension, and one that carries no matrix parameter
-cannot express correlated effects at all.
+Whatever the distribution, its location parameters must be held. A free
+location is confounded with the intercept of the equation in which the
+term sits, and the build rejects it with a message naming the parameter
+and the remedy. A multivariate distribution must also match the
+within-group dimension, and one that carries no matrix parameter cannot
+express correlated effects at all.
 
 Any value named in `hyper` is checked here too, against the penalty's
-own names, this being the first point at which the penalty exists.
+own names, because this is the first point at which the penalty exists.
 
 A term carrying a covariance label is finished differently: its block
 and coefficient names are built as above, and it declares no penalty.
@@ -117,5 +117,6 @@ try(term_build(random(~ 1 | g,
 #>   intercept of the equation in which the term sits. Hold it with
 #>   distributions7::fixed(): at zero for a family on the line, and at
 #>   whatever centers the effects where the prior is a transformation of
-#>   another family, the parameter being the mean on the original scale.
+#>   another family, because the parameter is then the mean on the original
+#>   scale.
 ```

@@ -1,7 +1,7 @@
 # Where a Fit of a Term's Own Parameters Starts, Several Times
 
-The starting points a fitting layer tries for a structural term's own
-parameters, as a list of vectors of the kind
+Returns the starting points that a fitting layer tries for a structural
+term's own parameters, as a list of vectors of the kind that
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
 returns. The layer fits from each and keeps the best.
 

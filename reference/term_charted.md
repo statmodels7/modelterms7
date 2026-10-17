@@ -31,19 +31,19 @@ term_charted(term, ...)
 
 A character vector for a structural term, an integer vector for
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
-named by parameter (`integer(0)` when no parameter is charted), and
-`character(0)` otherwise.
+named by parameter (`integer(0)` when the term has no charted
+parameter), and `character(0)` otherwise.
 
 ## Details
 
-For a structural term the answer is a character vector of names from
+For a structural term the result is a character vector of names from
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md):
 every parameter whose link in
 [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
 is not the identity, and for
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
 also the additive log-ratios of the transition matrix, whose chart is
-the one
+the one that
 [`parameters7::transition_matrix()`](https://statmodels7.github.io/parameters7/reference/transition_matrix.html)
 provides and which
 [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
@@ -51,7 +51,7 @@ therefore reports as the identity. For
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) it
 is an integer vector of positions in the term's block, named by
 parameter: the scalar parameters (those with no subformula) whose link
-is not the identity. Every other term answers with an empty vector.
+is not the identity. For every other term the result is an empty vector.
 
 ## See also
 

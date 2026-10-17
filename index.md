@@ -1,13 +1,14 @@
 # modelterms7
 
-Model terms as S7 objects. A term is the recipe a formula names: the
-mapping from a data frame to a design-matrix block, the penalty attached
-to the block’s coefficients, and the metadata that a fit uses:
+Model terms as S7 objects. A term is the recipe that a formula names:
+the mapping from a data frame to a design-matrix block, the penalty
+attached to the block’s coefficients, and the metadata that a fit uses:
 coefficient names, hyperparameters with their links, whether the
 penalized objective is differentiable, and how effective degrees of
 freedom are counted.
 
-Part of the [statmodels7](https://statmodels7.github.io) toolkit.
+The package is part of the [statmodels7](https://statmodels7.github.io)
+toolkit.
 
 ## Installation
 
@@ -19,7 +20,7 @@ pak::pak("statmodels7/modelterms7")
 
 ## The terms
 
-An **additive** term contributes a block of columns, so the predictor is
+An additive term contributes a block of columns, so the predictor is
 $`\eta = \sum_t X_t \beta_t`$ and a penalized fit minimizes
 $`-\ell(\beta) + \sum_t \rho_t(\beta_t; \theta_t)`$:
 
@@ -37,27 +38,27 @@ $`-\ell(\beta) + \sum_t \rho_t(\beta_t; \theta_t)`$:
 - [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
   builds grouped intercepts and slopes with the effect distribution as
   the penalty: a multivariate one lets the effects of a group depend on
-  each other, its matrix parameter carrying the dependence on whichever
-  [parameters7](https://statmodels7.github.io/parameters7/) chart is
-  given it, and a second bar labels effects that share a covariance
-  block with those of other terms;
+  each other, and its matrix parameter carries the dependence on
+  whichever [parameters7](https://statmodels7.github.io/parameters7/)
+  chart is given to it; a second bar labels effects that share a
+  covariance block with those of other terms;
 - [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
   [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
   are the penalized smooths of one and of several covariates, built on
   [basis7](https://statmodels7.github.io/basis7/);
 - [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
-  carries a contribution nonlinear in its own parameters, its block the
-  Jacobian refreshed as they move;
+  carries a contribution that is nonlinear in its own parameters, and
+  its block is the Jacobian, which is refreshed as the parameters move;
 - [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
   [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
   and
   [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
   estimate the break-points at which an effect changes slope, level, or
-  both, with
+  both, and
   [`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
-  choosing where the iteration begins.
+  chooses where the iteration begins.
 
-A **structural** term rewrites the likelihood instead of adding to the
+A structural term rewrites the likelihood instead of adding to the
 predictor:
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
 gives score-driven dynamics and
@@ -87,8 +88,8 @@ formula, and
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
 returns it as the response.
 [`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
-and `rstatmod()` reject a censored response, because no censored
-likelihood is assembled from it yet.
+and `rstatmod()` reject a censored response, because a censored
+likelihood for it is not yet implemented.
 
 ## A term’s own parameters take formulas
 
@@ -126,7 +127,7 @@ parameters that each entry covers.
 
 ## Effects that share a covariance block
 
-A second bar labels a random effect, following **brms**: in
+A second bar labels a random effect, following brms: in
 `~ 1 + x | u | id` the last position is the grouping variable, and the
 middle one is a label shared by the terms whose effects are correlated
 with each other. R nests bars to the left, so the parser yields that
@@ -181,7 +182,7 @@ c(sharp    = jb(npsi = 1),
 #>    FALSE     TRUE
 ```
 
-The same difference decides which developments a discontinuous term
+The same difference determines which developments a discontinuous term
 accepts. On a sharp
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 or
@@ -190,7 +191,7 @@ the estimated coefficients are products of the change of level and the
 development, so a penalty on the development would act on the product,
 and the term rejects a development that carries a penalty. A development
 without a penalty is accepted, and a smoothed term accepts both kinds,
-its block being a Jacobian.
+because its block is a Jacobian.
 
 `marginal = TRUE`, together with a subformula `psi ~ random(~ 1 | g)`,
 integrates the latent break-point of each group out of the likelihood.

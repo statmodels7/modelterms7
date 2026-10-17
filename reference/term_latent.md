@@ -1,6 +1,6 @@
 # The Posterior of a Structural Term's Latent Variable
 
-A summary of the latent variable over which a structural term
+Returns a summary of the latent variable over which a structural term
 integrates, given the whole sample. For a marginal break-point term it
 consists of the posterior mean and standard deviation of each group's
 break-points, which locate each group's change and measure the
@@ -22,8 +22,8 @@ term_latent(term, eta, y, logdens, psi, ...)
 
 - eta:
 
-  The static predictor of the equation the term sits in, one value per
-  observation.
+  The static predictor of the equation in which the term sits, one value
+  per observation.
 
 - y:
 
@@ -49,10 +49,10 @@ term_latent(term, eta, y, logdens, psi, ...)
 
 For a marginal break-point term, a data frame with one row per group and
 break-point and four columns: `group`, the grouping level; `psi`, which
-break-point; `mean` and `sd`, the posterior moments of its position.
-`NA` in a moment the prior does not possess. For a regime term, a data
-frame with one row per observation and one column per regime, `state1`,
-`state2`, and so on.
+break-point; `mean` and `sd`, the posterior moments of its position. A
+moment that the prior does not possess is `NA`. For a regime term, a
+data frame with one row per observation and one column per regime,
+`state1`, `state2`, and so on.
 
 ## Details
 
@@ -66,9 +66,9 @@ under quadrature the moments of the node posterior.
 
 ## Priors without moments
 
-The moments are those of the prior, so a prior that lacks them gives
-none. A Student t prior with fewer than one degree of freedom has no
-mean on an edge interval, and with fewer than two it has no variance.
+The moments are those of the prior, so a prior that lacks them cannot
+give them. A Student t prior with fewer than one degree of freedom has
+no mean on an edge interval, and with fewer than two it has no variance.
 Where such an interval carries posterior weight of at least 1e-9, the
 corresponding column holds `NA`.
 
@@ -85,7 +85,7 @@ computes, labeled by regime.
 ## See also
 
 [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)
-for the component weights a fit reads,
+for the component weights that a fit reads,
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 and
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)

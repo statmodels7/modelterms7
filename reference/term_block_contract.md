@@ -1,8 +1,8 @@
 # How a Term's Block Moves With Its Coefficients
 
-\\\sum\_{i,j} A\_{ij}\\\partial X\_{ij}/\partial\beta_c\\, one entry per
-coefficient of the term: the block's own derivative contracted against a
-weight the caller supplies.
+Returns \\\sum\_{i,j} A\_{ij}\\\partial X\_{ij}/\partial\beta_c\\, one
+entry per coefficient of the term: the block's own derivative contracted
+against a weight that the caller supplies.
 
 ## Usage
 
@@ -19,7 +19,7 @@ term_block_contract(term, coef = NULL, A, ...)
 - coef:
 
   The coefficients, one per coefficient of the term, or `NULL` for the
-  ones it carries.
+  coefficients that the term carries.
 
 - A:
 
@@ -44,8 +44,8 @@ needs this: a marginal criterion reads \\\log\|K\|\\ with \\K = -\sum_i
 w_i \ell\_{ab,i} X_a X_b'\\, so \\\partial K/\partial\beta\\ gains
 everything coming from \\\partial X/\partial\beta\\.
 
-**Only the contraction is computed.** \\\partial X/\partial\beta\\ is
-\\n \times m \times m\\ and nothing needs it whole. For
+Only the contraction is computed. \\\partial X/\partial\beta\\ is \\n
+\times m \times m\\ and consumers need only its contractions. For
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) it
 is closed form at \\O(nm)\\: writing \\X\_{i,c} = w\_{p}(i) Z_p\[i,c\]\\
 with \\w_p = (\partial f/\partial\theta_p)\\h_p'\\, \$\$\frac{\partial
@@ -75,11 +75,11 @@ or
 keeps the base method's zeros. Its position is read off a product of the
 unknowns, \\\psi = -g/\delta\\, so a column's derivative runs through
 that read-off instead of through a development's design, and the weight
-\\W = 1/(2\lvert\tilde x-\psi\rvert)\\ it carries has an unbounded
+\\W = 1/(2\lvert\tilde x-\psi\rvert)\\ that it carries has an unbounded
 derivative in the break-point. Its block is a working linearization with
 a frozen weight, which is the reason that
 [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
-answers `FALSE` for it. A break-point term with `smoothed =` has a block
+returns `FALSE` for it. A break-point term with `smoothed =` has a block
 that is a true Jacobian, and its contraction is written out from the
 smoother's derivatives.
 

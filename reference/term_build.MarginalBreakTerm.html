@@ -13,7 +13,7 @@ integrated follows from that ordering."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,7 +65,7 @@ integrated follows from that ordering.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The term with <code>blueprint</code> filled. <code><a href="term_is_built.html">term_is_built()</a></code> reads that
+    <p>The term in which <code>blueprint</code> is filled. <code><a href="term_is_built.html">term_is_built()</a></code> reads that
 property on this branch, so it is <code>TRUE</code> for the result.</p>
     </div>
     <div class="section level2">
@@ -78,12 +78,12 @@ of the data (<code>x</code>), for each group the row indices ordered by the cova
 (<code>groups</code>), and the labels of the groups (<code>labels</code>). The intervals over
 which the likelihood decomposes are the gaps between a group's ordered
 observations, so they follow from that ordering.</p>
-<p>No starting values are computed here: <code><a href="term_start.html">term_start()</a></code> computes them when it
-is called. A start with every change at zero is degenerate for this term.
-With <code>delta = 0</code> the intervals are indistinguishable, every mass derivative
-sums to the derivative of a constant, and the surface is exactly flat in the
-location and scale of the prior. A fitting layer therefore supplies a
-target to <code><a href="term_start.html">term_start()</a></code>, from which the changes are estimated.</p>
+<p>This function does not compute starting values; <code><a href="term_start.html">term_start()</a></code> computes
+them when it is called. A start with every change at zero is degenerate for
+this term. With <code>delta = 0</code> the intervals are indistinguishable, every mass
+derivative sums to the derivative of a constant, and the surface is exactly
+flat in the location and scale of the prior. A fitting layer therefore
+supplies a target to <code><a href="term_start.html">term_start()</a></code>, from which the changes are estimated.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

@@ -1,7 +1,8 @@
 # Penalty Entries of a Random-Effect Term
 
-One entry over the whole block when the prior reads a group's effects
-together, and one per within-group column when they are independent.
+Returns one entry over the whole block when the prior reads a group's
+effects together, and one per within-group column when they are
+independent.
 
 ## Usage
 
@@ -37,6 +38,6 @@ documents.
 
 The coefficients are ordered group by group, so column \\j\\ is the
 stride \\j, d+j, 2d+j, \dots\\. Those positions are named as a subset of
-the term's own parameters, never selected with a map, and that is what
-keeps a kinked prior's proximal operator available: a separable penalty
-under a selection map is the generalized-lasso problem, which has none.
+the term's own parameters, never selected with a map, which keeps a
+kinked prior's proximal operator available: a separable penalty under a
+selection map is the generalized-lasso problem, which has none.

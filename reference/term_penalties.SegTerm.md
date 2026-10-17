@@ -1,13 +1,13 @@
 # Penalties of a Break-Point Term
 
-One entry per penalty that the developments of the term's own
-coefficients declare, naming the coefficients that it covers. The
-entries of a subformula shared by every coefficient of one kind are
-pooled into one, so that `gamma ~ 0 + lasso(~1)` is a single penalized
-block over the changes under one hyperparameter. The list is empty for a
-term whose coefficients carry no development, and for a specification,
-which has no coefficients to index yet: the penalties are recorded at
-build, as for every penalized term in the package.
+Returns one entry per penalty that the developments of the term's own
+coefficients declare, and each entry names the coefficients that it
+covers. The entries of a subformula shared by every coefficient of one
+kind are pooled into one, so that `gamma ~ 0 + lasso(~1)` is a single
+penalized block over the changes under one hyperparameter. The list is
+empty for a term whose coefficients carry no development, and for a
+specification, which has no coefficients to index yet: the penalties are
+recorded at build, as for every penalized term in the package.
 
 ## Arguments
 

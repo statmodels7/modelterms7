@@ -1,8 +1,8 @@
 # Elastic Net Penalty on a Block of Coefficients
 
-The lasso and the ridge mixed: a kink at zero, so the term still
-selects, and a quadratic part that keeps correlated coefficients
-together instead of choosing arbitrarily among them.
+Mixes the lasso and the ridge. The penalty has a kink at zero, so the
+term still selects, and it has a quadratic part that keeps correlated
+coefficients together instead of choosing arbitrarily among them.
 
 ## Usage
 
@@ -45,9 +45,9 @@ enet(
 
 - lambda:
 
-  The overall rate. One number holds it, several are the grid the path
-  visits as they stand, and `NULL`, the default, has the path build one.
-  Must lie in \\(0, \infty)\\.
+  The overall rate. One number holds it, several are the grid that the
+  path visits as they stand, and `NULL`, the default, has the path build
+  one. Must lie in \\(0, \infty)\\.
 
 - alpha:
 
@@ -58,34 +58,35 @@ enet(
 
   Labels sharing this term's hyperparameters with those of other terms
   carrying the same ones: each is then estimated at a single value,
-  wherever in the formula they sit. A named vector, `c(alpha = "A")`,
-  because the penalty has several hyperparameters and the name says
-  which one is shared; `NULL`, the default, shares nothing. See
+  wherever in the formula they sit. The argument is a named vector,
+  `c(alpha = "A")`, because the penalty has several hyperparameters and
+  the name identifies the one that is shared; `NULL`, the default,
+  shares nothing. See
   [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md)
   for the meaning of the labels and the restrictions on their use.
 
 - n_lambda, n_alpha:
 
-  How many values the path visits for each, at least 2. The two are
-  separate arguments because the axes differ: \\\lambda\\ descends from
-  the kink size that empties the block to `min_ratio` times that size
-  (four decades at the default `min_ratio`), which takes more points
-  than \\\alpha\\, which spans one bounded interval. Each signals an
-  error when given explicitly for a hyperparameter that is held or
-  written out.
+  The number of values that the path visits for each, at least 2. The
+  two are separate arguments because the axes differ: \\\lambda\\
+  descends from the kink size that empties the block to `min_ratio`
+  times that size (four decades at the default `min_ratio`), which takes
+  more points than \\\alpha\\, which spans one bounded interval. Each
+  signals an error when given explicitly for a hyperparameter that is
+  held or written out.
 
 - min_ratio:
 
   How far down the path reaches, as a fraction of the kink that empties
-  the block: smaller reaches a denser fit, larger stops sooner. A single
-  number in \\(0, 1)\\, `1e-4` by default. Only the sweep by kink size
-  reads it, and it signals an error when given explicitly while `lambda`
-  is held or written out.
+  the block: smaller reaches a denser fit, larger stops sooner. It is a
+  single number in \\(0, 1)\\, `1e-4` by default. Only the sweep by kink
+  size reads it, and it signals an error when given explicitly while
+  `lambda` is held or written out.
 
 - search:
 
   `"grid"` to visit every combination of \\\lambda\\ and \\\alpha\\,
-  `"cyclic"` to sweep one at a time with the other held. See
+  `"cyclic"` to sweep one at a time while the other is held. See
   [`term_search()`](https://statmodels7.github.io/modelterms7/reference/term_search.md).
   Given explicitly while fewer than two hyperparameters are swept, it
   signals an error.
@@ -109,8 +110,8 @@ enet(
 
 An unbuilt
 [`PenalizedTerm()`](https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.md):
-a specification, with `X`, `coef_names`, `blueprint` and `penalty` empty
-until
+a specification whose `X`, `coef_names`, `blueprint` and `penalty` are
+empty until
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 fills them. The build attaches the penalty over the block's columns.
 
@@ -118,7 +119,7 @@ fills them. The build attaches the penalty over the block's columns.
 
 \$\$\rho(\beta) = \lambda\left\\\alpha\lVert\beta\rVert_1 +
 \frac{1-\alpha}{2}\lVert\beta\rVert_2^2\right\\ + p\log Z(\lambda,
-\alpha),\$\$ the normalizing constant being that of the product of a
+\alpha),\$\$ where the normalizing constant is that of the product of a
 Laplace and a Gaussian at zero
 ([`distributions7::enet_distrib()`](https://statmodels7.github.io/distributions7/reference/enet_distrib.html)).
 The constant depends on both hyperparameters and is kept, so the value
@@ -132,12 +133,12 @@ by default, as for the lasso.
 lasso and at \\\alpha \to 0\\ the ridge, and the kink at zero has
 half-width \\\lambda\alpha\\, so both hyperparameters scale it.
 
-**Hyperparameters.** `lambda` on \\(0, \infty)\\, swept over `n_lambda`
-values by kink size; `alpha` on \\(0, 1)\\, swept over `n_alpha` values
-across that interval, the ends excluded because the penalty there is one
-of the other two. Every combination of the two is visited,
-`n_lambda * n_alpha` fits, unless `search = "cyclic"` sweeps one at a
-time instead.
+The hyperparameters are `lambda`, on \\(0, \infty)\\, swept over
+`n_lambda` values by kink size, and `alpha`, on \\(0, 1)\\, swept over
+`n_alpha` values across that interval. The ends of the interval are
+excluded because the penalty there is one of the other two. Every
+combination of the two is visited, `n_lambda * n_alpha` fits, unless
+`search = "cyclic"` sweeps one at a time instead.
 
 ## References
 
@@ -182,7 +183,7 @@ all.equal(penalties7::penalty_value(pe, beta, list(lambda = 2, alpha = 1e-9)),
           penalties7::penalty_value(pr, beta, list(lambda = 2)))
 #> [1] TRUE
 
-# alpha held at the halfway mixture, lambda still estimated.
+# alpha is held at the halfway mixture, and lambda is still estimated.
 term_hyper(enet(~ x1 + x2, alpha = 0.5))
 #> [[1]]
 #> [[1]]$alpha
@@ -210,7 +211,7 @@ try(enet(~ x1 + x2, alpha = 1))
 #> Error : 'alpha' in 'enet' must lie strictly inside (0, 1); it is 1.
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The model is fitted. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(11)

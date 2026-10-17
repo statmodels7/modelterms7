@@ -1,7 +1,7 @@
 # Drawing Break-Points From Their Prior
 
-One set of latent positions per group, drawn from the prior that the
-term declares, and the predictor that each observation receives from
+Draws one set of latent positions per group from the prior that the term
+declares, and returns the predictor that each observation receives from
 them.
 
 ## Arguments
@@ -21,7 +21,7 @@ them.
 
 - draw:
 
-  Ignored: the positions do not read the response.
+  Ignored: the positions do not depend on the response.
 
 - ...:
 
@@ -39,7 +39,7 @@ estimated, so simulating from the model consists of drawing them, once
 per group, and then evaluating the term at the drawn positions. Under
 the gaussian prior the draw is \\N(m_k, \tau_k^2)\\, where \\m_k\\ is
 `psik.mean` and \\\tau_k\\ is `psik.sd`. Under an explicit prior it is a
-draw from that family with its location fixed at zero, shifted by
+draw from that family, whose location is fixed at zero, shifted by
 `psi1.mean`, which is the convention of the likelihood.
 
 The shift is the term's own construction evaluated at the drawn

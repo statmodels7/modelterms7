@@ -1,8 +1,8 @@
 # The Covariance Label of a Term
 
-The label that marks a term whose coefficients share a covariance block
-with those of other terms, or `NA_character_` where the term carries
-none.
+Returns the label that marks a term whose coefficients share a
+covariance block with those of other terms, or `NA_character_` where the
+term carries no label.
 
 ## Usage
 
@@ -32,8 +32,8 @@ grouping variable and the middle one the label. Terms carrying the same
 label and the same grouping describe effects that are correlated with
 each other, and a fitting layer collects them into one block.
 
-The label is a **name and not data**. It is read as a symbol and never
-evaluated, so a column of the data with the same name is not looked at.
+The label is a name and not data. It is read as a symbol and never
+evaluated, so a column of the data with the same name is not consulted.
 A term that carries a label declares no penalties through
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md):
 the prior of the shared covariance block is built by the fitting layer.
@@ -48,7 +48,7 @@ so a term written outside this package needs no method here.
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md),
 the one constructor that reads a label;
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-for the penalties a term declares on its own.
+for the penalties that a term declares on its own.
 
 ## Examples
 
@@ -59,7 +59,7 @@ term_tag(random(~ 1 | g))
 term_tag(linpar(~ x))
 #> [1] NA
 
-# A label, read from the middle of the two bars.
+# The label is read from the middle of the two bars.
 term_tag(random(~ 1 + x | u | g))
 #> [1] "u"
 

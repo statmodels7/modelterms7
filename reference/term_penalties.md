@@ -1,9 +1,9 @@
-# Every Penalty a Term Carries
+# Every Penalty That a Term Carries
 
-Returns the penalties a term declares: a list of entries, each naming a
-subset of the term's own parameters, the penalty over them, and the
-hyperparameters that the caller held for that penalty. A fitting layer
-enumerates penalties through this list, and
+Returns the penalties that a term declares: a list of entries, where
+each entry names a subset of the term's own parameters, the penalty over
+them, and the hyperparameters that the caller held for that penalty. A
+fitting layer enumerates penalties through this list, and
 [`term_smooth()`](https://statmodels7.github.io/modelterms7/reference/term_smooth.md)
 and
 [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
@@ -19,8 +19,8 @@ term_penalties(term, ...)
 
 - term:
 
-  A built term. An unbuilt one is accepted and reports what it has,
-  which is usually nothing.
+  A built term. An unbuilt one is accepted, and the result lists the
+  entries that it already declares, usually none.
 
 - ...:
 
@@ -29,8 +29,8 @@ term_penalties(term, ...)
 ## Value
 
 An unnamed list, possibly empty, one element per declared penalty. Every
-element is a list with the same nine fields, an empty value standing for
-a field that is not set:
+element is a list with the same nine fields; an empty value stands for a
+field that is not set:
 
 - `name`:
 
@@ -63,29 +63,30 @@ a field that is not set:
 - `ids`:
 
   the sharing labels of this penalty's hyperparameters, a named
-  character vector, empty where none is shared.
+  character vector, empty where the penalty shares none of its
+  hyperparameters.
 
 An entry that a term carries up from one of its sub-terms keeps the
 values and the search that the sub-term holds.
 
-## Two ways it generalizes [`term_penalty()`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md)
+## Two ways in which it generalizes [`term_penalty()`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md)
 
-**A term may carry more than one penalty**, over different parameters of
-its own. A panel model with a population value and a departure per group
+A term may carry more than one penalty, over different parameters of its
+own. A panel model with a population value and a departure per group
 leaves the population value free and shrinks the departures, which is
-one penalty over part of the parameters and none over the rest.
-[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
-developing two of its parameters by two different penalized sub-terms
+one penalty over part of the parameters and no penalty over the rest. An
+[`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) term
+that develops two of its parameters by two different penalized sub-terms
 carries two entries.
 
-**The parameters need not be coefficients of a design block.** The
+The parameters need not be coefficients of a design block. The
 persistence of a score-driven term, the nonlinear parameters of
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) and
 the break-point of
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
-are parameters of the term and of nothing else, and all a penalty needs
-from them is a vector of numbers and their positions. For a structural
-term `index` gives positions in
+are parameters of the term and of nothing else, and a penalty needs from
+them only a vector of numbers and their positions. For a structural term
+`index` gives positions in
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md);
 for an additive one, columns of the block.
 
@@ -93,20 +94,20 @@ for an additive one, columns of the block.
 
 The method on
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)
-answers from
+derives its result from
 [`term_penalty()`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md),
 so a term carrying one penalty over its whole block needs no method of
 its own. Its single entry is named `""`, meaning the whole term.
 
-A name is unique **within** the term and is not the term's own name. Two
+A name is unique within the term and is not the term's own name. Two
 [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md)
 terms in one formula are two terms with their own hyperparameters, told
 apart by their names in the formula;
 [`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
-files a hyperparameter under the key `term` for a term with one entry
+records a hyperparameter under the key `term` for a term with one entry
 and `term::entry` for a term with several.
 
-The list itself is **unnamed**: the key of an entry is its `name` field,
+The list itself is unnamed: the key of an entry is its `name` field,
 read as `e$name`, and `names(entries)` is `NULL`.
 
 ## A specification carries no entries
@@ -114,10 +115,10 @@ read as `e$name`, and `names(entries)` is `NULL`.
 The penalty is attached at
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md),
 so `term_penalties()` on an unbuilt penalized term is an empty list.
-That is why
+Consequently
 [`term_smooth()`](https://statmodels7.github.io/modelterms7/reference/term_smooth.md),
-which reads this, answers `TRUE` for `lasso(~ x)` and `FALSE` once it is
-built.
+which reads this list, returns `TRUE` for `lasso(~ x)` and `FALSE` once
+the term is built.
 
 ## See also
 
@@ -126,7 +127,7 @@ for the single-penalty case,
 [`term_components()`](https://statmodels7.github.io/modelterms7/reference/term_components.md)
 for how a term's columns divide among its own parameters,
 [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md)
-for the held values alone, and
+for only the held values, and
 [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
 for what the entries cost.
 
@@ -136,7 +137,8 @@ for what the entries cost.
 set.seed(1)
 d <- data.frame(x = sort(runif(50, 0, 10)), g = factor(rep(c("a", "b"), 25)))
 
-# One penalty over the whole block: one entry, named with the empty string.
+# A penalty over the whole block gives one entry, named with the empty
+# string.
 e <- term_penalties(term_build(ridge(~ x), d))
 length(e)
 #> [1] 1

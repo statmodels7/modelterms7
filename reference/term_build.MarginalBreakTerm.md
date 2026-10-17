@@ -22,7 +22,7 @@ integrated follows from that ordering.
 
 ## Value
 
-The term with `blueprint` filled.
+The term in which `blueprint` is filled.
 [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
 reads that property on this branch, so it is `TRUE` for the result.
 
@@ -38,7 +38,7 @@ covariate (`groups`), and the labels of the groups (`labels`). The
 intervals over which the likelihood decomposes are the gaps between a
 group's ordered observations, so they follow from that ordering.
 
-No starting values are computed here:
+This function does not compute starting values;
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
 computes them when it is called. A start with every change at zero is
 degenerate for this term. With `delta = 0` the intervals are

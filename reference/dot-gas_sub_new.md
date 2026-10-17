@@ -6,10 +6,10 @@ at each row of `newdata`, so that
 can carry a score-driven filter past the end of its series. A parameter
 carrying a subformula is read by calling
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-on each of its sub-terms, which reapplies the blueprint each sub-term
-recorded at build time; a basis or a set of contrasts is therefore not
-relearned on the new rows. A parameter with no subformula is constant
-over the rows.
+on each of its sub-terms, which reapplies the blueprint that each
+sub-term recorded at build time; a basis or a set of contrasts is
+therefore not relearned on the new rows. A parameter with no subformula
+is constant over the rows.
 
 ## Usage
 
@@ -32,8 +32,8 @@ over the rows.
 
 - newdata:
 
-  A data frame of the rows to read at, carrying every variable the
-  subformulas name.
+  A data frame of the rows at which to read the parameters, carrying
+  every variable that the subformulas name.
 
 ## Value
 
@@ -49,8 +49,9 @@ A list with the following elements:
 
 - `B`:
 
-  `nrow(newdata)` by `q`, the autoregressive coefficients,
-  Levinson-Durbin applied row by row. A zero-column matrix at \\q = 0\\.
+  `nrow(newdata)` by `q`, the autoregressive coefficients, obtained by
+  applying Levinson-Durbin row by row. At \\q = 0\\ it is a zero-column
+  matrix.
 
 - `dom`, `dA`, `dB`:
 

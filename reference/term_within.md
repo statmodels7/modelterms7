@@ -1,6 +1,7 @@
 # The Within-Group Design of a Term With Grouped Effects
 
-The design row each group's effect multiplies, at new rows.
+Returns, at new rows, the design row that each group's effect
+multiplies.
 
 ## Usage
 
@@ -31,9 +32,10 @@ A numeric matrix of `nrow(newdata)` rows, or `NULL`.
 A term whose coefficients are one effect per group,
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md),
 builds its block by interacting a within-group design with the group
-indicators. This returns the first factor alone, which does not depend
-on the grouping: a caller integrating the effect of a group the fit
-never saw reads \\z_i^\top b\\ from it with \\b\\ drawn from the prior.
+indicators. This returns the first factor by itself, and that factor
+does not depend on the grouping: a caller who integrates the effect of a
+group that was absent from the fitting data reads \\z_i^\top b\\ from
+it, where \\b\\ is drawn from the prior.
 
 The base method returns `NULL`, which is the answer for every term but
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md).

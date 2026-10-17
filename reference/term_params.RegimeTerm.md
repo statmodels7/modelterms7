@@ -1,10 +1,10 @@
 # The Parameters of a Regime Term
 
-`"level1"`, then `"gap2"` ... `"gapK"`, then the free names of the
-transition matrix, `"alr1.1"` and the rest. A chain of \\K\\ regimes has
-\\K + K(K-1)\\ parameters in all: one free level, \\K-1\\ positive gaps
-that order the others, and \\K(K-1)\\ additive log-ratios, \\K-1\\ per
-row of the matrix.
+The parameters are `"level1"`, then `"gap2"` ... `"gapK"`, then the free
+names of the transition matrix, `"alr1.1"` and the rest. A chain of
+\\K\\ regimes has \\K + K(K-1)\\ parameters in all: one free level,
+\\K-1\\ positive gaps that order the others, and \\K(K-1)\\ additive
+log-ratios, \\K-1\\ per row of the matrix.
 
 ## Arguments
 
@@ -40,7 +40,7 @@ own `free_names`, so the spelling is that package's.
 ## See also
 
 [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
-for the chart each rides,
+for the chart on which each parameter is carried,
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
 for what they mean.
 

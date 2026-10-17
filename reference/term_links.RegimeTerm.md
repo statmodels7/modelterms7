@@ -1,8 +1,8 @@
 # The Charts of a Regime Term's Parameters
 
-The **log** link on every gap and the identity on everything else. A gap
-must be positive, that being what orders the levels; a level and an
-additive log-ratio are already unconstrained.
+Returns the log link for every gap and the identity link for every other
+parameter. A gap must be positive, and positivity orders the levels; a
+level and an additive log-ratio are already unconstrained.
 
 ## Arguments
 
@@ -27,8 +27,7 @@ The log-ratios need no chart because
 has already provided one: they are the additive log-ratios of each row,
 so any real values at all give a row of probabilities summing to one.
 
-The consequence for a caller is that `psi` and `zeta` differ only in the
-gaps.
+Therefore `psi` and `zeta` differ only in the gaps.
 [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
 takes the parameter scale, where `gap2 = 3` is a gap of three;
 [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)

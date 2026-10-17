@@ -42,12 +42,12 @@ components normalized to a unit largest entry and does not move with the
 smoothing parameters.
 
 Where the smoother has already placed the null space in its leading
-columns with a zero border in every component, which is what every
-basis7 smoother does under `null_space = "keep"`, the map keeps those
-columns and their names. Otherwise, as for a tensor product, an
-orthonormal basis of the null space and one of its complement are taken
-from the eigenvectors of the normalized sum, and the columns are named
-`null1`, ... and `z1`, ....
+columns with a zero border in every component, as every basis7 smoother
+does under `null_space = "keep"`, the map keeps those columns and their
+names. Otherwise, as for a tensor product, an orthonormal basis of the
+null space and one of its complement are taken from the eigenvectors of
+the normalized sum, and the columns are named `null1`, ... and `z1`,
+....
 
 With a single component the penalized coordinates are then whitened:
 with \\P = R^\top R\\ the penalty on the penalized coordinates

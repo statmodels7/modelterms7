@@ -1,13 +1,14 @@
 # Score-Driven Dynamics
 
-A generalized autoregressive score component (Creal et al., 2013;
-Harvey, 2013): a level \\f_t\\ added to the linear predictor, driven by
-the score of the observation density at the previous times, \$\$f_t =
-\omega + \sum\_{i=1}^{p} \kappa_i s\_{t-i} + \sum\_{j=1}^{q} \xi_j
-f\_{t-j},\$\$ with \\s_t = \partial \ell_t / \partial \eta_t\\ the
-derivative of the log-likelihood contribution at time \\t\\ with respect
-to the predictor at which it is evaluated, multiplied by a power of the
-expected information when `scaling` is not zero.
+`gas()` constructs a generalized autoregressive score component (Creal
+et al., 2013; Harvey, 2013): a level \\f_t\\ that is added to the linear
+predictor and driven by the score of the observation density at the
+previous times, \$\$f_t = \omega + \sum\_{i=1}^{p} \kappa_i s\_{t-i} +
+\sum\_{j=1}^{q} \xi_j f\_{t-j},\$\$ with \\s_t = \partial \ell_t /
+\partial \eta_t\\ the derivative of the log-likelihood contribution at
+time \\t\\ with respect to the predictor at which it is evaluated,
+multiplied by a power of the expected information when `scaling` is not
+zero.
 
 ## Usage
 
@@ -47,8 +48,8 @@ gas(
 
   An optional grouping variable, evaluated in the data; each group is
   filtered independently, from its own starting level. A formula here is
-  the shorthand giving the same subformula to every parameter, and then
-  no grouping is implied.
+  the shorthand that gives the same subformula to every parameter, and
+  the term then does not imply any grouping.
 
 - time:
 
@@ -87,14 +88,14 @@ The term adds no columns. The predictor at one time depends on the data
 at the previous ones, so the contribution cannot be written as a block,
 and
 [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
-runs the recursion instead. That is what puts it on the structural
-branch.
+runs the recursion instead. For this reason the term belongs to the
+structural branch.
 
-What drives the recursion is the score of whatever distribution the
-model carries, so the same term is a GARCH-like volatility model when it
+The score of the distribution that the model carries drives the
+recursion, so the same term is a GARCH-like volatility model when it
 enters the scale of a Gaussian, a dynamic count model when it enters the
 mean of a Poisson, and a robust location filter when it enters a Student
-t: a heavy-tailed score is bounded in the observation, so an outlier
+t. A heavy-tailed score is bounded in the observation, so an outlier
 moves the level by a bounded amount instead of in proportion to its
 size.
 
@@ -105,16 +106,17 @@ The parameters are the level \\\omega\\, the score loadings \\\kappa_1,
 unconstrained scale of a link, and `links` overrides any of them; the
 defaults are the following.
 
-The level carries the identity, being unconstrained. The loadings carry
-the **log** link: a positive loading responds in the direction of the
-score, which is the case the score-driven literature writes, and
-positivity is then structural. A subformula develops the loading on the
-log scale, so every group and every observation has a positive loading.
-A loading that must be free in sign takes the identity link, which is
-set with `links = list(kappa1 = linkfunctions7::identity_link())`.
+The level carries the identity link because it is unconstrained. The
+loadings carry the log link: a positive loading responds in the
+direction of the score, which is the case that the score-driven
+literature writes, and positivity is then structural. A subformula
+develops the loading on the log scale, so every group and every
+observation has a positive loading. A loading that must be free in sign
+takes the identity link, which is set with
+`links = list(kappa1 = linkfunctions7::identity_link())`.
 
-The persistence is carried by **partial autocorrelations** and not by
-the coefficients \\\xi_j\\ directly. The stationary region of an
+The persistence is carried by partial autocorrelations and not by the
+coefficients \\\xi_j\\ directly. The stationary region of an
 autoregression is not a box, so a collection of scalar links cannot
 represent it, whereas the partial autocorrelations each range over
 \\(-1, 1)\\ independently and the Levinson-Durbin recursion maps them
@@ -129,19 +131,19 @@ persistence on the rhobit link is stationary at every observation.
 
 ### One parameter at a time
 
-The level this term drives is a scalar, so it enters the predictor of
-one distribution parameter. In the general formulation the level is a
-vector with one entry per modeled parameter, \\\omega\\ a vector and the
-loadings \\A_i\\ and \\B_j\\ matrices, which lets the scale respond to
-the score of the location and the other way round. The recursion
-generalizes mechanically, and so does the derivative propagated with it;
-what is missing is a way to say that one filter spans several
-parameters, since a term written inside the formula of one parameter has
-no place to declare it. That belongs to the model layer. The persistence
-would also need a different chart: the partial-autocorrelation
-construction above is a scalar one, and the stationary region of a
-matrix autoregression is a bound on the spectral radius of its companion
-matrix, which is not a box.
+The level that this term drives is a scalar, so it enters the predictor
+of one distribution parameter. In the general formulation the level is a
+vector with one entry per modeled parameter, \\\omega\\ is a vector, and
+the loadings \\A_i\\ and \\B_j\\ are matrices. This lets the scale
+respond to the score of the location and the other way round. The
+recursion generalizes mechanically, and so does the derivative
+propagated with it. The package has no way to declare that one filter
+spans several parameters, because a term written inside the formula of
+one parameter has no place for such a declaration. The declaration
+belongs to the model layer. The persistence would also need a different
+chart: the partial-autocorrelation construction above is a scalar one,
+and the stationary region of a matrix autoregression is a bound on the
+spectral radius of its companion matrix, which is not a box.
 
 ### The scaling of the score
 
@@ -191,9 +193,9 @@ The two spellings are one model with the same log-likelihood, loadings
 and persistence, and their constants measure different quantities. The
 score has zero conditional mean, so the level fluctuates around the
 fixed point of the recursion, \$\$\mathrm{E}\[f_t\] = \frac{\omega}{1 -
-\sum\_{j=1}^{q} \xi_j},\$\$ and this is what the intercept estimates
-when \\\omega\\ is held: \$\$\eta_t = c + f_t \\\text{with}\\ \omega = 0
-\qquad\text{and}\qquad \eta_t = f_t \\\text{with}\\ c =
+\sum\_{j=1}^{q} \xi_j},\$\$ and the intercept estimates this quantity
+when \\\omega\\ is held. Therefore \$\$\eta_t = c + f_t \\\text{with}\\
+\omega = 0 \qquad\text{and}\qquad \eta_t = f_t \\\text{with}\\ c =
 \frac{\omega}{1 - \sum_j \xi_j}\$\$ describe the same predictor. With a
 persistence close to one the factor \\1/(1 - \sum_j \xi_j)\\ is large,
 so \\\omega\\ is small, and its standard error is not comparable with
@@ -211,17 +213,17 @@ Without `time` the rows are taken in the order in which they appear.
 ### A parameter developed with covariates
 
 A two-sided formula in `...` whose left side names a parameter develops
-it as \\\psi\_{j,t} = g_j^{-1}(z_t^\top\gamma_j)\\, the design \\Z\\
-built from the right-hand side through
+it as \\\psi\_{j,t} = g_j^{-1}(z_t^\top\gamma_j)\\, where the design
+\\Z\\ is built from the right-hand side through
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
-so it takes the additive terms of the package whose block does not move
-with their coefficients:
+so the design takes the additive terms of the package whose block does
+not move with their coefficients:
 
     gas(p = 1, q = 1, omega ~ ridge(~g), kappa1 ~ s(x),
         pacf1 ~ random(~1 | id), by = id)
 
 The development acts on the unconstrained scale of the parameter's own
-link. That is what keeps every per-observation value inside the
+link, and therefore every per-observation value stays inside the
 parameter's own set whatever the coefficients are: a loading on the log
 link is positive at every observation, a persistence on the rhobit chart
 is inside \\(-1, 1)\\ at every observation, and at \\q = 1\\ that bounds
@@ -257,14 +259,15 @@ a fitting layer estimates. `lasso(...)` in the subformula sets the
 departures of the groups that do not need one exactly to zero.
 
 The departures act on the unconstrained scale of the parameter's chart,
-so a persistence stays inside \\(-1, 1)\\ whatever the departure is.
-Their penalty is also what identifies them: a population value and \\m\\
-departures are \\m+1\\ numbers describing \\m\\ group values, so without
-the penalty the likelihood is flat along one direction per developed
-parameter. This is the parametrization of a random effect and it is
-identified the same way, there by a variance component, here by the
-penalty. An unpenalized development over group indicators is therefore
-for reading a filter at given parameters rather than for fitting one.
+so a persistence stays inside \\(-1, 1)\\ whatever the departure is. The
+penalty on the departures also identifies them: a population value and
+\\m\\ departures are \\m+1\\ numbers describing \\m\\ group values, so
+without the penalty the likelihood is flat along one direction per
+developed parameter. This is the parametrization of a random effect and
+it is identified the same way, there by a variance component, here by
+the penalty. An unpenalized development over group indicators is
+therefore for reading a filter at given parameters rather than for
+fitting one.
 
 The arguments `deviations` and `penalty` are not accepted and are
 rejected by name; the subformula takes their place.
@@ -294,7 +297,7 @@ for what a fitted one reports.
 ## Examples
 
 ``` r
-# A level, one loading and one persistence coordinate.
+# The term has a level, one loading and one persistence coordinate.
 term_params(gas(p = 1, q = 1))
 #> [1] "omega"  "kappa1" "pacf1" 
 term_params(gas(p = 2, q = 2))
@@ -308,7 +311,8 @@ vapply(term_links(gas(p = 1, q = 2)), function(l) l@link_name,
 #> "identity"      "log"   "rhobit"   "rhobit" 
 
 # Running the filter: the term supplies the recursion and the caller
-# supplies the density's score and curvature. Here a Gaussian mean.
+# supplies the density's score and curvature. Here the predictor is a
+# Gaussian mean.
 set.seed(1)
 dd <- data.frame(t = 1:60, y = c(rnorm(30), rnorm(30, 3)))
 b <- term_build(gas(p = 1, q = 1, time = t), dd)
@@ -337,7 +341,7 @@ fd <- vapply(1:3, function(j) {
 max(abs(colSums(out$jacobian) - fd))
 #> [1] 6.187901e-08
 
-# A panel: each group filtered from its own starting level.
+# A panel: the filter runs on each group from its own starting level.
 dd$id <- rep(1:3, each = 20)
 term_build(gas(p = 1, q = 1, by = id, time = t), dd)
 #> <GasTerm> 'gas': score-driven, p = 1, q = 1; 3 group(s)
@@ -354,10 +358,11 @@ vapply(term_penalties(gb), function(e) e$name, character(1))
 #> [1] "omega::ridge(~g)"
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The term is fitted. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
-  # drawn from the recursion the term implements, with a gaussian mean
+  # The series is drawn from the recursion that the term implements,
+  # with a gaussian mean.
   set.seed(2)
   om <- 0.05; al <- 0.3; be <- 0.9
   lev <- om / (1 - be)
@@ -369,7 +374,7 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   fd <- data.frame(t = seq_len(600), y = yy)
   ft <- statmodels7::statmod(y ~ 0 + gas(p = 1, q = 1, time = t),
                              distributions7::gaussian1_distrib(), fd)
-  # truth: omega 0.05, kappa 0.3, xi 0.9. xi is reported as the
+  # The truth is omega 0.05, kappa 0.3, xi 0.9. xi is reported as the
   # autoregressive coefficient, whereas the estimated coordinate is a
   # partial autocorrelation.
   print(round(coef(ft)$mu, 3))

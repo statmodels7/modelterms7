@@ -1,8 +1,8 @@
 # Settle Whether a Block Is Built Sparse
 
-Passes an explicit `TRUE` or `FALSE` through, and where the caller left
-`NULL` decides from the size of the indicator part: sparse when
-`n * ncol_ind` exceeds \\10^5\\.
+Returns an explicit `TRUE` or `FALSE` unchanged. Where the caller left
+`NULL`, it settles the storage from the size of the indicator part:
+sparse when `n * ncol_ind` exceeds \\10^5\\.
 
 ## Usage
 
@@ -14,7 +14,7 @@ Passes an explicit `TRUE` or `FALSE` through, and where the caller left
 
 - sparse:
 
-  `TRUE`, `FALSE`, or `NULL` to decide here.
+  `TRUE`, `FALSE`, or `NULL` to settle the storage here.
 
 - n:
 
@@ -33,9 +33,8 @@ A single logical, never `NA`. A non-finite `n` or `ncol_ind` gives
 ## Details
 
 The dense indicator part holds `n * ncol_ind` cells where the sparse one
-holds one non-zero per row, so that product is what separates the two
-routes, and the threshold is read off it rather than off a count of
-levels.
+holds one non-zero per row, so that product separates the two routes,
+and the threshold is read off it rather than off a count of levels.
 
 Below about \\10^5\\ cells the sparse route is slightly slower than the
 dense route, and above it the sparse route is faster, so the threshold
@@ -48,6 +47,6 @@ design.
 ## See also
 
 [`.indicator_cols()`](https://statmodels7.github.io/modelterms7/reference/dot-indicator_cols.md)
-for the count it reads,
+for the count that it reads,
 [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
-for the argument it settles.
+for the argument that it settles.

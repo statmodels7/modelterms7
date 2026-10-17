@@ -31,9 +31,9 @@ brms's convention and is the reading that the parser itself yields.
 
 The label is taken with
 [`as.character()`](https://rdrr.io/r/base/character.html) on the symbol
-and **never evaluated**, so a column of the data carrying that name is
-not read. It is the one element of the formula that does not refer to
-the data.
+and never evaluated, so a column of the data carrying that name is not
+read. It is the one element of the formula that does not refer to the
+data.
 
 Two bars are the most that carry a meaning, so a third is rejected.
 

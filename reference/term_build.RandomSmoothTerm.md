@@ -38,11 +38,11 @@ unpenalized: a straight line for a second derivative, a sine and a
 cosine for the harmonic operator, an exponential for \\D^2 + aD\\,
 nothing for a cyclic smoother.
 
-The smoother's `null_space` decides what the null space contributes.
-Under `"keep"` its columns are there and carry the null-space prior
-together with the constant; under `"shrink"` they are penalized with the
-rest and belong to the penalized coordinates; under `"drop"` they are
-absent.
+The argument `null_space` of the smoother determines what the null space
+contributes. Under `"keep"` its columns are there and carry the
+null-space prior together with the constant; under `"shrink"` they are
+penalized with the rest and belong to the penalized coordinates; under
+`"drop"` they are absent.
 
 ## The two priors
 
@@ -57,9 +57,9 @@ and to the phase of a periodic one.
 
 The penalized coordinates of every group have the prior of the smooth's
 own penalty. With one component that is an independent centered Gaussian
-with one standard deviation, the coordinates having been whitened, and
-its hyperparameter is `sigma.smooth`. With several components it is the
-sum \\\sum_k \lambda_k (I_m \otimes S_k)\\, with hyperparameters
+with one standard deviation, because the coordinates have been whitened,
+and its hyperparameter is `sigma.smooth`. With several components it is
+the sum \\\sum_k \lambda_k (I_m \otimes S_k)\\, with hyperparameters
 `lambda1.smooth`, `lambda2.smooth` and so on. The groups share these
 hyperparameters, so all the curves have the same roughness.
 

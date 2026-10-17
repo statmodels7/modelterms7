@@ -1,8 +1,8 @@
 # Where a Score-Driven Term's Parameters Start
 
-Zero on the unconstrained scale of every parameter except the score
-loadings, which start at \\0.1\\ on the parameter scale, through
-whatever link each one carries.
+Returns zero on the unconstrained scale for every parameter except the
+score loadings, which start at \\0.1\\ on the parameter scale, through
+the link that each one carries.
 
 ## Arguments
 

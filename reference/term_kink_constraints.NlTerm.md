@@ -1,6 +1,6 @@
 # The Constraints of a Kinked Sub-Term, Carried to a Nonlinear Term
 
-The rows of
+Returns the rows of
 [`term_kink_constraints()`](https://statmodels7.github.io/modelterms7/reference/term_kink_constraints.md)
 of every sharp
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)

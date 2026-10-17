@@ -1,6 +1,6 @@
 # S7 Class for Penalized Parametric Terms
 
-The subclass of
+`PenalizedTerm` is the subclass of
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 for a parametric block whose coefficients carry a penalties7 penalty.
 [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
@@ -12,7 +12,7 @@ and
 all construct it. The five differ in the penalty that their factory
 attaches at build time and in the hyperparameter arguments that their
 constructors take, so every derivative, hyperparameter, bound, link and
-kink belongs to the penalty object and none of it is restated here.
+kink belongs to the penalty object and is not restated here.
 
 ## Usage
 
@@ -49,8 +49,8 @@ PenalizedTerm(
 
 - hyper:
 
-  The hyperparameters of the term's penalty that the caller **held**, as
-  a named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller held, as a
+  named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -63,9 +63,9 @@ PenalizedTerm(
 
 - values:
 
-  The values a path visits, for each hyperparameter the caller wrote
-  out, as a named list of numeric vectors. Empty, the default, has the
-  path build them. See
+  The values that a path visits, for each hyperparameter that the caller
+  wrote out, as a named list of numeric vectors. Empty, the default, has
+  the path build them. See
   [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md).
 
 - min_ratio:
@@ -93,21 +93,22 @@ PenalizedTerm(
 - X:
 
   The design block, one row per observation: a numeric matrix or a
-  two-dimensional Matrix. Empty until
+  two-dimensional Matrix. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
 - coef_names:
 
   The block's coefficient names, one per column, prefixed by `label`
-  when there is one. Filled by
-  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md).
+  when there is one.
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+  fills it.
 
 - blueprint:
 
   A named list of everything needed to reproduce the mapping on new
-  rows. Its contents are the subclass's business; nothing outside the
-  term reads them. Empty until
+  rows. Its contents belong to the subclass, and only the term reads
+  them. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
@@ -136,8 +137,8 @@ PenalizedTerm(
 - standardize:
 
   A single logical: whether each coefficient is penalized on the scale
-  of its own column, through the penalty's diagonal map. `FALSE` by
-  default.
+  of its own column, through the penalty's diagonal map. The default is
+  `FALSE`.
 
 - sparse:
 
@@ -164,20 +165,20 @@ that
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 can re-evaluate it in new data.
 
-`factory` maps a coefficient count to the penalty. It is called at
-build, when the count is known, and with the diagonal map as a second
-argument when `standardize = TRUE`, so a factory that is never used with
-standardization may take the count alone.
+`factory` maps a coefficient count to the penalty. The build calls it
+with the count, once the count is known, and with the diagonal map as a
+second argument when `standardize = TRUE`, so a factory that is never
+used with standardization may take only the count.
 
 `standardize` is a single logical on the specification; after a build
 the spreads themselves are in `blueprint$standardize`, one per column.
 
-`sparse` governs the formula route only, a matrix input being kept in
-whatever storage it arrives in. The property stays as the caller wrote
-it, `NULL` by default, and the storage that the build settles on is
+`sparse` governs the formula route only, because a matrix input is kept
+in the storage in which it arrives. The property stays as the caller
+wrote it, `NULL` by default, and the storage that the build settles is
 recorded in `blueprint$sparse`.
 
-## What the class does not decide
+## What the class does not fix
 
 Which hyperparameters are estimated, over what grid and how far down a
 path are recorded in

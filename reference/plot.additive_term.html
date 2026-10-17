@@ -3,14 +3,16 @@
 per coefficient against its position in the block, a stem down to zero, a
 dotted line at zero, and the coefficient names rotated along the horizontal
 axis. It shows which coefficients a penalty has driven to zero and how large
-the survivors are, so it reads a lasso or a smooth at a glance.
+the survivors are, so the effect of a lasso or a smooth is visible at a
+glance.
 The coefficients are supplied by the caller. A term holds a design block and
 no fit, so there is nothing to display without them, and coef = NULL is
 rejected."><meta property="og:description" content="Draws the coefficients of a built additive term as a stem plot: one point
 per coefficient against its position in the block, a stem down to zero, a
 dotted line at zero, and the coefficient names rotated along the horizontal
 axis. It shows which coefficients a penalty has driven to zero and how large
-the survivors are, so it reads a lasso or a smooth at a glance.
+the survivors are, so the effect of a lasso or a smooth is visible at a
+glance.
 The coefficients are supplied by the caller. A term holds a design block and
 no fit, so there is nothing to display without them, and coef = NULL is
 rejected."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
@@ -21,7 +23,7 @@ rejected."><meta property="og:image" content="https://statmodels7.github.io/mode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +54,8 @@ rejected."><meta property="og:image" content="https://statmodels7.github.io/mode
 per coefficient against its position in the block, a stem down to zero, a
 dotted line at zero, and the coefficient names rotated along the horizontal
 axis. It shows which coefficients a penalty has driven to zero and how large
-the survivors are, so it reads a lasso or a smooth at a glance.</p>
+the survivors are, so the effect of a lasso or a smooth is visible at a
+glance.</p>
 <p>The coefficients are supplied by the caller. A term holds a design block and
 no fit, so there is nothing to display without them, and <code>coef = NULL</code> is
 rejected.</p>
@@ -85,7 +88,7 @@ error.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p><code>x</code>, invisibly. Called for the plot.</p>
+    <p><code>x</code>, invisibly. The method is called for the plot.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -110,7 +113,7 @@ coefficients cost in degrees of freedom.</p></div>
 <span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x1 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">30</span><span class="op">)</span>, x2 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">30</span><span class="op">)</span>, x3 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">30</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="lasso.html">lasso</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x2</span> <span class="op">+</span> <span class="va">x3</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Two survivors and one coefficient at exactly zero.</span></span></span>
+<span class="r-in"><span><span class="co"># The plot shows two survivors and one coefficient at exactly zero.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">b</span>, coef <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.8</span>, <span class="fl">0</span>, <span class="op">-</span><span class="fl">0.35</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="plot.additive_term-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span></span></span>

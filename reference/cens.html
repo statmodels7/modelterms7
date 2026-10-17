@@ -17,7 +17,7 @@ two finite bounds is interval-censored."><meta property="og:image" content="http
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,14 +63,14 @@ two finite bounds is interval-censored.</p>
 
 <dl><dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
 <dd><p>A numeric vector of responses, <code>NA</code> at an interval-censored
-observation. Coerced with <code><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric()</a></code>, so an integer vector is accepted;
-a factor is rejected.</p></dd>
+observation. The vector is coerced with <code><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric()</a></code>, so an integer
+vector is accepted; a factor is rejected.</p></dd>
 
 
 <dt id="arg-lwr">lwr<a class="anchor" aria-label="anchor" href="#arg-lwr"></a></dt>
 <dd><p>A numeric lower bound, of length 1 or <code>length(y)</code>, recycled to
-<code>length(y)</code>. <code>-Inf</code> by default, which is no left censoring. A factor is
-rejected. Any other length signals the error
+<code>length(y)</code>. The default is <code>-Inf</code>, which means that there is no left
+censoring. A factor is rejected. Any other length signals the error
 <code>"'lwr' must have length 1 or length(y)."</code>, and an <code>NA</code> entry signals
 <code>"'lwr' must not contain NA."</code>.</p></dd>
 
@@ -83,18 +83,18 @@ class validator.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code><a href="censored_response.html">censored_response()</a></code> object holding <code>length(y)</code> observations,
-carrying <code>y</code> unchanged (<code>NA</code> included), the recycled <code>lwr</code> and <code>upr</code>, and the derived
-<code>status</code>.</p>
+    <p>A <code><a href="censored_response.html">censored_response()</a></code> object with <code>length(y)</code> observations. It
+carries <code>y</code> unchanged (<code>NA</code> included), the recycled <code>lwr</code> and <code>upr</code>, and
+the derived <code>status</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="the-rule-that-assigns-a-status">The rule that assigns a status<a class="anchor" aria-label="anchor" href="#the-rule-that-assigns-a-status"></a></h2>
     <p>The bounds are recycled to <code>length(y)</code> first, so a scalar applies to every
 observation and a vector gives one bound per observation. Each entry is then
-classified by where it sits, with the bounds inclusive:</p><table class="table table"><tr><td>condition</td><td>status</td><td>what is known</td></tr><tr><td><code>y &lt;= lwr</code></td><td><code>"left"</code></td><td>\(Y \le\) <code>lwr</code></td></tr><tr><td><code>y &gt;= upr</code></td><td><code>"right"</code></td><td>\(Y \ge\) <code>upr</code></td></tr><tr><td><code>lwr &lt; y &lt; upr</code></td><td><code>"observed"</code></td><td>\(Y = y\)</td></tr><tr><td><code>is.na(y)</code>, both bounds finite</td><td><code>"interval"</code></td><td>\(Y \in [\)<code>lwr</code>, <code>upr</code>\(]\)</td></tr></table><p>The left test is applied first and the right test second, and the later
+classified by where it sits, and the bounds are inclusive:</p><table class="table table"><tr><td>condition</td><td>status</td><td>what is known</td></tr><tr><td><code>y &lt;= lwr</code></td><td><code>"left"</code></td><td>\(Y \le\) <code>lwr</code></td></tr><tr><td><code>y &gt;= upr</code></td><td><code>"right"</code></td><td>\(Y \ge\) <code>upr</code></td></tr><tr><td><code>lwr &lt; y &lt; upr</code></td><td><code>"observed"</code></td><td>\(Y = y\)</td></tr><tr><td><code>is.na(y)</code>, both bounds finite</td><td><code>"interval"</code></td><td>\(Y \in [\)<code>lwr</code>, <code>upr</code>\(]\)</td></tr></table><p>The left test is applied first and the right test second, and the later
 assignment overrides the earlier one, so a value that met both conditions
 would receive the status <code>"right"</code>. The class validator rejects
-<code>lwr &gt;= upr</code>, so no value meets both. An <code>NA</code> value without two finite
+<code>lwr &gt;= upr</code>, so a value cannot meet both. An <code>NA</code> value without two finite
 bounds carries no information about \(Y\), and <code>cens()</code> signals an error.</p>
 <p>At the defaults <code>lwr = -Inf</code> and <code>upr = Inf</code>, every finite value has the
 status <code>"observed"</code>, and the object then carries the same information as the
@@ -103,19 +103,19 @@ status <code>"left"</code> and the value <code>Inf</code> the status <code>"righ
     </div>
     <div class="section level2">
     <h2 id="where-it-can-be-used">Where it can be used<a class="anchor" aria-label="anchor" href="#where-it-can-be-used"></a></h2>
-    <p>On the left of a formula passed to <code><a href="interpret_formula.html">interpret_formula()</a></code>, which returns the
-object as its <code>response</code> element. <code><a href="https://statmodels7.github.io/statmodels7/reference/statmod.html" class="external-link">statmodels7::statmod()</a></code> and
-<code><a href="https://statmodels7.github.io/statmodels7/reference/rstatmod.html" class="external-link">statmodels7::rstatmod()</a></code> reject that response with an error message: the
-toolkit marks censoring and does not assemble a censored likelihood from it.
-See <code><a href="censored_response.html">censored_response()</a></code> for the four contributions that such an assembler
-would need.</p>
+    <p>A call to <code>cens()</code> goes on the left of a formula passed to
+<code><a href="interpret_formula.html">interpret_formula()</a></code>, which returns the object as its <code>response</code> element.
+<code><a href="https://statmodels7.github.io/statmodels7/reference/statmod.html" class="external-link">statmodels7::statmod()</a></code> and <code><a href="https://statmodels7.github.io/statmodels7/reference/rstatmod.html" class="external-link">statmodels7::rstatmod()</a></code> reject that response
+with an error message: the toolkit marks censoring and does not assemble a
+censored likelihood from it. See <code><a href="censored_response.html">censored_response()</a></code> for the four
+contributions that such an assembler would need.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="censored_response.html">censored_response()</a></code> for the class and the four likelihood
-contributions; <code><a href="interpret_formula.html">interpret_formula()</a></code> for the formula it goes into;
+contributions; <code><a href="interpret_formula.html">interpret_formula()</a></code> for the formula in which it is used;
 <code><a href="https://statmodels7.github.io/distributions7/reference/distrib_grad_cdf.html" class="external-link">distributions7::distrib_grad_cdf()</a></code> for the distribution-function
-derivatives a censored likelihood is built from.</p></div>
+derivatives from which a censored likelihood is built.</p></div>
     </div>
 
     <div class="section level2">
@@ -126,7 +126,8 @@ derivatives a censored likelihood is built from.</p></div>
 <span class="r-in"><span><span class="va">r</span><span class="op">@</span><span class="va">status</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "left"     "observed" "observed"</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># One of each status. The NA is interval-censored between the bounds.</span></span></span>
+<span class="r-in"><span><span class="co"># The call produces one of each status. The NA is interval-censored between</span></span></span>
+<span class="r-in"><span><span class="co"># the bounds.</span></span></span>
 <span class="r-in"><span><span class="va">r2</span> <span class="op">&lt;-</span> <span class="fu">cens</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">5</span>, <span class="cn">NA</span><span class="op">)</span>, lwr <span class="op">=</span> <span class="fl">0</span>, upr <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">r2</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;censored_response&gt; 4 observations: 1 observed, 1 left, 1 right, 1 interval</span>
@@ -141,7 +142,7 @@ derivatives a censored likelihood is built from.</p></div>
 <span class="r-in"><span><span class="fu">cens</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span><span class="op">)</span>, lwr <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="cn">Inf</span>, <span class="fl">2</span>, <span class="op">-</span><span class="cn">Inf</span><span class="op">)</span>, upr <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">Inf</span>, <span class="cn">Inf</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span><span class="op">@</span><span class="va">status</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "observed" "left"     "right"   </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># With no bounds given, every observation is exact.</span></span></span>
+<span class="r-in"><span><span class="co"># If no bounds are given, every observation is exact.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu">cens</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span><span class="op">)</span><span class="op">@</span><span class="va">status</span> <span class="op">==</span> <span class="st">"observed"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span></span></span>

@@ -1,9 +1,9 @@
 # Design Block of a Built Term
 
-Returns the \\n \times k\\ block a built additive term contributes to
-the linear predictor, with the term's coefficient names as column names
-and one row per observation of the data on which it was built. The block
-is the term's `X` property, returned as it is stored.
+Returns the \\n \times k\\ block that a built additive term contributes
+to the linear predictor, with the term's coefficient names as column
+names and one row per observation of the data on which it was built. The
+block is the term's `X` property, returned as it is stored.
 
 ## Usage
 
@@ -27,13 +27,13 @@ term_matrix(term, ...)
 ## Value
 
 The design block: a numeric matrix, or a two-dimensional Matrix object
-where the term built one, with `nrow` the number of observations the
-term was built on and `ncol` equal to
+where the term built one, with `nrow` equal to the number of
+observations on which the term was built and `ncol` equal to
 [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md).
 
 ## Details
 
-The block is **not necessarily a base matrix**.
+The block is not necessarily a base matrix.
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
 builds a grouping indicator as a `dgCMatrix`, since a row belongs to one
 group and the fraction of nonzero entries is \\1/m\\ for \\m\\ groups,
@@ -42,9 +42,11 @@ and
 the penalized terms and a smooth with a factor `by` build a sparse block
 where their `sparse` argument selects it. Code that reads a block
 therefore tests `is.matrix(x) && is.numeric(x)` or a two-dimensional S4
-object; [`is.matrix()`](https://rdrr.io/r/base/matrix.html) alone is
-`FALSE` for every Matrix class and would reject a block merely for being
-stored sparsely.
+object. A test that consisted of
+[`is.matrix()`](https://rdrr.io/r/base/matrix.html) only would reject a
+block merely for being stored sparsely, because
+[`is.matrix()`](https://rdrr.io/r/base/matrix.html) is `FALSE` for every
+Matrix class.
 
 For a term whose block moves with its own coefficients,
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) and

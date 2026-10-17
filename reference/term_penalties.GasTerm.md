@@ -1,10 +1,10 @@
 # Penalties of a Score-Driven Term
 
-The penalties that the subformulas' sub-terms declare, each under the
-key `parameter::subterm` and covering that sub-term's coefficients in
-the term's own numbering. The scalar parameters are unpenalized, and the
-list is empty for a specification, whose developments do not exist until
-the term is built.
+Returns the penalties that the subformulas' sub-terms declare. Each
+penalty is under the key `parameter::subterm` and covers that sub-term's
+coefficients in the term's own numbering. The scalar parameters are
+unpenalized, and the list is empty for a specification, whose
+developments do not exist until the term is built.
 
 ## Arguments
 

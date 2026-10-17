@@ -1,9 +1,9 @@
-# The Columns Each Parameter of a Nonlinear Term Owns
+# The Columns That Each Parameter of a Nonlinear Term Owns
 
-One entry per parameter of \\f\\, giving the columns of the block that
-parameter owns and the sub-terms developing it. A parameter with no
-subformula owns one column; a developed one owns as many as its own
-design has.
+Returns one entry per parameter of \\f\\, giving the columns of the
+block that belong to the parameter and the sub-terms that develop it. A
+parameter with no subformula owns one column; a developed one owns as
+many as its own design has.
 
 ## Arguments
 
@@ -36,7 +36,7 @@ recovered by parsing the names; the term records it in its blueprint.
 [`term_components()`](https://statmodels7.github.io/modelterms7/reference/term_components.md)
 for the structure of an entry,
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-for the penalties those sub-terms bring.
+for the penalties that those sub-terms bring.
 
 ## Examples
 
@@ -46,7 +46,8 @@ dd <- data.frame(x = seq(0.2, 3, length.out = 20),
                  g = factor(rep(c("a", "b"), 10)))
 dd$y <- 2 * exp(-1.3 * dd$x)
 
-# `a` developed over a two-level factor, `r` scalar: two columns and one.
+# `a` is developed over a two-level factor and `r` is a scalar, which gives
+# two columns and one.
 b <- term_build(nl(~ a * exp(-r * x), a ~ 0 + g,
                    start = list(a = 1, r = 1.3)), dd)
 term_coef_names(b)

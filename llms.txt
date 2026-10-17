@@ -1,13 +1,14 @@
 # modelterms7
 
-Model terms as S7 objects. A term is the recipe a formula names: the
-mapping from a data frame to a design-matrix block, the penalty attached
-to the block’s coefficients, and the metadata that a fit uses:
+Model terms as S7 objects. A term is the recipe that a formula names:
+the mapping from a data frame to a design-matrix block, the penalty
+attached to the block’s coefficients, and the metadata that a fit uses:
 coefficient names, hyperparameters with their links, whether the
 penalized objective is differentiable, and how effective degrees of
 freedom are counted.
 
-Part of the [statmodels7](https://statmodels7.github.io) toolkit.
+The package is part of the [statmodels7](https://statmodels7.github.io)
+toolkit.
 
 ## Installation
 
@@ -19,7 +20,7 @@ pak::pak("statmodels7/modelterms7")
 
 ## The terms
 
-An **additive** term contributes a block of columns, so the predictor is
+An additive term contributes a block of columns, so the predictor is
 $`\eta = \sum_t X_t \beta_t`$ and a penalized fit minimizes
 $`-\ell(\beta) + \sum_t \rho_t(\beta_t; \theta_t)`$:
 
@@ -37,27 +38,27 @@ $`-\ell(\beta) + \sum_t \rho_t(\beta_t; \theta_t)`$:
 - [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
   builds grouped intercepts and slopes with the effect distribution as
   the penalty: a multivariate one lets the effects of a group depend on
-  each other, its matrix parameter carrying the dependence on whichever
-  [parameters7](https://statmodels7.github.io/parameters7/) chart is
-  given it, and a second bar labels effects that share a covariance
-  block with those of other terms;
+  each other, and its matrix parameter carries the dependence on
+  whichever [parameters7](https://statmodels7.github.io/parameters7/)
+  chart is given to it; a second bar labels effects that share a
+  covariance block with those of other terms;
 - [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
   [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
   are the penalized smooths of one and of several covariates, built on
   [basis7](https://statmodels7.github.io/basis7/);
 - [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
-  carries a contribution nonlinear in its own parameters, its block the
-  Jacobian refreshed as they move;
+  carries a contribution that is nonlinear in its own parameters, and
+  its block is the Jacobian, which is refreshed as the parameters move;
 - [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
   [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
   and
   [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
   estimate the break-points at which an effect changes slope, level, or
-  both, with
+  both, and
   [`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
-  choosing where the iteration begins.
+  chooses where the iteration begins.
 
-A **structural** term rewrites the likelihood instead of adding to the
+A structural term rewrites the likelihood instead of adding to the
 predictor:
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
 gives score-driven dynamics and
@@ -87,8 +88,8 @@ formula, and
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
 returns it as the response.
 [`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
-and `rstatmod()` reject a censored response, because no censored
-likelihood is assembled from it yet.
+and `rstatmod()` reject a censored response, because a censored
+likelihood for it is not yet implemented.
 
 ## A term’s own parameters take formulas
 
@@ -126,7 +127,7 @@ parameters that each entry covers.
 
 ## Effects that share a covariance block
 
-A second bar labels a random effect, following **brms**: in
+A second bar labels a random effect, following brms: in
 `~ 1 + x | u | id` the last position is the grouping variable, and the
 middle one is a label shared by the terms whose effects are correlated
 with each other. R nests bars to the left, so the parser yields that
@@ -181,7 +182,7 @@ c(sharp    = jb(npsi = 1),
 #>    FALSE     TRUE
 ```
 
-The same difference decides which developments a discontinuous term
+The same difference determines which developments a discontinuous term
 accepts. On a sharp
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 or
@@ -190,7 +191,7 @@ the estimated coefficients are products of the change of level and the
 development, so a penalty on the development would act on the product,
 and the term rejects a development that carries a penalty. A development
 without a penalty is accepted, and a smoothed term accepts both kinds,
-its block being a Jacobian.
+because its block is a Jacobian.
 
 `marginal = TRUE`, together with a subformula `psi ~ random(~ 1 | g)`,
 integrates the latent break-point of each group out of the likelihood.
@@ -335,15 +336,15 @@ structural term implements a filter or a likelihood instead of a block.
 - [`term_penalty()`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md)
   : Penalty of a Term
 - [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-  : Every Penalty a Term Carries
+  : Every Penalty That a Term Carries
 - [`term_components()`](https://statmodels7.github.io/modelterms7/reference/term_components.md)
   : How a Term's Columns Divide Among Its Own Parameters
 - [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md)
-  : The Hyperparameters a Term Holds
+  : The Hyperparameters That a Term Holds
 - [`term_grid()`](https://statmodels7.github.io/modelterms7/reference/term_grid.md)
   : The Grid Sizes of a Term
 - [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md)
-  : The Hyperparameter Values a Term Writes Out
+  : The Hyperparameter Values That a Term Writes Out
 - [`term_path_min()`](https://statmodels7.github.io/modelterms7/reference/term_path_min.md)
   : How Far Down Its Path a Term Reaches
 - [`term_search()`](https://statmodels7.github.io/modelterms7/reference/term_search.md)
@@ -355,7 +356,7 @@ structural term implements a filter or a likelihood instead of a block.
 - [`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)
   : Where a Term's Own Coefficients Begin
 - [`term_coef_draw()`](https://statmodels7.github.io/modelterms7/reference/term_coef_draw.md)
-  : Coefficients a Term Draws for Itself
+  : Coefficients That a Term Draws for Itself
 - [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
   : Is a Term's Block the Jacobian of Its Contribution?
 - [`term_kinks()`](https://statmodels7.github.io/modelterms7/reference/term_kinks.md)
@@ -367,7 +368,7 @@ structural term implements a filter or a likelihood instead of a block.
 - [`term_tag()`](https://statmodels7.github.io/modelterms7/reference/term_tag.md)
   : The Covariance Label of a Term
 - [`term_group()`](https://statmodels7.github.io/modelterms7/reference/term_group.md)
-  : The Grouping a Term's Coefficients Are Indexed By
+  : The Grouping by Which a Term's Coefficients Are Indexed
 - [`term_within()`](https://statmodels7.github.io/modelterms7/reference/term_within.md)
   : The Within-Group Design of a Term With Grouped Effects
 - [`term_coef_names()`](https://statmodels7.github.io/modelterms7/reference/term_coef_names.md)
@@ -410,8 +411,8 @@ column of the data.
 
 ## The random-effect term
 
-Grouped intercepts, slopes and smooth curves, with the effects’
-distribution attached as the penalty, which is how a random effect
+Grouped intercepts, slopes and smooth curves, in which the distribution
+of the effects is attached as the penalty. This is how a random effect
 enters a penalized likelihood.
 
 - [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
@@ -502,8 +503,8 @@ an ordinary parameter, and the grid rule chooses where to start.
 
 Terms that rewrite the likelihood instead of adding to the predictor:
 score-driven dynamics, a latent Markov chain and break-points integrated
-out of the likelihood, each carrying its exact derivatives through its
-recursion.
+out of the likelihood. Each of these terms carries its exact derivatives
+through its recursion.
 
 - [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
   : Score-Driven Dynamics
@@ -561,7 +562,7 @@ recursion.
 - [`term_level_param()`](https://statmodels7.github.io/modelterms7/reference/term_level_param.md)
   : Which of a Term's Parameters Acts as an Intercept
 - [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
-  : The Quantities a Fitted Term Reports
+  : The Quantities That a Fitted Term Reports
 
 ## The formula layer
 
@@ -574,8 +575,8 @@ class defined outside the package needs no registration.
 
 ## The response
 
-Marking a censored response on the left side of a formula, with the
-status of each observation derived from the values given.
+Marking a censored response on the left side of a formula and deriving
+the status of each observation from the values that are given.
 statmodels7::statmod() rejects a censored response.
 
 - [`cens()`](https://statmodels7.github.io/modelterms7/reference/cens.md)

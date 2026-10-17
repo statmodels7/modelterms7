@@ -13,7 +13,7 @@ scaling schedule and, where the term is smoothed, the transition width."><meta p
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -85,14 +85,14 @@ this term, so <code><a href="term_coef_start.html">term_coef_start()</a></code> 
 of zeros.</p>
 <p>Each subformula's right-hand side goes through <code><a href="interpret_formula.html">interpret_formula()</a></code> and its
 terms are built, so their blueprints are recorded and reapplied at
-prediction. What a development may carry depends on <code>kind</code>. The continuous
-construction takes any of them. A sharp <code><a href="jump.html">jump()</a></code> takes a development of the
-break-point with a scalar change of level on any design, or one development
-shared by the change of level and the break-point on a design that
-partitions the rows; a sharp <code><a href="jseg.html">jseg()</a></code> takes only the shared partition
-development, the read-off being a product of two unknowns. A smoothed term
-takes any development. A design that carries the intercept twice, the
-subformula's own and a constant column of a sub-term, as in
+prediction. The developments that a term may carry depend on <code>kind</code>. The
+continuous construction takes any of them. A sharp <code><a href="jump.html">jump()</a></code> takes a
+development of the break-point with a scalar change of level on any design,
+or one development shared by the change of level and the break-point on a
+design that partitions the rows; a sharp <code><a href="jseg.html">jseg()</a></code> takes only the shared
+partition development, because the read-off is a product of two unknowns. A
+smoothed term takes any development. A design that carries the intercept
+twice, the subformula's own and a constant column of a sub-term, as in
 <code>gamma ~ lasso(~1)</code>, is rejected, and <code>gamma ~ 0 + lasso(~1)</code> is the
 spelling of an intercept-only penalized development.</p>
     </div>

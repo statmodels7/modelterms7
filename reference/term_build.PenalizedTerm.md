@@ -9,8 +9,8 @@ or [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
 term, names its coefficients, records the blueprint, and calls the
 term's factory to produce the penalties7 penalty over exactly that many
 coefficients. The penalty exists only after this: a specification's
-`penalty` property is `NULL`, its width being unknown until the data are
-seen.
+`penalty` property is `NULL`, because its width is unknown until the
+data are seen.
 
 ## Arguments
 
@@ -22,7 +22,7 @@ seen.
 - data:
 
   A data frame with as many rows as a matrix input has, carrying every
-  variable a formula input names.
+  variable that a formula input names.
 
 - ...:
 
@@ -30,20 +30,20 @@ seen.
 
 ## Value
 
-The term with `X`, `coef_names`, `blueprint` and `penalty` filled.
+The term whose `X`, `coef_names`, `blueprint` and `penalty` are filled.
 `penalty@n_coef` equals `ncol(X)`.
 
 ## Two input routes, two blueprints
 
-A **formula** is built through
+A formula is built through
 [`stats::model.frame()`](https://rdrr.io/r/stats/model.frame.html) and
 [`.design_matrix()`](https://statmodels7.github.io/modelterms7/reference/dot-design_matrix.md)
-with the intercept removed by `update(formula, ~ . - 1)`, unless the
-intercept is all the formula has, in which case it is kept and is the
-block. The blueprint records `kind = "formula"`, the terms object, the
-levels, the contrasts and the settled storage.
+after its intercept is removed by `update(formula, ~ . - 1)`, unless the
+formula has an intercept and nothing else, in which case the intercept
+is kept and is the block. The blueprint records `kind = "formula"`, the
+terms object, the levels, the contrasts and the settled storage.
 
-A **matrix** is used as it stands, and its row count must equal
+A matrix is used as it stands, and its row count must equal
 `nrow(data)`; any other row count is an error that gives both numbers.
 Its columns take the matrix's own names, or `1`, `2`, ... where it has
 none. The blueprint records `kind = "matrix"`, the expression that
@@ -61,9 +61,9 @@ go into `blueprint$standardize` and become a
 [`Matrix::Diagonal()`](https://rdrr.io/pkg/Matrix/man/Diagonal.html)
 map. The design is not touched, so a sparse block stays sparse.
 
-The map is passed to the factory **as a second argument, and only when
-there is one**. A factory written before standardization existed takes
-the count alone and goes on working, provided it is never standardized.
+The map is passed to the factory as a second argument, and only when
+there is one. A factory written before standardization existed takes
+only the count and goes on working, provided it is never standardized.
 
 ## See also
 

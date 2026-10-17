@@ -1,11 +1,12 @@
 # Polish a Break-Point Term's Positions on the Exact Profile
 
-Coordinate descent over the break-point positions on the exact profile:
-one position at a time is swept over a grid with the others held, the
-least-squares fit at fixed positions being an ordinary linear model, and
-the sweeps repeat until no position moves. The grid has `k` quantiles of
-the covariate, from the 2nd to the 98th percentile and confined to the
-term's limits. The term comes back relocated
+Performs coordinate descent over the break-point positions on the exact
+profile: one position at a time is swept over a grid while the others
+are held (the least-squares fit at fixed positions is an ordinary linear
+model), and the sweeps repeat until a full sweep leaves every position
+unchanged. The grid has `k` quantiles of the covariate, from the 2nd to
+the 98th percentile and confined to the term's limits. The term comes
+back relocated
 ([`seg_relocate()`](https://statmodels7.github.io/modelterms7/reference/seg_relocate.md))
 at the best positions found.
 
@@ -25,7 +26,7 @@ seg_polish(term, y, k = 50, sweeps = 10, weights = NULL)
 - y:
 
   A numeric vector of finite values, one per observation of the build
-  data: the response, net of whatever the caller wants held.
+  data: the response, net of whatever the caller wants to hold fixed.
 
 - k:
 
@@ -52,11 +53,11 @@ This is the device of
 made conditional on the current positions, and it addresses the failure
 that a start cannot fix: with several break-points the iteration can
 capture two of them on one feature and press the third against its
-confinement limit, and neither a bootstrap excursion, whose perturbation
-is of order \\1/\sqrt{n}\\, nor a random relocation escapes it, the
-basin of the right configuration being narrow. A grid sweep of one
-position with the others held reaches the missing feature, since the
-profile at fixed positions is exact.
+confinement limit, and a bootstrap excursion, whose perturbation is of
+order \\1/\sqrt{n}\\, and a random relocation both fail to escape it,
+because the basin of the right configuration is narrow. A grid sweep of
+one position, while the others are held, reaches the missing feature,
+since the profile at fixed positions is exact.
 
 The profile is least squares of `y` on an intercept, the linear column
 where the term has one, and the term's own columns at fixed positions,
@@ -64,7 +65,7 @@ so it is exact for a gaussian response and a starting rule for any
 other, the argument that
 [`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
 already makes. A term whose per-break-point coefficients carry a
-development is rejected, its positions being one per observation.
+development is rejected, because its positions are one per observation.
 
 With `weights`, the profile is weighted least squares. A restarting loop
 can sweep the profile of a bootstrap resample in this way, using the

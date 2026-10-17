@@ -1,13 +1,13 @@
 # The Exact Profile of a Break-Point Term at Its Positions
 
-The residual sum of squares of `y` on an intercept, the linear column
-where the term has one, and the term's own columns at its current
-positions, the number that
+Returns the residual sum of squares of `y` on an intercept, the linear
+column where the term has one, and the term's own columns at its current
+positions. This is the number on which
 [`seg_polish()`](https://statmodels7.github.io/modelterms7/reference/seg_polish.md)
-descends on, read at one point. A restarting loop screens proposals with
-it: two configurations of positions are compared by their profiles at
-the cost of two linear fits, where refitting the model to compare them
-costs a whole fit each.
+descends, evaluated at one point. A restarting loop screens proposals
+with it: two configurations of positions are compared by their profiles
+at the cost of two linear fits, where refitting the model to compare
+them costs a whole fit each.
 
 ## Usage
 
@@ -25,7 +25,7 @@ seg_profile_rss(term, y, weights = NULL)
 - y:
 
   A numeric vector of finite values, one per observation of the build
-  data: the response, net of whatever the caller wants held.
+  data: the response, net of whatever the caller wants to hold fixed.
 
 - weights:
 

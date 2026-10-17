@@ -1,9 +1,9 @@
 # Drawing a Term's Own Parameters
 
-A point drawn from the region a structural term's parameters plausibly
-occupy: the values
+Draws a point from the region that a structural term's parameters
+plausibly occupy. The point consists of the values that
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
-gives, displaced by normal noise on the unconstrained scale
+gives, displaced by normal noise on the unconstrained scale that
 [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
 defines.
 
@@ -26,7 +26,7 @@ term_draw(term, sd = 1, ...)
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use these arguments.
 
 ## Value
 
@@ -81,9 +81,9 @@ them.
 ## See also
 
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
-for the point it spreads from,
+for the point from which the draw spreads,
 [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md)
-for the scale it is on,
+for the scale on which the draw is expressed,
 [`term_simulate()`](https://statmodels7.github.io/modelterms7/reference/term_simulate.md)
 for the response drawn once these are chosen.
 
@@ -93,7 +93,7 @@ for the response drawn once these are chosen.
 set.seed(1)
 g <- gas(p = 1, q = 1)
 
-# The same names and the same scale as term_start(), drawn.
+# The draw has the same names and the same scale as term_start().
 identical(names(term_draw(g)), term_params(g))
 #> [1] TRUE
 
@@ -106,7 +106,7 @@ c(kappa1 = linkfunctions7::linkinv(lk$kappa1, z[["kappa1"]]),
 #>     kappa1      pacf1 
 #>  0.1179103 -0.3886715 
 
-# A wider draw is a wider model.
+# A larger sd widens the draws, and with them the range of models.
 stats::sd(replicate(200, term_draw(g, sd = 2)[["omega"]]))
 #> [1] 1.041263
 ```

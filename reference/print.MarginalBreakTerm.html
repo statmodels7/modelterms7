@@ -11,7 +11,7 @@ the parameters, and a third names the prior where one was given."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,7 +58,7 @@ the parameters, and a third names the prior where one was given.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p><code>x</code>, invisibly. Called for the lines it writes.</p>
+    <p><code>x</code>, invisibly. The method is called for the lines that it writes.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -80,7 +80,8 @@ its number of groups, and an unbuilt one is marked as a specification.</p>
 <span class="r-in"><span><span class="va">dd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, each <span class="op">=</span> <span class="fl">8</span><span class="op">)</span>, x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">8</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">dd</span><span class="op">$</span><span class="va">y</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">24</span>, <span class="fl">2</span> <span class="op">*</span> <span class="op">(</span><span class="va">dd</span><span class="op">$</span><span class="va">x</span> <span class="op">&gt;=</span> <span class="fl">4.5</span><span class="op">)</span>, <span class="fl">0.4</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># A specification, and the same term built over three groups.</span></span></span>
+<span class="r-in"><span><span class="co"># The first call prints a specification, and the second prints the same</span></span></span>
+<span class="r-in"><span><span class="co"># term built over three groups.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="jump.html">jump</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">psi</span> <span class="op">~</span> <span class="fu"><a href="random.html">random</a></span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span> <span class="op">|</span> <span class="va">id</span><span class="op">)</span>, marginal <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;MarginalBreakTerm&gt; 'jump' (jump): 1 latent break-point per group, integrated out (specification)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   parameters: psi1.mean, psi1.sd, delta1</span>

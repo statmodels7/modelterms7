@@ -13,7 +13,7 @@ hyperparameters belong to the penalty object; the term only carries it."><meta p
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,21 +73,20 @@ it has not been built.</p>
     <h2 id="a-penalty-over-the-whole-block">A penalty over the whole block<a class="anchor" aria-label="anchor" href="#a-penalty-over-the-whole-block"></a></h2>
     <p>A term whose penalty reaches part of its parameters returns <code>NULL</code> here and
 declares that penalty through <code><a href="term_penalties.html">term_penalties()</a></code>, which names the parameters
-it covers. A <code><a href="seg.html">seg()</a></code> term and an <code><a href="nl.html">nl()</a></code> term carry a penalty only where a
-subformula on one of their parameters declares one, as in
-<code>gamma ~ 0 + lasso(~ 1)</code> over the changes of slope of a <code><a href="seg.html">seg()</a></code>, and their
-other parameters stay free; <code><a href="gas.html">gas()</a></code> declares its penalties through
+that it covers. A <code><a href="seg.html">seg()</a></code> term and an <code><a href="nl.html">nl()</a></code> term carry a penalty only where
+a subformula on one of their parameters declares one, as in <code>gamma ~ 0 + lasso(~ 1)</code> over the changes of slope of a <code><a href="seg.html">seg()</a></code>, and their other
+parameters stay free; <code><a href="gas.html">gas()</a></code> declares its penalties through
 <code><a href="term_penalties.html">term_penalties()</a></code> in the same way. Reporting one of those penalties here
-would state that it covers the whole block, so this generic answers only
-where that holds.</p>
+would state that it covers the whole block, so this generic returns a penalty
+only where that holds.</p>
 <p><code><a href="term_penalties.html">term_penalties()</a></code> is therefore the general function, and a fitting layer
 enumerates penalties through it. This one is the shortcut for the common
 case.</p>
     </div>
     <div class="section level2">
     <h2 id="a-specification-carries-no-penalty">A specification carries no penalty<a class="anchor" aria-label="anchor" href="#a-specification-carries-no-penalty"></a></h2>
-    <p>The penalty is attached at <code><a href="term_build.html">term_build()</a></code>, its width being the number of
-columns the data produce, so <code>term_penalty(ridge(~ x))</code> is <code>NULL</code> and
+    <p>The penalty is attached at <code><a href="term_build.html">term_build()</a></code>, and its width is the number of
+columns that the data produce, so <code>term_penalty(ridge(~ x))</code> is <code>NULL</code> and
 <code>term_penalty(term_build(ridge(~ x), d))</code> is the quadratic penalty. The same
 holds for <code><a href="term_penalties.html">term_penalties()</a></code> and, through it, for <code><a href="term_smooth.html">term_smooth()</a></code>.</p>
 <p>The one method is registered on <code><a href="additive_term.html">additive_term()</a></code> and reads the <code>penalty</code>
@@ -117,7 +116,7 @@ whether the result has a kink, <code><a href="edf.html">edf()</a></code> for wha
 <span class="r-out co"><span class="r-pr">#&gt;</span>        name      params      n_coef </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> "quadratic"    "lambda"         "1" </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># A term whose penalty covers part of its parameters answers NULL here</span></span></span>
+<span class="r-in"><span><span class="co"># A term whose penalty covers part of its parameters returns NULL here</span></span></span>
 <span class="r-in"><span><span class="co"># and declares it through term_penalties() instead: a lasso on the</span></span></span>
 <span class="r-in"><span><span class="co"># change of slope of a break-point term.</span></span></span>
 <span class="r-in"><span><span class="va">sb</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="seg.html">seg</a></span><span class="op">(</span><span class="va">x</span>, npsi <span class="op">=</span> <span class="fl">1</span>, <span class="va">gamma</span> <span class="op">~</span> <span class="fl">0</span> <span class="op">+</span> <span class="fu"><a href="lasso.html">lasso</a></span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span>,</span></span>

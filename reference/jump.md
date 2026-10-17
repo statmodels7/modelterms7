@@ -1,22 +1,22 @@
 # Step Term: a Level that Changes at Estimated Break-Points
 
-A covariate whose effect is a constant that steps to a new value at
-\\K\\ break-points estimated with everything else (Fasola, Muggeo and
-Kuchenhoff, 2018). Written in the equation of any parameter of any
-distribution, the term contributes
+`jump()` specifies a covariate whose effect is a constant that steps to
+a new value at \\K\\ break-points estimated with everything else
+(Fasola, Muggeo and Kuchenhoff, 2018). Written in the equation of any
+parameter of any distribution, the term contributes
 
 \$\$\sum\_{k=1}^{K} \delta_k\\\mathbb{1}(x_i \geq \psi_k)\$\$
 
 to that parameter's linear predictor, so that in a model \\g(\theta_i) =
-\eta_i\\ with the rest of the equation supplying \\z_i'\alpha\\,
+\eta_i\\ in which the rest of the equation supplies \\z_i'\alpha\\,
 
 \$\$\eta_i = z_i'\alpha + \sum\_{k=1}^{K} \delta_k\\\mathbb{1}(x_i \geq
 \psi_k).\$\$
 
 There is no linear effect: the relationship between \\x\\ and the
-predictor is a step function, the intercept of the equation being its
-level before the first break-point and \\\delta_k\\ the change of level
-at \\\psi_k\\. A model that is linear in \\x\\ *and* steps is written by
+predictor is a step function; the intercept of the equation is its level
+before the first break-point, and \\\delta_k\\ is the change of level at
+\\\psi_k\\. A model that is linear in \\x\\ *and* steps is written by
 putting the covariate in the equation as well, `y ~ x + jump(x)`, or by
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
 where the slope is to change at the same points.
@@ -56,8 +56,8 @@ jump(
 - psi:
 
   Optional starting positions; defaults to evenly spaced quantiles of
-  the covariate. Where a break-point carries a development they seed it,
-  each starting vector solving \\Wp_k \approx \psi_k^{0}\\.
+  the covariate. Where a break-point carries a development, they seed
+  it, and each starting vector solves \\Wp_k \approx \psi_k^{0}\\.
 
 - by:
 
@@ -69,7 +69,7 @@ jump(
 
   The starting value of the scaling factor that separates the
   observations from the break-point, as a fraction of the distance to
-  the ends of the range. Defaults to `0.05`, the value Fasola et
+  the ends of the range. Defaults to `0.05`, the value that Fasola et
   al. (2018) recommend; see Details.
 
 - smoothed:
@@ -88,26 +88,26 @@ jump(
   working parametrization, no auxiliary coefficient and no scaling
   schedule (for `jump()` and
   [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md),
-  a `c0` that is passed is ignored with a message), the block is the
+  a `c0` that is passed is ignored with a message). The block is the
   true Jacobian and the term is fitted by Gauss-Newton like
   [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md). A
   smoothed term accepts a development of any coefficient, including a
   break-point (`psi ~ random(~1 | id)`) and penalized developments, for
-  every kind, since no read-off constrains the development. The
-  smoother's width is resolved at build from the covariate's spacing
-  (the median gap between distinct values, within groups where a
-  break-point development supplies a partition) unless the object
-  carries one. For the quintic, which is exact outside its width, the
-  width is raised to at least 0.55 times the largest gap over the range
-  a break-point may take, so that a break-point cannot sit in a gap with
-  no observation within its width. The width is reported: it is the
-  width of the transition (the bent-cable reading). The smoothing bias
-  is zero outside the transition for the quintic, decays with the
-  Gaussian tails for the probit, and decays as \\c/(4\|u\|)\\ for the
-  hyperbolic, whose parameter \\c\\ is a squared length. The objective
-  remains multimodal in the positions: smoothing rounds the local optima
-  and does not remove them, so the profile start and the `n_boot`
-  restarts remain necessary.
+  every kind, since a smoothed term has no read-off that would constrain
+  the development. The smoother's width is resolved at build from the
+  covariate's spacing (the median gap between distinct values, within
+  groups where a break-point development supplies a partition) unless
+  the object carries one. For the quintic, which is exact outside its
+  width, the width is raised to at least 0.55 times the largest gap over
+  the range that a break-point may take, so that a break-point cannot
+  sit in a gap with no observation within its width. The width is
+  reported: it is the width of the transition (the bent-cable reading).
+  The smoothing bias is zero outside the transition for the quintic,
+  decays with the Gaussian tails for the probit, and decays as
+  \\c/(4\|u\|)\\ for the hyperbolic, whose parameter \\c\\ is a squared
+  length. The objective remains multimodal in the positions: smoothing
+  rounds the local optima and does not remove them, so the profile start
+  and the `n_boot` restarts remain necessary.
 
 - marginal:
 
@@ -119,15 +119,15 @@ jump(
 - n_boot:
 
   How many bootstrap restarts the fitting layer runs after the iteration
-  first converges (Wood 2001, the device `segmented` runs by default):
-  each restart re-estimates on a bootstrap resample from the current
-  break-points and then on the data again from where the resample ended,
-  keeping the better fit. The objective has local optima in the
-  break-points, and with several of them a grid start does not reach the
-  right basin from every placement. Defaults to 10, `segmented`'s own
-  default; 0 disables. The term itself only declares the value; running
-  the restarts is the fitting layer's, as with a penalty's
-  hyperparameters.
+  first converges (Wood 2001, the device that `segmented` runs by
+  default): each restart re-estimates on a bootstrap resample from the
+  current break-points and then on the data again from where the
+  resample ended, keeping the better fit. The objective has local optima
+  in the break-points, and with several of them a grid start does not
+  reach the right basin from every placement. Defaults to 10,
+  `segmented`'s own default; 0 disables. The term itself only declares
+  the value; running the restarts is the fitting layer's, as with a
+  penalty's hyperparameters.
 
 - label:
 
@@ -151,13 +151,14 @@ A step is not differentiable in \\\psi\\, and the identity
 \$\$\mathbb{1}(x\>\psi) = \frac{1}{2} + \frac{x-\psi}{2\lvert x-\psi
 \rvert}\$\$ holds exactly for \\x \neq \psi\\ and is linear in \\\psi\\
 once the weight \\1/(2\lvert x-\psi^{0}\rvert)\\ is held at the previous
-iterate, so no search over candidate positions is needed. Writing \\W =
-1/(2\lvert x-\psi^{0}\rvert)\\ and \\Z = xW + 1/2\\, a step of size
-\\\delta\\ at \\\psi\\ is \\\delta Z + gW\\ with \\g = -\delta\psi\\, so
-a linear fit on \\(Z, W)\\ returns the break-point as \\\psi =
--g/\delta\\ (Fasola et al., 2018). The break-point is therefore not a
-coefficient here but a quantity read off two of them, which is why
-refreshing the term recovers it before rebuilding the weights, and why
+iterate, so a search over candidate positions is unnecessary. Writing
+\\W = 1/(2\lvert x-\psi^{0}\rvert)\\ and \\Z = xW + 1/2\\, a step of
+size \\\delta\\ at \\\psi\\ is \\\delta Z + gW\\ with \\g =
+-\delta\psi\\, so a linear fit on \\(Z, W)\\ returns the break-point as
+\\\psi = -g/\delta\\ (Fasola et al., 2018). The break-point is therefore
+not a coefficient here but a quantity read off two of them, which is why
+[`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
+recovers it before rebuilding the weights, and why
 [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
 exists.
 
@@ -200,10 +201,10 @@ chosen on a grid by
 
 ## The coefficients
 
-`delta1` ... `deltaK`, the changes of level, followed by `g1` ... `gK`,
-the auxiliary coefficients of the identity above, from which \\\psi_k =
--g_k/\delta_k\\ is read. For a sharp term the break-points are not
-coefficients, and
+The coefficients are `delta1` ... `deltaK`, the changes of level,
+followed by `g1` ... `gK`, the auxiliary coefficients of the identity
+above, from which \\\psi_k = -g_k/\delta_k\\ is read. For a sharp term
+the break-points are not coefficients, and
 [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
 reports them. A smoothed term holds them directly, and its coefficients
 are `delta1` ... `deltaK` followed by `psi1` ... `psiK`.
@@ -220,27 +221,25 @@ through
 and takes any term with a fixed design block; structural terms and terms
 whose block moves with its coefficients are rejected.
 
-What the sharp discontinuous construction can carry is narrower than
-what the continuous one can, because of the read-off. The auxiliary
-coefficient is \\g_k = -\delta_k\psi_k\\, a product of the two
+The sharp discontinuous construction can carry a narrower set of
+developments than the continuous one, because of the read-off. The
+auxiliary coefficient is \\g_k = -\delta_k\psi_k\\, a product of the two
 quantities, so it stays linear in the unknowns only when one of the two
 factors is a single number:
 
-- **the break-point developed**, the change of level a single number:
-  exact for any design, \\g_k = -\delta_k p_k\\ being linear in \\p_k\\.
-  `jump(x, psi ~ id)` is a break-point per subject with a shared step
-  size.
+- The break-point is developed and the change of level is a single
+  number: the read-off is exact for any design, because \\g_k =
+  -\delta_k p_k\\ is linear in \\p_k\\. `jump(x, psi ~ id)` is a
+  break-point per subject with a shared step size.
 
-- **a development on group indicators**, where the design has one column
-  per group and each observation belongs to one: the product collapses
-  group by group and the read-off is exact within each.
-  `jump(x, by = ~0 + g)` is an independent step and break-point per
-  level.
+- A development on group indicators, where the design has one column per
+  group and each observation belongs to one: the product collapses group
+  by group and the read-off is exact within each. `jump(x, by = ~0 + g)`
+  is an independent step and break-point per level.
 
-- **anything else** is rejected and is not approximated, since the
-  product of two developments needs the outer product of their designs,
-  and an unconstrained fit cannot return that as one set of
-  coefficients.
+- Anything else is rejected and is not approximated, since the product
+  of two developments needs the outer product of their designs, and an
+  unconstrained fit cannot return that as one set of coefficients.
 
 A smoothed term accepts a development of any coefficient.
 
@@ -261,15 +260,16 @@ independent \\u\_{ik} \sim N(0, \tau_k^2)\\, and integrates them out of
 the likelihood exactly. The parameters \\m_k\\ and \\\tau_k\\ are named
 `psik.mean` and `psik.sd`. The conditional is constant on the product
 partition of the intervals between a group's ordered covariate values,
-giving \\(n_i+1)^K\\ cells, but the sum is never taken over the cells:
-the side process \\S_t = \\k : \psi_k \le x\_{(t)}\\\\ is monotone on
-the subset lattice with independent coordinates, so it is a hidden
-Markov chain on the \\2^K\\ side patterns whose transition factors over
-the coordinates, and the exact forward recursion costs \\n K 2^K\\: a
-coordinate that flips at a step contributes its interval's prior mass as
-the transition weight, one that never flips its upper-tail mass at the
-end. Up to eight break-points are covered. The cost of more lies in the
-\\2^K\\ components at which a fitting layer evaluates the family.
+giving \\(n_i+1)^K\\ cells. The sum is never taken over the cells. The
+side process \\S_t = \\k : \psi_k \le x\_{(t)}\\\\ is monotone on the
+subset lattice with independent coordinates, so it is a hidden Markov
+chain on the \\2^K\\ side patterns whose transition factors over the
+coordinates, and the exact forward recursion costs \\n K 2^K\\. In this
+recursion a coordinate that flips at a step contributes its interval's
+prior mass as the transition weight, and a coordinate that never flips
+contributes its upper-tail mass at the end. Up to eight break-points are
+covered. The cost of more lies in the \\2^K\\ components at which a
+fitting layer evaluates the family.
 
 The prior is part of the likelihood: \\(m_k, \tau_k, \delta_k)\\, named
 `psik.mean`, `psik.sd` and `deltak`, are ordinary parameters estimated
@@ -277,7 +277,7 @@ by maximum likelihood, with no penalty, no marginal criterion and no
 smoothing constant, and the term is itself structural
 ([`MarginalBreakTerm()`](https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.md),
 of the likelihood shape). With one break-point the prior may be any
-continuous distributions7 distribution with its location fixed at zero,
+continuous distributions7 distribution whose location is fixed at zero,
 through `random(distrib = )`: the interval masses are differences of its
 cdf and their derivatives come from the cdf surface built for the
 censored likelihoods, with that surface's own caveats (closed for the
@@ -318,7 +318,7 @@ seg_psi(built)
 #> [1] 5.054907
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The term is fitted next. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(2)
@@ -326,7 +326,7 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   fd$y <- 1 + 2 * (fd$x > 6) + rnorm(200, sd = 0.3)
   ft <- statmodels7::statmod(y ~ jump(x),
                              distributions7::gaussian1_distrib(), fd)
-  # truth: intercept 1, a jump of 2, and the break-point at 6
+  # The truth is intercept 1, a jump of 2 and the break-point at 6.
   round(coef(ft)$mu, 2)
 }
 #> (Intercept) jump.delta1   jump.psi1 

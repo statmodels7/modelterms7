@@ -1,15 +1,16 @@
 # The Contribution of a Break-Point Term
 
-The values that the term contributes to the linear predictor at its
-current break-points: the broken line for
+Returns the values that the term contributes to the linear predictor at
+its current break-points: the broken line for
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
 the step for
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md),
 both for
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md).
-It is what a Gauss-Newton step needs beside the block, and for
+A Gauss-Newton step needs these values beside the block, and for
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
-and for a smoothed term it is **not** the block times the coefficients.
+and for a smoothed term they do not equal the block times the
+coefficients.
 
 ## Arguments
 
@@ -20,8 +21,8 @@ and for a smoothed term it is **not** the block times the coefficients.
 
 - coef:
 
-  Optional coefficients to evaluate at; `NULL`, the default, uses the
-  ones
+  Optional coefficients at which to evaluate; `NULL`, the default, uses
+  the ones that
   [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
   last committed.
 
@@ -44,7 +45,7 @@ For `seg` the block is the Jacobian, so \\X\beta\\ is the linearization
 and the two differ by whatever that drops: a step at the break-point, in
 a construction that is continuous. The same holds for a smoothed term.
 For a sharp `jump` the columns satisfy \\X\beta = \\ the contribution,
-the identity behind the read-off making them so, and the two agree to
+because of the identity behind the read-off, and the two agree to
 rounding error.
 
 With `newdata` the contribution is returned on those rows, at the

@@ -1,11 +1,11 @@
 # Third Derivatives of a Structural Term's Predictor, in One Direction
 
-The second derivative of
+Returns the second derivative of
 [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md)
 differentiated once more along a single direction, and the derivative of
-the term's Jacobian along that same direction. It is what the exact
-gradient of a marginal criterion needs when a penalty covers the term's
-own parameters.
+the term's Jacobian along that same direction. The exact gradient of a
+marginal criterion needs this when a penalty covers the term's own
+parameters.
 
 ## Usage
 
@@ -51,7 +51,7 @@ term_third(
 
 - g:
 
-  The weights the third derivative is contracted against, one per
+  The weights against which the third derivative is contracted, one per
   observation.
 
 - seed:
@@ -91,15 +91,15 @@ nothing else. Where a filter produces the predictor, \\K\\ carries
 
 The derivative is only ever contracted. The full third derivative is an
 \\m^3\\ array per observation and is never formed: the criterion needs
-it only along the one direction in which the mode moves, so what is
-propagated is a matrix per observation, the same size as the curvature
-and therefore the same \\O(nm^2)\\. A caller that needs several
-hyperparameters calls this once per direction, which is cheaper than one
-\\O(nm^3)\\ assembly whenever the hyperparameters are fewer than the
-unknowns.
+it only along the one direction in which the mode moves, so the method
+propagates a matrix per observation, which has the same size as the
+curvature and therefore the same \\O(nm^2)\\. A caller that needs
+several hyperparameters calls this once per direction, which is cheaper
+than one \\O(nm^3)\\ assembly whenever the hyperparameters are fewer
+than the unknowns.
 
 Each order of differentiation of the predictor involves one more order
-of the family, the recursion being driven by a score read at the
+of the family, because the recursion is driven by a score read at the
 predictor that it produces: the curvature's `M` is built from third
 derivatives, and this method needs a fourth. `blocks` therefore returns
 two quantities beyond the curvature's, at an observation, from the
@@ -109,9 +109,9 @@ current Jacobian row \\D\\ and the direction \\v\\:
 \sum\_{r,r'}\Big(\sum\_{r''}\ell\_{prr'r''}(V\_{r''}\cdot v)\Big)
 V_r^\top V\_{r'},\$\$
 
-`dcurv` serving both the derivative of the curvature along \\v\\, which
-is \\\texttt{dcurv}\cdot v\\, and the two terms differentiating \\M\\'s
-own \\V_p\\.
+where `dcurv` serves for both the derivative of the curvature along
+\\v\\, which is \\\texttt{dcurv}\cdot v\\, and the two terms that arise
+from differentiating \\M\\'s own \\V_p\\.
 
 The base method returns zeros, which is correct for a term whose
 predictor is a block of columns times coefficients, since the second

@@ -1,15 +1,15 @@
 # Whether a Term Has Been Built
 
-`TRUE` for a term that
+Returns `TRUE` for a term that
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-has filled, `FALSE` for a bare specification. It is the test
+has filled and `FALSE` for a bare specification.
 [`term_matrix()`](https://statmodels7.github.io/modelterms7/reference/term_matrix.md),
 [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md),
 [`term_coef_names()`](https://statmodels7.github.io/modelterms7/reference/term_coef_names.md),
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) apply
-before reading a design block, so it decides which error a caller gets
-from those.
+and [`plot()`](https://rdrr.io/r/graphics/plot.default.html) apply this
+test before reading a design block, so the result determines which error
+a caller receives from those functions.
 
 ## Usage
 
@@ -39,13 +39,13 @@ structural term contributes no design columns and so has none to count,
 and is built when its blueprint is filled,
 `length(term@blueprint) > 0L`.
 
-**A built additive term with no columns would give `FALSE`.** The
-shipped constructors do not produce one: a formula that gives no
-columns, such as `~ 0`, is rejected when
+A built additive term with no columns would give `FALSE`. The shipped
+constructors do not produce one: a formula that gives no columns, such
+as `~ 0`, is rejected when
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 runs.
 
-**`blueprint` is read directly.** It is declared on
+The `blueprint` property is read directly. It is declared on
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 and on the abstract
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md),
@@ -80,7 +80,7 @@ term_is_built(linpar(~ x))
 term_is_built(term_build(linpar(~ x), d))
 #> [1] TRUE
 
-# It is what the accessors test, so it predicts the error.
+# The accessors apply this test, so it predicts their error.
 try(term_matrix(linpar(~ x)))
 #> Error : the term has not been built; call term_build(term, data) first.
 

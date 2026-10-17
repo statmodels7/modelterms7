@@ -23,8 +23,8 @@ were used.
 
 - mf:
 
-  The model frame `tt` was built from, or one built against the same
-  levels.
+  The model frame from which `tt` was built, or one built against the
+  same levels.
 
 - contrasts:
 
@@ -36,20 +36,20 @@ were used.
 
 ## Value
 
-A list of two: `X`, the block, and `contrasts`, the named list
+A list of two: `X`, the block, and `contrasts`, the named list that
 [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)
-recorded. On the dense route it is `NULL` when no factor was coded, and
-on the sparse route it is an empty named list.
+recorded. On the dense route it is `NULL` if
+[`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)
+coded no factor, and on the sparse route it is an empty named list.
 
 ## Details
 
-The two routes give identical numbers; what differs is the storage and
+The two routes give identical numbers and differ in the storage and in
 the cost of producing it. The sparse route builds the matrix sparse and
 never forms a dense intermediate.
 
-The contrasts come back beside the block instead of staying on it: the
-block is what a consumer reads, and the contrasts are what the blueprint
-records.
+The contrasts are returned beside the block and are not kept on it. A
+consumer reads the block, and the blueprint records the contrasts.
 
 ## See also
 

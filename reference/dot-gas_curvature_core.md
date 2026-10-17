@@ -1,6 +1,6 @@
 # The Score-Driven Recursion's Second, Third and Fourth Derivatives
 
-The body that
+Implements the body that
 [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md),
 [`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
 and

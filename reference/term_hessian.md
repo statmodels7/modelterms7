@@ -1,9 +1,9 @@
 # The Observed Hessian of a Likelihood Mixed Over States
 
-The log-likelihood of a term that mixes over latent states, with its
-exact gradient and its exact Hessian in the whole of a caller's unknown
-vector: the coefficients of every equation together with the term's own
-parameters.
+Returns the log-likelihood of a term that mixes over latent states, with
+its exact gradient and its exact Hessian in the whole of a caller's
+unknown vector: the coefficients of every equation together with the
+term's own parameters.
 
 ## Usage
 
@@ -33,7 +33,7 @@ term_hessian(
 
 - eta:
 
-  The static part of the predictor the regimes shift.
+  The static part of the predictor that the regimes shift.
 
 - y:
 
@@ -41,23 +41,23 @@ term_hessian(
 
 - logdens:
 
-  A function of a predictor value and a row index returning the
+  A function of a predictor value and a row index that returns the
   log-density there, one value per observation, as
   [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
   takes it.
 
 - grad:
 
-  A function of the same two arguments returning a matrix with one row
-  per observation and one column per distribution parameter, the
-  derivative of the log-density in each predictor.
+  A function of the same two arguments that returns a matrix with one
+  row per observation and one column per distribution parameter, whose
+  columns hold the derivative of the log-density in each predictor.
 
 - hess:
 
-  A function of the same two arguments returning an array of dimension
-  `c(n, p, p)`, observation first, holding the second derivatives of the
-  log-density in the predictors, where `p` is the number of distribution
-  parameters.
+  A function of the same two arguments that returns an array of
+  dimension `c(n, p, p)`, whose first index is the observation and whose
+  entries are the second derivatives of the log-density in the
+  predictors, where `p` is the number of distribution parameters.
 
 - psi:
 
@@ -70,27 +70,27 @@ term_hessian(
 
 - seed:
 
-  A list with one matrix per distribution parameter, each with one row
-  per observation and one column per unknown, giving the derivative of
-  that predictor in the caller's unknowns with zeros in the columns the
-  term's own parameters occupy.
+  A list with one matrix per distribution parameter. Each matrix has one
+  row per observation and one column per unknown, and holds the
+  derivative of that predictor in the caller's unknowns, with zeros in
+  the columns that the term's own parameters occupy.
 
 - cols:
 
-  The columns of the unknown vector the term's own parameters occupy, in
-  the order of
+  The columns of the unknown vector that the term's own parameters
+  occupy, in the order of
   [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
 - level:
 
-  The index, among the distribution parameters, of the one the regimes
-  shift.
+  The index, among the distribution parameters, of the one that the
+  regimes shift.
 
 - weights:
 
   Optional observation weights: one number or one number per
-  observation, none missing. `NULL` gives every observation the weight
-  one.
+  observation, without missing values. `NULL` gives every observation
+  the weight one.
 
 - ...:
 
@@ -104,7 +104,7 @@ the caller's whole unknown vector; and `hessian`, the observed Hessian
 of the weighted sum in that same vector, an `m` by `m` matrix with `m`
 its length. The Hessian is the mixture's own. Its negative, the observed
 information, is smaller in the Loewner order than the complete-data
-information, the difference being the information that the unobserved
+information, and the difference is the information that the unobserved
 states cost.
 
 ## Details
@@ -125,8 +125,9 @@ and a recursion carrying a second moment. This method uses a shorter
 route. The scaled forward recursion computes the observed log-likelihood
 exactly, as \\\log L = \sum_t \log c_t\\ with \\c_t\\ the normalizing
 constant of one step, so differentiating that arithmetic twice gives the
-observed Hessian with no identity involved. Carrying \\a_t(k)\\ together
-with its first and second derivatives in the unknown vector \\u\\,
+observed Hessian without any identity. The recursion carries \\a_t(k)\\
+together with its first and second derivatives in the unknown vector
+\\u\\. The derivatives of the contribution are
 
 \$\$\frac{\partial \log c_t}{\partial u} = \frac{\dot c_t}{c_t}, \qquad
 \frac{\partial^2 \log c_t}{\partial u \partial u^\top} = \frac{\ddot
@@ -157,8 +158,8 @@ The computation is meant to be run once, at a fitted point.
 set.seed(1)
 dd <- data.frame(t = 1:30, y = c(rnorm(15), rnorm(15, 3)))
 term <- term_build(regime(2, time = t), dd)
-# a gaussian mean of unit variance: one predictor, one unknown besides
-# the term's own four
+# The model is a gaussian mean of unit variance: one predictor, one unknown
+# besides the term's own four.
 m <- 5L
 out <- term_hessian(
   term, eta = rep(0, 30), y = dd$y,

@@ -11,7 +11,7 @@ attributes, and returns the block beside the contrasts that were used."><meta pr
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,8 +58,8 @@ attributes, and returns the block beside the contrasts that were used.</p>
 
 
 <dt id="arg-mf">mf<a class="anchor" aria-label="anchor" href="#arg-mf"></a></dt>
-<dd><p>The model frame <code>tt</code> was built from, or one built against the same
-levels.</p></dd>
+<dd><p>The model frame from which <code>tt</code> was built, or one built against
+the same levels.</p></dd>
 
 
 <dt id="arg-contrasts">contrasts<a class="anchor" aria-label="anchor" href="#arg-contrasts"></a></dt>
@@ -73,16 +73,17 @@ levels.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list of two: <code>X</code>, the block, and <code>contrasts</code>, the named list
-<code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">stats::model.matrix()</a></code> recorded. On the dense route it is <code>NULL</code> when no
-factor was coded, and on the sparse route it is an empty named list.</p>
+that <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">stats::model.matrix()</a></code> recorded. On the dense route it is <code>NULL</code>
+if <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">stats::model.matrix()</a></code> coded no factor, and on the sparse route it is
+an empty named list.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The two routes give identical numbers; what differs is the storage and the
+    <p>The two routes give identical numbers and differ in the storage and in the
 cost of producing it. The sparse route builds the matrix sparse and never
 forms a dense intermediate.</p>
-<p>The contrasts come back beside the block instead of staying on it: the block
-is what a consumer reads, and the contrasts are what the blueprint records.</p>
+<p>The contrasts are returned beside the block and are not kept on it. A
+consumer reads the block, and the blueprint records the contrasts.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

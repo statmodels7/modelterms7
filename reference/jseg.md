@@ -1,7 +1,8 @@
 # Segmented-with-Jump Term: Slope and Level Both Changing
 
-A covariate whose slope *and* level both change at \\K\\ break-points
-estimated with everything else, the union of
+`jseg()` specifies a covariate whose slope *and* level both change at
+\\K\\ break-points estimated with everything else, and the term is the
+union of
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
 and
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
@@ -12,7 +13,7 @@ distribution, the term contributes
 \psi_k) + \gamma_k\\(x_i - \psi_k)\_{+}\bigr\]\$\$
 
 to that parameter's linear predictor, so that in a model \\g(\theta_i) =
-\eta_i\\ with the rest of the equation supplying \\z_i'\alpha\\,
+\eta_i\\ in which the rest of the equation supplies \\z_i'\alpha\\,
 
 \$\$\eta_i = z_i'\alpha + \beta x_i + \sum\_{k=1}^{K}
 \bigl\[\delta_k\\\mathbb{1}(x_i \geq \psi_k) + \gamma_k\\(x_i -
@@ -58,8 +59,8 @@ jseg(
 - psi:
 
   Optional starting positions; defaults to evenly spaced quantiles of
-  the covariate. Where a break-point carries a development they seed it,
-  each starting vector solving \\Wp_k \approx \psi_k^{0}\\.
+  the covariate. Where a break-point carries a development, they seed
+  it, and each starting vector solves \\Wp_k \approx \psi_k^{0}\\.
 
 - by:
 
@@ -76,7 +77,7 @@ jseg(
 
   The starting value of the scaling factor that separates the
   observations from the break-point, as a fraction of the distance to
-  the ends of the range. Defaults to `0.05`, the value Fasola et
+  the ends of the range. Defaults to `0.05`, the value that Fasola et
   al. (2018) recommend; see Details.
 
 - smoothed:
@@ -95,26 +96,26 @@ jseg(
   working parametrization, no auxiliary coefficient and no scaling
   schedule (for
   [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
-  and `jseg()`, a `c0` that is passed is ignored with a message), the
+  and `jseg()`, a `c0` that is passed is ignored with a message). The
   block is the true Jacobian and the term is fitted by Gauss-Newton like
   [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md). A
   smoothed term accepts a development of any coefficient, including a
   break-point (`psi ~ random(~1 | id)`) and penalized developments, for
-  every kind, since no read-off constrains the development. The
-  smoother's width is resolved at build from the covariate's spacing
-  (the median gap between distinct values, within groups where a
-  break-point development supplies a partition) unless the object
-  carries one. For the quintic, which is exact outside its width, the
-  width is raised to at least 0.55 times the largest gap over the range
-  a break-point may take, so that a break-point cannot sit in a gap with
-  no observation within its width. The width is reported: it is the
-  width of the transition (the bent-cable reading). The smoothing bias
-  is zero outside the transition for the quintic, decays with the
-  Gaussian tails for the probit, and decays as \\c/(4\|u\|)\\ for the
-  hyperbolic, whose parameter \\c\\ is a squared length. The objective
-  remains multimodal in the positions: smoothing rounds the local optima
-  and does not remove them, so the profile start and the `n_boot`
-  restarts remain necessary.
+  every kind, since a smoothed term has no read-off that would constrain
+  the development. The smoother's width is resolved at build from the
+  covariate's spacing (the median gap between distinct values, within
+  groups where a break-point development supplies a partition) unless
+  the object carries one. For the quintic, which is exact outside its
+  width, the width is raised to at least 0.55 times the largest gap over
+  the range that a break-point may take, so that a break-point cannot
+  sit in a gap with no observation within its width. The width is
+  reported: it is the width of the transition (the bent-cable reading).
+  The smoothing bias is zero outside the transition for the quintic,
+  decays with the Gaussian tails for the probit, and decays as
+  \\c/(4\|u\|)\\ for the hyperbolic, whose parameter \\c\\ is a squared
+  length. The objective remains multimodal in the positions: smoothing
+  rounds the local optima and does not remove them, so the profile start
+  and the `n_boot` restarts remain necessary.
 
 - marginal:
 
@@ -129,25 +130,25 @@ jseg(
   For a `seg` term the native random-changepoint fit
   (`psi ~ random(~1 | g)` without `marginal`) estimates the break-points
   as the mode of the latent distribution and is the recommended route,
-  the marginal being the exact-likelihood alternative. The marginal
-  `seg` has one break-point: the conditional is smooth in the position,
-  so the integral runs on Gauss-Kronrod panels over the intervals
-  between a group's ordered observations, and several latent
+  while the marginal construction is the exact-likelihood alternative.
+  The marginal `seg` has one break-point: the conditional is smooth in
+  the position, so the integral runs on Gauss-Kronrod panels over the
+  intervals between a group's ordered observations, and several latent
   break-points would need a product quadrature with a number of
   components that a fitting layer cannot carry.
 
 - n_boot:
 
   How many bootstrap restarts the fitting layer runs after the iteration
-  first converges (Wood 2001, the device `segmented` runs by default):
-  each restart re-estimates on a bootstrap resample from the current
-  break-points and then on the data again from where the resample ended,
-  keeping the better fit. The objective has local optima in the
-  break-points, and with several of them a grid start does not reach the
-  right basin from every placement. Defaults to 10, `segmented`'s own
-  default; 0 disables. The term itself only declares the value; running
-  the restarts is the fitting layer's, as with a penalty's
-  hyperparameters.
+  first converges (Wood 2001, the device that `segmented` runs by
+  default): each restart re-estimates on a bootstrap resample from the
+  current break-points and then on the data again from where the
+  resample ended, keeping the better fit. The objective has local optima
+  in the break-points, and with several of them a grid start does not
+  reach the right basin from every placement. Defaults to 10,
+  `segmented`'s own default; 0 disables. The term itself only declares
+  the value; running the restarts is the fitting layer's, as with a
+  penalty's hyperparameters.
 
 - label:
 
@@ -170,12 +171,12 @@ line is differentiable in the break-point and the step is linearized by
 the identity of Fasola et al. (2018), on the rescaled covariate that its
 scaling schedule provides (see
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)).
-What is particular to the joint term is the read-off, since the
-truncated line depends on the break-point as well and reading only the
-step's pair would discard what the change of slope says about it.
-Linearizing both parts about the previous position, and writing \\h\\
-for the increment, \\U\\ for the truncated line and \\I = Z -
-\psi^{0}W\\ for the indicator,
+The read-off is particular to the joint term, because the truncated line
+depends on the break-point as well, and a read-off from only the step's
+pair would discard the information that the change of slope carries
+about the break-point. Linearizing both parts about the previous
+position, and writing \\h\\ for the increment, \\U\\ for the truncated
+line and \\I = Z - \psi^{0}W\\ for the indicator,
 
 \$\$\gamma\\(x-\psi)\_{+} \approx \gamma U - \gamma h I, \qquad
 \delta\\\mathbb{1}(x\>\psi) = \delta Z - \delta\psi W,\$\$
@@ -190,17 +191,17 @@ the root of smaller modulus. At \\\gamma = 0\\ the quadratic degenerates
 to \\h = -(b + a\psi^{0})/a\\, that is \\\psi = -b/a\\, so the pure step
 is a special case of this reading.
 
-Everything
+Everything that
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 documents about the scaling schedule, the confinement of a break-point
 and the choice of starting positions applies here unchanged.
 
 ## The coefficients
 
-`beta` (present when `linear = TRUE`), `gamma1` ... `gammaK`, the
-changes of slope, then `delta1` ... `deltaK`, the changes of level, then
-`g1` ... `gK`, the auxiliary coefficients from which the break-points
-are read;
+The coefficients are `beta` (present when `linear = TRUE`), `gamma1` ...
+`gammaK`, the changes of slope, then `delta1` ... `deltaK`, the changes
+of level, then `g1` ... `gK`, the auxiliary coefficients from which the
+break-points are read;
 [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
 reports the break-points. A smoothed term holds the break-points
 directly, and its coefficients end with `psi1` ... `psiK` in place of
@@ -229,7 +230,7 @@ smoothed `jseg` accepts a development of any coefficient.
 break-point per group out of the likelihood exactly, on the
 Gauss-Kronrod panels of
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)'s
-marginal with the change of level entering each interval's conditional
+marginal, where the change of level enters each interval's conditional
 as a constant. The mode-based routes approximate the integral over the
 latent break-points by a Laplace approximation, and the marginal
 construction evaluates it by quadrature.
@@ -264,7 +265,7 @@ term_coef_names(built)
 #> [1] "jseg.beta"   "jseg.gamma1" "jseg.delta1" "jseg.g1"    
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The term is fitted next. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(3)
@@ -273,8 +274,8 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
     rnorm(300, sd = 0.3)
   ft <- statmodels7::statmod(y ~ jseg(x),
                              distributions7::gaussian1_distrib(), fd)
-  # truth: intercept 1, slope 0.3, and at 6 a jump of 1.5 with a change
-  # of slope of 1.2
+  # The truth is intercept 1, slope 0.3, and at 6 a jump of 1.5 with a
+  # change of slope of 1.2.
   round(coef(ft)$mu, 2)
 }
 #> (Intercept)   jseg.beta jseg.gamma1 jseg.delta1   jseg.psi1 

@@ -3,13 +3,13 @@
 design block from data, assigns the coefficient names and records the
 blueprint that will reproduce the mapping on other rows; a structural term
 records whatever its recursion needs, its grouping and its ordering. The
-returned object is a copy of the specification with those properties filled,
-and the specification is unchanged."><meta property="og:description" content="Turns a term specification into a built term: an additive term computes its
+returned object is a copy of the specification in which those properties are
+filled, and the specification is unchanged."><meta property="og:description" content="Turns a term specification into a built term: an additive term computes its
 design block from data, assigns the coefficient names and records the
 blueprint that will reproduce the mapping on other rows; a structural term
 records whatever its recursion needs, its grouping and its ordering. The
-returned object is a copy of the specification with those properties filled,
-and the specification is unchanged."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
+returned object is a copy of the specification in which those properties are
+filled, and the specification is unchanged."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -17,7 +17,7 @@ and the specification is unchanged."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -48,8 +48,8 @@ and the specification is unchanged."><meta property="og:image" content="https://
 design block from <code>data</code>, assigns the coefficient names and records the
 blueprint that will reproduce the mapping on other rows; a structural term
 records whatever its recursion needs, its grouping and its ordering. The
-returned object is a copy of the specification with those properties filled,
-and the specification is unchanged.</p>
+returned object is a copy of the specification in which those properties are
+filled, and the specification is unchanged.</p>
     </div>
 
     <div class="section level2">
@@ -67,8 +67,8 @@ term is rebuilt.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
-<dd><p>A data frame carrying every variable the term names. Any other
-object is rejected by the generic, before dispatch, with the error
+<dd><p>A data frame carrying every variable that the term names. Any
+other object is rejected by the generic, before dispatch, with the error
 <code>"'data' must be a data frame."</code>.</p></dd>
 
 
@@ -80,9 +80,9 @@ object is rejected by the generic, before dispatch, with the error
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A built term of the same class as <code>term</code>. For an additive term the
 <code>X</code>, <code>coef_names</code> and <code>blueprint</code> properties are filled, and <code>penalty</code> is
-where the term is penalized; for a structural term the <code>blueprint</code> is.
-<code><a href="term_is_built.html">term_is_built()</a></code> is <code>TRUE</code> either way, reading whichever of the two the
-branch fills.</p>
+filled where the term is penalized; for a structural term the <code>blueprint</code>
+is filled. <code><a href="term_is_built.html">term_is_built()</a></code> is <code>TRUE</code> either way, because it reads the
+one of the two records that the branch fills.</p>
     </div>
     <div class="section level2">
     <h2 id="what-building-produces">What building produces<a class="anchor" aria-label="anchor" href="#what-building-produces"></a></h2>
@@ -91,23 +91,23 @@ through a penalty on that block's coefficients when it is penalized:</p>
 <p>$$\eta = \sum_{t} X_t \beta_t,
   \qquad \text{penalized objective} \quad
   -\ell(\beta) + \sum_{t} \rho_t(\beta_t; \theta_t).$$</p>
-<p>Building is what produces \(X_t\) from the data and attaches
+<p>Building produces \(X_t\) from the data and attaches
 \(\rho_t\). <code><a href="term_matrix.html">term_matrix()</a></code> then reads the block, <code><a href="term_penalties.html">term_penalties()</a></code> the
 penalties, and <code><a href="term_predict.html">term_predict()</a></code> reproduces \(X_t\) at other rows through
 the blueprint.</p>
-<p>A structural term has no such block. <code><a href="gas.html">gas()</a></code> records the group each row
-belongs to and its place in that group's series; <code><a href="regime.html">regime()</a></code> and the marginal
-break-point terms record what their forward recursion reads. They report
-themselves through <code><a href="term_filter.html">term_filter()</a></code> or <code><a href="term_loglik.html">term_loglik()</a></code>, and <code><a href="term_matrix.html">term_matrix()</a></code>
-has no method for them.</p>
+<p>A structural term has no such block. <code><a href="gas.html">gas()</a></code> records the group to which each
+row belongs and its place in that group's series; <code><a href="regime.html">regime()</a></code> and the marginal
+break-point terms record the quantities that their forward recursion reads.
+They report themselves through <code><a href="term_filter.html">term_filter()</a></code> or <code><a href="term_loglik.html">term_loglik()</a></code>, and
+<code><a href="term_matrix.html">term_matrix()</a></code> has no method for them.</p>
     </div>
     <div class="section level2">
     <h2 id="building-twice-and-building-on-other-data">Building twice, and building on other data<a class="anchor" aria-label="anchor" href="#building-twice-and-building-on-other-data"></a></h2>
     <p>Building is not idempotent in general: a term built again on new data
-re-derives its factor levels and its knots from those rows. That is what
-<code><a href="term_predict.html">term_predict()</a></code> exists to avoid, and what <code><a href="check_term.html">check_term()</a></code>'s subset check
-tests for. A term is therefore built once and applied to other rows with
-<code><a href="term_predict.html">term_predict()</a></code>.</p>
+re-derives its factor levels and its knots from those rows.
+<code><a href="term_predict.html">term_predict()</a></code> exists to avoid this re-derivation, and the subset check of
+<code><a href="check_term.html">check_term()</a></code> tests for it. A term is therefore built once and applied to
+other rows with <code><a href="term_predict.html">term_predict()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="the-default">The default<a class="anchor" aria-label="anchor" href="#the-default"></a></h2>

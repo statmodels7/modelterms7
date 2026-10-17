@@ -1,8 +1,9 @@
-# The Grouping a Term's Coefficients Are Indexed By
+# The Grouping by Which a Term's Coefficients Are Indexed
 
 For a term whose coefficients are one set per level of a grouping
-variable, the expression that defines that variable, its levels, and the
-number of columns that each level carries. `NULL` for every other term.
+variable, returns the expression that defines that variable, its levels,
+and the number of columns that each level carries. The result is `NULL`
+for every other term.
 
 ## Usage
 
@@ -27,12 +28,12 @@ A list with `expr` (a language object), `levels` (a character vector),
 
 ## Details
 
-Two labelled terms belong to the same covariance block only if they
-share a grouping, and deciding that needs both halves: the expression
-alone is not enough, since `droplevels(id)` and `id` are different
-expressions for the same grouping and `id` under two subsets is the same
-expression for two different ones. The levels settle it, and the
-expression makes a message readable.
+Two labeled terms belong to the same covariance block only if they share
+a grouping, and deciding that requires both the expression and the
+levels: the expression by itself is not enough, since `droplevels(id)`
+and `id` are different expressions for the same grouping and `id` under
+two subsets is the same expression for two different ones. The levels
+settle it, and the expression makes a message readable.
 
 `dim` is the number of columns that one level carries, which together
 with the levels gives the layout of the block: the coefficients are
@@ -51,7 +52,7 @@ The base method returns `NULL`, which is the answer for every term but
 [`term_tag()`](https://statmodels7.github.io/modelterms7/reference/term_tag.md)
 for the label that, with this, identifies a covariance block;
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
-for the formula both are read from.
+for the formula from which both are read.
 
 ## Examples
 

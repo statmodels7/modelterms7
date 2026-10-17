@@ -37,12 +37,12 @@ parameters, propagated alongside the state.
 - psi:
 
   The parameters, named as
-  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md),
-  each scalar coordinate on its parameter scale (the loading itself, the
-  partial autocorrelation itself). The coefficients of a development
-  enter as they are, the link of the developed parameter being applied
-  inside the development. The columns of the returned Jacobian refer to
-  the same scale.
+  [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md);
+  each scalar coordinate is on its parameter scale (the loading itself,
+  the partial autocorrelation itself). The coefficients of a development
+  enter as they are, because the link of the developed parameter is
+  applied inside the development. The columns of the returned Jacobian
+  refer to the same scale.
 
 - ...:
 

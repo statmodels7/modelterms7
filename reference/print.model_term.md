@@ -4,7 +4,7 @@ Prints one line naming the term's class, its label when it has one, and
 whether it is built. A built term reports how many coefficients its
 block carries; a specification is marked as one and names the call that
 would build it. This is the default for every term class, and several
-classes override it to add what they alone carry.
+classes override it to add the information that only that class carries.
 
 ## Arguments
 
@@ -19,7 +19,7 @@ classes override it to add what they alone carry.
 
 ## Value
 
-`x`, invisibly. Called for the line it writes.
+`x`, invisibly. The function is called for the line that it writes.
 
 ## Details
 
@@ -31,10 +31,10 @@ The two forms are
 The class name is the S7 class's own, the label comes from the `label`
 property and is omitted when empty, and the count is `ncol(x@X)`.
 
-A structural term has no `X` to count, so it gets the word `built` and
-no count. Every shipped structural term registers a method of its own,
-so this line is reached only by a structural class written outside the
-package.
+A structural term has no `X` to count, so the line shows the word
+`built` and no count. Every shipped structural term registers a method
+of its own, so this line is reached only by a structural class written
+outside the package.
 
 The classes that override this add something of their own:
 [`print.PenalizedTerm()`](https://statmodels7.github.io/modelterms7/reference/print.PenalizedTerm.md)
@@ -51,7 +51,7 @@ reports its break-points.
 ## See also
 
 [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
-for the predicate it branches on,
+for the predicate on which it branches,
 [`term_coef_names()`](https://statmodels7.github.io/modelterms7/reference/term_coef_names.md)
 for the names behind the count.
 
@@ -60,7 +60,7 @@ for the names behind the count.
 ``` r
 d <- data.frame(x = 1:4)
 
-# A specification, and the same term built.
+# A specification prints first, and the same term built prints second.
 linpar(~ x)
 #> <LinparTerm> (specification; call term_build() with data)
 term_build(linpar(~ x), d)

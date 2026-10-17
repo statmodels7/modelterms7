@@ -11,7 +11,7 @@ are not one of the two."><meta property="og:image" content="https://statmodels7.
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,8 +68,8 @@ or <code>NA_character_</code>.</p>
 <code>id</code> on its right and <code>1 + x | u</code> on its left. The last position is
 therefore the grouping variable and the middle one the label, which is
 <span class="pkg">brms</span>'s convention and is the reading that the parser itself yields.</p>
-<p>The label is taken with <code><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character()</a></code> on the symbol and <strong>never
-evaluated</strong>, so a column of the data carrying that name is not read. It is
+<p>The label is taken with <code><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character()</a></code> on the symbol and never
+evaluated, so a column of the data carrying that name is not read. It is
 the one element of the formula that does not refer to the data.</p>
 <p>Two bars are the most that carry a meaning, so a third is rejected.</p>
 <p>The constructor and <code><a href="term_build.html">term_build()</a></code> both call this function, so that the

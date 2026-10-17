@@ -1,7 +1,7 @@
 # Levels of a Regime Term
 
-The regime means, ordered by construction: the first level and the
-cumulative sums of the positive gaps.
+Returns the regime means, which are ordered by construction: the first
+level and the cumulative sums of the positive gaps.
 
 ## Arguments
 

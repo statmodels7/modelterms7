@@ -3,7 +3,7 @@
 build succeeds and returns a two-dimensional numeric block with one row per
 observation, that the coefficient names are unique and as numerous as the
 columns, that term_npar() agrees with that count, that term_smooth()
-answers with a single non-missing logical, that term_predict() on the same
+returns a single non-missing logical, that term_predict() on the same
 data reproduces the block, and that term_predict() on a subset of rows
 returns the corresponding rows of it. The result has one row per check; the
 rows are printed after all the checks have run, when verbose is TRUE, and
@@ -15,7 +15,7 @@ fails this one."><meta property="og:description" content="Builds term against da
 build succeeds and returns a two-dimensional numeric block with one row per
 observation, that the coefficient names are unique and as numerous as the
 columns, that term_npar() agrees with that count, that term_smooth()
-answers with a single non-missing logical, that term_predict() on the same
+returns a single non-missing logical, that term_predict() on the same
 data reproduces the block, and that term_predict() on a subset of rows
 returns the corresponding rows of it. The result has one row per check; the
 rows are printed after all the checks have run, when verbose is TRUE, and
@@ -31,7 +31,7 @@ fails this one."><meta property="og:image" content="https://statmodels7.github.i
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -62,7 +62,7 @@ fails this one."><meta property="og:image" content="https://statmodels7.github.i
 build succeeds and returns a two-dimensional numeric block with one row per
 observation, that the coefficient names are unique and as numerous as the
 columns, that <code><a href="term_npar.html">term_npar()</a></code> agrees with that count, that <code><a href="term_smooth.html">term_smooth()</a></code>
-answers with a single non-missing logical, that <code><a href="term_predict.html">term_predict()</a></code> on the same
+returns a single non-missing logical, that <code><a href="term_predict.html">term_predict()</a></code> on the same
 data reproduces the block, and that <code><a href="term_predict.html">term_predict()</a></code> on a subset of rows
 returns the corresponding rows of it. The result has one row per check; the
 rows are printed after all the checks have run, when <code>verbose</code> is <code>TRUE</code>, and
@@ -91,10 +91,10 @@ accepted and is rebuilt against <code>data</code>.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
-<dd><p>A data frame carrying every variable the term names. Any other
-object signals the error <code>"'data' must be a data frame."</code>, and a data frame
-without rows signals <code>"'data' has no rows."</code>. With one row the subset check
-compares the block against itself and is uninformative.</p></dd>
+<dd><p>A data frame carrying every variable that the term names. Any
+other object signals the error <code>"'data' must be a data frame."</code>, and a data
+frame without rows signals <code>"'data' has no rows."</code>. With one row the subset
+check compares the block against itself and is uninformative.</p></dd>
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
@@ -115,14 +115,14 @@ character, one row per check:</p><dl><dt><code>check</code></dt>
 
 <dt><code>info</code></dt>
 <dd><p>The block's dimensions for <code>build</code>, in the form
-<code>"6 x 4 block"</code> with <code>", sparse"</code> appended when it is an S4 matrix;
-<code>"smooth"</code> or <code>"non-smooth"</code> for <code>smooth</code>; the number of rows kept for
-<code>subset</code>; the condition message of a check that signaled an error; and
-<code>""</code> otherwise.</p></dd>
+<code>"6 x 4 block"</code>, followed by <code>", sparse"</code> when the block is an S4
+matrix; <code>"smooth"</code> or <code>"non-smooth"</code> for <code>smooth</code>; the number of rows
+kept for <code>subset</code>; the condition message of a check that signaled an
+error; and <code>""</code> otherwise.</p></dd>
 
 
 </dl><p>A build that signals an error gives a single row, <code>check = "build"</code> and
-<code>status = "FAILED"</code>, with the message in <code>info</code>; no later check is
+<code>status = "FAILED"</code>, with the message in <code>info</code>; the later checks are not
 attempted.</p>
     </div>
     <div class="section level2">
@@ -133,10 +133,11 @@ subset of the row indices. The last two checks are</p>
   \qquad
   \mathrm{predict}(\mathrm{term}, \mathrm{droplevels}(\mathrm{data}[S, ]))
   = X[S, ],$$</p>
-<p>both compared by <code><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal()</a></code> at a relative tolerance of <code>1e-12</code>. The second
+<p>and each of them is compared by <code><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal()</a></code> at a relative tolerance of
+<code>1e-12</code>. The second
 does not follow from the first: a term that rebuilds its encoding satisfies
-the first, the rows being the same ones, and fails the second as soon as
-\(S\) omits a factor level or narrows the range a basis is placed on.</p>
+the first because the rows are the same ones, and fails the second as soon as
+\(S\) omits a factor level or narrows the range on which a basis is placed.</p>
     </div>
     <div class="section level2">
     <h2 id="which-rows-the-subset-takes">Which rows the subset takes<a class="anchor" aria-label="anchor" href="#which-rows-the-subset-takes"></a></h2>
@@ -146,16 +147,16 @@ of the rows, every row of that level is dropped, so a rebuilt encoding is
 one column short. Failing that, the first <code>max(1, nrow(data) %/% 2)</code> rows are
 taken, which still narrows the range of a numeric covariate. Character
 columns are not examined.</p>
-<p><code><a href="https://rdrr.io/r/base/droplevels.html" class="external-link">droplevels()</a></code> is applied to the subset before it is passed on, because that
-is how new data reach <code><a href="term_predict.html">term_predict()</a></code>: a factor column there carries only
-the levels its own rows use, and the remaining levels are recorded only in
-the blueprint. Without the call a plain row subset carries the original level
-set along with it and the check cannot fail.</p>
+<p><code><a href="https://rdrr.io/r/base/droplevels.html" class="external-link">droplevels()</a></code> is applied to the subset before it is passed on, because new
+data reach <code><a href="term_predict.html">term_predict()</a></code> in that form: a factor column there carries only
+the levels that its own rows use, and the remaining levels are recorded only
+in the blueprint. Without the call a plain row subset carries the original
+level set along with it and the check cannot fail.</p>
     </div>
     <div class="section level2">
     <h2 id="what-is-not-checked">What is not checked<a class="anchor" aria-label="anchor" href="#what-is-not-checked"></a></h2>
-    <p>The battery covers the design block. It reads neither the penalty a
-penalized term attaches nor the hyperparameters it declares, so
+    <p>The battery covers the design block. It does not read the penalty that a
+penalized term attaches or the hyperparameters that the term declares, so
 <code><a href="term_penalties.html">term_penalties()</a></code> and <code><a href="term_hyper.html">term_hyper()</a></code> are never called.</p>
 <p><code>check_term()</code> applies to an additive term and rejects a structural one by
 name. A structural term (<code><a href="gas.html">gas()</a></code>, <code><a href="regime.html">regime()</a></code>, and the marginal break-point
@@ -164,13 +165,13 @@ method, so there is nothing for the six checks to read; the error message
 gives this reason and lists what such a term supplies instead, which is
 <code><a href="term_params.html">term_params()</a></code>,
 <code><a href="term_links.html">term_links()</a></code>, <code><a href="term_npar.html">term_npar()</a></code> and one of <code><a href="term_filter.html">term_filter()</a></code> or
-<code><a href="term_loglik.html">term_loglik()</a></code>. No validator covers those.</p>
+<code><a href="term_loglik.html">term_loglik()</a></code>. Those are not covered by any validator.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_build.html">term_build()</a></code> and <code><a href="term_predict.html">term_predict()</a></code>, the two generics the checks
-compare; <code><a href="term_matrix.html">term_matrix()</a></code> for the block itself; <code><a href="interpret_formula.html">interpret_formula()</a></code> for
-reading a whole formula into terms.</p></div>
+    <div class="dont-index"><p><code><a href="term_build.html">term_build()</a></code> and <code><a href="term_predict.html">term_predict()</a></code>, the two generics that the
+checks compare; <code><a href="term_matrix.html">term_matrix()</a></code> for the block itself; <code><a href="interpret_formula.html">interpret_formula()</a></code>
+for reading a whole formula into terms.</p></div>
     </div>
 
     <div class="section level2">
@@ -188,8 +189,8 @@ reading a whole formula into terms.</p></div>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="va">res</span><span class="op">$</span><span class="va">status</span> <span class="op">==</span> <span class="st">"OK"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># What the subset check is testing. The chosen rows drop level "c", and</span></span></span>
-<span class="r-in"><span><span class="co"># the reapplied block keeps the four columns the blueprint recorded.</span></span></span>
+<span class="r-in"><span><span class="co"># This is what the subset check tests. The chosen rows drop level "c", and</span></span></span>
+<span class="r-in"><span><span class="co"># the reapplied block keeps the four columns that the blueprint recorded.</span></span></span>
 <span class="r-in"><span><span class="va">b</span>  <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="linpar.html">linpar</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span> <span class="op">+</span> <span class="va">g</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">nd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/droplevels.html" class="external-link">droplevels</a></span><span class="op">(</span><span class="va">dd</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">5</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/levels.html" class="external-link">levels</a></span><span class="op">(</span><span class="va">nd</span><span class="op">$</span><span class="va">g</span><span class="op">)</span></span></span>
@@ -199,7 +200,7 @@ reading a whole formula into terms.</p></div>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span> <span class="op">+</span> <span class="va">g</span>, <span class="va">nd</span><span class="op">)</span><span class="op">)</span>        <span class="co"># 4 x 3, what a rebuild gives</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4 3</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># The same failure for a basis: rebuilding places the knots on the</span></span></span>
+<span class="r-in"><span><span class="co"># The same failure occurs for a basis: rebuilding places the knots on the</span></span></span>
 <span class="r-in"><span><span class="co"># narrower range, so the columns are different functions of x.</span></span></span>
 <span class="r-in"><span><span class="va">d2</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, length.out <span class="op">=</span> <span class="fl">40</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bs</span>  <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="s.html">s</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">6</span><span class="op">)</span><span class="op">)</span>, <span class="va">d2</span><span class="op">)</span></span></span>
@@ -211,7 +212,7 @@ reading a whole formula into terms.</p></div>
 <span class="r-in"><span>        <span class="va">X</span><span class="op">[</span><span class="va">sub</span>, <span class="op">]</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2.777484</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># A sparse block is accepted, and the info column says it is sparse.</span></span></span>
+<span class="r-in"><span><span class="co"># A sparse block is accepted, and the info column reports that it is sparse.</span></span></span>
 <span class="r-in"><span><span class="fu">check_term</span><span class="op">(</span><span class="fu"><a href="random.html">random</a></span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span> <span class="op">|</span> <span class="va">g</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [OK] build -- 6 x 3 block, sparse</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   [OK] names</span>

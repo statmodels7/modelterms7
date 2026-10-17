@@ -1,8 +1,8 @@
 # The Chart's Derivatives in the Unconstrained Parameters
 
-The level, the score loadings and the autoregressive coefficients as
-functions of the term's unconstrained parameters, with their first and
-second derivatives in those.
+Computes the level, the score loadings and the autoregressive
+coefficients as functions of the term's unconstrained parameters, with
+their first and second derivatives in those.
 
 ## Usage
 

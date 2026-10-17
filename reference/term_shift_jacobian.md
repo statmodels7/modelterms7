@@ -1,10 +1,10 @@
 # The Posterior Shift of a Term Mixed Over States, and Its Jacobian
 
-For a structural term whose contribution is a likelihood mixed over
-latent states, the shift that the term adds to its equation's predictor
-at each observation, averaged over the smoothed posterior of the states,
-together with its exact derivative in the whole of a caller's unknown
-vector.
+Computes, for a structural term whose contribution is a likelihood mixed
+over latent states, the shift that the term adds to its equation's
+predictor at each observation, averaged over the smoothed posterior of
+the states, together with its exact derivative in the whole of a
+caller's unknown vector.
 
 ## Usage
 
@@ -20,7 +20,7 @@ term_shift_jacobian(term, eta, y, logdens, grad, psi, seed, cols, level, ...)
 
 - eta:
 
-  The static part of the predictor the term shifts.
+  The static part of the predictor that the term shifts.
 
 - y:
 
@@ -59,7 +59,7 @@ term_shift_jacobian(term, eta, y, logdens, grad, psi, seed, cols, level, ...)
 
 - level:
 
-  The index, among the distribution parameters, of the one the term
+  The index, among the distribution parameters, of the one that the term
   shifts.
 
 - ...:

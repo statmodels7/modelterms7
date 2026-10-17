@@ -1,6 +1,6 @@
 # Check a Term's Path Depth
 
-Validates the fraction of the emptying value a path descends to.
+Validates the fraction of the emptying value to which a path descends.
 
 ## Usage
 

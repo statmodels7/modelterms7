@@ -1,6 +1,6 @@
 # S7 Class for Structural Terms
 
-The branch of
+`structural_term` is the branch of
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)
 whose terms rewrite the likelihood instead of adding design columns.
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
@@ -41,8 +41,8 @@ structural_term(
 
 - hyper:
 
-  The hyperparameters of the term's penalty that the caller **held**, as
-  a named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller held, as a
+  named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -55,9 +55,9 @@ structural_term(
 
 - values:
 
-  The values a path visits, for each hyperparameter the caller wrote
-  out, as a named list of numeric vectors. Empty, the default, has the
-  path build them. See
+  The values that a path visits, for each hyperparameter that the caller
+  wrote out, as a named list of numeric vectors. Empty, the default, has
+  the path build them. See
   [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md).
 
 - min_ratio:
@@ -85,14 +85,15 @@ structural_term(
 - blueprint:
 
   A named list of everything needed to reproduce the term on new rows:
-  the design's state, the levels a factor had, whatever the subclass's
-  own filter or recursion needs. Its contents are that subclass's
-  business and nothing outside the term reads them. Empty in a
-  specification and filled by
-  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md).
+  the design's state, the levels that a factor had, whatever the
+  subclass's own filter or recursion needs. Its contents belong to that
+  subclass and only the term reads them. It is empty in a specification
+  and
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+  fills it.
   [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
   reads it on this branch, because a structural term has no coefficient
-  names from which to tell.
+  names that would show whether it is built.
 
 ## Value
 
@@ -107,9 +108,9 @@ empty in a specification.
 
 ## The parameters of a structural term
 
-What such a term estimates are its **own parameters**, named by
+Such a term estimates its own parameters, which
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
-and each riding a chart named by
+names and each of which rides a chart named by
 [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md),
 so a persistence stays inside \\(-1, 1)\\ and a loading stays positive
 whatever an optimizer proposes.
@@ -128,11 +129,11 @@ slots.
 
 ## The two shapes
 
-A **filter** reports a predictor and its exact derivative:
+A filter reports a predictor and its exact derivative:
 [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
 returns the level at each observation together with the Jacobian in the
 term's parameters, propagated beside the state because the recursion is
-the only place it can be computed.
+the only place in which that Jacobian can be computed.
 [`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md),
 [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md),
 [`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
@@ -143,7 +144,7 @@ recursion.
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
 has this shape.
 
-A **likelihood** term reports no predictor at all.
+A likelihood term reports no predictor at all.
 [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
 returns its own contribution,
 [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)
@@ -153,8 +154,7 @@ the observed information of the mixture.
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
 and the marginal break-point terms have this shape.
 
-The fitting layer distinguishes the two shapes by which of the two
-generics
+The two shapes are distinguished by which of the two generics
 [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
 and
 [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
@@ -178,7 +178,7 @@ for what such a term estimates.
 ## Examples
 
 ``` r
-# gas() and regime() are on this branch; every additive term is not.
+# gas() and regime() are on this branch; the additive terms are on the other.
 vapply(list(gas(p = 1, q = 1), regime(k = 2), s(x, basis7::bspline_smooth(k = 5)), ridge(~ x)),
        function(t) S7::S7_inherits(t, structural_term), logical(1))
 #> [1]  TRUE  TRUE FALSE FALSE
@@ -191,7 +191,7 @@ vapply(term_links(g), function(l) l@link_name, character(1))
 #>      omega     kappa1      pacf1      pacf2 
 #> "identity"      "log"   "rhobit"   "rhobit" 
 
-# And has no design block at all.
+# A structural term has no design block at all.
 try(term_matrix(g))
 #> Error : Can't find method for `term_matrix(<modelterms7::GasTerm>)`.
 

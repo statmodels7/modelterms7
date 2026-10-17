@@ -1,8 +1,9 @@
 # The Fourth Derivative of the Levinson-Durbin Map, in Two Directions
 
-[`gas_levinson3()`](https://statmodels7.github.io/modelterms7/reference/gas_levinson3.md)'s
-third derivatives differentiated once more and contracted against a
-second direction, one matrix per coefficient.
+Differentiates the third derivatives of
+[`gas_levinson3()`](https://statmodels7.github.io/modelterms7/reference/gas_levinson3.md)
+once more and contracts them against a second direction, which gives one
+matrix per coefficient.
 
 ## Usage
 
@@ -18,8 +19,8 @@ gas_levinson4(pacf, v, w)
 
 - v, w:
 
-  The two directions to contract against, each as long as `pacf`. The
-  result is symmetric in the two.
+  The two directions against which to contract, each as long as `pacf`.
+  The result is symmetric in the two.
 
 ## Value
 
@@ -31,12 +32,12 @@ The second derivative of a marginal criterion in a pair of
 hyperparameters reads the fourth derivative of the predictor along the
 two directions in which the mode moves, and the persistence reaches the
 predictor through this map. As at the third order it is needed only
-contracted, so what is propagated is a matrix per coefficient and never
-a four-index array.
+contracted, so the recursion propagates a matrix per coefficient instead
+of a four-index array.
 
 Differentiating the third-order recursion of
 [`gas_levinson3()`](https://statmodels7.github.io/modelterms7/reference/gas_levinson3.md)
-once more adds no new kind of term, the map being bilinear at every
+once more adds no new kind of term, because the map is bilinear at every
 step. The full fourth derivative obeys \$\$Q^{(k)}\_i = Q^{(k-1)}\_i -
 \rho_k Q^{(k-1)}\_{k-i} - \sum\_{\text{4 slots}} \delta\_{\cdot
 k}T^{(k-1)}\_{k-i}\[\text{the rest}\],\$\$ and contracting two of those
@@ -55,7 +56,8 @@ Each coefficient \\\xi^{(k)}\_i\\ is a polynomial of degree at most
 \\k\\ in the first \\k\\ partial autocorrelations, multilinear in them,
 so the result is identically zero for \\q \le 3\\. The first coefficient
 carrying a monomial of degree four is \\\xi^{(4)}\_2\\, which needs \\q
-= 4\\. A comparison with a reference therefore needs \\q \ge 4\\.
+= 4\\. Therefore the result can be compared with a reference only if \\q
+\ge 4\\.
 
 ## See also
 

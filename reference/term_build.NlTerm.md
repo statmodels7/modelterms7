@@ -3,7 +3,7 @@
 Resolves the parameters, their links and their subformulas against the
 data, evaluates the function at the starting values, and takes the
 Jacobian there as the design block. It also chooses how each order of
-derivative will be obtained and checks that any function the caller
+derivative will be obtained and checks that any function that the caller
 supplied returns the right components.
 
 ## Arguments
@@ -15,8 +15,8 @@ supplied returns the right components.
 
 - data:
 
-  A data frame carrying the covariates the function names and whatever
-  the subformulas name.
+  A data frame carrying the covariates that the function names and
+  whatever the subformulas name.
 
 - ...:
 
@@ -24,9 +24,9 @@ supplied returns the right components.
 
 ## Value
 
-The term with `X`, `coef_names`, `nl_params`, `links`, `deriv_mode` and
-`blueprint` filled. The penalties of the sub-terms are kept in the
-blueprint and reported by
+The term, in which `X`, `coef_names`, `nl_params`, `links`, `deriv_mode`
+and `blueprint` are filled. The penalties of the sub-terms are kept in
+the blueprint and reported by
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md);
 the `penalty` property stays `NULL`.
 
@@ -58,9 +58,9 @@ predictor are then read at the coefficients rather than stored.
 
 ## The starting point
 
-The block is the Jacobian **at the starting coefficients**, so it is
-only as good as they are. A parameter that `start` does not name is
-built at coefficient zero. When the fitting layer supplies a response,
+The block is the Jacobian at the starting coefficients, so it is only as
+good as they are. A parameter that `start` does not name is built at
+coefficient zero. When the fitting layer supplies a response,
 [`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)
 estimates each such parameter over a deterministic grid on its chart,
 because zero can be a degenerate starting point for a nonlinear
@@ -100,5 +100,5 @@ bad <- function(theta, data) list(a = data$x, wrong = data$x)
 try(term_build(nl(~ a * exp(-r * x), gradient = bad,
                   start = list(a = 1, r = 1)), dd))
 #> Error : 'gradient' returned the component 'wrong', which is not one of this term's.
-#>   Expected: a, r.
+#>   The components of this order are: a, r.
 ```

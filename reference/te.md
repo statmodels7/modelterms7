@@ -1,6 +1,7 @@
 # Penalized Smooth of Several Covariates
 
-A tensor-product smooth: a basis7 basis in each covariate, combined by
+Constructs a tensor-product smooth: a basis7 basis in each covariate,
+combined by
 [`basis7::tensor_basis()`](https://statmodels7.github.io/basis7/reference/tensor_basis.html),
 with a roughness penalty on the product coefficients. By default each
 margin keeps a smoothing parameter of its own, so the surface may be
@@ -27,7 +28,7 @@ te(
 - ...:
 
   The covariates, bare expressions evaluated in the data, at least two
-  of them. A single covariate signals the error
+  of them. With a single covariate, `te()` signals the error
   `"'te' needs at least two covariates; use s() for one."`.
 
 - smooths:
@@ -38,13 +39,12 @@ te(
   tensor product's penalty is the sum of the marginal roughnesses, and a
   factory does not specify how it composes with that sum.
 
-  What the product reads from a margin is its **basis** and its
-  **roughness matrix**, so `k`, `degree`, `order`, `measure`, `lower`
-  and `upper` all act. The constraint, the null space and the
-  reparametrization are the product's own and not a margin's: the tensor
-  contains the constant whatever its margins do, and it is the product
-  that is centered. A margin that sets one of those is rejected and not
-  ignored.
+  The product reads the basis and the roughness matrix of a margin, so
+  `k`, `degree`, `order`, `measure`, `lower` and `upper` all act. The
+  constraint, the null space and the reparametrization are the product's
+  own and not a margin's: the tensor contains the constant whatever its
+  margins do, and the centering is applied to the product. A margin that
+  sets one of those is rejected and not ignored.
 
 - by:
 
@@ -64,22 +64,22 @@ te(
 - anisotropic:
 
   `TRUE`, the default, for one smoothing parameter per margin; `FALSE`
-  for one over their sum. An argument that is not a single non-missing
-  logical signals an error.
+  for one over their sum. `te()` signals an error for an argument that
+  is not a single non-missing logical.
 
 - hyper:
 
-  The hyperparameters to hold, as a named numeric vector, with anything
-  left out **estimated**. An anisotropic product carries one per margin,
-  so a vector of that length, or a named one holding some of them. A
-  held value must be finite.
+  The hyperparameters to hold, as a named numeric vector; any
+  hyperparameter that is left out is estimated. An anisotropic product
+  carries one per margin, so the value is a vector of that length, or a
+  named vector that holds some of them. A held value must be finite.
 
 - id:
 
   Labels sharing this term's smoothing parameters with those of other
   terms carrying the same ones. An anisotropic product carries one per
   margin, so the labels are named after them, `c(lambda1 = "A")`; an
-  isotropic one carries `lambda` alone and a single unnamed string will
+  isotropic one carries only `lambda` and a single unnamed string will
   do. `NULL`, the default, shares nothing. See
   [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
 
@@ -108,7 +108,7 @@ fills them.
 The block is the tensor basis evaluated at the covariates, and the
 penalty is built from the marginal roughness penalties carried into the
 product, \\P_v = I \otimes \cdots \otimes P_v \otimes \cdots \otimes
-I\\, each penalizing curvature in one direction.
+I\\. Each component penalizes curvature in one direction.
 
 With `anisotropic = TRUE`, the default, those components go to
 [`penalties7::additive_penalty()`](https://statmodels7.github.io/penalties7/reference/additive_penalty.html)
@@ -126,12 +126,12 @@ knots. Under `anisotropic = TRUE` the normalization is a
 reparametrization and the fit is the same: the component's own `lambda`
 absorbs the factor, so the normalization makes the reported parameters
 of two margins comparable with each other. Under `anisotropic = FALSE`
-it is part of the model, since one `lambda` weights a sum whose terms it
-fixes, and margins on very different ranges then contribute comparably,
-where otherwise the margin on the widest range would contribute almost
-nothing.
+the normalization is part of the model, since one `lambda` weights a sum
+and the normalization fixes the scale of the terms of that sum, so that
+margins on very different ranges contribute comparably, where otherwise
+the margin on the widest range would contribute almost nothing.
 
-The marginal bases are **not** reparametrized, so the marginal linear
+The marginal bases are not reparametrized, so the marginal linear
 effects are not separated out as
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md)
 separates its one. With the default second-derivative roughness they lie
@@ -149,11 +149,12 @@ cover the deficiency.
 The block therefore carries the sum-to-zero constraint over the observed
 covariates
 ([`basis7::constrain_basis()`](https://statmodels7.github.io/basis7/reference/constrain_basis.html)).
-The term has **one column fewer** than the product of its marginal
+The term has one column fewer than the product of its marginal
 dimensions, so `te(x, z, smooths = bspline_smooth(k = 4))` gives 15 and
-not 16; every column sums to zero over the data it was built on, to
-machine precision; and the penalty follows by congruence with its rank
-unchanged, the direction removed having been one of its null directions.
+not 16; every column sums to zero over the data on which it was built,
+to machine precision; and the penalty follows by congruence and keeps
+its rank, because the direction that was removed was one of its null
+directions.
 
 The transform is stored in the blueprint and reapplied by
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md),
@@ -198,7 +199,8 @@ c(npar = term_npar(b), product = 4 * 4)
 max(abs(colSums(term_matrix(b))))
 #> [1] 1.427244e-15
 
-# Anisotropic by default: one smoothing parameter per margin.
+# By default the term is anisotropic, with one smoothing parameter per
+# margin.
 term_penalty(b)@penalty_name
 #> [1] "additive [2 components]"
 term_penalty(b)@params
@@ -208,7 +210,7 @@ ti <- te(x, z, smooths = basis7::bspline_smooth(k = 4),
 term_penalty(term_build(ti, dd))@params
 #> [1] "lambda"
 
-# Holding both of them.
+# Both smoothing parameters are held.
 term_hyper(te(x, z, smooths = basis7::bspline_smooth(k = 4), hyper = c(1, 5)))
 #> [[1]]
 #> [[1]]$lambda1
@@ -221,22 +223,23 @@ term_hyper(te(x, z, smooths = basis7::bspline_smooth(k = 4), hyper = c(1, 5)))
 
 # The centering transform is reapplied, not recomputed.
 max(abs(term_predict(b, dd[1:10, ]) - term_matrix(b)[1:10, ]))
-#> [1] 6.938894e-18
+#> [1] 4.163336e-17
 
 # One covariate is s(), not te().
 try(te(x, smooths = basis7::bspline_smooth(k = 4)))
 #> Error : 'te' needs at least two covariates; use s() for one.
 
 
-# Fitted. The data are simulated from a known truth, so the
-# estimates below can be read against it.
+# The tensor smooth is fitted. The data are simulated from a known truth, so
+# the estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(5)
   fd <- data.frame(a = runif(300, -2, 2), b = runif(300, -2, 2))
   fd$y <- sin(fd$a) * cos(fd$b) + rnorm(300, sd = 0.3)
   ft <- statmodels7::statmod(y ~ te(a, b, smooths = basis7::bspline_smooth(k = 5)),
                              distributions7::gaussian1_distrib(), fd)
-  # one smoothing parameter per margin, against a truth of sin(a) cos(b)
+  # The fit has one smoothing parameter per margin, and its error is
+  # measured against the truth sin(a) cos(b).
   round(sqrt(mean((fitted(ft) - sin(fd$a) * cos(fd$b))^2)), 3)
 }
 #> [1] 0.081

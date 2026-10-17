@@ -1,7 +1,7 @@
 # What the Penalized Terms Share
 
-The input handling, the storage, the standardization and the prediction
-of the five penalized terms, documented once.
+This page documents once, for the five penalized terms, the input
+handling, the storage, the standardization and the prediction.
 [`ridge()`](https://statmodels7.github.io/modelterms7/reference/ridge.md),
 [`lasso()`](https://statmodels7.github.io/modelterms7/reference/lasso.md),
 [`enet()`](https://statmodels7.github.io/modelterms7/reference/enet.md),
@@ -56,16 +56,16 @@ the term.
 
 An unbuilt
 [`PenalizedTerm()`](https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.md):
-a specification, with `X`, `coef_names`, `blueprint` and `penalty` all
-empty until
+a specification in which `X`, `coef_names`, `blueprint` and `penalty`
+are all empty until
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 fills them.
 
 ## The two inputs
 
-A **formula** goes through the
+A formula goes through the
 [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)
-machinery with the intercept removed: a penalized block does not
+machinery after its intercept is removed: a penalized block does not
 penalize an intercept, and the model's intercept lives in the parametric
 block. Its blueprint records the terms, the factor levels and the
 contrasts, exactly as
@@ -73,58 +73,61 @@ contrasts, exactly as
 does, so `~ g` and `~ 0 + g` give the same four columns for a four-level
 factor.
 
-The exception is a formula whose intercept is all it has. `ridge(~ 1)`
-is a block of that one column under the penalty, removing it leaving no
-block at all. That is the form a subformula on another term's parameter
-uses: `gamma ~ 0 + lasso(~ 1)` means that the parameter itself carries a
-lasso, there being no parametric block of its own to hold an unpenalized
-intercept. A formula with neither an intercept nor a term, such as
-`ridge(~ 0)`, has no columns, and the term is rejected when it is built.
+The exception is a formula that has an intercept and nothing else.
+`ridge(~ 1)` is a block of that one column under the penalty, because
+removing the intercept would leave no block at all. That is the form
+that a subformula on another term's parameter uses:
+`gamma ~ 0 + lasso(~ 1)` means that the parameter itself carries a
+lasso, because there is no parametric block of its own to hold an
+unpenalized intercept. A formula with neither an intercept nor a term,
+such as `ridge(~ 0)`, has no columns, and the term is rejected when it
+is built.
 
-A **matrix** is used as given, and its columns are named after its own
+A matrix is used as given, and its columns are named after its own
 column names, or numbered `1`, `2`, ... when it has none.
 
 ## Predicting a matrix input
 
-Prediction re-evaluates the expression that produced the matrix **in the
-new data, and only there**. So the intended use is a matrix column of
-the model data frame:
+Prediction re-evaluates the expression that produced the matrix in the
+new data, and only there. So the intended use is a matrix column of the
+model data frame:
 
     dd$R <- R
     ridge(R)      # in the formula
 
 A subset of `dd` then carries the matching rows of `R`. A free-standing
-matrix from the calling environment can be used to build the term, its
-value being captured, but prediction signals an error that names the
+matrix from the calling environment can be used to build the term, and
+its value is captured, but prediction signals an error that names the
 expression. Resolving the name outside the new data would reuse the
 build-time rows whenever the row counts agree.
 
 ## Sparse storage
 
-A **matrix** input is kept in whatever storage it arrives in, so a
-`dgCMatrix` passed to any of the five stays one and nothing needs to be
-said.
+A matrix input is kept in the storage in which it arrives, so a
+`dgCMatrix` passed to any of the five stays a `dgCMatrix` without any
+further argument.
 
-`sparse` governs the **formula** route, where the model matrix would
+`sparse` governs the formula route, where the model matrix would
 otherwise be built dense whatever the columns look like. `TRUE` goes
 through
 [`Matrix::sparse.model.matrix()`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html),
 which builds the block sparse; building a dense one and compressing it
-would cost the memory the choice exists to avoid.
+would cost the memory that sparse storage is meant to save.
 
 It pays where the formula carries a factor of many levels, whose
 indicator columns hold one non-zero per row, and `lasso(~ 0 + g)` over
 hundreds of groups is the case. On numeric covariates the block has no
 zeros to exploit, and the sparse storage then costs more than it saves.
-Left `NULL`, the default, the storage is settled at build by
+If `sparse` is left `NULL`, the default, the storage is settled at build
+by
 [`.resolve_sparse()`](https://statmodels7.github.io/modelterms7/reference/dot-resolve_sparse.md):
 the dense indicator part holds `n` times its column count in cells
 against one non-zero per row, and the two routes cross at about \\10^5\\
 of those cells.
 
-Standardization does not interfere. It is a diagonal map on the
-**penalty** and never an operation on the design, so a sparse block
-stays sparse under it.
+Standardization does not interfere. It is a diagonal map on the penalty
+and never an operation on the design, so a sparse block stays sparse
+under it.
 
 ## Standardization
 
@@ -144,13 +147,13 @@ penalty's diagonal map. With \\z_j = x_j/s_j\\ the coefficients satisfy
 s_j\lvert\beta\_{x,j}\rvert = \rho(S\beta_x), \qquad S =
 \mathrm{diag}(s),\$\$
 
-which is the standardized penalty read on the original scale. Three
-things follow. The design is never rescaled, so a sparse block stays
-sparse. \\\lambda\\ stays one number, and the coefficients are already
-on the scale the data came in, with nothing to map back. And centering,
-which is what would destroy sparsity, is not needed: the fit is
-invariant to a translation of a penalized column wherever an intercept
-is free.
+which is the standardized penalty read on the original scale. This has
+three consequences. First, the design is never rescaled, so a sparse
+block stays sparse. Second, \\\lambda\\ stays one number, and the
+coefficients are already on the scale of the original data, so they need
+no mapping back. Third, centering, which would destroy sparsity, is not
+needed, because the fit is invariant to a translation of a penalized
+column wherever an intercept is free.
 
 The spread is computed from the built block by
 [`.block_sd()`](https://statmodels7.github.io/modelterms7/reference/dot-block_sd.md)
@@ -160,17 +163,18 @@ move with the working weights of a fit. A constant column takes \\s_j =
 1\\. [`print()`](https://rdrr.io/r/base/print.html) shows the values,
 because a change of scale changes the meaning of \\\lambda\\.
 
-For SCAD and MCP the map is not a rescaling of \\\lambda\\ alone. The
-penalty of the \\j\\-th coefficient is the original penalty evaluated at
+For SCAD and MCP the map does more than rescale \\\lambda\\. The penalty
+of the \\j\\-th coefficient is the original penalty evaluated at
 \\s_j\lvert\beta_j\rvert\\, with the same \\\lambda\\ and \\a\\ (or
 \\\gamma\\) for every coordinate, so that the map acts on the argument
 of the penalty and leaves the hyperparameters unchanged. The penalty of
 coordinate \\j\\ becomes flat at \\\lvert\beta_j\rvert = a\lambda/s_j\\
 (at \\\gamma\lambda/s_j\\ for MCP). For MCP this equals an MCP on
 \\\beta_j\\ with \\\lambda_j = \lambda s_j\\ and \\\gamma_j =
-\gamma/s_j^2\\. For SCAD no pair \\(\lambda_j, a_j)\\ reproduces it,
-because the slope at the origin, \\s_j\lambda\\, and the end of the
-first segment, \\\lambda/s_j\\, would both have to equal \\\lambda_j\\.
+\gamma/s_j^2\\. For SCAD, any pair \\(\lambda_j, a_j)\\ fails to
+reproduce it, because the slope at the origin, \\s_j\lambda\\, and the
+end of the first segment, \\\lambda/s_j\\, would both have to equal
+\\\lambda_j\\.
 
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
 does not standardize and takes no such argument. Its columns are the
@@ -211,7 +215,7 @@ term_coef_names(built)
 term_coef_names(term_build(lasso(~ g), dd))
 #> [1] "lasso.ga" "lasso.gb" "lasso.gc" "lasso.gd"
 
-# Unless the intercept is all the formula has.
+# The intercept is kept if the formula has nothing else.
 term_coef_names(term_build(ridge(~ 1), dd))
 #> [1] "ridge.(Intercept)"
 
@@ -246,5 +250,5 @@ apply(term_matrix(bs), 2, sd)
 # An argument named after another penalty's hyperparameter is rejected.
 try(scad(~ x1, gamma = 1))
 #> Error : 'scad' has no argument 'gamma'.
-#>   Its hyperparameters are: lambda, a, each held by naming it and estimated when left NULL.
+#>   Its hyperparameters are: lambda, a. Each is held by naming it and is estimated when it is left NULL.
 ```

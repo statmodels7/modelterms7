@@ -1,9 +1,10 @@
 # The Parameters of a Score-Driven Term
 
-`"omega"`, then `"kappa1"` ... `"kappap"`, then `"pacf1"` ... `"pacfq"`:
-the level, one loading per score lag, and one partial autocorrelation
-per autoregressive lag. A parameter carrying a subformula is **expanded
-in place** into its coefficients, named `parameter.coefficient`.
+Returns the names `"omega"`, then `"kappa1"` ... `"kappap"`, then
+`"pacf1"` ... `"pacfq"`: the level, one loading per score lag, and one
+partial autocorrelation per autoregressive lag. A parameter carrying a
+subformula is expanded in place into its coefficients, named
+`parameter.coefficient`.
 
 ## Arguments
 
@@ -11,8 +12,8 @@ in place** into its coefficients, named `parameter.coefficient`.
 
   A
   [`GasTerm()`](https://statmodels7.github.io/modelterms7/reference/GasTerm.md).
-  Unbuilt, the subformulas have not been resolved, so a developed
-  parameter still appears as itself.
+  If the term is unbuilt, its subformulas have not been resolved, so a
+  developed parameter still appears as itself.
 
 - ...:
 

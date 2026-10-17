@@ -21,7 +21,7 @@ bounded scale is."><meta property="og:image" content="https://statmodels7.github
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,20 +78,20 @@ bounded scale is.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A character vector for a structural term, an integer vector for
-<code><a href="nl.html">nl()</a></code> named by parameter (<code>integer(0)</code> when no parameter is charted), and
-<code>character(0)</code> otherwise.</p>
+<code><a href="nl.html">nl()</a></code> named by parameter (<code>integer(0)</code> when the term has no charted
+parameter), and <code>character(0)</code> otherwise.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>For a structural term the answer is a character vector of names from
+    <p>For a structural term the result is a character vector of names from
 <code><a href="term_params.html">term_params()</a></code>: every parameter whose link in <code><a href="term_links.html">term_links()</a></code> is not the
 identity, and for <code><a href="regime.html">regime()</a></code> also the additive log-ratios of the
-transition matrix, whose chart is the one
+transition matrix, whose chart is the one that
 <code><a href="https://statmodels7.github.io/parameters7/reference/transition_matrix.html" class="external-link">parameters7::transition_matrix()</a></code> provides and which <code><a href="term_links.html">term_links()</a></code>
 therefore reports as the identity. For <code><a href="nl.html">nl()</a></code> it is an integer vector of
 positions in the term's block, named by parameter: the scalar parameters
-(those with no subformula) whose link is not the identity. Every other
-term answers with an empty vector.</p>
+(those with no subformula) whose link is not the identity. For every other
+term the result is an empty vector.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

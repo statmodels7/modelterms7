@@ -1,8 +1,9 @@
 # Print a Regime Term
 
 Prints two lines: the label and the number of regimes, followed by the
-term's parameters. A built term reports how many groups the recursion
-runs over, and a specification reports no group count.
+term's parameters. The first line of a built term gives the number of
+groups over which the recursion runs, and the first line of a
+specification has no group count.
 
 ## Arguments
 
@@ -19,7 +20,7 @@ runs over, and a specification reports no group count.
 
 ## Value
 
-`x`, invisibly. Called for the two lines it writes.
+`x`, invisibly. The function is called for the two lines that it writes.
 
 ## Details
 
@@ -34,10 +35,11 @@ The two forms are
 The group count is `length(blueprint$order)`, which is 1 unless the term
 was given a `by`. The parameter list is
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md),
-the same before and after a build, `k` alone determining it.
+which is the same before and after a build because only `k` determines
+it.
 
-A built term is described by its count of groups, not by the word
-"built".
+The description of a built term gives its count of groups and omits the
+word "built".
 
 ## See also
 
@@ -51,7 +53,8 @@ set.seed(1)
 dd <- data.frame(t = 1:40, id = rep(1:2, each = 20),
                  y = c(rnorm(20), rnorm(20, 3)))
 
-# A specification, and the same term built over two groups.
+# The first call prints a specification, and the second prints the same
+# term built over two groups.
 regime(2)
 #> <RegimeTerm> 'regime': 2 regimes (specification)
 #>   parameters: level1, gap2, alr1.1, alr2.1

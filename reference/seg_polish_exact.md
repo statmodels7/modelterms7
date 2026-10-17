@@ -6,7 +6,7 @@ Minimizes the least-squares profile of a sharp
 or
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
 term over the positions of its break-points, one break-point at a time
-with the others held. The profile of a
+while the others are held. The profile of a
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 or a
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
@@ -33,7 +33,7 @@ seg_polish_exact(term, y, sweeps = 10, weights = NULL)
 - y:
 
   A numeric vector of finite values, one per observation of the build
-  data: the response, net of whatever the caller wants held.
+  data: the response, net of whatever the caller wants to hold fixed.
 
 - sweeps:
 
@@ -49,25 +49,27 @@ seg_polish_exact(term, y, sweeps = 10, weights = NULL)
 
 The term at the polished positions (see
 [`seg_relocate()`](https://statmodels7.github.io/modelterms7/reference/seg_relocate.md)),
-or the term itself when no interval lies inside the confinement limits.
+or the term itself when there is no interval inside the confinement
+limits.
 
 ## Details
 
-Write \\F\\ for the columns that do not move with the break-point being
-polished (an intercept, the covariate where the term carries a linear
-part, and the columns of the other break-points), and \\a(q)\\ for the
-columns that do: the indicator \\1(x \> q)\\, and for a
+Write \\F\\ for the columns that do not move with the break-point that
+is being polished (an intercept, the covariate where the term carries a
+linear part, and the columns of the other break-points), and \\a(q)\\
+for the columns that do: the indicator \\1(x \> q)\\, and for a
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
 also the truncated line \\(x - q)1(x \> q)\\. The residual sum of
 squares at \\q\\ is that of the response on \\F\\ less the part of the
 remainder that \\a(q)\\ explains, and every cross product that involves
 \\a(q)\\ is a sum over the observations above \\q\\ of a fixed quantity,
-or of one fixed quantity minus \\q\\ times another. Sorted once, those
-sums are cumulative sums, so all the intervals cost \\O(np^2)\\
-together, where one linear fit per interval would cost more. The sweeps
-over the break-points repeat, at most `sweeps` times, until none moves.
-Inside an interval between consecutive distinct values of the covariate,
-the span of the columns of a
+or of one fixed quantity minus \\q\\ times another. After the
+observations are sorted once, those sums are cumulative sums, so all the
+intervals together cost \\O(np^2)\\, whereas one linear fit per interval
+would cost more. The sweeps over the break-points repeat, at most
+`sweeps` times, until a sweep leaves every break-point in place. Inside
+an interval between consecutive distinct values of the covariate, the
+span of the columns of a
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 or a
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
@@ -78,19 +80,19 @@ For a
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
 the column that moves is \\(x - q)\_+\\. Inside the interval between the
 consecutive values \\u_k \< u\_{k+1}\\ it is \\t - q s\\, with \\s = 1(x
-\> u_k)\\ and \\t = x s\\, so the part of the residual sum of squares it
-removes is \\(c_t - q c_s)^2 / (a\_{tt} - 2 q a\_{ts} + q^2 a\_{ss})\\,
-the \\c\\ and \\a\\ being the cross products of \\t\\, \\s\\ and the
-response after the fixed columns are projected out. Its one stationary
-point is \\q^\* = -b/\gamma\\ of the least-squares fit on \\t\\ and
-\\s\\. The minimum over the interval is at \\q^\*\\, when that falls
-inside the interval, or at one of the two ends, whichever gives the
-smaller residual sum of squares. The ends are consecutive observed
+\> u_k)\\ and \\t = x s\\, so the part of the residual sum of squares
+that it removes is \\(c_t - q c_s)^2 / (a\_{tt} - 2 q a\_{ts} + q^2
+a\_{ss})\\, where \\c\\ and \\a\\ are the cross products of \\t\\, \\s\\
+and the response after the fixed columns are projected out. Its one
+stationary point is \\q^\* = -b/\gamma\\ of the least-squares fit on
+\\t\\ and \\s\\. The minimum over the interval is at \\q^\*\\, when that
+falls inside the interval, or at one of the two ends, whichever gives
+the smaller residual sum of squares. The ends are consecutive observed
 values of the covariate or confinement limits.
 
 [`seg_polish()`](https://statmodels7.github.io/modelterms7/reference/seg_polish.md)
 sweeps instead a grid of `k` quantiles of the covariate, so that the
-position it reaches is accurate only to the resolution of the grid.
+position that it reaches is accurate only to the resolution of the grid.
 
 The profile is the least-squares fit of `y` on an intercept and the
 term's own columns, which is exact for a gaussian response. For any
@@ -109,11 +111,11 @@ varies smoothly. Where the sub-design partitions the observations into
 groups (`psi ~ g`, `by = ~ 0 + g`), the lines move the position of one
 group at a time, which is a search over every interval of that group.
 The sweep is also started from each group's own minimum, which is the
-minimum of the profile on the observations of that group alone, and the
-better of the two results is kept. Otherwise the lines are the
-coordinate directions and, in each plane of two coordinates, six further
-fixed directions, so that the result is the best point found along those
-lines and not a global minimum. A developed
+minimum of the profile when only the observations of that group are
+used, and the better of the two results is kept. Otherwise the lines are
+the coordinate directions and, in each plane of two coordinates, six
+further fixed directions, so that the result is the best point found
+along those lines and not a global minimum. A developed
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 or
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)

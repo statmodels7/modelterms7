@@ -1,8 +1,8 @@
 # Whether a Multivariate Family Can Carry Correlated Effects
 
-`TRUE` for a family with a location block as long as its dimension and a
-matrix parameter, which together are what a centered prior on \\R^d\\
-needs.
+Returns `TRUE` for a family with a location block as long as its
+dimension and a matrix parameter, both of which a centered prior on
+\\R^d\\ requires.
 
 ## Usage
 

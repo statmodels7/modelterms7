@@ -62,16 +62,16 @@ returns an empty list, and the fitting layer collects the labelled terms
 and declares one entry over their stacked columns.
 
 The blueprint records what the layer needs for that: the within-group
-dimension and the grouping's levels, beside the pieces
+dimension and the grouping's levels, beside the pieces that
 [`term_predict.RandomTerm()`](https://statmodels7.github.io/modelterms7/reference/term_predict.RandomTerm.md)
 already reads.
 
 The function rejects `hyper`, `id` and `correlated = FALSE` on a
 labelled term, and a `distrib` that is a list or is univariate. A
-`distrib` given here is the **class's** joint prior. Its dimension is
-the total over the class and cannot be checked from one term, so that
-check is left to the layer. The remaining checks, that it is a
-continuous distributions7 object with its location held, are made here,
+`distrib` given here is the class's joint prior. Its dimension is the
+total over the class and cannot be checked from one term, so that check
+is left to the layer. The remaining checks, which verify that it is a
+continuous distributions7 object whose location is held, are made here,
 where the message can name the argument.
 
 ## See also

@@ -3,15 +3,15 @@
 working block there, and, for a sharp jump or jseg, advances the
 scaling schedule. A smoothed term has no schedule, and a term held by
 seg_hold() keeps its positions and only rebuilds the exact block at the
-new coefficients. It is one step of
-the iteration that estimates the break-points, and the block that it
-returns is what the next linear fit is taken on."><meta property="og:description" content="Moves the break-points to where the coefficients put them, rebuilds the
+new coefficients. The call is one step of
+the iteration that estimates the break-points, and the next linear fit is
+taken on the block that the call returns."><meta property="og:description" content="Moves the break-points to where the coefficients put them, rebuilds the
 working block there, and, for a sharp jump or jseg, advances the
 scaling schedule. A smoothed term has no schedule, and a term held by
 seg_hold() keeps its positions and only rebuilds the exact block at the
-new coefficients. It is one step of
-the iteration that estimates the break-points, and the block that it
-returns is what the next linear fit is taken on."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
+new coefficients. The call is one step of
+the iteration that estimates the break-points, and the next linear fit is
+taken on the block that the call returns."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -19,7 +19,7 @@ returns is what the next linear fit is taken on."><meta property="og:image" cont
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,9 +50,9 @@ returns is what the next linear fit is taken on."><meta property="og:image" cont
 working block there, and, for a sharp <code>jump</code> or <code>jseg</code>, advances the
 scaling schedule. A smoothed term has no schedule, and a term held by
 <code><a href="seg_hold.html">seg_hold()</a></code> keeps its positions and only rebuilds the exact block at the
-new coefficients. It is one step of
-the iteration that estimates the break-points, and the block that it
-returns is what the next linear fit is taken on.</p>
+new coefficients. The call is one step of
+the iteration that estimates the break-points, and the next linear fit is
+taken on the block that the call returns.</p>
     </div>
 
 
@@ -65,7 +65,8 @@ returns is what the next linear fit is taken on.</p>
 
 
 <dt id="arg-coef">coef<a class="anchor" aria-label="anchor" href="#arg-coef"></a></dt>
-<dd><p>The coefficients to move to, of length <code>ncol(term@X)</code>. Any
+<dd><p>The coefficients to which the term moves, of length
+<code>ncol(term@X)</code>. Any
 other length signals an error that names the required length.</p></dd>
 
 
@@ -75,29 +76,29 @@ other length signals an error that names the required length.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The term with its block, its break-points, its contribution and its
-scaling schedule all recomputed at <code>coef</code>.</p>
+    <p>The term, in which the block, the break-points, the contribution
+and the scaling schedule are all recomputed at <code>coef</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="how-the-new-positions-are-found">How the new positions are found<a class="anchor" aria-label="anchor" href="#how-the-new-positions-are-found"></a></h2>
     <p>For <code>seg</code>, and for any smoothed term, the break-point is a coefficient, so
 the new position is read straight out of <code>coef</code>. For a sharp <code>jump</code> and
-<code>jseg</code> it is <strong>read off</strong> two of
+<code>jseg</code> it is read off two of
 them: the identity \(1(x &gt; \psi) = 1/2 + (x-\psi)/(2|x-\psi|)\) makes the
 step linear in \(\psi\) once the weight is frozen, and
 \(\psi = -g_k/\delta_k\) follows. <code>jseg</code> reads a quadratic instead, its
-truncated line depending on the position as well.</p>
+truncated line depends on the position as well.</p>
 <p>Every new position is clamped into the confinement interval that
 <code><a href="term_build.html">term_build()</a></code> set. When the term has more than one break-point and
-none of its per-break-point coefficients carries a development, crossed
+its per-break-point coefficients carry no development, crossed
 break-points are relabeled so that each keeps traveling with its own
 scaling factor and direction.</p>
     </div>
     <div class="section level2">
     <h2 id="the-scaling-schedule">The scaling schedule<a class="anchor" aria-label="anchor" href="#the-scaling-schedule"></a></h2>
     <p>The rescaling of Fasola, Muggeo and Kuchenhoff (2018) opens a gap of
-relative width \(c\) around each break-point, and the factor is <strong>halved
-whenever that break-point reverses direction</strong>, which is the signal that the
+relative width \(c\) around each break-point, and the factor is halved
+whenever that break-point reverses direction, which is the signal that the
 iteration has begun to circle an optimum instead of traveling toward one.
 The factor is both the conditioning device and the step control, so it must
 advance once per committed step: refreshing inside a line search would

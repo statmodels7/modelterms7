@@ -1,6 +1,6 @@
 # Whether a Multivariate Family Defines Its Mixed Block
 
-`TRUE` when `distrib_cross_y` comes from the family itself. The
+Returns `TRUE` when `distrib_cross_y` comes from the family itself. The
 multivariate base class rejects that generic, so the function returns
 `FALSE` for a family that has not overridden it.
 

@@ -19,7 +19,7 @@ lists the parameters, and a third names the prior where one was given.
 
 ## Value
 
-`x`, invisibly. Called for the lines it writes.
+`x`, invisibly. The method is called for the lines that it writes.
 
 ## Details
 
@@ -45,7 +45,8 @@ set.seed(1)
 dd <- data.frame(id = rep(1:3, each = 8), x = rep(1:8, 3))
 dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
 
-# A specification, and the same term built over three groups.
+# The first call prints a specification, and the second prints the same
+# term built over three groups.
 jump(x, psi ~ random(~ 1 | id), marginal = TRUE)
 #> <MarginalBreakTerm> 'jump' (jump): 1 latent break-point per group, integrated out (specification)
 #>   parameters: psi1.mean, psi1.sd, delta1

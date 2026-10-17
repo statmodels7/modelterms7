@@ -2,7 +2,7 @@
 
 Random intercepts and slopes for a grouping factor: `random(~ 1 | g)`
 builds one coefficient per level of `g`, and `random(~ x | g)` one
-intercept and one slope per level, with the distribution of the effects
+intercept and one slope per level. The distribution of the effects is
 attached as the penalty on those coefficients, which is how a random
 effect enters a penalized likelihood.
 
@@ -24,7 +24,7 @@ random(
 
 - formula:
 
-  A bar formula, `~ lhs | g`, with `g` evaluating to the grouping
+  A bar formula, `~ lhs | g`, where `g` evaluates to the grouping
   variable in the data, or `~ lhs | tag | g` with a covariance label in
   the middle. `g` must not be continuous: a double carrying a value that
   is not a whole number is rejected, since its levels would be its
@@ -52,8 +52,8 @@ random(
   vector or list; those not named are estimated. For a distribution
   whose log-density has a kink, several values for one name are the grid
   that the path visits, and for any other distribution they are
-  rejected. The names are the distribution's own parameters, with the
-  within-group column appended where there is one copy per column. A
+  rejected. The names are the distribution's own parameters, and the
+  within-group column is appended where there is one copy per column. A
   name that the penalty does not carry is rejected when the term is
   built, which is where the penalty first exists.
 
@@ -85,9 +85,10 @@ An object of class
 
 The left side of the bar is an ordinary one-sided formula for the
 within-group design, with the usual intercept convention: `~ x | g`
-carries an intercept and a slope per group and `~ 0 + x | g` the slope
-alone. The block interacts that design with the group indicators,
-ordered group by group, so the coefficients of one group are adjacent.
+carries an intercept and a slope per group and `~ 0 + x | g` carries
+only the slope. The block interacts that design with the group
+indicators, ordered group by group, so the coefficients of one group are
+adjacent.
 
 The formula and the distribution of the effects determine the term. The
 parametrization in which the hyperparameters are estimated, their names,
@@ -103,28 +104,29 @@ that are correlated with each other, so an intercept in one equation and
 a slope in another can share one covariance block. R nests bars to the
 left, so the parser itself yields that reading.
 
-The label is a **name and not data**. It is read as a symbol and never
-evaluated, and a column of the data carrying the same name is not looked
-at, so `~ 1 | u | g` builds the same block as `~ 1 | g`, whatever `u`
+The label is a name and not data. It is read as a symbol and never
+evaluated, and a column of the data that carries the same name is not
+read, so `~ 1 | u | g` builds the same block as `~ 1 | g`, whatever `u`
 is.
 
-**A labelled term declares no penalty of its own.** The covariance block
-spans columns that the term cannot see, possibly in another equation, so
-the prior over it belongs to the class and is built by the fitting
-layer.
+A labelled term declares no penalty of its own. The covariance block
+spans columns to which the term has no access, possibly in another
+equation, so the prior over it belongs to the class and is built by the
+fitting layer.
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 returns an empty list and
 [`term_penalty()`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md)
 is `NULL`. Consequently `hyper` and `id` are rejected when the term is
-built, the hyperparameters being those of the class, and a `distrib`
-given on a labelled term is the **class's** joint prior: it must be
-multivariate, and its dimension is checked where the class is known.
+built, because the hyperparameters are those of the class, and a
+`distrib` that is given on a labelled term is the class's joint prior:
+it must be multivariate, and its dimension is checked where the class is
+known.
 
-The two arguments have different scopes. `correlated` states whether the
-columns of **this** term may depend on each other, and the label states
-that its columns depend on those of **other** terms. The combination of
-`correlated = FALSE` with a label is contradictory and is rejected when
-the term is built.
+The two arguments have different scopes. `correlated` indicates whether
+the columns of this term may depend on each other, and the label
+indicates that its columns depend on those of other terms. The
+combination of `correlated = FALSE` with a label is contradictory and is
+rejected when the term is built.
 
 ## The distribution of the effects
 
@@ -132,23 +134,23 @@ the term is built.
 per within-group column.
 
 A multivariate distribution of the within-group dimension lets the
-effects of one group depend on each other, its matrix parameter carrying
-the dependence: `mvgaussian2_distrib(2, ar1(2))` is a prior whose
-precision is autoregressive, `mvstudent_t1_distrib(2)` a heavy-tailed
-one. Correlated effects require a family that carries a matrix
-parameter, that is, a location block as long as the dimension together
-with a covariance, precision or scale matrix, and that defines the mixed
-response-parameter derivative block read by a marginal criterion. The
-term reads these properties from the family, so a family added later is
-covered without an edit here.
+effects of one group depend on each other, and its matrix parameter
+carries the dependence: `mvgaussian2_distrib(2, ar1(2))` is a prior
+whose precision is autoregressive, `mvstudent_t1_distrib(2)` a
+heavy-tailed one. Correlated effects require a family that carries a
+matrix parameter, that is, a location block as long as the dimension
+together with a covariance, precision or scale matrix, and that defines
+the mixed response-parameter derivative block read by a marginal
+criterion. The term reads these properties from the family, so a family
+added later is covered without an edit here.
 
-A univariate distribution makes the effects independent, the penalty
-being the product of the densities. With more than one within-group
-column it is a template: one copy per column, each with its own
+A univariate distribution makes the effects independent, and the penalty
+is the product of the densities. With more than one within-group column
+it is a template: one copy per column, each with its own
 hyperparameters, since an intercept and a slope are quantities of
 different units and a shared scale would price them against each other.
 A list of distributions gives one per column explicitly, when the
-columns want different priors.
+columns need different priors.
 
 The default is Gaussian: `gaussian1_distrib` at one column, so the
 hyperparameter is the standard deviation of the effects; the
@@ -183,12 +185,12 @@ modelterms7 does not compute the marginal likelihood.
 
 They are the distribution's own free parameters, and every one of them
 is estimated unless it is held. There are two ways to hold one, and the
-fit is the same either way; what differs is what gets reported. Holding
-it inside the distribution,
-`fixed(pseudohuber_distrib(), mu = 0, nu = 2)`, removes it: it becomes a
-constant of the prior and appears nowhere among the model's
-hyperparameters. Naming it in `hyper` keeps it, reported as held at the
-value given, as a penalized term's own hyperparameter argument does.
+fit is the same either way, but the reported output differs. Holding it
+inside the distribution, `fixed(pseudohuber_distrib(), mu = 0, nu = 2)`,
+removes it: it becomes a constant of the prior and is not among the
+model's hyperparameters. Naming it in `hyper` keeps it, reported as held
+at the value given, as a penalized term's own hyperparameter argument
+does.
 
 The hyperparameters of a prior with a smooth log-density are estimated
 by the outer criterion. A prior whose log-density has a kink, a Laplace
@@ -198,11 +200,11 @@ hyperparameter is chosen by a path over the sparse criterion of
 [`statmodels7::bic()`](https://statmodels7.github.io/statmodels7/reference/aic.html)
 by default.
 
-An estimated hyperparameter is reported with a standard error and an
-interval, a shape parameter included. The standard error is absent where
-the criterion at the point at which the run ended has a curvature of the
-wrong sign, since no interval follows from such a point. A shape
-parameter that moves toward a limit is the common case.
+An estimated hyperparameter, including a shape parameter, is reported
+with a standard error and an interval. The standard error is absent
+where the criterion at the point at which the run ended has a curvature
+of the wrong sign, since such a point does not yield an interval. A
+shape parameter that moves toward a limit is the common case.
 
 The parametrization of a family that is used as a prior matters. The
 centered skew normal
@@ -231,10 +233,11 @@ value. The \\\nu\\ of a pseudo-Huber prior, the point at which the loss
 stops being quadratic, is subject to the same limitation.
 
 Prediction maps new data onto the levels seen at build time. A level
-that the term has not seen, or a missing grouping value, is rejected by
+that was not present at build time, or a missing grouping value, is
+rejected by
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-unless `unseen = "zero"` is given, in which case the rows get no effect
-of their own.
+unless `unseen = "zero"` is given, in which case those rows have no
+effect of their own.
 
 A random effect is not standardized, and `random()` has no `standardize`
 argument; passing one is an error. Its columns are grouping indicators
@@ -281,7 +284,7 @@ own (a random surface for
 [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)),
 and the term is a
 [`RandomSmoothTerm()`](https://statmodels7.github.io/modelterms7/reference/RandomSmoothTerm.md).
-With the smooth's columns split into the null space of its penalty
+When the smooth's columns are split into the null space of its penalty
 \\N(x)\\ and the penalized coordinates \\Z(x)\\, group \\i\\ contributes
 
 \$\$g_i(x) = a\_{0i} + N(x)a_i + Z(x)\delta_i, \qquad (a\_{0i}, a_i)
@@ -291,11 +294,11 @@ I),\$\$
 independently over the groups. The null space is whatever the smoother's
 operator leaves unpenalized, less the constant: a straight line for a
 second-derivative penalty, a sine and a cosine for the harmonic
-operator, nothing for a cyclic smoother. The smoother's `null_space`
-decides what it contributes: under `"keep"` its columns carry \\\Sigma\\
-with the random level, under `"shrink"` they join the penalized
-coordinates, and under `"drop"` they are absent. `~ 0 + s(x) | g`
-removes the random level.
+operator, nothing for a cyclic smoother. The argument `null_space` of
+the smoother determines what the null space contributes: under `"keep"`
+its columns carry \\\Sigma\\ with the random level, under `"shrink"`
+they join the penalized coordinates, and under `"drop"` they are absent.
+`~ 0 + s(x) | g` removes the random level.
 
 \\\Sigma\\ is the prior that `distrib` and `correlated` describe for the
 within-group columns of an ordinary random effect, here over the random
@@ -334,11 +337,13 @@ longitudinal data. *Biometrics* 38, 963-974.
 dd <- data.frame(y = rnorm(9), x = rnorm(9),
                  g = factor(rep(c("a", "b", "c"), 3)))
 
-# one variance component, reported as a standard deviation
+# The term has one variance component, which is reported as a standard
+# deviation.
 term_penalty(term_build(random(~ 1 | g), dd))@params
 #> [1] "sigma"
 
-# intercepts and slopes, correlated: the covariance of the effects
+# Intercepts and slopes are correlated, and the covariance of the effects
+# is the hyperparameter.
 built <- term_build(random(~ x | g), dd)
 term_coef_names(built)
 #> [1] "random.a.(Intercept)" "random.a.x"           "random.b.(Intercept)"
@@ -346,18 +351,19 @@ term_coef_names(built)
 term_penalty(built)@params
 #> [1] "sigma_log_L1" "sigma_log_L2" "sigma_L2.1"  
 
-# independent, one standard deviation per column
+# The effects are independent, and each column has its own standard
+# deviation.
 vapply(term_penalties(term_build(random(~ x | g, correlated = FALSE), dd)),
        function(e) e$name, "")
 #> [1] "(Intercept)" "x"          
 
-# a heavy-tailed prior, held at four degrees of freedom
+# A heavy-tailed prior is held at four degrees of freedom.
 t4 <- distributions7::fixed(distributions7::student_t1_distrib(),
                             mu = 0, nu = 4)
 term_penalty(term_build(random(~ 1 | g, distrib = t4), dd))@params
 #> [1] "sigma"
 
-# A covariance label, read from the middle of two bars and reported by
+# A covariance label is read from the middle of two bars and is reported by
 # term_tag(). It is a name: the block is the one bar formula's.
 term_tag(random(~ 1 | u | g))
 #> [1] "u"
@@ -373,7 +379,7 @@ try(term_build(random(~ 1 | x), dd))
 #>   formatted numbers, one group per distinct value. Write factor(x) if
 #>   they really are labels.
 
-# A smooth random effect: one random curve per level of g.
+# A smooth random effect has one random curve per level of g.
 sd <- data.frame(x = runif(60), g = factor(rep(c("a", "b", "c"), 20)))
 rs <- term_build(random(~ s(x, smoother = basis7::bspline_smooth(k = 5)) |
                           g), sd)
@@ -381,7 +387,7 @@ term_group(rs)$names
 #> [1] "(Intercept)" "lin"         "z1"          "z2"          "z3"         
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The model is fitted to data simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(6)
@@ -390,7 +396,7 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   fd$y <- 1 + 0.5 * fd$x + bb[fd$gr] + rnorm(300, sd = 0.5)
   cf <- coef(statmodels7::statmod(y ~ x + random(~1 | gr),
                                   distributions7::gaussian1_distrib(), fd))$mu
-  # truth: a slope of 0.5, and the shrunken effects track the ones drawn
+  # The true slope is 0.5, and the shrunken effects track the ones drawn.
   round(c(slope = cf[["x"]],
           cor = cor(cf[grep("^random", names(cf))], bb)), 3)
 }

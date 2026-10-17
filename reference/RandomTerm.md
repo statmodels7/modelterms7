@@ -1,11 +1,11 @@
 # S7 Class for Grouped Random-Effect Terms
 
-The subclass of
+`RandomTerm` is the subclass of
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
-holding grouped coefficients with a distribution attached to them: the
-within-group design interacted with the group indicators, one
-coefficient per group and per within-group column, and a penalty
-carrying that distribution's negative log-density.
+that holds grouped coefficients with a distribution attached to them:
+the within-group design interacted with the group indicators, one
+coefficient per group and per within-group column, and a penalty that
+carries that distribution's negative log-density.
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
 constructs it.
 
@@ -43,8 +43,8 @@ RandomTerm(
 
 - hyper:
 
-  The hyperparameters of the term's penalty that the caller **held**, as
-  a named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller held, as a
+  named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -57,9 +57,9 @@ RandomTerm(
 
 - values:
 
-  The values a path visits, for each hyperparameter the caller wrote
-  out, as a named list of numeric vectors. Empty, the default, has the
-  path build them. See
+  The values that a path visits, for each hyperparameter that the caller
+  wrote out, as a named list of numeric vectors. Empty, the default, has
+  the path build them. See
   [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md).
 
 - min_ratio:
@@ -87,21 +87,22 @@ RandomTerm(
 - X:
 
   The design block, one row per observation: a numeric matrix or a
-  two-dimensional Matrix. Empty until
+  two-dimensional Matrix. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
 - coef_names:
 
   The block's coefficient names, one per column, prefixed by `label`
-  when there is one. Filled by
-  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md).
+  when there is one.
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+  fills it.
 
 - blueprint:
 
   A named list of everything needed to reproduce the mapping on new
-  rows. Its contents are the subclass's business; nothing outside the
-  term reads them. Empty until
+  rows. Its contents belong to the subclass, and only the term reads
+  them. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
@@ -141,7 +142,7 @@ classes.
 ## The properties of its own
 
 `formula` is the bar formula as given, `~ 1 | g` or `~ x | g`, kept with
-its environment. `correlated` states whether the **default** Gaussian
+its environment. `correlated` indicates whether the default Gaussian
 lets the within-group effects depend on each other. It is read only
 where `distrib` is `NULL`, since a distribution given in `distrib`
 determines the same thing.
@@ -172,7 +173,7 @@ takes no `sparse` argument for that reason, and passing one is an error.
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md),
 the constructor;
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-for the entries a built one declares;
+for the entries that a built one declares;
 [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
 for the effective degrees of freedom of a fitted random effect.
 
@@ -187,7 +188,7 @@ S7::S7_inherits(tm, RandomTerm)
 #> [1] TRUE
 tm@formula
 #> ~x | g
-#> <environment: 0x5641f196c7f0>
+#> <environment: 0x55787fd00688>
 tm@correlated
 #> [1] TRUE
 

@@ -1,5 +1,32 @@
 # Changelog
 
+## modelterms7 0.99.2
+
+- Documentation and messages: relative clauses without a relative
+  pronoun, stranded prepositions, absolute constructions, sentences
+  without a verb (example captions and later sentences of `@return`
+  included), emphasis in bold, negated subjects, cleft sentences and
+  personified descriptions of the code rewritten as plain clauses. Error
+  messages of
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md),
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md),
+  [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md),
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md),
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md),
+  [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md),
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+  [`cens()`](https://statmodels7.github.io/modelterms7/reference/cens.md),
+  the penalized constructors, the formula interpreter and the marginal
+  break-point term are reworded; where a test matches a message, its
+  pattern changes with it.
+- The documentation of
+  [`term_hessian()`](https://statmodels7.github.io/modelterms7/reference/term_hessian.md)
+  for the marginal break-point term said that the column of an explicit
+  prior’s degrees of freedom comes from a finite-difference stencil. The
+  method takes no finite differences of its own: for a Student t prior
+  the cdf derivatives in the degrees of freedom are integrals of the
+  exact derivatives of the density in distributions7.
+
 ## modelterms7 0.99.1
 
 - [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)

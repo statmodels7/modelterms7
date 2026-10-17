@@ -3,7 +3,7 @@
 Carries the `hyper` argument of
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) or
 [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md) onto
-the names its penalty uses, and checks that every held smoothing
+the names that its penalty uses, and checks that every held smoothing
 parameter is finite and strictly positive.
 
 ## Usage
@@ -34,7 +34,7 @@ A named list of held values.
 
 A one-dimensional smooth and an isotropic tensor product carry one
 smoothing parameter, named `lambda`; an anisotropic tensor product
-carries one per margin, `lambda1`, `lambda2` and so on, which is what
+carries one per margin, `lambda1`, `lambda2` and so on, as
 [`penalties7::additive_penalty()`](https://statmodels7.github.io/penalties7/reference/additive_penalty.html)
 names them. An unnamed vector is read in that order and must be as long
 as there are margins; a named one may hold some and leave the others to

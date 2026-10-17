@@ -48,14 +48,14 @@ returns these positions and not a vector of zeros.
 Each subformula's right-hand side goes through
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
 and its terms are built, so their blueprints are recorded and reapplied
-at prediction. What a development may carry depends on `kind`. The
-continuous construction takes any of them. A sharp
+at prediction. The developments that a term may carry depend on `kind`.
+The continuous construction takes any of them. A sharp
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 takes a development of the break-point with a scalar change of level on
 any design, or one development shared by the change of level and the
 break-point on a design that partitions the rows; a sharp
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
-takes only the shared partition development, the read-off being a
+takes only the shared partition development, because the read-off is a
 product of two unknowns. A smoothed term takes any development. A design
 that carries the intercept twice, the subformula's own and a constant
 column of a sub-term, as in `gamma ~ lasso(~1)`, is rejected, and

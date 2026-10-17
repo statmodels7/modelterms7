@@ -1,6 +1,7 @@
 # How a Score-Driven Term's Parameters Divide
 
-One entry per base parameter of the filter, giving the positions in
+Returns one entry per base parameter of the filter, giving the positions
+in
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
 that the parameter owns and the sub-terms that develop it. A parameter
 with no subformula owns one position; a developed parameter owns as many
@@ -44,7 +45,7 @@ penalty on the coordinates that the sub-term covers.
 [`term_components()`](https://statmodels7.github.io/modelterms7/reference/term_components.md)
 for the fields of an entry,
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
-for the vector the indices point into.
+for the vector into which the indices point.
 
 ## Examples
 
@@ -52,8 +53,8 @@ for the vector the indices point into.
 set.seed(1)
 dd <- data.frame(t = 1:40, y = rnorm(40), z = rnorm(40))
 
-# omega developed over one covariate: two positions for it, one each
-# for the loading and the persistence.
+# When omega is developed over one covariate, it has two positions, and
+# the loading and the persistence have one each.
 b <- term_build(gas(p = 1, q = 1, omega ~ z, time = t), dd)
 term_params(b)
 #> [1] "omega.(Intercept)" "omega.z"           "kappa1"           

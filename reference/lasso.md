@@ -1,8 +1,8 @@
 # Lasso Penalty on a Block of Coefficients
 
-A block of coefficients under a Laplace prior at zero: the penalty has a
-kink there, so coefficients are set exactly to zero and the term
-selects.
+Specifies a block of coefficients under a Laplace prior at zero. The
+penalty has a kink there, so coefficients are set exactly to zero and
+the term selects.
 
 ## Usage
 
@@ -42,9 +42,9 @@ lasso(
 
 - lambda:
 
-  The rate of the prior. One number holds it, several are the grid the
-  path visits as they stand, and `NULL`, the default, has the path build
-  one. Must lie in \\(0, \infty)\\.
+  The rate of the prior. One number holds it, several are the grid that
+  the path visits as they stand, and `NULL`, the default, has the path
+  build one. Must lie in \\(0, \infty)\\.
 
 - id:
 
@@ -57,19 +57,19 @@ lasso(
 
 - n_lambda:
 
-  How many values the path visits, a whole number of at least 2, `25` by
-  default. The axis descends from the kink size that empties the block
-  to `min_ratio` times that size, which is four decades at the default
-  `min_ratio`. Given explicitly while `lambda` is held or written out,
-  it signals an error.
+  The number of values that the path visits, a whole number of at least
+  2, `25` by default. The axis descends from the kink size that empties
+  the block to `min_ratio` times that size, which is four decades at the
+  default `min_ratio`. Given explicitly while `lambda` is held or
+  written out, it signals an error.
 
 - min_ratio:
 
   How far down the path reaches, as a fraction of the kink that empties
-  the block: smaller reaches a denser fit, larger stops sooner. A single
-  number in \\(0, 1)\\, `1e-4` by default. Only the sweep by kink size
-  reads it, and it signals an error when given explicitly while `lambda`
-  is held or written out.
+  the block: smaller reaches a denser fit, larger stops sooner. It is a
+  single number in \\(0, 1)\\, `1e-4` by default. Only the sweep by kink
+  size reads it, and it signals an error when given explicitly while
+  `lambda` is held or written out.
 
 - sparse:
 
@@ -90,8 +90,8 @@ lasso(
 
 An unbuilt
 [`PenalizedTerm()`](https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.md):
-a specification, with `X`, `coef_names`, `blueprint` and `penalty` empty
-until
+a specification whose `X`, `coef_names`, `blueprint` and `penalty` are
+empty until
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 fills them. The build attaches the penalty over the block's columns.
 
@@ -103,8 +103,8 @@ is minus the log density of a Laplace at zero with rate \\\lambda\\, and
 a larger \\\lambda\\ shrinks harder and keeps fewer coefficients.
 
 The kink is at zero, so the block is fitted by a proximal method or by a
-coordinate descent with the other terms held, and \\\lambda\\ is chosen
-by a path over its own values, scored by
+coordinate descent while the other terms are held, and \\\lambda\\ is
+chosen by a path over its own values, scored by
 [`statmodels7::bic()`](https://statmodels7.github.io/statmodels7/reference/aic.html)
 by default or by
 [`statmodels7::aic()`](https://statmodels7.github.io/statmodels7/reference/aic.html)
@@ -113,8 +113,8 @@ or
 A marginal criterion cannot be used: it is a Laplace expansion at a mode
 that sits on the kink.
 
-**Hyperparameter.** `lambda`, admissible on \\(0, \infty)\\, swept over
-`n_lambda` values from the one that empties the block down to
+The hyperparameter is `lambda`, admissible on \\(0, \infty)\\. It is
+swept over `n_lambda` values from the one that empties the block down to
 `min_ratio` of it.
 
 ## References
@@ -153,7 +153,7 @@ all.equal(penalties7::penalty_value(p, beta, list(lambda = 2)),
           2 * sum(abs(beta)) - 2 * log(2 / 2))
 #> [1] TRUE
 
-# The path's length and depth, at the defaults and set.
+# The path's length and depth are shown at the defaults and when set.
 term_grid(lasso(~ x1 + x2))
 #> [[1]]
 #> [[1]]$lambda
@@ -172,7 +172,7 @@ term_path_min(lasso(~ x1 + x2, min_ratio = 1e-3))
 #> 
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The model is fitted. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(11)

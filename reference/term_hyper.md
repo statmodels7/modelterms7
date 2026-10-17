@@ -1,9 +1,10 @@
-# The Hyperparameters a Term Holds
+# The Hyperparameters That a Term Holds
 
-Reports the hyperparameter values the caller fixed in the constructor,
-one entry per penalty the term carries. A hyperparameter left `NULL`, or
-written out as a grid, is **estimated** by the fit and does not appear
-here, so an empty result means that the term holds none.
+Reports the hyperparameter values that the caller fixed in the
+constructor, one entry per penalty that the term carries. A
+hyperparameter left `NULL`, or written out as a grid, is estimated by
+the fit and does not appear here, so an empty result means that the term
+holds none.
 
 ## Usage
 
@@ -26,7 +27,8 @@ term_hyper(term, ...)
 A named list, one entry per penalty of the term and named as
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 names it, each entry a named list of single numbers keyed by the
-penalty's own hyperparameter names. Empty where the term holds nothing.
+penalty's own hyperparameter names. The list is empty where the term
+holds nothing.
 
 ## The three states of one argument
 
@@ -38,13 +40,12 @@ marginal criterion estimates the value at the mode for a smooth one.
 [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md)
 and
 [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
-defaults to a held number, and `NULL` there has the shape estimated.
-**One number** holds the hyperparameter, and that is what this function
-reports. **Several numbers** are a grid that the path visits as they
-stand, which
+defaults to a held number, and `NULL` there has the shape estimated. One
+number holds the hyperparameter, and this function reports that number.
+Several numbers are a grid that the path visits as they stand, and
 [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md)
-reports; the hyperparameter is still estimated, the values to search
-being given and the estimate being left to the fit.
+reports that grid. The hyperparameter is still estimated, because the
+values to search are given and the estimate is left to the fit.
 
 ## How the entries are keyed
 
@@ -56,12 +57,12 @@ whose penalties come from sub-terms, such as
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) or
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
 with subformulas, propagates their held values without a method of its
-own, every entry of that enumeration carrying its own in the field
-`fixed`.
+own, because every entry of that enumeration carries its own in the
+field `fixed`.
 
 A built term reports those entries, and an unbuilt term reports its own
-`hyper` property with the names as written. The two answers are the same
-for the penalized terms, and for
+`hyper` property under the names as they were written. The two answers
+are the same for the penalized terms, and for
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
 where the names are not qualified. A qualified name, such as `lambda.a`
@@ -80,12 +81,12 @@ for a written-out grid,
 [`term_grid()`](https://statmodels7.github.io/modelterms7/reference/term_grid.md)
 for how many values a built grid visits,
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-for the entries this is keyed by.
+for the entry names that key the result.
 
 ## Examples
 
 ``` r
-# Held, and free.
+# The first term holds its hyperparameter and the second leaves it free.
 term_hyper(lasso(~ x, lambda = 3))
 #> [[1]]
 #> [[1]]$lambda
@@ -105,7 +106,7 @@ term_values(lasso(~ x, lambda = c(0.1, 1, 10)))
 #> 
 #> 
 
-# One of two held, the other estimated.
+# One of the two hyperparameters is held, and the other is estimated.
 term_hyper(enet(~ x, alpha = 0.5))
 #> [[1]]
 #> [[1]]$alpha

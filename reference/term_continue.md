@@ -1,8 +1,8 @@
 # Continuing a Structural Term Past the Observed Series
 
-The contribution a structural term makes at rows that come after the
-ones it was built on, continuing its recursion rather than restarting
-it.
+Returns the contribution that a structural term makes at rows that come
+after the rows on which it was built, continuing its recursion rather
+than restarting it.
 
 ## Usage
 
@@ -31,7 +31,7 @@ term_continue(term, psi, f_past, s_past, newdata, ...)
 
 - newdata:
 
-  The rows to continue onto.
+  The rows onto which the recursion continues.
 
 - ...:
 
@@ -44,11 +44,11 @@ A numeric vector of `nrow(newdata)` contributions.
 ## Details
 
 A structural term's contribution at one observation is not a function of
-that observation: it is the state a recursion has reached, so predicting
-past the series means carrying the state forward. What makes it possible
-without simulation is that the quantity driving the recursion has zero
-conditional mean, the score itself for a score-driven term, so beyond
-the data the recursion is deterministic.
+that observation: it is the state that a recursion has reached, so
+predicting past the series means carrying the state forward. This is
+possible without simulation because the quantity driving the recursion
+has zero conditional mean, the score itself for a score-driven term, so
+beyond the data the recursion is deterministic.
 
 Among the shipped classes,
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)

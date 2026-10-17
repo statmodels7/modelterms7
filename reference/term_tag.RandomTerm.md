@@ -1,7 +1,7 @@
 # The Covariance Label of a Random-Effect Term
 
-The label written between two bars, or `NA_character_` where the formula
-carries one bar.
+Returns the label written between two bars, or `NA_character_` where the
+formula carries one bar.
 
 ## Arguments
 
@@ -29,4 +29,4 @@ It is recorded by the constructor, from the middle position of
 [`term_tag()`](https://statmodels7.github.io/modelterms7/reference/term_tag.md)
 for the generic,
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
-for the formula it is read from.
+for the formula from which it is read.

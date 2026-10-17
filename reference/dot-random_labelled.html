@@ -9,7 +9,7 @@ the block and its names as usual, and no penalty entry at all."><meta property="
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -96,15 +96,15 @@ fit should read. <code><a href="term_penalties.html">term_penalties()</a></code>
 layer collects the labelled terms and declares one entry over their stacked
 columns.</p>
 <p>The blueprint records what the layer needs for that: the within-group
-dimension and the grouping's levels, beside the pieces
+dimension and the grouping's levels, beside the pieces that
 <code><a href="term_predict.RandomTerm.html">term_predict.RandomTerm()</a></code> already reads.</p>
 <p>The function rejects <code>hyper</code>, <code>id</code> and <code>correlated = FALSE</code> on a labelled
 term, and a <code>distrib</code> that is a list or is univariate. A <code>distrib</code> given
-here is the <strong>class's</strong> joint prior. Its dimension is the total over the
+here is the class's joint prior. Its dimension is the total over the
 class and cannot be checked from one term, so that check is left to the
-layer. The remaining checks, that it is a continuous <span class="pkg">distributions7</span>
-object with its location held, are made here, where the message can name the
-argument.</p>
+layer. The remaining checks, which verify that it is a continuous
+<span class="pkg">distributions7</span> object whose location is held, are made here, where the
+message can name the argument.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

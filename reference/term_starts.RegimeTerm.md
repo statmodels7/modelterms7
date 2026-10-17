@@ -1,10 +1,10 @@
 # The Starting Points of a Regime Term
 
-`n_start` starting points. The first is
+Returns `n_start` starting points. The first is
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)'s.
 Each further one draws every additive log-ratio of the transition matrix
 from \\N(0, 2^2)\\ and adds \\N(0, 0.7^2)\\ to the logarithm of every
-gap, the first level staying where the first start put it.
+gap, and the first level stays where the first start put it.
 
 ## Arguments
 

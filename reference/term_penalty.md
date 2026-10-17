@@ -34,7 +34,7 @@ been built.
 A term whose penalty reaches part of its parameters returns `NULL` here
 and declares that penalty through
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
-which names the parameters it covers. A
+which names the parameters that it covers. A
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
 term and an
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) term
@@ -47,8 +47,8 @@ and their other parameters stay free;
 declares its penalties through
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 in the same way. Reporting one of those penalties here would state that
-it covers the whole block, so this generic answers only where that
-holds.
+it covers the whole block, so this generic returns a penalty only where
+that holds.
 
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 is therefore the general function, and a fitting layer enumerates
@@ -58,7 +58,7 @@ penalties through it. This one is the shortcut for the common case.
 
 The penalty is attached at
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md),
-its width being the number of columns the data produce, so
+and its width is the number of columns that the data produce, so
 `term_penalty(ridge(~ x))` is `NULL` and
 `term_penalty(term_build(ridge(~ x), d))` is the quadratic penalty. The
 same holds for
@@ -100,7 +100,7 @@ c(name = p@penalty_name, params = p@params, n_coef = p@n_coef)
 #>        name      params      n_coef 
 #> "quadratic"    "lambda"         "1" 
 
-# A term whose penalty covers part of its parameters answers NULL here
+# A term whose penalty covers part of its parameters returns NULL here
 # and declares it through term_penalties() instead: a lasso on the
 # change of slope of a break-point term.
 sb <- term_build(seg(x, npsi = 1, gamma ~ 0 + lasso(~ 1)),

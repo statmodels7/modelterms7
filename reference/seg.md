@@ -1,15 +1,15 @@
 # Segmented Term: a Broken Line with Estimated Break-Points
 
-A covariate whose slope changes at \\K\\ break-points estimated with
-everything else, the relationship staying continuous (Muggeo, 2003).
-Written in the equation of any parameter of any distribution, the term
-contributes
+`seg()` specifies a covariate whose slope changes at \\K\\ break-points
+estimated with everything else, and the relationship stays continuous
+(Muggeo, 2003). Written in the equation of any parameter of any
+distribution, the term contributes
 
 \$\$\beta x_i + \sum\_{k=1}^{K} \gamma_k\\(x_i - \psi_k)\_{+}, \qquad
 (u)\_{+} = \max(0, u),\$\$
 
 to that parameter's linear predictor, so that in a model \\g(\theta_i) =
-\eta_i\\ with the rest of the equation supplying \\z_i'\alpha\\,
+\eta_i\\ in which the rest of the equation supplies \\z_i'\alpha\\,
 
 \$\$\eta_i = z_i'\alpha + \beta x_i + \sum\_{k=1}^{K} \gamma_k\\(x_i -
 \psi_k)\_{+}.\$\$
@@ -56,8 +56,8 @@ seg(
 - psi:
 
   Optional starting positions; defaults to evenly spaced quantiles of
-  the covariate. Where a break-point carries a development they seed it,
-  each starting vector solving \\Wp_k \approx \psi_k^{0}\\.
+  the covariate. Where a break-point carries a development, they seed
+  it, and each starting vector solves \\Wp_k \approx \psi_k^{0}\\.
 
 - by:
 
@@ -88,26 +88,26 @@ seg(
   [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
   and
   [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md),
-  a `c0` that is passed is ignored with a message), the block is the
+  a `c0` that is passed is ignored with a message). The block is the
   true Jacobian and the term is fitted by Gauss-Newton like
   [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md). A
   smoothed term accepts a development of any coefficient, including a
   break-point (`psi ~ random(~1 | id)`) and penalized developments, for
-  every kind, since no read-off constrains the development. The
-  smoother's width is resolved at build from the covariate's spacing
-  (the median gap between distinct values, within groups where a
-  break-point development supplies a partition) unless the object
-  carries one. For the quintic, which is exact outside its width, the
-  width is raised to at least 0.55 times the largest gap over the range
-  a break-point may take, so that a break-point cannot sit in a gap with
-  no observation within its width. The width is reported: it is the
-  width of the transition (the bent-cable reading). The smoothing bias
-  is zero outside the transition for the quintic, decays with the
-  Gaussian tails for the probit, and decays as \\c/(4\|u\|)\\ for the
-  hyperbolic, whose parameter \\c\\ is a squared length. The objective
-  remains multimodal in the positions: smoothing rounds the local optima
-  and does not remove them, so the profile start and the `n_boot`
-  restarts remain necessary.
+  every kind, since a smoothed term has no read-off that would constrain
+  the development. The smoother's width is resolved at build from the
+  covariate's spacing (the median gap between distinct values, within
+  groups where a break-point development supplies a partition) unless
+  the object carries one. For the quintic, which is exact outside its
+  width, the width is raised to at least 0.55 times the largest gap over
+  the range that a break-point may take, so that a break-point cannot
+  sit in a gap with no observation within its width. The width is
+  reported: it is the width of the transition (the bent-cable reading).
+  The smoothing bias is zero outside the transition for the quintic,
+  decays with the Gaussian tails for the probit, and decays as
+  \\c/(4\|u\|)\\ for the hyperbolic, whose parameter \\c\\ is a squared
+  length. The objective remains multimodal in the positions: smoothing
+  rounds the local optima and does not remove them, so the profile start
+  and the `n_boot` restarts remain necessary.
 
 - marginal:
 
@@ -122,25 +122,25 @@ seg(
   For a `seg` term the native random-changepoint fit
   (`psi ~ random(~1 | g)` without `marginal`) estimates the break-points
   as the mode of the latent distribution and is the recommended route,
-  the marginal being the exact-likelihood alternative. The marginal
-  `seg` has one break-point: the conditional is smooth in the position,
-  so the integral runs on Gauss-Kronrod panels over the intervals
-  between a group's ordered observations, and several latent
+  while the marginal construction is the exact-likelihood alternative.
+  The marginal `seg` has one break-point: the conditional is smooth in
+  the position, so the integral runs on Gauss-Kronrod panels over the
+  intervals between a group's ordered observations, and several latent
   break-points would need a product quadrature with a number of
   components that a fitting layer cannot carry.
 
 - n_boot:
 
   How many bootstrap restarts the fitting layer runs after the iteration
-  first converges (Wood 2001, the device `segmented` runs by default):
-  each restart re-estimates on a bootstrap resample from the current
-  break-points and then on the data again from where the resample ended,
-  keeping the better fit. The objective has local optima in the
-  break-points, and with several of them a grid start does not reach the
-  right basin from every placement. Defaults to 10, `segmented`'s own
-  default; 0 disables. The term itself only declares the value; running
-  the restarts is the fitting layer's, as with a penalty's
-  hyperparameters.
+  first converges (Wood 2001, the device that `segmented` runs by
+  default): each restart re-estimates on a bootstrap resample from the
+  current break-points and then on the data again from where the
+  resample ended, keeping the better fit. The objective has local optima
+  in the break-points, and with several of them a grid start does not
+  reach the right basin from every placement. Defaults to 10,
+  `segmented`'s own default; 0 disables. The term itself only declares
+  the value; running the restarts is the fitting layer's, as with a
+  penalty's hyperparameters.
 
 - label:
 
@@ -167,12 +167,12 @@ Jacobian and the break-point is an ordinary coefficient. The working
 variables \\U = (x-\psi)\_{+}\\ and \\V = -\mathbb{1}(x\>\psi)\\ of
 Muggeo (2003) are, up to the factor \\\gamma_k\\ on \\V\\, the columns
 of the block for \\\gamma_k\\ and \\\psi_k\\, so a Gauss-Newton step on
-the block is an iteration of his linearization. Refreshing the term at
-the current coefficients
+the block is an iteration of his linearization. An iteration of this
+scheme refreshes the term at the current coefficients
 ([`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md))
-and fitting is one such iteration, which is the scheme that
+and then fits, and
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) uses
-as well.
+the same scheme.
 
 The objective has local optima in the break-points and the iteration
 converges from within a basin around where it starts, so
@@ -196,10 +196,10 @@ that can evaluate the objective should stop on its relative change, as
 
 ## The coefficients
 
-`beta` (present when `linear = TRUE`), `gamma1` ... `gammaK` and `psi1`
-... `psiK`, in that order. The break-points are coefficients of the
-working block here, and they are not in the sharp discontinuous
-constructions, so
+The coefficients are `beta` (present when `linear = TRUE`), `gamma1` ...
+`gammaK` and `psi1` ... `psiK`, in that order. The break-points are
+coefficients of the working block here, and they are not in the sharp
+discontinuous constructions, so
 [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
 reports them under every construction.
 
@@ -226,24 +226,24 @@ rejected. The hyperparameters that a sub-term declares are reported by
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 and estimated by the fitting layer. The left side names either one
 coefficient (`gamma2`) or a whole kind (`gamma`, meaning every
-\\\gamma_k\\, each with coefficients of its own over the shared design).
-`by = ~f` is the shorthand giving every coefficient the same
-development, and does not combine with per-coefficient formulas.
+\\\gamma_k\\, and each of them has coefficients of its own over the
+shared design). `by = ~f` is the shorthand giving every coefficient the
+same development, and does not combine with per-coefficient formulas.
 
 A developed coefficient carries one value per observation:
 \\\gamma\_{k,i} = w_i'a_k\\ and \\\psi\_{k,i} = w_i'p_k\\, with \\w_i\\
-the row of the sub-design. Both enter the block linearly, the truncated
-line becoming \\(x_i-\psi\_{k,i})\_{+}w_i'\\ and the Jacobian column
-\\-\gamma\_{k,i}\\\mathbb{1}(x_i\>\psi\_{k,i})\\w_i'\\, so the
+the row of the sub-design. Both enter the block linearly: the truncated
+line becomes \\(x_i-\psi\_{k,i})\_{+}w_i'\\ and the Jacobian column
+becomes \\-\gamma\_{k,i}\\\mathbb{1}(x_i\>\psi\_{k,i})\\w_i'\\, so the
 continuous construction accepts a development of any coefficient and any
 combination of them.
 
 A penalty on the changes themselves, the lasso that selects the number
 of break-points, is the development on an intercept alone,
 `seg(x, npsi = 4, gamma ~ 0 + lasso(~1))`: the \\K\\ changes are then
-one penalized block under one hyperparameter, the entries of a
-subformula shared by every coefficient of a kind being pooled into one.
-A subformula follows the intercept convention of a formula, so
+one penalized block under one hyperparameter, because the entries of a
+subformula shared by every coefficient of a kind are pooled into one. A
+subformula follows the intercept convention of a formula, so
 `gamma ~ lasso(~1)` carries the subformula's own unpenalized intercept
 beside the penalized column, which for an intercept-only development
 repeats the same constant column. That design is rejected when the term
@@ -296,7 +296,7 @@ seg_psi(built)
 #> [1] 5.054907
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The term is fitted next. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(1)
@@ -304,7 +304,7 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   fd$y <- 1 + 0.5 * fd$x + 2 * pmax(fd$x - 6, 0) + rnorm(200, sd = 0.3)
   ft <- statmodels7::statmod(y ~ seg(x),
                              distributions7::gaussian1_distrib(), fd)
-  # truth: intercept 1, slope 0.5, change of slope 2, break-point 6
+  # The truth is intercept 1, slope 0.5, change of slope 2 and break-point 6.
   round(coef(ft)$mu, 2)
 }
 #> (Intercept)    seg.beta  seg.gamma1    seg.psi1 

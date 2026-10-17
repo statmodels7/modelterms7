@@ -1,8 +1,8 @@
 # Check a Term's Grid Sizes Against Its Penalty
 
-Validates the number of values the constructor was given per
-hyperparameter, and returns them as a named list with the `NULL` entries
-dropped.
+Validates the number of values that the constructor was given per
+hyperparameter, and returns them as a named list from which the `NULL`
+entries are dropped.
 
 ## Usage
 
@@ -34,7 +34,7 @@ A named list of grid sizes.
 
 How finely a hyperparameter is swept belongs to the term for the same
 reason as whether it is swept at all: a penalized block of four columns
-and one of four hundred want different grids, and a criterion is applied
+and one of four hundred need different grids, and a criterion is applied
 to every term of the model at once. Where a term gives no size, the path
 of the fitting layer uses its own default.
 

@@ -3,11 +3,11 @@
 whether it is built. A built term reports how many coefficients its block
 carries; a specification is marked as one and names the call that would
 build it. This is the default for every term class, and several classes
-override it to add what they alone carry."><meta property="og:description" content="Prints one line naming the term's class, its label when it has one, and
+override it to add the information that only that class carries."><meta property="og:description" content="Prints one line naming the term's class, its label when it has one, and
 whether it is built. A built term reports how many coefficients its block
 carries; a specification is marked as one and names the call that would
 build it. This is the default for every term class, and several classes
-override it to add what they alone carry."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
+override it to add the information that only that class carries."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -15,7 +15,7 @@ override it to add what they alone carry."><meta property="og:image" content="ht
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,7 +46,7 @@ override it to add what they alone carry."><meta property="og:image" content="ht
 whether it is built. A built term reports how many coefficients its block
 carries; a specification is marked as one and names the call that would
 build it. This is the default for every term class, and several classes
-override it to add what they alone carry.</p>
+override it to add the information that only that class carries.</p>
     </div>
 
 
@@ -64,7 +64,7 @@ override it to add what they alone carry.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p><code>x</code>, invisibly. Called for the line it writes.</p>
+    <p><code>x</code>, invisibly. The function is called for the line that it writes.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -73,9 +73,9 @@ override it to add what they alone carry.</p>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a><span class="sc">&lt;</span>SmoothTerm<span class="sc">&gt;</span> <span class="st">'s(x)'</span> (specification; call <span class="fu">term_build</span>() with data)</span></code></pre><p></p></div>
 <p>The class name is the S7 class's own, the label comes from the <code>label</code>
 property and is omitted when empty, and the count is <code>ncol(x@X)</code>.</p>
-<p>A structural term has no <code>X</code> to count, so it gets the word <code>built</code> and no
-count. Every shipped structural term registers a method of its own, so this
-line is reached only by a structural class written outside the package.</p>
+<p>A structural term has no <code>X</code> to count, so the line shows the word <code>built</code> and
+no count. Every shipped structural term registers a method of its own, so
+this line is reached only by a structural class written outside the package.</p>
 <p>The classes that override this add something of their own:
 <code><a href="print.PenalizedTerm.html">print.PenalizedTerm()</a></code> names the penalty and the standardization,
 <code><a href="gas.html">gas()</a></code> and <code><a href="regime.html">regime()</a></code> report their parameters, <code><a href="nl.html">nl()</a></code> reports its parameters
@@ -83,7 +83,7 @@ and its derivative mode, and <code><a href="seg.html">seg()</a></code> reports i
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_is_built.html">term_is_built()</a></code> for the predicate it branches on,
+    <div class="dont-index"><p><code><a href="term_is_built.html">term_is_built()</a></code> for the predicate on which it branches,
 <code><a href="term_coef_names.html">term_coef_names()</a></code> for the names behind the count.</p></div>
     </div>
 
@@ -91,7 +91,7 @@ and its derivative mode, and <code><a href="seg.html">seg()</a></code> reports i
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># A specification, and the same term built.</span></span></span>
+<span class="r-in"><span><span class="co"># A specification prints first, and the same term built prints second.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="linpar.html">linpar</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;LinparTerm&gt; (specification; call term_build() with data)</span>
 <span class="r-in"><span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="linpar.html">linpar</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span></span></span>

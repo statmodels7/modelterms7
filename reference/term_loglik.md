@@ -1,12 +1,13 @@
 # Log-Likelihood Contributions of a Structural Term
 
-The per-observation log-likelihood contributions a structural term
-produces, with their derivatives in the term's own parameters. This is
-the second shape the structural branch takes, beside
+Returns the per-observation log-likelihood contributions that a
+structural term produces, with their derivatives in the term's own
+parameters. This is the second shape that the structural branch takes,
+beside
 [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md):
-a term that shifts the predictor implements the filter, and one that
-rewrites the likelihood itself implements this, its contribution being
-no predictor at all.
+a term that shifts the predictor implements the filter, and a term that
+rewrites the likelihood itself implements this generic, because its
+contribution is not a predictor at all.
 
 ## Usage
 
@@ -41,7 +42,7 @@ term_loglik(term, eta, y, logdens, score, psi, ...)
 
 - psi:
 
-  The term's parameters on the **parameter** scale, named as
+  The term's parameters on the parameter scale, named as
   [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md).
 
 - ...:
@@ -79,9 +80,9 @@ distribution, never differenced.
 ## How the model reaches it
 
 The term holds the chain and the levels and contains nothing about the
-family. The two callbacks are how the model's own density enters:
-`logdens` returns the log-density at a given predictor, one value per
-observation, and `score` returns its derivative in that predictor. For
+family. The model's own density enters through two callbacks: `logdens`
+returns the log-density at a given predictor, one value per observation,
+and `score` returns its derivative in that predictor. For
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md),
 each is called once per regime, with the predictor shifted by that
 regime's level and the whole index vector of the observations, so a term
@@ -89,11 +90,11 @@ of \\K\\ regimes makes \\K\\ calls to each.
 
 The callbacks of
 [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
-depend on the state the recursion has reached. The callbacks of a regime
-term do not, because a regime shifts a predictor that is known in
-advance. The density and the score of every observation under every
-regime can therefore be computed once, vectorized, before the recursion
-starts.
+depend on the state that the recursion has reached. The callbacks of a
+regime term do not depend on it, because a regime shifts a predictor
+that is known in advance. The density and the score of every observation
+under every regime can therefore be computed once, vectorized, before
+the recursion starts.
 
 The method on
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)

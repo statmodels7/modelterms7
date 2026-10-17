@@ -1,11 +1,11 @@
 # The Starting Coefficients of a Break-Point Term
 
-The start
+Returns the start that
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-computed: the break-points at the positions `psi` names or at the
+computed: the break-points at the positions that `psi` names or at the
 interior quantiles of the covariate, and unit changes. Where `target` is
-given (the response on the scale of the predictor) and no coefficient
-carries a development, the slope and the changes are instead the
+given (the response on the scale of the predictor) and the coefficients
+carry no development, the slope and the changes are instead the
 least-squares coefficients of `target` on an intercept and the term's
 exact columns at the starting positions, which puts the starting mean
 near the data whatever the scale of the covariate. A start of zero is

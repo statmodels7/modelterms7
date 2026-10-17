@@ -1,10 +1,11 @@
 # S7 Class for Additive Terms
 
-The branch of
+`additive_term` is the branch of
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)
 whose terms contribute a block of design columns \\X_j \beta_j\\ to the
-linear predictor of one distribution parameter. Everything a formula can
-write that is not a filter or a latent mixture is on this branch:
+linear predictor of one distribution parameter. Every term that a
+formula can write and that is not a filter or a latent mixture is on
+this branch:
 [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md),
 the five penalized terms,
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md),
@@ -53,8 +54,8 @@ additive_term(
 
 - hyper:
 
-  The hyperparameters of the term's penalty that the caller **held**, as
-  a named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller held, as a
+  named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -67,9 +68,9 @@ additive_term(
 
 - values:
 
-  The values a path visits, for each hyperparameter the caller wrote
-  out, as a named list of numeric vectors. Empty, the default, has the
-  path build them. See
+  The values that a path visits, for each hyperparameter that the caller
+  wrote out, as a named list of numeric vectors. Empty, the default, has
+  the path build them. See
   [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md).
 
 - min_ratio:
@@ -97,21 +98,22 @@ additive_term(
 - X:
 
   The design block, one row per observation: a numeric matrix or a
-  two-dimensional Matrix. Empty until
+  two-dimensional Matrix. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
 - coef_names:
 
   The block's coefficient names, one per column, prefixed by `label`
-  when there is one. Filled by
-  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md).
+  when there is one.
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+  fills it.
 
 - blueprint:
 
   A named list of everything needed to reproduce the mapping on new
-  rows. Its contents are the subclass's business; nothing outside the
-  term reads them. Empty until
+  rows. Its contents belong to the subclass, and only the term reads
+  them. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
@@ -133,11 +135,11 @@ beside those of
 A specification has `X` empty and `blueprint` an empty list;
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 fills `X`, `coef_names` and `blueprint`, and `penalty` as well for a
-term that carries a penalty. The blueprint is the reason
+term that carries a penalty. The blueprint allows
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-can **reapply** the mapping instead of rebuilding it: the factor levels,
-the contrasts, the knots on which a basis was placed and the spreads
-that a standardization used are recorded there at build time.
+to reapply the mapping instead of rebuilding it: the factor levels, the
+contrasts, the knots on which a basis was placed and the spreads that a
+standardization used are recorded there at build time.
 [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)'s
 subset check tests that they are.
 
@@ -156,7 +158,7 @@ returns `coef_names`,
 [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
 counts the columns and
 [`term_penalty()`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md)
-returns `penalty`, all from the properties, so a subclass gets them
+returns `penalty`, all from the properties, so a subclass inherits them
 without writing anything. A subclass must supply
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 and

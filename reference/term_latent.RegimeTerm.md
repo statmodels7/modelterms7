@@ -1,7 +1,7 @@
 # The Smoothed States of a Regime Term
 
-The probability of each regime at each observation given the whole
-series, \\P(S_t = j \mid y_1, \dots, y_n)\\, as a data frame.
+Returns the probability of each regime at each observation given the
+whole series, \\P(S_t = j \mid y_1, \dots, y_n)\\, as a data frame.
 
 ## Arguments
 
@@ -43,5 +43,5 @@ The probabilities are those of
 [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md),
 computed by the forward and backward recursions, and this method adds
 the column labels. The rows are in the order of the data on which the
-term was built, whatever `by` and `time` say, so the result can be bound
-to that data directly.
+term was built, regardless of `by` and `time`, so the result can be
+bound to that data directly.

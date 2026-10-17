@@ -8,9 +8,9 @@ Prints one line describing a
 or [`mcp()`](https://statmodels7.github.io/modelterms7/reference/mcp.md)
 term. An unbuilt specification reports its label and whether it will
 standardize; a built one reports the number of coefficients, the
-penalty's name and the hyperparameters that penalty carries, and, when
-the term is standardized, adds a second line giving the spread by which
-each column is standardized.
+penalty's name and the hyperparameters that the penalty carries, and,
+when the term is standardized, adds a second line giving the spread by
+which each column is standardized.
 
 ## Arguments
 
@@ -27,7 +27,7 @@ each column is standardized.
 
 ## Value
 
-`x`, invisibly. Called for the line it writes.
+`x`, invisibly. The method is called for the line that it writes.
 
 ## Details
 
@@ -38,10 +38,11 @@ net, `lambda, a` for SCAD and `lambda, gamma` for MCP.
 
 The standardization line is needed to read a fitted hyperparameter. With
 `standardize = TRUE` the penalty is evaluated at the coefficients
-multiplied by those spreads, which are the coefficients of the columns
-divided by the spreads. The spreads are computed once at build time and
-recorded in the blueprint. They enter the penalty only: the design block
-is not rescaled, so prediction at new rows does not use them.
+multiplied by those spreads; these products are the coefficients of the
+columns after each is divided by its spread. The spreads are computed
+once at build time and recorded in the blueprint. They enter the penalty
+only: the design block is not rescaled, so prediction at new rows does
+not use them.
 
 ## See also
 
@@ -54,7 +55,7 @@ for the five constructors and what they share.
 set.seed(5)
 d <- data.frame(x1 = rnorm(30), x2 = rnorm(30) * 20)
 
-# A specification says only what it is.
+# A specification prints what it is, without any quantity from data.
 ridge(~ x1 + x2)
 #> <PenalizedTerm> 'ridge' (specification; call term_build() with data)
 lasso(~ x1 + x2, standardize = TRUE)

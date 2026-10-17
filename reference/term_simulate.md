@@ -1,8 +1,8 @@
 # Drawing a Response From a Structural Term
 
-The predictor a structural term produces when the response is being
-generated rather than read, together with whatever latent quantity the
-term drew on the way.
+Returns the predictor that a structural term produces when the response
+is being generated rather than read, together with whatever latent
+quantity the term drew on the way.
 
 ## Usage
 
@@ -53,9 +53,9 @@ time before, so the response has to be drawn as the recursion runs.
 
 The same calling convention covers both. The caller supplies `draw`, a
 function of a predictor and a row index returning one response value,
-and the method returns the predictor it produced. A method that drew
-returns the responses as well, and a method that did not returns `NULL`
-there, leaving the caller to draw at the predictor.
+and the method returns the predictor that it produced. A method that
+drew returns the responses as well, and a method that did not returns
+`NULL` there, leaving the caller to draw at the predictor.
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
 draws one chain per group, in time order and started from the stationary
 distribution, and returns the state of each row as `latent`.

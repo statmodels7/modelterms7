@@ -1,9 +1,9 @@
 # S7 Class for Marginal Break-Point Terms
 
-The subclass of
+`MarginalBreakTerm` is the subclass of
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
-holding break-points that vary by group as latent variables **integrated
-out** of the likelihood.
+for break-points that vary by group as latent variables integrated out
+of the likelihood.
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md),
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
 and
@@ -52,8 +52,8 @@ MarginalBreakTerm(
 
 - hyper:
 
-  The hyperparameters of the term's penalty that the caller **held**, as
-  a named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller held, as a
+  named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -66,9 +66,9 @@ MarginalBreakTerm(
 
 - values:
 
-  The values a path visits, for each hyperparameter the caller wrote
-  out, as a named list of numeric vectors. Empty, the default, has the
-  path build them. See
+  The values that a path visits, for each hyperparameter that the caller
+  wrote out, as a named list of numeric vectors. Empty, the default, has
+  the path build them. See
   [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md).
 
 - min_ratio:
@@ -95,8 +95,8 @@ MarginalBreakTerm(
 
 - blueprint:
 
-  A named list recording the number of rows, the covariate, the rows of
-  each group and the group labels, empty until
+  A named list that records the number of rows, the covariate, the rows
+  of each group and the group labels. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
@@ -127,7 +127,7 @@ MarginalBreakTerm(
 - prior:
 
   The latent's distribution: `NULL` for the Gaussian, or a
-  distributions7 object with its location held at zero.
+  distributions7 object whose location is held at zero.
 
 - spec:
 
@@ -224,14 +224,15 @@ c(kind = tm@kind, npsi = tm@npsi, linear = tm@linear)
 #>    kind    npsi  linear 
 #>  "jump"     "1" "FALSE" 
 
-# Numbered parameters: the prior's location and scale, and the change.
+# The parameters are numbered: the prior's location and scale, and the
+# change.
 term_params(tm)
 #> [1] "psi1.mean" "psi1.sd"   "delta1"   
 vapply(term_links(tm), function(l) l@link_name, character(1))
 #>  psi1.mean    psi1.sd     delta1 
 #> "identity"      "log" "identity" 
 
-# The prior is part of the likelihood, so nothing is declared penalized.
+# The prior is part of the likelihood, so the term declares no penalty.
 length(term_penalties(tm))
 #> [1] 0
 

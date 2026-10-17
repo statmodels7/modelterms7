@@ -1,8 +1,8 @@
 # The Autoregressive Coefficients Behind the Partial Autocorrelations
 
-The Levinson-Durbin recursion carrying partial autocorrelations onto the
-coefficients of a stationary autoregression, with the Jacobian of that
-map propagated alongside.
+Computes the Levinson-Durbin recursion, which carries partial
+autocorrelations onto the coefficients of a stationary autoregression,
+and propagates the Jacobian of that map alongside.
 
 ## Usage
 

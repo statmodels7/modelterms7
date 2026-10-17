@@ -1,8 +1,8 @@
 # Number of Parameters of a Built Term
 
-How many parameters of its own a built term carries: the number of
-columns of the design block for an additive term, and the number of
-entries of
+Returns the number of parameters of its own that a built term carries:
+the number of columns of the design block for an additive term, and the
+number of entries of
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
 for a structural one, which has no block. It is the length of the vector
 into which a

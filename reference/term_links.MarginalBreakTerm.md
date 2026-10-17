@@ -1,7 +1,7 @@
 # The Charts of a Marginal Break-Point Term's Parameters
 
-The **log** link on every `psik.sd`, the prior's own link on any
-parameter that the prior contributes, and the identity on everything
+Assigns the log link to every `psik.sd`, the prior's own link to any
+parameter that the prior contributes, and the identity to everything
 else. A prior scale must be positive; a position, a change of level and
 a change of slope are already unconstrained.
 

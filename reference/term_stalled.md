@@ -1,9 +1,9 @@
 # Has a Term's Own Iteration Run Out of Step Control?
 
-`TRUE` when a term whose block is refreshed has not settled and its
-iteration has no means left of bringing it to rest, so further refreshes
-cannot be expected to settle it. A term with no iteration of its own
-answers `FALSE`.
+Returns `TRUE` when a term whose block is refreshed has not settled and
+its iteration has no means left of bringing it to rest, so further
+refreshes cannot be expected to settle it. A term with no iteration of
+its own returns `FALSE`.
 
 ## Usage
 
@@ -35,17 +35,17 @@ control their step with the scaling factor of Fasola, Muggeo and
 Kuchenhoff, halved whenever a break-point reverses direction and held at
 a floor derived from the conditioning of the working block (see
 [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)).
-Once every break-point that has not settled sits at that floor the
-factor can shrink no further, and the iteration continues without step
+Once every break-point that has not settled sits at that floor, the
+factor cannot shrink further, and the iteration continues without step
 control. The profile objective of a discontinuous term is constant
 between two consecutive observations, so a break-point in that state can
 pass from one observation to the next indefinitely. A fitting layer
 reads this to end the working phase and report the fit as not converged.
 
-A term whose block is the Jacobian of its contribution,
+A term whose block is the Jacobian of its contribution has no scaling
+schedule and returns `FALSE`; this includes
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
-and every smoothed construction among them, has no scaling schedule and
-answers `FALSE`.
+and every smoothed construction.
 
 ## See also
 

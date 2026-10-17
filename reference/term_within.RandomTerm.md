@@ -1,8 +1,8 @@
 # The Within-Group Design of a Random-Effect Term
 
-The design one group's effect multiplies, at new rows: the intercept,
-the covariates of a random slope, one column per coordinate of the
-effect.
+Returns the design that one group's effect multiplies, at new rows: the
+intercept, the covariates of a random slope, one column per coordinate
+of the effect.
 
 ## Arguments
 
@@ -26,11 +26,11 @@ columns, named as `term_group(term)$names`.
 
 ## Details
 
-Read from the blueprint the build recorded, so a factor keeps its levels
-and contrasts. It does not depend on the grouping, which is what lets a
-caller integrate the effect of a group the fit never saw: the effect is
-\\z_i^\top b\\ with \\z_i\\ this row and \\b\\ drawn from the term's
-prior.
+The design is read from the blueprint that the build recorded, so a
+factor keeps its levels and contrasts. It does not depend on the
+grouping, so a caller can integrate the effect of a group that is absent
+from the fitting data: the effect is \\z_i^\top b\\ with \\z_i\\ this
+row and \\b\\ drawn from the term's prior.
 
 ## See also
 

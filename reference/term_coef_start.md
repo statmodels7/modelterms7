@@ -1,9 +1,9 @@
 # Where a Term's Own Coefficients Begin
 
-The starting coefficients of a built term, one per column of its block.
-The base method returns zero everywhere, which is an admissible start
-for a term whose block is a fixed design, since that block does not
-depend on the coefficients.
+Returns the starting coefficients of a built term, one per column of its
+block. The base method returns zero everywhere, which is an admissible
+start for a term whose block is a fixed design, since that block does
+not depend on the coefficients.
 
 ## Usage
 
@@ -23,9 +23,9 @@ term_coef_start(term, target = NULL, ...)
 - target:
 
   Optional numeric vector, one value per observation: the response on
-  the scale of the predictor, `NULL` by default. Supplied only where
-  `params_interpretation` records that the response reads the parameter
-  directly, so a term in a scale's equation receives `NULL`.
+  the scale of the predictor, `NULL` by default. It is supplied only
+  where `params_interpretation` records that the response reads the
+  parameter directly, so a term in a scale's equation receives `NULL`.
 
 - ...:
 
@@ -50,28 +50,28 @@ with more than one break-point the columns of the block coincide. In
 the Jacobian column is \\-\gamma_k \mathbb{1}(x \> \psi_k)\\ and
 vanishes identically at \\\gamma_k = 0\\.
 
-Without a `target`, the break-point terms return the start
+Without a `target`, the break-point terms return the start that
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 computed: unit changes, and the break-points at the interior quantiles
-of the covariate or at the positions `psi` names. With a `target` of the
-right length and no developed coefficient, the slope and the changes are
-instead the least-squares coefficients of the target on an intercept and
-the term's columns at the starting positions.
+of the covariate or at the positions that `psi` names. With a `target`
+of the right length and no developed coefficient, the slope and the
+changes are instead the least-squares coefficients of the target on an
+intercept and the term's columns at the starting positions.
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
 returns the starting values of its own parameters carried through their
 links.
 
-What a coefficient of zero means depends on the block that the term
-builds, which is why this start belongs to the term, as
+A coefficient of zero has a meaning that depends on the block that the
+term builds, so this start belongs to the term, as
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
 does for a structural term.
 
-## What `target` is for
+## The role of `target`
 
-`target` is the response carried onto the scale of the predictor the
-term contributes to. A term cannot work it out for itself: the term
-holds its formula and its charts, and the fitting layer holds the
-distribution, the link and the equation.
+`target` is the response carried onto the scale of the predictor to
+which the term contributes. A term cannot compute it, because the term
+holds its formula and its charts but not the distribution, the link or
+the equation, which the fitting layer holds.
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) uses
 it to estimate its own parameters from the data, over a deterministic
 grid on each free parameter's chart, and the break-point terms use it
@@ -84,7 +84,7 @@ start that does not depend on the response.
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)
 for a structural term's own parameters,
 [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
-for the terms this exists for,
+for the terms for which this function exists,
 [`seg_start()`](https://statmodels7.github.io/modelterms7/reference/seg_start.md)
 for the grid rule behind a break-point start.
 

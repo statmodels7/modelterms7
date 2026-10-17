@@ -1,8 +1,8 @@
 # Which of a Term's Parameters Acts as an Intercept
 
-The name of the parameter, if any, that shifts the term's contribution
-by a constant, and is therefore the same direction as an intercept in
-the equation the term sits in.
+Returns the name of the parameter, if any, that shifts the term's
+contribution by a constant and is therefore the same direction as an
+intercept in the equation in which the term sits.
 
 ## Usage
 
@@ -35,12 +35,13 @@ rejecting the model. A score-driven level \\\omega\\ and a regime's
 first level both add a constant to their equation's predictor: with an
 intercept there too, adding \\c\\ to one and subtracting the matching
 amount from the other leaves every predictor unchanged, and the
-likelihood is flat along that direction. The layer decides which of the
-two is dropped, because only the layer has the full list of terms in the
-equation.
+likelihood is flat along that direction. Which of the two is dropped is
+determined in the layer, because only the layer has the full list of
+terms in the equation.
 
-The base method returns `character(0)`, meaning the term shifts nothing
-by a constant and no such question arises. The method for
+The base method returns `character(0)`, which means that the term does
+not shift its contribution by a constant and the question does not
+arise. The method for
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
 returns `"level1"`. The method for
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)

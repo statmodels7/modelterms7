@@ -1,17 +1,18 @@
 # S7 Base Class for Model Terms
 
-The abstract root of the term hierarchy. A term records what a formula
-names: the recipe turning a data frame into a contribution to the model,
-together with the metadata a fit reads. A term written in a formula is a
-**specification**, carrying only what the call said;
+`model_term` is the abstract root of the term hierarchy. A term records
+what a formula names: the recipe turning a data frame into a
+contribution to the model, together with the metadata that a fit reads.
+A term written in a formula is a specification that carries only what is
+written in the call;
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-turns it into a **built** term carrying the design block or the state
-the recipe produces on given data.
+turns it into a built term that carries the design block or the state
+that the recipe produces on given data.
 
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
 recognizes a term by this class. Any call on the right of a formula
 whose value inherits from `model_term` becomes a term, so a term class
-defined outside the package works in a formula the day it is written,
+defined outside the package works in a formula as soon as it is written,
 with nothing to register.
 
 ## Usage
@@ -40,8 +41,8 @@ model_term(
 
 - hyper:
 
-  The hyperparameters of the term's penalty that the caller **held**, as
-  a named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller held, as a
+  named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -54,9 +55,9 @@ model_term(
 
 - values:
 
-  The values a path visits, for each hyperparameter the caller wrote
-  out, as a named list of numeric vectors. Empty, the default, has the
-  path build them. See
+  The values that a path visits, for each hyperparameter that the caller
+  wrote out, as a named list of numeric vectors. Empty, the default, has
+  the path build them. See
   [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md).
 
 - min_ratio:
@@ -103,13 +104,13 @@ routes on it.
 
 ## The properties of the root
 
-Beyond `label` the properties all describe a hyperparameter path. The
-term alone determines which hyperparameters are estimated: the term is
-where the penalty is named, so a held value, a grid size, a written-out
-set of values, the depth of the path and the way several hyperparameters
-are combined all belong to it. An outer criterion applies to every
-hyperparameter of a model, smooth ones included, and records none of
-this.
+Beyond `label` the properties all describe a hyperparameter path. Only
+the term determines which hyperparameters are estimated, because the
+penalty is named in the term, so a held value, a grid size, a
+written-out set of values, the depth of the path and the way in which
+several hyperparameters are combined all belong to it. An outer
+criterion applies to every hyperparameter of a model, including the
+smooth ones, and records none of this.
 
 Each of `hyper`, `grid` and `values` is a named list keyed by the
 penalty's own hyperparameter names, and each is empty by default.
@@ -132,7 +133,7 @@ A class inheriting from it supplies
 at the very least: the method registered here signals an error that
 names the class that did not implement it. Most other generics have a
 usable default, so a new term class starts from a working object and
-overrides what it has reason to.
+overrides the defaults that it has reason to change.
 
 ## See also
 
@@ -150,12 +151,12 @@ for validating one.
 ## Examples
 
 ``` r
-# Every term inherits from this class, whichever branch it is on.
+# Every term inherits from this class, on either branch.
 vapply(list(linpar(~ 1), ridge(~ x), s(x, basis7::bspline_smooth(k = 5)), gas(p = 1, q = 1)),
        function(t) S7::S7_inherits(t, model_term), logical(1))
 #> [1] TRUE TRUE TRUE TRUE
 
-# The branch is what a consumer routes on.
+# A consumer routes on the branch of a term.
 c(additive = S7::S7_inherits(s(x, basis7::bspline_smooth(k = 5)), additive_term),
   structural = S7::S7_inherits(s(x, basis7::bspline_smooth(k = 5)), structural_term))
 #>   additive structural 

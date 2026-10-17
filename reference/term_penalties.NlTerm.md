@@ -1,7 +1,7 @@
 # Penalties of a Nonlinear Term
 
-The penalties the sub-terms of the subformulas declare. The list is
-unnamed: each entry carries its label in `name`, of the form
+Returns the penalties that the sub-terms of the subformulas declare. The
+list is unnamed: each entry carries its label in `name`, of the form
 `parameter::subterm`, and covers that sub-term's coefficients in the
 term's own numbering. The list is empty when there are none, and for a
 term that has not been built.

@@ -34,7 +34,7 @@ seg_hold(term, hold = TRUE)
 
 ## Value
 
-The term in the requested state, its block rebuilt.
+The term in the requested state, whose block is rebuilt.
 
 ## Details
 
@@ -42,10 +42,10 @@ The working construction of Fasola, Muggeo and Kuchenhoff (2018) reaches
 its break-points through a block whose weight is frozen at the previous
 iterate. At the fixed point of that iteration the coefficients are
 therefore those of the working model, and not the least-squares
-coefficients at the positions reached. With the positions held, the term
-contributes a linear function of its remaining coefficients, and a fit
-of those coefficients is an ordinary fit, which is how `segmented` and
-`stepmented` report their coefficients. For a held term,
+coefficients at the positions reached. When the positions are held, the
+term contributes a linear function of its remaining coefficients, and a
+fit of those coefficients is an ordinary fit, which is how `segmented`
+and `stepmented` report their coefficients. For a held term,
 [`term_held()`](https://statmodels7.github.io/modelterms7/reference/term_held.md)
 returns the slots that are held,
 [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
@@ -62,15 +62,15 @@ The positions are then the values \\w_i'p_k\\ of the development at the
 current coefficients \\p_k\\.
 
 Releasing the term writes the position back into the slot as \\g_k =
--\delta_k\psi_k\\, with the coefficient vector \\p_k\\ of the
-development in place of \\\psi_k\\ for a developed position. The
-read-off of the working construction then returns the held positions,
-and the iteration can continue from them.
+-\delta_k\psi_k\\, where the coefficient vector \\p_k\\ of the
+development replaces \\\psi_k\\ for a developed position. When the
+iteration then reads off the working construction, the result is the
+held positions, and the iteration can continue from them.
 
 A continuous
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
 and a smoothed term are rejected, since their positions are ordinary
-coefficients, each with a column of its own.
+coefficients and each position has a column of its own.
 
 ## References
 

@@ -22,15 +22,15 @@ structural term implements a filter or a likelihood instead of a block.
 - [`term_penalty()`](https://statmodels7.github.io/modelterms7/reference/term_penalty.md)
   : Penalty of a Term
 - [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-  : Every Penalty a Term Carries
+  : Every Penalty That a Term Carries
 - [`term_components()`](https://statmodels7.github.io/modelterms7/reference/term_components.md)
   : How a Term's Columns Divide Among Its Own Parameters
 - [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md)
-  : The Hyperparameters a Term Holds
+  : The Hyperparameters That a Term Holds
 - [`term_grid()`](https://statmodels7.github.io/modelterms7/reference/term_grid.md)
   : The Grid Sizes of a Term
 - [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md)
-  : The Hyperparameter Values a Term Writes Out
+  : The Hyperparameter Values That a Term Writes Out
 - [`term_path_min()`](https://statmodels7.github.io/modelterms7/reference/term_path_min.md)
   : How Far Down Its Path a Term Reaches
 - [`term_search()`](https://statmodels7.github.io/modelterms7/reference/term_search.md)
@@ -42,7 +42,7 @@ structural term implements a filter or a likelihood instead of a block.
 - [`term_coef_start()`](https://statmodels7.github.io/modelterms7/reference/term_coef_start.md)
   : Where a Term's Own Coefficients Begin
 - [`term_coef_draw()`](https://statmodels7.github.io/modelterms7/reference/term_coef_draw.md)
-  : Coefficients a Term Draws for Itself
+  : Coefficients That a Term Draws for Itself
 - [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
   : Is a Term's Block the Jacobian of Its Contribution?
 - [`term_kinks()`](https://statmodels7.github.io/modelterms7/reference/term_kinks.md)
@@ -54,7 +54,7 @@ structural term implements a filter or a likelihood instead of a block.
 - [`term_tag()`](https://statmodels7.github.io/modelterms7/reference/term_tag.md)
   : The Covariance Label of a Term
 - [`term_group()`](https://statmodels7.github.io/modelterms7/reference/term_group.md)
-  : The Grouping a Term's Coefficients Are Indexed By
+  : The Grouping by Which a Term's Coefficients Are Indexed
 - [`term_within()`](https://statmodels7.github.io/modelterms7/reference/term_within.md)
   : The Within-Group Design of a Term With Grouped Effects
 - [`term_coef_names()`](https://statmodels7.github.io/modelterms7/reference/term_coef_names.md)
@@ -97,8 +97,8 @@ column of the data.
 
 ## The random-effect term
 
-Grouped intercepts, slopes and smooth curves, with the effects’
-distribution attached as the penalty, which is how a random effect
+Grouped intercepts, slopes and smooth curves, in which the distribution
+of the effects is attached as the penalty. This is how a random effect
 enters a penalized likelihood.
 
 - [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
@@ -189,8 +189,8 @@ an ordinary parameter, and the grid rule chooses where to start.
 
 Terms that rewrite the likelihood instead of adding to the predictor:
 score-driven dynamics, a latent Markov chain and break-points integrated
-out of the likelihood, each carrying its exact derivatives through its
-recursion.
+out of the likelihood. Each of these terms carries its exact derivatives
+through its recursion.
 
 - [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
   : Score-Driven Dynamics
@@ -248,7 +248,7 @@ recursion.
 - [`term_level_param()`](https://statmodels7.github.io/modelterms7/reference/term_level_param.md)
   : Which of a Term's Parameters Acts as an Intercept
 - [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
-  : The Quantities a Fitted Term Reports
+  : The Quantities That a Fitted Term Reports
 
 ## The formula layer
 
@@ -261,8 +261,8 @@ class defined outside the package needs no registration.
 
 ## The response
 
-Marking a censored response on the left side of a formula, with the
-status of each observation derived from the values given.
+Marking a censored response on the left side of a formula and deriving
+the status of each observation from the values that are given.
 statmodels7::statmod() rejects a censored response.
 
 - [`cens()`](https://statmodels7.github.io/modelterms7/reference/cens.md)

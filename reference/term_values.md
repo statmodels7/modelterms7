@@ -1,9 +1,9 @@
-# The Hyperparameter Values a Term Writes Out
+# The Hyperparameter Values That a Term Writes Out
 
-Reports the values a path visits, for each hyperparameter the caller
-wrote out as a vector instead of leaving to be built. It is the third
-state of a constructor's hyperparameter argument, beside `NULL` for a
-built grid and one number for a held value.
+Reports the values that a path visits, for each hyperparameter that the
+caller wrote out as a vector instead of leaving to be built. It is the
+third state of a constructor's hyperparameter argument, beside `NULL`
+for a built grid and one number for a held value.
 
 ## Usage
 
@@ -25,7 +25,7 @@ term_values(term, ...)
 
 A named list, one entry per penalty of the term, each a named list of
 numeric vectors keyed by hyperparameter, sorted and without duplicates.
-Empty where the term wrote nothing out.
+The list is empty where the term wrote nothing out.
 
 ## Details
 
@@ -35,8 +35,8 @@ block does not cap it and
 does not extend it: those two construct a grid, and here there is
 nothing to construct.
 
-A hyperparameter written out is still **estimated**. The caller supplies
-the values to search and not the estimate, so a fit reports the
+A hyperparameter written out is still estimated. The caller supplies the
+values to search and not the estimate, so a fit reports the
 hyperparameter as chosen by the criterion, and
 [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md)
 does not carry it.
@@ -58,12 +58,12 @@ for a held value,
 [`term_grid()`](https://statmodels7.github.io/modelterms7/reference/term_grid.md)
 for a grid to be built,
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-for the entries this is keyed by.
+for the entry names that key the result.
 
 ## Examples
 
 ``` r
-# Written out, and reported as the grid to visit.
+# A grid that is written out is reported as the grid to visit.
 term_values(lasso(~ x, lambda = c(0.1, 1, 10)))
 #> [[1]]
 #> [[1]]$lambda
@@ -71,7 +71,7 @@ term_values(lasso(~ x, lambda = c(0.1, 1, 10)))
 #> 
 #> 
 
-# Sorted and deduplicated at construction.
+# The values are sorted and deduplicated at construction.
 term_values(lasso(~ x, lambda = c(10, 0.1, 1, 1)))
 #> [[1]]
 #> [[1]]$lambda

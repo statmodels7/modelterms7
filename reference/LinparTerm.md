@@ -1,15 +1,14 @@
 # S7 Class for the Unpenalized Parametric Term
 
-The subclass of
+`LinparTerm` is the subclass of
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
-holding an unpenalized parametric block built from a one-sided formula
-through
-[`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html). It
-is what
+that holds an unpenalized parametric block built from a one-sided
+formula through
+[`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html).
 [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
-constructs, and what
+constructs it, and
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
-collects a formula's bare covariates into, so most models carry one
+collects a formula's bare covariates into it, so most models carry one
 whether or not the caller wrote it.
 
 Beyond the additive branch's four properties it records the formula,
@@ -51,8 +50,8 @@ LinparTerm(
 
 - hyper:
 
-  The hyperparameters of the term's penalty that the caller **held**, as
-  a named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller held, as a
+  named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -65,9 +64,9 @@ LinparTerm(
 
 - values:
 
-  The values a path visits, for each hyperparameter the caller wrote
-  out, as a named list of numeric vectors. Empty, the default, has the
-  path build them. See
+  The values that a path visits, for each hyperparameter that the caller
+  wrote out, as a named list of numeric vectors. Empty, the default, has
+  the path build them. See
   [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md).
 
 - min_ratio:
@@ -95,21 +94,22 @@ LinparTerm(
 - X:
 
   The design block, one row per observation: a numeric matrix or a
-  two-dimensional Matrix. Empty until
+  two-dimensional Matrix. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
 - coef_names:
 
   The block's coefficient names, one per column, prefixed by `label`
-  when there is one. Filled by
-  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md).
+  when there is one.
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+  fills it.
 
 - blueprint:
 
   A named list of everything needed to reproduce the mapping on new
-  rows. Its contents are the subclass's business; nothing outside the
-  term reads them. Empty until
+  rows. Its contents belong to the subclass, and only the term reads
+  them. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
@@ -140,13 +140,13 @@ LinparTerm(
 - drop_intercept:
 
   `TRUE` to remove the column `(Intercept)` after the model matrix is
-  built, so that the factors keep the coding they have in a formula with
-  an intercept.
+  built, so that the factors keep the coding that they have in a formula
+  with an intercept.
   [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
   sets it on a
   [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
-  written in a formula that already carries an intercept; `FALSE` by
-  default.
+  written in a formula that already carries an intercept. The default is
+  `FALSE`.
 
 ## Value
 
@@ -154,17 +154,17 @@ An S7 object of class `LinparTerm`, inheriting from
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 and
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
-with the four properties above beside the properties it inherits.
+with the four properties above beside the properties that it inherits.
 
 ## The properties of its own
 
 `formula` is the one-sided formula, kept with its environment, so a
-symbol the data do not carry is still found where the formula was
+symbol that the data do not carry is still found where the formula was
 written.
 
-`sparse` holds the value the caller gave, and `NULL` where none was
-given. The build leaves it alone and records the storage it settled on
-in `blueprint$sparse`, which is the value
+`sparse` holds the value that the caller gave, and `NULL` where the
+caller gave no value. The build leaves it unchanged and records in
+`blueprint$sparse` the storage that it resolved, which is the value that
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 reads, so the block and a prediction from it never differ in storage. A
 formula naming a factor of many levels has one non-zero per row, and
@@ -173,8 +173,8 @@ storage avoids.
 
 `contrasts` is a named list, one entry per factor, or empty for the
 session's own `options("contrasts")`. Whatever is used is recorded in
-the blueprint and reapplied, so a fit and a prediction never disagree
-about the coding.
+the blueprint and reapplied, so a fit and a prediction always use the
+same coding.
 
 `drop_intercept` is `FALSE` by default. When it is `TRUE`, the build
 removes the column `(Intercept)` after the coding, and the blueprint
@@ -202,16 +202,16 @@ and
 ``` r
 d <- data.frame(x = rnorm(20), g = factor(rep(letters[1:4], 5)))
 
-# linpar() is the constructor; the class is what it returns.
+# linpar() is the constructor and returns an object of this class.
 tm <- linpar(~ x + g)
 S7::S7_inherits(tm, LinparTerm)
 #> [1] TRUE
 tm@formula
 #> ~x + g
-#> <environment: 0x5641ed338908>
+#> <environment: 0x55787c1a9480>
 
-# The property keeps the value given; the blueprint records what the
-# build settled on, and that is what a prediction reads.
+# The property keeps the value given; the blueprint records the storage
+# that the build used, and a prediction reads the blueprint.
 bt <- term_build(tm, d)
 c(sparse_is_null = is.null(bt@sparse), settled = bt@blueprint$sparse)
 #> sparse_is_null        settled 

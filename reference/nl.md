@@ -1,9 +1,10 @@
 # Nonlinear Parametric Term
 
-A contribution \\f(x; \theta)\\ that is nonlinear in its own parameters,
-given either as a formula in the covariates and the parameters or as a
-function of both. Each parameter may carry a link, and, when the term is
-given as a formula, may itself be modeled with covariates.
+Constructs a term for a contribution \\f(x; \theta)\\ that is nonlinear
+in its own parameters and is given either as a formula in the covariates
+and the parameters or as a function of both. Each parameter may carry a
+link, and, when the term is given as a formula, may itself be modeled
+with covariates.
 
 ## Usage
 
@@ -34,18 +35,19 @@ nl(
 - ...:
 
   Two-sided formulas whose left side names a parameter, one per
-  parameter to be modeled with covariates, e.g. `theta1 ~ s(z)`. Formula
-  input only; the same as naming the right-hand side in `subformulas`.
+  parameter to be modeled with covariates, e.g. `theta1 ~ s(z)`. They
+  apply to formula input only and have the same effect as naming the
+  right-hand side in `subformulas`.
 
 - params:
 
-  The parameter names. Required when `fn` is a function, and rejected
-  when `fn` is a formula, whose parameters are read from it.
+  The parameter names. They are required when `fn` is a function and
+  rejected when `fn` is a formula, whose parameters are read from it.
 
 - x:
 
   The covariate expression handed to a function `fn`, evaluated in the
-  data. Unused for a formula.
+  data. A formula does not use it.
 
 - links:
 
@@ -55,7 +57,7 @@ nl(
 - subformulas:
 
   An optional named list of one-sided formulas, the programmatic
-  spelling of the formulas of `...`. Formula input only.
+  spelling of the formulas of `...`. It applies to formula input only.
 
 - start:
 
@@ -88,7 +90,7 @@ While \\f\\ is differentiable the term is an ordinary additive one at
 every point. The contribution is linearized as \$\$f(x;\theta(\beta))
 \approx f(x;\theta(\beta_0)) + J(\beta_0)\\(\beta - \beta_0), \qquad J =
 \frac{\partial f}{\partial \beta},\$\$ so the design block is the
-Jacobian. What separates the term from a linear one is that the block is
+Jacobian. The term differs from a linear one in that the block is
 recomputed as the parameters move:
 [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
 does that, and
@@ -98,12 +100,12 @@ Gauss-Newton step needs.
 
 ### Two ways to give the function
 
-A **formula** such as `~ theta1 * exp(theta2 * x)` is read symbolically:
-the names it uses that are not columns of the data are the parameters,
-and the derivatives come from
+A formula such as `~ theta1 * exp(theta2 * x)` is read symbolically: the
+names in the formula that are not columns of the data are the
+parameters, and the derivatives come from
 [`stats::deriv()`](https://rdrr.io/r/stats/deriv.html) and
 [`stats::D()`](https://rdrr.io/r/stats/deriv.html) where those succeed
-and from a central difference where they do not. A **function**
+and from a central difference where they do not. A function
 `f(x, theta)`, vectorized in both, is treated as opaque: its derivatives
 are the ones supplied in `gradient`, `hessian`, `deriv3` and `deriv4`
 and are otherwise differenced, and its parameters must be named in
@@ -139,7 +141,7 @@ so it takes any term of this package: `theta1 ~ ridge(~g)` is a
 population value (the intercept) plus shrunken departures,
 `theta1 ~ s(z)` lets the parameter move smoothly with a covariate, and
 `theta1 ~ random(~1 | g)` is a random intercept on the parameter's
-unconstrained scale. The penalties the sub-terms carry are reported
+unconstrained scale. The penalties that the sub-terms carry are reported
 through
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
 each entry named `parameter::subterm`, so a fitting layer estimates
@@ -171,7 +173,7 @@ and
 [`term_block_deriv2()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv2.md)
 where \\X_s\\ moves, so a fitting layer's exact outer derivatives reach
 it unchanged. The position is confined to the sub-term's own interval,
-as it is where the term stands alone.
+as it is when the sub-term is used as a term by itself.
 
 A sharp
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
@@ -214,8 +216,8 @@ orders where the block moves with the coefficients. Each order is
 obtained separately, by the first of three routes that applies: a
 function supplied here, symbolic differentiation of the expression, and
 one stencil applied to the highest analytic order below the one wanted,
-or to the value of \\f\\ where no lower order is analytic. A function
-given without derivatives, and a formula that
+or to the value of \\f\\ if every lower order is computed numerically. A
+function given without derivatives, and a formula that
 [`stats::deriv()`](https://rdrr.io/r/stats/deriv.html) and
 [`stats::D()`](https://rdrr.io/r/stats/deriv.html) cannot differentiate,
 therefore have every order differenced from the value.
@@ -238,10 +240,10 @@ derivative surfaces: the parameter names joined by `"_"`. Order two of
 `a_a_r`, `a_r_r`, `r_r_r`.
 
 The names are normalized here, so `r_a` and `a_r` are the same component
-and the order in which they are returned does not matter; what is
-checked is the set. A name that is not a component of this term, a
-missing component, a repeated one or a component of a length other than
-1 or `n` is an error at
+and the order in which they are returned does not matter; the check
+compares the set of names. A name that is not a component of this term,
+a missing component, a repeated one or a component of a length other
+than 1 or `n` is an error at
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md).
 The term does not fall back to the numerical route in these cases.
 
@@ -264,7 +266,7 @@ set.seed(1)
 dd <- data.frame(x = seq(0, 3, length.out = 60))
 dd$y <- 2 * exp(-1.3 * dd$x) + rnorm(60, sd = 0.05)
 
-# an exponential decay, with the rate held positive by a log link
+# The term is an exponential decay, and a log link holds the rate positive.
 spec <- nl(~ a * exp(-r * x),
            links = list(r = linkfunctions7::log_link()),
            start = list(a = 1, r = 1))
@@ -274,15 +276,15 @@ term_coef_names(built)
 dim(term_matrix(built))
 #> [1] 60  2
 
-# the amplitude developed by group: a population value plus shrunken
-# departures, whose hyperparameter a fitting layer estimates
+# The amplitude is developed by group: a population value plus shrunken
+# departures, whose hyperparameter a fitting layer estimates.
 dd$g <- factor(rep(c("u", "v"), 30))
 sub <- term_build(nl(~ a * exp(-r * x), a ~ ridge(~g),
                      start = list(a = 1, r = 1)), dd)
 vapply(term_penalties(sub), function(e) e$name, character(1))
 #> [1] "a::ridge(~g)"
 
-# the first two orders written out by hand
+# The first two orders are written out by hand.
 g <- function(theta, data) {
   e <- exp(-theta$r * data$x)
   list(a = e, r = -theta$a * data$x * e)
@@ -304,7 +306,7 @@ exf <- term_build(nl(f, params = c("a", "r"), x = x, gradient = g,
 max(abs(nl_fderiv(exf, order = 3)$r_r_r + dd$x^3 * exp(-dd$x)))
 #> [1] 9.263701e-13
 
-# Fitted. The data are simulated from a known truth, so the
+# The model is fitted to data simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(8)
@@ -313,7 +315,7 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   ft <- statmodels7::statmod(
     y ~ 0 + nl(~ a * exp(-r * x), start = list(a = 1, r = 1)),
     distributions7::gaussian1_distrib(), fd)
-  # truth: a = 3 and r = 0.8
+  # The true values are a = 3 and r = 0.8.
   round(coef(ft)$mu, 2)
 }
 #> nl.a nl.r 

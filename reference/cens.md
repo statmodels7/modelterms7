@@ -20,15 +20,15 @@ cens(y, lwr = -Inf, upr = Inf)
 - y:
 
   A numeric vector of responses, `NA` at an interval-censored
-  observation. Coerced with
+  observation. The vector is coerced with
   [`as.numeric()`](https://rdrr.io/r/base/numeric.html), so an integer
   vector is accepted; a factor is rejected.
 
 - lwr:
 
   A numeric lower bound, of length 1 or `length(y)`, recycled to
-  `length(y)`. `-Inf` by default, which is no left censoring. A factor
-  is rejected. Any other length signals the error
+  `length(y)`. The default is `-Inf`, which means that there is no left
+  censoring. A factor is rejected. Any other length signals the error
   `"'lwr' must have length 1 or length(y)."`, and an `NA` entry signals
   `"'lwr' must not contain NA."`.
 
@@ -42,14 +42,14 @@ cens(y, lwr = -Inf, upr = Inf)
 
 A
 [`censored_response()`](https://statmodels7.github.io/modelterms7/reference/censored_response.md)
-object holding `length(y)` observations, carrying `y` unchanged (`NA`
+object with `length(y)` observations. It carries `y` unchanged (`NA`
 included), the recycled `lwr` and `upr`, and the derived `status`.
 
 ## The rule that assigns a status
 
 The bounds are recycled to `length(y)` first, so a scalar applies to
 every observation and a vector gives one bound per observation. Each
-entry is then classified by where it sits, with the bounds inclusive:
+entry is then classified by where it sits, and the bounds are inclusive:
 
 |                                |              |                                |
 |--------------------------------|--------------|--------------------------------|
@@ -62,9 +62,9 @@ entry is then classified by where it sits, with the bounds inclusive:
 The left test is applied first and the right test second, and the later
 assignment overrides the earlier one, so a value that met both
 conditions would receive the status `"right"`. The class validator
-rejects `lwr >= upr`, so no value meets both. An `NA` value without two
-finite bounds carries no information about \\Y\\, and `cens()` signals
-an error.
+rejects `lwr >= upr`, so a value cannot meet both. An `NA` value without
+two finite bounds carries no information about \\Y\\, and `cens()`
+signals an error.
 
 At the defaults `lwr = -Inf` and `upr = Inf`, every finite value has the
 status `"observed"`, and the object then carries the same information as
@@ -73,7 +73,7 @@ receives the status `"left"` and the value `Inf` the status `"right"`.
 
 ## Where it can be used
 
-On the left of a formula passed to
+A call to `cens()` goes on the left of a formula passed to
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md),
 which returns the object as its `response` element.
 [`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
@@ -89,10 +89,10 @@ for the four contributions that such an assembler would need.
 [`censored_response()`](https://statmodels7.github.io/modelterms7/reference/censored_response.md)
 for the class and the four likelihood contributions;
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
-for the formula it goes into;
+for the formula in which it is used;
 [`distributions7::distrib_grad_cdf()`](https://statmodels7.github.io/distributions7/reference/distrib_grad_cdf.html)
-for the distribution-function derivatives a censored likelihood is built
-from.
+for the distribution-function derivatives from which a censored
+likelihood is built.
 
 ## Examples
 
@@ -103,7 +103,8 @@ r <- cens(c(0, 0.7, 2.4), lwr = 0)
 r@status
 #> [1] "left"     "observed" "observed"
 
-# One of each status. The NA is interval-censored between the bounds.
+# The call produces one of each status. The NA is interval-censored between
+# the bounds.
 r2 <- cens(c(0, 1, 5, NA), lwr = 0, upr = 5)
 r2
 #> <censored_response> 4 observations: 1 observed, 1 left, 1 right, 1 interval
@@ -118,7 +119,7 @@ data.frame(y = r2@y, lwr = r2@lwr, upr = r2@upr, status = r2@status)
 cens(c(1, 2, 3), lwr = c(-Inf, 2, -Inf), upr = c(Inf, Inf, 3))@status
 #> [1] "observed" "left"     "right"   
 
-# With no bounds given, every observation is exact.
+# If no bounds are given, every observation is exact.
 all(cens(rnorm(20))@status == "observed")
 #> [1] TRUE
 

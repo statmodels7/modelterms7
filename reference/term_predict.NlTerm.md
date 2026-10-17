@@ -1,9 +1,9 @@
 # A Nonlinear Term's Block at New Rows
 
-The Jacobian of \\f\\ evaluated at the new rows, at the coefficients the
-term currently carries. Each parameter's subformula is reapplied through
-its sub-terms' own blueprints, so a basis or a set of contrasts inside a
-submodel is not relearned.
+Returns the Jacobian of \\f\\ evaluated at the new rows, at the
+coefficients that the term currently carries. Each parameter's
+subformula is reapplied through its sub-terms' own blueprints, so a
+basis or a set of contrasts inside a submodel is not relearned.
 
 ## Arguments
 
@@ -16,8 +16,8 @@ submodel is not relearned.
 
 - newdata:
 
-  A data frame carrying the covariates the function names and whatever
-  the subformulas name.
+  A data frame carrying the covariates that the function names and
+  whatever the subformulas name.
 
 - ...:
 
@@ -31,19 +31,18 @@ columns, with the term's coefficient names as column names.
 
 ## Details
 
-The coefficients are the ones
+The coefficients are the ones that
 [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
-last committed, not new ones: the block a prediction returns must
-multiply the same coefficients the fit reached, or \\\tilde{X}\beta\\ is
-not the fitted contribution.
+last committed, not new ones: the block that a prediction returns must
+multiply the same coefficients that the fit reached, or
+\\\tilde{X}\beta\\ is not the fitted contribution.
 [`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
-is what reports \\f\\ itself at new rows.
+reports \\f\\ itself at new rows.
 
-Reading the block on its own is rarely what a caller wants for a
-nonlinear term. \\\tilde{X}\beta\\ is the **linearization** of \\f\\:
-the two agree in the increment that a Gauss-Newton step takes, and in
-general they differ in value. `term_value(term, newdata = ...)` returns
-the contribution.
+For a nonlinear term, a caller rarely wants to read the block on its
+own. \\\tilde{X}\beta\\ is the linearization of \\f\\: the two agree in
+the increment that a Gauss-Newton step takes, and in general they differ
+in value. `term_value(term, newdata = ...)` returns the contribution.
 
 ## See also
 
@@ -74,7 +73,8 @@ term_predict(b, nd)
 #> [2,] 0.14227407 -0.4268222
 #> [3,] 0.03877421 -0.1938710
 
-# Which is the linearization, not the function: read the value for that.
+# The product of the block and the coefficients is the linearization, not
+# the function: the value is the function.
 cbind(linear = as.numeric(term_predict(b, nd) %*% b@blueprint$coef),
       value = term_value(b, newdata = nd),
       truth = 2 * exp(-1.3 * nd$x))

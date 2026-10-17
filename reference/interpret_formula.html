@@ -7,8 +7,8 @@ is collected into a single linpar() block with the usual
 stats::model.matrix() conventions. An offset() term is not among the
 labels that stats::terms() returns, so it is dropped without a message;
 statmodels7::statmod() separates offsets before calling this function.
-The terms come back unbuilt, so the caller decides which data each is built
-against."><meta property="og:description" content="Splits a model formula into a response and a named list of term
+The terms are returned unbuilt, so the caller chooses the data against which
+each term is built."><meta property="og:description" content="Splits a model formula into a response and a named list of term
 specifications. A call on the right-hand side is evaluated, and if its value
 inherits from model_term() it becomes a term of its own; everything else,
 meaning bare covariates, transformations such as log(x) and interactions,
@@ -16,8 +16,8 @@ is collected into a single linpar() block with the usual
 stats::model.matrix() conventions. An offset() term is not among the
 labels that stats::terms() returns, so it is dropped without a message;
 statmodels7::statmod() separates offsets before calling this function.
-The terms come back unbuilt, so the caller decides which data each is built
-against."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
+The terms are returned unbuilt, so the caller chooses the data against which
+each term is built."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -25,7 +25,7 @@ against."><meta property="og:image" content="https://statmodels7.github.io/model
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,8 +60,8 @@ is collected into a single <code><a href="linpar.html">linpar()</a></code> block
 <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">stats::model.matrix()</a></code> conventions. An <code><a href="https://rdrr.io/r/stats/offset.html" class="external-link">offset()</a></code> term is not among the
 labels that <code><a href="https://rdrr.io/r/stats/terms.html" class="external-link">stats::terms()</a></code> returns, so it is dropped without a message;
 <code><a href="https://statmodels7.github.io/statmodels7/reference/statmod.html" class="external-link">statmodels7::statmod()</a></code> separates offsets before calling this function.
-The terms come back unbuilt, so the caller decides which data each is built
-against.</p>
+The terms are returned unbuilt, so the caller chooses the data against which
+each term is built.</p>
     </div>
 
     <div class="section level2">
@@ -75,9 +75,10 @@ against.</p>
 
 <dl><dt id="arg-formula">formula<a class="anchor" aria-label="anchor" href="#arg-formula"></a></dt>
 <dd><p>A two-sided or one-sided model formula. Anything else signals
-the error <code>"'formula' must be a formula."</code>. Its environment is where a term call's
-symbols are looked up when <code>data</code> does not carry them, and it is carried
-onto the formula of the implicit <code>linpar</code> block.</p></dd>
+the error <code>"'formula' must be a formula."</code>. The symbols of a term call are
+looked up in the formula's environment when <code>data</code> does not carry them, and
+that environment is carried onto the formula of the implicit <code>linpar</code>
+block.</p></dd>
 
 
 <dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
@@ -86,12 +87,13 @@ Anything else signals the error <code>"'data' must be a data frame."</code>.</p>
 
 
 <dt id="arg-linpar">linpar<a class="anchor" aria-label="anchor" href="#arg-linpar"></a></dt>
-<dd><p>A named list of arguments for the <strong>implicit</strong> <code><a href="linpar.html">linpar()</a></code>
-term, the one the bare covariates collapse into: <code>sparse</code> and <code>contrasts</code>.
-This is the only place they can be given, that term never being written by
-the caller. Empty by default, which leaves <code><a href="linpar.html">linpar()</a></code>'s own defaults. A
-<code><a href="linpar.html">linpar()</a></code> term the caller writes out takes its own arguments and ignores
-this one. Anything that is not a list signals an error.</p></dd>
+<dd><p>A named list of arguments for the implicit <code><a href="linpar.html">linpar()</a></code> term,
+the term into which the bare covariates collapse; the arguments are
+<code>sparse</code> and <code>contrasts</code>. This is the only place where they can be given,
+because the caller never writes that term. The default is an empty list,
+which leaves <code><a href="linpar.html">linpar()</a></code>'s own defaults in place. A <code><a href="linpar.html">linpar()</a></code> term that the
+caller writes out takes its own arguments and ignores this one. Anything
+that is not a list signals an error.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -122,20 +124,20 @@ defined outside the package works in a formula without a list of special
 names to amend. <code>log(x)</code> evaluates to a numeric vector and stays a
 covariate; <code>s(x, basis7::bspline_smooth(k = 5))</code> evaluates to a <code>SmoothTerm</code>
 and is routed as a term. A call whose evaluation signals an error, such as a
-term constructor called with an argument it does not have, signals the error
-<code>"evaluating '&lt;label&gt;' failed: &lt;message&gt;"</code>, so the call is not treated as a
-covariate.</p>
+term constructor called with an argument that it does not have, signals the
+error <code>"evaluating '&lt;label&gt;' failed: &lt;message&gt;"</code>, so the call is not treated
+as a covariate.</p>
 <p>Some labels are never evaluated: <code>:</code>, <code>*</code>, <code>^</code>, <code>%in%</code>, <code>+</code>, <code>-</code>, <code>(</code> and
 <code>I</code>. A bare interaction <code>x1:x2</code> parses as a call to <code>:</code>, which on numeric
 vectors is the sequence operator and would return something unrelated to the
-column <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">stats::model.matrix()</a></code> builds. Those labels go straight to the
+column that <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">stats::model.matrix()</a></code> builds. Those labels go straight to the
 parametric block.</p>
-<p>A call whose value is neither a term nor something a model matrix can hold
-signals an error that names the label and the class of the value. The
+<p>A call whose value is neither a term nor something that a model matrix can
+hold signals an error that names the label and the class of the value. The
 commonest cause is a masked name. The package <code>mgcv</code> also exports <code><a href="s.html">s()</a></code> and
-<code><a href="te.html">te()</a></code>, and <code>segmented</code> exports <code><a href="seg.html">seg()</a></code>, so where this package exports a
-term of that name and the name resolves elsewhere, the message states where
-the function was found and suggests <code>modelterms7::</code>.</p>
+<code><a href="te.html">te()</a></code>, and <code>segmented</code> exports <code><a href="seg.html">seg()</a></code>, so where this package exports a term
+of that name and the name resolves elsewhere, the message states where the
+function was found and suggests <code>modelterms7::</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="the-response-and-the-intercept">The response and the intercept<a class="anchor" aria-label="anchor" href="#the-response-and-the-intercept"></a></h2>
@@ -147,8 +149,8 @@ parametric block. <code>y ~ ridge(~ g)</code> still produces an intercept-only
 <code>linpar</code> block, and <code>y ~ ridge(~ g) - 1</code> produces no <code>linpar</code> block at all.</p>
 <p>A <code><a href="linpar.html">linpar()</a></code> written in a formula that carries an intercept drops its own
 column <code>(Intercept)</code> after its model matrix is built, so its factors keep
-the coding they have with an intercept and <code>y ~ linpar(~ x + g)</code> gives the
-columns of <code>lm(y ~ x + g)</code>. Under <code>0 +</code> it keeps the column.</p>
+the coding that they have with an intercept and <code>y ~ linpar(~ x + g)</code> gives
+the columns of <code>lm(y ~ x + g)</code>. Under <code>0 +</code> it keeps the column.</p>
     </div>
     <div class="section level2">
     <h2 id="one-covariate-is-removed">One covariate is removed<a class="anchor" aria-label="anchor" href="#one-covariate-is-removed"></a></h2>
@@ -168,7 +170,8 @@ modify another term.</p>
     </div>
     <div class="section level2">
     <h2 id="what-it-does-not-do">What it does not do<a class="anchor" aria-label="anchor" href="#what-it-does-not-do"></a></h2>
-    <p>Nothing is built: every element of <code>terms</code> is a specification, and
+    <p>The function does not build any term: every element of <code>terms</code> is a
+specification, and
 <code><a href="term_is_built.html">term_is_built()</a></code> is <code>FALSE</code> for all of them. <code>data</code> is read for
 <code><a href="https://rdrr.io/r/stats/terms.html" class="external-link">stats::terms()</a></code>'s variable classification and for evaluating the term calls
 and the response, and the term constructors themselves do not touch it.</p>
@@ -178,9 +181,9 @@ column.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="linpar.html">linpar()</a></code> for the block the covariates collapse into, <code><a href="cens.html">cens()</a></code> for
-the response constructor, <code><a href="check_term.html">check_term()</a></code> for validating one of the
-returned specifications, and <code><a href="term_build.html">term_build()</a></code> for building it.</p></div>
+    <div class="dont-index"><p><code><a href="linpar.html">linpar()</a></code> for the block into which the covariates collapse,
+<code><a href="cens.html">cens()</a></code> for the response constructor, <code><a href="check_term.html">check_term()</a></code> for validating one of
+the returned specifications, and <code><a href="term_build.html">term_build()</a></code> for building it.</p></div>
     </div>
 
     <div class="section level2">
@@ -194,7 +197,7 @@ returned specifications, and <code><a href="term_build.html">term_build()</a></c
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "linpar"</span>
 <span class="r-in"><span><span class="va">out</span><span class="op">$</span><span class="va">terms</span><span class="op">$</span><span class="va">linpar</span><span class="op">@</span><span class="va">formula</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x1 + log(x2)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x56420b5e8c80&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5578a4546a58&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A constructor call becomes a term, keyed by its label in the formula.</span></span></span>
 <span class="r-in"><span><span class="va">out2</span> <span class="op">&lt;-</span> <span class="fu">interpret_formula</span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="fu"><a href="s.html">s</a></span><span class="op">(</span><span class="va">x2</span>, <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="ridge.html">ridge</a></span><span class="op">(</span><span class="op">~</span> <span class="va">g</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
@@ -208,7 +211,7 @@ returned specifications, and <code><a href="term_build.html">term_build()</a></c
 <span class="r-out co"><span class="r-pr">#&gt;</span>                            ridge(~g) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         "modelterms7::PenalizedTerm" </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Nothing is built yet.</span></span></span>
+<span class="r-in"><span><span class="co"># The terms are not built yet.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="va">out2</span><span class="op">$</span><span class="va">terms</span>, <span class="va">term_is_built</span>, <span class="fu"><a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                               linpar s(x2, basis7::bspline_smooth(k = 5)) </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                FALSE                                FALSE </span>
@@ -229,19 +232,20 @@ returned specifications, and <code><a href="term_build.html">term_build()</a></c
 <span class="r-in"><span><span class="co"># An interaction is a covariate: `:` is never evaluated.</span></span></span>
 <span class="r-in"><span><span class="fu">interpret_formula</span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span><span class="op">:</span><span class="va">x2</span> <span class="op">+</span> <span class="va">g</span>, <span class="va">dd</span><span class="op">)</span><span class="op">$</span><span class="va">terms</span><span class="op">$</span><span class="va">linpar</span><span class="op">@</span><span class="va">formula</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~g + x1:x2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x56420b5e8c80&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5578a4546a58&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># seg() carries the linear effect, so the bare covariate is removed.</span></span></span>
 <span class="r-in"><span><span class="va">w</span> <span class="op">&lt;-</span> <span class="fu">interpret_formula</span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="fu"><a href="seg.html">seg</a></span><span class="op">(</span><span class="va">x1</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>the covariate 'x1' is exactly collinear with the linear effect that 'seg' carries, and has been removed from the parametric part. Write seg(x1, linear = FALSE) to keep the linear effect outside the term instead.</span>
 <span class="r-in"><span><span class="va">w</span><span class="op">$</span><span class="va">terms</span><span class="op">$</span><span class="va">linpar</span><span class="op">@</span><span class="va">formula</span>          <span class="co"># x1 is gone; the term carries it</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x56420b5e8c80&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5578a4546a58&gt;</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Unless the term is told not to own it.</span></span></span>
+<span class="r-in"><span><span class="co"># The bare covariate is kept when the term is told not to own the linear</span></span></span>
+<span class="r-in"><span><span class="co"># effect.</span></span></span>
 <span class="r-in"><span><span class="fu">interpret_formula</span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="fu"><a href="seg.html">seg</a></span><span class="op">(</span><span class="va">x1</span>, linear <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">$</span><span class="va">terms</span><span class="op">$</span><span class="va">linpar</span><span class="op">@</span><span class="va">formula</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x56420b5e8c80&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5578a4546a58&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Arguments for the implicit block go through `linpar`.</span></span></span>
 <span class="r-in"><span><span class="va">sp</span> <span class="op">&lt;-</span> <span class="fu">interpret_formula</span><span class="op">(</span><span class="va">y</span> <span class="op">~</span> <span class="va">g</span>, <span class="va">dd</span>, linpar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>sparse <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>

@@ -1,8 +1,8 @@
 # Observed Hessian of a Marginal Break-Point Term
 
-The exact observed Hessian of the marginal log-likelihood over a
-caller's unknowns, the coefficients of every equation together with the
-term's own parameters on the unconstrained scale.
+Computes the exact observed Hessian of the marginal log-likelihood over
+a caller's unknowns, the coefficients of every equation together with
+the term's own parameters on the unconstrained scale.
 
 ## Arguments
 
@@ -32,9 +32,9 @@ term's own parameters on the unconstrained scale.
 
 - seed:
 
-  A list with one matrix per distribution parameter, each of one row per
-  observation, holding the derivative of that parameter's predictor in
-  the caller's unknowns.
+  A list with one matrix per distribution parameter; each matrix has one
+  row per observation and holds the derivative of that parameter's
+  predictor in the caller's unknowns.
 
 - cols:
 
@@ -62,17 +62,21 @@ weights, and `gradient` and `hessian`, which are weighted.
 
 ## Details
 
-Analytic throughout. The step kind propagates first and second
-derivatives through the side chain's forward recursion, the prior's
-interval-mass derivatives closed for the gaussian and read off the cdf
-surface of distributions7 for an explicit prior. The column of an
-explicit prior's degrees of freedom comes from a single
-finite-difference stencil of that surface, the one piece that is not in
-closed form. The continuous kinds differentiate the node sum twice; the
-moving panels below the data are affine in the parameters of the prior,
-so their motion enters the chain rule with no curvature of its own. The
-one-break-point gaussian step uses an interval sum that shares no
-arithmetic with the propagation, and the tests compare the two.
+The method takes no finite differences of its own. The step kind
+propagates first and second derivatives through the side chain's forward
+recursion; the prior's interval-mass derivatives are closed for the
+gaussian and are read off the cdf surface of distributions7 for an
+explicit prior. For a Student t prior that package integrates the exact
+derivatives of the density by a compiled rule, so the column of the
+degrees of freedom is exact to the accuracy of the quadrature. A prior
+family without derivatives of its cdf receives the numerical fallbacks
+of distributions7, and the columns of its own parameters are then
+finite-difference approximations. The continuous kinds differentiate the
+node sum twice; the moving panels below the data are affine in the
+parameters of the prior, so their motion enters the chain rule with no
+curvature of its own. The one-break-point gaussian step uses an interval
+sum that shares no arithmetic with the propagation, and the tests
+compare the two.
 
 The marginal likelihood of a group does not factorize over its
 observations, so an observation weight has a meaning only when it is

@@ -1,9 +1,10 @@
 # The Chart's Fourth Derivatives, in Two Directions
 
+Differentiates
 [`.gas_chart_derivs3()`](https://statmodels7.github.io/modelterms7/reference/dot-gas_chart_derivs3.md)
-differentiated once more and contracted against a second direction: one
-matrix for the level, one per score loading and one per autoregressive
-coefficient.
+once more and contracts the result against a second direction, which
+gives one matrix for the level, one per score loading and one per
+autoregressive coefficient.
 
 ## Usage
 
@@ -33,18 +34,18 @@ coefficient.
 
 ## Value
 
-A list with `q_omega`, `q_a` and `q_b`, each a matrix or a list of
+A list with `q_omega`, `q_a` and `q_b`; each is a matrix or a list of
 matrices over the term's base coordinates.
 
 ## Details
 
 The level and the loadings ride scalar links, so each of their fourth
-derivatives is a single diagonal entry, the link's own \\h''''\\ times
-the two directions' components there. The persistence is a composition,
-the Levinson-Durbin map read at \\\rho = h^{-1}(z)\\, whose inner map is
-diagonal. Differentiating \\B(z) = \xi(\rho(z))\\ four times and
-contracting two slots leaves, with \\p_v = h'v\\ and \\p_w = h'w\\ the
-directions pushed onto the partial autocorrelations,
+derivatives is a single diagonal entry, equal to the link's own
+\\h''''\\ times the two directions' components there. The persistence is
+a composition, the Levinson-Durbin map read at \\\rho = h^{-1}(z)\\,
+whose inner map is diagonal. Differentiating \\B(z) = \xi(\rho(z))\\
+four times and contracting two slots leaves, with \\p_v = h'v\\ and
+\\p_w = h'w\\ the directions pushed onto the partial autocorrelations,
 \$\$Q\[p_v,p_w\]h'h'^{\top} + T\[p_v\]\big(h''w\\h'^{\top} +
 h'\\h''w^{\top}\big) + T\[p_w\]\big(h''v\\h'^{\top} +
 h'\\h''v^{\top}\big) + T\[h''vw\]h'h'^{\top}\$\$ \$\${}+

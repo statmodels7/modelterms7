@@ -7,8 +7,8 @@ or
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
 term by scoring an equally spaced grid between the 5th and the 95th
 percentile of the covariate on the least-squares profile of the term's
-own columns, and returns the specification with `psi` set to the best
-combination found.
+own columns, and returns the specification in which `psi` is set to the
+best combination found.
 
 ## Usage
 
@@ -37,7 +37,7 @@ seg_start(spec, data, y, k = 10)
 
 ## Value
 
-The specification, with `psi` set.
+The specification, in which `psi` is set.
 
 ## Details
 
@@ -64,10 +64,10 @@ are several break-points.
 The grid is scored on the residual sum of squares of an intercept, the
 term's columns at each candidate position and, where the term carries
 one, the linear effect. That is the exact profile for a gaussian
-response and an adequate starting rule for any other, the quantity being
-used to place a starting value and not to fit. The positions found seed
-a development as well, each starting vector projecting the position onto
-the sub-design.
+response and an adequate starting rule for any other, since the quantity
+is used to place a starting value and not to fit. The positions found
+seed a development as well, and each starting vector projects the
+position onto the sub-design.
 
 ## References
 

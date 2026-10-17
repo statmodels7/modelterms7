@@ -4,9 +4,9 @@ Specifies an unpenalized parametric block: the model matrix of a
 one-sided formula, with the usual
 [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)
 conventions for factors, contrasts, interactions and the intercept. It
-is the plainest term in the package, and the one
+is the plainest term in the package, and
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
-collects a formula's bare covariates into.
+collects a formula's bare covariates into it.
 
 The term's contribution to the predictor is \\X\beta\\, with no penalty,
 so every column costs one degree of freedom and
@@ -33,9 +33,9 @@ linpar(formula, label = "", sparse = NULL, contrasts = NULL)
 - label:
 
   A single character string, `""` by default. When non-empty it is
-  prefixed to every coefficient name as `label.name`, and it is the
-  title [`plot()`](https://rdrr.io/r/graphics/plot.default.html) uses.
-  Any other value is rejected.
+  prefixed to every coefficient name as `label.name`, and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) uses it as
+  the title. Any other value is rejected.
 
 - sparse:
 
@@ -46,7 +46,7 @@ linpar(formula, label = "", sparse = NULL, contrasts = NULL)
 
 - contrasts:
 
-  A named list of contrasts for the formula's factors, of the kind
+  A named list of contrasts for the formula's factors, of the kind that
   [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)'s
   `contrasts.arg` takes, or `NULL`, the default, for the session's
   `options("contrasts")`. A value that is not a list is rejected.
@@ -55,9 +55,10 @@ linpar(formula, label = "", sparse = NULL, contrasts = NULL)
 
 An unbuilt
 [`LinparTerm()`](https://statmodels7.github.io/modelterms7/reference/LinparTerm.md):
-a specification, with `X`, `coef_names` and `blueprint` empty until
+a specification in which `X`, `coef_names` and `blueprint` are empty
+until
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-fills them, and `penalty` `NULL` permanently.
+fills them, and `penalty` is `NULL` permanently.
 
 ## The block, and what a build records
 
@@ -70,12 +71,12 @@ still gets its column.
 
 The blueprint records the terms object, the factor levels
 ([`stats::.getXlevels()`](https://rdrr.io/r/stats/checkMFClasses.html)),
-the contrasts actually used, the storage settled on and the
+the contrasts actually used, the storage chosen at build and the
 `drop_intercept` setting.
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 reapplies each of them, so a factor column at new rows is encoded
-against the levels seen at build time. A level the blueprint does not
-know is rejected by
+against the levels seen at build time. A level that the blueprint does
+not record is rejected by
 [`stats::model.frame()`](https://rdrr.io/r/stats/model.frame.html) with
 `"factor g has new levels zz"`.
 
@@ -87,9 +88,9 @@ blocks: the block that
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
 builds implicitly, which holds the intercept, and the block of
 `linpar()`, which holds `x1` and `x2`. The explicit constructor is
-therefore for callers wanting more than one parametric block with
-distinct labels, or wanting to set `sparse` or `contrasts` on a block.
-Arguments for the block that
+therefore intended for callers who want more than one parametric block
+with distinct labels, or who want to set `sparse` or `contrasts` on a
+block. Arguments for the block that
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
 builds implicitly go through that function's own `linpar` argument.
 
@@ -106,10 +107,10 @@ with the implicit block, `y ~ linpar(~ x + g)` gives the columns of
 which builds the block sparse. Building a dense matrix and compressing
 it would use the memory that the sparse route is meant to avoid.
 
-Sparse storage pays where the formula carries a **factor of many
-levels**, whose indicator columns hold one non-zero per row. On numeric
-covariates the block has few zero entries, and sparse storage then costs
-more than it saves.
+Sparse storage pays where the formula carries a factor of many levels,
+whose indicator columns hold one non-zero per row. On numeric covariates
+the block has few zero entries, and sparse storage then costs more than
+it saves.
 
 `sparse = NULL`, the default, settles the storage at build from the size
 of the indicator part: the block is built sparse when
@@ -194,8 +195,8 @@ class(term_matrix(term_build(linpar(~ g), big)))
 #> [1] "Matrix"
 
 
-# Fitted. The data are simulated from a known truth, so the
-# estimates below can be read against it.
+# The data are simulated from a known truth, so the estimates
+# below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(1)
   fd <- data.frame(x = runif(200, -2, 2),
@@ -203,7 +204,7 @@ if (requireNamespace("statmodels7", quietly = TRUE)) {
   fd$y <- 1 + 2 * fd$x + 0.5 * (fd$g == "b") + rnorm(200, sd = 0.4)
   ft <- statmodels7::statmod(y ~ x + g,
                              distributions7::gaussian1_distrib(), fd)
-  # truth: intercept 1, slope 2, and 0.5 for the second level
+  # The true values are intercept 1, slope 2, and 0.5 for the second level
   round(coef(ft)$mu, 2)
 }
 #> (Intercept)           x          gb 

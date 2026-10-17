@@ -1,7 +1,8 @@
 # The Score-Driven Recursion in R
 
-The loop `gas_filter_cpp()` replaces, kept so the compiled route has
-something to be compared against that shares none of its code.
+Implements in R the loop that `gas_filter_cpp()` replaces, so that the
+compiled route can be compared against an implementation that shares
+none of its code.
 
 ## Usage
 

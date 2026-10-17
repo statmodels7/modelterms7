@@ -1,8 +1,8 @@
 # The Derivative of a Filtered Predictor in the Static One
 
-How the predictor a structural term produces moves when the static part
-of the predictor moves, one row per observation and one column per
-direction the caller supplies.
+Returns how the predictor that a structural term produces moves when the
+static part of the predictor moves, one row per observation and one
+column per direction that the caller supplies.
 
 ## Usage
 
@@ -22,8 +22,8 @@ term_static_deriv(term, curv, X, psi, ...)
 
 - X:
 
-  The directions to propagate, one column each. Ordinarily the
-  equation's design, so the result is one row per observation and one
+  The directions to propagate, one column each. Ordinarily `X` is the
+  equation's design, so the result has one row per observation and one
   column per coefficient.
 
 - psi:
@@ -39,8 +39,8 @@ term_static_deriv(term, curv, X, psi, ...)
 
 A matrix of `X`'s dimensions, holding the full derivative \\\partial
 \eta_t/\partial \beta = x_t + \partial f_t/\partial \beta\\ for each
-column of `X`, so that the design is already included. `NULL` for a term
-that carries no state.
+column of `X`, so that the design is already included. The value is
+`NULL` for a term that carries no state.
 
 ## Details
 
@@ -56,8 +56,8 @@ and the second piece obeys the recursion that the filter already runs,
 score loadings, \\\xi_j\\ the autoregressive coefficients and
 \\\ell''\_t\\ the curvature. The curvature is the one that
 [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
-returns, so no callback is evaluated here and the pass is arithmetic
-alone.
+returns, so this pass does not evaluate any callback and consists only
+of arithmetic.
 
 Without this derivative, the standard error of the predictor accounts
 for the static part only and leaves out the part that runs through the

@@ -1,9 +1,9 @@
 # Apply a Structural Term to a Linear Predictor
 
-Runs the term's recursion over the data and returns the predictor it
-produces, together with the derivative of that predictor with respect to
-the term's own parameters. This is the operation that defines a
-filter-shaped structural term such as
+Runs the term's recursion over the data and returns the predictor that
+it produces, together with the derivative of that predictor with respect
+to the term's own parameters. This operation defines a filter-shaped
+structural term such as
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md):
 the predictor at one observation depends on the others, so it cannot be
 written as a block of columns. The structural terms of the likelihood
@@ -60,9 +60,9 @@ term_filter(term, eta, y, score, curvature, psi, ...)
 
 ## Value
 
-A list with `eta`, the predictor the term produces, `jacobian`, an `n`
-by `length(psi)` matrix of its derivatives with respect to `psi`, and
-`curv`, the value of `curvature` at each predictor. That last one is
+A list with `eta`, the predictor that the term produces, `jacobian`, an
+`n` by `length(psi)` matrix of its derivatives with respect to `psi`,
+and `curv`, the value of `curvature` at each predictor. That last one is
 returned because the recursion evaluates it anyway, so a consumer
 running a second pass at the same point, as
 [`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
@@ -80,10 +80,11 @@ where \\f_t\\ is the term's own recursion, driven by `score` and
 `curvature` evaluated at the predictor already produced. Both are read
 at \\\eta_t\\, so `curvature` is the second derivative \\\partial^{2}
 \ell_t / \partial \eta^{2}\\ and is negative at an ordinary observation.
-Its sign matters: the predictor does not depend on `curvature`, but the
-Jacobian does, so passing the information, which is the negative of the
-curvature, returns the correct predictor together with a Jacobian that
-is not its derivative, and no error is signaled.
+The sign of `curvature` matters: the predictor does not depend on
+`curvature`, but the Jacobian does, so passing the information, which is
+the negative of the curvature, returns the correct predictor together
+with a Jacobian that is not its derivative, and the filter does not
+signal an error.
 
 The filter applies no scaling of its own. The callbacks supplied are the
 driving sequence of the recursion, and a fitting layer that uses the
@@ -91,11 +92,11 @@ driving sequence of the recursion, and a fitting layer that uses the
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
 builds callbacks that return the scaled score and its derivative.
 
-The derivative is returned because the recursion is the only place it
-can be computed. Propagating it beside the state costs one extra vector
-per parameter and is exact; a model layer differencing the filter
-instead would pay one pass per parameter and inherit the error of the
-difference.
+The derivative is returned because the recursion is the only place in
+which it can be computed. Propagating it beside the state costs one
+extra vector per parameter and is exact; a model layer differencing the
+filter instead would pay one pass per parameter and inherit the error of
+the difference.
 
 ## See also
 
@@ -117,7 +118,8 @@ set.seed(1)
 dd <- data.frame(t = 1:20, y = rnorm(20))
 term <- term_build(gas(p = 1, q = 1, time = t), dd)
 
-# the score and curvature a Gaussian mean would supply
+# The callbacks return the score and the curvature that a Gaussian mean
+# would supply.
 out <- term_filter(term, eta = rep(0, 20), y = dd$y,
                    score = function(e, i) dd$y[i] - e,
                    curvature = function(e, i) -1,

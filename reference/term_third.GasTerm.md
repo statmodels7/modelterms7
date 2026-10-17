@@ -1,8 +1,8 @@
 # Third Derivatives of a Score-Driven Predictor
 
-The second derivative of the filter's predictor differentiated once more
-along one direction, propagated beside the state exactly as the first
-two orders are.
+Differentiates the second derivative of the filter's predictor once more
+along one direction and propagates the result beside the state exactly
+as the first two orders are propagated.
 
 ## Arguments
 
@@ -42,7 +42,7 @@ two orders are.
 
 - direction:
 
-  The direction to contract against.
+  The direction against which to contract.
 
 - ...:
 
@@ -51,9 +51,9 @@ two orders are.
 - score_values, curvature_values, blocks_data:
 
   As for
-  [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md);
-  supplying all three, with `blocks_data` carrying the fourth
-  derivatives `D4`, routes the recursion through the compiled kernel.
+  [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md).
+  If all three are supplied and `blocks_data` carries the fourth
+  derivatives `D4`, the recursion runs through the compiled kernel.
 
 - threads:
 
@@ -67,11 +67,11 @@ A list with `jacobian`, `dphi` and `curvature`.
 
 The recursion gains one state, \\\Psi_t = \partial^3f_t/\partial
 u^3\[v\]\\, seeded by the third derivative of the score in the same way
-\\\Phi\\ is seeded by its second. Everything else it needs, meaning the
-directional derivatives of \\F\\, \\\Phi\\, \\\dot S\\ and \\\ddot S\\,
-is a contraction of a quantity that the second-order recursion already
-carries. The third order therefore needs no second recursion and forms
-no three-index array.
+\\\Phi\\ is seeded by its second. Everything else that it needs, meaning
+the directional derivatives of \\F\\, \\\Phi\\, \\\dot S\\ and \\\ddot
+S\\, is a contraction of a quantity that the second-order recursion
+already carries. The third order therefore needs no second recursion and
+forms no three-index array.
 
 The chart contributes its own third derivatives: the level and the
 loadings through their scalar links, the persistence through

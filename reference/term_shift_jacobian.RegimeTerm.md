@@ -1,6 +1,7 @@
 # The Posterior Shift of a Regime Term, and Its Jacobian
 
-Forward mode through the normalized forward and backward recursions of
+Computes the shift and its Jacobian by forward mode through the
+normalized forward and backward recursions of
 [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md),
 over each group in time order.
 

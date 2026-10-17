@@ -3,10 +3,10 @@
 Builds the basis of an
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) or
 [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md) term
-at the observed covariates, applies the reparametrization that
-construction calls for, multiplies by a `by` variable where there is
-one, and attaches the roughness penalty. Two quantities are computed
-**from the data** here and recorded in the blueprint, so that
+at the observed covariates, applies the reparametrization that the
+construction requires, multiplies by a `by` variable where there is one,
+and attaches the roughness penalty. Two quantities are computed from the
+data here and recorded in the blueprint, so that
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 reapplies them instead of deriving them again: the Demmler-Reinsch
 transform for
@@ -31,10 +31,10 @@ the centering constraint for
 
 ## Value
 
-The term with `X`, `coef_names` and `blueprint` filled, and with
-`penalty` filled except where the term declares penalties of its own (a
-penalty factory on the smoother, or `by_hyper = "level"`), in which case
-`penalty` is `NULL` and
+The term, in which `X`, `coef_names` and `blueprint` are filled, and
+`penalty` is filled except where the term declares penalties of its own
+(a penalty factory on the smoother, or `by_hyper = "level"`), in which
+case `penalty` is `NULL` and
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 returns them.
 
@@ -65,11 +65,11 @@ identity.
 [`basis7::tensor_basis()`](https://statmodels7.github.io/basis7/reference/tensor_basis.html)
 combines the margins, and one penalty component per margin is carried
 into the product as \\I \otimes \cdots \otimes P_v \otimes \cdots
-\otimes I\\, each \\P_v\\ the margin's roughness matrix at the order and
-the measure that its smoother carries (the second-derivative Gram at the
-defaults), normalized to a maximum entry of one.
+\otimes I\\, where each \\P_v\\ is the margin's roughness matrix at the
+order and the measure that its smoother carries (the second-derivative
+Gram at the defaults), normalized to a maximum entry of one.
 
-The Kronecker product is taken over the **reversed** blocks, because
+The Kronecker product is taken over the reversed blocks, because
 [`basis7::tensor_basis()`](https://statmodels7.github.io/basis7/reference/tensor_basis.html)
 varies the first margin fastest. The block is then centered by
 [`basis7::constrain_basis()`](https://statmodels7.github.io/basis7/reference/constrain_basis.html)
@@ -83,7 +83,7 @@ copies of the block and a penalty repeated blockwise; the levels are
 recorded so a prediction uses the same set. A numeric `by` multiplies
 the basis after an unpenalized constant column, named `const`, has been
 put in front of it, and the block is not centered. The storage is
-settled here and recorded, an explicit `sparse = TRUE` being rejected
+settled here and recorded, and an explicit `sparse = TRUE` is rejected
 where there is no factor `by`.
 
 ## See also
@@ -100,7 +100,7 @@ for the block at new rows.
 set.seed(1)
 dd <- data.frame(x = sort(runif(80)), z = runif(80))
 
-# What the build records for a one-covariate smooth.
+# The build records the following for a one-covariate smooth.
 b <- term_build(s(x, basis7::bspline_smooth(k = 8)), dd)
 names(b@blueprint)
 #> [1] "core"      "marg"      "spec"      "vars"      "by"        "by_levels"
@@ -108,7 +108,7 @@ names(b@blueprint)
 b@blueprint$core$kind
 #> [1] "smoother"
 
-# And for a tensor product: one column fewer than 4 x 4.
+# For a tensor product, the block has one column fewer than 4 x 4.
 bt <- term_build(te(x, z, smooths = basis7::bspline_smooth(k = 4)), dd)
 term_npar(bt)
 #> [1] 15

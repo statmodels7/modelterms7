@@ -1,14 +1,14 @@
 # S7 Class for Smooth Terms
 
-The subclass of
+`SmoothTerm` is the subclass of
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 for a penalized smooth: a basis7 expansion of one or more covariates
 with a roughness penalty on its coefficients.
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md)
 constructs it for one covariate and
 [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md) for
-several, and the two differ in the basis they build and the penalty they
-attach, not in the class.
+several, and the two differ in the basis that they build and the penalty
+that they attach, not in the class.
 
 ## Usage
 
@@ -44,8 +44,8 @@ SmoothTerm(
 
 - hyper:
 
-  The hyperparameters of the term's penalty that the caller **held**, as
-  a named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller held, as a
+  named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -58,9 +58,9 @@ SmoothTerm(
 
 - values:
 
-  The values a path visits, for each hyperparameter the caller wrote
-  out, as a named list of numeric vectors. Empty, the default, has the
-  path build them. See
+  The values that a path visits, for each hyperparameter that the caller
+  wrote out, as a named list of numeric vectors. Empty, the default, has
+  the path build them. See
   [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md).
 
 - min_ratio:
@@ -88,21 +88,22 @@ SmoothTerm(
 - X:
 
   The design block, one row per observation: a numeric matrix or a
-  two-dimensional Matrix. Empty until
+  two-dimensional Matrix. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
 - coef_names:
 
   The block's coefficient names, one per column, prefixed by `label`
-  when there is one. Filled by
-  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md).
+  when there is one.
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+  fills it.
 
 - blueprint:
 
   A named list of everything needed to reproduce the mapping on new
-  rows. Its contents are the subclass's business; nothing outside the
-  term reads them. Empty until
+  rows. Its contents belong to the subclass, and only the term reads
+  them. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
@@ -122,10 +123,10 @@ SmoothTerm(
 
 - spec:
 
-  A named list of what the build reads: `smoothers`, one basis7 smoother
-  per covariate; `by_hyper`; `default_label`, saying whether the label
-  was built from the call; and for
-  [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
+  A named list of the settings that the build uses: `smoothers`, one
+  basis7 smoother per covariate; `by_hyper`; `default_label`, which
+  records whether the label was built from the call; and, for
+  [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md),
   the `anisotropic` flag.
 
 - sparse:
@@ -152,22 +153,21 @@ kept unevaluated so that a build reads them in whatever data it is
 given. `by` is the expression of the variable over which the smooth
 varies, or `NULL`.
 
-`spec` carries what the build reads: the basis7 smoothers, one per
-covariate, which hold the whole construction; `by_hyper`, saying whether
-the levels of a factor `by` share a smoothing parameter or carry one
-each; `default_label`, saying whether the label was built from the call;
-and for
-[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
+`spec` carries the settings that the build uses: the basis7 smoothers,
+one per covariate, which hold the whole construction; `by_hyper`, which
+records whether the levels of a factor `by` share a smoothing parameter
+or carry one each; `default_label`, which records whether the label was
+built from the call; and, for
+[`te()`](https://statmodels7.github.io/modelterms7/reference/te.md),
 whether the penalty is anisotropic. What a build then computes from the
 data goes into the blueprint instead: the Demmler-Reinsch transform, the
-centering constraint, the `by` levels and the penalties the term
+centering constraint, the `by` levels and the penalties that the term
 declares.
 
 `sparse` is `NULL` until the build settles it. A smooth's block is
-sparse only under a **factor** `by`, where each row sits in the block of
-its own level: the basis itself is dense by construction, the
-Demmler-Reinsch rotation making it so, and a numeric `by` merely
-multiplies it.
+sparse only under a factor `by`, where each row sits in the block of its
+own level: the basis itself is dense by construction because of the
+Demmler-Reinsch rotation, and a numeric `by` merely multiplies it.
 
 ## See also
 
@@ -191,7 +191,8 @@ c(s = S7::S7_inherits(s(x), SmoothTerm),
 #>    s   te 
 #> TRUE TRUE 
 
-# The settings are on `spec`; what the data decide is in the blueprint.
+# The settings are on `spec`, and the quantities computed from the data are
+# in the blueprint.
 tm <- s(x, basis7::bspline_smooth(k = 8))
 names(tm@spec)
 #> [1] "smoothers"     "by_hyper"      "default_label"

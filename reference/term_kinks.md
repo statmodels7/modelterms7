@@ -1,11 +1,12 @@
 # Where a Term's Objective Has a Kink
 
-The positions, among the term's own coefficients, of those in which the
-term's contribution to the objective is not differentiable at the
-coefficients given. A fitting layer reads them where a line search
-rejects every step along a Newton or Gauss-Newton direction: holding
-those coordinates at their values and solving for the rest is the step
-at a kink, as holding a coordinate at a bound is the step at a boundary.
+Returns the positions, among the term's own coefficients, of those
+coefficients in which the term's contribution to the objective is not
+differentiable at the given coefficients. A fitting layer reads them
+where a line search rejects every step along a Newton or Gauss-Newton
+direction: holding those coordinates at their values and solving for the
+rest is the step at a kink, as holding a coordinate at a bound is the
+step at a boundary.
 
 ## Usage
 
@@ -35,8 +36,8 @@ empty.
 ## Details
 
 A term whose contribution is a smooth function of its coefficients has
-no kink, and that is the base method's answer. Two shipped terms answer
-otherwise: the continuous break-point construction,
+no kink, and that is the base method's answer. Two shipped terms report
+kinks: the continuous break-point construction,
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
 whose truncated line \\(x-\psi)\_+\\ is not differentiable in \\\psi\\
 at an observation, and
@@ -49,7 +50,7 @@ and the discontinuous
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 and
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
-answer `integer(0)`. The kinks of a penalty are not reported here;
+return `integer(0)`. The kinks of a penalty are not reported here;
 [`term_smooth()`](https://statmodels7.github.io/modelterms7/reference/term_smooth.md)
 reports them.
 

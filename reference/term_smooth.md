@@ -1,9 +1,10 @@
 # Whether a Term's Penalized Objective Is Smooth
 
-`TRUE` when the term's contribution to the penalized objective is
-differentiable in the coefficients. A fitting layer reads it to split
-the coefficient vector into the block a classical optimizer handles and
-the block that needs a proximal step or a coordinate descent.
+Returns `TRUE` when the term's contribution to the penalized objective
+is differentiable in the coefficients. A fitting layer reads the result
+to split the coefficient vector into the block that a classical
+optimizer handles and the block that needs a proximal step or a
+coordinate descent.
 
 ## Usage
 
@@ -39,16 +40,17 @@ term is therefore smooth, a ridge or a Gaussian prior is smooth, and
 lasso, SCAD, MCP and the elastic net are not. The answer always agrees
 with the penalties that the term carries.
 
-The probe is any admissible value, the kink set being structural: the
-midpoint of a bounded interval, one step inside a half-bounded one, zero
-where the interval is the whole line.
+The probe is any admissible value, because the kink set is structural:
+the midpoint of a bounded interval, one step inside a half-bounded one,
+zero where the interval is the whole line.
 
 ## The answer covers the whole term
 
-A term carrying a penalty over part of its parameters and none over the
-rest answers from the part that is penalized.
-`nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g))` is not smooth: the
-coefficients developing `a` sit at a kink, although `r` is unpenalized.
+For a term that carries a penalty over part of its parameters and no
+penalty over the rest, the result is determined by the part that is
+penalized. `nl(~ a * exp(-r * x), a ~ 0 + lasso(~ g))` is not smooth:
+the coefficients developing `a` sit at a kink, although `r` is
+unpenalized.
 
 ## A specification is always smooth
 
@@ -56,8 +58,8 @@ The penalty is attached at
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md),
 so
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
-on an unbuilt term is empty and this answers `TRUE` whatever penalty the
-term will carry. `term_smooth(lasso(~ x))` is `TRUE` and
+on an unbuilt term is empty and this function returns `TRUE` whatever
+penalty the term will carry. `term_smooth(lasso(~ x))` is `TRUE` and
 `term_smooth(term_build(lasso(~ x), d))` is `FALSE`. The function is
 therefore applied to a built term.
 

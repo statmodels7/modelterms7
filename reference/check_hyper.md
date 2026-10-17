@@ -1,8 +1,9 @@
 # Check a Term's Held Hyperparameters Against Its Penalty
 
-Validates the values a constructor was given against the names and the
-bounds of the penalty the term will build, and returns them as a named
-list, dropping the `NULL` entries, which are the ones to be estimated.
+Validates the values that a constructor was given against the names and
+the bounds of the penalty that the term will build, and returns them as
+a named list. The `NULL` entries, which are the hyperparameters to be
+estimated, are dropped.
 
 ## Usage
 
@@ -28,17 +29,18 @@ check_hyper(values, penalty, what = "this term")
 
 ## Value
 
-A named list, keyed by the penalty's own hyperparameter names, of the
-values given exactly one number. Empty where every hyperparameter was
-left `NULL` or written out as a grid.
+A named list, keyed by the penalty's own hyperparameter names, that
+holds the single value of each hyperparameter that was given exactly one
+number. The list is empty where every hyperparameter was left `NULL` or
+written out as a grid.
 
 ## Details
 
 The check is made at construction and not at the fit. A name that the
-penalty does not carry is an error that lists the names it does carry.
-In the penalized constructors, an argument written for another penalty,
-such as `mcp(x, a = 3)`, which gives SCAD's shape to an MCP whose own
-shape is `gamma`, is rejected earlier, as an argument that the
+penalty does not carry is an error that lists the names that it does
+carry. In the penalized constructors, an argument written for another
+penalty, such as `mcp(x, a = 3)`, which gives SCAD's shape to an MCP
+whose own shape is `gamma`, is rejected earlier, as an argument that the
 constructor does not have (see
 [`penalized_terms()`](https://statmodels7.github.io/modelterms7/reference/penalized_terms.md)).
 

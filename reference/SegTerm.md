@@ -1,6 +1,6 @@
 # S7 Class for Break-Point Terms
 
-The subclass of
+`SegTerm` is the subclass of
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
 for a covariate whose effect changes at estimated break-points: a change
 of slope
@@ -9,8 +9,8 @@ a change of level
 ([`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)),
 or both at the same points
 ([`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)).
-Its design block is the **working** block of the iteration that
-estimates the break-points, and
+Its design block is the working block of the iteration that estimates
+the break-points, and
 [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
 recomputes it as they move.
 
@@ -50,8 +50,8 @@ SegTerm(
 
 - hyper:
 
-  The hyperparameters of the term's penalty that the caller **held**, as
-  a named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller held, as a
+  named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -64,9 +64,9 @@ SegTerm(
 
 - values:
 
-  The values a path visits, for each hyperparameter the caller wrote
-  out, as a named list of numeric vectors. Empty, the default, has the
-  path build them. See
+  The values that a path visits, for each hyperparameter that the caller
+  wrote out, as a named list of numeric vectors. Empty, the default, has
+  the path build them. See
   [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md).
 
 - min_ratio:
@@ -94,21 +94,22 @@ SegTerm(
 - X:
 
   The design block, one row per observation: a numeric matrix or a
-  two-dimensional Matrix. Empty until
+  two-dimensional Matrix. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
 - coef_names:
 
   The block's coefficient names, one per column, prefixed by `label`
-  when there is one. Filled by
-  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md).
+  when there is one.
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+  fills it.
 
 - blueprint:
 
   A named list of everything needed to reproduce the mapping on new
-  rows. Its contents are the subclass's business; nothing outside the
-  term reads them. Empty until
+  rows. Its contents belong to the subclass, and only the term reads
+  them. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
@@ -135,8 +136,8 @@ SegTerm(
 
 - subformulas:
 
-  A named list of one-sided formulas, one per developed coefficient.
-  Empty where none is.
+  A named list of one-sided formulas, one per developed coefficient. The
+  list is empty when the term develops no coefficient.
 
 - spec:
 
@@ -172,7 +173,7 @@ the block is the exact Jacobian: the contribution is differentiable in
 \\\psi_k\\ away from the break-point, so the break-point is an ordinary
 coefficient and a linear fit on the block is a Gauss-Newton step.
 [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
-answers `TRUE`.
+returns `TRUE`.
 
 For a sharp
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
@@ -180,17 +181,16 @@ or
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
 the block is a working linearization with the weight \\W =
 1/(2\lvert\tilde{x} - \psi\rvert)\\ frozen at the previous break-point,
-and the break-point is **read off** two coefficients and is not
-incremented.
+and the break-point is read off two coefficients and is not incremented.
 [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
-answers `FALSE`, and a fitting layer routes such a term to exact working
+returns `FALSE`, and a fitting layer routes such a term to exact working
 fits alternating with committed read-offs. Smoothing the step (the
 `smoothed` argument of
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md))
-makes the break-point an ordinary parameter again, and the answer
-becomes `TRUE`. A term held by
+makes the break-point an ordinary parameter again, and the value becomes
+`TRUE`. A term held by
 [`seg_hold()`](https://statmodels7.github.io/modelterms7/reference/seg_hold.md)
-also answers `TRUE`, its block being the exact design at the held
+also returns `TRUE`, because its block is the exact design at the held
 positions.
 
 [`seg_psi()`](https://statmodels7.github.io/modelterms7/reference/seg_psi.md)
@@ -221,7 +221,7 @@ d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0) + rnorm(120, sd = 0.4)
 vapply(list(seg(x), jump(x), jseg(x)), function(t) t@kind, character(1))
 #> [1] "seg"  "jump" "jseg"
 
-# which determines the coefficients that the term carries.
+# The kind determines the coefficients that the term carries.
 lapply(list(seg = seg(x), jump = jump(x), jseg = jseg(x)),
        function(t) term_coef_names(term_build(t, d)))
 #> $seg
@@ -234,7 +234,8 @@ lapply(list(seg = seg(x), jump = jump(x), jseg = jseg(x)),
 #> [1] "jseg.beta"   "jseg.gamma1" "jseg.delta1" "jseg.g1"    
 #> 
 
-# And whether its block is a Jacobian or a working linearization.
+# term_jacobian_block() reports whether the block is a Jacobian or a
+# working linearization.
 vapply(list(seg = seg(x), jump = jump(x), jseg = jseg(x)),
        term_jacobian_block, logical(1))
 #>   seg  jump  jseg 

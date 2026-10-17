@@ -1,8 +1,8 @@
 # The Score-Driven Recursion's Fourth Derivative
 
-The fourth derivative of the filtered predictor in the caller's
+Computes the fourth derivative of the filtered predictor in the caller's
 unknowns, contracted against the caller's weights and against two
-directions, and the lower orders' contractions beside it.
+directions, together with the lower orders' contractions.
 
 ## Arguments
 
@@ -42,7 +42,7 @@ directions, and the lower orders' contractions beside it.
 
 - directions:
 
-  A list of two directions to contract against.
+  A list of two directions against which to contract.
 
 - ...:
 
@@ -51,10 +51,10 @@ directions, and the lower orders' contractions beside it.
 - score_values, curvature_values, blocks_data:
 
   As for
-  [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md);
-  supplying all three, with `blocks_data` carrying the fourth and fifth
-  derivatives `D4` and `D5`, routes the recursion through the compiled
-  kernel.
+  [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md).
+  If all three are supplied and `blocks_data` carries the fourth and
+  fifth derivatives `D4` and `D5`, the recursion runs through the
+  compiled kernel.
 
 - threads:
 

@@ -1,13 +1,13 @@
 # Where a Nonlinear Term's Coefficients Begin
 
-The coefficients
+Returns the coefficients at which
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-built the block at: the starting value of each of the term's own
-parameters carried through its link, from `start` where the caller gave
-one, and coefficient zero for a parameter that `start` does not name.
-The block is the Jacobian at those values, so it is a different block at
-any other point. Where `target` is given (the response on the scale of
-the predictor, which the fitting layer supplies), the parameters that
+built the block: the starting value of each of the term's own parameters
+carried through its link, from `start` where the caller gave one, and
+coefficient zero for a parameter that `start` does not name. The block
+is the Jacobian at those values, so it is a different block at any other
+point. Where `target` is given (the response on the scale of the
+predictor, which the fitting layer supplies), the parameters that
 `start` does not fix are estimated from it by least squares. Zero
 coefficients are a poor start for a nonlinear term, since the block is
 then linearized at a point where the function was not meant to be
@@ -23,19 +23,19 @@ jointly affine are solved by least squares at each point of the grid
 instead of being searched over. They are found with
 [`stats::D()`](https://rdrr.io/r/stats/deriv.html) by removing
 repeatedly from the set of parameters every one whose derivative names a
-member of the set (itself included); for a function given as an opaque
-`fn` the set is empty. Where a parameter is developed over a break-point
-term, each break-point is then started as described in
+member of the set (including the parameter itself); for a function given
+as an opaque `fn` the set is empty. Where a parameter is developed over
+a break-point term, each break-point is then started as described in
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md).
 
-The box each grid spans comes from the data: the quantiles, the standard
-deviation and the range of the response and of every covariate the
-formula names, carried through the parameter's own link and widened,
-because a parameter may be measured in the units of the response or of a
-covariate and the box has to cover both.
+The box that each grid spans comes from the data: the quantiles, the
+standard deviation and the range of the response and of every covariate
+that the formula names, carried through the parameter's own link and
+widened, because a parameter may be measured in the units of the
+response or of a covariate and the box has to cover both.
 
 It is a starting value and is allowed to be approximate; anything that
-fails leaves the coefficients
+fails leaves the coefficients that
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 computed.
 
@@ -49,7 +49,8 @@ computed.
 - target:
 
   Optional numeric vector, one per observation: the response on the
-  scale of the predictor. Absent, the coefficients are those
+  scale of the predictor. If it is absent, the coefficients are those
+  that
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   computed.
 

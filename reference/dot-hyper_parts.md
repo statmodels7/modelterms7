@@ -33,6 +33,6 @@ empty.
 
 ## Details
 
-The validation is one body because the two states differ in length
-alone: the name must be one the penalty carries and every value must lie
+The validation is one body because the two states differ only in length:
+the name must be one that the penalty carries and every value must lie
 strictly inside its bounds, whether there is one of them or twenty.

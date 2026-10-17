@@ -1,9 +1,9 @@
 # S7 Class for Markov Regime Terms
 
-The subclass of
+`RegimeTerm` is the subclass of
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
-holding a latent Markov chain of regimes, each shifting the linear
-predictor by a level of its own.
+that holds a latent Markov chain of regimes, and each regime shifts the
+linear predictor by a level of its own.
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
 constructs it. Its contribution is a likelihood mixed over the
 unobserved state path, so it implements
@@ -42,8 +42,8 @@ RegimeTerm(
 
 - hyper:
 
-  The hyperparameters of the term's penalty that the caller **held**, as
-  a named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller held, as a
+  named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -56,9 +56,9 @@ RegimeTerm(
 
 - values:
 
-  The values a path visits, for each hyperparameter the caller wrote
-  out, as a named list of numeric vectors. Empty, the default, has the
-  path build them. See
+  The values that a path visits, for each hyperparameter that the caller
+  wrote out, as a named list of numeric vectors. Empty, the default, has
+  the path build them. See
   [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md).
 
 - min_ratio:
@@ -96,11 +96,11 @@ RegimeTerm(
 - by:
 
   An optional grouping expression; each group runs its own recursion.
-  `NULL` for one group.
+  `NULL` means one group.
 
 - time:
 
-  An optional ordering expression. `NULL` for row order.
+  An optional ordering expression. `NULL` means row order.
 
 - chain:
 
@@ -110,8 +110,8 @@ RegimeTerm(
 
 - n_start:
 
-  The number of starting points a fitting layer tries, a single whole
-  number of at least 1, as set by
+  The number of starting points that a fitting layer tries, a single
+  whole number of at least 1, as set by
   [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md).
 
 ## Value
@@ -131,7 +131,7 @@ and `blueprint`).
 `k` is the number of regimes. `by` and `time` are the grouping and
 ordering expressions as written, kept unevaluated. A `by` of `NULL`
 means one group, and a `time` of `NULL` means that the rows are taken in
-the order they are given.
+the order in which they are given.
 
 `chain` is the
 [`parameters7::transition_matrix()`](https://statmodels7.github.io/parameters7/reference/transition_matrix.html)

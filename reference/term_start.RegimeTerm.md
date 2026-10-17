@@ -1,7 +1,8 @@
 # Where a Regime Term's Parameters Start
 
-The levels at the quantiles of the response at \\(2j-1)/(2k)\\, \\j = 1,
-\dots, k\\, and the transition matrix with every row uniform.
+Returns the starting values: the levels are placed at the quantiles of
+the response at \\(2j-1)/(2k)\\, \\j = 1, \dots, k\\, and every row of
+the transition matrix is uniform.
 
 ## Arguments
 

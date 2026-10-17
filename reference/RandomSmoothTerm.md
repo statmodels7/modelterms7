@@ -1,6 +1,6 @@
 # S7 Class for a Smooth Random Effect
 
-The subclass of
+`RandomSmoothTerm` is the subclass of
 [`RandomTerm()`](https://statmodels7.github.io/modelterms7/reference/RandomTerm.md)
 whose within-group design is a smooth: one random curve or surface per
 level of the grouping variable.
@@ -46,8 +46,8 @@ RandomSmoothTerm(
 
 - hyper:
 
-  The hyperparameters of the term's penalty that the caller **held**, as
-  a named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller held, as a
+  named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -60,9 +60,9 @@ RandomSmoothTerm(
 
 - values:
 
-  The values a path visits, for each hyperparameter the caller wrote
-  out, as a named list of numeric vectors. Empty, the default, has the
-  path build them. See
+  The values that a path visits, for each hyperparameter that the caller
+  wrote out, as a named list of numeric vectors. Empty, the default, has
+  the path build them. See
   [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md).
 
 - min_ratio:
@@ -90,21 +90,22 @@ RandomSmoothTerm(
 - X:
 
   The design block, one row per observation: a numeric matrix or a
-  two-dimensional Matrix. Empty until
+  two-dimensional Matrix. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
 - coef_names:
 
   The block's coefficient names, one per column, prefixed by `label`
-  when there is one. Filled by
-  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md).
+  when there is one.
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+  fills it.
 
 - blueprint:
 
   A named list of everything needed to reproduce the mapping on new
-  rows. Its contents are the subclass's business; nothing outside the
-  term reads them. Empty until
+  rows. Its contents belong to the subclass, and only the term reads
+  them. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
@@ -162,8 +163,8 @@ for `~ s(x) | g` and `FALSE` for `~ 0 + s(x) | g`.
 Every other property, and every generic that
 [`RandomTerm()`](https://statmodels7.github.io/modelterms7/reference/RandomTerm.md)
 implements, has the meaning documented there: the block is sparse and
-ordered group by group, a level that the build did not see is predicted
-at a zero effect on request, and
+ordered group by group, a level that was not present at build time is
+predicted at a zero effect on request, and
 [`term_within()`](https://statmodels7.github.io/modelterms7/reference/term_within.md)
 returns the design that one group's effect multiplies.
 

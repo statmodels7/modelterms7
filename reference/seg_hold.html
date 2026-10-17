@@ -19,7 +19,7 @@ slot that carried the position."><meta property="og:image" content="https://stat
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,7 +75,7 @@ that is not held returns it unchanged.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The term in the requested state, its block rebuilt.</p>
+    <p>The term in the requested state, whose block is rebuilt.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -83,7 +83,7 @@ that is not held returns it unchanged.</p></dd>
 its break-points through a block whose weight is frozen at the previous
 iterate. At the fixed point of that iteration the coefficients are therefore
 those of the working model, and not the least-squares coefficients at the
-positions reached. With the positions held, the term contributes a linear
+positions reached. When the positions are held, the term contributes a linear
 function of its remaining coefficients, and a fit of those coefficients is
 an ordinary fit, which is how <code>segmented</code> and <code>stepmented</code> report their
 coefficients. For a held term, <code><a href="term_held.html">term_held()</a></code> returns the slots that are
@@ -94,12 +94,13 @@ returns <code>FALSE</code>.</p>
 positions are then the values \(w_i'p_k\) of the development at the
 current coefficients \(p_k\).</p>
 <p>Releasing the term writes the position back into the slot as
-\(g_k = -\delta_k\psi_k\), with the coefficient vector \(p_k\) of the
-development in place of \(\psi_k\) for a developed position. The read-off
-of the working construction then returns the held positions, and the
-iteration can continue from them.</p>
+\(g_k = -\delta_k\psi_k\), where the coefficient vector \(p_k\) of the
+development replaces \(\psi_k\) for a developed position. When the
+iteration then reads off the working construction, the result is the held
+positions, and the iteration can continue from them.</p>
 <p>A continuous <code><a href="seg.html">seg()</a></code> and a smoothed term are rejected, since their
-positions are ordinary coefficients, each with a column of its own.</p>
+positions are ordinary coefficients and each position has a column of its
+own.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

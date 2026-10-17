@@ -1,4 +1,4 @@
-# Check the Sharing Labels a Constructor Was Given
+# Check the Sharing Labels That a Constructor Was Given
 
 Validates `id` and returns it as a named character vector, one entry per
 hyperparameter to share, empty where the constructor was given none.
@@ -18,10 +18,11 @@ check_ids(x, names, what = "this term")
 
 - names:
 
-  The hyperparameter names the term's penalty carries, which the labels'
-  names are checked against, or `NULL` where the penalty does not exist
-  yet: the shape is then checked and the labels carried as written, to
-  be resolved by a second call where the names are known.
+  The hyperparameter names that the term's penalty carries, against
+  which the names of the labels are checked, or `NULL` where the penalty
+  does not exist yet. In that case the shape is checked and the labels
+  are carried as written, to be resolved by a second call where the
+  names are known.
 
 - what:
 
@@ -36,22 +37,23 @@ unnamed, to be named by the second call.
 ## Details
 
 Two forms are accepted and both have the same meaning. An unnamed single
-string shares **the** hyperparameter, and is legal only where the
-penalty carries one: it is the short form for the frequent case, a
-smooth or a ridge. A named vector names which, `c(alpha = "A")`, and is
-what a penalty carrying several needs, since sharing the mixing of an
-elastic net while leaving its strength free is a different model from
-the reverse, and the code does not guess which one was meant.
+string shares the hyperparameter, and is valid only where the penalty
+carries one: it is the short form for the frequent case, a smooth or a
+ridge. A named vector, `c(alpha = "A")`, names the hyperparameter to
+share, and a penalty carrying several requires this form, since sharing
+the mixing of an elastic net while leaving its strength free is a
+different model from the reverse, and the code does not infer which one
+was meant.
 
 The short form on a penalty carrying several hyperparameters is an error
 that lists them. The names are checked against the penalty's own, so a
 misspelling is reported where it was written.
 
 Sharing does not merge the penalties. They remain two objects estimated
-at one value, and no check is made that they are comparable: the two may
-weigh quite different matrices, and the caller decides whether that is
-the model intended. A shared value is most meaningful between penalties
-of the same shape over covariates of comparable scale.
+at one value, and the code does not check whether they are comparable:
+the two may weigh quite different matrices, and whether that is the
+intended model is left to the caller. A shared value is most meaningful
+between penalties of the same shape over covariates of comparable scale.
 
 ## See also
 

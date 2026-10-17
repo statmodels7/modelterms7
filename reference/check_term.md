@@ -7,7 +7,7 @@ as the columns, that
 [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
 agrees with that count, that
 [`term_smooth()`](https://statmodels7.github.io/modelterms7/reference/term_smooth.md)
-answers with a single non-missing logical, that
+returns a single non-missing logical, that
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 on the same data reproduces the block, and that
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
@@ -41,10 +41,10 @@ check_term(term, data, verbose = TRUE)
 
 - data:
 
-  A data frame carrying every variable the term names. Any other object
-  signals the error `"'data' must be a data frame."`, and a data frame
-  without rows signals `"'data' has no rows."`. With one row the subset
-  check compares the block against itself and is uninformative.
+  A data frame carrying every variable that the term names. Any other
+  object signals the error `"'data' must be a data frame."`, and a data
+  frame without rows signals `"'data' has no rows."`. With one row the
+  subset check compares the block against itself and is uninformative.
 
 - verbose:
 
@@ -68,15 +68,15 @@ one row per check:
 
 - `info`:
 
-  The block's dimensions for `build`, in the form `"6 x 4 block"` with
-  `", sparse"` appended when it is an S4 matrix; `"smooth"` or
+  The block's dimensions for `build`, in the form `"6 x 4 block"`,
+  followed by `", sparse"` when the block is an S4 matrix; `"smooth"` or
   `"non-smooth"` for `smooth`; the number of rows kept for `subset`; the
   condition message of a check that signaled an error; and `""`
   otherwise.
 
 A build that signals an error gives a single row, `check = "build"` and
-`status = "FAILED"`, with the message in `info`; no later check is
-attempted.
+`status = "FAILED"`, with the message in `info`; the later checks are
+not attempted.
 
 ## The two identities
 
@@ -87,11 +87,12 @@ subset of the row indices. The last two checks are
 \mathrm{predict}(\mathrm{term}, \mathrm{droplevels}(\mathrm{data}\[S,
 \])) = X\[S, \],\$\$
 
-both compared by [`all.equal()`](https://rdrr.io/r/base/all.equal.html)
-at a relative tolerance of `1e-12`. The second does not follow from the
-first: a term that rebuilds its encoding satisfies the first, the rows
-being the same ones, and fails the second as soon as \\S\\ omits a
-factor level or narrows the range a basis is placed on.
+and each of them is compared by
+[`all.equal()`](https://rdrr.io/r/base/all.equal.html) at a relative
+tolerance of `1e-12`. The second does not follow from the first: a term
+that rebuilds its encoding satisfies the first because the rows are the
+same ones, and fails the second as soon as \\S\\ omits a factor level or
+narrows the range on which a basis is placed.
 
 ## Which rows the subset takes
 
@@ -103,17 +104,18 @@ rebuilt encoding is one column short. Failing that, the first
 of a numeric covariate. Character columns are not examined.
 
 [`droplevels()`](https://rdrr.io/r/base/droplevels.html) is applied to
-the subset before it is passed on, because that is how new data reach
-[`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md):
-a factor column there carries only the levels its own rows use, and the
-remaining levels are recorded only in the blueprint. Without the call a
-plain row subset carries the original level set along with it and the
-check cannot fail.
+the subset before it is passed on, because new data reach
+[`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
+in that form: a factor column there carries only the levels that its own
+rows use, and the remaining levels are recorded only in the blueprint.
+Without the call a plain row subset carries the original level set along
+with it and the check cannot fail.
 
 ## What is not checked
 
-The battery covers the design block. It reads neither the penalty a
-penalized term attaches nor the hyperparameters it declares, so
+The battery covers the design block. It does not read the penalty that a
+penalized term attaches or the hyperparameters that the term declares,
+so
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 and
 [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md)
@@ -136,14 +138,14 @@ and one of
 [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
 or
 [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md).
-No validator covers those.
+Those are not covered by any validator.
 
 ## See also
 
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 and
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md),
-the two generics the checks compare;
+the two generics that the checks compare;
 [`term_matrix()`](https://statmodels7.github.io/modelterms7/reference/term_matrix.md)
 for the block itself;
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
@@ -165,8 +167,8 @@ res <- check_term(linpar(~ x + g), dd)
 all(res$status == "OK")
 #> [1] TRUE
 
-# What the subset check is testing. The chosen rows drop level "c", and
-# the reapplied block keeps the four columns the blueprint recorded.
+# This is what the subset check tests. The chosen rows drop level "c", and
+# the reapplied block keeps the four columns that the blueprint recorded.
 b  <- term_build(linpar(~ x + g), dd)
 nd <- droplevels(dd[c(1, 2, 4, 5), ])
 levels(nd$g)
@@ -176,7 +178,7 @@ dim(term_predict(b, nd))              # 4 x 4, the blueprint's levels
 dim(model.matrix(~ x + g, nd))        # 4 x 3, what a rebuild gives
 #> [1] 4 3
 
-# The same failure for a basis: rebuilding places the knots on the
+# The same failure occurs for a basis: rebuilding places the knots on the
 # narrower range, so the columns are different functions of x.
 d2  <- data.frame(x = seq(0, 1, length.out = 40))
 bs  <- term_build(s(x, basis7::bspline_smooth(k = 6)), d2)
@@ -188,7 +190,7 @@ max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 6)), d2[sub, , dr
         X[sub, ]))
 #> [1] 2.777484
 
-# A sparse block is accepted, and the info column says it is sparse.
+# A sparse block is accepted, and the info column reports that it is sparse.
 check_term(random(~ 1 | g), dd)
 #>   [OK] build -- 6 x 3 block, sparse
 #>   [OK] names

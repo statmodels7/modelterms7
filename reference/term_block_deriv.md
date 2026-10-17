@@ -1,8 +1,8 @@
 # How a Term's Block Moves Along One Direction
 
-\\\sum_c v_c\\\partial X\_{ij}/\partial\beta_c\\, one entry per
+Returns \\\sum_c v_c\\\partial X\_{ij}/\partial\beta_c\\, one entry per
 observation and column of the block: the block's own derivative taken
-along a direction the caller supplies.
+along a direction that the caller supplies.
 
 ## Usage
 
@@ -19,7 +19,7 @@ term_block_deriv(term, coef = NULL, v, ...)
 - coef:
 
   The coefficients, one per coefficient of the term, or `NULL` for the
-  ones it carries.
+  coefficients that the term carries.
 
 - v:
 
@@ -37,16 +37,17 @@ of the term.
 ## Details
 
 It is the adjoint of
-[`term_block_contract()`](https://statmodels7.github.io/modelterms7/reference/term_block_contract.md)
-and neither computes the other. That one contracts over the observations
-and the columns and answers per coefficient, as the gradient of a
-marginal criterion needs; this one contracts over the coefficients and
-answers per entry of the block, as its Hessian needs, \\\partial
-K/\partial\beta\\ being required there in the direction the mode moves
-instead of traced.
+[`term_block_contract()`](https://statmodels7.github.io/modelterms7/reference/term_block_contract.md),
+and each of the two is computed without the other. That one contracts
+over the observations and the columns and returns one entry per
+coefficient, as the gradient of a marginal criterion needs; this one
+contracts over the coefficients and returns one entry per entry of the
+block, as its Hessian needs, because \\\partial K/\partial\beta\\ is
+required there in the direction in which the mode moves instead of being
+traced.
 
-Both are \\O(nm)\\ and read the same closed form, so this needs no
-derivative the other did not: for
+Both are \\O(nm)\\ and read the same closed form, so this one needs only
+the derivatives that the other needs: for
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md),
 writing \\q\_{p_1p_2} = f\_{p_1p_2}h\_{p_1}'h\_{p_2}' +
 \delta\_{p_1p_2}f\_{p_1}h\_{p_1}''\\, \$\$\Big(\frac{\partial

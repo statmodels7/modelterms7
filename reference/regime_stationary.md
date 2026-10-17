@@ -1,8 +1,8 @@
 # The Stationary Distribution of a Chain, and Its Derivative
 
-The row vector \\\delta\\ solving \\\delta P = \delta\\ with \\\sum_j
-\delta_j = 1\\, together with its derivative in whatever the transition
-matrix depends on.
+Computes the row vector \\\delta\\ that solves \\\delta P = \delta\\
+with \\\sum_j \delta_j = 1\\, together with its derivative in whatever
+the transition matrix depends on.
 
 ## Usage
 
@@ -36,8 +36,8 @@ with one square matrix per state, each of size `length(dP)`.
 
 Differentiating \\\delta(I - P) = 0\\ under the normalization gives
 \\d\delta\\(I - P) = \delta\\dP\\ with \\\sum_j d\delta_j = 0\\, so both
-the value and the derivative come from the same linear system with one
-column replaced by the normalization.
+the value and the derivative come from the same linear system, in which
+one column is replaced by the normalization.
 
 Differentiating a second time gives \\d^2\delta\\(I - P) =
 d_i\delta\\d_jP + d_j\delta\\d_iP + \delta\\d^2P\\ under \\\sum_j

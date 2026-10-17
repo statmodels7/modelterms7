@@ -1,9 +1,9 @@
 # Report an Argument That s() and te() No Longer Take
 
-Names the replacement for each of the arguments the smooth constructors
-carried before the construction became an object. They are reported here
-rather than left to R's own "unused argument", which names the argument
-and not what to write instead.
+Names the replacement for each of the arguments that the smooth
+constructors carried before the construction became an object. They are
+reported here rather than left to R's own "unused argument", which names
+the argument and not what to write instead.
 
 ## Usage
 
@@ -23,15 +23,15 @@ retired_smooth_args(dots, fn)
 
 ## Value
 
-`NULL`, invisibly. Called for the error it signals.
+`NULL`, invisibly. The function is called for the error that it signals.
 
 ## Details
 
-The four decisions a smooth is made of (the basis, the penalty, the null
-space and the reparametrization) travel together on a basis7 smoother,
-so the settings that described the first two belong there. `k` and
-`degree` belong to a B-spline and not to smoothers in general; `linear`
-named the null space as "linear", which it is only when the penalty is
-of order 2. The smoothing parameter `lambda` is now a hyperparameter of
-the term, held through `hyper`. An argument that is not one of these is
-reported as having no such argument.
+A smooth consists of four decisions (the basis, the penalty, the null
+space and the reparametrization), which travel together on a basis7
+smoother, so the settings that described the first two belong there. `k`
+and `degree` belong to a B-spline and not to smoothers in general;
+`linear` named the null space as "linear", which it is only when the
+penalty is of order 2. The smoothing parameter `lambda` is now a
+hyperparameter of the term, held through `hyper`. An argument that is
+not one of these is reported as having no such argument.

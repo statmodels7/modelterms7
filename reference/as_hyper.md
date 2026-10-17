@@ -22,7 +22,8 @@ as_hyper(x, what = "this term")
 ## Value
 
 A named list, one entry per hyperparameter named, each a numeric vector
-of length one or more. Empty for `NULL` or a zero-length input.
+of length one or more. The list is empty for `NULL` or a zero-length
+input.
 
 ## Details
 

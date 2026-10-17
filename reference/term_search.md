@@ -1,9 +1,9 @@
 # How a Term Covers Its Own Kinked Hyperparameters
 
 Reports whether the term's own hyperparameters are swept as a product,
-`"grid"`, or one at a time with the others held, `"cyclic"`. A term that
-names neither is covered the way the fitting layer covers one by
-default.
+`"grid"`, or one at a time while the others are held, `"cyclic"`. A term
+that names neither word is covered in the way that the fitting layer
+covers a term by default.
 
 ## Usage
 
@@ -24,12 +24,12 @@ term_search(term, ...)
 ## Value
 
 A named list, one entry per penalty of the term, each the single string
-`"grid"` or `"cyclic"`. Empty where every penalty of the term has fewer
-than two swept hyperparameters.
+`"grid"` or `"cyclic"`. The list is empty where every penalty of the
+term has fewer than two swept hyperparameters.
 
 ## Details
 
-It matters only for a term with **more than one** swept hyperparameter:
+It matters only for a term with more than one swept hyperparameter:
 [`enet()`](https://statmodels7.github.io/modelterms7/reference/enet.md)
 by default, and
 [`scad()`](https://statmodels7.github.io/modelterms7/reference/scad.md)
@@ -43,13 +43,13 @@ the grids of the swept hyperparameters; under `"cyclic"` it is their sum
 per pass.
 
 It is one word per penalty, and it states how the hyperparameters are
-combined **with each other**, which is not a property of any single one
-of them.
+combined with each other, which is not a property of any single one of
+them.
 
 Between two terms the sweep alternates, whichever search each term
-names, so `y ~ lasso(X) + enet(R)` costs the two blocks added. A term
-with `search = "grid"` therefore does not raise the cost of the other
-term.
+names, so `y ~ lasso(X) + enet(R)` costs the sum of the costs of the two
+blocks. A term with `search = "grid"` therefore does not raise the cost
+of the other term.
 
 The keys are
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)'s
@@ -58,7 +58,7 @@ entry names, `""` for a penalty over the whole term.
 ## See also
 
 [`term_grid()`](https://statmodels7.github.io/modelterms7/reference/term_grid.md)
-for the sizes being combined,
+for the sizes that are combined,
 [`term_path_min()`](https://statmodels7.github.io/modelterms7/reference/term_path_min.md)
 for the depth of the kink-size axis.
 
@@ -83,10 +83,11 @@ term_search(scad(~ x, a = NULL))
 #> [1] "grid"
 #> 
 
-# One hyperparameter, so nothing to combine and no argument to take.
+# With one hyperparameter there is nothing to combine and no argument to
+# take.
 term_search(lasso(~ x))
 #> list()
 try(lasso(~ x, search = "cyclic"))
 #> Error : 'lasso' has no argument 'search'.
-#>   Its hyperparameters are: lambda, each held by naming it and estimated when left NULL.
+#>   Its hyperparameters are: lambda. Each is held by naming it and is estimated when it is left NULL.
 ```

@@ -1,9 +1,9 @@
 # Coefficient Names of a Built Term
 
-The names of a built additive term's coefficients, one per column of its
-block and in the block's own order. They are the names a fit reports, so
-a coefficient table is readable without knowing which term produced
-which row.
+Returns the names of a built additive term's coefficients, one per
+column of its block and in the block's own order. A fit reports these
+names, so that a reader of a coefficient table can tell which term
+produced which row.
 
 ## Usage
 
@@ -42,9 +42,10 @@ sets none, so its names are
 [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)'s
 unchanged.
 
-The names are assigned at build time and recorded, so they are also what
+The names are assigned at build time and recorded, so
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-labels its columns with at other rows. Uniqueness is not enforced here;
+also labels its columns with them at other rows. Uniqueness is not
+enforced here;
 [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
 checks it.
 
@@ -53,7 +54,7 @@ checks it.
 [`term_npar()`](https://statmodels7.github.io/modelterms7/reference/term_npar.md)
 for the count,
 [`term_matrix()`](https://statmodels7.github.io/modelterms7/reference/term_matrix.md)
-for the block they name,
+for the block that they name,
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
 for a structural term's parameter names instead.
 

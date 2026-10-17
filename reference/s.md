@@ -1,10 +1,10 @@
 # Penalized Smooth of One Covariate
 
-A smooth function of one covariate, expanded in a basis7 basis and
-penalized for roughness. The default is a cubic B-spline basis under the
-Demmler-Reinsch reparametrization, which separates the linear effect
-from the nonlinear deviation and turns the roughness penalty into the
-identity on the deviation.
+Constructs a smooth function of one covariate, expanded in a basis7
+basis and penalized for roughness. The default is a cubic B-spline basis
+under the Demmler-Reinsch reparametrization, which separates the linear
+effect from the nonlinear deviation and turns the roughness penalty into
+the identity on the deviation.
 
 With the default smoother the fit approaches a straight line as the
 smoothing parameter grows, and
@@ -55,14 +55,14 @@ s(
 
   With a factor `by`, whether the levels share one smoothing parameter
   (`"shared"`, the default) or carry one each (`"level"`). See the
-  section above. Rejected without a factor `by`, which has no levels to
-  give one each.
+  section above. The value `"level"` is rejected without a factor `by`,
+  which has no levels to give one each.
 
 - hyper:
 
   The hyperparameters of the smoother's penalty to hold, as a named
-  numeric vector such as `c(lambda = 2)`. What names there are depends
-  on the penalty; anything left out is **estimated**, which is the
+  numeric vector such as `c(lambda = 2)`. The admissible names depend on
+  the penalty; any hyperparameter left out is estimated, which is the
   default. A held value must be finite. Under `by_hyper = "level"` a
   name is qualified by the level, `c(lambda.a = 2)`.
 
@@ -70,9 +70,9 @@ s(
 
   A label sharing this smooth's smoothing parameter with those of other
   terms carrying the same one: they are then estimated at a single
-  value, so several curves are smoothed together. It is what `id` does
-  in mgcv, and what it means best between smooths of the same basis and
-  dimension. `NULL`, the default, shares nothing. See
+  value, so several curves are smoothed together. This is the mechanism
+  of `id` in mgcv, and it is most meaningful between smooths of the same
+  basis and dimension. `NULL`, the default, shares nothing. See
   [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
 
 - label:
@@ -88,8 +88,8 @@ s(
 
 - ...:
 
-  Not used, and accepted only so that an argument `s()` no longer takes
-  is reported with its replacement rather than as R's own "unused
+  Not used, and accepted only so that an argument that `s()` no longer
+  takes is reported with its replacement rather than as R's own "unused
   argument", which names the argument and not what to write.
 
 ## Value
@@ -105,8 +105,8 @@ fills them.
 
 The block has one column for the linear effect, centered and scaled,
 followed by the reparametrized basis, so `s(x, bspline_smooth(k = 8))`
-gives seven columns named `s(x).lin`, `s(x).z1` ... `s(x).z6`. That
-ordering is what the penalty reads: it is the quadratic penalty of
+gives seven columns named `s(x).lin`, `s(x).z1` ... `s(x).z6`. The
+penalty depends on that ordering: it is the quadratic penalty of
 \\\mathrm{diag}(0, 1, \dots, 1)\\, rank deficient by exactly one, so the
 linear effect is unpenalized and the deviation is shrunk toward zero.
 
@@ -119,11 +119,11 @@ the nonlinear parts of a fitted smooth can be read separately.
 `bspline_smooth(null_space = "drop")` drops that first column, and the
 penalty is then the identity over the whole block, of full rank.
 
-## A penalty of your own
+## A user-defined penalty
 
 The smoother's `penalty` argument replaces the roughness matrix with a
-penalties7 penalty of its own, built at the coefficient count only the
-data settle:
+penalties7 penalty of its own, built at the coefficient count that only
+the data settle:
 `s(x, bspline_smooth(k = 20, penalty = penalties7::lasso_penalty))`. A
 penalties7 constructor passes bare, and anything else is a function of
 the count.
@@ -131,17 +131,17 @@ the count.
 The Demmler-Reinsch coordinates are ordered from the smoothest to the
 most wiggly, and the roughness penalty on them is the identity. An
 \\\ell_1\\ penalty on them therefore takes whole directions of
-wiggliness to exactly zero, so that the penalty chooses the effective
+wiggliness to exactly zero, so that the penalty determines the effective
 dimension of the smooth. A heavy-tailed penalty gives a robust reading
 of the same block, and a structured one estimates the correlation of the
 coefficients instead of fixing it.
 
-Two properties of the fit follow. The penalty covers **the penalized
-coordinates alone**: a roughness matrix carries a zero row for the
+The fit therefore has two properties. First, the penalty covers only the
+penalized coordinates: a roughness matrix carries a zero row for the
 linear column and leaves it free by its own arithmetic, whereas a
 separable penalty has no such row and would shrink it, so the free
-columns are outside the entry that the term declares. A penalty **with a
-kink** has no second derivative at zero, which a marginal criterion
+columns are outside the entry that the term declares. Second, a penalty
+with a kink has no second derivative at zero, which a marginal criterion
 needs, so its smoothing parameter is chosen by a path over
 `sparse_criterion` (BIC by default) and not by REML, whatever
 `outer_criterion` is. The selection criterion for that parameter is
@@ -150,12 +150,11 @@ therefore BIC, and not the marginal likelihood.
 ## The construction is empirical
 
 The Demmler-Reinsch transform (Demmler and Reinsch, 1975; used for
-effect selection by Bach and Klein, 2024) takes the inner product **at
-the observed covariate values**, so it is computed when the term is
-built and stored in the blueprint. Prediction is the parent basis
-evaluated at the new points and multiplied by that same transform, so
-the separation of the linear from the nonlinear part holds at new rows
-as it does at old.
+effect selection by Bach and Klein, 2024) takes the inner product at the
+observed covariate values, so it is computed when the term is built and
+stored in the blueprint. Prediction is the parent basis evaluated at the
+new points and multiplied by that same transform, so the separation of
+the linear from the nonlinear part holds at new rows as it does at old.
 
 Rebuilding on other rows instead would place the knots on their range
 and compute another transform, so the columns would be different
@@ -165,42 +164,42 @@ a different block (see the examples).
 
 ## Varying the smooth by another variable
 
-A **factor** `by` gives one smooth per level: the block is the smooth
+A factor `by` gives one smooth per level: the block is the smooth
 multiplied by each level's indicator, and the penalty is the same matrix
 repeated blockwise. `s(x, bspline_smooth(k = 5), by = g)` over a
 four-level factor has 16 columns.
 
-`by_hyper` determines whether the levels are smoothed **together or
-apart**. `"shared"`, the default, estimates one smoothing parameter for
-all of the levels. `"level"` declares one penalty per level through
+`by_hyper` determines whether the levels are smoothed together or apart.
+`"shared"`, the default, estimates one smoothing parameter for all of
+the levels. `"level"` declares one penalty per level through
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md),
-so each is estimated on its own; it is what mgcv does by default, and
-what `id` there undoes. The choice depends on the data: levels that
-differ in how wiggly they are, or in how many observations they hold,
-need different amounts of smoothing, and `"level"` lets each level take
-its own.
+so each is estimated on its own. This is the default behavior of mgcv,
+which its `id` argument undoes. The choice depends on the data: levels
+that differ in how wiggly they are, or in how many observations they
+hold, need different amounts of smoothing, and `"level"` lets each level
+take its own.
 
-Under `"level"` a held hyperparameter is qualified by the level it
-belongs to, `hyper = c(lambda.a = 2)`, and so is an `id`.
+Under `"level"` a held hyperparameter is qualified by the level to which
+it belongs, `hyper = c(lambda.a = 2)`, and so is an `id`.
 
-A **numeric** `by` gives a varying-coefficient term: the smooth
-multiplies that variable, and the fitted function is the coefficient of
-`by` as it changes with the covariate. The term is not centered: its
-first column is the constant times `by`, unpenalized and named `const`,
-because the constant of the coefficient is the main effect of `by`, a
-coefficient that only this column carries (this is also what mgcv does).
-Writing `by` in the formula as well makes that column aliased. The
-default label is `s(x):z` for a `by` called `z`, so a formula may carry
-`s(x)` and `s(x, by = z)` together. A numeric `by` has no levels, so
-`by_hyper = "level"` is rejected and is not read as `"shared"`.
+A numeric `by` gives a varying-coefficient term: the smooth multiplies
+that variable, and the fitted function is the coefficient of `by` as it
+changes with the covariate. The term is not centered: its first column
+is the constant times `by`, unpenalized and named `const`, because the
+constant of the coefficient is the main effect of `by`, a coefficient
+that only this column carries (mgcv does the same). Writing `by` in the
+formula as well makes that column aliased. The default label is `s(x):z`
+for a `by` called `z`, so a formula may carry `s(x)` and `s(x, by = z)`
+together. A numeric `by` has no levels, so `by_hyper = "level"` is
+rejected and is not read as `"shared"`.
 
 ## Sparse storage
 
-A factor `by` is the one place a smooth's block can be sparse, each row
-sitting in the block of its own level and nowhere else, a density of
-\\1/m\\. `sparse = TRUE` builds it that way instead of building the
-dense matrix and compressing it. The sparse block needs far less storage
-than the dense one, and the two hold the same numbers.
+A factor `by` is the one place where a smooth's block can be sparse:
+each row sits in the block of its own level and nowhere else, which
+gives a density of \\1/m\\. `sparse = TRUE` builds it that way instead
+of building the dense matrix and compressing it. The sparse block needs
+far less storage than the dense one, and the two hold the same numbers.
 
 `sparse = NULL`, the default, settles the storage at build: the block is
 stored as sparse when its dense form would hold more than \\10^5\\
@@ -210,7 +209,8 @@ columns per level (see
 
 An explicit `TRUE` without a factor `by` is rejected, and the error
 message gives the reason: the basis is dense by construction and a
-numeric `by` multiplies it, so there is nothing to build on.
+numeric `by` multiplies it, so a sparse form would have nothing on which
+to build.
 
 The penalty of a factor `by` is the same matrix repeated blockwise. In
 `s()` and in a
@@ -267,7 +267,7 @@ X <- term_matrix(b)
 cor(X[, 1], dd$x)
 #> [1] 1
 max(abs(crossprod(X[, 1], X[, -1])))
-#> [1] 8.992806e-14
+#> [1] 4.418688e-14
 
 # So edf runs from k - 1 down to one, not to zero.
 H <- crossprod(X)
@@ -297,8 +297,8 @@ vapply(term_penalties(bl), function(e) range(e$index), integer(2))
 #> [2,]    4    8   12   16
 
 # A penalty factory covers the PENALIZED coordinates: the free linear
-# column is left out, a separable penalty having no zero row with which
-# to leave it alone.
+# column is left out, because a separable penalty has no zero row with
+# which to leave it alone.
 bp <- term_build(s(x, basis7::bspline_smooth(
   k = 5, penalty = penalties7::lasso_penalty)), dd)
 term_penalties(bp)[[1]]$index
@@ -310,16 +310,16 @@ term_penalties(bp)[[1]]$penalty@params
 max(abs(term_predict(b, dd[1:10, ]) - X[1:10, ]))
 #> [1] 0
 max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 8)), dd[1:10, ])) - X[1:10, ]))
-#> [1] 2.849289
+#> [1] 3.628495
 
 # Sparsity needs a factor `by`; without one the build signals an error.
 try(term_build(s(x, basis7::bspline_smooth(k = 5), sparse = TRUE), dd))
-#> Error : 'sparse' has nothing to build on here: a smooth's basis is dense by
+#> Error : 'sparse' has nothing on which to build here: a smooth's basis is dense by
 #>   construction. Sparsity comes from a FACTOR 'by', whose indicators put each
 #>   row in the block of its own level.
 
 
-# Fitted. The data are simulated from a known truth, so the
+# The smooth is fitted. The data are simulated from a known truth, so the
 # estimates below can be read against it.
 if (requireNamespace("statmodels7", quietly = TRUE)) {
   set.seed(4)

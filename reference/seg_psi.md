@@ -1,7 +1,7 @@
 # The Break-Points of a Break-Point Term
 
-The estimated positions of the break-points. For a continuous or a
-smoothed term these are coefficients; for a sharp
+Returns the estimated positions of the break-points. For a continuous or
+a smoothed term these are coefficients; for a sharp
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 they are read off two coefficients as \\-g_k/\delta_k\\, and for a sharp
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
@@ -24,8 +24,8 @@ seg_psi(term, coef = NULL)
 
 - coef:
 
-  Optional coefficients; defaults to the ones that the term was last
-  refreshed at.
+  Optional coefficients; defaults to the coefficients at which the term
+  was last refreshed.
 
 ## Value
 

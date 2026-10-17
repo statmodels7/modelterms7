@@ -1,11 +1,12 @@
 # Levels of a Marginal Break-Point Term
 
-For the step kind, the constant shift of each side pattern, the sums of
-the changes of level over the active break-points. For the continuous
-kinds the shift varies by observation, each node contributing its own
-hinge value, and a matrix is returned, aligned with
+Returns, for the step kind, the constant shift of each side pattern,
+which is the sum of the changes of level over the active break-points of
+that pattern. For the continuous kinds each node contributes its own
+hinge value to the shift, so the shift varies by observation and the
+method returns a matrix aligned with
 [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)'s
-columns. The node set depends on the term's parameters alone, so the
+columns. The node set depends only on the term's parameters, so the
 family is not evaluated.
 
 ## Arguments

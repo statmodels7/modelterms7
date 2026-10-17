@@ -1,10 +1,10 @@
 # Links of a Structural Term's Parameters
 
-One linkfunctions7 link per parameter of
+Returns one linkfunctions7 link per parameter of
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md),
 carrying that parameter from its own admissible set onto the whole real
-line. A fitting layer optimizes on that unconstrained scale, so an
-optimizer never has to be told about the constraint.
+line. A fitting layer optimizes on that unconstrained scale, so the
+optimizer needs no information about the constraint.
 
 ## Usage
 
@@ -23,7 +23,7 @@ term_links(term, ...)
 
 - ...:
 
-  Passed to methods. No shipped method reads anything here.
+  Passed to methods. The shipped methods do not use these arguments.
 
 ## Value
 
@@ -36,10 +36,10 @@ and named by it.
 The charts are chosen so that a proposal from anywhere lands somewhere
 admissible.
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
-puts its level on the identity, its score loadings on the **log** so a
-loading stays positive, and its persistence coordinates on the
-**rhobit** so each partial autocorrelation stays inside \\(-1, 1)\\ and
-the filter stays stationary.
+puts its level on the identity, its score loadings on the log so a
+loading stays positive, and its persistence coordinates on the rhobit so
+each partial autocorrelation stays inside \\(-1, 1)\\ and the filter
+stays stationary.
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
 puts its first level and the free entries of its transition matrix on
 the identity and the gaps between levels on the log, so the levels are
@@ -49,17 +49,17 @@ overrides the links per parameter.
 
 The persistence uses a different kind of chart from the other
 parameters. The stationary region in the autoregressive coefficients is
-not a box, so no collection of scalar links covers it; the partial
+not a box, so a collection of scalar links cannot cover it; the partial
 autocorrelations are each in \\(-1, 1)\\ independently, and
-Levinson-Durbin carries them onto the coefficients. That is why
+Levinson-Durbin carries them onto the coefficients. The function
 [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
-exists: the coordinate and the quantity a reader reads are different
-things.
+exists because the coordinate and the quantity that a reader reads are
+different things.
 
-Where a parameter carries a subformula the link is applied **inside**
-the development, \\\psi\_{j,t} = g_j^{-1}(z_t'\gamma_j)\\, so the
-parameter stays admissible at every observation and the coefficients
-\\\gamma_j\\ are unconstrained.
+Where a parameter carries a subformula the link is applied inside the
+development, \\\psi\_{j,t} = g_j^{-1}(z_t'\gamma_j)\\, so the parameter
+stays admissible at every observation and the coefficients \\\gamma_j\\
+are unconstrained.
 
 The method on
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
@@ -77,7 +77,8 @@ for the quantities to which the coordinates map.
 ## Examples
 
 ``` r
-# Identity for the level, log for the loading, rhobit for the persistence.
+# The level uses the identity link, the loading uses the log link and the
+# persistence uses the rhobit link.
 vapply(term_links(gas(p = 1, q = 2)), function(l) l@link_name, character(1))
 #>      omega     kappa1      pacf1      pacf2 
 #> "identity"      "log"   "rhobit"   "rhobit" 

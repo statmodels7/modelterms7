@@ -11,7 +11,7 @@ blueprint. The recursion itself runs later, in term_filter()."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -63,7 +63,7 @@ name.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The term with <code>blueprint</code> filled. <code><a href="term_is_built.html">term_is_built()</a></code> reads that
+    <p>The term, whose <code>blueprint</code> is filled. <code><a href="term_is_built.html">term_is_built()</a></code> reads that
 property on this branch, so it is <code>TRUE</code> for the result.</p>
     </div>
     <div class="section level2">
@@ -93,7 +93,7 @@ two times counts as one step.</p>
 <span class="r-in"><span><span class="va">dd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>t <span class="op">=</span> <span class="fl">1</span><span class="op">:</span><span class="fl">60</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">60</span><span class="op">)</span>, id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, each <span class="op">=</span> <span class="fl">20</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                 g <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"u"</span>, <span class="st">"v"</span><span class="op">)</span>, <span class="fl">30</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># One series, then a panel of three.</span></span></span>
+<span class="r-in"><span><span class="co"># The first term filters one series, and the second a panel of three.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lengths.html" class="external-link">lengths</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span>, time <span class="op">=</span> <span class="va">t</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">@</span><span class="va">blueprint</span><span class="op">$</span><span class="va">order</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>  1 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 60 </span>

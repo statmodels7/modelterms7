@@ -1,9 +1,9 @@
 # The Linear Constraints a Kink Places on a Term's Coefficients
 
-The rows of the linear constraints that hold the term's objective on its
-kinks at the coefficients given: one row per constraint, one column per
-coefficient of the term. A perturbation \\d\\ of the coefficients keeps
-the kinks where they are if and only if \\A d = 0\\.
+Returns the rows of the linear constraints that hold the term's
+objective on its kinks at the given coefficients: one row per constraint
+and one column per coefficient of the term. A perturbation \\d\\ of the
+coefficients keeps the kinks where they are if and only if \\A d = 0\\.
 
 ## Usage
 

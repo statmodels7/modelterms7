@@ -5,9 +5,9 @@ Returns the least-squares profile of a sharp
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 or
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
-term in one of its break-points, the others held at their current
-positions. The profile is the residual sum of squares in every interval
-between consecutive distinct values of the covariate inside the
+term in one of its break-points, while the others are held at their
+current positions. The profile is the residual sum of squares in every
+interval between consecutive distinct values of the covariate inside the
 confinement limits, evaluated at the midpoint of the interval for a
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 or a
@@ -16,8 +16,9 @@ and at the minimizing position inside the interval for a
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md).
 This is the quantity that
 [`seg_polish_exact()`](https://statmodels7.github.io/modelterms7/reference/seg_polish_exact.md)
-minimizes. It is returned whole so that a caller whose objective the
-profile only approximates can take several candidates from it.
+minimizes. It is returned whole so that a caller can take several
+candidates from it when the profile only approximates the objective of
+that caller.
 
 ## Usage
 
@@ -35,7 +36,7 @@ seg_profile_intervals(term, y, k = 1L, weights = NULL)
 - y:
 
   A numeric vector of finite values, one per observation of the build
-  data: the response, net of whatever the caller wants held.
+  data: the response, net of whatever the caller wants to hold fixed.
 
 - k:
 
@@ -50,7 +51,8 @@ seg_profile_intervals(term, y, k = 1L, weights = NULL)
 
 A data frame with columns `psi`, the position in each interval, and
 `rss`, the profile there (`Inf` where the design is singular). The data
-frame has no rows when no interval lies inside the confinement limits.
+frame has no rows when there is no interval inside the confinement
+limits.
 
 ## See also
 

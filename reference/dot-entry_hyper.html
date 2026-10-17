@@ -11,7 +11,7 @@ it. The same applies to id."><meta property="og:image" content="https://statmode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -53,8 +53,8 @@ it. The same applies to <code>id</code>.</p>
 
 
 <dl><dt id="arg-entries">entries<a class="anchor" aria-label="anchor" href="#arg-entries"></a></dt>
-<dd><p>The entries a term declares, each a list with at least
-<code>name</code> and <code>penalty</code>.</p></dd>
+<dd><p>The entries that a term declares, where each entry is a list
+with at least <code>name</code> and <code>penalty</code>.</p></dd>
 
 
 <dt id="arg-hyper">hyper<a class="anchor" aria-label="anchor" href="#arg-hyper"></a></dt>
@@ -70,7 +70,8 @@ it. The same applies to <code>id</code>.</p>
 
 
 <dt id="arg-what">what<a class="anchor" aria-label="anchor" href="#arg-what"></a></dt>
-<dd><p>What the hyperparameters belong to, named in the message.</p></dd>
+<dd><p>The object to which the hyperparameters belong, named in the
+message.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -83,14 +84,14 @@ checked.</p>
     <p>The hyperparameters of a term are not always determined when the term is
 written. A random effect's are the effects' distribution's, and a smooth's
 are its penalty's, which may come from a factory called at a coefficient
-count that the data determine. The check is therefore made here, at the
-build, which is the first point at which the penalties exist.</p>
-<p>A name is qualified by the entry it belongs to where there is more than
-one: the within-group column for a random effect, the level of the factor
-for a smooth with one smoothing parameter per level. An unqualified name
-is an error that lists the names available. A value is never recycled over
-the entries, because a value applied silently to every entry would be
-wrong for those it does not belong to.</p>
+count that the data determine. This function therefore makes the check at
+the build, which is the first point at which the penalties exist.</p>
+<p>A name is qualified by the entry to which it belongs where there is more
+than one: the within-group column for a random effect, the level of the
+factor for a smooth with one smoothing parameter per level. An unqualified
+name is an error that lists the names available. A value is never recycled
+over the entries, because a value applied silently to every entry would be
+wrong for the entries to which it does not belong.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

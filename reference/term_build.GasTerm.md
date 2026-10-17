@@ -22,7 +22,7 @@ the blueprint. The recursion itself runs later, in
 
 ## Value
 
-The term with `blueprint` filled.
+The term, whose `blueprint` is filled.
 [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
 reads that property on this branch, so it is `TRUE` for the result.
 
@@ -60,7 +60,7 @@ set.seed(1)
 dd <- data.frame(t = 1:60, y = rnorm(60), id = rep(1:3, each = 20),
                  g = factor(rep(c("u", "v"), 30)))
 
-# One series, then a panel of three.
+# The first term filters one series, and the second a panel of three.
 lengths(term_build(gas(p = 1, q = 1, time = t), dd)@blueprint$order)
 #>  1 
 #> 60 

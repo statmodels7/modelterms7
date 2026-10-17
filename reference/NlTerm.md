@@ -1,11 +1,12 @@
 # S7 Class for Nonlinear Parametric Terms
 
-The subclass of
+`NlTerm` is the subclass of
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
-holding a parametric function that is nonlinear in its own parameters.
-Its design block is the **Jacobian** of that function, so the term is
-linear in the sense that a fitting layer needs while the function is
-not. The block depends on the current values of the parameters, and
+that holds a parametric function that is nonlinear in its own
+parameters. Its design block is the Jacobian of that function, so the
+term is linear in the sense that a fitting layer needs while the
+function is not. The block depends on the current values of the
+parameters, and
 [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
 recomputes it as they move.
 
@@ -45,8 +46,8 @@ NlTerm(
 
 - hyper:
 
-  The hyperparameters of the term's penalty that the caller **held**, as
-  a named list keyed by the penalty's names. Empty, the default, means
+  The hyperparameters of the term's penalty that the caller held, as a
+  named list keyed by the penalty's names. Empty, the default, means
   every one of them is estimated. See
   [`term_hyper()`](https://statmodels7.github.io/modelterms7/reference/term_hyper.md).
 
@@ -59,9 +60,9 @@ NlTerm(
 
 - values:
 
-  The values a path visits, for each hyperparameter the caller wrote
-  out, as a named list of numeric vectors. Empty, the default, has the
-  path build them. See
+  The values that a path visits, for each hyperparameter that the caller
+  wrote out, as a named list of numeric vectors. Empty, the default, has
+  the path build them. See
   [`term_values()`](https://statmodels7.github.io/modelterms7/reference/term_values.md).
 
 - min_ratio:
@@ -89,21 +90,22 @@ NlTerm(
 - X:
 
   The design block, one row per observation: a numeric matrix or a
-  two-dimensional Matrix. Empty until
+  two-dimensional Matrix. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
 - coef_names:
 
   The block's coefficient names, one per column, prefixed by `label`
-  when there is one. Filled by
-  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md).
+  when there is one.
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+  fills it.
 
 - blueprint:
 
   A named list of everything needed to reproduce the mapping on new
-  rows. Its contents are the subclass's business; nothing outside the
-  term reads them. Empty until
+  rows. Its contents belong to the subclass, and only the term reads
+  them. It is empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
@@ -118,8 +120,8 @@ NlTerm(
 
 - nl_params:
 
-  A character vector of the parameter names, in the order the derivative
-  components are keyed by.
+  A character vector of the parameter names, in the order used to key
+  the derivative components.
 
 - links:
 
@@ -129,7 +131,8 @@ NlTerm(
 - subformulas:
 
   A named list of one-sided formulas, one per parameter developed over
-  covariates. Empty where none is.
+  covariates. The list is empty if the term develops no parameter over
+  covariates.
 
 - deriv_mode:
 
@@ -155,14 +158,14 @@ which. `nl_params` names the parameters:
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md) sets
 it from `params` for a function, and
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-sets it for a formula, from the names that the formula uses and the data
-do not supply.
+sets it for a formula, from the names that the formula uses and that the
+data do not supply.
 
 `links` holds the links given in the call. After
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-it holds one linkfunctions7 link per parameter, the identity where none
-was named. `subformulas` holds one right-hand side per parameter
-developed over covariates, and is empty otherwise.
+it holds one linkfunctions7 link per parameter, the identity link for
+each parameter without a named link. `subformulas` holds one right-hand
+side per parameter developed over covariates, and is empty otherwise.
 
 `deriv_mode` is `"symbolic"` where
 [`stats::deriv()`](https://rdrr.io/r/stats/deriv.html) could read the

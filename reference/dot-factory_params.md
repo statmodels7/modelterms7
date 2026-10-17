@@ -1,4 +1,4 @@
-# The Hyperparameter Names a Penalty Factory Produces
+# The Hyperparameter Names That a Penalty Factory Produces
 
 Builds the penalty at a probe size and reads its `params`, returning
 `NULL` where it cannot be built.
@@ -22,7 +22,7 @@ or `NULL` where it could not be built.
 
 ## Details
 
-A factory is a function of the coefficient count, and the names it
+A factory is a function of the coefficient count, and the names that it
 produces do not depend on that count, so one coefficient is enough to
 read them. The probe is wrapped because a factory may reject a size of
 one, and the two outcomes are kept apart: `NULL` marks a penalty whose

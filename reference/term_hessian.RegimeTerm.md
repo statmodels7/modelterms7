@@ -1,7 +1,8 @@
 # Observed Hessian of a Regime Term
 
-Forward-mode second-order propagation through the scaled forward
-recursion, giving the exact Hessian of the mixed log-likelihood.
+Propagates the derivatives to second order, in forward mode, through the
+scaled forward recursion and returns the exact Hessian of the mixed
+log-likelihood.
 
 ## Arguments
 
@@ -33,15 +34,16 @@ recursion, giving the exact Hessian of the mixed log-likelihood.
 
 - cols:
 
-  The columns the term's own parameters occupy.
+  The columns that the term's own parameters occupy.
 
 - level:
 
-  The distribution parameter the regimes shift.
+  The distribution parameter that the regimes shift.
 
 - weights:
 
-  Observation weights: one number or one per observation, none missing.
+  Observation weights: one number or one per observation, without
+  missing values.
 
 - ...:
 

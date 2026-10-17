@@ -18,8 +18,8 @@ so that the higher harmonics shrink first.
 A new additive term is a subclass of `additive_term` together with a
 method for
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md).
-State that belongs to the term is declared as **properties of its own
-subclass**; the shipped `SmoothTerm` carries `vars`, `by`, `spec` and
+State that belongs to the term is declared as properties of its own
+subclass; the shipped `SmoothTerm` carries `vars`, `by`, `spec` and
 `sparse` in this way.
 
 ``` r
@@ -30,7 +30,7 @@ SeasonTerm <- S7::new_class(
 )
 ```
 
-The constructor captures the covariate **unevaluated** and records the
+The constructor captures the covariate unevaluated and records the
 settings that the build needs. The constructor computes nothing, because
 a specification is not a block and the data are not yet in scope.
 
@@ -51,7 +51,7 @@ season <- function(x, period, k = 3, lambda = NULL) {
 
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 evaluates the expression in the data and fills `X`, `coef_names`,
-`blueprint` and `penalty`. The **blueprint** stores what
+`blueprint` and `penalty`. The blueprint stores what
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 needs later, so that prediction reapplies recorded quantities and does
 not recompute them from the new rows. Storing the blueprint at build
@@ -130,8 +130,8 @@ coefficients.
 ## Prediction at new data
 
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-has **no base method**, so a term that will be predicted from or
-cross-validated defines one. The method reapplies the blueprint:
+has no base method, so a term that is used for prediction or for
+cross-validation defines one. The method reapplies the blueprint:
 
 ``` r
 
@@ -144,9 +144,8 @@ S7::method(term_predict, SeasonTerm) <- function(term, newdata, ...) {
 
 The period comes from the blueprint and never from the new data. A term
 that recomputed it would be a different term on every subset. The
-identity that catches this mistake is that prediction on the rows that
-the model was fitted to must return the block that the model was fitted
-with:
+identity that detects this mistake is that prediction on the rows of the
+fit must return the block of the fit:
 
 ``` r
 
@@ -195,8 +194,8 @@ omits every row of the factor’s last level; otherwise it is the first
 half of the rows, as here. The subset is passed through
 [`droplevels()`](https://rdrr.io/r/base/droplevels.html) first, because
 a plain row subset of a data frame keeps every factor level, including
-levels that no row uses, and a term that rebuilt its levels would look
-correct on it.
+levels that do not occur in any row, and a term that rebuilt its levels
+would look correct on it.
 
 ## The penalty and its rank
 
@@ -212,16 +211,16 @@ c(`lambda = 1` = edf(tm, cf[-1], H, theta = list(lambda = 1)),
 #> 5.7381084609 0.0002722007
 ```
 
-The count runs from 6 down to 0, because the penalty above has **full
-rank**: every coefficient is penalized, so a large smoothing parameter
+The count runs from 6 down to 0, because the penalty above has full
+rank: every coefficient is penalized, so a large smoothing parameter
 removes the seasonal effect entirely. A shipped
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) with
 its default smoother has a penalty that is rank deficient by exactly
 one, so that the effective count runs from the number of coefficients
-down to **one**, and the limit is a straight line. The cyclic, Fourier
-and first-order smoothers have no free line, and their count goes to
-zero. The choice of the penalty’s null space decides which of the two
-behaviors a term has, and it is a modeling decision.
+down to one, and the limit is a straight line. The cyclic, Fourier and
+first-order smoothers have no free line, and their count goes to zero.
+Which of the two behaviors a term has depends on the null space of its
+penalty, and the choice of that null space is a modeling decision.
 
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 reports the entries that a term declares. Each entry names a subset of
@@ -260,9 +259,9 @@ length(term_penalties(term_build(jseg(t), d)))
 ## In a formula
 
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
-recognizes a term by **evaluating** its call and testing whether the
-value inherits `model_term`. The term names are never listed, so the new
-term is recognized with no edit:
+recognizes a term by evaluating its call and testing whether the value
+inherits `model_term`. The term names are never listed, so the new term
+is recognized with no edit:
 
 ``` r
 
@@ -278,16 +277,16 @@ does not inherit `model_term` stays a covariate when a model matrix can
 hold the value, so `log(x)` is arithmetic. A call whose evaluation fails
 signals an error that names the call.
 
-Recognition by evaluation has one further consequence: a **masked name**
-is a third case. `mgcv` exports
+Recognition by evaluation also produces a third case, a masked name.
+`mgcv` exports
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
 [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md), and
 `segmented` exports
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
 so a user who has attached either package and writes this package’s
 formula gets the function of the other package. The interpreter rejects
-the result where it happens. The error names the term, the class of the
-value and the package that supplied the function, and it suggests
+the result at the call itself. The error names the term, the class of
+the value and the package that supplied the function, and it suggests
 `modelterms7::`, so the value does not reach
 [`model.matrix()`](https://rdrr.io/r/stats/model.matrix.html) and fail
 there.
@@ -307,26 +306,27 @@ from the base classes and read the properties that
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 filled.
 
-Two further generics matter only for a term whose block **moves with its
-coefficients**.
+Two further generics matter only for a term whose block moves with its
+coefficients.
 [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
 recomputes the block at new coefficients.
 [`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
 reports whether that block is a Jacobian, so that the fitting step is
 Gauss-Newton, or a frozen working linearization, so that the step is a
-fixed-point iteration.
+fixed-point iteration. For
 [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md),
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
-and every smoothed break-point term answer `TRUE`. A sharp
+and every smoothed break-point term, the answer is `TRUE`. For a sharp
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 or
-[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
-answers `FALSE`, because its break-point is read off a product of
+[`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md),
+the answer is `FALSE`, because its break-point is read off a product of
 coefficients and is not estimated as a parameter. A term with a fixed
 design, like the one above, inherits a
 [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
-that returns the term unchanged and the answer `TRUE`, and it needs
-neither method.
+that returns the term unchanged and a
+[`term_jacobian_block()`](https://statmodels7.github.io/modelterms7/reference/term_jacobian_block.md)
+that returns `TRUE`, and it needs neither method.
 
 The other branch of the class tree is `structural_term`, whose terms
 rewrite the likelihood instead of adding columns:
@@ -343,16 +343,16 @@ and either
 [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
 or
 [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md),
-with
+and
 [`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md)
-carrying the derivative of a filter.
+carries the derivative of a filter.
 [`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
 fits at most one structural term in a formula.
 
 ## Summary
 
-- **Minimum to define an additive term:** a subclass of `additive_term`
-  and a
+- Minimum to define an additive term: a subclass of `additive_term` and
+  a
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   method that fills `X`, `coef_names`, `blueprint` and `penalty`. Any
   state of its own is a property of the subclass.
@@ -364,11 +364,11 @@ fits at most one structural term in a formula.
   [`baseenv()`](https://rdrr.io/r/base/environment.html) as the
   enclosure.
 - [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
-  runs six checks, the last of them on a
+  runs six checks, and the last one runs on a
   [`droplevels()`](https://rdrr.io/r/base/droplevels.html) subset, which
   exposes a rebuild.
-- The penalty’s null space decides what a large smoothing parameter
-  leaves behind, and
+- The null space of the penalty determines what a large smoothing
+  parameter leaves behind, and
   [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
   follows from the term alone.
 - [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)

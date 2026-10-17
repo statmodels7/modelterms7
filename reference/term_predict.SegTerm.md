@@ -1,9 +1,9 @@
 # A Break-Point Term's Block at New Rows
 
-The working block evaluated at `newdata`, at the break-points and the
-coefficients that the term currently carries. The positions are not
-re-derived from the new rows, and any development of a coefficient is
-reapplied through its sub-terms' own blueprints.
+Returns the working block evaluated at `newdata`, at the break-points
+and the coefficients that the term currently carries. The positions are
+not re-derived from the new rows, and any development of a coefficient
+is reapplied through its sub-terms' own blueprints.
 
 ## Arguments
 
@@ -31,15 +31,15 @@ columns, with the term's coefficient names as column names.
 ## Details
 
 Re-deriving the break-points would give a different model at every set
-of rows, which is the general reason
+of rows, which is the general reason why
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-reapplies instead of rebuilding. For a break-point term it is sharper
-than usual: the positions are what the fit estimated, and a subset of
-the data may not even contain one.
+reapplies instead of rebuilding. For a break-point term the argument
+holds more strongly, because the positions are the values that the fit
+estimated, and a subset of the data may not even contain one.
 
 [`term_value()`](https://statmodels7.github.io/modelterms7/reference/term_value.md)
-with `newdata` is what gives the contribution there. For `seg` the two
-differ, the block being a Jacobian.
+with `newdata` gives the contribution there. For `seg` the two differ,
+because the block is a Jacobian.
 
 ## See also
 

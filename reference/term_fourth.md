@@ -1,9 +1,10 @@
 # Fourth Derivatives of a Structural Term's Predictor, in Two Directions
 
+Returns
 [`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
-differentiated once more along a second direction. It is what the exact
-Hessian of a marginal criterion needs when the model carries a term that
-bends the predictor.
+differentiated once more along a second direction. The exact Hessian of
+a marginal criterion needs this when the model carries a term that bends
+the predictor.
 
 ## Usage
 
@@ -49,7 +50,7 @@ term_fourth(
 
 - g:
 
-  The weights the fourth derivative is contracted against, one per
+  The weights against which the fourth derivative is contracted, one per
   observation.
 
 - seed:
@@ -93,9 +94,9 @@ filter produces it, \\K\\ carries \\\sum_t w_t \ell\_{p,t}E_t\\ as well,
 and differentiating that twice requires \\\partial^4 e_t/\partial u^4\\.
 
 The derivative is contracted in two directions only. The full fourth
-derivative is an \\m^4\\ array per observation and is never formed: what
-is propagated is a matrix per observation, the same size as the
-curvature and therefore the same \\O(nm^2)\\. A caller that needs a
+derivative is an \\m^4\\ array per observation and is never formed: the
+method propagates a matrix per observation, which has the same size as
+the curvature and therefore the same \\O(nm^2)\\. A caller that needs a
 Hessian over \\n_h\\ hyperparameters calls this once per pair.
 
 The recursion carries five states, \\F_t\\, \\\Phi_t\\,
@@ -113,13 +114,13 @@ at an observation,
 v)(V\_{s'}\cdot w)\Big)V_r^\top V\_{r'},\$\$
 
 with `cppp` \\= \ell\_{ppp}\\ beside them, and `N` a list of two, one
-per direction. `P` is the only place where the family's fifth derivative
-enters. The scalar `cppp` is not recovered by any contraction; it is the
-amount by which the level's own curvature moves.
+per direction. The family's fifth derivative enters only through `P`.
+The scalar `cppp` is not recovered by any contraction; it is the amount
+by which the level's own curvature moves.
 
-The base method returns zeros, so an additive term is covered without
-writing anything. A structural term signals an error, for the reason
-that
+The base method returns zeros, so an additive term is covered and its
+author writes no method. A structural term signals an error, for the
+reason that
 [`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
 gives: a zero fourth derivative would misstate it.
 

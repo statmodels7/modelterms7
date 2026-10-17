@@ -1,12 +1,12 @@
 # The Posterior Shift of a Marginal Break-Point Term, and Its Jacobian
 
-For the step kind, forward mode through the forward and backward
-recursions of the side chain over the \\2^K\\ side patterns, the
-interval masses and the survivals carrying their derivatives in the
-prior's parameters. For the continuous kinds, the derivative of each
-group's posterior over its quadrature nodes, the node weights, the node
-positions and the shifts carrying their derivatives in the term's own
-parameters.
+Computes the shift and its Jacobian. For the step kind, the function
+applies forward mode through the forward and backward recursions of the
+side chain over the \\2^K\\ side patterns, and the interval masses and
+the survivals carry their derivatives in the prior's parameters. For the
+continuous kinds, it computes the derivative of each group's posterior
+over its quadrature nodes, and the node weights, the node positions and
+the shifts carry their derivatives in the term's own parameters.
 
 ## Arguments
 
