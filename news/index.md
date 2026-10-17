@@ -1,5 +1,12 @@
 # Changelog
 
+## modelterms7 0.99.3
+
+- The error message of
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+  for `subformulas` given with a function `fn` is reworded without a
+  personified subject; the test pattern changes with it.
+
 ## modelterms7 0.99.2
 
 - Documentation and messages: relative clauses without a relative
