@@ -367,9 +367,9 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
            call. = FALSE)
     }
     if (!is.null(subformulas)) {
-      stop(paste("'subformulas' requires the place where a parameter enters",
-                 "the model, which only a formula says; give 'fn' as a",
-                 "formula to develop a parameter with covariates."),
+      stop(paste("'subformulas' requires 'fn' to be a formula, because the",
+                 "place where a parameter enters the model can be read from a",
+                 "formula and not from a function."),
            call. = FALSE)
     }
   }

@@ -124,7 +124,7 @@ test_that("what only a formula can do is refused to a function", {
   fx <- function(x, theta) theta$a * x
   expect_error(nl(fx), "'params' must name the parameters")
   expect_error(nl(fx, params = "a", subformulas = list(a = ~g)),
-               "only a formula says")
+               "can be read from a formula")
   expect_error(nl(y ~ a * x), "one-sided")
   expect_error(nl("not a formula"), "formula or a function")
   expect_error(nl(~ a * x, links = list(nope = 1)), NA)

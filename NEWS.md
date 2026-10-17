@@ -1,3 +1,9 @@
+# modelterms7 0.99.3
+
+* The error message of `nl()` for `subformulas` given with a function `fn`
+  is reworded without a personified subject; the test pattern changes with
+  it.
+
 # modelterms7 0.99.2
 
 * Documentation and messages: relative clauses without a relative pronoun,
