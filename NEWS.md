@@ -1,3 +1,17 @@
+# modelterms7 0.101.0
+
+* The joint filter of `GasJoint` runs compiled where the joint registry of
+  distributions7 (0.81.0) covers the family and the registry of
+  linkfunctions7 covers every link: `term_filter()` takes `fast` and
+  `threads` and reads the gradient, the Hessian, the expected information and
+  its derivative at each observation through the registry, with the groups
+  over threads. Elsewhere the context is inert and the callbacks run in R as
+  before. Against the R route the predictors agree to 1e-13 and the Jacobian,
+  the curvature and the reverse pass to 1e-11.
+* The reverse pass of `GasJoint` is compiled and takes `stored_curv`, the
+  curvature that the forward pass returned, so that it no longer reruns the
+  filter.
+
 # modelterms7 0.100.0
 
 * `GasJoint` and `gas_joint()`: several `gas()` terms, one in the equation of

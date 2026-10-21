@@ -291,6 +291,22 @@ S7::method(term_params, GasJoint) <- function(term, ...) {
 #'   term's parameters on the parameter scale, named as [term_params()] of
 #'   the term; or one flat list named as [term_params()] of the joint filter.
 #' @param ... Unused.
+#' @param fast `NULL`, or the context of the compiled route, a list with
+#'   `family` (the name under which the C registry of \pkg{distributions7}
+#'   knows the distribution), `constants` (its constants, each of length 1
+#'   or one per observation), `links` (the class name of each parameter's
+#'   link), `link_par` (a list of each link's own parameters), `bounds` (a
+#'   list of each link's bounds), `y`, `eta` (the static predictors of every
+#'   distribution parameter, one column each), `filtered` (the positions of
+#'   the filtered parameters among them) and `scaling`. Where the joint
+#'   registry of \pkg{distributions7} and the registry of
+#'   \pkg{linkfunctions7} cover the family and the links, the recursion runs
+#'   compiled and reads the family through them instead of the callbacks;
+#'   where they do not, the context is inert and the callbacks run in R.
+#' @param threads How many threads the compiled recursion may use, over
+#'   groups, when the distribution's entries are safe on a worker thread and
+#'   there are at least eight groups. Each group writes only to its own rows,
+#'   so the result does not depend on the count.
 #' @return A list with `eta` (a matrix like the input), `jacobian` (a named
 #'   list with one matrix per filtered parameter, one row per observation and
 #'   one column per entry of [term_params()] of the joint filter) and `curv`
@@ -298,13 +314,26 @@ S7::method(term_params, GasJoint) <- function(term, ...) {
 #'   row).
 #' @keywords internal
 S7::method(term_filter, GasJoint) <- function(term, eta, y, score, curvature,
-                                              psi, ...) {
+                                              psi, ..., fast = NULL,
+                                              threads = 1L) {
   bp <- term@blueprint
   K <- length(term@params)
   n <- bp$n
   eta <- matrix(as.numeric(eta), n, K)
   cf <- .gas_joint_coefs(term, psi)
   M <- length(term_params(term))
+  nm <- term_params(term)
+  if (!is.null(fast)) {
+    out <- gas_joint_filter_cpp(eta, cf, M, bp$order, fast,
+                                as.integer(threads))
+    if (!is.null(out)) {
+      jac <- lapply(out$jacobian, function(J) { colnames(J) <- nm; J })
+      names(jac) <- term@params
+      eta_out <- out$eta
+      colnames(eta_out) <- term@params
+      return(list(eta = eta_out, jacobian = jac, curv = out$curv))
+    }
+  }
   eta_out <- eta
   jac <- lapply(seq_len(K), function(k) matrix(0, n, M))
   cv <- array(0, c(n, K, K))
@@ -359,7 +388,6 @@ S7::method(term_filter, GasJoint) <- function(term, eta, y, score, curvature,
     eta_out[rows, ] <- eta[rows, , drop = FALSE] + t(f)
     for (k in seq_len(K)) jac[[k]][rows, ] <- Fd[k, , ]
   }
-  nm <- term_params(term)
   jac <- lapply(jac, function(J) { colnames(J) <- nm; J })
   names(jac) <- term@params
   colnames(eta_out) <- term@params
@@ -378,53 +406,42 @@ S7::method(term_filter, GasJoint) <- function(term, eta, y, score, curvature,
 #' predictor \eqn{e_{k,t}} directly through `g` and through every driving
 #' score read there, \eqn{\bar e_{k,t} = g_{k,t} + \sum_l \bar u_{l,t}
 #' C_{t,lk}}; the level passes this on to its own earlier values through the
-#' persistence and to the earlier driving scores through the loadings.
+#' persistence and to the earlier driving scores through the loadings. The
+#' pass reads the curvature \eqn{C_t} that the forward pass stored and runs
+#' compiled.
 #' @param term A [GasJoint()].
 #' @param eta,y,score,curvature,psi As for [term_filter()].
 #' @param g The direct derivative of the objective in the filtered
 #'   predictors, a matrix like `eta`.
 #' @param ... Unused.
+#' @param stored_curv `NULL`, or the `curv` that [term_filter()] returned at
+#'   the same parameters and static predictors; where it is `NULL`, the
+#'   forward pass is run to obtain it. The name is not a prefix of
+#'   `curvature`, so that it cannot be matched partially to that argument.
+#' @param fast,threads Passed to that forward pass.
 #' @return A list with `deta` and `dscore`, matrices like `eta`.
 #' @keywords internal
 S7::method(term_adjoint, GasJoint) <- function(term, eta, y, score, curvature,
-                                               psi, g, ...) {
+                                               psi, g, ..., stored_curv = NULL,
+                                               fast = NULL, threads = 1L) {
   bp <- term@blueprint
   K <- length(term@params)
   n <- bp$n
   g <- matrix(as.numeric(g), n, K)
-  cv <- term_filter(term, eta, y, score, curvature, psi)$curv
-  cf <- .gas_joint_coefs(term, psi)
-  deta <- matrix(0, n, K)
-  dscore <- matrix(0, n, K)
-  for (rows in bp$order) {
-    T_ <- length(rows)
-    fb <- matrix(0, K, T_)
-    ub <- matrix(0, K, T_)
-    for (t in rev(seq_len(T_))) {
-      row <- rows[t]
-      C <- matrix(cv[row, , ], K, K)
-      eb <- g[row, ] + as.numeric(crossprod(C, ub[, t]))
-      fb[, t] <- fb[, t] + eb
-      deta[row, ] <- eb
-      dscore[row, ] <- ub[, t]
-      for (k in seq_len(K)) {
-        c_k <- cf[[k]]
-        for (j in seq_len(c_k$q)) {
-          if (t - j >= 1L) fb[k, t - j] <- fb[k, t - j] + c_k$b[[j]] * fb[k, t]
-        }
-        for (i in seq_len(c_k$p)) {
-          if (t - i < 1L) next
-          ub[k, t - i] <- ub[k, t - i] + c_k$a[[i]] * fb[k, t]
-          for (j in seq_along(c_k$partners)) {
-            l <- c_k$partners[j]
-            ub[l, t - i] <- ub[l, t - i] + c_k$cross[j, i] * fb[k, t]
-          }
-        }
-      }
-    }
+  cv <- if (is.null(stored_curv)) {
+    term_filter(term, eta, y, score, curvature, psi, fast = fast,
+                threads = threads)$curv
+  } else {
+    stored_curv
   }
-  colnames(deta) <- colnames(dscore) <- term@params
-  list(deta = deta, dscore = dscore)
+  if (length(dim(cv)) != 3L || any(dim(cv) != c(n, K, K))) {
+    stop(sprintf("'stored_curv' must be an array of dimension c(%d, %d, %d).",
+                 n, K, K), call. = FALSE)
+  }
+  out <- gas_joint_adjoint_cpp(as.numeric(cv), g, .gas_joint_coefs(term, psi),
+                               bp$order)
+  colnames(out$deta) <- colnames(out$dscore) <- term@params
+  out
 }
 
 # the per-term pieces of a joint vector keyed as term_params() of the joint

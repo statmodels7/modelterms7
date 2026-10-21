@@ -13,6 +13,14 @@ gas_filter_sub_cpp <- function(eta, groups, p, q, om, A, B, np, score, curvature
     .Call(`_modelterms7_gas_filter_sub_cpp`, eta, groups, p, q, om, A, B, np, score, curvature, fast, threads)
 }
 
+gas_joint_filter_cpp <- function(eta, cf, M, order, fast = NULL, threads = 1L) {
+    .Call(`_modelterms7_gas_joint_filter_cpp`, eta, cf, M, order, fast, threads)
+}
+
+gas_joint_adjoint_cpp <- function(curv, g, cf, order) {
+    .Call(`_modelterms7_gas_joint_adjoint_cpp`, curv, g, cf, order)
+}
+
 marg_seg_nodes_cpp <- function(xs, m, tau, gk_nodes, gk_wk, mr) {
     .Call(`_modelterms7_marg_seg_nodes_cpp`, xs, m, tau, gk_nodes, gk_wk, mr)
 }

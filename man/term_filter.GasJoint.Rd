@@ -25,6 +25,24 @@ term's parameters on the parameter scale, named as \code{\link[=term_params]{ter
 the term; or one flat list named as \code{\link[=term_params]{term_params()}} of the joint filter.}
 
 \item{...}{Unused.}
+
+\item{fast}{\code{NULL}, or the context of the compiled route, a list with
+\code{family} (the name under which the C registry of \pkg{distributions7}
+knows the distribution), \code{constants} (its constants, each of length 1
+or one per observation), \code{links} (the class name of each parameter's
+link), \code{link_par} (a list of each link's own parameters), \code{bounds} (a
+list of each link's bounds), \code{y}, \code{eta} (the static predictors of every
+distribution parameter, one column each), \code{filtered} (the positions of
+the filtered parameters among them) and \code{scaling}. Where the joint
+registry of \pkg{distributions7} and the registry of
+\pkg{linkfunctions7} cover the family and the links, the recursion runs
+compiled and reads the family through them instead of the callbacks;
+where they do not, the context is inert and the callbacks run in R.}
+
+\item{threads}{How many threads the compiled recursion may use, over
+groups, when the distribution's entries are safe on a worker thread and
+there are at least eight groups. Each group writes only to its own rows,
+so the result does not depend on the count.}
 }
 \value{
 A list with \code{eta} (a matrix like the input), \code{jacobian} (a named

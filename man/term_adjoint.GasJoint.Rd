@@ -12,6 +12,13 @@
 predictors, a matrix like \code{eta}.}
 
 \item{...}{Unused.}
+
+\item{stored_curv}{\code{NULL}, or the \code{curv} that \code{\link[=term_filter]{term_filter()}} returned at
+the same parameters and static predictors; where it is \code{NULL}, the
+forward pass is run to obtain it. The name is not a prefix of
+\code{curvature}, so that it cannot be matched partially to that argument.}
+
+\item{fast, threads}{Passed to that forward pass.}
 }
 \value{
 A list with \code{deta} and \code{dscore}, matrices like \code{eta}.
@@ -27,6 +34,8 @@ With \eqn{\bar f_{k,t}} the derivative of the objective in the level and
 predictor \eqn{e_{k,t}} directly through \code{g} and through every driving
 score read there, \eqn{\bar e_{k,t} = g_{k,t} + \sum_l \bar u_{l,t}
 C_{t,lk}}; the level passes this on to its own earlier values through the
-persistence and to the earlier driving scores through the loadings.
+persistence and to the earlier driving scores through the loadings. The
+pass reads the curvature \eqn{C_t} that the forward pass stored and runs
+compiled.
 }
 \keyword{internal}
