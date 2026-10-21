@@ -1,3 +1,24 @@
+# modelterms7 0.100.0
+
+* `GasJoint` and `gas_joint()`: several `gas()` terms, one in the equation of
+  each of several parameters, filtered as one recursion. The score of each
+  filtered parameter is read at the levels of all the others. The class has
+  the filter, its reverse pass, the curvature and the third and fourth
+  derivatives (`term_filter()`, `term_adjoint()`, `term_curvature()`,
+  `term_third()`, `term_fourth()`), the continuation past the series and the
+  simulation, all exact; the derivatives carry each level and each driving
+  score as a jet and read the driving vector's derivatives in every
+  predictor as data.
+* `gas(cross = )`: terms that carry the same label load each other's scores
+  (`kappa1_sigma` in the term of `mu` is the loading of the score of `sigma`),
+  on the identity link. By default the loadings are diagonal.
+* `gas_joint()` requires the same `by`, `time` and `scaling` in every term,
+  a `scaling` of 0, 1/2 or 1 with more than one term, no subformula, and a
+  `cross` label carried by at least two terms.
+* The chart preparation of the scalar core is a function of its own,
+  `.gas_chart_prep()`, which the joint core reuses; the scalar results are
+  unchanged.
+
 # modelterms7 0.99.4
 
 * The package description lists the kinds of terms that the package

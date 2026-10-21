@@ -137,6 +137,8 @@ reference:
   contents:
   - gas
   - GasTerm
+  - gas_joint
+  - GasJoint
   - regime
   - RegimeTerm
   - MarginalBreakTerm

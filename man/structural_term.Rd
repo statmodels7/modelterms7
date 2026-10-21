@@ -100,8 +100,9 @@ marginal break-point terms have this shape.
 
 The two shapes are distinguished by which of the two generics
 \code{\link[=term_filter]{term_filter()}} and \code{\link[=term_loglik]{term_loglik()}} has a method for the term's class.
-\code{\link[statmodels7:statmod]{statmodels7::statmod()}} admits at most one structural term per model
-formula.
+\code{\link[statmodels7:statmod]{statmodels7::statmod()}} admits one structural term per model formula,
+or one \code{\link[=gas]{gas()}} term in each of several equations, which it filters
+jointly as one \code{\link[=GasJoint]{GasJoint()}}.
 }
 
 \examples{

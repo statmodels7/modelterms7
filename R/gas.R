@@ -56,6 +56,12 @@ NULL
 #' @param submodels A named list of one-sided formulas, one per parameter
 #'   developed over covariates. The list is empty if no parameter is
 #'   developed.
+#' @param cross The label of the group of terms whose levels load each
+#'   other's scores, or an empty vector for a term that loads its own score
+#'   only.
+#' @param cross_with The distribution parameters whose scores the level of
+#'   this term loads besides its own, in the order of their loadings. It is
+#'   empty until [gas_joint()] fills it from the labels of `cross`.
 #' @param blueprint A named list of the resolved ordering, grouping and
 #'   sub-term designs, empty until [term_build()] fills it.
 #'
@@ -95,7 +101,9 @@ GasTerm <- S7::new_class(
     time = S7::class_any,
     links = S7::class_list,
     submodels = S7::class_list,
-    scaling = S7::class_double
+    scaling = S7::class_double,
+    cross = S7::class_character,
+    cross_with = S7::class_character
   )
 )
 
@@ -156,20 +164,40 @@ GasTerm <- S7::new_class(
 #' is stationary at every observation.
 #' }
 #'
-#' \subsection{One parameter at a time}{
-#' The level that this term drives is a scalar, so it enters the predictor
-#' of one distribution parameter. In the general formulation the level is a
-#' vector with one entry per modeled parameter, \eqn{\omega} is a vector,
-#' and the loadings \eqn{A_i} and \eqn{B_j} are matrices. This lets the
-#' scale respond to the score of the location and the other way round. The
-#' recursion generalizes mechanically, and so does the derivative
-#' propagated with it. The package has no way to declare that one filter
-#' spans several parameters, because a term written inside the formula of
-#' one parameter has no place for such a declaration. The declaration
-#' belongs to the model layer. The persistence would also need a different
-#' chart: the partial-autocorrelation construction above is a scalar one, and
-#' the stationary region of a matrix autoregression is a bound on the
-#' spectral radius of its companion matrix, which is not a box.
+#' \subsection{Several filtered parameters}{
+#' A `gas()` term in the formula of each of several parameters, as in
+#' `y ~ gas(p = 1, q = 1, time = t) | sigma ~ gas(p = 1, q = 1, time = t)`,
+#' gives one recursion for the vector of their levels. The score of each
+#' filtered parameter is read at the levels of all the others at the same
+#' time, so the levels cannot be filtered one after the other.
+#' [gas_joint()] joins the terms, and a fitting layer reads them as one
+#' structural term. The terms must walk the same series (the same `by` and
+#' `time`), and a parameter developed by a subformula is not available in a
+#' joint filter.
+#'
+#' The scaling is joint. With \eqn{G} the filtered parameters, the driving
+#' vector is
+#' \deqn{u_t = \mathcal{I}_{GG,t}^{-d}\,
+#'   \frac{\partial \ell_t}{\partial \eta_{G,t}},}
+#' where \eqn{\mathcal{I}_{GG,t}} is the expected information of the
+#' filtered parameters with the other parameters held. Every term carries the
+#' same `scaling`, and with more than one term it is 0, 1/2 or 1. For 1/2
+#' the power is the symmetric square root, which does not depend on the order
+#' of the parameters. Where the information is diagonal, as for the mean and
+#' the scale of a gaussian, the joint scaling equals the scaling of each
+#' parameter by its own information.
+#'
+#' By default each level loads its own score only, so the matrices of
+#' loadings are diagonal. The terms that carry the same label in `cross`
+#' load each other's scores as well: in
+#' `y ~ gas(..., cross = "a") | sigma ~ gas(..., cross = "a") | nu ~ gas(...)`
+#' the levels of `mu` and `sigma` respond to both scores, and the level of
+#' `nu` responds to its own. A cross loading rides the identity link,
+#' because its sign is free. For a gaussian, the loading of the score of the
+#' mean in the level of the log-scale is the asymmetric response of the
+#' volatility to the sign of a surprise, which is the term in
+#' \eqn{z_{t-1}} of an EGARCH model. Each level keeps its own persistence,
+#' so the autoregressive part is stationary when the part of each level is.
 #' }
 #'
 #' \subsection{The scaling of the score}{
@@ -309,6 +337,10 @@ GasTerm <- S7::new_class(
 #' @param scaling A single finite number \eqn{d}: the score is multiplied by
 #'   the expected information to the power \eqn{-d}. Defaults to 0, the score
 #'   as it is; see the section on the scaling of the score.
+#' @param cross An optional label, a single string. The terms of a model that
+#'   carry the same label load each other's scores as well as their own;
+#'   see the section on several filtered parameters. `NULL`, the default,
+#'   gives a term that loads its own score only.
 #' @param links An optional named list of \pkg{linkfunctions7} links over
 #'   the parameters of [term_params()], overriding the defaults
 #'   described above. Only the parameters of [term_params()] before any
@@ -415,7 +447,7 @@ GasTerm <- S7::new_class(
 #' }
 #' @export
 gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
-                links = NULL, label = "gas") {
+                cross = NULL, links = NULL, label = "gas") {
   if (inherits(p, "formula") || inherits(q, "formula")) {
     stop(paste("'p' and 'q' are the orders of the filter; a subformula is",
                "given by name after them, as in gas(1, 1, kappa1 ~ x)."),
@@ -437,6 +469,11 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
   if (!is.character(label) || length(label) != 1L || is.na(label) ||
       !nzchar(label)) {
     stop("'label' must be a single non-empty character string.",
+         call. = FALSE)
+  }
+  if (!is.null(cross) && (!is.character(cross) || length(cross) != 1L ||
+                          is.na(cross) || !nzchar(cross))) {
+    stop("'cross' must be NULL or a single non-empty character string.",
          call. = FALSE)
   }
   by <- substitute(by)
@@ -481,6 +518,8 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
           links = if (is.null(links)) list() else links,
           submodels = submodels,
           scaling = as.double(scaling),
+          cross = if (is.null(cross)) character(0) else cross,
+          cross_with = character(0),
           blueprint = list())
 }
 
@@ -549,6 +588,12 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
 #' through Levinson-Durbin, and coincides with the coordinate only at
 #' \eqn{q = 1}. [term_readable()] maps the coordinates onto the coefficients.
 #'
+#' A term that [gas_joint()] has placed in a group of `cross` carries, after
+#' these, one loading per score lag of each other parameter of the group,
+#' named `kappa1_sigma`, `kappa2_sigma` and so on: `kappa1_sigma` is the
+#' loading of the score of `sigma` at lag one in the level of this term.
+#' These loadings ride the identity link, because their sign is free.
+#'
 #' The order is the one by which [term_links()], [term_start()], the Jacobian
 #' columns of [term_filter()] and the joint variance matrix are indexed.
 #'
@@ -575,7 +620,16 @@ S7::method(term_params, GasTerm) <- function(term, ...) {
   if (length(term@blueprint) && !is.null(term@blueprint$sub)) {
     return(.gas_sub_layout(term)$names)
   }
-  .gas_base_params(term@p, term@q)
+  c(.gas_base_params(term@p, term@q), .gas_cross_params(term))
+}
+
+# the loadings of the other parameters' scores, one per score lag and
+# partner, partner by partner: kappa1_sigma is the loading of the score of
+# sigma at lag one in this term's level
+.gas_cross_params <- function(term) {
+  if (!length(term@cross_with)) return(character(0))
+  as.vector(t(outer(term@cross_with, seq_len(term@p),
+                    function(l, i) paste0("kappa", i, "_", l))))
 }
 
 #' @title The Level of a Score-Driven Term
@@ -1975,119 +2029,8 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
   # derivative arrays and the starting level are built once
   active_of <- function(l) seq_len(m)
 
-  lift_of <- function(l, act) {
-    A <- matrix(0, nb, length(act))
-    A[cbind(seq_len(nb), match(zcol[seq_len(nb)], act))] <- 1
-    A
-  }
-
   prep <- function(l, act) {
-    mk <- length(act)
-    ch <- .gas_chart_derivs(zeta, p, q, links)
-    A <- lift_of(l, act)
-    lift <- function(v) as.numeric(crossprod(A, v))
-    lift2 <- function(h) crossprod(A, h %*% A)
-    om_u <- lift(ch$d_omega)
-    om_uu <- lift2(ch$h_omega)
-    a_u <- lapply(ch$d_a, lift)
-    a_uu <- lapply(ch$h_a, lift2)
-    b_u <- lapply(ch$d_b, lift)
-    b_uu <- lapply(ch$h_b, lift2)
-    sb <- if (q > 0L) sum(ch$b) else 0
-    if (abs(1 - sb) < 1e-10) {
-      stop("the autoregressive polynomial is at the unit root; the filter has no starting level.",
-           call. = FALSE)
-    }
-    # the starting level and its two derivatives: f0 = omega/(1 - sum b),
-    # with omega's own chart curvature entering the first term
-    db_sum <- if (q > 0L) Reduce(`+`, b_u) else numeric(mk)
-    f0 <- ch$omega / (1 - sb)
-    f0_u <- om_u / (1 - sb) + ch$omega * db_sum / (1 - sb)^2
-    f0_uu <- om_uu / (1 - sb) +
-      (outer(om_u, db_sum) + outer(db_sum, om_u)) / (1 - sb)^2 +
-      2 * ch$omega * outer(db_sum, db_sum) / (1 - sb)^3
-    if (q > 0L) {
-      f0_uu <- f0_uu + ch$omega * Reduce(`+`, b_uu) / (1 - sb)^2
-    }
-    out <- list(omega = ch$omega, a = ch$a, b = ch$b, om_u = om_u,
-                om_uu = om_uu, a_u = a_u, a_uu = a_uu, b_u = b_u,
-                b_uu = b_uu, f0 = f0, f0_u = f0_u, f0_uu = f0_uu)
-    if (!third) return(out)
-
-    # the third order, contracted against the direction. Every quantity here
-    # is either a contraction of one the second order already carries or the
-    # chart's own third derivative; nothing of three indices is formed. With
-    # two directions the whole block runs twice, once per direction, and the
-    # expressions are the ones a single direction has always used.
-    vks <- lapply(dirs, function(d) d[act])
-    out$vks <- vks
-    out$vk <- vks[[1L]]
-    cst <- 1 / (1 - sb)
-    S_u <- db_sum
-    S_uu <- if (q > 0L) Reduce(`+`, b_uu) else matrix(0, mk, mk)
-    om <- ch$omega
-    out$t_om <- out$t_a <- out$t_b <- vector("list", nd)
-    out$dom <- out$dom2 <- vector("list", nd)
-    out$da <- out$da2 <- out$db <- out$db2 <- vector("list", nd)
-    out$f0_3 <- out$df0 <- out$dphi0 <- vector("list", nd)
-    out$S_3 <- vector("list", nd)
-    for (d in seq_len(nd)) {
-      vk <- vks[[d]]
-      v_base <- dirs[[d]][zcol[seq_len(nb)]]
-      ch3 <- .gas_chart_derivs3(zeta, p, q, links, v_base)
-      out$t_om[[d]] <- lift2(ch3$t_omega)
-      out$t_a[[d]] <- lapply(ch3$t_a, lift2)
-      out$t_b[[d]] <- lapply(ch3$t_b, lift2)
-      out$dom[[d]] <- sum(om_u * vk)
-      out$dom2[[d]] <- as.numeric(om_uu %*% vk)
-      out$da[[d]] <- lapply(a_u, function(x) sum(x * vk))
-      out$da2[[d]] <- lapply(a_uu, function(x) as.numeric(x %*% vk))
-      out$db[[d]] <- lapply(b_u, function(x) sum(x * vk))
-      out$db2[[d]] <- lapply(b_uu, function(x) as.numeric(x %*% vk))
-
-      # the starting level's third derivative. f0 = omega/(1 - S) with
-      # S the sum of the autoregressive coefficients, so writing c = 1/(1-S)
-      # the second order is c*om_uu + c^2(om_u S_u + S_u om_u)
-      # + 2 omega c^3 S_u S_u + omega c^2 S_uu, and this differentiates it
-      S_3 <- if (q > 0L) Reduce(`+`, out$t_b[[d]]) else matrix(0, mk, mk)
-      out$S_3[[d]] <- S_3
-      dS <- sum(S_u * vk)
-      dS2 <- as.numeric(S_uu %*% vk)
-      out$f0_3[[d]] <- out$t_om[[d]] * cst + om_uu * (cst^2 * dS) +
-        2 * cst^3 * dS * (outer(om_u, S_u) + outer(S_u, om_u)) +
-        cst^2 * (outer(out$dom2[[d]], S_u) + outer(om_u, dS2) +
-                 outer(dS2, om_u) + outer(S_u, out$dom2[[d]])) +
-        (2 * out$dom[[d]] * cst^3 + 6 * om * cst^4 * dS) * outer(S_u, S_u) +
-        2 * om * cst^3 * (outer(dS2, S_u) + outer(S_u, dS2)) +
-        out$dom[[d]] * cst^2 * S_uu + 2 * om * cst^3 * dS * S_uu +
-        om * cst^2 * S_3
-      out$df0[[d]] <- sum(f0_u * vk)
-      out$dphi0[[d]] <- as.numeric(f0_uu %*% vk)
-    }
-    if (!fourth) return(out)
-
-    # the fourth order, contracted against both directions. The chart's own
-    # fourth derivatives, and the starting level's, which is read off the
-    # fixed point f0 = omega + S f0 rather than by differentiating
-    # omega/(1 - S) four times: the product rule of .gas_prod4() then
-    # supplies every term but the one carrying all four derivatives on f0,
-    # and that one is what dividing by (1 - S) removes.
-    v_base <- dirs[[1L]][zcol[seq_len(nb)]]
-    w_base <- dirs[[2L]][zcol[seq_len(nb)]]
-    ch4 <- .gas_chart_derivs4(zeta, p, q, links, v_base, w_base)
-    out$q_om <- lift2(ch4$q_omega)
-    out$q_a <- lapply(ch4$q_a, lift2)
-    out$q_b <- lapply(ch4$q_b, lift2)
-    S_4 <- if (q > 0L) Reduce(`+`, out$q_b) else matrix(0, mk, mk)
-    Sj <- .gas_jet(sb, S_u, S_uu, out$S_3[[1L]], out$S_3[[2L]], S_4, vks)
-    fj <- .gas_jet(f0, f0_u, f0_uu, out$f0_3[[1L]], out$f0_3[[2L]],
-                   matrix(0, mk, mk), vks)
-    oj <- .gas_jet(om, om_u, om_uu, out$t_om[[1L]], out$t_om[[2L]], out$q_om,
-                   vks)
-    out$f0_4 <- cst * (oj$d4 + .gas_prod4(Sj, fj))
-    out$f0j <- fj
-    out$Sj <- Sj
-    out
+    .gas_chart_prep(zeta, p, q, links, zcol[seq_len(nb)], act, dirs)
   }
   shared <- prep(1L, seq_len(m))
 
@@ -2885,4 +2828,142 @@ S7::method(term_simulate, GasTerm) <- function(term, psi, eta, draw,
                      function(e, i) as.numeric(curvature(get(e, i), e, i)),
                      psi, fast = NULL, threads = 1L)
   list(eta = out$eta, y = yv, latent = as.numeric(out$eta) - as.numeric(eta))
+}
+
+#' The Chart's Jets, Lifted to a Caller's Unknowns
+#'
+#' @description
+#' Computes the level, the loadings, the autoregressive coefficients and the
+#' starting level of a score-driven term, with their derivatives in a
+#' caller's unknowns to the order that the number of directions sets: two
+#' without a direction, the third contracted against one direction, and the
+#' fourth contracted against two.
+#'
+#' @details
+#' The chart's own derivatives come from [.gas_chart_derivs()] and its
+#' siblings, in the term's base coordinates, and are lifted to the unknowns
+#' by placing base coordinate \eqn{j} at position `zbase[j]` of `act`.
+#'
+#' @param zeta The term's base parameters on the unconstrained scale.
+#' @param p,q The score and autoregressive orders.
+#' @param links The links, as [term_links()] gives them.
+#' @param zbase The positions of the base parameters among the unknowns.
+#' @param act The unknowns over which the jets are formed.
+#' @param dirs A list of zero, one or two directions over all the unknowns.
+#'
+#' @return A list of the values and their lifted derivatives.
+#'
+#' @keywords internal
+.gas_chart_prep <- function(zeta, p, q, links, zbase, act, dirs) {
+  nb <- length(zbase)
+  nd <- length(dirs)
+  third <- nd >= 1L
+  fourth <- nd >= 2L
+  mk <- length(act)
+  ch <- .gas_chart_derivs(zeta, p, q, links)
+  A <- matrix(0, nb, length(act))
+  A[cbind(seq_len(nb), match(zbase, act))] <- 1
+  lift <- function(v) as.numeric(crossprod(A, v))
+  lift2 <- function(h) crossprod(A, h %*% A)
+  om_u <- lift(ch$d_omega)
+  om_uu <- lift2(ch$h_omega)
+  a_u <- lapply(ch$d_a, lift)
+  a_uu <- lapply(ch$h_a, lift2)
+  b_u <- lapply(ch$d_b, lift)
+  b_uu <- lapply(ch$h_b, lift2)
+  sb <- if (q > 0L) sum(ch$b) else 0
+  if (abs(1 - sb) < 1e-10) {
+    stop("the autoregressive polynomial is at the unit root; the filter has no starting level.",
+         call. = FALSE)
+  }
+  # the starting level and its two derivatives: f0 = omega/(1 - sum b),
+  # with omega's own chart curvature entering the first term
+  db_sum <- if (q > 0L) Reduce(`+`, b_u) else numeric(mk)
+  f0 <- ch$omega / (1 - sb)
+  f0_u <- om_u / (1 - sb) + ch$omega * db_sum / (1 - sb)^2
+  f0_uu <- om_uu / (1 - sb) +
+    (outer(om_u, db_sum) + outer(db_sum, om_u)) / (1 - sb)^2 +
+    2 * ch$omega * outer(db_sum, db_sum) / (1 - sb)^3
+  if (q > 0L) {
+    f0_uu <- f0_uu + ch$omega * Reduce(`+`, b_uu) / (1 - sb)^2
+  }
+  out <- list(omega = ch$omega, a = ch$a, b = ch$b, om_u = om_u,
+              om_uu = om_uu, a_u = a_u, a_uu = a_uu, b_u = b_u,
+              b_uu = b_uu, f0 = f0, f0_u = f0_u, f0_uu = f0_uu)
+  if (!third) return(out)
+
+  # the third order, contracted against the direction. Every quantity here
+  # is either a contraction of one the second order already carries or the
+  # chart's own third derivative; nothing of three indices is formed. With
+  # two directions the whole block runs twice, once per direction, and the
+  # expressions are the ones a single direction has always used.
+  vks <- lapply(dirs, function(d) d[act])
+  out$vks <- vks
+  out$vk <- vks[[1L]]
+  cst <- 1 / (1 - sb)
+  S_u <- db_sum
+  S_uu <- if (q > 0L) Reduce(`+`, b_uu) else matrix(0, mk, mk)
+  om <- ch$omega
+  out$t_om <- out$t_a <- out$t_b <- vector("list", nd)
+  out$dom <- out$dom2 <- vector("list", nd)
+  out$da <- out$da2 <- out$db <- out$db2 <- vector("list", nd)
+  out$f0_3 <- out$df0 <- out$dphi0 <- vector("list", nd)
+  out$S_3 <- vector("list", nd)
+  for (d in seq_len(nd)) {
+    vk <- vks[[d]]
+    v_base <- dirs[[d]][zbase]
+    ch3 <- .gas_chart_derivs3(zeta, p, q, links, v_base)
+    out$t_om[[d]] <- lift2(ch3$t_omega)
+    out$t_a[[d]] <- lapply(ch3$t_a, lift2)
+    out$t_b[[d]] <- lapply(ch3$t_b, lift2)
+    out$dom[[d]] <- sum(om_u * vk)
+    out$dom2[[d]] <- as.numeric(om_uu %*% vk)
+    out$da[[d]] <- lapply(a_u, function(x) sum(x * vk))
+    out$da2[[d]] <- lapply(a_uu, function(x) as.numeric(x %*% vk))
+    out$db[[d]] <- lapply(b_u, function(x) sum(x * vk))
+    out$db2[[d]] <- lapply(b_uu, function(x) as.numeric(x %*% vk))
+
+    # the starting level's third derivative. f0 = omega/(1 - S) with
+    # S the sum of the autoregressive coefficients, so writing c = 1/(1-S)
+    # the second order is c*om_uu + c^2(om_u S_u + S_u om_u)
+    # + 2 omega c^3 S_u S_u + omega c^2 S_uu, and this differentiates it
+    S_3 <- if (q > 0L) Reduce(`+`, out$t_b[[d]]) else matrix(0, mk, mk)
+    out$S_3[[d]] <- S_3
+    dS <- sum(S_u * vk)
+    dS2 <- as.numeric(S_uu %*% vk)
+    out$f0_3[[d]] <- out$t_om[[d]] * cst + om_uu * (cst^2 * dS) +
+      2 * cst^3 * dS * (outer(om_u, S_u) + outer(S_u, om_u)) +
+      cst^2 * (outer(out$dom2[[d]], S_u) + outer(om_u, dS2) +
+               outer(dS2, om_u) + outer(S_u, out$dom2[[d]])) +
+      (2 * out$dom[[d]] * cst^3 + 6 * om * cst^4 * dS) * outer(S_u, S_u) +
+      2 * om * cst^3 * (outer(dS2, S_u) + outer(S_u, dS2)) +
+      out$dom[[d]] * cst^2 * S_uu + 2 * om * cst^3 * dS * S_uu +
+      om * cst^2 * S_3
+    out$df0[[d]] <- sum(f0_u * vk)
+    out$dphi0[[d]] <- as.numeric(f0_uu %*% vk)
+  }
+  if (!fourth) return(out)
+
+  # the fourth order, contracted against both directions. The chart's own
+  # fourth derivatives, and the starting level's, which is read off the
+  # fixed point f0 = omega + S f0 rather than by differentiating
+  # omega/(1 - S) four times: the product rule of .gas_prod4() then
+  # supplies every term but the one carrying all four derivatives on f0,
+  # and that one is what dividing by (1 - S) removes.
+  v_base <- dirs[[1L]][zbase]
+  w_base <- dirs[[2L]][zbase]
+  ch4 <- .gas_chart_derivs4(zeta, p, q, links, v_base, w_base)
+  out$q_om <- lift2(ch4$q_omega)
+  out$q_a <- lapply(ch4$q_a, lift2)
+  out$q_b <- lapply(ch4$q_b, lift2)
+  S_4 <- if (q > 0L) Reduce(`+`, out$q_b) else matrix(0, mk, mk)
+  Sj <- .gas_jet(sb, S_u, S_uu, out$S_3[[1L]], out$S_3[[2L]], S_4, vks)
+  fj <- .gas_jet(f0, f0_u, f0_uu, out$f0_3[[1L]], out$f0_3[[2L]],
+                 matrix(0, mk, mk), vks)
+  oj <- .gas_jet(om, om_u, om_uu, out$t_om[[1L]], out$t_om[[2L]], out$q_om,
+                 vks)
+  out$f0_4 <- cst * (oj$d4 + .gas_prod4(Sj, fj))
+  out$f0j <- fj
+  out$Sj <- Sj
+  out
 }

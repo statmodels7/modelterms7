@@ -318,8 +318,9 @@ additive_term <- S7::new_class(
 #'
 #' The two shapes are distinguished by which of the two generics
 #' [term_filter()] and [term_loglik()] has a method for the term's class.
-#' [statmodels7::statmod()] admits at most one structural term per model
-#' formula.
+#' [statmodels7::statmod()] admits one structural term per model formula,
+#' or one [gas()] term in each of several equations, which it filters
+#' jointly as one [GasJoint()].
 #'
 #' @inheritParams model_term
 #' @param blueprint A named list of everything needed to reproduce the term

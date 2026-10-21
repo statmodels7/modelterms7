@@ -19,7 +19,9 @@ GasTerm(
   time = NULL,
   links = list(),
   submodels = list(),
-  scaling = numeric(0)
+  scaling = numeric(0),
+  cross = character(0),
+  cross_with = character(0)
 )
 }
 \arguments{
@@ -76,6 +78,14 @@ developed.}
 \item{scaling}{The power \eqn{d} of the expected information in the factor
 \eqn{\mathcal{I}^{-d}} that multiplies the score; zero for the score as
 it is.}
+
+\item{cross}{The label of the group of terms whose levels load each
+other's scores, or an empty vector for a term that loads its own score
+only.}
+
+\item{cross_with}{The distribution parameters whose scores the level of
+this term loads besides its own, in the order of their loadings. It is
+empty until \code{\link[=gas_joint]{gas_joint()}} fills it from the labels of \code{cross}.}
 }
 \value{
 An S7 object of class \code{GasTerm}, inheriting from
