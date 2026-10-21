@@ -1,3 +1,9 @@
+# modelterms7 0.99.4
+
+* The package description lists the kinds of terms that the package
+  provides, where it named only the parametric term and the censored
+  response, and writes out the relative pronoun of a relative clause.
+
 # modelterms7 0.99.3
 
 * The error message of `nl()` for `subformulas` given with a function `fn`
