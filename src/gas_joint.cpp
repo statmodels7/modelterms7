@@ -250,7 +250,11 @@ JointCtx joint_ctx(SEXP fastS, const NumericMatrix& eta_g) {
                                               "lf7_class_id");
     std::string fam = as<std::string>(fast["family"]);
     c.fam = d7id(fam.c_str());
-    if (c.fam < 0 || cov(c.fam) != 1) return c;
+    c.scaling = fast.containsElementNamed("scaling") ?
+        as<double>(fast["scaling"]) : 0.0;
+    // the registry covers a family for the gradient and the Hessian (2),
+    // enough for an unscaled filter, or for all four entries (4)
+    if (c.fam < 0 || cov(c.fam) < (c.scaling == 0.0 ? 2 : 4)) return c;
     CharacterVector links = fast["links"];
     List lpar = fast["link_par"];
     List bounds = fast["bounds"];
@@ -286,8 +290,6 @@ JointCtx joint_ctx(SEXP fastS, const NumericMatrix& eta_g) {
     c.y = y.begin();
     c.eta_all = eta_all.begin();
     c.eta_g = eta_g.begin();
-    c.scaling = fast.containsElementNamed("scaling") ?
-        as<double>(fast["scaling"]) : 0.0;
     c.inv12 = (lf7_inv12p_t) R_GetCCallable("linkfunctions7", "lf7_inv12p");
     c.clamp = (lf7_clamp_t) R_GetCCallable("linkfunctions7", "lf7_clamp");
     c.grad = (d7_joint_t) R_GetCCallable("distributions7", "d7_joint_grad");

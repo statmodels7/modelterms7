@@ -37,7 +37,10 @@ the filtered parameters among them) and \code{scaling}. Where the joint
 registry of \pkg{distributions7} and the registry of
 \pkg{linkfunctions7} cover the family and the links, the recursion runs
 compiled and reads the family through them instead of the callbacks;
-where they do not, the context is inert and the callbacks run in R.}
+where they do not, the context is inert and the callbacks run in R. A
+scaled filter also needs the family's expected information and its
+derivative in the registry, which some families do not have (their
+expected information is a quadrature); their scaled filters run in R.}
 
 \item{threads}{How many threads the compiled recursion may use, over
 groups, when the distribution's entries are safe on a worker thread and

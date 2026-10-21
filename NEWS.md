@@ -1,3 +1,10 @@
+# modelterms7 0.102.0
+
+* The compiled route of the joint filter reads the coverage that the joint
+  registry of distributions7 (0.82.0) reports per family: a family covered for
+  the gradient and the Hessian runs compiled when the scaling is zero, and a
+  scaled filter of that family runs in R.
+
 # modelterms7 0.101.0
 
 * The joint filter of `GasJoint` runs compiled where the joint registry of

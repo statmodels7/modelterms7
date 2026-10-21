@@ -58,8 +58,9 @@ jc_callbacks <- function(d, y, Eall, G, scaling) {
 jc_fast <- function(d, y, Eall, G, scaling) {
   params <- d@params
   lks <- d@link_params[params]
-  list(family = distributions7::distrib_scalar_route(d)$name,
-       constants = list(),
+  route <- distributions7::distrib_scalar_route(d)
+  list(family = route$name,
+       constants = lapply(route$constants, as.numeric),
        links = vapply(lks, function(lk)
          linkfunctions7::link_scalar_route(lk)$name, ""),
        link_par = lapply(lks, function(lk)
@@ -151,6 +152,69 @@ test_that("the compiled joint filter is the R route", {
   }
 })
 
+# every family that the joint registry of distributions7 covers, with the
+# orders it covers: 4 (all entries) or 2 (the gradient and the Hessian, for an
+# unscaled filter only)
+jc_families <- list(
+  gaussian1 = 4, gamma1 = 4, negbin2 = 4, beta1 = 4, cauchy = 4,
+  logistic = 4, gaussian2 = 4, gaussian3 = 4, lognormal1 = 4, invgauss1 = 4,
+  invgauss2 = 4, gamma2 = 4, gpd = 4, vonmises1 = 4, vonmises2 = 4,
+  weibull3 = 4, lognormal2 = 4, student_t1 = 4, student_t2 = 4,
+  gengamma1 = 4, gengamma2 = 4, gumbel = 4, laplace = 4, laplace2 = 4,
+  weibull1 = 4, beta2 = 4, enet = 4, negbin1 = 4, pig1 = 4, pig2 = 4,
+  betabinom1 = 4, betabinom2 = 4, skewnormal1 = 2, skewt = 2,
+  pseudohuber = 2, pseudohuber2 = 2, skewnormal2 = 2)
+
+jc_family <- function(nm) {
+  ctor <- get(paste0(nm, "_distrib"), envir = asNamespace("distributions7"))
+  if (startsWith(nm, "betabinom")) ctor(size = 9) else ctor()
+}
+
+test_that("the compiled joint filter is the R route for every covered family", {
+  n <- 40
+  dd <- data.frame(t = seq_len(n), g = rep(c("a", "b"), each = n / 2))
+  for (nm in names(jc_families)) {
+    d <- jc_family(nm)
+    P <- length(d@params)
+    G <- 1:2
+    Eall <- vapply(seq_len(P), function(a) 0.3 + 0.1 * sin(seq_len(n) + a),
+                   numeric(n))
+    th <- lapply(seq_len(P), function(a)
+      linkfunctions7::linkinv(d@link_params[[d@params[a]]], Eall[, a]))
+    names(th) <- d@params
+    set.seed(5)
+    y <- vapply(seq_len(n), function(i)
+      distributions7::distrib_rng(d, 1, lapply(th, `[`, i)), 0)
+    for (scaling in if (jc_families[[nm]] == 4) c(0, 0.5, 1) else c(0, 0.5)) {
+      tms <- jc_terms(2, 1, 1, "x", TRUE, dd, scaling = scaling)
+      names(tms) <- d@params[G]
+      jt <- gas_joint(tms)
+      psi <- jc_psi(jt, 9)
+      eta <- Eall[, G]
+      fast <- jc_fast(d, y, Eall, G, scaling)
+      lab <- sprintf("%s, d = %s", nm, format(scaling))
+      cf <- .gas_joint_coefs(jt, psi)
+      direct <- gas_joint_filter_cpp(eta, cf, length(term_params(jt)),
+                                     jt@blueprint$order, fast)
+      if (jc_families[[nm]] == 2 && scaling != 0) {
+        # the expected information is not in the registry for this family
+        expect_null(direct, info = lab)
+        next
+      }
+      expect_false(is.null(direct), info = lab)
+      cb <- jc_callbacks(d, y, Eall, G, scaling)
+      r <- term_filter(jt, eta, y, cb$score, cb$curvature, psi)
+      cc <- term_filter(jt, eta, y, cb$score, cb$curvature, psi, fast = fast)
+      expect_equal(cc$eta, r$eta, tolerance = 1e-12, info = lab)
+      for (k in jt@params) {
+        expect_equal(cc$jacobian[[k]], r$jacobian[[k]], tolerance = 1e-10,
+                     info = paste(lab, k))
+      }
+      expect_equal(cc$curv, r$curv, tolerance = 1e-10, info = lab)
+    }
+  }
+})
+
 test_that("the compiled joint filter gives the same result on any thread count", {
   n <- 120
   dd <- data.frame(t = rep(seq_len(12), 10), g = rep(letters[1:10], each = 12))
@@ -166,7 +230,7 @@ test_that("the compiled joint filter gives the same result on any thread count",
   expect_identical(four, one)
 })
 
-test_that("an uncovered family leaves the context inert", {
+test_that("a family that the registry does not know leaves the context inert", {
   n <- 40
   dd <- data.frame(t = seq_len(n))
   d <- distributions7::gamma1_distrib()
@@ -179,6 +243,7 @@ test_that("an uncovered family leaves the context inert", {
   psi <- jc_psi(jt, 4)
   cb <- jc_callbacks(d, y, Eall, 1:2, 0)
   fast <- jc_fast(d, y, Eall, 1:2, 0)
+  fast$family <- "NoSuchDistrib"
   expect_null(gas_joint_filter_cpp(Eall, .gas_joint_coefs(jt, psi),
                                    length(term_params(jt)), jt@blueprint$order,
                                    fast))
