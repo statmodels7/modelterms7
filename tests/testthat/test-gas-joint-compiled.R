@@ -174,48 +174,94 @@ jc_family <- function(nm) {
   if (startsWith(nm, "betabinom")) ctor(size = 9) else ctor()
 }
 
-test_that("the compiled joint filter is the R route for every covered family", {
+# one covered family, its first two parameters filtered, with cross loadings
+# and groups, at the scalings its coverage `cov` admits; the static
+# predictors vary around `base` (0.3 for every parameter by default)
+jc_check_family <- function(nm, d, cov, base = NULL) {
   n <- 40
   dd <- data.frame(t = seq_len(n), g = rep(c("a", "b"), each = n / 2))
-  for (nm in names(jc_families)) {
-    d <- jc_family(nm)
-    P <- length(d@params)
-    G <- 1:2
-    Eall <- vapply(seq_len(P), function(a) 0.3 + 0.1 * sin(seq_len(n) + a),
-                   numeric(n))
-    th <- lapply(seq_len(P), function(a)
-      linkfunctions7::linkinv(d@link_params[[d@params[a]]], Eall[, a]))
-    names(th) <- d@params
-    set.seed(5)
-    y <- vapply(seq_len(n), function(i)
-      distributions7::distrib_rng(d, 1, lapply(th, `[`, i)), 0)
-    for (scaling in if (jc_families[[nm]] == 4) c(0, 0.5, 1) else c(0, 0.5)) {
-      tms <- jc_terms(2, 1, 1, "x", TRUE, dd, scaling = scaling)
-      names(tms) <- d@params[G]
-      jt <- gas_joint(tms)
-      psi <- jc_psi(jt, 9)
-      eta <- Eall[, G]
-      fast <- jc_fast(d, y, Eall, G, scaling)
-      lab <- sprintf("%s, d = %s", nm, format(scaling))
-      cf <- .gas_joint_coefs(jt, psi)
-      direct <- gas_joint_filter_cpp(eta, cf, length(term_params(jt)),
-                                     jt@blueprint$order, fast)
-      if (jc_families[[nm]] == 2 && scaling != 0) {
-        # the expected information is not in the registry for this family
-        expect_null(direct, info = lab)
-        next
-      }
-      expect_false(is.null(direct), info = lab)
-      cb <- jc_callbacks(d, y, Eall, G, scaling)
-      r <- term_filter(jt, eta, y, cb$score, cb$curvature, psi)
-      cc <- term_filter(jt, eta, y, cb$score, cb$curvature, psi, fast = fast)
-      expect_equal(cc$eta, r$eta, tolerance = 1e-11, info = lab)
-      for (k in jt@params) {
-        expect_equal(cc$jacobian[[k]], r$jacobian[[k]], tolerance = 1e-10,
-                     info = paste(lab, k))
-      }
-      expect_equal(cc$curv, r$curv, tolerance = 1e-10, info = lab)
+  P <- length(d@params)
+  G <- 1:2
+  if (is.null(base)) base <- rep(0.3, P)
+  Eall <- vapply(seq_len(P), function(a) base[a] + 0.1 * sin(seq_len(n) + a),
+                 numeric(n))
+  th <- lapply(seq_len(P), function(a)
+    linkfunctions7::linkinv(d@link_params[[d@params[a]]], Eall[, a]))
+  names(th) <- d@params
+  set.seed(5)
+  y <- vapply(seq_len(n), function(i)
+    distributions7::distrib_rng(d, 1, lapply(th, `[`, i)), 0)
+  for (scaling in if (cov == 4) c(0, 0.5, 1) else c(0, 0.5)) {
+    tms <- jc_terms(2, 1, 1, "x", TRUE, dd, scaling = scaling)
+    names(tms) <- d@params[G]
+    jt <- gas_joint(tms)
+    psi <- jc_psi(jt, 9)
+    eta <- Eall[, G]
+    fast <- jc_fast(d, y, Eall, G, scaling)
+    lab <- sprintf("%s, d = %s", nm, format(scaling))
+    cf <- .gas_joint_coefs(jt, psi)
+    direct <- gas_joint_filter_cpp(eta, cf, length(term_params(jt)),
+                                   jt@blueprint$order, fast)
+    if (cov == 2 && scaling != 0) {
+      # the expected information is not in the registry for this family
+      expect_null(direct, info = lab)
+      next
     }
+    expect_false(is.null(direct), info = lab)
+    cb <- jc_callbacks(d, y, Eall, G, scaling)
+    r <- term_filter(jt, eta, y, cb$score, cb$curvature, psi)
+    cc <- term_filter(jt, eta, y, cb$score, cb$curvature, psi, fast = fast)
+    expect_equal(cc$eta, r$eta, tolerance = 1e-11, info = lab)
+    for (k in jt@params) {
+      expect_equal(cc$jacobian[[k]], r$jacobian[[k]], tolerance = 1e-10,
+                   info = paste(lab, k))
+    }
+    expect_equal(cc$curv, r$curv, tolerance = 1e-10, info = lab)
+  }
+}
+
+test_that("the compiled joint filter is the R route for every covered family", {
+  for (nm in names(jc_families)) {
+    jc_check_family(nm, jc_family(nm), jc_families[[nm]])
+  }
+})
+
+# wrapped families, whose joint entries distributions7 composes from the inner
+# family's, with their coverage
+jc_wrapped <- list(
+  fixed_t1 = list(function() distributions7::fixed(
+    distributions7::student_t1_distrib(), nu = 5), 4),
+  fixed_skewt = list(function() distributions7::fixed(
+    distributions7::skewt_distrib(), nu = 6), 2),
+  zi_poisson = list(function() distributions7::zero_inflated(
+    distributions7::poisson_distrib()), 4),
+  zi_negbin2 = list(function() distributions7::zero_inflated(
+    distributions7::negbin2_distrib()), 4),
+  fixed_zi_negbin2 = list(function() distributions7::fixed(
+    distributions7::zero_inflated(distributions7::negbin2_distrib()),
+    theta = 2), 4),
+  za_negbin2 = list(function() distributions7::zero_adjusted(
+    distributions7::negbin2_distrib()), 4),
+  za_gamma1 = list(function() distributions7::zero_adjusted(
+    distributions7::gamma1_distrib()), 4),
+  tf_gaussian1 = list(function() distributions7::transformation(
+    distributions7::gaussian1_distrib(), distributions7::exp_transform()), 4),
+  # a folded family has no information in its center at a center of zero,
+  # so the center is held two scales from the fold
+  fo_gaussian1 = list(function() distributions7::folded(
+    distributions7::gaussian1_distrib()), 4, c(2, 0)),
+  fo_skewnormal1 = list(function() distributions7::folded(
+    distributions7::skewnormal1_distrib()), 4, c(2, 0, 0.3)),
+  tr_negbin2 = list(function() distributions7::truncated(
+    distributions7::negbin2_distrib(), lower = 1), 4),
+  tr_gaussian1 = list(function() distributions7::truncated(
+    distributions7::gaussian1_distrib(), lower = -1, upper = 3), 4)
+)
+
+test_that("the compiled joint filter is the R route for wrapped families", {
+  for (nm in names(jc_wrapped)) {
+    w <- jc_wrapped[[nm]]
+    jc_check_family(nm, w[[1]](), w[[2]], if (length(w) > 2L) w[[3]])
   }
 })
 
