@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.102.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.102.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,10 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.102.1" id="modelterms7-01021">modelterms7 0.102.1<a class="anchor" aria-label="anchor" href="#modelterms7-01021"></a></h2>
+<ul><li>The tests of the compiled joint filter compare its predictors with the R route at 1e-11, the tolerance of the Jacobian, where they used 1e-13: on Linux with R 4.5 the two routes differ by 6e-13 relative.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.102.0" id="modelterms7-01020">modelterms7 0.102.0<a class="anchor" aria-label="anchor" href="#modelterms7-01020"></a></h2>
 <ul><li>The compiled route of the joint filter reads the coverage that the joint registry of distributions7 (0.82.0) reports per family: a family covered for the gradient and the Hessian runs compiled when the scaling is zero, and a scaled filter of that family runs in R.</li>
