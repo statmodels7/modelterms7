@@ -20,6 +20,7 @@ gas(
   by = NULL,
   time = NULL,
   scaling = 0,
+  cross = NULL,
   links = NULL,
   label = "gas"
 )
@@ -60,6 +61,13 @@ gas(
   A single finite number \\d\\: the score is multiplied by the expected
   information to the power \\-d\\. Defaults to 0, the score as it is;
   see the section on the scaling of the score.
+
+- cross:
+
+  An optional label, a single string. The terms of a model that carry
+  the same label load each other's scores as well as their own; see the
+  section on several filtered parameters. `NULL`, the default, gives a
+  term that loads its own score only.
 
 - links:
 
@@ -129,21 +137,40 @@ observations stays in its own set. The development acts on the
 unconstrained scale, so a loading on the log link is positive and a
 persistence on the rhobit link is stationary at every observation.
 
-### One parameter at a time
+### Several filtered parameters
 
-The level that this term drives is a scalar, so it enters the predictor
-of one distribution parameter. In the general formulation the level is a
-vector with one entry per modeled parameter, \\\omega\\ is a vector, and
-the loadings \\A_i\\ and \\B_j\\ are matrices. This lets the scale
-respond to the score of the location and the other way round. The
-recursion generalizes mechanically, and so does the derivative
-propagated with it. The package has no way to declare that one filter
-spans several parameters, because a term written inside the formula of
-one parameter has no place for such a declaration. The declaration
-belongs to the model layer. The persistence would also need a different
-chart: the partial-autocorrelation construction above is a scalar one,
-and the stationary region of a matrix autoregression is a bound on the
-spectral radius of its companion matrix, which is not a box.
+A `gas()` term in the formula of each of several parameters, as in
+`y ~ gas(p = 1, q = 1, time = t) | sigma ~ gas(p = 1, q = 1, time = t)`,
+gives one recursion for the vector of their levels. The score of each
+filtered parameter is read at the levels of all the others at the same
+time, so the levels cannot be filtered one after the other.
+[`gas_joint()`](https://statmodels7.github.io/modelterms7/reference/gas_joint.md)
+joins the terms, and a fitting layer reads them as one structural term.
+The terms must walk the same series (the same `by` and `time`), and a
+parameter developed by a subformula is not available in a joint filter.
+
+The scaling is joint. With \\G\\ the filtered parameters, the driving
+vector is \$\$u_t = \mathcal{I}\_{GG,t}^{-d}\\ \frac{\partial
+\ell_t}{\partial \eta\_{G,t}},\$\$ where \\\mathcal{I}\_{GG,t}\\ is the
+expected information of the filtered parameters with the other
+parameters held. Every term carries the same `scaling`, and with more
+than one term it is 0, 1/2 or 1. For 1/2 the power is the symmetric
+square root, which does not depend on the order of the parameters. Where
+the information is diagonal, as for the mean and the scale of a
+gaussian, the joint scaling equals the scaling of each parameter by its
+own information.
+
+By default each level loads its own score only, so the matrices of
+loadings are diagonal. The terms that carry the same label in `cross`
+load each other's scores as well: in
+`y ~ gas(..., cross = "a") | sigma ~ gas(..., cross = "a") | nu ~ gas(...)`
+the levels of `mu` and `sigma` respond to both scores, and the level of
+`nu` responds to its own. A cross loading rides the identity link,
+because its sign is free. For a gaussian, the loading of the score of
+the mean in the level of the log-scale is the asymmetric response of the
+volatility to the sign of a surprise, which is the term in \\z\_{t-1}\\
+of an EGARCH model. Each level keeps its own persistence, so the
+autoregressive part is stationary when the part of each level is.
 
 ### The scaling of the score
 

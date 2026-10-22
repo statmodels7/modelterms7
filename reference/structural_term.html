@@ -19,7 +19,7 @@ and no term_matrix() method."><meta property="og:image" content="https://statmod
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.102.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -163,8 +163,9 @@ its own contribution, <code><a href="term_posterior.html">term_posterior()</a></
 marginal break-point terms have this shape.</p>
 <p>The two shapes are distinguished by which of the two generics
 <code><a href="term_filter.html">term_filter()</a></code> and <code><a href="term_loglik.html">term_loglik()</a></code> has a method for the term's class.
-<code><a href="https://statmodels7.github.io/statmodels7/reference/statmod.html" class="external-link">statmodels7::statmod()</a></code> admits at most one structural term per model
-formula.</p>
+<code><a href="https://statmodels7.github.io/statmodels7/reference/statmod.html" class="external-link">statmodels7::statmod()</a></code> admits one structural term per model formula,
+or one <code><a href="gas.html">gas()</a></code> term in each of several equations, which it filters
+jointly as one <code><a href="GasJoint.html">GasJoint()</a></code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

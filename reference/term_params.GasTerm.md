@@ -34,6 +34,14 @@ through Levinson-Durbin, and coincides with the coordinate only at \\q =
 [`term_readable()`](https://statmodels7.github.io/modelterms7/reference/term_readable.md)
 maps the coordinates onto the coefficients.
 
+A term that
+[`gas_joint()`](https://statmodels7.github.io/modelterms7/reference/gas_joint.md)
+has placed in a group of `cross` carries, after these, one loading per
+score lag of each other parameter of the group, named `kappa1_sigma`,
+`kappa2_sigma` and so on: `kappa1_sigma` is the loading of the score of
+`sigma` at lag one in the level of this term. These loadings ride the
+identity link, because their sign is free.
+
 The order is the one by which
 [`term_links()`](https://statmodels7.github.io/modelterms7/reference/term_links.md),
 [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md),

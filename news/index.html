@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.102.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,25 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.102.0" id="modelterms7-01020">modelterms7 0.102.0<a class="anchor" aria-label="anchor" href="#modelterms7-01020"></a></h2>
+<ul><li>The compiled route of the joint filter reads the coverage that the joint registry of distributions7 (0.82.0) reports per family: a family covered for the gradient and the Hessian runs compiled when the scaling is zero, and a scaled filter of that family runs in R.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.101.0" id="modelterms7-01010">modelterms7 0.101.0<a class="anchor" aria-label="anchor" href="#modelterms7-01010"></a></h2>
+<ul><li>The joint filter of <code>GasJoint</code> runs compiled where the joint registry of distributions7 (0.81.0) covers the family and the registry of linkfunctions7 covers every link: <code><a href="../reference/term_filter.html">term_filter()</a></code> takes <code>fast</code> and <code>threads</code> and reads the gradient, the Hessian, the expected information and its derivative at each observation through the registry, with the groups over threads. Elsewhere the context is inert and the callbacks run in R as before. Against the R route the predictors agree to 1e-13 and the Jacobian, the curvature and the reverse pass to 1e-11.</li>
+<li>The reverse pass of <code>GasJoint</code> is compiled and takes <code>stored_curv</code>, the curvature that the forward pass returned, so that it no longer reruns the filter.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.100.0" id="modelterms7-01000">modelterms7 0.100.0<a class="anchor" aria-label="anchor" href="#modelterms7-01000"></a></h2>
+<ul><li>
+<code>GasJoint</code> and <code><a href="../reference/gas_joint.html">gas_joint()</a></code>: several <code><a href="../reference/gas.html">gas()</a></code> terms, one in the equation of each of several parameters, filtered as one recursion. The score of each filtered parameter is read at the levels of all the others. The class has the filter, its reverse pass, the curvature and the third and fourth derivatives (<code><a href="../reference/term_filter.html">term_filter()</a></code>, <code><a href="../reference/term_adjoint.html">term_adjoint()</a></code>, <code><a href="../reference/term_curvature.html">term_curvature()</a></code>, <code><a href="../reference/term_third.html">term_third()</a></code>, <code><a href="../reference/term_fourth.html">term_fourth()</a></code>), the continuation past the series and the simulation, all exact; the derivatives carry each level and each driving score as a jet and read the driving vector’s derivatives in every predictor as data.</li>
+<li>
+<code>gas(cross = )</code>: terms that carry the same label load each other’s scores (<code>kappa1_sigma</code> in the term of <code>mu</code> is the loading of the score of <code>sigma</code>), on the identity link. By default the loadings are diagonal.</li>
+<li>
+<code><a href="../reference/gas_joint.html">gas_joint()</a></code> requires the same <code>by</code>, <code>time</code> and <code>scaling</code> in every term, a <code>scaling</code> of 0, 1/2 or 1 with more than one term, no subformula, and a <code>cross</code> label carried by at least two terms.</li>
+<li>The chart preparation of the scalar core is a function of its own, <code><a href="../reference/dot-gas_chart_prep.html">.gas_chart_prep()</a></code>, which the joint core reuses; the scalar results are unchanged.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.99.4" id="modelterms7-0994">modelterms7 0.99.4<a class="anchor" aria-label="anchor" href="#modelterms7-0994"></a></h2>
 <ul><li>The package description lists the kinds of terms that the package provides, where it named only the parametric term and the censored response, and writes out the relative pronoun of a relative clause.</li>

@@ -196,6 +196,10 @@ through its recursion.
   : Score-Driven Dynamics
 - [`GasTerm()`](https://statmodels7.github.io/modelterms7/reference/GasTerm.md)
   : S7 Class for Score-Driven Dynamics
+- [`gas_joint()`](https://statmodels7.github.io/modelterms7/reference/gas_joint.md)
+  : Filter Several Score-Driven Terms as One Recursion
+- [`GasJoint()`](https://statmodels7.github.io/modelterms7/reference/GasJoint.md)
+  : A Joint Score-Driven Filter
 - [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
   : Markov Regime Switching
 - [`RegimeTerm()`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md)

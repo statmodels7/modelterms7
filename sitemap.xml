@@ -5,6 +5,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/authors.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/index.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/news/index.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/LinparTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/MarginalBreakTerm.html</loc></url>
@@ -35,6 +36,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_chart_derivs.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_chart_derivs3.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_chart_derivs4.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_chart_prep.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_curvature_core.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_dirs.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/dot-gas_jet.html</loc></url>
@@ -61,6 +63,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/enet.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/gas.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/gas_filter_r.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/gas_joint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/gas_levinson.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/gas_levinson2.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/gas_levinson3.html</loc></url>
@@ -78,6 +81,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/nl_fderiv.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/penalized_terms.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/plot.additive_term.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/print.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/print.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/print.MarginalBreakTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/print.NlTerm.html</loc></url>
@@ -109,11 +113,13 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/structural_term.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/te.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/te_smoothers.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_adjoint.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_adjoint.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_adjoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_block_contract.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_block_deriv.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_block_deriv2.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.LinparTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.MarginalBreakTerm.html</loc></url>
@@ -136,16 +142,20 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_components.NlTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_components.SegTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_components.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_continue.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_continue.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_continue.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_continue.model_term.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_converged.SegTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_converged.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_curvature.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_curvature.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_curvature.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_draw.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_filter.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_filter.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_filter.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_fourth.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_fourth.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_fourth.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_grid.html</loc></url>
@@ -172,12 +182,14 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_latent.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_level_design.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_level_design.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_level_param.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_level_param.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_level_param.RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_level_param.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_levels.MarginalBreakTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_levels.RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_levels.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_links.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_links.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_links.MarginalBreakTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_links.RegimeTerm.html</loc></url>
@@ -187,11 +199,13 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_loglik.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_matrix.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_npar.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_params.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_params.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_params.MarginalBreakTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_params.RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_params.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_path_min.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_penalties.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_penalties.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_penalties.NlTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_penalties.RandomTerm.html</loc></url>
@@ -209,6 +223,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_predict.SegTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_predict.SmoothTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_predict.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_readable.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_readable.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_readable.RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_readable.SegTerm.html</loc></url>
@@ -219,6 +234,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_shift_jacobian.MarginalBreakTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_shift_jacobian.RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_shift_jacobian.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_simulate.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_simulate.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_simulate.MarginalBreakTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_simulate.RegimeTerm.html</loc></url>
@@ -227,6 +243,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_smooth.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_stalled.SegTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_stalled.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_start.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_start.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_start.MarginalBreakTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_start.RegimeTerm.html</loc></url>
@@ -238,6 +255,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_static_deriv.model_term.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_tag.RandomTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_tag.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_third.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_third.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_third.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_value.SegTerm.html</loc></url>

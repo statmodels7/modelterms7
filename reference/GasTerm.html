@@ -15,7 +15,7 @@ implements term_filter() and has no term_matrix() method at all."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.102.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -66,7 +66,9 @@ implements <code><a href="term_filter.html">term_filter()</a></code> and has no 
 <span>  time <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  links <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  submodels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  scaling <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
+<span>  scaling <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
+<span>  cross <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
+<span>  cross_with <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -156,6 +158,18 @@ developed.</p></dd>
 <dd><p>The power \(d\) of the expected information in the factor
 \(\mathcal{I}^{-d}\) that multiplies the score; zero for the score as
 it is.</p></dd>
+
+
+<dt id="arg-cross">cross<a class="anchor" aria-label="anchor" href="#arg-cross"></a></dt>
+<dd><p>The label of the group of terms whose levels load each
+other's scores, or an empty vector for a term that loads its own score
+only.</p></dd>
+
+
+<dt id="arg-cross-with">cross_with<a class="anchor" aria-label="anchor" href="#arg-cross-with"></a></dt>
+<dd><p>The distribution parameters whose scores the level of
+this term loads besides its own, in the order of their loadings. It is
+empty until <code><a href="gas_joint.html">gas_joint()</a></code> fills it from the labels of <code>cross</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

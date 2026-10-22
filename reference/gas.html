@@ -25,7 +25,7 @@ when scaling is not zero."><meta property="og:image" content="https://statmodels
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.99.4</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.102.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,6 +73,7 @@ when <code>scaling</code> is not zero.</p>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  time <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scaling <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  cross <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  links <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  label <span class="op">=</span> <span class="st">"gas"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -114,6 +115,13 @@ parameter, and the term then does not imply any grouping.</p></dd>
 <dd><p>A single finite number \(d\): the score is multiplied by
 the expected information to the power \(-d\). Defaults to 0, the score
 as it is; see the section on the scaling of the score.</p></dd>
+
+
+<dt id="arg-cross">cross<a class="anchor" aria-label="anchor" href="#arg-cross"></a></dt>
+<dd><p>An optional label, a single string. The terms of a model that
+carry the same label load each other's scores as well as their own;
+see the section on several filtered parameters. <code>NULL</code>, the default,
+gives a term that loads its own score only.</p></dd>
 
 
 <dt id="arg-links">links<a class="anchor" aria-label="anchor" href="#arg-links"></a></dt>
@@ -175,20 +183,38 @@ is stationary at every observation.</p>
 </div>
 
 <div class="section">
-<h3 id="one-parameter-at-a-time">One parameter at a time<a class="anchor" aria-label="anchor" href="#one-parameter-at-a-time"></a></h3>
-<p>The level that this term drives is a scalar, so it enters the predictor
-of one distribution parameter. In the general formulation the level is a
-vector with one entry per modeled parameter, \(\omega\) is a vector,
-and the loadings \(A_i\) and \(B_j\) are matrices. This lets the
-scale respond to the score of the location and the other way round. The
-recursion generalizes mechanically, and so does the derivative
-propagated with it. The package has no way to declare that one filter
-spans several parameters, because a term written inside the formula of
-one parameter has no place for such a declaration. The declaration
-belongs to the model layer. The persistence would also need a different
-chart: the partial-autocorrelation construction above is a scalar one, and
-the stationary region of a matrix autoregression is a bound on the
-spectral radius of its companion matrix, which is not a box.</p>
+<h3 id="several-filtered-parameters">Several filtered parameters<a class="anchor" aria-label="anchor" href="#several-filtered-parameters"></a></h3>
+<p>A <code>gas()</code> term in the formula of each of several parameters, as in
+<code>y ~ gas(p = 1, q = 1, time = t) | sigma ~ gas(p = 1, q = 1, time = t)</code>,
+gives one recursion for the vector of their levels. The score of each
+filtered parameter is read at the levels of all the others at the same
+time, so the levels cannot be filtered one after the other.
+<code><a href="gas_joint.html">gas_joint()</a></code> joins the terms, and a fitting layer reads them as one
+structural term. The terms must walk the same series (the same <code>by</code> and
+<code>time</code>), and a parameter developed by a subformula is not available in a
+joint filter.</p>
+<p>The scaling is joint. With \(G\) the filtered parameters, the driving
+vector is
+$$u_t = \mathcal{I}_{GG,t}^{-d}\,
+  \frac{\partial \ell_t}{\partial \eta_{G,t}},$$
+where \(\mathcal{I}_{GG,t}\) is the expected information of the
+filtered parameters with the other parameters held. Every term carries the
+same <code>scaling</code>, and with more than one term it is 0, 1/2 or 1. For 1/2
+the power is the symmetric square root, which does not depend on the order
+of the parameters. Where the information is diagonal, as for the mean and
+the scale of a gaussian, the joint scaling equals the scaling of each
+parameter by its own information.</p>
+<p>By default each level loads its own score only, so the matrices of
+loadings are diagonal. The terms that carry the same label in <code>cross</code>
+load each other's scores as well: in
+<code>y ~ gas(..., cross = "a") | sigma ~ gas(..., cross = "a") | nu ~ gas(...)</code>
+the levels of <code>mu</code> and <code>sigma</code> respond to both scores, and the level of
+<code>nu</code> responds to its own. A cross loading rides the identity link,
+because its sign is free. For a gaussian, the loading of the score of the
+mean in the level of the log-scale is the asymmetric response of the
+volatility to the sign of a surprise, which is the term in
+\(z_{t-1}\) of an EGARCH model. Each level keeps its own persistence,
+so the autoregressive part is stationary when the part of each level is.</p>
 </div>
 
 <div class="section">

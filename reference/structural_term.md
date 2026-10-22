@@ -160,7 +160,10 @@ and
 [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
 has a method for the term's class.
 [`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
-admits at most one structural term per model formula.
+admits one structural term per model formula, or one
+[`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+term in each of several equations, which it filters jointly as one
+[`GasJoint()`](https://statmodels7.github.io/modelterms7/reference/GasJoint.md).
 
 ## See also
 

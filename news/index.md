@@ -1,5 +1,58 @@
 # Changelog
 
+## modelterms7 0.102.0
+
+- The compiled route of the joint filter reads the coverage that the
+  joint registry of distributions7 (0.82.0) reports per family: a family
+  covered for the gradient and the Hessian runs compiled when the
+  scaling is zero, and a scaled filter of that family runs in R.
+
+## modelterms7 0.101.0
+
+- The joint filter of `GasJoint` runs compiled where the joint registry
+  of distributions7 (0.81.0) covers the family and the registry of
+  linkfunctions7 covers every link:
+  [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md)
+  takes `fast` and `threads` and reads the gradient, the Hessian, the
+  expected information and its derivative at each observation through
+  the registry, with the groups over threads. Elsewhere the context is
+  inert and the callbacks run in R as before. Against the R route the
+  predictors agree to 1e-13 and the Jacobian, the curvature and the
+  reverse pass to 1e-11.
+- The reverse pass of `GasJoint` is compiled and takes `stored_curv`,
+  the curvature that the forward pass returned, so that it no longer
+  reruns the filter.
+
+## modelterms7 0.100.0
+
+- `GasJoint` and
+  [`gas_joint()`](https://statmodels7.github.io/modelterms7/reference/gas_joint.md):
+  several
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  terms, one in the equation of each of several parameters, filtered as
+  one recursion. The score of each filtered parameter is read at the
+  levels of all the others. The class has the filter, its reverse pass,
+  the curvature and the third and fourth derivatives
+  ([`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md),
+  [`term_adjoint()`](https://statmodels7.github.io/modelterms7/reference/term_adjoint.md),
+  [`term_curvature()`](https://statmodels7.github.io/modelterms7/reference/term_curvature.md),
+  [`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md),
+  [`term_fourth()`](https://statmodels7.github.io/modelterms7/reference/term_fourth.md)),
+  the continuation past the series and the simulation, all exact; the
+  derivatives carry each level and each driving score as a jet and read
+  the driving vector’s derivatives in every predictor as data.
+- `gas(cross = )`: terms that carry the same label load each other’s
+  scores (`kappa1_sigma` in the term of `mu` is the loading of the score
+  of `sigma`), on the identity link. By default the loadings are
+  diagonal.
+- [`gas_joint()`](https://statmodels7.github.io/modelterms7/reference/gas_joint.md)
+  requires the same `by`, `time` and `scaling` in every term, a
+  `scaling` of 0, 1/2 or 1 with more than one term, no subformula, and a
+  `cross` label carried by at least two terms.
+- The chart preparation of the scalar core is a function of its own,
+  [`.gas_chart_prep()`](https://statmodels7.github.io/modelterms7/reference/dot-gas_chart_prep.md),
+  which the joint core reuses; the scalar results are unchanged.
+
 ## modelterms7 0.99.4
 
 - The package description lists the kinds of terms that the package
