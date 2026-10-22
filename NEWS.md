@@ -1,3 +1,9 @@
+# modelterms7 0.102.1
+
+* The tests of the compiled joint filter compare its predictors with the R
+  route at 1e-11, the tolerance of the Jacobian, where they used 1e-13: on
+  Linux with R 4.5 the two routes differ by 6e-13 relative.
+
 # modelterms7 0.102.0
 
 * The compiled route of the joint filter reads the coverage that the joint

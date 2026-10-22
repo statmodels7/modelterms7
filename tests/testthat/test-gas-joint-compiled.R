@@ -134,7 +134,11 @@ test_that("the compiled joint filter is the R route", {
         r <- term_filter(jt, eta, cs$y, cb$score, cb$curvature, psi)
         cc <- term_filter(jt, eta, cs$y, cb$score, cb$curvature, psi,
                           fast = fast)
-        expect_equal(cc$eta, r$eta, tolerance = 1e-13, info = lab)
+        # the two routes invert the information differently (solve() against
+        # an eigen decomposition), and the last bits that the platform's
+        # LAPACK leaves accumulate along the recursion: 6e-13 on Linux with
+        # R 4.5, so the predictors are held to the Jacobian's tolerance
+        expect_equal(cc$eta, r$eta, tolerance = 1e-11, info = lab)
         for (k in jt@params) {
           expect_equal(cc$jacobian[[k]], r$jacobian[[k]], tolerance = 1e-11,
                        info = paste(lab, k))
@@ -205,7 +209,7 @@ test_that("the compiled joint filter is the R route for every covered family", {
       cb <- jc_callbacks(d, y, Eall, G, scaling)
       r <- term_filter(jt, eta, y, cb$score, cb$curvature, psi)
       cc <- term_filter(jt, eta, y, cb$score, cb$curvature, psi, fast = fast)
-      expect_equal(cc$eta, r$eta, tolerance = 1e-12, info = lab)
+      expect_equal(cc$eta, r$eta, tolerance = 1e-11, info = lab)
       for (k in jt@params) {
         expect_equal(cc$jacobian[[k]], r$jacobian[[k]], tolerance = 1e-10,
                      info = paste(lab, k))
