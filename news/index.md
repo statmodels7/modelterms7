@@ -1,5 +1,12 @@
 # Changelog
 
+## modelterms7 0.102.2
+
+- The tests of the compiled joint filter cover wrapped families
+  (`fixed()`, `zero_inflated()`, `zero_adjusted()`, `transformation()`,
+  `folded()`, `truncated()`), whose joint entries distributions7 0.83.0
+  writes.
+
 ## modelterms7 0.102.1
 
 - The tests of the compiled joint filter compare its predictors with the
