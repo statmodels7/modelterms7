@@ -301,3 +301,40 @@ test_that("the compiled joint curvature is the R route's", {
     }
   }
 })
+
+test_that("the compiled joint third and fourth orders are the R route's", {
+  # gas_joint_third_cpp() and gas_joint_fourth_cpp() against the R recursion
+  # they replace, over the lags, cross loadings and a panel of groups
+  for (cfg in list(list(fp = 1:2, p = 1, q = 1, cross = NULL, by = FALSE),
+                   list(fp = 1:2, p = 2, q = 1, cross = "a", by = FALSE),
+                   list(fp = 1:2, p = 1, q = 2, cross = "a", by = TRUE),
+                   list(fp = 1, p = 1, q = 1, cross = NULL, by = TRUE))) {
+    md <- gjc_model(cfg$fp, cfg$p, cfg$q, cross = cfg$cross, by = cfg$by)
+    u0 <- gjc_u0(md, 3)
+    set.seed(7)
+    gw <- matrix(stats::rnorm(nc * length(cfg$fp)), nc, length(cfg$fp))
+    v <- stats::rnorm(md$m)
+    w <- stats::rnorm(md$m)
+    lab <- sprintf("p = %d, q = %d, cross = %s, by = %s", cfg$p, cfg$q,
+                   format(cfg$cross), cfg$by)
+    for (dir in list(v, list(v, w))) {
+      compiled <- md$core(u0, gw, dir)
+      old <- options(modelterms7.joint_core_r = TRUE)
+      r <- md$core(u0, gw, dir)
+      options(old)
+      expect_identical(names(compiled), names(r), info = lab)
+      expect_equal(compiled$curvature, r$curvature, tolerance = 1e-12,
+                   info = lab)
+      for (k in names(r$jacobian)) {
+        expect_equal(compiled$jacobian[[k]], r$jacobian[[k]],
+                     tolerance = 1e-13, info = paste(lab, k))
+        expect_equal(compiled$dphi[[k]], r$dphi[[k]], tolerance = 1e-12,
+                     info = paste(lab, k))
+        if (!is.null(r$dpsi)) {
+          expect_equal(compiled$dpsi[[k]], r$dpsi[[k]], tolerance = 1e-12,
+                       info = paste(lab, k))
+        }
+      }
+    }
+  }
+})

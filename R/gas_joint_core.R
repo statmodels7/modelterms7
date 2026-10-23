@@ -149,14 +149,18 @@ NULL
   out
 }
 
-# The second order of the joint filter on the compiled route: the term charts
-# lifted to the unknowns by .gas_chart_prep() (no direction), flattened to
-# plain vectors, and gas_joint_curv_cpp() running the recursion. The result has
-# the structure that the R recursion returns.
+# The joint filter on the compiled route: the term charts lifted to the
+# unknowns by .gas_chart_prep() with the directions the order calls for (none
+# for the second order, one for the third, two for the fourth), flattened to
+# plain vectors, and gas_joint_curv_cpp(), gas_joint_third_cpp() or
+# gas_joint_fourth_cpp() running the recursion. The result has the structure
+# that the R recursion returns.
 .gas_joint_core_cpp <- function(term, psi, cf, g, seed, fp, u_at, U1, U2, m,
-                                zoff, threads) {
+                                zoff, threads, dirs = list(), U3 = NULL,
+                                U4 = NULL) {
   K <- length(term@params)
   P <- length(seed)
+  nd <- length(dirs)
   cols <- function(lst) {
     if (length(lst)) as.numeric(do.call(cbind, lst)) else numeric(0)
   }
@@ -171,19 +175,48 @@ NULL
       linkfunctions7::linkfun(links[[j]], v[[j]]), numeric(1))
     gp <- .gas_chart_prep(zeta, tm@p, tm@q, links,
                           zoff + term@offsets[k] + seq_along(base),
-                          seq_len(m), list())
+                          seq_len(m), dirs)
     charts[[k]] <- list(
       omega = gp$omega, om_u = gp$om_u, om_uu = as.numeric(gp$om_uu),
       f0 = gp$f0, f0_u = gp$f0_u, f0_uu = as.numeric(gp$f0_uu),
       a = as.numeric(unlist(gp$a)), a_u = cols(gp$a_u), a_uu = cube(gp$a_uu),
       b = as.numeric(unlist(gp$b)), b_u = cols(gp$b_u), b_uu = cube(gp$b_uu))
+    if (nd >= 1L) {
+      # the third derivatives along each direction, direction-major: blocks
+      # of m x m ordered by direction and then by coefficient
+      charts[[k]]$om_t <- cube(gp$t_om)
+      charts[[k]]$a_t <- cube(gp$t_a)
+      charts[[k]]$b_t <- cube(gp$t_b)
+      charts[[k]]$f0_3 <- cube(gp$f0_3)
+    }
+    if (nd >= 2L) {
+      charts[[k]]$om_q <- as.numeric(gp$q_om)
+      charts[[k]]$a_q <- cube(gp$q_a)
+      charts[[k]]$b_q <- cube(gp$q_b)
+      charts[[k]]$f0_4 <- as.numeric(gp$f0_4)
+    }
   }
-  out <- gas_joint_curv_cpp(seed, charts, cf, as.integer(fp), g,
-                            matrix(as.numeric(u_at), nrow(g), K),
-                            as.numeric(U1), as.numeric(U2),
-                            term@blueprint$order, as.integer(m),
-                            as.integer(zoff), as.integer(threads))
+  u_mat <- matrix(as.numeric(u_at), nrow(g), K)
+  ord <- term@blueprint$order
+  out <- if (nd == 0L) {
+    gas_joint_curv_cpp(seed, charts, cf, as.integer(fp), g, u_mat,
+                       as.numeric(U1), as.numeric(U2), ord, as.integer(m),
+                       as.integer(zoff), as.integer(threads))
+  } else if (nd == 1L) {
+    gas_joint_third_cpp(seed, charts, cf, as.integer(fp), g, u_mat,
+                        as.numeric(U1), as.numeric(U2), as.numeric(U3),
+                        as.numeric(dirs[[1L]]), ord, as.integer(m),
+                        as.integer(zoff), as.integer(threads))
+  } else {
+    gas_joint_fourth_cpp(seed, charts, cf, as.integer(fp), g, u_mat,
+                         as.numeric(U1), as.numeric(U2), as.numeric(U3),
+                         as.numeric(U4), as.numeric(dirs[[1L]]),
+                         as.numeric(dirs[[2L]]), ord, as.integer(m),
+                         as.integer(zoff), as.integer(threads))
+  }
   names(out$jacobian) <- term@params
+  if (nd >= 1L) names(out$dphi) <- term@params
+  if (nd >= 2L) names(out$dpsi) <- term@params
   out
 }
 
@@ -240,11 +273,13 @@ NULL
   psi <- .gas_joint_psi(term, psi)
   cf <- .gas_joint_coefs(term, psi)
 
-  # the second order (no direction) on the compiled route; the R recursion
-  # below stays reachable with options(modelterms7.joint_core_r = TRUE)
-  if (nd == 0L && !isTRUE(getOption("modelterms7.joint_core_r", FALSE))) {
+  # the second, third and fourth orders on the compiled route; the R
+  # recursion below stays reachable with options(modelterms7.joint_core_r =
+  # TRUE)
+  if (!isTRUE(getOption("modelterms7.joint_core_r", FALSE))) {
     return(.gas_joint_core_cpp(term, psi, cf, g, seed, fp, u_at, U1, U2, m,
-                               zoff, as.integer(threads)))
+                               zoff, as.integer(threads), dirs = dirs,
+                               U3 = U3, U4 = U4))
   }
   charts <- vector("list", K)
   for (k in seq_len(K)) {

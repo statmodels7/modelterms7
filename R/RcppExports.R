@@ -25,6 +25,14 @@ gas_joint_curv_cpp <- function(seed, charts, cf, fp, g, u_at, U1, U2, order, m, 
     .Call(`_modelterms7_gas_joint_curv_cpp`, seed, charts, cf, fp, g, u_at, U1, U2, order, m, zoff, threads)
 }
 
+gas_joint_third_cpp <- function(seed, charts, cf, fp, g, u_at, U1, U2, U3, x, order, m, zoff, threads = 1L) {
+    .Call(`_modelterms7_gas_joint_third_cpp`, seed, charts, cf, fp, g, u_at, U1, U2, U3, x, order, m, zoff, threads)
+}
+
+gas_joint_fourth_cpp <- function(seed, charts, cf, fp, g, u_at, U1, U2, U3, U4, x, y, order, m, zoff, threads = 1L) {
+    .Call(`_modelterms7_gas_joint_fourth_cpp`, seed, charts, cf, fp, g, u_at, U1, U2, U3, U4, x, y, order, m, zoff, threads)
+}
+
 marg_seg_nodes_cpp <- function(xs, m, tau, gk_nodes, gk_wk, mr) {
     .Call(`_modelterms7_marg_seg_nodes_cpp`, xs, m, tau, gk_nodes, gk_wk, mr)
 }
