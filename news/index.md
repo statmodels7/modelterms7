@@ -1,5 +1,17 @@
 # Changelog
 
+## modelterms7 0.104.0
+
+- The third and fourth derivatives of a joint score-driven filter
+  ([`term_third()`](https://statmodels7.github.io/modelterms7/reference/term_third.md)
+  and
+  [`term_fourth()`](https://statmodels7.github.io/modelterms7/reference/term_fourth.md)
+  for `GasJoint`) are compiled (`gas_joint_third_cpp()`,
+  `gas_joint_fourth_cpp()`), equal to the R recursion to 1e-12; on 400
+  rows the compiled kernel takes about 21 ms where the R recursion took
+  about 1 s. `options(modelterms7.joint_core_r = TRUE)` selects the R
+  route at every order.
+
 ## modelterms7 0.103.0
 
 - The second derivative of a joint score-driven filter
