@@ -166,8 +166,8 @@ jc_families <- list(
   weibull3 = 4, lognormal2 = 4, student_t1 = 4, student_t2 = 4,
   gengamma1 = 4, gengamma2 = 4, gumbel = 4, laplace = 4, laplace2 = 4,
   weibull1 = 4, beta2 = 4, enet = 4, negbin1 = 4, pig1 = 4, pig2 = 4,
-  betabinom1 = 4, betabinom2 = 4, skewnormal1 = 2, skewt = 2,
-  pseudohuber = 2, pseudohuber2 = 2, skewnormal2 = 2)
+  betabinom1 = 4, betabinom2 = 4, skewnormal1 = 4, skewt = 4,
+  pseudohuber = 4, pseudohuber2 = 4, skewnormal2 = 4)
 
 jc_family <- function(nm) {
   ctor <- get(paste0(nm, "_distrib"), envir = asNamespace("distributions7"))
@@ -232,7 +232,7 @@ jc_wrapped <- list(
   fixed_t1 = list(function() distributions7::fixed(
     distributions7::student_t1_distrib(), nu = 5), 4),
   fixed_skewt = list(function() distributions7::fixed(
-    distributions7::skewt_distrib(), nu = 6), 2),
+    distributions7::skewt_distrib(), nu = 6), 4),
   zi_poisson = list(function() distributions7::zero_inflated(
     distributions7::poisson_distrib()), 4),
   zi_negbin2 = list(function() distributions7::zero_inflated(

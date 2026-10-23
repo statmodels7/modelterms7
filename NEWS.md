@@ -1,3 +1,14 @@
+# modelterms7 0.103.0
+
+* The second derivative of a joint score-driven filter (`term_curvature()`
+  for `GasJoint`) is compiled (`gas_joint_curv_cpp()`), equal to the R
+  recursion to 1e-15; joint fits run 1.4 to 2 times faster. The third and
+  fourth orders keep the R route, which `options(modelterms7.joint_core_r =
+  TRUE)` also selects for the second.
+* The tests of the compiled joint filter cover the skew normals, the skew t
+  and the pseudo-Huber families when scaled, now that distributions7 0.84.0
+  has their expected information in the joint registry.
+
 # modelterms7 0.102.2
 
 * The tests of the compiled joint filter cover wrapped families (`fixed()`,

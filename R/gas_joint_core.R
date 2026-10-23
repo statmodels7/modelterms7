@@ -149,10 +149,50 @@ NULL
   out
 }
 
+# The second order of the joint filter on the compiled route: the term charts
+# lifted to the unknowns by .gas_chart_prep() (no direction), flattened to
+# plain vectors, and gas_joint_curv_cpp() running the recursion. The result has
+# the structure that the R recursion returns.
+.gas_joint_core_cpp <- function(term, psi, cf, g, seed, fp, u_at, U1, U2, m,
+                                zoff, threads) {
+  K <- length(term@params)
+  P <- length(seed)
+  cols <- function(lst) {
+    if (length(lst)) as.numeric(do.call(cbind, lst)) else numeric(0)
+  }
+  cube <- function(lst) as.numeric(unlist(lst))
+  charts <- vector("list", K)
+  for (k in seq_len(K)) {
+    tm <- term@terms[[term@params[k]]]
+    base <- .gas_base_params(tm@p, tm@q)
+    links <- term_links(tm)
+    v <- unlist(psi[[term@params[k]]][base])
+    zeta <- vapply(base, function(j)
+      linkfunctions7::linkfun(links[[j]], v[[j]]), numeric(1))
+    gp <- .gas_chart_prep(zeta, tm@p, tm@q, links,
+                          zoff + term@offsets[k] + seq_along(base),
+                          seq_len(m), list())
+    charts[[k]] <- list(
+      omega = gp$omega, om_u = gp$om_u, om_uu = as.numeric(gp$om_uu),
+      f0 = gp$f0, f0_u = gp$f0_u, f0_uu = as.numeric(gp$f0_uu),
+      a = as.numeric(unlist(gp$a)), a_u = cols(gp$a_u), a_uu = cube(gp$a_uu),
+      b = as.numeric(unlist(gp$b)), b_u = cols(gp$b_u), b_uu = cube(gp$b_uu))
+  }
+  out <- gas_joint_curv_cpp(seed, charts, cf, as.integer(fp), g,
+                            matrix(as.numeric(u_at), nrow(g), K),
+                            as.numeric(U1), as.numeric(U2),
+                            term@blueprint$order, as.integer(m),
+                            as.integer(zoff), as.integer(threads))
+  names(out$jacobian) <- term@params
+  out
+}
+
 # The body that term_curvature(), term_third() and term_fourth() share for a
 # joint filter: the levels' jets propagated through the recursion, the
 # driving scores' jets formed from the predictors' at every row.
-.gas_joint_core <- function(term, psi, g, seed, blocks, direction = NULL) {
+.gas_joint_core <- function(term, psi, g, seed, blocks, direction = NULL,
+                            threads = getOption("modelterms7.joint_threads",
+                                                1L)) {
   bp <- term@blueprint
   K <- length(term@params)
   n <- bp$n
@@ -199,6 +239,13 @@ NULL
   zoff <- m - M
   psi <- .gas_joint_psi(term, psi)
   cf <- .gas_joint_coefs(term, psi)
+
+  # the second order (no direction) on the compiled route; the R recursion
+  # below stays reachable with options(modelterms7.joint_core_r = TRUE)
+  if (nd == 0L && !isTRUE(getOption("modelterms7.joint_core_r", FALSE))) {
+    return(.gas_joint_core_cpp(term, psi, cf, g, seed, fp, u_at, U1, U2, m,
+                               zoff, as.integer(threads)))
+  }
   charts <- vector("list", K)
   for (k in seq_len(K)) {
     tm <- term@terms[[term@params[k]]]

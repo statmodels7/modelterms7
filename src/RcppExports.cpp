@@ -117,6 +117,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// gas_joint_curv_cpp
+List gas_joint_curv_cpp(List seed, List charts, List cf, IntegerVector fp, NumericMatrix g, NumericMatrix u_at, NumericVector U1, NumericVector U2, List order, int m, int zoff, int threads);
+RcppExport SEXP _modelterms7_gas_joint_curv_cpp(SEXP seedSEXP, SEXP chartsSEXP, SEXP cfSEXP, SEXP fpSEXP, SEXP gSEXP, SEXP u_atSEXP, SEXP U1SEXP, SEXP U2SEXP, SEXP orderSEXP, SEXP mSEXP, SEXP zoffSEXP, SEXP threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type seed(seedSEXP);
+    Rcpp::traits::input_parameter< List >::type charts(chartsSEXP);
+    Rcpp::traits::input_parameter< List >::type cf(cfSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type fp(fpSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type g(gSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type u_at(u_atSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type U1(U1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type U2(U2SEXP);
+    Rcpp::traits::input_parameter< List >::type order(orderSEXP);
+    Rcpp::traits::input_parameter< int >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type zoff(zoffSEXP);
+    Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(gas_joint_curv_cpp(seed, charts, cf, fp, g, u_at, U1, U2, order, m, zoff, threads));
+    return rcpp_result_gen;
+END_RCPP
+}
 // marg_seg_nodes_cpp
 List marg_seg_nodes_cpp(const NumericVector& xs, double m, double tau, const NumericVector& gk_nodes, const NumericVector& gk_wk, double mr);
 RcppExport SEXP _modelterms7_marg_seg_nodes_cpp(SEXP xsSEXP, SEXP mSEXP, SEXP tauSEXP, SEXP gk_nodesSEXP, SEXP gk_wkSEXP, SEXP mrSEXP) {
@@ -215,6 +237,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_modelterms7_gas_filter_sub_cpp", (DL_FUNC) &_modelterms7_gas_filter_sub_cpp, 12},
     {"_modelterms7_gas_joint_filter_cpp", (DL_FUNC) &_modelterms7_gas_joint_filter_cpp, 6},
     {"_modelterms7_gas_joint_adjoint_cpp", (DL_FUNC) &_modelterms7_gas_joint_adjoint_cpp, 4},
+    {"_modelterms7_gas_joint_curv_cpp", (DL_FUNC) &_modelterms7_gas_joint_curv_cpp, 12},
     {"_modelterms7_marg_seg_nodes_cpp", (DL_FUNC) &_modelterms7_marg_seg_nodes_cpp, 6},
     {"_modelterms7_marg_seg_shift_cpp", (DL_FUNC) &_modelterms7_marg_seg_shift_cpp, 7},
     {"_modelterms7_marg_seg_forward_cpp", (DL_FUNC) &_modelterms7_marg_seg_forward_cpp, 9},
