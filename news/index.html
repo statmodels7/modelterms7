@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.102.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.103.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,11 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.103.0" id="modelterms7-01030">modelterms7 0.103.0<a class="anchor" aria-label="anchor" href="#modelterms7-01030"></a></h2>
+<ul><li>The second derivative of a joint score-driven filter (<code><a href="../reference/term_curvature.html">term_curvature()</a></code> for <code>GasJoint</code>) is compiled (<code>gas_joint_curv_cpp()</code>), equal to the R recursion to 1e-15; joint fits run 1.4 to 2 times faster. The third and fourth orders keep the R route, which <code>options(modelterms7.joint_core_r = TRUE)</code> also selects for the second.</li>
+<li>The tests of the compiled joint filter cover the skew normals, the skew t and the pseudo-Huber families when scaled, now that distributions7 0.84.0 has their expected information in the joint registry.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.102.2" id="modelterms7-01022">modelterms7 0.102.2<a class="anchor" aria-label="anchor" href="#modelterms7-01022"></a></h2>
 <ul><li>The tests of the compiled joint filter cover wrapped families (<code>fixed()</code>, <code>zero_inflated()</code>, <code>zero_adjusted()</code>, <code>transformation()</code>, <code>folded()</code>, <code>truncated()</code>), whose joint entries distributions7 0.83.0 writes.</li>
