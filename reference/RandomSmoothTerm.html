@@ -13,7 +13,7 @@ or a te() call, as in random(~ s(x) | g)."><meta property="og:image" content="ht
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.105.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.105.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -194,9 +194,9 @@ effects gives the model; <code><a href="s.html">s()</a></code> and <code><a href
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">tm</span> <span class="op">&lt;-</span> <span class="fu"><a href="random.html">random</a></span><span class="op">(</span><span class="op">~</span> <span class="fu"><a href="s.html">s</a></span><span class="op">(</span><span class="va">x</span>, smoother <span class="op">=</span> <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">6</span><span class="op">)</span><span class="op">)</span> <span class="op">|</span> <span class="va">g</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/S7_inherits.html" class="external-link">S7_inherits</a></span><span class="op">(</span><span class="va">tm</span>, <span class="va">RandomSmoothTerm</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/S7/man/S7_inherits.html" class="external-link">S7_inherits</a></span><span class="op">(</span><span class="va">tm</span>, <span class="va">RandomSmoothTerm</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
-<span class="r-in"><span><span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/S7_inherits.html" class="external-link">S7_inherits</a></span><span class="op">(</span><span class="va">tm</span>, <span class="va">RandomTerm</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/S7/man/S7_inherits.html" class="external-link">S7_inherits</a></span><span class="op">(</span><span class="va">tm</span>, <span class="va">RandomTerm</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span><span class="va">tm</span><span class="op">@</span><span class="va">intercept</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>

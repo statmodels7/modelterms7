@@ -11,7 +11,7 @@ one with gas_joint()."><meta property="og:image" content="https://statmodels7.gi
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.105.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.105.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -182,7 +182,7 @@ the predictors.</p>
 <span class="r-in"><span><span class="va">tm</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mu <span class="op">=</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span>, time <span class="op">=</span> <span class="va">t</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>           sigma <span class="op">=</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span>, time <span class="op">=</span> <span class="va">t</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">jt</span> <span class="op">&lt;-</span> <span class="fu"><a href="gas_joint.html">gas_joint</a></span><span class="op">(</span><span class="va">tm</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/S7_inherits.html" class="external-link">S7_inherits</a></span><span class="op">(</span><span class="va">jt</span>, <span class="va">GasJoint</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/S7/man/S7_inherits.html" class="external-link">S7_inherits</a></span><span class="op">(</span><span class="va">jt</span>, <span class="va">GasJoint</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span><span class="va">jt</span><span class="op">@</span><span class="va">params</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "mu"    "sigma"</span>

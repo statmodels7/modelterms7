@@ -1,5 +1,11 @@
 # Changelog
 
+## modelterms7 0.105.1
+
+- The context of the compiled joint recursions (the family through the
+  joint registry, the links, the scaling) sits in one header,
+  `gas_joint_ctx.h`, which the constant and the per-row routes share.
+
 ## modelterms7 0.105.0
 
 - The terms of a joint score-driven filter
@@ -1574,8 +1580,8 @@
   [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
   reads as not built, so a bare subclass answers `FALSE` for the same
   reason it used to answer `FALSE` through
-  [`S7::prop_names()`](https://rconsortium.github.io/S7/reference/prop_names.html)
-  – the workaround that guard carried is removed.
+  [`S7::prop_names()`](https://rdrr.io/pkg/S7/man/prop_names.html) – the
+  workaround that guard carried is removed.
 
 ## modelterms7 0.62.0
 
@@ -1621,7 +1627,7 @@
   a built structural term without a coefficient count.
 
   `blueprint` is looked up with
-  [`S7::prop_names()`](https://rconsortium.github.io/S7/reference/prop_names.html)
+  [`S7::prop_names()`](https://rdrr.io/pkg/S7/man/prop_names.html)
   rather than assumed. It is declared on `additive_term` and on each of
   the three shipped structural classes, and not on the abstract
   `structural_term`, so a structural class written elsewhere need not
