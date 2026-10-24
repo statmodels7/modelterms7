@@ -1,3 +1,9 @@
+# modelterms7 0.105.1
+
+* The context of the compiled joint recursions (the family through the
+  joint registry, the links, the scaling) sits in one header,
+  `gas_joint_ctx.h`, which the constant and the per-row routes share.
+
 # modelterms7 0.105.0
 
 * The terms of a joint score-driven filter (`gas_joint()`) may develop
