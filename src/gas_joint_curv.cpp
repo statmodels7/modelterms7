@@ -52,8 +52,11 @@ struct JCurvChart {
 // columns at which a cross loading sits
 struct JCurvCoef {
     int p = 0, q = 0;
-    std::vector<int> partners, col_cross;   // col_cross: np x p
-    std::vector<double> cross;              // np x p
+    // one entry per cross pair (partner xpar, lag xlag), in the order of
+    // .gas_cross_params(); a pair's lag may exceed p
+    std::vector<int> partners, col_cross, xpar, xlag;
+    std::vector<double> cross;
+    int nx = 0, xmax = 0;                   // the pairs, and the largest lag
 };
 
 // J += A B for two quantities with value, gradient and Hessian: Leibniz's
@@ -70,6 +73,35 @@ inline void prod_add(int m, double Av, const double* A1, const double* A2,
             if (A2) v += Bv * A2[i + m * j];
             J2[i + m * j] += v;
         }
+    }
+}
+
+// reads and checks the cross pairs of one term from .gas_joint_coefs():
+// xpar, xlag, cross and col_cross, one entry per pair
+inline void read_cross_pairs(JCurvCoef& J, const List& f, int K, int zoff,
+                             int m) {
+    J.partners = as<std::vector<int> >(f["partners"]);
+    J.xpar = as<std::vector<int> >(f["xpar"]);
+    J.xlag = as<std::vector<int> >(f["xlag"]);
+    J.cross = as<std::vector<double> >(f["cross"]);
+    J.col_cross = as<std::vector<int> >(f["col_cross"]);
+    J.nx = static_cast<int>(J.xpar.size());
+    if (J.xlag.size() != J.xpar.size() || J.cross.size() != J.xpar.size() ||
+        J.col_cross.size() != J.xpar.size()) {
+        stop("the cross loadings of a term must have one partner, lag, value and column per pair.");
+    }
+    J.xmax = 0;
+    for (int h = 0; h < J.nx; ++h) {
+        if (J.xpar[h] < 1 || J.xpar[h] > K) {
+            stop("a partner of a filtered parameter is out of range.");
+        }
+        if (J.xlag[h] < 1) {
+            stop("the lag of a cross loading must be at least one.");
+        }
+        if (J.col_cross[h] < 1 || zoff + J.col_cross[h] > m) {
+            stop("a cross loading sits outside the unknowns.");
+        }
+        J.xmax = std::max(J.xmax, J.xlag[h]);
     }
 }
 
@@ -118,10 +150,7 @@ List gas_joint_curv_cpp(List seed, List charts, List cf, IntegerVector fp,
         JCurvCoef& J = co[k];
         J.p = as<int>(f["p"]);
         J.q = as<int>(f["q"]);
-        J.partners = as<std::vector<int> >(f["partners"]);
-        const std::size_t np = J.partners.size();
-        J.cross = as<std::vector<double> >(f["cross"]);
-        J.col_cross = as<std::vector<int> >(f["col_cross"]);
+        read_cross_pairs(J, f, K, zoff, m);
         C.omega = as<double>(c["omega"]);
         C.f0 = as<double>(c["f0"]);
         C.om_u = as<std::vector<double> >(c["om_u"]);
@@ -138,21 +167,11 @@ List gas_joint_curv_cpp(List seed, List charts, List cf, IntegerVector fp,
         if (C.om_u.size() != static_cast<std::size_t>(m) || C.om_uu.size() != mm ||
             C.f0_u.size() != static_cast<std::size_t>(m) || C.f0_uu.size() != mm ||
             C.a.size() != p || C.a_u.size() != p * m || C.a_uu.size() != p * mm ||
-            C.b.size() != q || C.b_u.size() != q * m || C.b_uu.size() != q * mm ||
-            J.cross.size() != np * p || J.col_cross.size() != np * p) {
+            C.b.size() != q || C.b_u.size() != q * m || C.b_uu.size() != q * mm) {
             stop("the chart of a term does not agree with its orders and the number of unknowns.");
         }
-        for (std::size_t j = 0; j < np; ++j) {
-            if (J.partners[j] < 1 || J.partners[j] > K) {
-                stop("a partner of a filtered parameter is out of range.");
-            }
-        }
-        for (std::size_t i = 0; i < J.col_cross.size(); ++i) {
-            if (J.col_cross[i] < 1 || zoff + J.col_cross[i] > m) {
-                stop("a cross loading sits outside the unknowns.");
-            }
-        }
-        L = std::max(L, std::max(J.p, J.q));
+        // the rings must reach the largest cross lag as well
+        L = std::max(L, std::max(std::max(J.p, J.q), J.xmax));
     }
     const int D = L + 1;   // the ring's depth
 
@@ -211,32 +230,30 @@ List gas_joint_curv_cpp(List seed, List charts, List cf, IntegerVector fp,
                 double* J2 = &fd2[cur * mm];
                 std::copy(C.om_u.begin(), C.om_u.end(), J1);
                 std::copy(C.om_uu.begin(), C.om_uu.end(), J2);
-                const int np = static_cast<int>(J.partners.size());
                 for (int i = 1; i <= J.p; ++i) {
                     if (t - i < 0) continue;
                     const int ls = (t - i) % D;
                     // the score loading times the parameter's own lagged score
-                    {
-                        const std::size_t lag = static_cast<std::size_t>(k + K * ls);
-                        prod_add(m, C.a[i - 1], &C.a_u[static_cast<std::size_t>(i - 1) * m],
-                                 &C.a_uu[static_cast<std::size_t>(i - 1) * mm],
-                                 uv[lag], &ud1[lag * m], &ud2[lag * mm],
-                                 &Jv, J1, J2);
-                    }
-                    // the cross loadings times the partners' lagged scores; a
-                    // cross loading rides the identity link, so its gradient
-                    // is a one at its own column and it has no Hessian
-                    for (int j = 0; j < np; ++j) {
-                        const int l = J.partners[j] - 1;
-                        const std::size_t lag = static_cast<std::size_t>(l + K * ls);
-                        const std::size_t ix = static_cast<std::size_t>(j) + static_cast<std::size_t>(np) * (i - 1);
-                        const int col = zoff + J.col_cross[ix] - 1;
-                        ecol[col] = 1.0;
-                        prod_add(m, J.cross[ix], ecol.data(), nullptr,
-                                 uv[lag], &ud1[lag * m], &ud2[lag * mm],
-                                 &Jv, J1, J2);
-                        ecol[col] = 0.0;
-                    }
+                    const std::size_t lag = static_cast<std::size_t>(k + K * ls);
+                    prod_add(m, C.a[i - 1], &C.a_u[static_cast<std::size_t>(i - 1) * m],
+                             &C.a_uu[static_cast<std::size_t>(i - 1) * mm],
+                             uv[lag], &ud1[lag * m], &ud2[lag * mm],
+                             &Jv, J1, J2);
+                }
+                // the cross loadings times the partners' lagged scores, one
+                // term per pair at its own lag; a cross loading rides the
+                // identity link, so its gradient is a one at its own column
+                // and it has no Hessian
+                for (int h = 0; h < J.nx; ++h) {
+                    const int xl = J.xlag[h];
+                    if (t - xl < 0) continue;
+                    const std::size_t lag = static_cast<std::size_t>((J.xpar[h] - 1) + K * ((t - xl) % D));
+                    const int col = zoff + J.col_cross[h] - 1;
+                    ecol[col] = 1.0;
+                    prod_add(m, J.cross[h], ecol.data(), nullptr,
+                             uv[lag], &ud1[lag * m], &ud2[lag * mm],
+                             &Jv, J1, J2);
+                    ecol[col] = 0.0;
                 }
                 for (int j = 1; j <= J.q; ++j) {
                     double lv;
@@ -633,10 +650,7 @@ List joint_run(int nd, List seed, List charts, List cf, IntegerVector fp,
         JCurvCoef& J = co[k];
         J.p = as<int>(f["p"]);
         J.q = as<int>(f["q"]);
-        J.partners = as<std::vector<int> >(f["partners"]);
-        const std::size_t np = J.partners.size();
-        J.cross = as<std::vector<double> >(f["cross"]);
-        J.col_cross = as<std::vector<int> >(f["col_cross"]);
+        read_cross_pairs(J, f, K, zoff, m);
         C.omega = as<double>(c["omega"]);
         C.f0 = as<double>(c["f0"]);
         C.om_u = as<std::vector<double> >(c["om_u"]);
@@ -663,8 +677,7 @@ List joint_run(int nd, List seed, List charts, List cf, IntegerVector fp,
         if (C.om_u.size() != static_cast<std::size_t>(m) || C.om_uu.size() != mm ||
             C.f0_u.size() != static_cast<std::size_t>(m) || C.f0_uu.size() != mm ||
             C.a.size() != p || C.a_u.size() != p * m || C.a_uu.size() != p * mm ||
-            C.b.size() != q || C.b_u.size() != q * m || C.b_uu.size() != q * mm ||
-            J.cross.size() != np * p || J.col_cross.size() != np * p) {
+            C.b.size() != q || C.b_u.size() != q * m || C.b_uu.size() != q * mm) {
             stop("the chart of a term does not agree with its orders and the number of unknowns.");
         }
         if (C.om_t.size() != ndz * mm || C.a_t.size() != ndz * p * mm ||
@@ -675,17 +688,8 @@ List joint_run(int nd, List seed, List charts, List cf, IntegerVector fp,
                         C.b_q.size() != q * mm || C.f0_4.size() != mm)) {
             stop("the fourth derivatives of a term's chart do not agree with its orders and the number of unknowns.");
         }
-        for (std::size_t j = 0; j < np; ++j) {
-            if (J.partners[j] < 1 || J.partners[j] > K) {
-                stop("a partner of a filtered parameter is out of range.");
-            }
-        }
-        for (std::size_t i = 0; i < J.col_cross.size(); ++i) {
-            if (J.col_cross[i] < 1 || zoff + J.col_cross[i] > m) {
-                stop("a cross loading sits outside the unknowns.");
-            }
-        }
-        L = std::max(L, std::max(J.p, J.q));
+        // the rings must reach the largest cross lag as well
+        L = std::max(L, std::max(std::max(J.p, J.q), J.xmax));
     }
     const int D = L + 1;   // the ring's depth
 
@@ -828,38 +832,36 @@ List joint_run(int nd, List seed, List charts, List cf, IntegerVector fp,
                 std::copy(C.om_uu.begin(), C.om_uu.end(), J2);
                 std::copy(C.om_t.begin(), C.om_t.end(), J3);
                 if (nd == 2) std::copy(C.om_q.begin(), C.om_q.end(), J4);
-                const int np = static_cast<int>(J.partners.size());
                 for (int i = 1; i <= J.p; ++i) {
                     if (t - i < 0) continue;
                     const int ls = (t - i) % D;
                     // the score loading times the parameter's own lagged score
-                    {
-                        const std::size_t lag = static_cast<std::size_t>(k + K * ls);
-                        const JetV A = CJ.a[i - 1];
-                        const JetV B = Uu.view(lag);
-                        prod_add(m, A.v, A.d1, A.d2, B.v, B.d1, B.d2, &Jv, J1, J2);
-                        prod_add3(m, nd, A, B, J3);
-                        if (nd == 2) prod_add4(m, A, B, J4);
-                    }
-                    // the cross loadings times the partners' lagged scores; a
-                    // cross loading rides the identity link: a one at its own
-                    // column, no Hessian and no higher derivative
-                    for (int j = 0; j < np; ++j) {
-                        const int l = J.partners[j] - 1;
-                        const std::size_t lag = static_cast<std::size_t>(l + K * ls);
-                        const std::size_t ix = static_cast<std::size_t>(j) + static_cast<std::size_t>(np) * (i - 1);
-                        const int col = zoff + J.col_cross[ix] - 1;
-                        ecol[col] = 1.0;
-                        JetV A;
-                        A.v = J.cross[ix];
-                        A.d1 = ecol.data();
-                        for (int d = 0; d < nd; ++d) A.ad[d] = dirs[d][col];
-                        const JetV B = Uu.view(lag);
-                        prod_add(m, A.v, A.d1, nullptr, B.v, B.d1, B.d2, &Jv, J1, J2);
-                        prod_add3(m, nd, A, B, J3);
-                        if (nd == 2) prod_add4(m, A, B, J4);
-                        ecol[col] = 0.0;
-                    }
+                    const std::size_t lag = static_cast<std::size_t>(k + K * ls);
+                    const JetV A = CJ.a[i - 1];
+                    const JetV B = Uu.view(lag);
+                    prod_add(m, A.v, A.d1, A.d2, B.v, B.d1, B.d2, &Jv, J1, J2);
+                    prod_add3(m, nd, A, B, J3);
+                    if (nd == 2) prod_add4(m, A, B, J4);
+                }
+                // the cross loadings times the partners' lagged scores, one
+                // term per pair at its own lag; a cross loading rides the
+                // identity link: a one at its own column, no Hessian and no
+                // higher derivative
+                for (int h = 0; h < J.nx; ++h) {
+                    const int xl = J.xlag[h];
+                    if (t - xl < 0) continue;
+                    const std::size_t lag = static_cast<std::size_t>((J.xpar[h] - 1) + K * ((t - xl) % D));
+                    const int col = zoff + J.col_cross[h] - 1;
+                    ecol[col] = 1.0;
+                    JetV A;
+                    A.v = J.cross[h];
+                    A.d1 = ecol.data();
+                    for (int d = 0; d < nd; ++d) A.ad[d] = dirs[d][col];
+                    const JetV B = Uu.view(lag);
+                    prod_add(m, A.v, A.d1, nullptr, B.v, B.d1, B.d2, &Jv, J1, J2);
+                    prod_add3(m, nd, A, B, J3);
+                    if (nd == 2) prod_add4(m, A, B, J4);
+                    ecol[col] = 0.0;
                 }
                 for (int j = 1; j <= J.q; ++j) {
                     const JetV A = CJ.b[j - 1];

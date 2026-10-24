@@ -31,12 +31,13 @@ namespace {
 
 // The per-row coefficients of one member, as plain vectors so that a worker
 // reads no R object: om (n), A (n x p, column-major), B (n x q), the partners'
-// positions (1-based) and the cross loadings per row (n x npk*p, the column of
-// partner j at lag i being j + npk (i - 1), j from 0).
+// positions (1-based) and the cross loadings per row (n x nx, one column per
+// pair h, loading the score of the parameter at position xpar[h] (1-based) at
+// lag xlag[h], which may exceed p).
 struct SubCoef {
-    int p = 0, q = 0, n = 0;
+    int p = 0, q = 0, n = 0, nx = 0;
     std::vector<double> om, A, B, cross;
-    std::vector<int> partners;
+    std::vector<int> partners, xpar, xlag;
 };
 
 std::vector<SubCoef> sub_coefs(const List& mem, bool need_om) {
@@ -55,10 +56,16 @@ std::vector<SubCoef> sub_coefs(const List& mem, bool need_om) {
         J.A.assign(A.begin(), A.end());
         J.B.assign(B.begin(), B.end());
         J.partners = as<std::vector<int> >(c["partners"]);
+        J.xpar = as<std::vector<int> >(c["xpar"]);
+        J.xlag = as<std::vector<int> >(c["xlag"]);
         NumericMatrix cr = as<NumericMatrix>(c["cross"]);
-        if (cr.nrow() != static_cast<int>(A.nrow()) ||
-            cr.ncol() != static_cast<int>(J.partners.size()) * J.p) {
-            stop("the cross loadings must have one column per partner and lag.");
+        J.nx = static_cast<int>(J.xpar.size());
+        if (cr.nrow() != static_cast<int>(A.nrow()) || cr.ncol() != J.nx ||
+            static_cast<int>(J.xlag.size()) != J.nx) {
+            stop("the cross loadings must have one column per pair.");
+        }
+        for (int h = 0; h < J.nx; ++h) {
+            if (J.xlag[h] < 1) stop("a cross lag must be at least 1.");
         }
         J.cross.assign(cr.begin(), cr.end());
     }
@@ -68,7 +75,7 @@ std::vector<SubCoef> sub_coefs(const List& mem, bool need_om) {
 // one member of one group: the derivative rows of the level, of each loading
 // and of each autoregressive coefficient on the group's active columns
 // (m x na, column-major), the starting level and its derivative, and the
-// derivative rows of the cross loadings (npk*p matrices, m x na)
+// derivative rows of the cross loadings (one matrix per pair, m x na)
 struct SubMem {
     const double* dom;
     std::vector<const double*> da, dbl, dcr;
@@ -88,10 +95,10 @@ struct SubGrp {
 // The joint filter with per-row coefficients on the compiled route, or NULL
 // where the context is inert (where gas_joint_filter_cpp() returns NULL).
 // eta: n x K, the static predictors of the filtered parameters; mem: one
-// list per member with p, q, om, A, B, partners, cross (n x npk*p); groups: one
-// list per group with rows, act (the group's active columns of the joint
-// vector) and mem (one list per member with dom, da, dbl, f0, df0, dcr: the
-// derivative rows of the cross loadings, npk*p matrices); M: the length
+// list per member with p, q, om, A, B, partners, xpar, xlag, cross (n x nx);
+// groups: one list per group with rows, act (the group's active columns of
+// the joint vector) and mem (one list per member with dom, da, dbl, f0, df0,
+// dcr: the derivative rows of the cross loadings, one matrix per pair); M: the length
 // of the joint parameter vector.
 // [[Rcpp::export]]
 SEXP gas_joint_sub_filter_cpp(NumericMatrix eta, List mem, List groups, int M,
@@ -153,8 +160,8 @@ SEXP gas_joint_sub_filter_cpp(NumericMatrix eta, List mem, List groups, int M,
                 S.dbl.push_back(x.begin());
             }
             List dcr = mk["dcr"];
-            if (dcr.size() != static_cast<int>(co[k].partners.size()) * co[k].p) {
-                stop("the cross loadings' derivative rows must be one per partner and lag.");
+            if (dcr.size() != co[k].nx) {
+                stop("the cross loadings' derivative rows must be one per pair.");
             }
             for (int c = 0; c < dcr.size(); ++c) {
                 NumericMatrix x = dcr[c];
@@ -187,7 +194,6 @@ SEXP gas_joint_sub_filter_cpp(NumericMatrix eta, List mem, List groups, int M,
                 const SubMem& S = Gp.mem[k];
                 double ft = J.om[r];
                 for (int c = 0; c < na; ++c) Ft[c] = S.dom[c * T + t];
-                const int npk = J.partners.size();
                 for (int i = 1; i <= J.p; ++i) {
                     const double ai = J.A[static_cast<std::size_t>(i - 1) * n + r];
                     const double* dai = S.da[i - 1];
@@ -199,18 +205,21 @@ SEXP gas_joint_sub_filter_cpp(NumericMatrix eta, List mem, List groups, int M,
                     for (int c = 0; c < na; ++c) {
                         Ft[c] += ai * sd[c] + sl * dai[c * T + t];
                     }
-                    for (int j = 0; j < npk; ++j) {
-                        const int l = J.partners[j] - 1;
-                        const int cx = j + npk * (i - 1);
-                        const double cji = J.cross[static_cast<std::size_t>(cx) * n + r];
-                        const double* dcj = S.dcr[cx];
-                        const std::size_t ll = static_cast<std::size_t>(l + K * (t - i));
-                        const double sll = u[ll];
-                        ft += cji * sll;
-                        const double* sdl = &Sd[ll * NA];
-                        for (int c = 0; c < na; ++c) {
-                            Ft[c] += cji * sdl[c] + sll * dcj[c * T + t];
-                        }
+                }
+                // the cross loadings times the partners' lagged scores, each
+                // pair at its own lag (which may exceed p)
+                for (int h = 0; h < J.nx; ++h) {
+                    const int lg = J.xlag[h];
+                    if (t - lg < 0) continue;   // the lagged score is zero
+                    const int l = J.xpar[h] - 1;
+                    const double cji = J.cross[static_cast<std::size_t>(h) * n + r];
+                    const double* dcj = S.dcr[h];
+                    const std::size_t ll = static_cast<std::size_t>(l + K * (t - lg));
+                    const double sll = u[ll];
+                    ft += cji * sll;
+                    const double* sdl = &Sd[ll * NA];
+                    for (int c = 0; c < na; ++c) {
+                        Ft[c] += cji * sdl[c] + sll * dcj[c * T + t];
                     }
                 }
                 for (int j = 1; j <= J.q; ++j) {
@@ -318,15 +327,16 @@ List gas_joint_sub_adjoint_cpp(NumericVector curv, NumericMatrix g, List mem,
                         fb[k + K * (t - j)] += J.B[static_cast<std::size_t>(j - 1) * n + r] * fbk;
                     }
                 }
-                const int npk = J.partners.size();
                 for (int i = 1; i <= J.p; ++i) {
                     if (t - i < 0) continue;
                     ub[k + K * (t - i)] += J.A[static_cast<std::size_t>(i - 1) * n + r] * fbk;
-                    for (int j = 0; j < npk; ++j) {
-                        const int l = J.partners[j] - 1;
-                        ub[l + K * (t - i)] +=
-                            J.cross[static_cast<std::size_t>(j + npk * (i - 1)) * n + r] * fbk;
-                    }
+                }
+                for (int h = 0; h < J.nx; ++h) {
+                    const int lg = J.xlag[h];
+                    if (t - lg < 0) continue;
+                    const int l = J.xpar[h] - 1;
+                    ub[l + K * (t - lg)] +=
+                        J.cross[static_cast<std::size_t>(h) * n + r] * fbk;
                 }
             }
         }

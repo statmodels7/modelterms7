@@ -17,8 +17,8 @@ loadings.
 }
 \description{
 Checks that a set of built \code{\link[=gas]{gas()}} terms can be filtered together and
-returns them as a \code{\link[=GasJoint]{GasJoint()}} object, with the loadings of \code{cross} added
-to the terms that share a label.
+returns them as a \code{\link[=GasJoint]{GasJoint()}} object, with the cross loadings that each
+term's \code{p_cross} declares added to its parameters.
 }
 \details{
 The terms must walk the same series: their \code{by} and \code{time} must give the
@@ -34,16 +34,19 @@ derivatives of the matrix power are exact and short (the identity, the
 symmetric square root through a Sylvester equation per order, and the
 inverse).
 
-The terms that carry the same label in \code{cross} form a group, in which each
-level loads the scores of the other parameters of the group as well as its
-own. A label carried by one term only is rejected, because it describes no
-group.
+The \code{p_cross} of a term names the parameters whose scores its level loads
+besides its own, with the number of lags of each. A parameter that it
+names with a positive count must be one of the joined terms, and a term
+cannot name its own parameter, whose score it loads through its own
+loadings. The cross loadings of a term follow the parameters in the order
+of the joined terms, lag by lag.
 }
 \examples{
 set.seed(1)
 dd <- data.frame(t = 1:40, y = rnorm(40))
-tm <- list(mu = term_build(gas(p = 1, q = 1, time = t, cross = "a"), dd),
-           sigma = term_build(gas(p = 1, q = 1, time = t, cross = "a"), dd),
+tm <- list(mu = term_build(gas(p = 1, q = 1, time = t,
+                               p_cross = c(sigma = 2)), dd),
+           sigma = term_build(gas(p = 1, q = 1, time = t), dd),
            nu = term_build(gas(p = 1, q = 1, time = t), dd))
 jt <- gas_joint(tm)
 lapply(jt@terms, term_params)

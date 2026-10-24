@@ -11,7 +11,7 @@ gas(
   by = NULL,
   time = NULL,
   scaling = 0,
-  cross = NULL,
+  p_cross = NULL,
   links = NULL,
   label = "gas"
 )
@@ -26,11 +26,14 @@ Defaults to 1.}
 \item{...}{Two-sided formulas whose left side names a parameter, one
 per parameter to be developed with covariates, e.g.
 \code{kappa1 ~ s(x)}; see the section above. The left side may also name a
-cross loading, \verb{kappa<i>_<parameter>}, in a term that sets \code{cross} and is
-filtered jointly with that parameter, e.g. \code{kappa1_mu ~ 1 + random(~ 1 | g)}; the cross loading is developed on the identity link unless \code{links}
-names another. A cross loading that varies by group is identified only
-with long series or many groups (with a few hundred observations per
-group). A formula given in the place of \code{p} or \code{q} is rejected.}
+cross loading, \verb{kappa<i>_<parameter>}, whose lag \code{i} the term declares
+in \code{p_cross}, e.g. \code{kappa1_mu ~ 1 + random(~ 1 | g)}; the cross loading
+is developed on the identity link unless \code{links} names another. A cross
+loading that varies by group is identified only with long series or
+many groups (with a few hundred observations per group). A subformula
+with no column, such as \code{kappa2_mu ~ 0}, is rejected: a cross loading is
+restricted to zero by leaving its lag out of \code{p_cross}. A formula given
+in the place of \code{p} or \code{q} is rejected.}
 
 \item{by}{An optional grouping variable, evaluated in the data; each
 group is filtered independently, from its own starting level. A
@@ -44,10 +47,13 @@ does not imply any grouping.}
 the expected information to the power \eqn{-d}. Defaults to 0, the score
 as it is; see the section on the scaling of the score.}
 
-\item{cross}{An optional label, a single string. The terms of a model that
-carry the same label load each other's scores as well as their own;
-see the section on several filtered parameters. \code{NULL}, the default,
-gives a term that loads its own score only.}
+\item{p_cross}{An optional named vector of integers of at least 0, one
+per other filtered parameter whose score the level of this term loads,
+giving the number of lags of that score, e.g. \code{p_cross = c(sigma = 2)}
+for the loadings \code{kappa1_sigma} and \code{kappa2_sigma}. Each named parameter
+must carry a \code{gas()} term of its own; see the section on several
+filtered parameters. \code{NULL}, the default, gives a term that loads its
+own score only, and so does a count of 0.}
 
 \item{links}{An optional named list of \pkg{linkfunctions7} links over
 the parameters of \code{\link[=term_params]{term_params()}}, overriding the defaults
@@ -126,8 +132,7 @@ filtered parameter is read at the levels of all the others at the same
 time, so the levels cannot be filtered one after the other.
 \code{\link[=gas_joint]{gas_joint()}} joins the terms, and a fitting layer reads them as one
 structural term. The terms must walk the same series (the same \code{by} and
-\code{time}), and a parameter developed by a subformula is not available in a
-joint filter.
+\code{time}).
 
 The scaling is joint. With \eqn{G} the filtered parameters, the driving
 vector is
@@ -142,11 +147,16 @@ the scale of a gaussian, the joint scaling equals the scaling of each
 parameter by its own information.
 
 By default each level loads its own score only, so the matrices of
-loadings are diagonal. The terms that carry the same label in \code{cross}
-load each other's scores as well: in
-\code{y ~ gas(..., cross = "a") | sigma ~ gas(..., cross = "a") | nu ~ gas(...)}
-the levels of \code{mu} and \code{sigma} respond to both scores, and the level of
-\code{nu} responds to its own. A cross loading rides the identity link,
+loadings are diagonal. The argument \code{p_cross} of a term names the other
+filtered parameters whose scores its level loads as well, with the number
+of lags of each: in
+\code{y ~ gas(p = 1, q = 1, p_cross = c(sigma = 1)) | sigma ~ gas(p = 1, q = 1)}
+the level of \code{mu} responds to the score of \code{sigma} at lag one, and the
+level of \code{sigma} responds to its own score only, so the matrix of
+loadings at lag one is upper triangular. A lag that \code{p_cross} leaves out
+is a loading restricted to zero, and the number of lags of a partner may
+exceed the term's own \code{p}. The parameter named in \code{p_cross} must carry a
+\code{gas()} term of its own. A cross loading rides the identity link,
 because its sign is free. For a gaussian, the loading of the score of the
 mean in the level of the log-scale is the asymmetric response of the
 volatility to the sign of a surprise, which is the term in

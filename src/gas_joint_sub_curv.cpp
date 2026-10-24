@@ -106,12 +106,15 @@ struct SVal {
 };
 
 // a member of the joint filter: the orders, the partners and the values of the
-// slots omega, kappa_1..p, pacf_1..q and then the cross loadings, the loading
-// of partner j (0-based) at lag i (1-based) at the slot 1 + p + q + j + np (i - 1)
+// slots omega, kappa_1..p, pacf_1..q and then the cross loadings, one slot per
+// pair h (0-based) at 1 + p + q + h: the score of the filtered parameter
+// xpar[h] (1-based position among the members) at lag xlag[h] (1-based, which
+// may exceed p)
 struct SMember {
     int p = 0, q = 0;
     std::vector<int> partners;       // 1-based positions among the members
-    std::vector<SVal> val;           // 1 + p + q + np p
+    std::vector<int> xpar, xlag;     // the partner and the lag of each pair
+    std::vector<SVal> val;           // 1 + p + q + nx
     std::vector<char> developed;     // the same slots
     std::vector<char> lin;           // the same slots: a cross loading with no
                                      // curvature at any row (value and
@@ -222,10 +225,24 @@ void parse_inputs(SInputs& I, List seed, List mem, List groups,
                 stop("a partner of a filtered parameter is out of range.");
             }
         }
+        M.xpar = as<std::vector<int> >(e["xpar"]);
+        M.xlag = as<std::vector<int> >(e["xlag"]);
+        const std::size_t nx = M.xpar.size();
+        if (M.xlag.size() != nx) {
+            stop("the partners and the lags of the cross loadings must have the same length.");
+        }
+        int maxlag = 0;
+        for (std::size_t h = 0; h < nx; ++h) {
+            if (M.xpar[h] < 1 || M.xpar[h] > K) {
+                stop("a partner of a cross loading is out of range.");
+            }
+            if (M.xlag[h] < 1) stop("the lag of a cross loading must be at least one.");
+            maxlag = std::max(maxlag, M.xlag[h]);
+        }
         LogicalVector dev = e["developed"];
         List vl = e["vals"];
         const int nb = 1 + M.p + M.q;
-        const int ns = nb + static_cast<int>(np) * M.p;
+        const int ns = nb + static_cast<int>(nx);
         if (dev.size() != ns || vl.size() != ns) {
             stop("a term must give one value per base parameter and per cross loading.");
         }
@@ -250,7 +267,7 @@ void parse_inputs(SInputs& I, List seed, List mem, List groups,
         for (int j = 0; j < M.q; ++j) {
             if (M.developed[1 + M.p + j]) M.varying_b = true;
         }
-        I.L = std::max(I.L, std::max(M.p, M.q));
+        I.L = std::max(I.L, std::max(std::max(M.p, M.q), maxlag));
     }
     const int ng = groups.size();
     I.grp.resize(ng);
@@ -875,31 +892,29 @@ List gas_joint_sub_curv_cpp(List seed, List mem, List groups, IntegerVector fp,
                 double* J2 = &fd2[cur * mm];
                 std::copy(cj[k][0].d1.begin(), cj[k][0].d1.end(), J1);
                 std::copy(cj[k][0].d2.begin(), cj[k][0].d2.end(), J2);
-                const int np = static_cast<int>(M.partners.size());
                 for (int i = 1; i <= M.p; ++i) {
                     if (t - i < 0) continue;
                     const int ls = (t - i) % D;
                     // the score loading times the parameter's own lagged score
-                    {
-                        const std::size_t lag = static_cast<std::size_t>(k + K * ls);
-                        const C2& a = cj[k][i];
-                        prod_add(mk, a.v, a.d1.data(), a.d2.data(),
-                                 uv[lag], &ud1[lag * mk], &ud2[lag * mm],
-                                 &Jv, J1, J2);
-                    }
-                    // the cross loadings times the partners' lagged scores,
-                    // each read at this row
-                    for (int j = 0; j < np; ++j) {
-                        const int l = M.partners[j] - 1;
-                        const std::size_t lag = static_cast<std::size_t>(l + K * ls);
-                        const std::size_t sx = static_cast<std::size_t>(1 + M.p + M.q) +
-                            static_cast<std::size_t>(j) + static_cast<std::size_t>(np) * (i - 1);
-                        const C2& a = cj[k][sx];
-                        prod_add(mk, a.v, a.d1.data(),
-                                 M.lin[sx] ? nullptr : a.d2.data(),
-                                 uv[lag], &ud1[lag * mk], &ud2[lag * mm],
-                                 &Jv, J1, J2);
-                    }
+                    const std::size_t lag = static_cast<std::size_t>(k + K * ls);
+                    const C2& a = cj[k][i];
+                    prod_add(mk, a.v, a.d1.data(), a.d2.data(),
+                             uv[lag], &ud1[lag * mk], &ud2[lag * mm],
+                             &Jv, J1, J2);
+                }
+                // the cross loadings times the partners' lagged scores, one
+                // pair at a time with its own lag, each read at this row
+                for (std::size_t h = 0; h < M.xpar.size(); ++h) {
+                    const int lg = M.xlag[h];
+                    if (t - lg < 0) continue;
+                    const int l = M.xpar[h] - 1;
+                    const std::size_t lag = static_cast<std::size_t>(l + K * ((t - lg) % D));
+                    const std::size_t sx = static_cast<std::size_t>(1 + M.p + M.q) + h;
+                    const C2& a = cj[k][sx];
+                    prod_add(mk, a.v, a.d1.data(),
+                             M.lin[sx] ? nullptr : a.d2.data(),
+                             uv[lag], &ud1[lag * mk], &ud2[lag * mm],
+                             &Jv, J1, J2);
                 }
                 for (int j = 1; j <= M.q; ++j) {
                     double lv;
@@ -1531,33 +1546,31 @@ List joint_sub_run(int nd, List seed, List mem, List groups, IntegerVector fp,
                 std::copy(CJ[0].d2.begin(), CJ[0].d2.end(), J2);
                 std::copy(CJ[0].d3.begin(), CJ[0].d3.end(), J3);
                 if (nd == 2) std::copy(CJ[0].d4.begin(), CJ[0].d4.end(), J4);
-                const int np = static_cast<int>(M.partners.size());
                 for (int i = 1; i <= M.p; ++i) {
                     if (t - i < 0) continue;
                     const int ls = (t - i) % D;
                     // the score loading times the parameter's own lagged score
-                    {
-                        const std::size_t lag = static_cast<std::size_t>(k + K * ls);
-                        const JetV A = CJ[i].view(0);
-                        const JetV B = Uu.view(lag);
-                        prod_add(m, A.v, A.d1, A.d2, B.v, B.d1, B.d2, &Jv, J1, J2);
-                        prod_add3(m, nd, A, B, J3);
-                        if (nd == 2) prod_add4(m, A, B, J4);
-                    }
-                    // the cross loadings times the partners' lagged scores,
-                    // each with its jets at this row; one without curvature
-                    // has a value and a gradient only
-                    for (int j = 0; j < np; ++j) {
-                        const int l = M.partners[j] - 1;
-                        const std::size_t lag = static_cast<std::size_t>(l + K * ls);
-                        const std::size_t sx = static_cast<std::size_t>(1 + M.p + M.q) +
-                            static_cast<std::size_t>(j) + static_cast<std::size_t>(np) * (i - 1);
-                        const JetV A = M.lin[sx] ? CJ[sx].lite_view() : CJ[sx].view(0);
-                        const JetV B = Uu.view(lag);
-                        prod_add(m, A.v, A.d1, A.d2, B.v, B.d1, B.d2, &Jv, J1, J2);
-                        prod_add3(m, nd, A, B, J3);
-                        if (nd == 2) prod_add4(m, A, B, J4);
-                    }
+                    const std::size_t lag = static_cast<std::size_t>(k + K * ls);
+                    const JetV A = CJ[i].view(0);
+                    const JetV B = Uu.view(lag);
+                    prod_add(m, A.v, A.d1, A.d2, B.v, B.d1, B.d2, &Jv, J1, J2);
+                    prod_add3(m, nd, A, B, J3);
+                    if (nd == 2) prod_add4(m, A, B, J4);
+                }
+                // the cross loadings times the partners' lagged scores, one
+                // pair at a time with its own lag, each with its jets at this
+                // row; one without curvature has a value and a gradient only
+                for (std::size_t h = 0; h < M.xpar.size(); ++h) {
+                    const int lg = M.xlag[h];
+                    if (t - lg < 0) continue;
+                    const int l = M.xpar[h] - 1;
+                    const std::size_t lag = static_cast<std::size_t>(l + K * ((t - lg) % D));
+                    const std::size_t sx = static_cast<std::size_t>(1 + M.p + M.q) + h;
+                    const JetV A = M.lin[sx] ? CJ[sx].lite_view() : CJ[sx].view(0);
+                    const JetV B = Uu.view(lag);
+                    prod_add(m, A.v, A.d1, A.d2, B.v, B.d1, B.d2, &Jv, J1, J2);
+                    prod_add3(m, nd, A, B, J3);
+                    if (nd == 2) prod_add4(m, A, B, J4);
                 }
                 for (int j = 1; j <= M.q; ++j) {
                     const JetV A = CJ[M.p + j].view(0);

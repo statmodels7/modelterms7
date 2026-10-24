@@ -34,9 +34,9 @@ namespace {
 struct JCoef {
     int p = 0, q = 0, col_omega = 0;
     double omega = 0.0, f0 = 0.0;
-    std::vector<double> a, b, db, df0, cross;   // db: q x nown, cross: np x p
-    std::vector<int> own, col_a, partners, col_cross;
-    int nown = 0;
+    std::vector<double> a, b, db, df0, cross;   // db: q x nown, cross: one per pair
+    std::vector<int> own, col_a, partners, col_cross, xpar, xlag;
+    int nown = 0, nx = 0;   // nx: the number of cross pairs (partner, lag)
 };
 
 std::vector<JCoef> joint_coefs(const List& cf) {
@@ -58,10 +58,16 @@ std::vector<JCoef> joint_coefs(const List& cf) {
         J.nown = J.own.size();
         NumericMatrix db = as<NumericMatrix>(c["db"]);
         J.db.assign(db.begin(), db.end());
-        NumericMatrix cr = as<NumericMatrix>(c["cross"]);
-        J.cross.assign(cr.begin(), cr.end());
-        IntegerMatrix cc = as<IntegerMatrix>(c["col_cross"]);
-        J.col_cross.assign(cc.begin(), cc.end());
+        J.cross = as<std::vector<double> >(c["cross"]);
+        J.col_cross = as<std::vector<int> >(c["col_cross"]);
+        J.xpar = as<std::vector<int> >(c["xpar"]);
+        J.xlag = as<std::vector<int> >(c["xlag"]);
+        J.nx = J.xpar.size();
+        if (static_cast<int>(J.xlag.size()) != J.nx ||
+            static_cast<int>(J.cross.size()) != J.nx ||
+            static_cast<int>(J.col_cross.size()) != J.nx) {
+            stop("the cross loadings, their columns, partners and lags must have one entry per pair.");
+        }
     }
     return out;
 }
@@ -123,16 +129,19 @@ SEXP gas_joint_filter_cpp(NumericMatrix eta, List cf, int M, List order,
                     const double* sd = &Sd[lag * M];
                     for (int m = 0; m < M; ++m) Ft[m] += ai * sd[m];
                     Ft[J.col_a[i - 1] - 1] += u[lag];
-                    const int npk = J.partners.size();
-                    for (int j = 0; j < npk; ++j) {
-                        const int l = J.partners[j] - 1;
-                        const double cji = J.cross[j + npk * (i - 1)];
-                        const std::size_t ll = static_cast<std::size_t>(l + K * (t - i));
-                        ft += cji * u[ll];
-                        const double* sdl = &Sd[ll * M];
-                        for (int m = 0; m < M; ++m) Ft[m] += cji * sdl[m];
-                        Ft[J.col_cross[j + npk * (i - 1)] - 1] += u[ll];
-                    }
+                }
+                // the cross loadings: pair h loads the score of partner
+                // xpar[h] at lag xlag[h], which may exceed p
+                for (int h = 0; h < J.nx; ++h) {
+                    const int xl = J.xlag[h];
+                    if (t - xl < 0) continue;
+                    const int l = J.xpar[h] - 1;
+                    const double ch = J.cross[h];
+                    const std::size_t ll = static_cast<std::size_t>(l + K * (t - xl));
+                    ft += ch * u[ll];
+                    const double* sdl = &Sd[ll * M];
+                    for (int m = 0; m < M; ++m) Ft[m] += ch * sdl[m];
+                    Ft[J.col_cross[h] - 1] += u[ll];
                 }
                 for (int j = 1; j <= J.q; ++j) {
                     double fl;
@@ -235,14 +244,14 @@ List gas_joint_adjoint_cpp(NumericVector curv, NumericMatrix g, List cf,
                 for (int j = 1; j <= J.q; ++j) {
                     if (t - j >= 0) fb[k + K * (t - j)] += J.b[j - 1] * fbk;
                 }
-                const int npk = J.partners.size();
                 for (int i = 1; i <= J.p; ++i) {
                     if (t - i < 0) continue;
                     ub[k + K * (t - i)] += J.a[i - 1] * fbk;
-                    for (int j = 0; j < npk; ++j) {
-                        const int l = J.partners[j] - 1;
-                        ub[l + K * (t - i)] += J.cross[j + npk * (i - 1)] * fbk;
-                    }
+                }
+                for (int h = 0; h < J.nx; ++h) {
+                    const int xl = J.xlag[h];
+                    if (t - xl < 0) continue;
+                    ub[(J.xpar[h] - 1) + K * (t - xl)] += J.cross[h] * fbk;
                 }
             }
         }

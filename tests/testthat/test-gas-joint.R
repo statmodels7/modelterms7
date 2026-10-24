@@ -18,12 +18,14 @@ gj_curv <- function(y) function(e, i) {
   matrix(c(-1 / s2, -2 * r / s2, -2 * r / s2, -2 * r^2 / s2), 2, 2)
 }
 
-gj_terms <- function(p, q, cross = NULL, by = FALSE, data = dj) {
-  mk <- function() {
-    if (by) gas(p = p, q = q, by = g, time = t, cross = cross)
-    else gas(p = p, q = q, time = t, cross = cross)
+# with sym, each level loads the other's score at the lags 1..p
+gj_terms <- function(p, q, sym = FALSE, by = FALSE, data = dj) {
+  mk <- function(other) {
+    pc <- if (sym) stats::setNames(p, other)
+    if (by) gas(p = p, q = q, by = g, time = t, p_cross = pc)
+    else gas(p = p, q = q, time = t, p_cross = pc)
   }
-  list(mu = term_build(mk(), data), sigma = term_build(mk(), data))
+  list(mu = term_build(mk("sigma"), data), sigma = term_build(mk("mu"), data))
 }
 
 gj_psi <- function(jt, seed = 1) {
@@ -69,7 +71,7 @@ test_that("one term filtered jointly is the scalar filter", {
 })
 
 test_that("the joint filter reproduces the recursion written out by hand", {
-  jt <- gas_joint(gj_terms(1, 1, cross = "a"))
+  jt <- gas_joint(gj_terms(1, 1, sym = TRUE))
   psi <- gj_psi(jt, 3)
   eta0 <- cbind(rep(0.8, nj), rep(0.3, nj))
   out <- term_filter(jt, eta0, dj$y, gj_score(dj$y), gj_curv(dj$y), psi)
@@ -92,9 +94,9 @@ test_that("the joint filter reproduces the recursion written out by hand", {
 })
 
 test_that("the joint Jacobian is the derivative of the filter", {
-  for (cfg in list(list(1, 1, NULL, FALSE), list(1, 1, "a", FALSE),
-                   list(2, 2, "a", TRUE), list(2, 1, NULL, TRUE))) {
-    jt <- gas_joint(gj_terms(cfg[[1]], cfg[[2]], cross = cfg[[3]],
+  for (cfg in list(list(1, 1, FALSE, FALSE), list(1, 1, TRUE, FALSE),
+                   list(2, 2, TRUE, TRUE), list(2, 1, FALSE, TRUE))) {
+    jt <- gas_joint(gj_terms(cfg[[1]], cfg[[2]], sym = cfg[[3]],
                              by = cfg[[4]]))
     psi <- gj_psi(jt, 5)
     eta0 <- cbind(0.9 + 0.1 * cos(seq_len(nj)), rep(0.35, nj))
@@ -102,7 +104,7 @@ test_that("the joint Jacobian is the derivative of the filter", {
                                     gj_curv(dj$y), ps)$eta
     got <- term_filter(jt, eta0, dj$y, gj_score(dj$y), gj_curv(dj$y), psi)
     nm <- term_params(jt)
-    lab <- sprintf("p = %d, q = %d, cross = %s, by = %s", cfg[[1]], cfg[[2]],
+    lab <- sprintf("p = %d, q = %d, sym = %s, by = %s", cfg[[1]], cfg[[2]],
                    format(cfg[[3]]), cfg[[4]])
     h <- 1e-6
     for (k in jt@params) {
@@ -122,7 +124,7 @@ test_that("the joint Jacobian is the derivative of the filter", {
 })
 
 test_that("the joint reverse pass is the derivative in the static predictors and the scores", {
-  jt <- gas_joint(gj_terms(2, 1, cross = "a", by = TRUE))
+  jt <- gas_joint(gj_terms(2, 1, sym = TRUE, by = TRUE))
   psi <- gj_psi(jt, 7)
   eta0 <- cbind(0.9 + 0.1 * cos(seq_len(nj)), rep(0.35, nj))
   set.seed(4)
@@ -155,9 +157,11 @@ test_that("the joint reverse pass is the derivative in the static predictors and
   }
 })
 
-test_that("cross labels add loadings to the terms of a group only", {
-  tm <- list(mu = term_build(gas(p = 2, q = 1, time = t, cross = "a"), dj),
-             sigma = term_build(gas(p = 1, q = 1, time = t, cross = "a"), dj),
+test_that("p_cross adds the declared loadings to its term only", {
+  tm <- list(mu = term_build(gas(p = 2, q = 1, time = t,
+                                 p_cross = c(sigma = 2)), dj),
+             sigma = term_build(gas(p = 1, q = 1, time = t,
+                                    p_cross = c(mu = 1)), dj),
              nu = term_build(gas(p = 1, q = 1, time = t), dj))
   jt <- gas_joint(tm)
   expect_identical(term_params(jt@terms$mu),
@@ -183,11 +187,28 @@ test_that("gas_joint rejects terms that cannot be filtered together", {
   expect_silent(gas_joint(list(
     mu = term_build(gas(p = 1, q = 1, time = t, scaling = 0.3), dj))))
   expect_error(gas_joint(list(mu = a, sigma = term_build(
-    gas(p = 1, q = 1, time = t, cross = "a"), dj))), "one gas\\(\\) term only")
+    gas(p = 1, q = 1, time = t, p_cross = c(nu = 1)), dj))),
+    "'nu' has no gas\\(\\) term")
+  expect_error(gas_joint(list(mu = a, sigma = term_build(
+    gas(p = 1, q = 1, time = t, p_cross = c(sigma = 1)), dj))),
+    "its own parameter")
+  # a count of zero declares nothing, so its parameter needs no term
+  expect_identical(term_params(gas_joint(list(mu = term_build(
+    gas(p = 1, q = 1, time = t, p_cross = c(nu = 0)), dj)))),
+    c("mu.omega", "mu.kappa1", "mu.pacf1"))
   expect_error(gas_joint(list(mu = a, sigma = term_build(
     gas(p = 1, q = 1, by = g, time = t), dj))), "walk different series")
   expect_error(gas_joint(list(mu = a, mu = a)), "distinct parameters")
-  expect_error(gas(cross = c("a", "b")), "single non-empty")
+  expect_error(gas(p_cross = c(1, 2)), "named vector of integers")
+  expect_error(gas(p_cross = c(sigma = -1)), "named vector of integers")
+  expect_error(gas(p_cross = c(sigma = 1.5)), "named vector of integers")
+  expect_error(gas(p_cross = c(sigma = 1, sigma = 2)),
+               "named vector of integers")
+  expect_error(gas(p = 1, q = 1, p_cross = c(sigma = 1), kappa2_sigma ~ 1),
+               "does not\\s+declare")
+  expect_error(gas(p = 1, q = 1, kappa1_sigma ~ 1), "does not\\s+declare")
+  expect_error(gas(p = 1, q = 1, links = list(
+    kappa1_sigma = linkfunctions7::log_link())), "does not\\s+declare")
 })
 
 test_that("the joint continuation is the filter with the scores at zero", {
@@ -195,12 +216,16 @@ test_that("the joint continuation is the filter with the scores at zero", {
   nh <- 6
   dfull <- data.frame(t = seq_len(n0 + nh), y = c(dj$y[1:n0], rep(0, nh)),
                       g = "a")
-  for (cfg in list(list(1, 1, NULL), list(2, 2, "a"))) {
+  # no cross loadings; both directions at p; mu alone loading sigma at
+  # lags beyond its own p
+  for (cfg in list(list(1, 1, NULL, NULL),
+                   list(2, 2, c(sigma = 2), c(mu = 2)),
+                   list(1, 1, c(sigma = 3), NULL))) {
     mk <- function(dat) gas_joint(list(
       mu = term_build(gas(p = cfg[[1]], q = cfg[[2]], time = t,
-                          cross = cfg[[3]]), dat),
+                          p_cross = cfg[[3]]), dat),
       sigma = term_build(gas(p = cfg[[1]], q = cfg[[2]], time = t,
-                             cross = cfg[[3]]), dat)))
+                             p_cross = cfg[[4]]), dat)))
     jt <- mk(dfull[1:n0, ])
     jf <- mk(dfull)
     psi <- gj_psi(jt, 11)
@@ -253,7 +278,7 @@ test_that("the joint continuation is the filter with the scores at zero", {
 })
 
 test_that("a joint filter is a structural term with prefixed parameters", {
-  jt <- gas_joint(gj_terms(1, 2, cross = "a"))
+  jt <- gas_joint(gj_terms(1, 2, sym = TRUE))
   expect_true(S7::S7_inherits(jt, structural_term))
   nm <- term_params(jt)
   expect_identical(nm, c("mu.omega", "mu.kappa1", "mu.pacf1", "mu.pacf2",
@@ -282,8 +307,9 @@ test_that("a joint filter is a structural term with prefixed parameters", {
 
 test_that("a developed member keeps its layout and its cross loadings in the joint vector", {
   jt <- gas_joint(list(
-    mu = term_build(gas(p = 1, q = 1, omega ~ g, time = t, cross = "a"), dj),
-    sigma = term_build(gas(p = 1, q = 1, time = t, cross = "a"), dj)))
+    mu = term_build(gas(p = 1, q = 1, omega ~ g, time = t,
+                        p_cross = c(sigma = 1)), dj),
+    sigma = term_build(gas(p = 1, q = 1, time = t, p_cross = c(mu = 1)), dj)))
   nm <- term_params(jt)
   expect_identical(nm[seq_len(5L)], c("mu.omega.(Intercept)", "mu.omega.gb",
                                       "mu.kappa1", "mu.pacf1",

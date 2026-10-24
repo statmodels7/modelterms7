@@ -88,15 +88,15 @@ score of that parameter, which is evaluated at the current values of all
 the others. Where two parameters both carry a level, each score depends on
 the other level, so the two recursions are one: with \eqn{G} the filtered
 parameters,
-\deqn{f_{k,t} = \omega_k + \sum_{i=1}^{p_k} \Big(\kappa_{k,i}\, u_{k,t-i}
-  + \sum_{l \in C_k} \kappa_{k,i,l}\, u_{l,t-i}\Big)
+\deqn{f_{k,t} = \omega_k + \sum_{i=1}^{p_k} \kappa_{k,i}\, u_{k,t-i}
+  + \sum_{l \in C_k} \sum_{i=1}^{p_{kl}} \kappa_{k,i,l}\, u_{l,t-i}
   + \sum_{j=1}^{q_k} \xi_{k,j} f_{k,t-j}, \qquad k \in G,}
 where \eqn{u_t} is the vector of driving scores of the parameters in
-\eqn{G}, read at the predictor of every equation at time \eqn{t}, and
-\eqn{C_k} is the set of the other parameters of the group of \code{cross} that
-contains \eqn{k} (empty when the term carries no label). The persistence
-of each level is its own, so the autoregressive part is stationary when
-each equation's is.
+\eqn{G}, read at the predictor of every equation at time \eqn{t},
+\eqn{C_k} is the set of the parameters to which the \code{p_cross} of the term
+of \eqn{k} gives a positive count, and \eqn{p_{kl}} is that count. The
+persistence of each level is its own, so the autoregressive part is
+stationary when each equation's is.
 
 The driving vector is the caller's: a fitting layer supplies
 \eqn{u_t = \mathcal{I}_{GG,t}^{-d}\,\partial\ell_t/\partial\eta_{G,t}} with

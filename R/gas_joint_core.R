@@ -318,12 +318,14 @@ NULL
         for (i in seq_len(c_k$p)) {
           if (t - i < 1L) next
           J <- .gas_jsum(J, .gas_jprod(ch$a[[i]], uj[[k]][[t - i]], dirs))
-          for (j in seq_along(c_k$partners)) {
-            l <- c_k$partners[j]
-            cj <- .gas_jcoord(c_k$cross[j, i], zoff + c_k$col_cross[j, i],
-                              m, nd)
-            J <- .gas_jsum(J, .gas_jprod(cj, uj[[l]][[t - i]], dirs))
-          }
+        }
+        # the cross loadings, one pair (partner, lag) at a time; a lag may
+        # exceed p
+        for (h in seq_along(c_k$xpar)) {
+          if (t - c_k$xlag[h] < 1L) next
+          cj <- .gas_jcoord(c_k$cross[h], zoff + c_k$col_cross[h], m, nd)
+          J <- .gas_jsum(J, .gas_jprod(cj, uj[[c_k$xpar[h]]][[t - c_k$xlag[h]]],
+                                       dirs))
         }
         for (j in seq_len(c_k$q)) {
           lagj <- if (t - j >= 1L) fj[[k]][[t - j]] else ch$f0

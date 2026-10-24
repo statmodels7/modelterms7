@@ -20,7 +20,7 @@ GasTerm(
   links = list(),
   submodels = list(),
   scaling = numeric(0),
-  cross = character(0),
+  p_cross = integer(0),
   cross_with = character(0)
 )
 }
@@ -79,13 +79,13 @@ developed.}
 \eqn{\mathcal{I}^{-d}} that multiplies the score; zero for the score as
 it is.}
 
-\item{cross}{The label of the group of terms whose levels load each
-other's scores, or an empty vector for a term that loads its own score
-only.}
+\item{p_cross}{A named integer vector with the number of lags of the
+score of each other filtered parameter that the level of this term
+loads, or an empty vector for a term that loads its own score only.}
 
 \item{cross_with}{The distribution parameters whose scores the level of
 this term loads besides its own, in the order of their loadings. It is
-empty until \code{\link[=gas_joint]{gas_joint()}} fills it from the labels of \code{cross}.}
+empty until \code{\link[=gas_joint]{gas_joint()}} fills it from \code{p_cross}.}
 }
 \value{
 An S7 object of class \code{GasTerm}, inheriting from

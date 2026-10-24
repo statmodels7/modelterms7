@@ -114,18 +114,18 @@ NULL
                             fourth = nd >= 2L)
     acts[[k]] <- .gas_sub_active(tm, vals)
     # the values of the recursion are the base parameters and then the cross
-    # loadings, the latter at the slot j + np (i - 1) (partner j, lag i), while
-    # the layout lists them partner by partner
+    # loadings, one slot per pair (partner, lag) in the order of
+    # .gas_cross_params(), which is also the layout's order
     partners <- term@partners[[k]]
-    np <- length(partners)
+    xp <- .gas_cross_pairs(tm)
+    xpar <- as.integer(match(xp$partner, term@params))
+    xlag <- as.integer(xp$lag)
     cn <- .gas_cross_params(tm)
-    if (length(cn) != np * p) {
+    if (length(cn) != length(xpar)) {
       stop("the cross loadings of a term do not agree with its partners.",
            call. = FALSE)
     }
-    xn <- cn[as.vector(outer(seq_len(np), seq_len(p),
-                             function(j, i) (j - 1L) * p + i))]
-    slots[[k]] <- c(base, xn)
+    slots[[k]] <- c(base, cn)
     vl <- lapply(slots[[k]], function(j) {
       vj <- vals[[j]]
       Z <- if (isTRUE(vj$developed)) vj$Z else matrix(1, n, 1L)
@@ -137,6 +137,7 @@ NULL
            k4 = if (nd >= 2L) as.numeric(vj$k4) else numeric(0))
     })
     mem[[k]] <- list(p = p, q = q, partners = as.integer(partners),
+                     xpar = xpar, xlag = xlag,
                      developed = vapply(slots[[k]], function(j)
                        isTRUE(vals[[j]]$developed), logical(1)),
                      vals = vl)

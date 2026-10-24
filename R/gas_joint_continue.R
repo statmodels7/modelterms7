@@ -124,14 +124,15 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
             dft <- dft + sc[t - i, k] * lift(c_k$dA[[i]][r, ]) +
               c_k$A[r, i] * dS[[k]][t - i, ]
           }
-          for (j in seq_along(c_k$partners)) {
-            l <- c_k$partners[j]
-            h <- (j - 1L) * c_k$p + i
-            ft <- ft + c_k$cross[[h]][r] * sc[t - i, l]
-            if (dcoef) {
-              dft <- dft + sc[t - i, l] * lift(c_k$dcross[[h]][r, ]) +
-                c_k$cross[[h]][r] * dS[[l]][t - i, ]
-            }
+        }
+        for (x in seq_along(c_k$xlag)) {
+          i <- c_k$xlag[x]
+          if (t - i < 1L || t - i > n0) next
+          l <- c_k$xpar[x]
+          ft <- ft + c_k$cross[[x]][r] * sc[t - i, l]
+          if (dcoef) {
+            dft <- dft + sc[t - i, l] * lift(c_k$dcross[[x]][r, ]) +
+              c_k$cross[[x]][r] * dS[[l]][t - i, ]
           }
         }
         for (j in seq_len(c_k$q)) {
@@ -215,6 +216,7 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
     # the cross loadings at every new row, partner by partner and lag by
     # lag as .gas_cross_params() orders them, with their derivative rows
     pk <- term@partners[[k]]
+    xp <- .gas_cross_pairs(tm)
     xv <- vector("list", length(xn))
     xd <- vector("list", length(xn))
     developed <- length(tm@blueprint) && !is.null(tm@blueprint$sub)
@@ -230,8 +232,9 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
       }
     }
     out[[k]] <- list(p = p, q = q, om = om, A = A, B = B, dom = dom,
-                     dA = dA, dB = dB, partners = pk, cross = xv,
-                     dcross = xd)
+                     dA = dA, dB = dB, partners = pk,
+                     xpar = match(xp$partner, term@params), xlag = xp$lag,
+                     cross = xv, dcross = xd)
   }
   out
 }

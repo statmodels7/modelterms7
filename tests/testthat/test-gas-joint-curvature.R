@@ -61,19 +61,25 @@ Xc <- cbind(1, as.numeric(scale(seq_len(nc))) * 0.3)
 # 2 = log sigma), mu carrying the columns of Xc and log sigma an intercept;
 # the unknowns are those coefficients followed by the filter's parameters on
 # their unconstrained scale
+# cross: NULL (no cross loadings), "sym" (each level loads the other score at
+# the lags 1..p) or "upper" (mu loads sigma's score at the lags 1..p + 2,
+# beyond its own p, and sigma loads nothing)
 gjc_model <- function(fp, p, q, cross = NULL, by = FALSE, dev = FALSE,
                       devx = NULL) {
+  oth <- c(mu = "sigma", sigma = "mu")
   mk <- function(k) {
+    cross <- if (identical(cross, "sym")) stats::setNames(p, oth[[k]])
+             else if (identical(cross, "upper") && k == "mu") c(sigma = p + 2)
     # with devx, a subformula on mu's cross loading (a panel with cross)
     if (!is.null(devx) && k == "mu") {
-      return(gas(p = p, q = q, devx, by = g, time = t, cross = cross))
+      return(gas(p = p, q = q, devx, by = g, time = t, p_cross = cross))
     }
     # with dev, the loading of mu is developed over x
     if (dev && k == "mu") {
-      if (by) gas(p = p, q = q, kappa1 ~ x, by = g, time = t, cross = cross)
-      else gas(p = p, q = q, kappa1 ~ x, time = t, cross = cross)
-    } else if (by) gas(p = p, q = q, by = g, time = t, cross = cross)
-    else gas(p = p, q = q, time = t, cross = cross)
+      if (by) gas(p = p, q = q, kappa1 ~ x, by = g, time = t, p_cross = cross)
+      else gas(p = p, q = q, kappa1 ~ x, time = t, p_cross = cross)
+    } else if (by) gas(p = p, q = q, by = g, time = t, p_cross = cross)
+    else gas(p = p, q = q, time = t, p_cross = cross)
   }
   nmp <- c("mu", "sigma")[fp]
   jt <- gas_joint(stats::setNames(lapply(nmp, function(k)
@@ -210,7 +216,7 @@ test_that("the joint core at K = 1 is the scalar core", {
 })
 
 test_that("the joint core's Jacobian is the derivative of the predictors", {
-  md <- gjc_model(1:2, 1, 1, cross = "a")
+  md <- gjc_model(1:2, 1, 1, cross = "sym")
   u0 <- gjc_u0(md)
   got <- md$core(u0, matrix(0, nc, 2))
   h <- 1e-6
@@ -229,7 +235,8 @@ test_that("the joint curvature is the derivative of the joint Jacobian", {
   # one filtered equation beside a static one, both filtered, and a group of
   # cross loadings over a panel
   for (cfg in list(list(1L, 1, 1, NULL, FALSE), list(2L, 2, 1, NULL, FALSE),
-                   list(1:2, 1, 1, NULL, FALSE), list(1:2, 2, 2, "a", TRUE))) {
+                   list(1:2, 1, 1, NULL, FALSE), list(1:2, 2, 2, "sym", TRUE),
+                   list(1:2, 1, 1, "upper", TRUE))) {
     md <- gjc_model(cfg[[1]], cfg[[2]], cfg[[3]], cross = cfg[[4]],
                     by = cfg[[5]])
     K <- length(cfg[[1]])
@@ -253,8 +260,10 @@ test_that("the joint curvature is the derivative of the joint Jacobian", {
 })
 
 test_that("the joint third and fourth orders are the derivatives of the order below", {
-  for (cfg in list(list(1L, 1, 1, NULL, FALSE), list(1:2, 1, 1, "a", FALSE),
-                   list(1:2, 2, 2, "a", TRUE))) {
+  for (cfg in list(list(1L, 1, 1, NULL, FALSE), list(1:2, 1, 1, "sym", FALSE),
+                   list(1:2, 2, 2, "sym", TRUE),
+                   list(1:2, 1, 1, "upper", TRUE),
+                   list(1:2, 2, 1, "upper", FALSE))) {
     md <- gjc_model(cfg[[1]], cfg[[2]], cfg[[3]], cross = cfg[[4]],
                     by = cfg[[5]])
     K <- length(cfg[[1]])
@@ -295,8 +304,9 @@ test_that("the compiled joint curvature is the R route's", {
   # gas_joint_curv_cpp() against the R recursion it replaces at the second
   # order, over the lags, cross loadings and a panel of groups
   for (cfg in list(list(fp = 1:2, p = 1, q = 1, cross = NULL, by = FALSE),
-                   list(fp = 1:2, p = 2, q = 1, cross = "a", by = FALSE),
-                   list(fp = 1:2, p = 1, q = 2, cross = "a", by = TRUE),
+                   list(fp = 1:2, p = 2, q = 1, cross = "sym", by = FALSE),
+                   list(fp = 1:2, p = 1, q = 2, cross = "sym", by = TRUE),
+                   list(fp = 1:2, p = 1, q = 1, cross = "upper", by = TRUE),
                    list(fp = 1, p = 1, q = 1, cross = NULL, by = TRUE))) {
     md <- gjc_model(cfg$fp, cfg$p, cfg$q, cross = cfg$cross, by = cfg$by)
     u0 <- gjc_u0(md)
@@ -321,8 +331,9 @@ test_that("the compiled joint third and fourth orders are the R route's", {
   # gas_joint_third_cpp() and gas_joint_fourth_cpp() against the R recursion
   # they replace, over the lags, cross loadings and a panel of groups
   for (cfg in list(list(fp = 1:2, p = 1, q = 1, cross = NULL, by = FALSE),
-                   list(fp = 1:2, p = 2, q = 1, cross = "a", by = FALSE),
-                   list(fp = 1:2, p = 1, q = 2, cross = "a", by = TRUE),
+                   list(fp = 1:2, p = 2, q = 1, cross = "sym", by = FALSE),
+                   list(fp = 1:2, p = 1, q = 2, cross = "sym", by = TRUE),
+                   list(fp = 1:2, p = 1, q = 1, cross = "upper", by = TRUE),
                    list(fp = 1, p = 1, q = 1, cross = NULL, by = TRUE))) {
     md <- gjc_model(cfg$fp, cfg$p, cfg$q, cross = cfg$cross, by = cfg$by)
     u0 <- gjc_u0(md, 3)
@@ -431,7 +442,7 @@ test_that("the joint core of one developed term is the term's own core", {
 })
 
 test_that("a developed joint core is the derivative of the order below", {
-  for (cfg in list(list(1:2, 1, 1, "a", FALSE), list(1:2, 2, 1, "a", TRUE))) {
+  for (cfg in list(list(1:2, 1, 1, "sym", FALSE), list(1:2, 2, 1, "sym", TRUE))) {
     md <- gjc_model(cfg[[1]], cfg[[2]], cfg[[3]], cross = cfg[[4]],
                     by = cfg[[5]], dev = TRUE)
     u0 <- gjc_u0(md, 3)
@@ -473,8 +484,8 @@ test_that("a developed joint core is the derivative of the order below", {
 })
 
 test_that("a cross loading developed by a subformula of one leaves the core unchanged", {
-  plain <- gjc_model(1:2, 1, 1, cross = "a", by = TRUE)
-  one <- gjc_model(1:2, 1, 1, cross = "a", by = TRUE,
+  plain <- gjc_model(1:2, 1, 1, cross = "sym", by = TRUE)
+  one <- gjc_model(1:2, 1, 1, cross = "sym", by = TRUE,
                    devx = kappa1_sigma ~ 1)
   expect_identical(length(term_params(one$jt)), length(term_params(plain$jt)))
   u0 <- gjc_u0(plain, 3)
@@ -502,36 +513,41 @@ test_that("a cross loading developed by a subformula of one leaves the core unch
 })
 
 test_that("a core with a developed cross loading is the derivative of the order below", {
-  md <- gjc_model(1:2, 1, 1, cross = "a", by = TRUE, devx = kappa1_sigma ~ x)
-  u0 <- gjc_u0(md, 3)
-  nm <- term_params(md$jt)
-  u0[md$mb + which(startsWith(nm, "mu.kappa1_sigma."))] <- c(0.03, 0.02)
-  set.seed(6)
-  gw <- matrix(stats::rnorm(nc * 2), nc, 2)
-  v <- stats::rnorm(md$m)
-  w <- stats::rnorm(md$m)
-  dir_of <- function(f, x, h) (f(u0 + h * x) - f(u0 - h * x)) / (2 * h)
-  rich <- function(f, x) (4 * dir_of(f, x, 1e-3) - dir_of(f, x, 2e-3)) / 3
-  g2 <- md$core(u0, gw)
-  g3 <- md$core(u0, gw, v)
-  expect_equal(g3$curvature, rich(function(u) md$core(u, gw)$curvature, v),
-               tolerance = 1e-6)
-  g4 <- md$core(u0, gw, list(v, w))
-  expect_equal(g4$curvature, rich(function(u) md$core(u, gw, v)$curvature, w),
-               tolerance = 1e-6)
-  for (k in 1:2) {
-    expect_equal(g3$dphi[[k]][[1L]],
-                 rich(function(u) md$core(u, gw)$jacobian[[k]], v),
+  # both directions at p, and mu alone loading sigma at the lags 1..3 with
+  # the third developed (a lag beyond its own p)
+  for (cfg in list(list("sym", kappa1_sigma ~ x, "mu.kappa1_sigma."),
+                   list("upper", kappa3_sigma ~ x, "mu.kappa3_sigma."))) {
+    md <- gjc_model(1:2, 1, 1, cross = cfg[[1]], by = TRUE, devx = cfg[[2]])
+    u0 <- gjc_u0(md, 3)
+    nm <- term_params(md$jt)
+    u0[md$mb + which(startsWith(nm, cfg[[3]]))] <- c(0.03, 0.02)
+    set.seed(6)
+    gw <- matrix(stats::rnorm(nc * 2), nc, 2)
+    v <- stats::rnorm(md$m)
+    w <- stats::rnorm(md$m)
+    dir_of <- function(f, x, h) (f(u0 + h * x) - f(u0 - h * x)) / (2 * h)
+    rich <- function(f, x) (4 * dir_of(f, x, 1e-3) - dir_of(f, x, 2e-3)) / 3
+    g2 <- md$core(u0, gw)
+    g3 <- md$core(u0, gw, v)
+    expect_equal(g3$curvature, rich(function(u) md$core(u, gw)$curvature, v),
                  tolerance = 1e-6)
-    expect_equal(g4$dpsi[[k]],
-                 rich(function(u) md$core(u, gw, v)$dphi[[k]][[1L]], w),
+    g4 <- md$core(u0, gw, list(v, w))
+    expect_equal(g4$curvature, rich(function(u) md$core(u, gw, v)$curvature, w),
                  tolerance = 1e-6)
-  }
-  for (j in md$mb + which(startsWith(nm, "mu.kappa1_sigma."))) {
-    ej <- numeric(md$m); ej[j] <- 1
-    d <- rich(function(u) md$preds(u), ej)
     for (k in 1:2) {
-      expect_equal(g2$jacobian[[k]][, j], d[, k], tolerance = 1e-6)
+      expect_equal(g3$dphi[[k]][[1L]],
+                   rich(function(u) md$core(u, gw)$jacobian[[k]], v),
+                   tolerance = 1e-6)
+      expect_equal(g4$dpsi[[k]],
+                   rich(function(u) md$core(u, gw, v)$dphi[[k]][[1L]], w),
+                   tolerance = 1e-6)
+    }
+    for (j in md$mb + which(startsWith(nm, cfg[[3]]))) {
+      ej <- numeric(md$m); ej[j] <- 1
+      d <- rich(function(u) md$preds(u), ej)
+      for (k in 1:2) {
+        expect_equal(g2$jacobian[[k]][, j], d[, k], tolerance = 1e-6)
+      }
     }
   }
 })

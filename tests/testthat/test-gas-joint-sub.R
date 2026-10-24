@@ -53,12 +53,12 @@ test_that("one developed term filtered jointly is the term's own submodel route"
 
 test_that("a subformula of one is the joint filter without it", {
   plain <- gas_joint(list(
-    mu = term_build(gas(p = 1, q = 1, by = g, time = t, cross = "a"), ds),
-    sigma = term_build(gas(p = 1, q = 1, by = g, time = t, cross = "a"), ds)))
+    mu = term_build(gas(p = 1, q = 1, by = g, time = t, p_cross = c(sigma = 1)), ds),
+    sigma = term_build(gas(p = 1, q = 1, by = g, time = t, p_cross = c(mu = 1)), ds)))
   dev <- gas_joint(list(
     mu = term_build(gas(p = 1, q = 1, kappa1 ~ 1, by = g, time = t,
-                        cross = "a"), ds),
-    sigma = term_build(gas(p = 1, q = 1, by = g, time = t, cross = "a"), ds)))
+                        p_cross = c(sigma = 1)), ds),
+    sigma = term_build(gas(p = 1, q = 1, by = g, time = t, p_cross = c(mu = 1)), ds)))
   pp <- gs_psi(term_params(plain))
   pd <- gs_psi(term_params(dev))
   eta0 <- matrix(c(rep(1, ns), rep(0.3, ns)), ns, 2)
@@ -80,8 +80,8 @@ test_that("a subformula of one is the joint filter without it", {
 test_that("the Jacobian of a developed joint filter is its derivative", {
   jt <- gas_joint(list(
     mu = term_build(gas(p = 1, q = 1, kappa1 ~ x, omega ~ g, by = g,
-                        time = t, cross = "a"), ds),
-    sigma = term_build(gas(p = 1, q = 1, by = g, time = t, cross = "a"), ds)))
+                        time = t, p_cross = c(sigma = 1)), ds),
+    sigma = term_build(gas(p = 1, q = 1, by = g, time = t, p_cross = c(mu = 1)), ds)))
   nm <- term_params(jt)
   psi <- unlist(gs_psi(nm))
   eta0 <- matrix(c(rep(1, ns), rep(0.3, ns)), ns, 2)
@@ -100,31 +100,36 @@ test_that("the Jacobian of a developed joint filter is its derivative", {
   }
 })
 
-test_that("a cross loading takes a subformula only inside its cross group", {
-  expect_error(gas(p = 1, q = 1, kappa1_mu ~ x), "cross loading")
-  expect_error(gas(p = 1, q = 1, cross = "a", kappa2_mu ~ x), "subformula names")
-  expect_silent(gas(p = 1, q = 1, cross = "a", kappa1_mu ~ x,
+test_that("a cross loading takes a subformula only where p_cross declares it", {
+  expect_error(gas(p = 1, q = 1, kappa1_mu ~ x), "does not\\s+declare")
+  expect_error(gas(p = 1, q = 1, p_cross = c(mu = 1), kappa2_mu ~ x),
+               "does not\\s+declare")
+  expect_error(gas(p = 1, q = 1, p_cross = c(mu = 2), kappa2_mu ~ 0),
+               "leaving its lag out")
+  expect_silent(gas(p = 1, q = 1, p_cross = c(mu = 1), kappa1_mu ~ x,
                     links = list(kappa1_mu = linkfunctions7::identity_link())))
-  mk <- function(k, f = NULL) {
-    if (is.null(f)) term_build(gas(p = 1, q = 1, by = g, time = t, cross = "a"), ds)
-    else term_build(gas(p = 1, q = 1, by = g, time = t, cross = "a", f), ds)
+  mk <- function(pc, f = NULL) {
+    if (is.null(f)) term_build(gas(p = 1, q = 1, by = g, time = t,
+                                   p_cross = pc), ds)
+    else term_build(gas(p = 1, q = 1, by = g, time = t, p_cross = pc, f), ds)
   }
-  expect_error(gas_joint(list(mu = mk("mu", kappa1_nu ~ x), sigma = mk("sigma"))),
-               "not one of its")
-  jt <- gas_joint(list(mu = mk("mu", kappa1_sigma ~ x), sigma = mk("sigma")))
+  expect_error(gas_joint(list(mu = mk(c(nu = 1), kappa1_nu ~ x),
+                              sigma = mk(NULL))), "has no gas\\(\\) term")
+  jt <- gas_joint(list(mu = mk(c(sigma = 1), kappa1_sigma ~ x),
+                       sigma = mk(NULL)))
   nm <- term_params(jt)
-  expect_identical(nm[1:5], c("mu.omega", "mu.kappa1", "mu.pacf1",
-                              "mu.kappa1_sigma.(Intercept)",
-                              "mu.kappa1_sigma.x"))
+  expect_identical(nm, c("mu.omega", "mu.kappa1", "mu.pacf1",
+                         "mu.kappa1_sigma.(Intercept)", "mu.kappa1_sigma.x",
+                         "sigma.omega", "sigma.kappa1", "sigma.pacf1"))
   expect_identical(term_links(jt)[["mu.kappa1_sigma.x"]]@link_name, "identity")
 })
 
 test_that("a cross loading developed by a subformula of one is the scalar loading", {
   mk <- function(dev) list(
-    mu = term_build(if (dev) gas(p = 1, q = 1, by = g, time = t, cross = "a",
+    mu = term_build(if (dev) gas(p = 1, q = 1, by = g, time = t, p_cross = c(sigma = 1),
                                  kappa1_sigma ~ 1)
-                    else gas(p = 1, q = 1, by = g, time = t, cross = "a"), ds),
-    sigma = term_build(gas(p = 1, q = 1, by = g, time = t, cross = "a"), ds))
+                    else gas(p = 1, q = 1, by = g, time = t, p_cross = c(sigma = 1)), ds),
+    sigma = term_build(gas(p = 1, q = 1, by = g, time = t, p_cross = c(mu = 1)), ds))
   plain <- gas_joint(mk(FALSE))
   dev <- gas_joint(mk(TRUE))
   pp <- gs_psi(term_params(plain))
@@ -145,13 +150,77 @@ test_that("a cross loading developed by a subformula of one is the scalar loadin
 
 test_that("the Jacobian of a filter with a developed cross loading is its derivative", {
   jt <- gas_joint(list(
-    mu = term_build(gas(p = 1, q = 1, by = g, time = t, cross = "a",
+    mu = term_build(gas(p = 1, q = 1, by = g, time = t, p_cross = c(sigma = 1),
                         kappa1_sigma ~ x), ds),
-    sigma = term_build(gas(p = 1, q = 1, by = g, time = t, cross = "a",
+    sigma = term_build(gas(p = 1, q = 1, by = g, time = t, p_cross = c(mu = 1),
                            kappa1_mu ~ g), ds)))
   nm <- term_params(jt)
   psi <- unlist(gs_psi(nm))
-  psi[grepl("_sigma.", nm, fixed = TRUE) | grepl("_mu.", nm, fixed = TRUE)] <- 0.04
+  psi[grepl("_sigma.", nm, fixed = TRUE) | grepl("_mu.", nm, fixed = TRUE)] <-
+    0.04
+  eta0 <- matrix(c(rep(1, ns), rep(0.3, ns)), ns, 2)
+  run <- function(v) term_filter(jt, eta0, ds$y, gs_score(ds$y),
+                                 gs_curv(ds$y), as.list(v))
+  base <- run(psi)
+  for (j in seq_along(nm)) {
+    h <- 1e-5
+    up <- psi; up[j] <- up[j] + h
+    dn <- psi; dn[j] <- dn[j] - h
+    d <- (run(up)$eta - run(dn)$eta) / (2 * h)
+    expect_equal(base$jacobian$mu[, j], d[, 1], tolerance = 1e-6,
+                 label = paste("mu", nm[j]))
+    expect_equal(base$jacobian$sigma[, j], d[, 2], tolerance = 1e-6,
+                 label = paste("sigma", nm[j]))
+  }
+})
+
+test_that("a one-way graph with a cross lag beyond p is the plain filter at a subformula of one", {
+  # mu loads sigma's score at the lags 1..3 (its own p is 1), sigma loads
+  # nothing: the subformula route against the route without subformulas
+  mk <- function(f = NULL) list(
+    mu = term_build(if (is.null(f)) gas(p = 1, q = 1, by = g, time = t,
+                                        p_cross = c(sigma = 3))
+                    else gas(p = 1, q = 1, by = g, time = t,
+                             p_cross = c(sigma = 3), f), ds),
+    sigma = term_build(gas(p = 1, q = 2, by = g, time = t), ds))
+  plain <- gas_joint(mk())
+  dev <- gas_joint(mk(kappa3_sigma ~ 1))
+  pp <- gs_psi(term_params(plain))
+  pp[["mu.kappa2_sigma"]] <- -0.03
+  pp[["mu.kappa3_sigma"]] <- 0.02
+  pd <- gs_psi(term_params(dev))
+  pd[["mu.kappa2_sigma"]] <- -0.03
+  pd[["mu.kappa3_sigma.(Intercept)"]] <- 0.02
+  eta0 <- matrix(c(rep(1, ns), rep(0.3, ns)), ns, 2)
+  a <- term_filter(plain, eta0, ds$y, gs_score(ds$y), gs_curv(ds$y), pp)
+  b <- term_filter(dev, eta0, ds$y, gs_score(ds$y), gs_curv(ds$y), pd)
+  expect_equal(b$eta, a$eta, tolerance = 1e-12)
+  for (k in c("mu", "sigma")) {
+    Jb <- b$jacobian[[k]]
+    colnames(Jb)[colnames(Jb) == "mu.kappa3_sigma.(Intercept)"] <-
+      "mu.kappa3_sigma"
+    expect_equal(unname(Jb[, colnames(a$jacobian[[k]])]),
+                 unname(a$jacobian[[k]]), tolerance = 1e-12)
+  }
+  gw <- matrix(stats::rnorm(2 * ns), ns, 2)
+  ra <- term_adjoint(plain, eta0, ds$y, gs_score(ds$y), gs_curv(ds$y), pp, gw)
+  rb <- term_adjoint(dev, eta0, ds$y, gs_score(ds$y), gs_curv(ds$y), pd, gw)
+  expect_equal(rb$deta, ra$deta, tolerance = 1e-12)
+  expect_equal(rb$dscore, ra$dscore, tolerance = 1e-12)
+})
+
+test_that("the Jacobian of a one-way graph with a developed cross lag beyond p is its derivative", {
+  jt <- gas_joint(list(
+    mu = term_build(gas(p = 1, q = 1, by = g, time = t,
+                        p_cross = c(sigma = 3), kappa3_sigma ~ x), ds),
+    sigma = term_build(gas(p = 1, q = 1, by = g, time = t), ds)))
+  nm <- term_params(jt)
+  expect_identical(nm, c("mu.omega", "mu.kappa1", "mu.pacf1",
+                         "mu.kappa1_sigma", "mu.kappa2_sigma",
+                         "mu.kappa3_sigma.(Intercept)", "mu.kappa3_sigma.x",
+                         "sigma.omega", "sigma.kappa1", "sigma.pacf1"))
+  psi <- unlist(gs_psi(nm))
+  psi[grepl("_sigma", nm)] <- c(0.04, -0.03, 0.02, 0.01)
   eta0 <- matrix(c(rep(1, ns), rep(0.3, ns)), ns, 2)
   run <- function(v) term_filter(jt, eta0, ds$y, gs_score(ds$y),
                                  gs_curv(ds$y), as.list(v))

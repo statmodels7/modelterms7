@@ -17,8 +17,10 @@ NULL
 
 # The per-member inputs of the filter at the parameters psi: the
 # coefficients per row, their chart derivatives, the autoregressive
-# coefficients per row and the cross loadings per row (n x npk*p, the column
-# of partner j at lag i being j + npk (i - 1)) with their names in that order.
+# coefficients per row and the cross loadings per row (n x nx, one column
+# per pair in the order of .gas_cross_params(): column h loads the score of
+# the parameter at position xpar[h] of term@params at lag xlag[h]) with
+# their names in that order.
 .gas_joint_sub_members <- function(term, psi) {
   psi <- .gas_joint_psi(term, psi)
   lapply(seq_along(term@params), function(k) {
@@ -37,14 +39,9 @@ NULL
     vals <- .gas_sub_values(tm, u, "parameter")
     bd <- .gas_sub_b(tm, vals)
     pk <- term@partners[[k]]
-    npk <- length(pk)
-    cnm <- character(0)
-    for (i in seq_len(p)) {
-      for (j in seq_len(npk)) {
-        cnm <- c(cnm, paste0("kappa", i, "_", tm@cross_with[j]))
-      }
-    }
-    cross <- matrix(0, n, npk * p)
+    xp <- .gas_cross_pairs(tm)
+    cnm <- xp$name
+    cross <- matrix(0, n, length(cnm))
     for (cc in seq_along(cnm)) cross[, cc] <- vals[[cnm[cc]]]$v
     aj <- if (p > 0L) paste0("kappa", seq_len(p)) else character(0)
     A <- matrix(0, n, p)
@@ -53,6 +50,7 @@ NULL
     for (j in seq_len(q)) B[, j] <- bd$B[, j]
     list(tm = tm, p = p, q = q, off = off, vals = vals, bd = bd,
          om = vals$omega$v, A = A, B = B, partners = as.integer(pk),
+         xpar = match(xp$partner, term@params), xlag = xp$lag,
          cross = cross, cross_names = cnm)
   })
 }
@@ -112,7 +110,8 @@ NULL
   if (!is.null(fast)) {
     cm <- lapply(mem, function(m)
       list(p = m$p, q = m$q, om = m$om, A = m$A, B = m$B,
-           partners = m$partners, cross = m$cross))
+           partners = m$partners, xpar = as.integer(m$xpar),
+           xlag = as.integer(m$xlag), cross = m$cross))
     out <- gas_joint_sub_filter_cpp(eta, cm, .gas_joint_sub_groups(term, mem),
                                     M, fast, as.integer(threads))
     if (!is.null(out)) {
@@ -176,14 +175,15 @@ NULL
           ft <- ft + a_r * u[k, t - i]
           Ft <- Ft + a_r * Sd[k, t - i, ] +
             u[k, t - i] * dense(k, paste0("kappa", i), r)
-          for (j in seq_along(m$partners)) {
-            l <- m$partners[j]
-            cc <- j + length(m$partners) * (i - 1L)
-            cji <- m$cross[r, cc]
-            ft <- ft + cji * u[l, t - i]
-            Ft <- Ft + cji * Sd[l, t - i, ] +
-              u[l, t - i] * dense(k, m$cross_names[cc], r)
-          }
+        }
+        for (h in seq_along(m$xpar)) {
+          lg <- m$xlag[h]
+          if (t - lg < 1L) next
+          l <- m$xpar[h]
+          cji <- m$cross[r, h]
+          ft <- ft + cji * u[l, t - lg]
+          Ft <- Ft + cji * Sd[l, t - lg, ] +
+            u[l, t - lg] * dense(k, m$cross_names[h], r)
         }
         for (j in seq_len(m$q)) {
           if (t - j >= 1L) {
@@ -226,6 +226,7 @@ NULL
   mem <- .gas_joint_sub_members(term, psi)
   cm <- lapply(mem, function(m)
     list(p = m$p, q = m$q, A = m$A, B = m$B, partners = m$partners,
+         xpar = as.integer(m$xpar), xlag = as.integer(m$xlag),
          cross = m$cross))
   out <- gas_joint_sub_adjoint_cpp(as.numeric(cv), g, cm, bp$order)
   colnames(out$deta) <- colnames(out$dscore) <- term@params

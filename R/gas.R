@@ -56,12 +56,12 @@ NULL
 #' @param submodels A named list of one-sided formulas, one per parameter
 #'   developed over covariates. The list is empty if no parameter is
 #'   developed.
-#' @param cross The label of the group of terms whose levels load each
-#'   other's scores, or an empty vector for a term that loads its own score
-#'   only.
+#' @param p_cross A named integer vector with the number of lags of the
+#'   score of each other filtered parameter that the level of this term
+#'   loads, or an empty vector for a term that loads its own score only.
 #' @param cross_with The distribution parameters whose scores the level of
 #'   this term loads besides its own, in the order of their loadings. It is
-#'   empty until [gas_joint()] fills it from the labels of `cross`.
+#'   empty until [gas_joint()] fills it from `p_cross`.
 #' @param blueprint A named list of the resolved ordering, grouping and
 #'   sub-term designs, empty until [term_build()] fills it.
 #'
@@ -102,7 +102,7 @@ GasTerm <- S7::new_class(
     links = S7::class_list,
     submodels = S7::class_list,
     scaling = S7::class_double,
-    cross = S7::class_character,
+    p_cross = S7::class_integer,
     cross_with = S7::class_character
   )
 )
@@ -172,8 +172,7 @@ GasTerm <- S7::new_class(
 #' time, so the levels cannot be filtered one after the other.
 #' [gas_joint()] joins the terms, and a fitting layer reads them as one
 #' structural term. The terms must walk the same series (the same `by` and
-#' `time`), and a parameter developed by a subformula is not available in a
-#' joint filter.
+#' `time`).
 #'
 #' The scaling is joint. With \eqn{G} the filtered parameters, the driving
 #' vector is
@@ -188,11 +187,16 @@ GasTerm <- S7::new_class(
 #' parameter by its own information.
 #'
 #' By default each level loads its own score only, so the matrices of
-#' loadings are diagonal. The terms that carry the same label in `cross`
-#' load each other's scores as well: in
-#' `y ~ gas(..., cross = "a") | sigma ~ gas(..., cross = "a") | nu ~ gas(...)`
-#' the levels of `mu` and `sigma` respond to both scores, and the level of
-#' `nu` responds to its own. A cross loading rides the identity link,
+#' loadings are diagonal. The argument `p_cross` of a term names the other
+#' filtered parameters whose scores its level loads as well, with the number
+#' of lags of each: in
+#' `y ~ gas(p = 1, q = 1, p_cross = c(sigma = 1)) | sigma ~ gas(p = 1, q = 1)`
+#' the level of `mu` responds to the score of `sigma` at lag one, and the
+#' level of `sigma` responds to its own score only, so the matrix of
+#' loadings at lag one is upper triangular. A lag that `p_cross` leaves out
+#' is a loading restricted to zero, and the number of lags of a partner may
+#' exceed the term's own `p`. The parameter named in `p_cross` must carry a
+#' `gas()` term of its own. A cross loading rides the identity link,
 #' because its sign is free. For a gaussian, the loading of the score of the
 #' mean in the level of the log-scale is the asymmetric response of the
 #' volatility to the sign of a surprise, which is the term in
@@ -328,12 +332,14 @@ GasTerm <- S7::new_class(
 #' @param ... Two-sided formulas whose left side names a parameter, one
 #'   per parameter to be developed with covariates, e.g.
 #'   `kappa1 ~ s(x)`; see the section above. The left side may also name a
-#'   cross loading, `kappa<i>_<parameter>`, in a term that sets `cross` and is
-#'   filtered jointly with that parameter, e.g. `kappa1_mu ~ 1 + random(~ 1 |
-#'   g)`; the cross loading is developed on the identity link unless `links`
-#'   names another. A cross loading that varies by group is identified only
-#'   with long series or many groups (with a few hundred observations per
-#'   group). A formula given in the place of `p` or `q` is rejected.
+#'   cross loading, `kappa<i>_<parameter>`, whose lag `i` the term declares
+#'   in `p_cross`, e.g. `kappa1_mu ~ 1 + random(~ 1 | g)`; the cross loading
+#'   is developed on the identity link unless `links` names another. A cross
+#'   loading that varies by group is identified only with long series or
+#'   many groups (with a few hundred observations per group). A subformula
+#'   with no column, such as `kappa2_mu ~ 0`, is rejected: a cross loading is
+#'   restricted to zero by leaving its lag out of `p_cross`. A formula given
+#'   in the place of `p` or `q` is rejected.
 #' @param by An optional grouping variable, evaluated in the data; each
 #'   group is filtered independently, from its own starting level. A
 #'   formula here is the shorthand that gives the same subformula to every
@@ -343,10 +349,13 @@ GasTerm <- S7::new_class(
 #' @param scaling A single finite number \eqn{d}: the score is multiplied by
 #'   the expected information to the power \eqn{-d}. Defaults to 0, the score
 #'   as it is; see the section on the scaling of the score.
-#' @param cross An optional label, a single string. The terms of a model that
-#'   carry the same label load each other's scores as well as their own;
-#'   see the section on several filtered parameters. `NULL`, the default,
-#'   gives a term that loads its own score only.
+#' @param p_cross An optional named vector of integers of at least 0, one
+#'   per other filtered parameter whose score the level of this term loads,
+#'   giving the number of lags of that score, e.g. `p_cross = c(sigma = 2)`
+#'   for the loadings `kappa1_sigma` and `kappa2_sigma`. Each named parameter
+#'   must carry a `gas()` term of its own; see the section on several
+#'   filtered parameters. `NULL`, the default, gives a term that loads its
+#'   own score only, and so does a count of 0.
 #' @param links An optional named list of \pkg{linkfunctions7} links over
 #'   the parameters of [term_params()], overriding the defaults
 #'   described above. Only the parameters of [term_params()] before any
@@ -454,7 +463,7 @@ GasTerm <- S7::new_class(
 #' }
 #' @export
 gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
-                cross = NULL, links = NULL, label = "gas") {
+                p_cross = NULL, links = NULL, label = "gas") {
   if (inherits(p, "formula") || inherits(q, "formula")) {
     stop(paste("'p' and 'q' are the orders of the filter; a subformula is",
                "given by name after them, as in gas(1, 1, kappa1 ~ x)."),
@@ -478,20 +487,12 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
     stop("'label' must be a single non-empty character string.",
          call. = FALSE)
   }
-  if (!is.null(cross) && (!is.character(cross) || length(cross) != 1L ||
-                          is.na(cross) || !nzchar(cross))) {
-    stop("'cross' must be NULL or a single non-empty character string.",
-         call. = FALSE)
-  }
+  p_cross <- .gas_check_p_cross(p_cross)
   by <- substitute(by)
   base <- .gas_base_params(p, q)
   submodels <- .gas_gather_submodels(list(...), base)
-  xs <- names(submodels)[.gas_is_cross_name(names(submodels), base)]
-  if (length(xs) && is.null(cross)) {
-    stop(sprintf(paste("'%s' is a cross loading, which exists only in a",
-                       "term that sets 'cross' and is filtered jointly",
-                       "with its partner."), xs[1L]), call. = FALSE)
-  }
+  xs <- names(submodels)[.gas_is_cross_name(names(submodels))]
+  .gas_check_declared(xs, p_cross, "a subformula")
   # `by = ~f` is the shorthand giving every parameter the same subformula;
   # a grouping variable is a bare symbol, so the two are told apart by shape
   if (is.call(by) && identical(by[[1L]], as.name("~"))) {
@@ -505,6 +506,10 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
            call. = FALSE)
     }
     f <- stats::as.formula(by, env = parent.frame())
+    if (.gas_empty_rhs(f)) {
+      stop(paste("'by = ~0' develops every parameter over no column; a",
+                 "subformula needs an intercept or a term."), call. = FALSE)
+    }
     submodels <- stats::setNames(rep(list(f), length(base)), base)
     by <- NULL
   }
@@ -515,11 +520,13 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
            call. = FALSE)
     }
     bad <- setdiff(names(links), base)
-    bad <- bad[!.gas_is_cross_name(bad, base)]
+    xl <- bad[.gas_is_cross_name(bad)]
+    bad <- setdiff(bad, xl)
     if (length(bad)) {
       stop(sprintf("'links' names '%s'; the parameters are %s.",
                    bad[1L], paste(base, collapse = ", ")), call. = FALSE)
     }
+    .gas_check_declared(xl, p_cross, "'links'")
     for (lname in names(links)) {
       if (!S7::S7_inherits(links[[lname]], linkfunctions7::link)) {
         stop(sprintf("'links$%s' is not a linkfunctions7 link.", lname),
@@ -532,7 +539,7 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
           links = if (is.null(links)) list() else links,
           submodels = submodels,
           scaling = as.double(scaling),
-          cross = if (is.null(cross)) character(0) else cross,
+          p_cross = p_cross,
           cross_with = character(0),
           blueprint = list())
 }
@@ -557,7 +564,7 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
            call. = FALSE)
     }
     pn <- as.character(d[[2L]])
-    if (!(pn %in% base) && !.gas_is_cross_name(pn, base)) {
+    if (!(pn %in% base) && !.gas_is_cross_name(pn)) {
       stop(sprintf(paste("the subformula names '%s'; the parameters are %s,",
                          "and the cross loadings kappa<i>_<parameter>."),
                    pn, paste(base, collapse = ", ")), call. = FALSE)
@@ -566,18 +573,68 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
       stop(sprintf("parameter '%s' carries two subformulas.", pn),
            call. = FALSE)
     }
-    out[[pn]] <- stats::as.formula(call("~", d[[3L]]), env = environment(d))
+    f <- stats::as.formula(call("~", d[[3L]]), env = environment(d))
+    if (.gas_empty_rhs(f)) {
+      rhs <- paste(deparse(d[[3L]]), collapse = " ")
+      if (.gas_is_cross_name(pn)) {
+        stop(sprintf(paste0(
+          "'%s ~ %s' develops the cross loading over no column; a cross ",
+          "loading\n  is restricted to zero by leaving its lag out of ",
+          "'p_cross'."), pn, rhs), call. = FALSE)
+      }
+      stop(sprintf(paste0(
+        "'%s ~ %s' develops '%s' over no column, which leaves the ",
+        "parameter\n  undefined; a subformula needs an intercept or a term."),
+        pn, rhs, pn), call. = FALSE)
+    }
+    out[[pn]] <- f
   }
   out
 }
 
-# whether a name is that of a cross loading, kappa<i>_<parameter>, with a lag
-# i among the term's loadings; which parameters are partners is known only
-# when gas_joint() joins the terms
-.gas_is_cross_name <- function(nm, base) {
-  m <- regmatches(nm, regexec("^kappa([0-9]+)_(.+)$", nm))
-  vapply(m, function(x) length(x) == 3L &&
-           paste0("kappa", x[2L]) %in% base, logical(1))
+# whether a one-sided formula has no column: no term and no intercept, as in
+# ~ 0 or ~ -1
+.gas_empty_rhs <- function(f) {
+  tt <- tryCatch(stats::terms(f), error = function(e) NULL)
+  !is.null(tt) && !length(attr(tt, "term.labels")) &&
+    attr(tt, "intercept") == 0L
+}
+
+# whether a name has the shape of a cross loading, kappa<i>_<parameter>
+.gas_is_cross_name <- function(nm) {
+  grepl("^kappa[1-9][0-9]*_.+$", nm)
+}
+
+# p_cross as a named integer vector, empty for NULL
+.gas_check_p_cross <- function(x) {
+  if (is.null(x)) return(stats::setNames(integer(0), character(0)))
+  nm <- names(x)
+  if (!is.numeric(x) || !length(x) || is.null(nm) || anyNA(nm) ||
+      !all(nzchar(nm)) || anyDuplicated(nm) || anyNA(x) ||
+      !all(is.finite(x)) || any(x < 0) || any(x != round(x))) {
+    stop(paste("'p_cross' must be NULL or a named vector of integers of at",
+               "least 0,\n  one per parameter whose score the level loads,",
+               "e.g. p_cross = c(sigma = 1)."), call. = FALSE)
+  }
+  stats::setNames(as.integer(x), nm)
+}
+
+# a cross loading kappa<i>_<l> named by a subformula or by 'links' must be
+# one that p_cross declares, i.e. i <= p_cross[l]
+.gas_check_declared <- function(xs, p_cross, where) {
+  for (x in xs) {
+    lag <- as.integer(sub("^kappa([0-9]+)_.*$", "\\1", x))
+    par <- sub("^kappa[0-9]+_", "", x)
+    have <- if (par %in% names(p_cross)) p_cross[[par]] else 0L
+    if (lag > have) {
+      stop(sprintf(paste0(
+        "%s names the cross loading '%s', which 'p_cross' does not ",
+        "declare:\n  the level loads the score of '%s' at lag %d only with ",
+        "p_cross = c(%s = %d) or more."), where, x, par, lag, par, lag),
+        call. = FALSE)
+    }
+  }
+  invisible(NULL)
 }
 
 # the parameters of the filter itself, before any deviation
@@ -612,10 +669,10 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
 #' through Levinson-Durbin, and coincides with the coordinate only at
 #' \eqn{q = 1}. [term_readable()] maps the coordinates onto the coefficients.
 #'
-#' A term that [gas_joint()] has placed in a group of `cross` carries, after
-#' these, one loading per score lag of each other parameter of the group,
-#' named `kappa1_sigma`, `kappa2_sigma` and so on: `kappa1_sigma` is the
-#' loading of the score of `sigma` at lag one in the level of this term.
+#' A term that [gas_joint()] has joined with the parameters of its `p_cross`
+#' carries, after these, one loading per declared lag of the score of each of
+#' them, named `kappa1_sigma`, `kappa2_sigma` and so on: `kappa1_sigma` is
+#' the loading of the score of `sigma` at lag one in the level of this term.
 #' These loadings ride the identity link, because their sign is free.
 #'
 #' The order is the one by which [term_links()], [term_start()], the Jacobian
@@ -649,13 +706,21 @@ S7::method(term_params, GasTerm) <- function(term, ...) {
   c(.gas_base_params(term@p, term@q), .gas_cross_params(term))
 }
 
-# the loadings of the other parameters' scores, one per score lag and
-# partner, partner by partner: kappa1_sigma is the loading of the score of
-# sigma at lag one in this term's level
-.gas_cross_params <- function(term) {
-  if (!length(term@cross_with)) return(character(0))
-  as.vector(t(outer(term@cross_with, seq_len(term@p),
-                    function(l, i) paste0("kappa", i, "_", l))))
+# the loadings of the other parameters' scores, partner by partner (in the
+# order of cross_with) and lag by lag up to the partner's count in p_cross:
+# kappa1_sigma is the loading of the score of sigma at lag one in this term's
+# level
+.gas_cross_params <- function(term) .gas_cross_pairs(term)$name
+
+# the same loadings as pairs: name, partner and lag of each
+.gas_cross_pairs <- function(term) {
+  pw <- term@cross_with
+  lags <- if (length(pw)) term@p_cross[pw] else integer(0)
+  par <- rep(pw, lags)
+  lag <- unlist(lapply(lags, seq_len), use.names = FALSE)
+  if (is.null(lag)) lag <- integer(0)
+  list(name = if (length(par)) paste0("kappa", lag, "_", par) else character(0),
+       partner = par, lag = as.integer(lag))
 }
 
 #' @title The Level of a Score-Driven Term

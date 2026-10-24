@@ -26,10 +26,10 @@ coefficient \eqn{\xi_1} of the literature is a function of the whole chart
 through Levinson-Durbin, and coincides with the coordinate only at
 \eqn{q = 1}. \code{\link[=term_readable]{term_readable()}} maps the coordinates onto the coefficients.
 
-A term that \code{\link[=gas_joint]{gas_joint()}} has placed in a group of \code{cross} carries, after
-these, one loading per score lag of each other parameter of the group,
-named \code{kappa1_sigma}, \code{kappa2_sigma} and so on: \code{kappa1_sigma} is the
-loading of the score of \code{sigma} at lag one in the level of this term.
+A term that \code{\link[=gas_joint]{gas_joint()}} has joined with the parameters of its \code{p_cross}
+carries, after these, one loading per declared lag of the score of each of
+them, named \code{kappa1_sigma}, \code{kappa2_sigma} and so on: \code{kappa1_sigma} is
+the loading of the score of \code{sigma} at lag one in the level of this term.
 These loadings ride the identity link, because their sign is free.
 
 The order is the one by which \code{\link[=term_links]{term_links()}}, \code{\link[=term_start]{term_start()}}, the Jacobian

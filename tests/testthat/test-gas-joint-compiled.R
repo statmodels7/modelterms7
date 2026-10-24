@@ -87,14 +87,23 @@ jc_case <- function(fam, n, seed) {
   list(d = d, Eall = Eall, y = y, G = G)
 }
 
-jc_terms <- function(K, p, q, cross, by, data, scaling = 0) {
-  mk <- function() {
-    if (by) gas(p = p, q = q, by = g, time = t, cross = cross,
+# the terms of the parameters `pnames`; cross NULL (no cross loadings),
+# "sym" (every level loads every other score at the lags 1..p) or "upper"
+# (the first level loads the second score at the lags 1..p + 2, beyond its
+# own p, and the others load nothing)
+jc_terms <- function(K, p, q, cross, by, data, scaling = 0,
+                     pnames = c("a", "b", "c")[seq_len(K)]) {
+  mk <- function(k) {
+    pc <- if (identical(cross, "sym")) {
+      stats::setNames(rep(p, K - 1L), setdiff(pnames, k))
+    } else if (identical(cross, "upper") && k == pnames[1L]) {
+      stats::setNames(p + 2, pnames[2L])
+    }
+    if (by) gas(p = p, q = q, by = g, time = t, p_cross = pc,
                 scaling = scaling)
-    else gas(p = p, q = q, time = t, cross = cross, scaling = scaling)
+    else gas(p = p, q = q, time = t, p_cross = pc, scaling = scaling)
   }
-  nm <- c("a", "b", "c")[seq_len(K)]
-  stats::setNames(lapply(nm, function(k) term_build(mk(), data)), nm)
+  stats::setNames(lapply(pnames, function(k) term_build(mk(k), data)), pnames)
 }
 
 jc_psi <- function(jt, seed) {
@@ -118,11 +127,10 @@ test_that("the compiled joint filter is the R route", {
   for (fam in c("gaussian1", "student_t1")) {
     cs <- jc_case(fam, n, 2)
     for (scaling in c(0, 0.5, 1)) {
-      for (cfg in list(list(1, 1, NULL, FALSE), list(2, 1, "x", TRUE),
-                       list(1, 2, "x", FALSE))) {
+      for (cfg in list(list(1, 1, NULL, FALSE), list(2, 1, "sym", TRUE),
+                       list(1, 2, "sym", FALSE), list(1, 1, "upper", TRUE))) {
         tms <- jc_terms(2, cfg[[1]], cfg[[2]], cfg[[3]], cfg[[4]], dd,
-                        scaling = scaling)
-        names(tms) <- cs$d@params[cs$G]
+                        scaling = scaling, pnames = cs$d@params[cs$G])
         jt <- gas_joint(tms)
         psi <- jc_psi(jt, 9)
         eta <- cs$Eall[, cs$G]
@@ -192,8 +200,8 @@ jc_check_family <- function(nm, d, cov, base = NULL) {
   y <- vapply(seq_len(n), function(i)
     distributions7::distrib_rng(d, 1, lapply(th, `[`, i)), 0)
   for (scaling in if (cov == 4) c(0, 0.5, 1) else c(0, 0.5)) {
-    tms <- jc_terms(2, 1, 1, "x", TRUE, dd, scaling = scaling)
-    names(tms) <- d@params[G]
+    tms <- jc_terms(2, 1, 1, "sym", TRUE, dd, scaling = scaling,
+                    pnames = d@params[G])
     jt <- gas_joint(tms)
     psi <- jc_psi(jt, 9)
     eta <- Eall[, G]

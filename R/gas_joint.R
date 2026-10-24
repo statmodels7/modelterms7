@@ -14,15 +14,15 @@ NULL
 #' the others. Where two parameters both carry a level, each score depends on
 #' the other level, so the two recursions are one: with \eqn{G} the filtered
 #' parameters,
-#' \deqn{f_{k,t} = \omega_k + \sum_{i=1}^{p_k} \Big(\kappa_{k,i}\, u_{k,t-i}
-#'   + \sum_{l \in C_k} \kappa_{k,i,l}\, u_{l,t-i}\Big)
+#' \deqn{f_{k,t} = \omega_k + \sum_{i=1}^{p_k} \kappa_{k,i}\, u_{k,t-i}
+#'   + \sum_{l \in C_k} \sum_{i=1}^{p_{kl}} \kappa_{k,i,l}\, u_{l,t-i}
 #'   + \sum_{j=1}^{q_k} \xi_{k,j} f_{k,t-j}, \qquad k \in G,}
 #' where \eqn{u_t} is the vector of driving scores of the parameters in
-#' \eqn{G}, read at the predictor of every equation at time \eqn{t}, and
-#' \eqn{C_k} is the set of the other parameters of the group of `cross` that
-#' contains \eqn{k} (empty when the term carries no label). The persistence
-#' of each level is its own, so the autoregressive part is stationary when
-#' each equation's is.
+#' \eqn{G}, read at the predictor of every equation at time \eqn{t},
+#' \eqn{C_k} is the set of the parameters to which the `p_cross` of the term
+#' of \eqn{k} gives a positive count, and \eqn{p_{kl}} is that count. The
+#' persistence of each level is its own, so the autoregressive part is
+#' stationary when each equation's is.
 #'
 #' The driving vector is the caller's: a fitting layer supplies
 #' \eqn{u_t = \mathcal{I}_{GG,t}^{-d}\,\partial\ell_t/\partial\eta_{G,t}} with
@@ -77,8 +77,8 @@ GasJoint <- S7::new_class(
 #'
 #' @description
 #' Checks that a set of built [gas()] terms can be filtered together and
-#' returns them as a [GasJoint()] object, with the loadings of `cross` added
-#' to the terms that share a label.
+#' returns them as a [GasJoint()] object, with the cross loadings that each
+#' term's `p_cross` declares added to its parameters.
 #'
 #' @details
 #' The terms must walk the same series: their `by` and `time` must give the
@@ -94,10 +94,12 @@ GasJoint <- S7::new_class(
 #' symmetric square root through a Sylvester equation per order, and the
 #' inverse).
 #'
-#' The terms that carry the same label in `cross` form a group, in which each
-#' level loads the scores of the other parameters of the group as well as its
-#' own. A label carried by one term only is rejected, because it describes no
-#' group.
+#' The `p_cross` of a term names the parameters whose scores its level loads
+#' besides its own, with the number of lags of each. A parameter that it
+#' names with a positive count must be one of the joined terms, and a term
+#' cannot name its own parameter, whose score it loads through its own
+#' loadings. The cross loadings of a term follow the parameters in the order
+#' of the joined terms, lag by lag.
 #'
 #' @param terms A named list of built [GasTerm()] objects, named by the
 #'   distribution parameter in whose equation each one sits.
@@ -111,8 +113,9 @@ GasJoint <- S7::new_class(
 #' @examples
 #' set.seed(1)
 #' dd <- data.frame(t = 1:40, y = rnorm(40))
-#' tm <- list(mu = term_build(gas(p = 1, q = 1, time = t, cross = "a"), dd),
-#'            sigma = term_build(gas(p = 1, q = 1, time = t, cross = "a"), dd),
+#' tm <- list(mu = term_build(gas(p = 1, q = 1, time = t,
+#'                                p_cross = c(sigma = 2)), dd),
+#'            sigma = term_build(gas(p = 1, q = 1, time = t), dd),
 #'            nu = term_build(gas(p = 1, q = 1, time = t), dd))
 #' jt <- gas_joint(tm)
 #' lapply(jt@terms, term_params)
@@ -161,41 +164,30 @@ gas_joint <- function(terms) {
       "several\n  filtered parameters 'scaling' must be 0, 1/2 or 1."),
       format(d[[1L]])), call. = FALSE)
   }
-  labels <- lapply(terms, function(tm) tm@cross)
-  lab <- unlist(labels)
-  for (a in unique(lab)) {
-    if (sum(lab == a) < 2L) {
-      stop(sprintf(paste0(
-        "the label cross = \"%s\" is carried by one gas() term only;\n",
-        "  a label groups the terms whose levels load each other's ",
-        "scores."), a), call. = FALSE)
-    }
-  }
   partners <- vector("list", length(params))
   for (k in seq_along(params)) {
     tm <- terms[[k]]
-    if (length(tm@cross)) {
-      same <- vapply(labels, function(l) length(l) && l == tm@cross,
-                     logical(1))
-      partners[[k]] <- setdiff(which(same), k)
-    } else {
-      partners[[k]] <- integer(0)
-    }
-    tm@cross_with <- params[partners[[k]]]
-    # a subformula on a cross loading names a partner of the term's group
-    sub <- tm@blueprint$sub
-    xs <- names(sub)[.gas_is_cross_name(names(sub),
-                                        .gas_base_params(tm@p, tm@q))]
-    bad <- setdiff(xs, .gas_cross_params(tm))
-    if (length(bad)) {
+    pc <- tm@p_cross
+    if (params[k] %in% names(pc)) {
       stop(sprintf(paste0(
-        "the gas() term of '%s' develops '%s', which is not one of its ",
-        "cross loadings\n  (%s): the parameter after the underscore must ",
-        "share the term's 'cross' label."), params[k], bad[1L],
-        if (length(.gas_cross_params(tm))) paste(.gas_cross_params(tm),
-                                                 collapse = ", ")
-        else "none"), call. = FALSE)
+        "the gas() term of '%s' names its own parameter in 'p_cross';\n",
+        "  the level loads its own score through %s."), params[k],
+        if (tm@p == 1L) "kappa1" else sprintf("kappa1, ..., kappa%d", tm@p)),
+        call. = FALSE)
     }
+    on <- names(pc)[pc > 0L]
+    miss <- setdiff(on, params)
+    if (length(miss)) {
+      stop(sprintf(paste0(
+        "the gas() term of '%s' loads the score of '%s' (p_cross), but '%s' ",
+        "has no gas() term:\n  a score drives the filter only for a ",
+        "parameter whose equation carries one."),
+        params[k], miss[1L], miss[1L]), call. = FALSE)
+    }
+    # the partners in the order of the joined terms, which orders the cross
+    # loadings of the term
+    partners[[k]] <- which(params %in% on)
+    tm@cross_with <- params[partners[[k]]]
     terms[[k]] <- tm
   }
   np <- vapply(terms, function(tm) length(term_params(tm)), integer(1))
@@ -242,7 +234,10 @@ S7::method(term_params, GasJoint) <- function(term, ...) {
 
 # The coefficients of the joint recursion from the terms' parameters: per
 # term, the chart of .gas_coefs() and the cross loadings, with the columns
-# of the joint vector at which each coefficient's derivative sits.
+# of the joint vector at which each coefficient's derivative sits. The cross
+# loadings are a list of pairs in the order of .gas_cross_params(): pair h
+# loads the score of the parameter at position xpar[h] of term@params at lag
+# xlag[h], with the value cross[h] and its column col_cross[h].
 .gas_joint_coefs <- function(term, psi) {
   psi <- .gas_joint_psi(term, psi)
   out <- vector("list", length(term@params))
@@ -262,19 +257,16 @@ S7::method(term_params, GasJoint) <- function(term, ...) {
     off <- term@offsets[k]
     nb <- length(base)
     pk <- term@partners[[k]]
-    cl <- matrix(0, length(pk), p)
-    ccol <- matrix(0L, length(pk), p)
-    for (j in seq_along(pk)) {
-      for (i in seq_len(p)) {
-        ccol[j, i] <- off + nb + (j - 1L) * p + i
-        cl[j, i] <- v[[nb + (j - 1L) * p + i]]
-      }
-    }
+    xp <- .gas_cross_pairs(tm)
+    nx <- length(xp$name)
     out[[k]] <- list(p = p, q = q, omega = cf$omega, a = cf$a, b = cf$b,
                      db = cf$db, f0 = cf$f0, df0 = cf$df0,
                      own = off + seq_len(nb), col_omega = off + 1L,
-                     col_a = off + cf$i_a, partners = pk, cross = cl,
-                     col_cross = ccol)
+                     col_a = off + cf$i_a, partners = as.integer(pk),
+                     xpar = match(xp$partner, term@params),
+                     xlag = xp$lag,
+                     cross = as.numeric(v[nb + seq_len(nx)]),
+                     col_cross = as.integer(off + nb + seq_len(nx)))
   }
   out
 }
@@ -379,13 +371,15 @@ S7::method(term_filter, GasJoint) <- function(term, eta, y, score, curvature,
           ft <- ft + c_k$a[[i]] * u[k, t - i]
           Ft <- Ft + c_k$a[[i]] * Sd[k, t - i, ]
           Ft[c_k$col_a[i]] <- Ft[c_k$col_a[i]] + u[k, t - i]
-          for (j in seq_along(c_k$partners)) {
-            l <- c_k$partners[j]
-            ft <- ft + c_k$cross[j, i] * u[l, t - i]
-            Ft <- Ft + c_k$cross[j, i] * Sd[l, t - i, ]
-            cc <- c_k$col_cross[j, i]
-            Ft[cc] <- Ft[cc] + u[l, t - i]
-          }
+        }
+        for (h in seq_along(c_k$xlag)) {
+          i <- c_k$xlag[h]
+          if (t - i < 1L) next
+          l <- c_k$xpar[h]
+          ft <- ft + c_k$cross[h] * u[l, t - i]
+          Ft <- Ft + c_k$cross[h] * Sd[l, t - i, ]
+          cc <- c_k$col_cross[h]
+          Ft[cc] <- Ft[cc] + u[l, t - i]
         }
         for (j in seq_len(c_k$q)) {
           if (t - j >= 1L) {
@@ -657,8 +651,8 @@ S7::method(term_build, GasJoint) <- function(term, data, ...) {
 #' @title Print a Joint Score-Driven Filter
 #' @name print.GasJoint
 #' @description
-#' Prints the filtered parameters with the orders of each term, the groups
-#' of cross loadings, and the scaling.
+#' Prints the filtered parameters with the orders of each term, the scores
+#' that each level loads besides its own with their lags, and the scaling.
 #' @param x A [GasJoint()].
 #' @param ... Unused.
 #' @return `x`, invisibly.
@@ -670,7 +664,11 @@ S7::method(print, GasJoint) <- function(x, ...) {
     tm <- x@terms[[k]]
     cat(sprintf("  %s: p = %d, q = %d%s\n", k, tm@p, tm@q,
                 if (length(tm@cross_with)) sprintf(", loads %s",
-                  paste(tm@cross_with, collapse = ", ")) else ""))
+                  paste(vapply(tm@cross_with, function(l) {
+                    L <- tm@p_cross[[l]]
+                    if (L == 1L) sprintf("%s (lag 1)", l)
+                    else sprintf("%s (lags 1-%d)", l, L)
+                  }, ""), collapse = ", ")) else ""))
   }
   d <- x@terms[[1L]]@scaling
   if (d != 0) cat(sprintf("  scaling: information^%s\n", format(-d)))
