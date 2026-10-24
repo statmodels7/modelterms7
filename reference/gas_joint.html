@@ -11,7 +11,7 @@ to the terms that share a label."><meta property="og:image" content="https://sta
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.104.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.105.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,8 +67,9 @@ loadings.</p>
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The terms must walk the same series: their <code>by</code> and <code>time</code> must give the
 same groups and the same order, because each score is read at the
-predictors of every equation at the same time. A term whose parameters
-carry a subformula is not accepted.</p>
+predictors of every equation at the same time. A term may develop its
+level, its loadings or its persistence with a subformula; its cross
+loadings stay scalar.</p>
 <p>The terms must share one <code>scaling</code>, because the driving vector is scaled
 by a power of the expected information of all the filtered parameters
 together. With more than one term the power is 0, 1/2 or 1: for these the
