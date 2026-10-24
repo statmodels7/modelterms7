@@ -24,7 +24,12 @@ using namespace Rcpp;
 // derivatives k2, k3 and k4 (as gas_curvature_gen.cpp reads a value of the
 // single-term recursion):
 //   d2 = k2 z z',   d3 along x = k3 (z.x) z z',   d4 along x, y = k4 (z.x)(z.y) z z'.
-// A scalar coordinate is the same expression with z = 1. The autoregressive
+// A scalar coordinate is the same expression with z = 1. The cross loadings
+// are values of the recursion like the others (a scalar one has z = 1, a
+// developed one its own design row), read at the row they multiply; a value
+// whose link has no curvature at any row (the identity link of a cross
+// loading) is carried as a value and a gradient only, so a scalar cross
+// loading costs what it cost when it was a constant. The autoregressive
 // coefficients go through the Levinson-Durbin map, whose derivatives to the
 // fourth order are written here as in gas_curvature_gen.cpp. A coefficient
 // that does not depend on the row (nothing developed in it) is built once
@@ -100,15 +105,17 @@ struct SVal {
     int nc = 0;
 };
 
-// a member of the joint filter: the orders, the cross loadings and the values
-// of the slots omega, kappa_1..p, pacf_1..q
+// a member of the joint filter: the orders, the partners and the values of the
+// slots omega, kappa_1..p, pacf_1..q and then the cross loadings, the loading
+// of partner j (0-based) at lag i (1-based) at the slot 1 + p + q + j + np (i - 1)
 struct SMember {
     int p = 0, q = 0;
     std::vector<int> partners;       // 1-based positions among the members
-    std::vector<double> cross;       // np x p, (j, i) at j + np (i - 1)
-    std::vector<int> col_cross;      // the same layout, 1-based, from zoff
-    std::vector<SVal> val;           // 1 + p + q
-    std::vector<char> developed;     // 1 + p + q
+    std::vector<SVal> val;           // 1 + p + q + np p
+    std::vector<char> developed;     // the same slots
+    std::vector<char> lin;           // the same slots: a cross loading with no
+                                     // curvature at any row (value and
+                                     // gradient only)
     bool varying_b = false;
 };
 
@@ -209,32 +216,36 @@ void parse_inputs(SInputs& I, List seed, List mem, List groups,
         M.p = as<int>(e["p"]);
         M.q = as<int>(e["q"]);
         M.partners = as<std::vector<int> >(e["partners"]);
-        M.cross = as<std::vector<double> >(e["cross"]);
-        M.col_cross = as<std::vector<int> >(e["col_cross"]);
         const std::size_t np = M.partners.size();
-        if (M.cross.size() != np * M.p || M.col_cross.size() != np * M.p) {
-            stop("the cross loadings of a term do not agree with its orders and partners.");
-        }
         for (std::size_t j = 0; j < np; ++j) {
             if (M.partners[j] < 1 || M.partners[j] > K) {
                 stop("a partner of a filtered parameter is out of range.");
             }
         }
-        for (std::size_t i = 0; i < M.col_cross.size(); ++i) {
-            if (M.col_cross[i] < 1 || zoff + M.col_cross[i] > m) {
-                stop("a cross loading sits outside the unknowns.");
-            }
-        }
         LogicalVector dev = e["developed"];
         List vl = e["vals"];
-        const int ns = 1 + M.p + M.q;
+        const int nb = 1 + M.p + M.q;
+        const int ns = nb + static_cast<int>(np) * M.p;
         if (dev.size() != ns || vl.size() != ns) {
-            stop("a term must give one value per base parameter.");
+            stop("a term must give one value per base parameter and per cross loading.");
         }
         M.developed.resize(ns);
         for (int s = 0; s < ns; ++s) M.developed[s] = dev[s] ? 1 : 0;
         M.val.resize(ns);
         for (int s = 0; s < ns; ++s) M.val[s] = read_val(as<List>(vl[s]), n, nd, I);
+        // a cross loading whose link has no curvature at any row is linear in
+        // its coordinates: its second and higher derivatives vanish
+        M.lin.assign(ns, 0);
+        for (int s = nb; s < ns; ++s) {
+            const SVal& V = M.val[s];
+            bool zero = true;
+            for (int r = 0; r < n && zero; ++r) {
+                if (V.k2[r] != 0.0) zero = false;
+                if (nd >= 1 && V.k3[r] != 0.0) zero = false;
+                if (nd >= 2 && V.k4[r] != 0.0) zero = false;
+            }
+            M.lin[s] = zero ? 1 : 0;
+        }
         M.varying_b = false;
         for (int j = 0; j < M.q; ++j) {
             if (M.developed[1 + M.p + j]) M.varying_b = true;
@@ -268,7 +279,7 @@ void parse_inputs(SInputs& I, List seed, List mem, List groups,
         for (int k = 0; k < K; ++k) {
             List gk = gv[k];
             const SMember& M = I.mem[k];
-            const int ns = 1 + M.p + M.q;
+            const int ns = static_cast<int>(M.val.size());
             if (gk.size() != ns) stop("a group must describe every value of a term.");
             G.gv[k].resize(ns);
             for (int s = 0; s < ns; ++s) {
@@ -369,6 +380,19 @@ inline void build_val(const SVal& V, const SGv& G, int r, int n, int m, int nd,
                 }
             }
         }
+    }
+}
+
+// the value and the gradient of a value with no curvature (all its higher
+// jets are zero), at row r on the m active unknowns of the group
+inline void build_lin(const SVal& V, const SGv& G, int r, int n, int m,
+                      double* v, double* d1) {
+    const std::size_t rr = static_cast<std::size_t>(r);
+    *v = V.v[rr];
+    zero_fill(d1, m);
+    const int na = static_cast<int>(G.at.size());
+    for (int i = 0; i < na; ++i) {
+        d1[G.at[i]] = V.W[rr + static_cast<std::size_t>(n) * G.sel[i]];
     }
 }
 
@@ -675,14 +699,6 @@ inline void prod_add(int m, double Av, const double* A1, const double* A2,
     }
 }
 
-// the position of an unknown among a group's active unknowns, or -1
-inline int local_pos(const SGroup& G, int col) {
-    const std::vector<int>::const_iterator it =
-        std::lower_bound(G.act.begin(), G.act.end(), col);
-    if (it == G.act.end() || *it != col) return -1;
-    return static_cast<int>(it - G.act.begin());
-}
-
 // the merge of the groups' curvature, in group order
 inline void scatter_add(NumericMatrix& W, const SGroup& G, const double* Wg,
                         int mfull) {
@@ -748,21 +764,9 @@ List gas_joint_sub_curv_cpp(List seed, List mem, List groups, IntegerVector fp,
         const int mk = static_cast<int>(G.act.size());
         const std::size_t mm = static_cast<std::size_t>(mk) * mk;
         double* Wg = Wgv[gi - b0].data();
-        // the local position of every cross loading's column
-        std::vector<std::vector<int> > cpos(K);
-        for (int k = 0; k < K; ++k) {
-            const SMember& M = I.mem[k];
-            cpos[k].resize(M.col_cross.size());
-            for (std::size_t i = 0; i < M.col_cross.size(); ++i) {
-                cpos[k][i] = local_pos(G, zoff + M.col_cross[i] - 1);
-                if (cpos[k][i] < 0) {
-                    bad[gi] = 2;
-                    return;
-                }
-            }
-        }
         // the coefficients of each member: omega, the loadings, the
-        // autoregressive coefficients, as value, gradient and Hessian
+        // autoregressive coefficients and the cross loadings, as value,
+        // gradient and Hessian (no Hessian for a linear cross loading)
         struct C2 {
             double v = 0.0;
             std::vector<double> d1, d2;
@@ -772,10 +776,10 @@ List gas_joint_sub_curv_cpp(List seed, List mem, List groups, IntegerVector fp,
         std::vector<BScratch> bs(K);
         for (int k = 0; k < K; ++k) {
             const SMember& M = I.mem[k];
-            cj[k].resize(1 + M.p + M.q);
+            cj[k].resize(M.val.size());
             for (std::size_t s = 0; s < cj[k].size(); ++s) {
                 cj[k][s].d1.assign(mk, 0.0);
-                cj[k][s].d2.assign(mm, 0.0);
+                if (!M.lin[s]) cj[k][s].d2.assign(mm, 0.0);
             }
             f0[k].d1.assign(mk, 0.0);
             f0[k].d2.assign(mm, 0.0);
@@ -798,6 +802,18 @@ List gas_joint_sub_curv_cpp(List seed, List mem, List groups, IntegerVector fp,
                     outs[j].d2 = c.d2.data();
                 }
                 build_b(M, G.gv[k], r, n, mk, 0, nullptr, nullptr, bs[k], outs.data());
+            }
+            // the cross loadings
+            for (int s = 1 + M.p + M.q; s < static_cast<int>(M.val.size()); ++s) {
+                if (!all && !M.developed[s]) continue;
+                C2& c = cj[k][s];
+                if (M.lin[s]) {
+                    build_lin(M.val[s], G.gv[k][s], r, n, mk, &c.v, c.d1.data());
+                } else {
+                    build_val(M.val[s], G.gv[k][s], r, n, mk, 0, nullptr,
+                              nullptr, &c.v, c.d1.data(), c.d2.data(), nullptr,
+                              nullptr);
+                }
             }
         };
         // the starting level of each member from the group's first row
@@ -841,7 +857,6 @@ List gas_joint_sub_curv_cpp(List seed, List mem, List groups, IntegerVector fp,
         std::vector<double> fv(ns, 0.0), uv(ns, 0.0);
         std::vector<double> fd1(ns * mk, 0.0), ud1(ns * mk, 0.0);
         std::vector<double> fd2(ns * mm, 0.0), ud2(ns * mm, 0.0);
-        std::vector<double> ecol(mk, 0.0);
         std::vector<double> Ed1(static_cast<std::size_t>(P) * mk);
         std::vector<const double*> Ed2(P);
         std::vector<double> TM(static_cast<std::size_t>(mk) * P);
@@ -872,19 +887,18 @@ List gas_joint_sub_curv_cpp(List seed, List mem, List groups, IntegerVector fp,
                                  uv[lag], &ud1[lag * mk], &ud2[lag * mm],
                                  &Jv, J1, J2);
                     }
-                    // the cross loadings times the partners' lagged scores; a
-                    // cross loading rides the identity link, so its gradient
-                    // is a one at its own column and it has no Hessian
+                    // the cross loadings times the partners' lagged scores,
+                    // each read at this row
                     for (int j = 0; j < np; ++j) {
                         const int l = M.partners[j] - 1;
                         const std::size_t lag = static_cast<std::size_t>(l + K * ls);
-                        const std::size_t ix = static_cast<std::size_t>(j) + static_cast<std::size_t>(np) * (i - 1);
-                        const int col = cpos[k][ix];
-                        ecol[col] = 1.0;
-                        prod_add(mk, M.cross[ix], ecol.data(), nullptr,
+                        const std::size_t sx = static_cast<std::size_t>(1 + M.p + M.q) +
+                            static_cast<std::size_t>(j) + static_cast<std::size_t>(np) * (i - 1);
+                        const C2& a = cj[k][sx];
+                        prod_add(mk, a.v, a.d1.data(),
+                                 M.lin[sx] ? nullptr : a.d2.data(),
                                  uv[lag], &ud1[lag * mk], &ud2[lag * mm],
                                  &Jv, J1, J2);
-                        ecol[col] = 0.0;
                     }
                 }
                 for (int j = 1; j <= M.q; ++j) {
@@ -999,9 +1013,6 @@ List gas_joint_sub_curv_cpp(List seed, List mem, List groups, IntegerVector fp,
     for (int gi = 0; gi < ng; ++gi) {
         if (bad[gi] == 1) {
             stop("the autoregressive polynomial is at the unit root; the filter has no starting level.");
-        }
-        if (bad[gi] == 2) {
-            stop("a cross loading is missing from a group's active unknowns.");
         }
     }
     // the entries and their transposes collect the same terms in a different
@@ -1194,6 +1205,23 @@ struct JRing {
         d2x.assign(ns * nd * m, 0.0);
         d2vw.assign(nd == 2 ? ns : 0, 0.0);
         d3vw.assign(nd == 2 ? ns * m : 0, 0.0);
+    }
+    // a quantity kept as a value and a gradient (and d1 . x_d in ad) only
+    void init_lite(int m_, int nd_) {
+        m = m_;
+        nd = nd_;
+        mm = static_cast<std::size_t>(m) * m;
+        v.assign(1, 0.0);
+        d1.assign(m, 0.0);
+        ad.assign(nd, 0.0);
+    }
+    // the view of a quantity made by init_lite(): every higher derivative null
+    JetV lite_view() const {
+        JetV V;
+        V.v = v[0];
+        V.d1 = d1.data();
+        for (int d = 0; d < nd; ++d) V.ad[d] = ad[d];
+        return V;
     }
     void aux(std::size_t s, const double* x0, const double* x1) {
         jet_aux(m, nd, x0, x1, &d1[s * m], &d2[s * mm], &d3[s * nd * mm],
@@ -1396,29 +1424,20 @@ List joint_sub_run(int nd, List seed, List mem, List groups, IntegerVector fp,
         }
         const double* x0 = dirs[0].data();
         const double* x1 = nd == 2 ? dirs[1].data() : nullptr;
-        // the local position of every cross loading's column
-        std::vector<std::vector<int> > cpos(K);
-        for (int k = 0; k < K; ++k) {
-            const SMember& M = I.mem[k];
-            cpos[k].resize(M.col_cross.size());
-            for (std::size_t i = 0; i < M.col_cross.size(); ++i) {
-                cpos[k][i] = local_pos(G, zoff + M.col_cross[i] - 1);
-                if (cpos[k][i] < 0) {
-                    bad[gi] = 2;
-                    return;
-                }
-            }
-        }
         // the coefficients of each member as quantities with every
-        // derivative: omega, the loadings, the autoregressive coefficients;
+        // derivative: omega, the loadings, the autoregressive coefficients and
+        // the cross loadings (a linear one keeps its value and gradient only);
         // and the starting level
         std::vector<std::vector<JRing> > cj(K);
         std::vector<JRing> f0r(K);
         std::vector<BScratch> bs(K);
         for (int k = 0; k < K; ++k) {
             const SMember& M = I.mem[k];
-            cj[k].resize(1 + M.p + M.q);
-            for (std::size_t s = 0; s < cj[k].size(); ++s) cj[k][s].init(1, m, nd);
+            cj[k].resize(M.val.size());
+            for (std::size_t s = 0; s < cj[k].size(); ++s) {
+                if (M.lin[s]) cj[k][s].init_lite(m, nd);
+                else cj[k][s].init(1, m, nd);
+            }
             f0r[k].init(1, m, nd);
             if (M.q > 0) bs[k].init(M.q, m, nd);
         }
@@ -1445,6 +1464,21 @@ List joint_sub_run(int nd, List seed, List mem, List groups, IntegerVector fp,
                 build_b(M, G.gv[k], r, n, m, nd, x0, x1, bs[k], outs.data());
                 for (int j = 0; j < M.q; ++j) cj[k][1 + M.p + j].aux(0, x0, x1);
             }
+            // the cross loadings
+            for (int s = 1 + M.p + M.q; s < static_cast<int>(M.val.size()); ++s) {
+                if (!all && !M.developed[s]) continue;
+                JRing& R = cj[k][s];
+                if (M.lin[s]) {
+                    build_lin(M.val[s], G.gv[k][s], r, n, m, &R.v[0], R.d1.data());
+                    const double* xs[2] = {x0, x1};
+                    for (int d = 0; d < nd; ++d) R.ad[d] = dotp(R.d1.data(), xs[d], m);
+                } else {
+                    build_val(M.val[s], G.gv[k][s], r, n, m, nd, x0, x1, &R.v[0],
+                              R.d1.data(), R.d2.data(), R.d3.data(),
+                              nd == 2 ? R.d4.data() : nullptr);
+                    R.aux(0, x0, x1);
+                }
+            }
         };
         // the starting level of each member from the group's first row
         const int r1 = rows[0] - 1;
@@ -1467,7 +1501,6 @@ List joint_sub_run(int nd, List seed, List mem, List groups, IntegerVector fp,
         JRing F, Uu;
         F.init(ns, m, nd);
         Uu.init(ns, m, nd);
-        std::vector<double> ecol(m, 0.0);
         // the predictors at a row: gradients (m x P), and for a filtered
         // equation the Hessian, the third derivatives, the fourth, and the
         // Hessian applied to each direction (null for a static equation)
@@ -1511,24 +1544,19 @@ List joint_sub_run(int nd, List seed, List mem, List groups, IntegerVector fp,
                         prod_add3(m, nd, A, B, J3);
                         if (nd == 2) prod_add4(m, A, B, J4);
                     }
-                    // the cross loadings times the partners' lagged scores; a
-                    // cross loading rides the identity link: a one at its own
-                    // column, no Hessian and no higher derivative
+                    // the cross loadings times the partners' lagged scores,
+                    // each with its jets at this row; one without curvature
+                    // has a value and a gradient only
                     for (int j = 0; j < np; ++j) {
                         const int l = M.partners[j] - 1;
                         const std::size_t lag = static_cast<std::size_t>(l + K * ls);
-                        const std::size_t ix = static_cast<std::size_t>(j) + static_cast<std::size_t>(np) * (i - 1);
-                        const int col = cpos[k][ix];
-                        ecol[col] = 1.0;
-                        JetV A;
-                        A.v = M.cross[ix];
-                        A.d1 = ecol.data();
-                        for (int d = 0; d < nd; ++d) A.ad[d] = dirs[d][col];
+                        const std::size_t sx = static_cast<std::size_t>(1 + M.p + M.q) +
+                            static_cast<std::size_t>(j) + static_cast<std::size_t>(np) * (i - 1);
+                        const JetV A = M.lin[sx] ? CJ[sx].lite_view() : CJ[sx].view(0);
                         const JetV B = Uu.view(lag);
-                        prod_add(m, A.v, A.d1, nullptr, B.v, B.d1, B.d2, &Jv, J1, J2);
+                        prod_add(m, A.v, A.d1, A.d2, B.v, B.d1, B.d2, &Jv, J1, J2);
                         prod_add3(m, nd, A, B, J3);
                         if (nd == 2) prod_add4(m, A, B, J4);
-                        ecol[col] = 0.0;
                     }
                 }
                 for (int j = 1; j <= M.q; ++j) {
@@ -1794,9 +1822,6 @@ List joint_sub_run(int nd, List seed, List mem, List groups, IntegerVector fp,
     for (int gi = 0; gi < ng; ++gi) {
         if (bad[gi] == 1) {
             stop("the autoregressive polynomial is at the unit root; the filter has no starting level.");
-        }
-        if (bad[gi] == 2) {
-            stop("a cross loading is missing from a group's active unknowns.");
         }
     }
     // the entries and their transposes collect the same terms in a different

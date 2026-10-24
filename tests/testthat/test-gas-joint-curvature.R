@@ -61,8 +61,13 @@ Xc <- cbind(1, as.numeric(scale(seq_len(nc))) * 0.3)
 # 2 = log sigma), mu carrying the columns of Xc and log sigma an intercept;
 # the unknowns are those coefficients followed by the filter's parameters on
 # their unconstrained scale
-gjc_model <- function(fp, p, q, cross = NULL, by = FALSE, dev = FALSE) {
+gjc_model <- function(fp, p, q, cross = NULL, by = FALSE, dev = FALSE,
+                      devx = NULL) {
   mk <- function(k) {
+    # with devx, a subformula on mu's cross loading (a panel with cross)
+    if (!is.null(devx) && k == "mu") {
+      return(gas(p = p, q = q, devx, by = g, time = t, cross = cross))
+    }
     # with dev, the loading of mu is developed over x
     if (dev && k == "mu") {
       if (by) gas(p = p, q = q, kappa1 ~ x, by = g, time = t, cross = cross)
@@ -463,6 +468,70 @@ test_that("a developed joint core is the derivative of the order below", {
         expect_equal(g2$jacobian[[k]][, j], d[, k], tolerance = 1e-6,
                      info = paste(lab, k, j))
       }
+    }
+  }
+})
+
+test_that("a cross loading developed by a subformula of one leaves the core unchanged", {
+  plain <- gjc_model(1:2, 1, 1, cross = "a", by = TRUE)
+  one <- gjc_model(1:2, 1, 1, cross = "a", by = TRUE,
+                   devx = kappa1_sigma ~ 1)
+  expect_identical(length(term_params(one$jt)), length(term_params(plain$jt)))
+  u0 <- gjc_u0(plain, 3)
+  set.seed(6)
+  gw <- matrix(stats::rnorm(nc * 2), nc, 2)
+  v <- stats::rnorm(plain$m)
+  w <- stats::rnorm(plain$m)
+  for (dirs in list(NULL, v, list(v, w))) {
+    a <- plain$core(u0, gw, dirs)
+    b <- one$core(u0, gw, dirs)
+    expect_equal(b$curvature, a$curvature, tolerance = 1e-12)
+    for (k in 1:2) {
+      expect_equal(unname(b$jacobian[[k]]), unname(a$jacobian[[k]]),
+                   tolerance = 1e-12)
+      if (!is.null(a$dphi)) {
+        expect_equal(unname(b$dphi[[k]][[1L]]), unname(a$dphi[[k]][[1L]]),
+                     tolerance = 1e-12)
+      }
+      if (!is.null(a$dpsi)) {
+        expect_equal(unname(b$dpsi[[k]]), unname(a$dpsi[[k]]),
+                     tolerance = 1e-12)
+      }
+    }
+  }
+})
+
+test_that("a core with a developed cross loading is the derivative of the order below", {
+  md <- gjc_model(1:2, 1, 1, cross = "a", by = TRUE, devx = kappa1_sigma ~ x)
+  u0 <- gjc_u0(md, 3)
+  nm <- term_params(md$jt)
+  u0[md$mb + which(startsWith(nm, "mu.kappa1_sigma."))] <- c(0.03, 0.02)
+  set.seed(6)
+  gw <- matrix(stats::rnorm(nc * 2), nc, 2)
+  v <- stats::rnorm(md$m)
+  w <- stats::rnorm(md$m)
+  dir_of <- function(f, x, h) (f(u0 + h * x) - f(u0 - h * x)) / (2 * h)
+  rich <- function(f, x) (4 * dir_of(f, x, 1e-3) - dir_of(f, x, 2e-3)) / 3
+  g2 <- md$core(u0, gw)
+  g3 <- md$core(u0, gw, v)
+  expect_equal(g3$curvature, rich(function(u) md$core(u, gw)$curvature, v),
+               tolerance = 1e-6)
+  g4 <- md$core(u0, gw, list(v, w))
+  expect_equal(g4$curvature, rich(function(u) md$core(u, gw, v)$curvature, w),
+               tolerance = 1e-6)
+  for (k in 1:2) {
+    expect_equal(g3$dphi[[k]][[1L]],
+                 rich(function(u) md$core(u, gw)$jacobian[[k]], v),
+                 tolerance = 1e-6)
+    expect_equal(g4$dpsi[[k]],
+                 rich(function(u) md$core(u, gw, v)$dphi[[k]][[1L]], w),
+                 tolerance = 1e-6)
+  }
+  for (j in md$mb + which(startsWith(nm, "mu.kappa1_sigma."))) {
+    ej <- numeric(md$m); ej[j] <- 1
+    d <- rich(function(u) md$preds(u), ej)
+    for (k in 1:2) {
+      expect_equal(g2$jacobian[[k]][, j], d[, k], tolerance = 1e-6)
     }
   }
 })

@@ -25,13 +25,18 @@ Defaults to 1.}
 
 \item{...}{Two-sided formulas whose left side names a parameter, one
 per parameter to be developed with covariates, e.g.
-\code{kappa1 ~ s(x)}; see the section above. A formula given in the place of
-\code{p} or \code{q} is rejected.}
+\code{kappa1 ~ s(x)}; see the section above. The left side may also name a
+cross loading, \verb{kappa<i>_<parameter>}, in a term that sets \code{cross} and is
+filtered jointly with that parameter, e.g. \code{kappa1_mu ~ 1 + random(~ 1 | g)}; the cross loading is developed on the identity link unless \code{links}
+names another. A cross loading that varies by group is identified only
+with long series or many groups (with a few hundred observations per
+group). A formula given in the place of \code{p} or \code{q} is rejected.}
 
 \item{by}{An optional grouping variable, evaluated in the data; each
 group is filtered independently, from its own starting level. A
 formula here is the shorthand that gives the same subformula to every
-parameter, and the term then does not imply any grouping.}
+parameter of the filter (not to the cross loadings), and the term then
+does not imply any grouping.}
 
 \item{time}{An optional ordering variable, evaluated in the data.}
 
@@ -47,7 +52,8 @@ gives a term that loads its own score only.}
 \item{links}{An optional named list of \pkg{linkfunctions7} links over
 the parameters of \code{\link[=term_params]{term_params()}}, overriding the defaults
 described above. Only the parameters of \code{\link[=term_params]{term_params()}} before any
-development can be named. The coefficients of a development are
+development, and the cross loadings \verb{kappa<i>_<parameter>}, can be
+named. The coefficients of a development are
 unconstrained, and the link of the developed parameter is applied inside
 the development.}
 

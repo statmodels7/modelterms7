@@ -327,12 +327,18 @@ GasTerm <- S7::new_class(
 #'   Defaults to 1.
 #' @param ... Two-sided formulas whose left side names a parameter, one
 #'   per parameter to be developed with covariates, e.g.
-#'   `kappa1 ~ s(x)`; see the section above. A formula given in the place of
-#'   `p` or `q` is rejected.
+#'   `kappa1 ~ s(x)`; see the section above. The left side may also name a
+#'   cross loading, `kappa<i>_<parameter>`, in a term that sets `cross` and is
+#'   filtered jointly with that parameter, e.g. `kappa1_mu ~ 1 + random(~ 1 |
+#'   g)`; the cross loading is developed on the identity link unless `links`
+#'   names another. A cross loading that varies by group is identified only
+#'   with long series or many groups (with a few hundred observations per
+#'   group). A formula given in the place of `p` or `q` is rejected.
 #' @param by An optional grouping variable, evaluated in the data; each
 #'   group is filtered independently, from its own starting level. A
 #'   formula here is the shorthand that gives the same subformula to every
-#'   parameter, and the term then does not imply any grouping.
+#'   parameter of the filter (not to the cross loadings), and the term then
+#'   does not imply any grouping.
 #' @param time An optional ordering variable, evaluated in the data.
 #' @param scaling A single finite number \eqn{d}: the score is multiplied by
 #'   the expected information to the power \eqn{-d}. Defaults to 0, the score
@@ -344,7 +350,8 @@ GasTerm <- S7::new_class(
 #' @param links An optional named list of \pkg{linkfunctions7} links over
 #'   the parameters of [term_params()], overriding the defaults
 #'   described above. Only the parameters of [term_params()] before any
-#'   development can be named. The coefficients of a development are
+#'   development, and the cross loadings `kappa<i>_<parameter>`, can be
+#'   named. The coefficients of a development are
 #'   unconstrained, and the link of the developed parameter is applied inside
 #'   the development.
 #' @param label A single non-empty string naming the term.
@@ -479,6 +486,12 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
   by <- substitute(by)
   base <- .gas_base_params(p, q)
   submodels <- .gas_gather_submodels(list(...), base)
+  xs <- names(submodels)[.gas_is_cross_name(names(submodels), base)]
+  if (length(xs) && is.null(cross)) {
+    stop(sprintf(paste("'%s' is a cross loading, which exists only in a",
+                       "term that sets 'cross' and is filtered jointly",
+                       "with its partner."), xs[1L]), call. = FALSE)
+  }
   # `by = ~f` is the shorthand giving every parameter the same subformula;
   # a grouping variable is a bare symbol, so the two are told apart by shape
   if (is.call(by) && identical(by[[1L]], as.name("~"))) {
@@ -502,6 +515,7 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
            call. = FALSE)
     }
     bad <- setdiff(names(links), base)
+    bad <- bad[!.gas_is_cross_name(bad, base)]
     if (length(bad)) {
       stop(sprintf("'links' names '%s'; the parameters are %s.",
                    bad[1L], paste(base, collapse = ", ")), call. = FALSE)
@@ -543,8 +557,9 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
            call. = FALSE)
     }
     pn <- as.character(d[[2L]])
-    if (!(pn %in% base)) {
-      stop(sprintf("the subformula names '%s'; the parameters are %s.",
+    if (!(pn %in% base) && !.gas_is_cross_name(pn, base)) {
+      stop(sprintf(paste("the subformula names '%s'; the parameters are %s,",
+                         "and the cross loadings kappa<i>_<parameter>."),
                    pn, paste(base, collapse = ", ")), call. = FALSE)
     }
     if (!is.null(out[[pn]])) {
@@ -554,6 +569,15 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
     out[[pn]] <- stats::as.formula(call("~", d[[3L]]), env = environment(d))
   }
   out
+}
+
+# whether a name is that of a cross loading, kappa<i>_<parameter>, with a lag
+# i among the term's loadings; which parameters are partners is known only
+# when gas_joint() joins the terms
+.gas_is_cross_name <- function(nm, base) {
+  m <- regmatches(nm, regexec("^kappa([0-9]+)_(.+)$", nm))
+  vapply(m, function(x) length(x) == 3L &&
+           paste0("kappa", x[2L]) %in% base, logical(1))
 }
 
 # the parameters of the filter itself, before any deviation
@@ -618,9 +642,9 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
 #' @keywords internal
 S7::method(term_params, GasTerm) <- function(term, ...) {
   if (length(term@blueprint) && !is.null(term@blueprint$sub)) {
-    # the cross loadings of a joint filter follow the developed layout, as
-    # they follow the base parameters of an undeveloped term
-    return(c(.gas_sub_layout(term)$names, .gas_cross_params(term)))
+    # the developed layout covers the base parameters and then the cross
+    # loadings of a joint filter, each expanded where it is developed
+    return(.gas_sub_layout(term)$names)
   }
   c(.gas_base_params(term@p, term@q), .gas_cross_params(term))
 }
@@ -814,7 +838,7 @@ S7::method(term_links, GasTerm) <- function(term, ...) {
     # a deviation, and a coordinate of a development, are unconstrained
     # already: they act on the scale the parameter's own link carries it
     # to, which the term applies inside
-    if (!(p %in% base)) return(id)
+    if (!(p %in% c(base, .gas_cross_params(term)))) return(id)
     .gas_param_link(term, p)
   }), nm)
 }

@@ -1,3 +1,14 @@
+# modelterms7 0.106.0
+
+* A cross loading of a joint score-driven filter, `kappa<i>_<parameter>`,
+  may carry a subformula, e.g. `kappa1_mu ~ 1 + random(~ 1 | g)` in the term
+  of sigma, on the identity link unless `links` names another; `by = ~f`
+  does not develop it. The filter, its reverse pass and its derivatives of
+  orders two to four read the cross loadings per observation. A subformula
+  `~ 1` equals the scalar cross loading to 1e-12. `gas_joint()` rejects a
+  subformula on a cross loading whose parameter does not share the term's
+  `cross` label.
+
 # modelterms7 0.105.1
 
 * The context of the compiled joint recursions (the family through the

@@ -20,7 +20,7 @@ NULL
 # the names and positions of the term's parameters with the developed ones
 # expanded in place
 .gas_sub_layout <- function(term) {
-  base <- .gas_base_params(term@p, term@q)
+  base <- c(.gas_base_params(term@p, term@q), .gas_cross_params(term))
   sub <- term@blueprint$sub
   nm <- character(0)
   idx <- list()
@@ -102,6 +102,8 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 # link applied inside the development
 .gas_param_link <- function(term, j) {
   if (!is.null(term@links[[j]])) return(term@links[[j]])
+  # a cross loading is free in sign
+  if (grepl("^kappa[0-9]+_", j)) return(linkfunctions7::identity_link())
   if (startsWith(j, "pacf")) linkfunctions7::rhobit_link()
   else if (startsWith(j, "kappa")) linkfunctions7::log_link()
   else linkfunctions7::identity_link()
@@ -119,9 +121,10 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
                             second = FALSE, third = FALSE,
                             fourth = FALSE) {
   scale <- match.arg(scale)
-  base <- .gas_base_params(term@p, term@q)
   sub <- term@blueprint$sub
   lay <- .gas_sub_layout(term)
+  # the base parameters and the cross loadings, in the layout's order
+  base <- names(lay$idx)
   n <- term@blueprint$n
   out <- list()
   for (j in base) {
@@ -164,7 +167,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 # coordinate reaches every group, and a development's coordinate reaches
 # the groups where its column is not identically zero
 .gas_sub_active <- function(term, vals) {
-  base <- .gas_base_params(term@p, term@q)
+  base <- names(.gas_sub_layout(term)$idx)
   lapply(term@blueprint$order, function(rows) {
     act <- integer(0)
     for (j in base) {
@@ -1101,8 +1104,9 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
   q <- term@q
   nn <- nrow(newdata)
   np <- length(u)
-  base <- .gas_base_params(p, q)
   lay <- .gas_sub_layout(term)
+  # the base parameters and the cross loadings of a joint filter
+  base <- names(lay$idx)
   v <- list()
   # the derivative of each value in the term's parameters, on the mixed
   # scale `u` is on: one for a scalar parameter, h'(z' gamma) z for a
@@ -1147,5 +1151,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
       }
     }
   }
-  list(om = v$omega, A = A, B = B, dom = dv$omega, dA = dA, dB = dB)
+  xn <- .gas_cross_params(term)
+  list(om = v$omega, A = A, B = B, dom = dv$omega, dA = dA, dB = dB,
+       cross = v[xn], dcross = dv[xn])
 }

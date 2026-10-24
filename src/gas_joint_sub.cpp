@@ -17,7 +17,7 @@ using namespace Rcpp;
 // carried, as in gas_filter_sub_cpp(), on each group's active columns of the
 // joint parameter vector instead of on all of them. The level, the loadings
 // and the autoregressive coefficients are read at the row whose equation they
-// enter; the cross loadings are scalars.
+// enter, the cross loadings included.
 //
 // The context (family, links, scaling) is the one of gas_joint_ctx.h,
 // shared with gas_joint.cpp.
@@ -31,7 +31,8 @@ namespace {
 
 // The per-row coefficients of one member, as plain vectors so that a worker
 // reads no R object: om (n), A (n x p, column-major), B (n x q), the partners'
-// positions (1-based) and the scalar cross loadings (npk x p).
+// positions (1-based) and the cross loadings per row (n x npk*p, the column of
+// partner j at lag i being j + npk (i - 1), j from 0).
 struct SubCoef {
     int p = 0, q = 0, n = 0;
     std::vector<double> om, A, B, cross;
@@ -55,6 +56,10 @@ std::vector<SubCoef> sub_coefs(const List& mem, bool need_om) {
         J.B.assign(B.begin(), B.end());
         J.partners = as<std::vector<int> >(c["partners"]);
         NumericMatrix cr = as<NumericMatrix>(c["cross"]);
+        if (cr.nrow() != static_cast<int>(A.nrow()) ||
+            cr.ncol() != static_cast<int>(J.partners.size()) * J.p) {
+            stop("the cross loadings must have one column per partner and lag.");
+        }
         J.cross.assign(cr.begin(), cr.end());
     }
     return out;
@@ -63,13 +68,12 @@ std::vector<SubCoef> sub_coefs(const List& mem, bool need_om) {
 // one member of one group: the derivative rows of the level, of each loading
 // and of each autoregressive coefficient on the group's active columns
 // (m x na, column-major), the starting level and its derivative, and the
-// positions among the active columns of the cross loadings (npk x p)
+// derivative rows of the cross loadings (npk*p matrices, m x na)
 struct SubMem {
     const double* dom;
-    std::vector<const double*> da, dbl;
+    std::vector<const double*> da, dbl, dcr;
     double f0;
     const double* df0;
-    std::vector<int> ccol;
 };
 
 struct SubGrp {
@@ -84,9 +88,10 @@ struct SubGrp {
 // The joint filter with per-row coefficients on the compiled route, or NULL
 // where the context is inert (where gas_joint_filter_cpp() returns NULL).
 // eta: n x K, the static predictors of the filtered parameters; mem: one
-// list per member with p, q, om, A, B, partners, cross; groups: one list per
-// group with rows, act (the group's active columns of the joint vector) and
-// mem (one list per member with dom, da, dbl, f0, df0, ccol); M: the length
+// list per member with p, q, om, A, B, partners, cross (n x npk*p); groups: one
+// list per group with rows, act (the group's active columns of the joint
+// vector) and mem (one list per member with dom, da, dbl, f0, df0, dcr: the
+// derivative rows of the cross loadings, npk*p matrices); M: the length
 // of the joint parameter vector.
 // [[Rcpp::export]]
 SEXP gas_joint_sub_filter_cpp(NumericMatrix eta, List mem, List groups, int M,
@@ -147,11 +152,19 @@ SEXP gas_joint_sub_filter_cpp(NumericMatrix eta, List mem, List groups, int M,
                 keep_m.push_back(x);
                 S.dbl.push_back(x.begin());
             }
+            List dcr = mk["dcr"];
+            if (dcr.size() != static_cast<int>(co[k].partners.size()) * co[k].p) {
+                stop("the cross loadings' derivative rows must be one per partner and lag.");
+            }
+            for (int c = 0; c < dcr.size(); ++c) {
+                NumericMatrix x = dcr[c];
+                keep_m.push_back(x);
+                S.dcr.push_back(x.begin());
+            }
             S.f0 = as<double>(mk["f0"]);
             NumericVector df0 = mk["df0"];
             keep_v.push_back(df0);
             S.df0 = df0.begin();
-            S.ccol = as<std::vector<int> >(mk["ccol"]);
         }
     }
     std::vector<int> bad(ng, 0);
@@ -188,12 +201,16 @@ SEXP gas_joint_sub_filter_cpp(NumericMatrix eta, List mem, List groups, int M,
                     }
                     for (int j = 0; j < npk; ++j) {
                         const int l = J.partners[j] - 1;
-                        const double cji = J.cross[j + npk * (i - 1)];
+                        const int cx = j + npk * (i - 1);
+                        const double cji = J.cross[static_cast<std::size_t>(cx) * n + r];
+                        const double* dcj = S.dcr[cx];
                         const std::size_t ll = static_cast<std::size_t>(l + K * (t - i));
-                        ft += cji * u[ll];
+                        const double sll = u[ll];
+                        ft += cji * sll;
                         const double* sdl = &Sd[ll * NA];
-                        for (int c = 0; c < na; ++c) Ft[c] += cji * sdl[c];
-                        Ft[S.ccol[j + npk * (i - 1)] - 1] += u[ll];
+                        for (int c = 0; c < na; ++c) {
+                            Ft[c] += cji * sdl[c] + sll * dcj[c * T + t];
+                        }
                     }
                 }
                 for (int j = 1; j <= J.q; ++j) {
@@ -272,8 +289,8 @@ SEXP gas_joint_sub_filter_cpp(NumericMatrix eta, List mem, List groups, int M,
 // curvature that the filter read: the derivative of a caller's objective in
 // the static predictors (deta) and in the driving scores (dscore), given its
 // direct derivative g (n x K) in the filtered predictors. The coefficients
-// are read at the row whose equation they enter, and no derivative of them
-// is needed.
+// are read at the row whose equation they enter (the cross loadings too), and
+// no derivative of them is needed.
 // [[Rcpp::export]]
 List gas_joint_sub_adjoint_cpp(NumericVector curv, NumericMatrix g, List mem,
                                List order) {
@@ -307,7 +324,8 @@ List gas_joint_sub_adjoint_cpp(NumericVector curv, NumericMatrix g, List mem,
                     ub[k + K * (t - i)] += J.A[static_cast<std::size_t>(i - 1) * n + r] * fbk;
                     for (int j = 0; j < npk; ++j) {
                         const int l = J.partners[j] - 1;
-                        ub[l + K * (t - i)] += J.cross[j + npk * (i - 1)] * fbk;
+                        ub[l + K * (t - i)] +=
+                            J.cross[static_cast<std::size_t>(j + npk * (i - 1)) * n + r] * fbk;
                     }
                 }
             }

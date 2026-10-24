@@ -126,12 +126,11 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
           }
           for (j in seq_along(c_k$partners)) {
             l <- c_k$partners[j]
-            ft <- ft + c_k$cross[j, i] * sc[t - i, l]
+            h <- (j - 1L) * c_k$p + i
+            ft <- ft + c_k$cross[[h]][r] * sc[t - i, l]
             if (dcoef) {
-              g <- numeric(M)
-              g[c_k$col_cross[j, i]] <- 1
-              dft <- dft + sc[t - i, l] * lift(g) +
-                c_k$cross[j, i] * dS[[l]][t - i, ]
+              dft <- dft + sc[t - i, l] * lift(c_k$dcross[[h]][r, ]) +
+                c_k$cross[[h]][r] * dS[[l]][t - i, ]
             }
           }
         }
@@ -178,7 +177,8 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
     p <- tm@p
     q <- tm@q
     off <- term@offsets[k]
-    nb <- length(nm) - length(tm@cross_with) * p
+    xn <- .gas_cross_params(tm)
+    nb <- length(nm) - length(xn)
     lifted <- function(D) {
       G <- matrix(0, nn, M)
       G[, off + seq_len(ncol(D))] <- D
@@ -212,18 +212,26 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
         G
       })
     }
+    # the cross loadings at every new row, partner by partner and lag by
+    # lag as .gas_cross_params() orders them, with their derivative rows
     pk <- term@partners[[k]]
-    cl <- matrix(0, length(pk), p)
-    ccol <- matrix(0L, length(pk), p)
-    for (j in seq_along(pk)) {
-      for (i in seq_len(p)) {
-        ccol[j, i] <- off + nb + (j - 1L) * p + i
-        cl[j, i] <- v[[nb + (j - 1L) * p + i]]
+    xv <- vector("list", length(xn))
+    xd <- vector("list", length(xn))
+    developed <- length(tm@blueprint) && !is.null(tm@blueprint$sub)
+    for (h in seq_along(xn)) {
+      if (developed) {
+        xv[[h]] <- nd$cross[[xn[h]]]
+        xd[[h]] <- lifted(nd$dcross[[xn[h]]])
+      } else {
+        xv[[h]] <- rep(v[[xn[h]]], nn)
+        G <- matrix(0, nn, M)
+        G[, off + nb + h] <- 1
+        xd[[h]] <- G
       }
     }
     out[[k]] <- list(p = p, q = q, om = om, A = A, B = B, dom = dom,
-                     dA = dA, dB = dB, partners = pk, cross = cl,
-                     col_cross = ccol)
+                     dA = dA, dB = dB, partners = pk, cross = xv,
+                     dcross = xd)
   }
   out
 }

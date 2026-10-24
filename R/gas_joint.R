@@ -182,6 +182,20 @@ gas_joint <- function(terms) {
       partners[[k]] <- integer(0)
     }
     tm@cross_with <- params[partners[[k]]]
+    # a subformula on a cross loading names a partner of the term's group
+    sub <- tm@blueprint$sub
+    xs <- names(sub)[.gas_is_cross_name(names(sub),
+                                        .gas_base_params(tm@p, tm@q))]
+    bad <- setdiff(xs, .gas_cross_params(tm))
+    if (length(bad)) {
+      stop(sprintf(paste0(
+        "the gas() term of '%s' develops '%s', which is not one of its ",
+        "cross loadings\n  (%s): the parameter after the underscore must ",
+        "share the term's 'cross' label."), params[k], bad[1L],
+        if (length(.gas_cross_params(tm))) paste(.gas_cross_params(tm),
+                                                 collapse = ", ")
+        else "none"), call. = FALSE)
+    }
     terms[[k]] <- tm
   }
   np <- vapply(terms, function(tm) length(term_params(tm)), integer(1))

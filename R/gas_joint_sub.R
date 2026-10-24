@@ -6,7 +6,8 @@ NULL
 # the reverse pass. It is the joint analogue of .gas_filter_sub() and
 # .gas_adjoint_sub() (gas_submodels.R). A member's parameter that carries a
 # subformula is read at each row from .gas_sub_values(), the autoregressive
-# coefficients from .gas_sub_b(), and the cross loadings stay scalar. The
+# coefficients from .gas_sub_b(), and the cross loadings, scalar or developed,
+# are read per row as well. The
 # curvature of the second and higher orders is in gas_joint_sub_core.R.
 #
 # The joint vector is the concatenation of the members' term_params(), member
@@ -16,8 +17,8 @@ NULL
 
 # The per-member inputs of the filter at the parameters psi: the
 # coefficients per row, their chart derivatives, the autoregressive
-# coefficients per row and the scalar cross loadings with their columns in
-# the joint vector.
+# coefficients per row and the cross loadings per row (n x npk*p, the column
+# of partner j at lag i being j + npk (i - 1)) with their names in that order.
 .gas_joint_sub_members <- function(term, psi) {
   psi <- .gas_joint_psi(term, psi)
   lapply(seq_along(term@params), function(k) {
@@ -36,15 +37,15 @@ NULL
     vals <- .gas_sub_values(tm, u, "parameter")
     bd <- .gas_sub_b(tm, vals)
     pk <- term@partners[[k]]
-    cross <- matrix(0, length(pk), p)
-    ccol <- matrix(0L, length(pk), p)
-    for (j in seq_along(pk)) {
-      for (i in seq_len(p)) {
-        at <- nl + (j - 1L) * p + i
-        cross[j, i] <- u[[at]]
-        ccol[j, i] <- as.integer(off + at)
+    npk <- length(pk)
+    cnm <- character(0)
+    for (i in seq_len(p)) {
+      for (j in seq_len(npk)) {
+        cnm <- c(cnm, paste0("kappa", i, "_", tm@cross_with[j]))
       }
     }
+    cross <- matrix(0, n, npk * p)
+    for (cc in seq_along(cnm)) cross[, cc] <- vals[[cnm[cc]]]$v
     aj <- if (p > 0L) paste0("kappa", seq_len(p)) else character(0)
     A <- matrix(0, n, p)
     for (i in seq_len(p)) A[, i] <- vals[[aj[i]]]$v
@@ -52,26 +53,25 @@ NULL
     for (j in seq_len(q)) B[, j] <- bd$B[, j]
     list(tm = tm, p = p, q = q, off = off, vals = vals, bd = bd,
          om = vals$omega$v, A = A, B = B, partners = as.integer(pk),
-         cross = cross, col_cross = ccol)
+         cross = cross, cross_names = cnm)
   })
 }
 
 # The groups of the compiled route. Each group is carried on the union of
-# the members' active coordinates (moved by the member's offset) and every
-# cross column, and every member's derivative rows are scattered onto it
-# once, from the single term's .gas_sub_prep().
+# the members' active coordinates (moved by the member's offset, the cross
+# loadings' included), and every member's derivative rows are scattered onto
+# it once, from the single term's .gas_sub_prep(); the cross loadings' rows
+# are scattered here.
 .gas_joint_sub_groups <- function(term, mem) {
   bp <- term@blueprint
   K <- length(mem)
   acts <- lapply(mem, function(m) .gas_sub_active(m$tm, m$vals))
   preps <- lapply(seq_len(K), function(k)
     .gas_sub_prep(mem[[k]]$tm, mem[[k]]$vals, mem[[k]]$bd, acts[[k]]))
-  cross_cols <- as.integer(unlist(lapply(mem, function(m) m$col_cross)))
   lapply(seq_along(bp$order), function(l) {
     rows <- bp$order[[l]]
-    jact <- sort(unique(as.integer(c(
-      unlist(lapply(seq_len(K), function(k) mem[[k]]$off + acts[[k]][[l]])),
-      cross_cols))))
+    jact <- sort(unique(as.integer(
+      unlist(lapply(seq_len(K), function(k) mem[[k]]$off + acts[[k]][[l]])))))
     na <- length(jact)
     members <- lapply(seq_len(K), function(k) {
       g <- preps[[k]]$groups[[l]]
@@ -83,10 +83,16 @@ NULL
       }
       df0 <- numeric(na)
       if (length(at)) df0[at] <- g$df0
-      npk <- length(mem[[k]]$partners)
+      dcr <- lapply(mem[[k]]$cross_names, function(nmj) {
+        vj <- mem[[k]]$vals[[nmj]]
+        pos <- match(mem[[k]]$off + vj$idx, jact)
+        ok <- !is.na(pos)
+        M <- matrix(0, length(rows), na)
+        if (any(ok)) M[, pos[ok]] <- vj$W[rows, ok, drop = FALSE]
+        M
+      })
       list(dom = sc(g$dom), da = lapply(g$da, sc), dbl = lapply(g$dbl, sc),
-           f0 = g$f0, df0 = df0,
-           ccol = matrix(match(mem[[k]]$col_cross, jact), npk, mem[[k]]$p))
+           f0 = g$f0, df0 = df0, dcr = dcr)
     })
     list(rows = as.integer(rows), act = as.integer(jact), mem = members)
   })
@@ -172,10 +178,11 @@ NULL
             u[k, t - i] * dense(k, paste0("kappa", i), r)
           for (j in seq_along(m$partners)) {
             l <- m$partners[j]
-            ft <- ft + m$cross[j, i] * u[l, t - i]
-            Ft <- Ft + m$cross[j, i] * Sd[l, t - i, ]
-            cc <- m$col_cross[j, i]
-            Ft[cc] <- Ft[cc] + u[l, t - i]
+            cc <- j + length(m$partners) * (i - 1L)
+            cji <- m$cross[r, cc]
+            ft <- ft + cji * u[l, t - i]
+            Ft <- Ft + cji * Sd[l, t - i, ] +
+              u[l, t - i] * dense(k, m$cross_names[cc], r)
           }
         }
         for (j in seq_len(m$q)) {

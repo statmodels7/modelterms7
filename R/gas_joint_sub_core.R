@@ -13,10 +13,13 @@ NULL
 # (.gas_curvature_sub()), done for every member: the values of the base
 # parameters at every row with their chart derivatives
 # (.gas_sub_values()), and each group's active coordinates
-# (.gas_sub_active()). A group's active unknowns are the unknowns that are not
-# parameters of the filter, every cross loading, and the coordinates of the
-# members that are not identically zero on the group, so that the kernels run
-# on a set whose size does not grow with the number of groups. The recursion,
+# (.gas_sub_active()). The cross loadings are values of the layout like the
+# others: a scalar one is a constant coordinate, a developed one is read at
+# every row with its chart jets. A group's active unknowns are the unknowns
+# that are not parameters of the filter and the coordinates of the members
+# that are not identically zero on the group (a scalar coordinate is active in
+# every group), so that the kernels run on a set whose size does not grow with
+# the number of groups. The recursion,
 # the jets of the coefficients at every row, the autoregressive coefficients'
 # Levinson-Durbin map and the starting levels are in
 # src/gas_joint_sub_curv.cpp.
@@ -77,8 +80,8 @@ NULL
   acts <- vector("list", K)
   lay <- vector("list", K)
   bases <- vector("list", K)
+  slots <- vector("list", K)
   nlay <- integer(K)
-  ncross <- integer(K)
   for (k in seq_len(K)) {
     pk <- term@params[k]
     tm <- term@terms[[pk]]
@@ -97,11 +100,11 @@ NULL
     }
     v <- as.numeric(v)
     # the term's coordinates on the mixed scale of .gas_sub_values(): the
-    # coefficients of a developed parameter as they are, a scalar parameter
-    # through the link of its chart
+    # coefficients of a developed parameter as they are, a scalar parameter or
+    # cross loading through the link of its chart
     u <- v[seq_len(nl)]
     sub <- tm@blueprint$sub
-    for (j in base) {
+    for (j in names(lay[[k]]$idx)) {
       if (is.null(sub[[j]])) {
         ix <- lay[[k]]$idx[[j]]
         u[ix] <- linkfunctions7::linkfun(.gas_param_link(tm, j), u[ix])
@@ -110,20 +113,20 @@ NULL
     vals <- .gas_sub_values(tm, u, "zeta", second = TRUE, third = nd >= 1L,
                             fourth = nd >= 2L)
     acts[[k]] <- .gas_sub_active(tm, vals)
-    # the cross loadings stay scalar and ride the identity link: partner by
-    # partner, lag by lag, after the developed layout
+    # the values of the recursion are the base parameters and then the cross
+    # loadings, the latter at the slot j + np (i - 1) (partner j, lag i), while
+    # the layout lists them partner by partner
     partners <- term@partners[[k]]
     np <- length(partners)
-    ncross[k] <- np * p
-    cl <- matrix(0, np, p)
-    ccol <- matrix(0L, np, p)
-    for (j in seq_len(np)) {
-      for (i in seq_len(p)) {
-        cl[j, i] <- v[nl + (j - 1L) * p + i]
-        ccol[j, i] <- term@offsets[k] + nl + (j - 1L) * p + i
-      }
+    cn <- .gas_cross_params(tm)
+    if (length(cn) != np * p) {
+      stop("the cross loadings of a term do not agree with its partners.",
+           call. = FALSE)
     }
-    vl <- lapply(base, function(j) {
+    xn <- cn[as.vector(outer(seq_len(np), seq_len(p),
+                             function(j, i) (j - 1L) * p + i))]
+    slots[[k]] <- c(base, xn)
+    vl <- lapply(slots[[k]], function(j) {
       vj <- vals[[j]]
       Z <- if (isTRUE(vj$developed)) vj$Z else matrix(1, n, 1L)
       list(v = as.numeric(vj$v),
@@ -134,8 +137,7 @@ NULL
            k4 = if (nd >= 2L) as.numeric(vj$k4) else numeric(0))
     })
     mem[[k]] <- list(p = p, q = q, partners = as.integer(partners),
-                     cross = as.numeric(cl), col_cross = as.integer(ccol),
-                     developed = vapply(base, function(j)
+                     developed = vapply(slots[[k]], function(j)
                        isTRUE(vals[[j]]$developed), logical(1)),
                      vals = vl)
   }
@@ -146,12 +148,11 @@ NULL
   groups <- vector("list", length(ord))
   for (l in seq_along(ord)) {
     cols <- lapply(seq_len(K), function(k) {
-      loc <- c(acts[[k]][[l]], nlay[k] + seq_len(ncross[k]))
-      zoff + term@offsets[k] + loc
+      zoff + term@offsets[k] + acts[[k]][[l]]
     })
     act <- sort(unique(c(seq_len(zoff), unlist(cols))))
     gv <- lapply(seq_len(K), function(k) {
-      lapply(bases[[k]], function(j) {
+      lapply(slots[[k]], function(j) {
         ids <- lay[[k]]$idx[[j]]
         sel <- which(ids %in% acts[[k]][[l]])
         list(at = as.integer(match(zoff + term@offsets[k] + ids[sel], act)),
