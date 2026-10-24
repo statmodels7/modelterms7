@@ -20,7 +20,7 @@ gas(
   by = NULL,
   time = NULL,
   scaling = 0,
-  cross = NULL,
+  p_cross = NULL,
   links = NULL,
   label = "gas"
 )
@@ -43,12 +43,14 @@ gas(
   Two-sided formulas whose left side names a parameter, one per
   parameter to be developed with covariates, e.g. `kappa1 ~ s(x)`; see
   the section above. The left side may also name a cross loading,
-  `kappa<i>_<parameter>`, in a term that sets `cross` and is filtered
-  jointly with that parameter, e.g. `kappa1_mu ~ 1 + random(~ 1 | g)`;
-  the cross loading is developed on the identity link unless `links`
-  names another. A cross loading that varies by group is identified only
-  with long series or many groups (with a few hundred observations per
-  group). A formula given in the place of `p` or `q` is rejected.
+  `kappa<i>_<parameter>`, whose lag `i` the term declares in `p_cross`,
+  e.g. `kappa1_mu ~ 1 + random(~ 1 | g)`; the cross loading is developed
+  on the identity link unless `links` names another. A cross loading
+  that varies by group is identified only with long series or many
+  groups (with a few hundred observations per group). A subformula with
+  no column, such as `kappa2_mu ~ 0`, is rejected: a cross loading is
+  restricted to zero by leaving its lag out of `p_cross`. A formula
+  given in the place of `p` or `q` is rejected.
 
 - by:
 
@@ -68,12 +70,15 @@ gas(
   information to the power \\-d\\. Defaults to 0, the score as it is;
   see the section on the scaling of the score.
 
-- cross:
+- p_cross:
 
-  An optional label, a single string. The terms of a model that carry
-  the same label load each other's scores as well as their own; see the
-  section on several filtered parameters. `NULL`, the default, gives a
-  term that loads its own score only.
+  An optional named vector of integers of at least 0, one per other
+  filtered parameter whose score the level of this term loads, giving
+  the number of lags of that score, e.g. `p_cross = c(sigma = 2)` for
+  the loadings `kappa1_sigma` and `kappa2_sigma`. Each named parameter
+  must carry a `gas()` term of its own; see the section on several
+  filtered parameters. `NULL`, the default, gives a term that loads its
+  own score only, and so does a count of 0.
 
 - links:
 
@@ -152,8 +157,7 @@ filtered parameter is read at the levels of all the others at the same
 time, so the levels cannot be filtered one after the other.
 [`gas_joint()`](https://statmodels7.github.io/modelterms7/reference/gas_joint.md)
 joins the terms, and a fitting layer reads them as one structural term.
-The terms must walk the same series (the same `by` and `time`), and a
-parameter developed by a subformula is not available in a joint filter.
+The terms must walk the same series (the same `by` and `time`).
 
 The scaling is joint. With \\G\\ the filtered parameters, the driving
 vector is \$\$u_t = \mathcal{I}\_{GG,t}^{-d}\\ \frac{\partial
@@ -167,11 +171,16 @@ gaussian, the joint scaling equals the scaling of each parameter by its
 own information.
 
 By default each level loads its own score only, so the matrices of
-loadings are diagonal. The terms that carry the same label in `cross`
-load each other's scores as well: in
-`y ~ gas(..., cross = "a") | sigma ~ gas(..., cross = "a") | nu ~ gas(...)`
-the levels of `mu` and `sigma` respond to both scores, and the level of
-`nu` responds to its own. A cross loading rides the identity link,
+loadings are diagonal. The argument `p_cross` of a term names the other
+filtered parameters whose scores its level loads as well, with the
+number of lags of each: in
+`y ~ gas(p = 1, q = 1, p_cross = c(sigma = 1)) | sigma ~ gas(p = 1, q = 1)`
+the level of `mu` responds to the score of `sigma` at lag one, and the
+level of `sigma` responds to its own score only, so the matrix of
+loadings at lag one is upper triangular. A lag that `p_cross` leaves out
+is a loading restricted to zero, and the number of lags of a partner may
+exceed the term's own `p`. The parameter named in `p_cross` must carry a
+`gas()` term of its own. A cross loading rides the identity link,
 because its sign is free. For a gaussian, the loading of the score of
 the mean in the level of the log-scale is the asymmetric response of the
 volatility to the sign of a surprise, which is the term in \\z\_{t-1}\\

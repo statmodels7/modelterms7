@@ -15,7 +15,7 @@ parameter.coefficient.'><meta property="og:image" content="https://statmodels7.g
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.106.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.107.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -74,10 +74,10 @@ estimated. <code>pacf1</code> is a partial autocorrelation; the autoregressive
 coefficient \(\xi_1\) of the literature is a function of the whole chart
 through Levinson-Durbin, and coincides with the coordinate only at
 \(q = 1\). <code><a href="term_readable.html">term_readable()</a></code> maps the coordinates onto the coefficients.</p>
-<p>A term that <code><a href="gas_joint.html">gas_joint()</a></code> has placed in a group of <code>cross</code> carries, after
-these, one loading per score lag of each other parameter of the group,
-named <code>kappa1_sigma</code>, <code>kappa2_sigma</code> and so on: <code>kappa1_sigma</code> is the
-loading of the score of <code>sigma</code> at lag one in the level of this term.
+<p>A term that <code><a href="gas_joint.html">gas_joint()</a></code> has joined with the parameters of its <code>p_cross</code>
+carries, after these, one loading per declared lag of the score of each of
+them, named <code>kappa1_sigma</code>, <code>kappa2_sigma</code> and so on: <code>kappa1_sigma</code> is
+the loading of the score of <code>sigma</code> at lag one in the level of this term.
 These loadings ride the identity link, because their sign is free.</p>
 <p>The order is the one by which <code><a href="term_links.html">term_links()</a></code>, <code><a href="term_start.html">term_start()</a></code>, the Jacobian
 columns of <code><a href="term_filter.html">term_filter()</a></code> and the joint variance matrix are indexed.</p>

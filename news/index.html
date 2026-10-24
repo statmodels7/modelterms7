@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.106.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.107.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,13 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.107.0" id="modelterms7-01070">modelterms7 0.107.0<a class="anchor" aria-label="anchor" href="#modelterms7-01070"></a></h2>
+<ul><li>
+<code><a href="../reference/gas.html">gas()</a></code> takes <code>p_cross</code>, a named vector of integers giving, for each other filtered parameter, the number of lags of its score that the level of the term loads: `y ~ gas(p = 1, q = 1, p_cross = c(sigma = 1)) | sigma
+~ gas(p = 1, q = 1)<code>makes mu respond to the score of sigma while sigma responds to its own only. A lag count may exceed the term's own</code>p<code>, and a count of 0 declares nothing. The argument</code>cross<code>, which switched on every pair of a labelled group at the lags 1..p, is removed: the same model is written with</code>p_cross<code>naming each partner at the term's</code>p<code>, and equals it to 1e-12.</code>gas_joint()` rejects a parameter named with a positive count that has no gas() term, and a term that names its own parameter. The compiled filter, its reverse pass and its derivatives of orders two to four read the cross loadings as a list of (partner, lag) pairs.</li>
+<li>A subformula with no column (<code>omega ~ 0</code>, <code>kappa2_sigma ~ 0</code>, <code>by = ~0</code>) is rejected; it was accepted and produced a coordinate named <code>omega.</code> that broke the fit. A cross loading is restricted to zero by leaving its lag out of <code>p_cross</code>.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.106.0" id="modelterms7-01060">modelterms7 0.106.0<a class="anchor" aria-label="anchor" href="#modelterms7-01060"></a></h2>
 <ul><li>A cross loading of a joint score-driven filter, <code>kappa&lt;i&gt;_&lt;parameter&gt;</code>, may carry a subformula, e.g. <code>kappa1_mu ~ 1 + random(~ 1 | g)</code> in the term of sigma, on the identity link unless <code>links</code> names another; <code>by = ~f</code> does not develop it. The filter, its reverse pass and its derivatives of orders two to four read the cross loadings per observation. A subformula <code>~ 1</code> equals the scalar cross loading to 1e-12. <code><a href="../reference/gas_joint.html">gas_joint()</a></code> rejects a subformula on a cross loading whose parameter does not share the term’s <code>cross</code> label.</li>

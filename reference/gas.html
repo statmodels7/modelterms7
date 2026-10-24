@@ -25,7 +25,7 @@ when scaling is not zero."><meta property="og:image" content="https://statmodels
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.106.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.107.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,7 +73,7 @@ when <code>scaling</code> is not zero.</p>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  time <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scaling <span class="op">=</span> <span class="fl">0</span>,</span>
-<span>  cross <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  p_cross <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  links <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  label <span class="op">=</span> <span class="st">"gas"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -97,11 +97,14 @@ Defaults to 1.</p></dd>
 <dd><p>Two-sided formulas whose left side names a parameter, one
 per parameter to be developed with covariates, e.g.
 <code>kappa1 ~ s(x)</code>; see the section above. The left side may also name a
-cross loading, <code>kappa&lt;i&gt;_&lt;parameter&gt;</code>, in a term that sets <code>cross</code> and is
-filtered jointly with that parameter, e.g. <code>kappa1_mu ~ 1 + random(~ 1 | g)</code>; the cross loading is developed on the identity link unless <code>links</code>
-names another. A cross loading that varies by group is identified only
-with long series or many groups (with a few hundred observations per
-group). A formula given in the place of <code>p</code> or <code>q</code> is rejected.</p></dd>
+cross loading, <code>kappa&lt;i&gt;_&lt;parameter&gt;</code>, whose lag <code>i</code> the term declares
+in <code>p_cross</code>, e.g. <code>kappa1_mu ~ 1 + random(~ 1 | g)</code>; the cross loading
+is developed on the identity link unless <code>links</code> names another. A cross
+loading that varies by group is identified only with long series or
+many groups (with a few hundred observations per group). A subformula
+with no column, such as <code>kappa2_mu ~ 0</code>, is rejected: a cross loading is
+restricted to zero by leaving its lag out of <code>p_cross</code>. A formula given
+in the place of <code>p</code> or <code>q</code> is rejected.</p></dd>
 
 
 <dt id="arg-by">by<a class="anchor" aria-label="anchor" href="#arg-by"></a></dt>
@@ -122,11 +125,14 @@ the expected information to the power \(-d\). Defaults to 0, the score
 as it is; see the section on the scaling of the score.</p></dd>
 
 
-<dt id="arg-cross">cross<a class="anchor" aria-label="anchor" href="#arg-cross"></a></dt>
-<dd><p>An optional label, a single string. The terms of a model that
-carry the same label load each other's scores as well as their own;
-see the section on several filtered parameters. <code>NULL</code>, the default,
-gives a term that loads its own score only.</p></dd>
+<dt id="arg-p-cross">p_cross<a class="anchor" aria-label="anchor" href="#arg-p-cross"></a></dt>
+<dd><p>An optional named vector of integers of at least 0, one
+per other filtered parameter whose score the level of this term loads,
+giving the number of lags of that score, e.g. <code>p_cross = c(sigma = 2)</code>
+for the loadings <code>kappa1_sigma</code> and <code>kappa2_sigma</code>. Each named parameter
+must carry a <code>gas()</code> term of its own; see the section on several
+filtered parameters. <code>NULL</code>, the default, gives a term that loads its
+own score only, and so does a count of 0.</p></dd>
 
 
 <dt id="arg-links">links<a class="anchor" aria-label="anchor" href="#arg-links"></a></dt>
@@ -197,8 +203,7 @@ filtered parameter is read at the levels of all the others at the same
 time, so the levels cannot be filtered one after the other.
 <code><a href="gas_joint.html">gas_joint()</a></code> joins the terms, and a fitting layer reads them as one
 structural term. The terms must walk the same series (the same <code>by</code> and
-<code>time</code>), and a parameter developed by a subformula is not available in a
-joint filter.</p>
+<code>time</code>).</p>
 <p>The scaling is joint. With \(G\) the filtered parameters, the driving
 vector is
 $$u_t = \mathcal{I}_{GG,t}^{-d}\,
@@ -211,11 +216,16 @@ of the parameters. Where the information is diagonal, as for the mean and
 the scale of a gaussian, the joint scaling equals the scaling of each
 parameter by its own information.</p>
 <p>By default each level loads its own score only, so the matrices of
-loadings are diagonal. The terms that carry the same label in <code>cross</code>
-load each other's scores as well: in
-<code>y ~ gas(..., cross = "a") | sigma ~ gas(..., cross = "a") | nu ~ gas(...)</code>
-the levels of <code>mu</code> and <code>sigma</code> respond to both scores, and the level of
-<code>nu</code> responds to its own. A cross loading rides the identity link,
+loadings are diagonal. The argument <code>p_cross</code> of a term names the other
+filtered parameters whose scores its level loads as well, with the number
+of lags of each: in
+<code>y ~ gas(p = 1, q = 1, p_cross = c(sigma = 1)) | sigma ~ gas(p = 1, q = 1)</code>
+the level of <code>mu</code> responds to the score of <code>sigma</code> at lag one, and the
+level of <code>sigma</code> responds to its own score only, so the matrix of
+loadings at lag one is upper triangular. A lag that <code>p_cross</code> leaves out
+is a loading restricted to zero, and the number of lags of a partner may
+exceed the term's own <code>p</code>. The parameter named in <code>p_cross</code> must carry a
+<code>gas()</code> term of its own. A cross loading rides the identity link,
 because its sign is free. For a gaussian, the loading of the score of the
 mean in the level of the log-scale is the asymmetric response of the
 volatility to the sign of a surprise, which is the term in

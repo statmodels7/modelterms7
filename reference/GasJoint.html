@@ -11,7 +11,7 @@ one with gas_joint()."><meta property="og:image" content="https://statmodels7.gi
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.106.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.107.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -156,15 +156,15 @@ score of that parameter, which is evaluated at the current values of all
 the others. Where two parameters both carry a level, each score depends on
 the other level, so the two recursions are one: with \(G\) the filtered
 parameters,
-$$f_{k,t} = \omega_k + \sum_{i=1}^{p_k} \Big(\kappa_{k,i}\, u_{k,t-i}
-  + \sum_{l \in C_k} \kappa_{k,i,l}\, u_{l,t-i}\Big)
+$$f_{k,t} = \omega_k + \sum_{i=1}^{p_k} \kappa_{k,i}\, u_{k,t-i}
+  + \sum_{l \in C_k} \sum_{i=1}^{p_{kl}} \kappa_{k,i,l}\, u_{l,t-i}
   + \sum_{j=1}^{q_k} \xi_{k,j} f_{k,t-j}, \qquad k \in G,$$
 where \(u_t\) is the vector of driving scores of the parameters in
-\(G\), read at the predictor of every equation at time \(t\), and
-\(C_k\) is the set of the other parameters of the group of <code>cross</code> that
-contains \(k\) (empty when the term carries no label). The persistence
-of each level is its own, so the autoregressive part is stationary when
-each equation's is.</p>
+\(G\), read at the predictor of every equation at time \(t\),
+\(C_k\) is the set of the parameters to which the <code>p_cross</code> of the term
+of \(k\) gives a positive count, and \(p_{kl}\) is that count. The
+persistence of each level is its own, so the autoregressive part is
+stationary when each equation's is.</p>
 <p>The driving vector is the caller's: a fitting layer supplies
 \(u_t = \mathcal{I}_{GG,t}^{-d}\,\partial\ell_t/\partial\eta_{G,t}\) with
 the expected information of the filtered parameters and its derivative in

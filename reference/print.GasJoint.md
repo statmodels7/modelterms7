@@ -1,7 +1,7 @@
 # Print a Joint Score-Driven Filter
 
-Prints the filtered parameters with the orders of each term, the groups
-of cross loadings, and the scaling.
+Prints the filtered parameters with the orders of each term, the scores
+that each level loads besides its own with their lags, and the scaling.
 
 ## Arguments
 

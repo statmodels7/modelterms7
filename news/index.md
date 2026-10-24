@@ -1,5 +1,22 @@
 # Changelog
 
+## modelterms7 0.107.0
+
+- [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  takes `p_cross`, a named vector of integers giving, for each other
+  filtered parameter, the number of lags of its score that the level of
+  the term loads: \`y ~ gas(p = 1, q = 1, p_cross = c(sigma = 1)) \|
+  sigma ~ gas(p = 1, q =
+  1)`makes mu respond to the score of sigma while sigma responds to its own only. A lag count may exceed the term's own`p`, and a count of 0 declares nothing. The argument`cross`, which switched on every pair of a labelled group at the lags 1..p, is removed: the same model is written with`p_cross`naming each partner at the term's`p`, and equals it to 1e-12.`gas_joint()\`
+  rejects a parameter named with a positive count that has no gas()
+  term, and a term that names its own parameter. The compiled filter,
+  its reverse pass and its derivatives of orders two to four read the
+  cross loadings as a list of (partner, lag) pairs.
+- A subformula with no column (`omega ~ 0`, `kappa2_sigma ~ 0`,
+  `by = ~0`) is rejected; it was accepted and produced a coordinate
+  named `omega.` that broke the fit. A cross loading is restricted to
+  zero by leaving its lag out of `p_cross`.
+
 ## modelterms7 0.106.0
 
 - A cross loading of a joint score-driven filter,

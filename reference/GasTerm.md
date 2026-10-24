@@ -31,7 +31,7 @@ GasTerm(
   links = list(),
   submodels = list(),
   scaling = numeric(0),
-  cross = character(0),
+  p_cross = integer(0),
   cross_with = character(0)
 )
 ```
@@ -129,17 +129,18 @@ GasTerm(
   \\\mathcal{I}^{-d}\\ that multiplies the score; zero for the score as
   it is.
 
-- cross:
+- p_cross:
 
-  The label of the group of terms whose levels load each other's scores,
-  or an empty vector for a term that loads its own score only.
+  A named integer vector with the number of lags of the score of each
+  other filtered parameter that the level of this term loads, or an
+  empty vector for a term that loads its own score only.
 
 - cross_with:
 
   The distribution parameters whose scores the level of this term loads
   besides its own, in the order of their loadings. It is empty until
   [`gas_joint()`](https://statmodels7.github.io/modelterms7/reference/gas_joint.md)
-  fills it from the labels of `cross`.
+  fills it from `p_cross`.
 
 ## Value
 
