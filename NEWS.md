@@ -1,3 +1,22 @@
+# modelterms7 0.105.0
+
+* The terms of a joint score-driven filter (`gas_joint()`) may develop
+  their level, loadings and persistence with subformulas, as one gas() term
+  does: `y ~ gas(by = g, kappa1 ~ 1 + random(~ 1 | g)) | sigma ~ gas(by =
+  g)`. The coefficients of the recursion then vary by observation; the
+  filter, its reverse pass and its derivatives of orders two to four run
+  compiled on each group's active coordinates (`gas_joint_sub_filter_cpp()`,
+  `gas_joint_sub_adjoint_cpp()`, `gas_joint_sub_curv_cpp()`,
+  `gas_joint_sub_third_cpp()`, `gas_joint_sub_fourth_cpp()`). A joint filter
+  of one developed term equals that term's own route to 1e-12, and a
+  subformula `~ 1` equals the joint filter without it. Cross loadings stay
+  scalar.
+* `term_penalties()` and `term_components()` of a joint filter collect
+  those of its terms, and the continuation past the series reads each new
+  row's coefficients through the subformulas.
+* `term_params()` of a developed gas() term inside a joint filter keeps its
+  cross loadings after the developed coordinates.
+
 # modelterms7 0.104.0
 
 * The third and fourth derivatives of a joint score-driven filter

@@ -618,7 +618,9 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
 #' @keywords internal
 S7::method(term_params, GasTerm) <- function(term, ...) {
   if (length(term@blueprint) && !is.null(term@blueprint$sub)) {
-    return(.gas_sub_layout(term)$names)
+    # the cross loadings of a joint filter follow the developed layout, as
+    # they follow the base parameters of an undeveloped term
+    return(c(.gas_sub_layout(term)$names, .gas_cross_params(term)))
   }
   c(.gas_base_params(term@p, term@q), .gas_cross_params(term))
 }

@@ -186,8 +186,6 @@ test_that("gas_joint rejects terms that cannot be filtered together", {
     gas(p = 1, q = 1, time = t, cross = "a"), dj))), "one gas\\(\\) term only")
   expect_error(gas_joint(list(mu = a, sigma = term_build(
     gas(p = 1, q = 1, by = g, time = t), dj))), "walk different series")
-  expect_error(gas_joint(list(mu = a, sigma = term_build(
-    gas(p = 1, q = 1, omega ~ g, time = t), dj))), "subformula")
   expect_error(gas_joint(list(mu = a, mu = a)), "distinct parameters")
   expect_error(gas(cross = c("a", "b")), "single non-empty")
 })
@@ -280,4 +278,20 @@ test_that("a joint filter is a structural term with prefixed parameters", {
   expect_identical(jb@blueprint$n, 60L)
   expect_identical(term_params(jb), nm)
   expect_output(print(jt), "mu: p = 1, q = 2, loads sigma")
+})
+
+test_that("a developed member keeps its layout and its cross loadings in the joint vector", {
+  jt <- gas_joint(list(
+    mu = term_build(gas(p = 1, q = 1, omega ~ g, time = t, cross = "a"), dj),
+    sigma = term_build(gas(p = 1, q = 1, time = t, cross = "a"), dj)))
+  nm <- term_params(jt)
+  expect_identical(nm[seq_len(5L)], c("mu.omega.(Intercept)", "mu.omega.gb",
+                                      "mu.kappa1", "mu.pacf1",
+                                      "mu.kappa1_sigma"))
+  expect_identical(nm[-seq_len(5L)], c("sigma.omega", "sigma.kappa1",
+                                       "sigma.pacf1", "sigma.kappa1_mu"))
+  cps <- term_components(jt)
+  expect_identical(cps[["mu.omega"]]$index, 1:2)
+  expect_identical(cps[["mu.kappa1_sigma"]]$index, 5L)
+  expect_identical(cps[["sigma.kappa1_mu"]]$index, 9L)
 })

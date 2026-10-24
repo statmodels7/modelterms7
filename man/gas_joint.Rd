@@ -23,8 +23,9 @@ to the terms that share a label.
 \details{
 The terms must walk the same series: their \code{by} and \code{time} must give the
 same groups and the same order, because each score is read at the
-predictors of every equation at the same time. A term whose parameters
-carry a subformula is not accepted.
+predictors of every equation at the same time. A term may develop its
+level, its loadings or its persistence with a subformula; its cross
+loadings stay scalar.
 
 The terms must share one \code{scaling}, because the driving vector is scaled
 by a power of the expected information of all the filtered parameters

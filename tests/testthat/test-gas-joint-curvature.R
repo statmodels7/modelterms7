@@ -52,20 +52,27 @@ set.seed(31)
 nc <- 40
 dc <- data.frame(t = seq_len(nc), y = rnorm(nc, 1, 1.4),
                  g = rep(c("a", "b"), each = nc / 2))
+# a covariate for a developed loading, deterministic so that the draws above
+# are unchanged
+dc$x <- sin(seq_len(nc) / 3)
 Xc <- cbind(1, as.numeric(scale(seq_len(nc))) * 0.3)
 
 # a model of the gaussian with filters in the equations `fp` (1 = mu,
 # 2 = log sigma), mu carrying the columns of Xc and log sigma an intercept;
 # the unknowns are those coefficients followed by the filter's parameters on
 # their unconstrained scale
-gjc_model <- function(fp, p, q, cross = NULL, by = FALSE) {
-  mk <- function() {
-    if (by) gas(p = p, q = q, by = g, time = t, cross = cross)
+gjc_model <- function(fp, p, q, cross = NULL, by = FALSE, dev = FALSE) {
+  mk <- function(k) {
+    # with dev, the loading of mu is developed over x
+    if (dev && k == "mu") {
+      if (by) gas(p = p, q = q, kappa1 ~ x, by = g, time = t, cross = cross)
+      else gas(p = p, q = q, kappa1 ~ x, time = t, cross = cross)
+    } else if (by) gas(p = p, q = q, by = g, time = t, cross = cross)
     else gas(p = p, q = q, time = t, cross = cross)
   }
   nmp <- c("mu", "sigma")[fp]
   jt <- gas_joint(stats::setNames(lapply(nmp, function(k)
-    term_build(mk(), dc)), nmp))
+    term_build(mk(k), dc)), nmp))
   M <- length(term_params(jt))
   mb <- ncol(Xc) + 1L
   m <- mb + M
@@ -120,6 +127,9 @@ gjc_u0 <- function(md, seed = 2) {
                                                    0.03, 0.08))
   z[grepl("_", nm)] <- stats::runif(sum(grepl("_", nm)), -0.04, 0.04)
   z[grepl("pacf", nm)] <- stats::runif(sum(grepl("pacf", nm)), 0.3, 0.8)
+  # a developed loading: log 0.05 in its intercept, a small slope
+  z[endsWith(nm, "kappa1.(Intercept)")] <- log(0.05)
+  z[endsWith(nm, "kappa1.x")] <- 0.2
   c(0.9, 0.1, 0.25, z)
 }
 
@@ -334,6 +344,124 @@ test_that("the compiled joint third and fourth orders are the R route's", {
           expect_equal(compiled$dpsi[[k]], r$dpsi[[k]], tolerance = 1e-12,
                        info = paste(lab, k))
         }
+      }
+    }
+  }
+})
+
+test_that("the joint core of one developed term is the term's own core", {
+  set.seed(8)
+  nn <- 50L
+  d2 <- data.frame(t = seq_len(nn), y = stats::rnorm(nn),
+                   x = sin(seq_len(nn) / 4))
+  X <- cbind(1, as.numeric(scale(seq_len(nn))) * 0.3)
+  mb <- ncol(X)
+  tt <- function(e, i) tanh(e - d2$y[i])
+  l1 <- function(e, i) -tt(e, i)
+  l2 <- function(e, i) -(1 - tt(e, i)^2)
+  l3 <- function(e, i) { t <- tt(e, i); 2 * t * (1 - t^2) }
+  l4 <- function(e, i) { t <- tt(e, i); (1 - t^2) * (2 - 6 * t^2) }
+  l5 <- function(e, i) { t <- tt(e, i); (1 - t^2) * (24 * t^3 - 16 * t) }
+  for (cfg in list(c(1, 1), c(2, 2))) {
+    term <- term_build(gas(p = cfg[1], q = cfg[2], kappa1 ~ x, time = t), d2)
+    jt <- gas_joint(list(mu = term))
+    nm <- term_params(term)
+    np <- length(nm)
+    lk <- term_links(term)
+    base <- .gas_base_params(cfg[1], cfg[2])
+    m <- mb + np
+    seed <- cbind(X, matrix(0, nn, np))
+    set.seed(9)
+    u0 <- c(0.3, -0.2, stats::runif(np, -0.4, 0.2))
+    u0[mb + which(nm == "kappa1.(Intercept)")] <- log(0.1)
+    # the filter's scale: a developed coordinate as it is, a scalar through
+    # its link
+    psi <- as.list(stats::setNames(vapply(seq_along(nm), function(j)
+      if (nm[j] %in% base) linkfunctions7::linkinv(lk[[nm[j]]], u0[mb + j])
+      else u0[mb + j], numeric(1)), nm))
+    gw <- stats::rnorm(nn)
+    v <- stats::rnorm(m)
+    w <- stats::rnorm(m)
+    eta0 <- as.numeric(X %*% u0[seq_len(mb)])
+    e <- term_filter(term, eta0, d2$y, l1, l2, psi)$eta
+    ix <- seq_len(nn)
+    bl <- list(filtered = 1L, u = matrix(l1(e, ix)),
+               U1 = array(l2(e, ix), c(nn, 1, 1)),
+               U2 = array(l3(e, ix), c(nn, 1, 1, 1)),
+               U3 = array(l4(e, ix), c(nn, 1, 1, 1, 1)),
+               U4 = array(l5(e, ix), c(nn, 1, 1, 1, 1, 1)))
+    blk4 <- function(e, i, D, act) {
+      DD <- outer(D, D)
+      dv <- sum(D * v[act])
+      dw <- sum(D * w[act])
+      list(cross = numeric(length(D)), M = l3(e, i) * DD,
+           dcurv = l3(e, i) * D, cppp = l3(e, i), Q = l4(e, i) * DD,
+           N = list(l4(e, i) * dv * DD, l4(e, i) * dw * DD),
+           P = l5(e, i) * dv * dw * DD)
+    }
+    blk3 <- function(e, i, D, act) list(
+      cross = numeric(length(D)), M = l3(e, i) * outer(D, D),
+      dcurv = l3(e, i) * D,
+      N = l4(e, i) * sum(D * v[act]) * outer(D, D))
+    blk2 <- function(e, i, D, act) list(cross = numeric(length(D)),
+                                        M = l3(e, i) * outer(D, D))
+    lab <- sprintf("p = %d, q = %d", cfg[1], cfg[2])
+    s2 <- term_curvature(term, eta0, d2$y, l1, l2, psi, gw, seed, blk2)
+    j2 <- term_curvature(jt, NULL, NULL, NULL, NULL, list(mu = psi),
+                         matrix(gw), list(mu = seed), bl)
+    expect_equal(j2$curvature, s2$curvature, tolerance = 1e-12, info = lab)
+    expect_equal(j2$jacobian$mu, s2$jacobian, tolerance = 1e-13, info = lab)
+    s3 <- term_third(term, eta0, d2$y, l1, l2, psi, gw, seed, blk3, v)
+    j3 <- term_third(jt, NULL, NULL, NULL, NULL, list(mu = psi), matrix(gw),
+                     list(mu = seed), bl, v)
+    expect_equal(j3$curvature, s3$curvature, tolerance = 1e-12, info = lab)
+    expect_equal(j3$dphi$mu[[1L]], s3$dphi, tolerance = 1e-12, info = lab)
+    s4 <- term_fourth(term, eta0, d2$y, l1, l2, psi, gw, seed, blk4,
+                      list(v, w))
+    j4 <- term_fourth(jt, NULL, NULL, NULL, NULL, list(mu = psi), matrix(gw),
+                      list(mu = seed), bl, list(v, w))
+    expect_equal(j4$curvature, s4$curvature, tolerance = 1e-11, info = lab)
+    expect_equal(j4$dpsi$mu, s4$dpsi, tolerance = 1e-12, info = lab)
+  }
+})
+
+test_that("a developed joint core is the derivative of the order below", {
+  for (cfg in list(list(1:2, 1, 1, "a", FALSE), list(1:2, 2, 1, "a", TRUE))) {
+    md <- gjc_model(cfg[[1]], cfg[[2]], cfg[[3]], cross = cfg[[4]],
+                    by = cfg[[5]], dev = TRUE)
+    u0 <- gjc_u0(md, 3)
+    set.seed(6)
+    gw <- matrix(stats::rnorm(nc * 2), nc, 2)
+    v <- stats::rnorm(md$m)
+    w <- stats::rnorm(md$m)
+    lab <- paste(format(cfg), collapse = " ")
+    dir_of <- function(f, x, h) (f(u0 + h * x) - f(u0 - h * x)) / (2 * h)
+    rich <- function(f, x) (4 * dir_of(f, x, 1e-3) - dir_of(f, x, 2e-3)) / 3
+    g2 <- md$core(u0, gw)
+    g3 <- md$core(u0, gw, v)
+    expect_equal(g3$curvature, rich(function(u) md$core(u, gw)$curvature, v),
+                 tolerance = 1e-6, info = lab)
+    for (k in 1:2) {
+      expect_equal(g3$dphi[[k]][[1L]],
+                   rich(function(u) md$core(u, gw)$jacobian[[k]], v),
+                   tolerance = 1e-6, info = lab)
+    }
+    g4 <- md$core(u0, gw, list(v, w))
+    expect_equal(g4$curvature,
+                 rich(function(u) md$core(u, gw, v)$curvature, w),
+                 tolerance = 1e-6, info = lab)
+    for (k in 1:2) {
+      expect_equal(g4$dpsi[[k]],
+                   rich(function(u) md$core(u, gw, v)$dphi[[k]][[1L]], w),
+                   tolerance = 1e-6, info = lab)
+    }
+    # the Jacobian is the derivative of the predictors
+    for (j in c(1L, md$mb + seq_len(md$M))) {
+      ej <- numeric(md$m); ej[j] <- 1
+      d <- rich(function(u) md$preds(u), ej)
+      for (k in 1:2) {
+        expect_equal(g2$jacobian[[k]][, j], d[, k], tolerance = 1e-6,
+                     info = paste(lab, k, j))
       }
     }
   }

@@ -83,8 +83,9 @@ GasJoint <- S7::new_class(
 #' @details
 #' The terms must walk the same series: their `by` and `time` must give the
 #' same groups and the same order, because each score is read at the
-#' predictors of every equation at the same time. A term whose parameters
-#' carry a subformula is not accepted.
+#' predictors of every equation at the same time. A term may develop its
+#' level, its loadings or its persistence with a subformula; its cross
+#' loadings stay scalar.
 #'
 #' The terms must share one `scaling`, because the driving vector is scaled
 #' by a power of the expected information of all the filtered parameters
@@ -133,12 +134,6 @@ gas_joint <- function(terms) {
     if (!length(tm@blueprint)) {
       stop(sprintf("the gas() term of '%s' has not been built.", k),
            call. = FALSE)
-    }
-    if (!is.null(tm@blueprint$sub)) {
-      stop(sprintf(paste0(
-        "the gas() term of '%s' develops a parameter with a subformula,\n",
-        "  which is not available when several parameters are filtered ",
-        "together."), k), call. = FALSE)
     }
   }
   bp1 <- terms[[1L]]@blueprint
@@ -208,6 +203,13 @@ gas_joint <- function(terms) {
 S7::method(term_params, GasJoint) <- function(term, ...) {
   unlist(lapply(term@params, function(k)
     paste0(k, ".", term_params(term@terms[[k]]))), use.names = FALSE)
+}
+
+# whether any term of the filter develops a parameter with a subformula,
+# which makes the recursion's coefficients vary by observation
+.gas_joint_has_sub <- function(term) {
+  any(vapply(term@terms, function(tm)
+    length(tm@blueprint) > 0L && !is.null(tm@blueprint$sub), logical(1)))
 }
 
 # The parameters as a list with one entry per filtered parameter. A caller
@@ -319,6 +321,12 @@ S7::method(term_params, GasJoint) <- function(term, ...) {
 S7::method(term_filter, GasJoint) <- function(term, eta, y, score, curvature,
                                               psi, ..., fast = NULL,
                                               threads = 1L) {
+  # coefficients that vary by observation take the route of
+  # gas_joint_sub.R, with the same result
+  if (.gas_joint_has_sub(term)) {
+    return(.gas_joint_sub_filter(term, eta, y, score, curvature, psi,
+                                 fast = fast, threads = threads))
+  }
   bp <- term@blueprint
   K <- length(term@params)
   n <- bp$n
@@ -441,6 +449,11 @@ S7::method(term_adjoint, GasJoint) <- function(term, eta, y, score, curvature,
     stop(sprintf("'stored_curv' must be an array of dimension c(%d, %d, %d).",
                  n, K, K), call. = FALSE)
   }
+  if (.gas_joint_has_sub(term)) {
+    out <- .gas_joint_sub_adjoint(term, cv, g, psi)
+    colnames(out$deta) <- colnames(out$dscore) <- term@params
+    return(out)
+  }
   out <- gas_joint_adjoint_cpp(as.numeric(cv), g, .gas_joint_coefs(term, psi),
                                bp$order)
   colnames(out$deta) <- colnames(out$dscore) <- term@params
@@ -554,13 +567,60 @@ S7::method(term_readable, GasJoint) <- function(term, zeta, ...) {
 #' @title Penalties of a Joint Score-Driven Filter
 #' @name term_penalties.GasJoint
 #' @description
-#' Returns an empty list: the terms of a joint filter carry no subformula,
-#' and their scalar parameters are unpenalized.
-#' @param term A [GasJoint()].
+#' Returns the penalties that the subformulas of every term of the filter
+#' declare, from [term_penalties()] of the term, each under the key
+#' `parameter.key` and with its indices moved to the term's position in
+#' [term_params()] of the joint filter. The scalar parameters and the cross
+#' loadings are unpenalized, so the list is empty when no term carries a
+#' subformula.
+#' @param term A built [GasJoint()].
 #' @param ... Unused.
-#' @return An empty list.
+#' @return A list of entries, as [term_penalties()] documents.
 #' @keywords internal
-S7::method(term_penalties, GasJoint) <- function(term, ...) list()
+S7::method(term_penalties, GasJoint) <- function(term, ...) {
+  out <- list()
+  for (k in seq_along(term@params)) {
+    for (e in term_penalties(term@terms[[term@params[k]]])) {
+      out[[length(out) + 1L]] <- .entry_relabel(
+        e, paste0(term@params[k], ".", e$name), term@offsets[k] + e$index)
+    }
+  }
+  out
+}
+
+#' @title How a Joint Score-Driven Filter's Parameters Divide
+#' @name term_components.GasJoint
+#' @description
+#' Returns the entries of [term_components()] of every term of the filter,
+#' named and indexed in [term_params()] of the joint filter, followed by one
+#' entry per cross loading of the term.
+#' @param term A built [GasJoint()].
+#' @param ... Unused.
+#' @return A named list of entries, as [term_components()] documents.
+#' @keywords internal
+S7::method(term_components, GasJoint) <- function(term, ...) {
+  out <- list()
+  for (k in seq_along(term@params)) {
+    tm <- term@terms[[term@params[k]]]
+    pre <- paste0(term@params[k], ".")
+    off <- term@offsets[k]
+    cps <- term_components(tm)
+    for (cp in cps) {
+      cp$name <- paste0(pre, cp$name)
+      cp$index <- off + cp$index
+      cp$sub_index <- lapply(cp$sub_index, function(i) off + i)
+      out[[cp$name]] <- cp
+    }
+    own <- term_params(tm)
+    covered <- unlist(lapply(cps, function(cp) cp$index))
+    for (i in setdiff(seq_along(own), covered)) {
+      nm <- paste0(pre, own[i])
+      out[[nm]] <- list(name = nm, index = off + i, subs = list(),
+                        sub_index = list())
+    }
+  }
+  out
+}
 
 #' @title Build a Joint Score-Driven Filter Against Data
 #' @name term_build.GasJoint

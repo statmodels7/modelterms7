@@ -71,32 +71,14 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
   if (anyNA(tv)) stop("`time` must not be missing.", call. = FALSE)
   f_past <- matrix(as.numeric(f_past), ncol = K)
   s_past <- matrix(as.numeric(s_past), ncol = K)
-  cf <- .gas_joint_coefs(term, psi)
+  # the coefficients at every new row with their derivative rows in the
+  # joint vector; constant for an undeveloped term, read from the new rows
+  # through the subformulas for a developed one
+  cf <- .gas_joint_new_coefs(term, psi, newdata)
   M <- length(term_params(term))
-
-  # the derivatives of the coefficients in the joint vector, then in the
-  # caller's coordinates through dpsi
-  dcoef <- NULL
-  if (!is.null(deriv)) {
-    m <- ncol(deriv$dpsi)
-    unit <- function(col) { g <- numeric(M); g[col] <- 1; g }
-    dcoef <- lapply(seq_len(K), function(k) {
-      c_k <- cf[[k]]
-      lift <- function(g) as.numeric(g %*% deriv$dpsi)
-      db <- lapply(seq_len(c_k$q), function(j) {
-        g <- numeric(M)
-        g[c_k$own] <- c_k$db[j, ]
-        lift(g)
-      })
-      list(om = lift(unit(c_k$col_omega)),
-           a = lapply(seq_len(c_k$p), function(i) lift(unit(c_k$col_a[i]))),
-           cross = lapply(seq_along(c_k$partners), function(j)
-             lapply(seq_len(c_k$p), function(i)
-               lift(unit(c_k$col_cross[j, i])))),
-           b = db)
-    })
-    jac <- lapply(seq_len(K), function(k) matrix(0, nn, m))
-  }
+  m <- if (!is.null(deriv)) ncol(deriv$dpsi) else 0L
+  lift <- function(g) as.numeric(g %*% deriv$dpsi)
+  if (!is.null(deriv)) jac <- lapply(seq_len(K), function(k) matrix(0, nn, m))
 
   gi <- as.integer(gf)
   for (lv in sort(unique(gi))) {
@@ -121,7 +103,7 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
     nh <- length(new)
     f <- rbind(f_past[rows_old, , drop = FALSE], matrix(0, nh, K))
     sc <- rbind(s_past[rows_old, , drop = FALSE], matrix(0, nh, K))
-    if (!is.null(dcoef)) {
+    if (!is.null(deriv)) {
       dF <- lapply(seq_len(K), function(k)
         rbind(deriv$df_past[[k]][rows_old, , drop = FALSE], matrix(0, nh, m)))
       dS <- lapply(seq_len(K), function(k)
@@ -132,20 +114,23 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
       r <- new[[h]]
       for (k in seq_len(K)) {
         c_k <- cf[[k]]
-        ft <- c_k$omega
-        dft <- if (!is.null(dcoef)) dcoef[[k]]$om
+        dcoef <- !is.null(deriv)
+        ft <- c_k$om[r]
+        dft <- if (dcoef) lift(c_k$dom[r, ])
         for (i in seq_len(c_k$p)) {
           if (t - i < 1L || t - i > n0) next
-          ft <- ft + c_k$a[[i]] * sc[t - i, k]
-          if (!is.null(dcoef)) {
-            dft <- dft + sc[t - i, k] * dcoef[[k]]$a[[i]] +
-              c_k$a[[i]] * dS[[k]][t - i, ]
+          ft <- ft + c_k$A[r, i] * sc[t - i, k]
+          if (dcoef) {
+            dft <- dft + sc[t - i, k] * lift(c_k$dA[[i]][r, ]) +
+              c_k$A[r, i] * dS[[k]][t - i, ]
           }
           for (j in seq_along(c_k$partners)) {
             l <- c_k$partners[j]
             ft <- ft + c_k$cross[j, i] * sc[t - i, l]
-            if (!is.null(dcoef)) {
-              dft <- dft + sc[t - i, l] * dcoef[[k]]$cross[[j]][[i]] +
+            if (dcoef) {
+              g <- numeric(M)
+              g[c_k$col_cross[j, i]] <- 1
+              dft <- dft + sc[t - i, l] * lift(g) +
                 c_k$cross[j, i] * dS[[l]][t - i, ]
             }
           }
@@ -154,24 +139,91 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
           # a lag before the series is the starting level, which the first
           # level equals
           lag <- max(t - j, 1L)
-          ft <- ft + c_k$b[[j]] * f[lag, k]
-          if (!is.null(dcoef)) {
-            dft <- dft + f[lag, k] * dcoef[[k]]$b[[j]] +
-              c_k$b[[j]] * dF[[k]][lag, ]
+          ft <- ft + c_k$B[r, j] * f[lag, k]
+          if (dcoef) {
+            dft <- dft + f[lag, k] * lift(c_k$dB[[j]][r, ]) +
+              c_k$B[r, j] * dF[[k]][lag, ]
           }
         }
         f[t, k] <- ft
         out[r, k] <- ft
-        if (!is.null(dcoef)) {
+        if (dcoef) {
           dF[[k]][t, ] <- dft
           jac[[k]][r, ] <- dft
         }
       }
     }
   }
-  if (!is.null(dcoef)) {
+  if (!is.null(deriv)) {
     names(jac) <- term@params
     attr(out, "jacobian") <- jac
+  }
+  out
+}
+
+# The coefficients of the joint recursion at the rows of `newdata`: per
+# term, the level, the loadings and the autoregressive coefficients at each
+# new row (constant for a term without a subformula), the cross loadings,
+# and the derivative row of each in the joint parameter vector, on the scale
+# of `psi` that the filter reads.
+.gas_joint_new_coefs <- function(term, psi, newdata) {
+  psi <- .gas_joint_psi(term, psi)
+  nn <- nrow(newdata)
+  M <- length(term_params(term))
+  out <- vector("list", length(term@params))
+  for (k in seq_along(term@params)) {
+    tm <- term@terms[[term@params[k]]]
+    nm <- term_params(tm)
+    v <- unlist(psi[[term@params[k]]][nm])
+    p <- tm@p
+    q <- tm@q
+    off <- term@offsets[k]
+    nb <- length(nm) - length(tm@cross_with) * p
+    lifted <- function(D) {
+      G <- matrix(0, nn, M)
+      G[, off + seq_len(ncol(D))] <- D
+      G
+    }
+    if (length(tm@blueprint) && !is.null(tm@blueprint$sub)) {
+      nd <- .gas_sub_new(tm, v[seq_len(nb)], newdata)
+      om <- nd$om
+      A <- nd$A
+      B <- nd$B
+      dom <- lifted(nd$dom)
+      dA <- lapply(nd$dA, lifted)
+      dB <- lapply(nd$dB, lifted)
+    } else {
+      base <- .gas_base_params(p, q)
+      cf <- .gas_coefs(v[base], p, q)
+      om <- rep(cf$omega, nn)
+      A <- matrix(rep(cf$a, each = nn), nn, p)
+      B <- matrix(rep(cf$b, each = nn), nn, q)
+      unit_rows <- function(col) {
+        G <- matrix(0, nn, M)
+        G[, off + col] <- 1
+        G
+      }
+      dom <- unit_rows(1L)
+      dA <- lapply(seq_len(p), function(i) unit_rows(cf$i_a[i]))
+      dB <- lapply(seq_len(q), function(j) {
+        G <- matrix(0, nn, M)
+        G[, off + seq_len(length(base))] <- matrix(cf$db[j, ], nn,
+                                                   length(base), byrow = TRUE)
+        G
+      })
+    }
+    pk <- term@partners[[k]]
+    cl <- matrix(0, length(pk), p)
+    ccol <- matrix(0L, length(pk), p)
+    for (j in seq_along(pk)) {
+      for (i in seq_len(p)) {
+        ccol[j, i] <- off + nb + (j - 1L) * p + i
+        cl[j, i] <- v[[nb + (j - 1L) * p + i]]
+      }
+    }
+    out[[k]] <- list(p = p, q = q, om = om, A = A, B = B, dom = dom,
+                     dA = dA, dB = dB, partners = pk, cross = cl,
+                     col_cross = ccol)
   }
   out
 }

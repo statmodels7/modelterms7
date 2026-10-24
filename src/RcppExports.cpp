@@ -189,6 +189,105 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// gas_joint_sub_filter_cpp
+SEXP gas_joint_sub_filter_cpp(NumericMatrix eta, List mem, List groups, int M, Nullable<List> fast, int threads);
+RcppExport SEXP _modelterms7_gas_joint_sub_filter_cpp(SEXP etaSEXP, SEXP memSEXP, SEXP groupsSEXP, SEXP MSEXP, SEXP fastSEXP, SEXP threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type eta(etaSEXP);
+    Rcpp::traits::input_parameter< List >::type mem(memSEXP);
+    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
+    Rcpp::traits::input_parameter< int >::type M(MSEXP);
+    Rcpp::traits::input_parameter< Nullable<List> >::type fast(fastSEXP);
+    Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(gas_joint_sub_filter_cpp(eta, mem, groups, M, fast, threads));
+    return rcpp_result_gen;
+END_RCPP
+}
+// gas_joint_sub_adjoint_cpp
+List gas_joint_sub_adjoint_cpp(NumericVector curv, NumericMatrix g, List mem, List order);
+RcppExport SEXP _modelterms7_gas_joint_sub_adjoint_cpp(SEXP curvSEXP, SEXP gSEXP, SEXP memSEXP, SEXP orderSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type curv(curvSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type g(gSEXP);
+    Rcpp::traits::input_parameter< List >::type mem(memSEXP);
+    Rcpp::traits::input_parameter< List >::type order(orderSEXP);
+    rcpp_result_gen = Rcpp::wrap(gas_joint_sub_adjoint_cpp(curv, g, mem, order));
+    return rcpp_result_gen;
+END_RCPP
+}
+// gas_joint_sub_curv_cpp
+List gas_joint_sub_curv_cpp(List seed, List mem, List groups, IntegerVector fp, NumericMatrix g, NumericMatrix u_at, NumericVector U1, NumericVector U2, int m, int zoff, int threads);
+RcppExport SEXP _modelterms7_gas_joint_sub_curv_cpp(SEXP seedSEXP, SEXP memSEXP, SEXP groupsSEXP, SEXP fpSEXP, SEXP gSEXP, SEXP u_atSEXP, SEXP U1SEXP, SEXP U2SEXP, SEXP mSEXP, SEXP zoffSEXP, SEXP threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type seed(seedSEXP);
+    Rcpp::traits::input_parameter< List >::type mem(memSEXP);
+    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type fp(fpSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type g(gSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type u_at(u_atSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type U1(U1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type U2(U2SEXP);
+    Rcpp::traits::input_parameter< int >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type zoff(zoffSEXP);
+    Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(gas_joint_sub_curv_cpp(seed, mem, groups, fp, g, u_at, U1, U2, m, zoff, threads));
+    return rcpp_result_gen;
+END_RCPP
+}
+// gas_joint_sub_third_cpp
+List gas_joint_sub_third_cpp(List seed, List mem, List groups, IntegerVector fp, NumericMatrix g, NumericMatrix u_at, NumericVector U1, NumericVector U2, NumericVector U3, NumericVector x, int m, int zoff, int threads);
+RcppExport SEXP _modelterms7_gas_joint_sub_third_cpp(SEXP seedSEXP, SEXP memSEXP, SEXP groupsSEXP, SEXP fpSEXP, SEXP gSEXP, SEXP u_atSEXP, SEXP U1SEXP, SEXP U2SEXP, SEXP U3SEXP, SEXP xSEXP, SEXP mSEXP, SEXP zoffSEXP, SEXP threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type seed(seedSEXP);
+    Rcpp::traits::input_parameter< List >::type mem(memSEXP);
+    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type fp(fpSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type g(gSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type u_at(u_atSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type U1(U1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type U2(U2SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type U3(U3SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type zoff(zoffSEXP);
+    Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(gas_joint_sub_third_cpp(seed, mem, groups, fp, g, u_at, U1, U2, U3, x, m, zoff, threads));
+    return rcpp_result_gen;
+END_RCPP
+}
+// gas_joint_sub_fourth_cpp
+List gas_joint_sub_fourth_cpp(List seed, List mem, List groups, IntegerVector fp, NumericMatrix g, NumericMatrix u_at, NumericVector U1, NumericVector U2, NumericVector U3, NumericVector U4, NumericVector x, NumericVector y, int m, int zoff, int threads);
+RcppExport SEXP _modelterms7_gas_joint_sub_fourth_cpp(SEXP seedSEXP, SEXP memSEXP, SEXP groupsSEXP, SEXP fpSEXP, SEXP gSEXP, SEXP u_atSEXP, SEXP U1SEXP, SEXP U2SEXP, SEXP U3SEXP, SEXP U4SEXP, SEXP xSEXP, SEXP ySEXP, SEXP mSEXP, SEXP zoffSEXP, SEXP threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type seed(seedSEXP);
+    Rcpp::traits::input_parameter< List >::type mem(memSEXP);
+    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type fp(fpSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type g(gSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type u_at(u_atSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type U1(U1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type U2(U2SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type U3(U3SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type U4(U4SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< int >::type m(mSEXP);
+    Rcpp::traits::input_parameter< int >::type zoff(zoffSEXP);
+    Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(gas_joint_sub_fourth_cpp(seed, mem, groups, fp, g, u_at, U1, U2, U3, U4, x, y, m, zoff, threads));
+    return rcpp_result_gen;
+END_RCPP
+}
 // marg_seg_nodes_cpp
 List marg_seg_nodes_cpp(const NumericVector& xs, double m, double tau, const NumericVector& gk_nodes, const NumericVector& gk_wk, double mr);
 RcppExport SEXP _modelterms7_marg_seg_nodes_cpp(SEXP xsSEXP, SEXP mSEXP, SEXP tauSEXP, SEXP gk_nodesSEXP, SEXP gk_wkSEXP, SEXP mrSEXP) {
@@ -290,6 +389,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_modelterms7_gas_joint_curv_cpp", (DL_FUNC) &_modelterms7_gas_joint_curv_cpp, 12},
     {"_modelterms7_gas_joint_third_cpp", (DL_FUNC) &_modelterms7_gas_joint_third_cpp, 14},
     {"_modelterms7_gas_joint_fourth_cpp", (DL_FUNC) &_modelterms7_gas_joint_fourth_cpp, 16},
+    {"_modelterms7_gas_joint_sub_filter_cpp", (DL_FUNC) &_modelterms7_gas_joint_sub_filter_cpp, 6},
+    {"_modelterms7_gas_joint_sub_adjoint_cpp", (DL_FUNC) &_modelterms7_gas_joint_sub_adjoint_cpp, 4},
+    {"_modelterms7_gas_joint_sub_curv_cpp", (DL_FUNC) &_modelterms7_gas_joint_sub_curv_cpp, 11},
+    {"_modelterms7_gas_joint_sub_third_cpp", (DL_FUNC) &_modelterms7_gas_joint_sub_third_cpp, 13},
+    {"_modelterms7_gas_joint_sub_fourth_cpp", (DL_FUNC) &_modelterms7_gas_joint_sub_fourth_cpp, 15},
     {"_modelterms7_marg_seg_nodes_cpp", (DL_FUNC) &_modelterms7_marg_seg_nodes_cpp, 6},
     {"_modelterms7_marg_seg_shift_cpp", (DL_FUNC) &_modelterms7_marg_seg_shift_cpp, 7},
     {"_modelterms7_marg_seg_forward_cpp", (DL_FUNC) &_modelterms7_marg_seg_forward_cpp, 9},

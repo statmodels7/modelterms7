@@ -33,6 +33,26 @@ gas_joint_fourth_cpp <- function(seed, charts, cf, fp, g, u_at, U1, U2, U3, U4, 
     .Call(`_modelterms7_gas_joint_fourth_cpp`, seed, charts, cf, fp, g, u_at, U1, U2, U3, U4, x, y, order, m, zoff, threads)
 }
 
+gas_joint_sub_filter_cpp <- function(eta, mem, groups, M, fast = NULL, threads = 1L) {
+    .Call(`_modelterms7_gas_joint_sub_filter_cpp`, eta, mem, groups, M, fast, threads)
+}
+
+gas_joint_sub_adjoint_cpp <- function(curv, g, mem, order) {
+    .Call(`_modelterms7_gas_joint_sub_adjoint_cpp`, curv, g, mem, order)
+}
+
+gas_joint_sub_curv_cpp <- function(seed, mem, groups, fp, g, u_at, U1, U2, m, zoff, threads = 1L) {
+    .Call(`_modelterms7_gas_joint_sub_curv_cpp`, seed, mem, groups, fp, g, u_at, U1, U2, m, zoff, threads)
+}
+
+gas_joint_sub_third_cpp <- function(seed, mem, groups, fp, g, u_at, U1, U2, U3, x, m, zoff, threads = 1L) {
+    .Call(`_modelterms7_gas_joint_sub_third_cpp`, seed, mem, groups, fp, g, u_at, U1, U2, U3, x, m, zoff, threads)
+}
+
+gas_joint_sub_fourth_cpp <- function(seed, mem, groups, fp, g, u_at, U1, U2, U3, U4, x, y, m, zoff, threads = 1L) {
+    .Call(`_modelterms7_gas_joint_sub_fourth_cpp`, seed, mem, groups, fp, g, u_at, U1, U2, U3, U4, x, y, m, zoff, threads)
+}
+
 marg_seg_nodes_cpp <- function(xs, m, tau, gk_nodes, gk_wk, mr) {
     .Call(`_modelterms7_marg_seg_nodes_cpp`, xs, m, tau, gk_nodes, gk_wk, mr)
 }

@@ -226,6 +226,10 @@ NULL
 .gas_joint_core <- function(term, psi, g, seed, blocks, direction = NULL,
                             threads = getOption("modelterms7.joint_threads",
                                                 1L)) {
+  if (.gas_joint_has_sub(term)) {
+    return(.gas_joint_sub_core(term, psi, g, seed, blocks,
+                               direction = direction, threads = threads))
+  }
   bp <- term@blueprint
   K <- length(term@params)
   n <- bp$n

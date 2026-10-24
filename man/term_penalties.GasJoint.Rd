@@ -4,15 +4,19 @@
 \alias{term_penalties.GasJoint}
 \title{Penalties of a Joint Score-Driven Filter}
 \arguments{
-\item{term}{A \code{\link[=GasJoint]{GasJoint()}}.}
+\item{term}{A built \code{\link[=GasJoint]{GasJoint()}}.}
 
 \item{...}{Unused.}
 }
 \value{
-An empty list.
+A list of entries, as \code{\link[=term_penalties]{term_penalties()}} documents.
 }
 \description{
-Returns an empty list: the terms of a joint filter carry no subformula,
-and their scalar parameters are unpenalized.
+Returns the penalties that the subformulas of every term of the filter
+declare, from \code{\link[=term_penalties]{term_penalties()}} of the term, each under the key
+\code{parameter.key} and with its indices moved to the term's position in
+\code{\link[=term_params]{term_params()}} of the joint filter. The scalar parameters and the cross
+loadings are unpenalized, so the list is empty when no term carries a
+subformula.
 }
 \keyword{internal}
