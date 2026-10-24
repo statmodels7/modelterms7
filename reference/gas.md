@@ -42,15 +42,21 @@ gas(
 
   Two-sided formulas whose left side names a parameter, one per
   parameter to be developed with covariates, e.g. `kappa1 ~ s(x)`; see
-  the section above. A formula given in the place of `p` or `q` is
-  rejected.
+  the section above. The left side may also name a cross loading,
+  `kappa<i>_<parameter>`, in a term that sets `cross` and is filtered
+  jointly with that parameter, e.g. `kappa1_mu ~ 1 + random(~ 1 | g)`;
+  the cross loading is developed on the identity link unless `links`
+  names another. A cross loading that varies by group is identified only
+  with long series or many groups (with a few hundred observations per
+  group). A formula given in the place of `p` or `q` is rejected.
 
 - by:
 
   An optional grouping variable, evaluated in the data; each group is
   filtered independently, from its own starting level. A formula here is
-  the shorthand that gives the same subformula to every parameter, and
-  the term then does not imply any grouping.
+  the shorthand that gives the same subformula to every parameter of the
+  filter (not to the cross loadings), and the term then does not imply
+  any grouping.
 
 - time:
 
@@ -75,9 +81,9 @@ gas(
   [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md),
   overriding the defaults described above. Only the parameters of
   [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
-  before any development can be named. The coefficients of a development
-  are unconstrained, and the link of the developed parameter is applied
-  inside the development.
+  before any development, and the cross loadings `kappa<i>_<parameter>`,
+  can be named. The coefficients of a development are unconstrained, and
+  the link of the developed parameter is applied inside the development.
 
 - label:
 

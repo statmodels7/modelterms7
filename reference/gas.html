@@ -25,7 +25,7 @@ when scaling is not zero."><meta property="og:image" content="https://statmodels
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.105.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.106.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -96,15 +96,20 @@ Defaults to 1.</p></dd>
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Two-sided formulas whose left side names a parameter, one
 per parameter to be developed with covariates, e.g.
-<code>kappa1 ~ s(x)</code>; see the section above. A formula given in the place of
-<code>p</code> or <code>q</code> is rejected.</p></dd>
+<code>kappa1 ~ s(x)</code>; see the section above. The left side may also name a
+cross loading, <code>kappa&lt;i&gt;_&lt;parameter&gt;</code>, in a term that sets <code>cross</code> and is
+filtered jointly with that parameter, e.g. <code>kappa1_mu ~ 1 + random(~ 1 | g)</code>; the cross loading is developed on the identity link unless <code>links</code>
+names another. A cross loading that varies by group is identified only
+with long series or many groups (with a few hundred observations per
+group). A formula given in the place of <code>p</code> or <code>q</code> is rejected.</p></dd>
 
 
 <dt id="arg-by">by<a class="anchor" aria-label="anchor" href="#arg-by"></a></dt>
 <dd><p>An optional grouping variable, evaluated in the data; each
 group is filtered independently, from its own starting level. A
 formula here is the shorthand that gives the same subformula to every
-parameter, and the term then does not imply any grouping.</p></dd>
+parameter of the filter (not to the cross loadings), and the term then
+does not imply any grouping.</p></dd>
 
 
 <dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
@@ -128,7 +133,8 @@ gives a term that loads its own score only.</p></dd>
 <dd><p>An optional named list of <span class="pkg">linkfunctions7</span> links over
 the parameters of <code><a href="term_params.html">term_params()</a></code>, overriding the defaults
 described above. Only the parameters of <code><a href="term_params.html">term_params()</a></code> before any
-development can be named. The coefficients of a development are
+development, and the cross loadings <code>kappa&lt;i&gt;_&lt;parameter&gt;</code>, can be
+named. The coefficients of a development are
 unconstrained, and the link of the developed parameter is applied inside
 the development.</p></dd>
 

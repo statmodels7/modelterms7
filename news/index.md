@@ -1,5 +1,18 @@
 # Changelog
 
+## modelterms7 0.106.0
+
+- A cross loading of a joint score-driven filter,
+  `kappa<i>_<parameter>`, may carry a subformula,
+  e.g. `kappa1_mu ~ 1 + random(~ 1 | g)` in the term of sigma, on the
+  identity link unless `links` names another; `by = ~f` does not develop
+  it. The filter, its reverse pass and its derivatives of orders two to
+  four read the cross loadings per observation. A subformula `~ 1`
+  equals the scalar cross loading to 1e-12.
+  [`gas_joint()`](https://statmodels7.github.io/modelterms7/reference/gas_joint.md)
+  rejects a subformula on a cross loading whose parameter does not share
+  the term’s `cross` label.
+
 ## modelterms7 0.105.1
 
 - The context of the compiled joint recursions (the family through the
@@ -1580,8 +1593,8 @@
   [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
   reads as not built, so a bare subclass answers `FALSE` for the same
   reason it used to answer `FALSE` through
-  [`S7::prop_names()`](https://rdrr.io/pkg/S7/man/prop_names.html) – the
-  workaround that guard carried is removed.
+  [`S7::prop_names()`](https://rconsortium.github.io/S7/reference/prop_names.html)
+  – the workaround that guard carried is removed.
 
 ## modelterms7 0.62.0
 
@@ -1627,7 +1640,7 @@
   a built structural term without a coefficient count.
 
   `blueprint` is looked up with
-  [`S7::prop_names()`](https://rdrr.io/pkg/S7/man/prop_names.html)
+  [`S7::prop_names()`](https://rconsortium.github.io/S7/reference/prop_names.html)
   rather than assumed. It is declared on `additive_term` and on each of
   the three shipped structural classes, and not on the abstract
   `structural_term`, so a structural class written elsewhere need not

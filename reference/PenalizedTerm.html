@@ -19,7 +19,7 @@ not restated here."><meta property="og:image" content="https://statmodels7.githu
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.105.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.106.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -220,7 +220,7 @@ for the other four, read from each penalty's kink set.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Every one of the five returns this class.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">vapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="ridge.html">ridge</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span><span class="op">)</span>, <span class="fu"><a href="lasso.html">lasso</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span><span class="op">)</span>, <span class="fu"><a href="enet.html">enet</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span><span class="op">)</span>, <span class="fu"><a href="scad.html">scad</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span><span class="op">)</span>, <span class="fu"><a href="mcp.html">mcp</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span><span class="op">)</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>       <span class="kw">function</span><span class="op">(</span><span class="va">t</span><span class="op">)</span> <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/S7/man/S7_inherits.html" class="external-link">S7_inherits</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">PenalizedTerm</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span>       <span class="kw">function</span><span class="op">(</span><span class="va">t</span><span class="op">)</span> <span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/S7_inherits.html" class="external-link">S7_inherits</a></span><span class="op">(</span><span class="va">t</span>, <span class="va">PenalizedTerm</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE TRUE TRUE TRUE TRUE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The penalty is attached at build, when the column count is known.</span></span></span>
