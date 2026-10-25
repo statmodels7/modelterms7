@@ -84,8 +84,8 @@ GasJoint <- S7::new_class(
 #' The terms must walk the same series: their `by` and `time` must give the
 #' same groups and the same order, because each score is read at the
 #' predictors of every equation at the same time. A term may develop its
-#' level, its loadings or its persistence with a subformula; its cross
-#' loadings stay scalar.
+#' level, its loadings, its persistence or its cross loadings with a
+#' subformula.
 #'
 #' The terms must share one `scaling`, because the driving vector is scaled
 #' by a power of the expected information of all the filtered parameters
@@ -96,17 +96,30 @@ GasJoint <- S7::new_class(
 #'
 #' The `p_cross` of a term names the parameters whose scores its level loads
 #' besides its own, with the number of lags of each. A parameter that it
-#' names with a positive count must be one of the joined terms, and a term
-#' cannot name its own parameter, whose score it loads through its own
-#' loadings. The cross loadings of a term follow the parameters in the order
-#' of the joined terms, lag by lag.
+#' names with a positive count must be one of the joined terms or one of
+#' `drivers`, and a term cannot name its own parameter, whose score it loads
+#' through its own loadings. The cross loadings of a term follow the
+#' parameters in the order of the joined terms and then of `drivers`, lag by
+#' lag.
+#'
+#' A parameter in `drivers` has no level of its own: its predictor is static,
+#' and its score enters the driving vector so that the levels of the terms
+#' can load it. It is carried as a [GasDriver()] member after the terms, with
+#' no parameters and a level of zero, which is a score-driven term whose
+#' loadings and persistence are zero. With a `scaling` other than zero the
+#' driving vector is scaled by the expected information of the filtered
+#' parameters and the drivers together.
 #'
 #' @param terms A named list of built [GasTerm()] objects, named by the
 #'   distribution parameter in whose equation each one sits.
+#' @param drivers The names of the distribution parameters without a
+#'   [gas()] term whose scores the terms load, or an empty vector. A fitting
+#'   layer, which knows the family, checks that they are parameters of it.
 #'
 #' @return A [GasJoint()] object. Its `terms` are the input terms with
 #'   `cross_with` filled, so their [term_params()] include the cross
-#'   loadings.
+#'   loadings, followed by one [GasDriver()] per entry of `drivers`; its
+#'   `params` are the names of both.
 #'
 #' @seealso [GasJoint()], [gas()]
 #'
@@ -120,8 +133,15 @@ GasJoint <- S7::new_class(
 #' jt <- gas_joint(tm)
 #' lapply(jt@terms, term_params)
 #'
+#' # The level of mu loads the score of sigma, whose predictor is static.
+#' jd <- gas_joint(list(mu = term_build(gas(p = 1, q = 1, time = t,
+#'                                          p_cross = c(sigma = 1)), dd)),
+#'                 drivers = "sigma")
+#' jd@params
+#' term_params(jd)
+#'
 #' @export
-gas_joint <- function(terms) {
+gas_joint <- function(terms, drivers = character(0)) {
   if (!is.list(terms) || !length(terms) || is.null(names(terms)) ||
       anyNA(names(terms)) || !all(nzchar(names(terms))) ||
       anyDuplicated(names(terms))) {
@@ -158,14 +178,27 @@ gas_joint <- function(terms) {
       paste(sprintf("%s = %s", params, format(d)), collapse = ", ")),
       call. = FALSE)
   }
-  if (length(terms) > 1L && !(d[[1L]] %in% c(0, 0.5, 1))) {
+  if (!is.character(drivers) || anyNA(drivers) || !all(nzchar(drivers)) ||
+      anyDuplicated(drivers)) {
+    stop("'drivers' must be a vector of distinct parameter names.",
+         call. = FALSE)
+  }
+  both <- intersect(drivers, params)
+  if (length(both)) {
+    stop(sprintf(paste0(
+      "'%s' carries a gas() term and is named in 'drivers'; a driver has ",
+      "no level of its own."), both[1L]), call. = FALSE)
+  }
+  if (length(terms) + length(drivers) > 1L && !(d[[1L]] %in% c(0, 0.5, 1))) {
     stop(sprintf(paste0(
       "'scaling = %s' is available for a single gas() term only; with ",
       "several\n  filtered parameters 'scaling' must be 0, 1/2 or 1."),
       format(d[[1L]])), call. = FALSE)
   }
-  partners <- vector("list", length(params))
-  for (k in seq_along(params)) {
+  nt <- length(params)
+  all_par <- c(params, drivers)
+  partners <- vector("list", length(all_par))
+  for (k in seq_len(nt)) {
     tm <- terms[[k]]
     pc <- tm@p_cross
     if (params[k] %in% names(pc)) {
@@ -176,24 +209,100 @@ gas_joint <- function(terms) {
         call. = FALSE)
     }
     on <- names(pc)[pc > 0L]
-    miss <- setdiff(on, params)
+    miss <- setdiff(on, all_par)
     if (length(miss)) {
       stop(sprintf(paste0(
         "the gas() term of '%s' loads the score of '%s' (p_cross), but '%s' ",
-        "has no gas() term:\n  a score drives the filter only for a ",
-        "parameter whose equation carries one."),
+        "has no gas() term\n  and is not among 'drivers'."),
         params[k], miss[1L], miss[1L]), call. = FALSE)
     }
-    # the partners in the order of the joined terms, which orders the cross
-    # loadings of the term
-    partners[[k]] <- which(params %in% on)
-    tm@cross_with <- params[partners[[k]]]
+    # the partners in the order of the joined terms and then of the drivers,
+    # which orders the cross loadings of the term
+    partners[[k]] <- which(all_par %in% on)
+    tm@cross_with <- all_par[partners[[k]]]
     terms[[k]] <- tm
   }
+  for (k in seq_along(drivers)) {
+    partners[[nt + k]] <- integer(0)
+    terms[[drivers[k]]] <- .gas_driver(terms[[1L]], d[[1L]])
+  }
   np <- vapply(terms, function(tm) length(term_params(tm)), integer(1))
-  GasJoint(label = "gas_joint", terms = terms, params = params,
+  GasJoint(label = "gas_joint", terms = terms, params = all_par,
            offsets = as.integer(cumsum(np) - np), partners = partners,
            blueprint = list(order = bp1$order, n = bp1$n))
+}
+
+# a driver beside the term `like`: its series, its scaling, no parameters
+.gas_driver <- function(like, scaling) {
+  bp <- like@blueprint
+  bp$sub <- NULL
+  GasDriver(label = "driver", p = 0L, q = 0L, by = like@by, time = like@time,
+            links = list(), submodels = list(), scaling = as.double(scaling),
+            p_cross = stats::setNames(integer(0), character(0)),
+            cross_with = character(0), blueprint = bp)
+}
+
+# whether a member of a joint filter is a driver
+.gas_is_driver <- function(tm) S7::S7_inherits(tm, GasDriver)
+
+# the members of a joint filter that are terms, not drivers
+.gas_joint_terms_only <- function(term) {
+  Filter(function(tm) !.gas_is_driver(tm), term@terms)
+}
+
+#' A Static Parameter Whose Score Drives a Joint Filter
+#'
+#' @description
+#' The S7 class of a member of a [GasJoint()] that carries no level: the
+#' predictor of its parameter is static, and its score enters the driving
+#' vector so that the levels of the other members can load it through their
+#' `p_cross`. [gas_joint()] creates it from its argument `drivers`.
+#'
+#' @details
+#' A driver is a score-driven term with no parameters, whose level is zero
+#' at every observation: [term_params()], [term_links()], [term_start()],
+#' [term_penalties()] and [term_components()] are empty, and the recursion
+#' gives it no level and no derivative.
+#'
+#' @inheritParams GasTerm
+#'
+#' @return An S7 object of class `GasDriver`, inheriting from [GasTerm()].
+#'
+#' @seealso [gas_joint()]
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(t = 1:40, y = rnorm(40))
+#' jd <- gas_joint(list(mu = term_build(gas(p = 1, q = 1, time = t,
+#'                                          p_cross = c(sigma = 1)), dd)),
+#'                 drivers = "sigma")
+#' S7::S7_inherits(jd@terms$sigma, GasDriver)
+#' term_params(jd@terms$sigma)
+#'
+#' @export
+GasDriver <- S7::new_class(name = "GasDriver", parent = GasTerm)
+
+#' @title The Empty Parameters of a Driver
+#' @name term_params.GasDriver
+#' @description
+#' A [GasDriver()] has no parameters: its parameters, links, start,
+#' penalties, components, level parameter and readable quantities are empty.
+#' @param term A [GasDriver()].
+#' @param zeta Unused.
+#' @param ... Unused.
+#' @return An empty vector or list of the type the generic returns.
+#' @keywords internal
+S7::method(term_params, GasDriver) <- function(term, ...) character(0)
+S7::method(term_links, GasDriver) <- function(term, ...) list()
+S7::method(term_start, GasDriver) <- function(term, ...) {
+  stats::setNames(numeric(0), character(0))
+}
+S7::method(term_penalties, GasDriver) <- function(term, ...) list()
+S7::method(term_components, GasDriver) <- function(term, ...) list()
+S7::method(term_level_param, GasDriver) <- function(term, ...) character(0)
+S7::method(term_readable, GasDriver) <- function(term, zeta, ...) {
+  list(name = character(0), value = numeric(0),
+       jacobian = matrix(0, 0, 0), scale = list())
 }
 
 #' @title The Parameters of a Joint Score-Driven Filter
@@ -207,8 +316,21 @@ gas_joint <- function(terms) {
 #' @return A character vector.
 #' @keywords internal
 S7::method(term_params, GasJoint) <- function(term, ...) {
-  unlist(lapply(term@params, function(k)
-    paste0(k, ".", term_params(term@terms[[k]]))), use.names = FALSE)
+  .gas_joint_prefixed(term, function(tm) term_params(tm))
+}
+
+# a per-member character vector prefixed by the member's parameter, over the
+# members that have parameters (a driver has none, and paste0() would turn
+# its empty vector into "sigma.")
+.gas_joint_prefixed <- function(term, f) {
+  out <- character(0)
+  for (k in term@params) {
+    tm <- term@terms[[k]]
+    if (.gas_is_driver(tm)) next
+    v <- f(tm)
+    if (length(v)) out <- c(out, paste0(k, ".", v))
+  }
+  out
 }
 
 # whether any term of the filter develops a parameter with a subformula,
@@ -222,12 +344,18 @@ S7::method(term_params, GasJoint) <- function(term, ...) {
 # may hand them as one flat list named as term_params() of the joint filter
 # names them (mu.omega, ...), which is how a fitting layer keeps them.
 .gas_joint_psi <- function(term, psi) {
-  if (all(term@params %in% names(psi))) return(psi)
+  # a driver has no parameters, so a caller need not name it
+  drv <- .gas_joint_drivers(term)
+  if (all(setdiff(term@params, drv) %in% names(psi))) {
+    for (k in drv) psi[[k]] <- list()
+    return(psi)
+  }
   flat <- unlist(psi)
   out <- list()
   for (k in term@params) {
     own <- term_params(term@terms[[k]])
-    out[[k]] <- as.list(stats::setNames(flat[paste0(k, ".", own)], own))
+    out[[k]] <- if (length(own))
+      as.list(stats::setNames(flat[paste0(k, ".", own)], own)) else list()
   }
   out
 }
@@ -243,6 +371,10 @@ S7::method(term_params, GasJoint) <- function(term, ...) {
   out <- vector("list", length(term@params))
   for (k in seq_along(term@params)) {
     tm <- term@terms[[term@params[k]]]
+    if (.gas_is_driver(tm)) {
+      out[[k]] <- .gas_driver_coefs()
+      next
+    }
     nm <- term_params(tm)
     v <- psi[[term@params[k]]]
     v <- unlist(v[nm])
@@ -269,6 +401,16 @@ S7::method(term_params, GasJoint) <- function(term, ...) {
                      col_cross = as.integer(off + nb + seq_len(nx)))
   }
   out
+}
+
+# the coefficients of a driver: a level of zero with no lags and no columns
+# (col_omega = 0 says that the constant has no derivative)
+.gas_driver_coefs <- function() {
+  list(p = 0L, q = 0L, omega = 0, a = numeric(0), b = numeric(0),
+       db = matrix(0, 0, 0), f0 = 0, df0 = numeric(0), own = integer(0),
+       col_omega = 0L, col_a = integer(0), partners = integer(0),
+       xpar = integer(0), xlag = integer(0), cross = numeric(0),
+       col_cross = integer(0))
 }
 
 #' @title Filter Several Score-Driven Terms Jointly
@@ -365,7 +507,7 @@ S7::method(term_filter, GasJoint) <- function(term, eta, y, score, curvature,
         c_k <- cf[[k]]
         ft <- c_k$omega
         Ft <- numeric(M)
-        Ft[c_k$col_omega] <- 1
+        if (c_k$col_omega > 0L) Ft[c_k$col_omega] <- 1
         for (i in seq_len(c_k$p)) {
           if (t - i < 1L) next
           ft <- ft + c_k$a[[i]] * u[k, t - i]
@@ -475,9 +617,15 @@ S7::method(term_adjoint, GasJoint) <- function(term, eta, y, score, curvature,
   out <- list()
   for (k in term@params) {
     own <- term_params(term@terms[[k]])
-    out[[k]] <- stats::setNames(x[paste0(k, ".", own)], own)
+    out[[k]] <- if (length(own)) stats::setNames(x[paste0(k, ".", own)], own)
+                else stats::setNames(x[0], character(0))
   }
   out
+}
+
+# the names of the drivers of a joint filter, in their order
+.gas_joint_drivers <- function(term) {
+  term@params[vapply(term@terms[term@params], .gas_is_driver, logical(1))]
 }
 
 #' @title The Charts of a Joint Score-Driven Filter
@@ -492,6 +640,7 @@ S7::method(term_adjoint, GasJoint) <- function(term, eta, y, score, curvature,
 S7::method(term_links, GasJoint) <- function(term, ...) {
   out <- list()
   for (k in term@params) {
+    if (.gas_is_driver(term@terms[[k]])) next
     lk <- term_links(term@terms[[k]])
     names(lk) <- paste0(k, ".", names(lk))
     out <- c(out, lk)
@@ -512,6 +661,7 @@ S7::method(term_links, GasJoint) <- function(term, ...) {
 S7::method(term_start, GasJoint) <- function(term, ...) {
   out <- numeric(0)
   for (k in term@params) {
+    if (.gas_is_driver(term@terms[[k]])) next
     z <- term_start(term@terms[[k]])
     names(z) <- paste0(k, ".", names(z))
     out <- c(out, z)
@@ -531,8 +681,7 @@ S7::method(term_start, GasJoint) <- function(term, ...) {
 #' @return A character vector with one entry per filtered parameter.
 #' @keywords internal
 S7::method(term_level_param, GasJoint) <- function(term, ...) {
-  unlist(lapply(term@params, function(k)
-    paste0(k, ".", term_level_param(term@terms[[k]]))), use.names = FALSE)
+  .gas_joint_prefixed(term, function(tm) term_level_param(tm))
 }
 
 #' @title The Reported Quantities of a Joint Score-Driven Filter
@@ -557,6 +706,7 @@ S7::method(term_readable, GasJoint) <- function(term, zeta, ...) {
   scale <- list()
   rows <- list()
   for (k in term@params) {
+    if (.gas_is_driver(term@terms[[k]])) next
     r <- term_readable(term@terms[[k]], as.list(parts[[k]]))
     J <- matrix(0, length(r$name), length(nm), dimnames = list(
       paste0(k, ".", r$name), nm))
@@ -610,6 +760,7 @@ S7::method(term_components, GasJoint) <- function(term, ...) {
   out <- list()
   for (k in seq_along(term@params)) {
     tm <- term@terms[[term@params[k]]]
+    if (.gas_is_driver(tm)) next
     pre <- paste0(term@params[k], ".")
     off <- term@offsets[k]
     cps <- term_components(tm)
@@ -641,8 +792,10 @@ S7::method(term_components, GasJoint) <- function(term, ...) {
 #' @return A built [GasJoint()].
 #' @keywords internal
 S7::method(term_build, GasJoint) <- function(term, data, ...) {
-  tms <- lapply(term@terms, function(tm) term_build(tm, data, ...))
-  out <- gas_joint(tms)
+  # the drivers are made again by gas_joint() beside the rebuilt terms
+  tms <- lapply(.gas_joint_terms_only(term), function(tm)
+    term_build(tm, data, ...))
+  out <- gas_joint(tms, drivers = .gas_joint_drivers(term))
   out@label <- term@label
   out@keys <- term@keys
   out
@@ -658,10 +811,16 @@ S7::method(term_build, GasJoint) <- function(term, data, ...) {
 #' @return `x`, invisibly.
 #' @keywords internal
 S7::method(print, GasJoint) <- function(x, ...) {
+  drv <- .gas_joint_drivers(x)
   cat(sprintf("<GasJoint> '%s': %d filtered parameters, %d group(s)\n",
-              x@label, length(x@params), length(x@blueprint$order)))
+              x@label, length(x@params) - length(drv),
+              length(x@blueprint$order)))
   for (k in x@params) {
     tm <- x@terms[[k]]
+    if (.gas_is_driver(tm)) {
+      cat(sprintf("  %s: static, its score drives the filter\n", k))
+      next
+    }
     cat(sprintf("  %s: p = %d, q = %d%s\n", k, tm@p, tm@q,
                 if (length(tm@cross_with)) sprintf(", loads %s",
                   paste(vapply(tm@cross_with, function(l) {

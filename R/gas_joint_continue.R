@@ -173,6 +173,15 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
   out <- vector("list", length(term@params))
   for (k in seq_along(term@params)) {
     tm <- term@terms[[term@params[k]]]
+    if (.gas_is_driver(tm)) {
+      # a driver's level is zero at every new row
+      out[[k]] <- list(p = 0L, q = 0L, om = numeric(nn),
+                       A = matrix(0, nn, 0L), B = matrix(0, nn, 0L),
+                       dom = matrix(0, nn, M), dA = list(), dB = list(),
+                       partners = integer(0), xpar = integer(0),
+                       xlag = integer(0), cross = list(), dcross = list())
+      next
+    }
     nm <- term_params(tm)
     v <- unlist(psi[[term@params[k]]][nm])
     p <- tm@p

@@ -139,6 +139,7 @@ reference:
   - GasTerm
   - gas_joint
   - GasJoint
+  - GasDriver
   - regime
   - RegimeTerm
   - MarginalBreakTerm

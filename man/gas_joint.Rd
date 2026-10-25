@@ -4,16 +4,21 @@
 \alias{gas_joint}
 \title{Filter Several Score-Driven Terms as One Recursion}
 \usage{
-gas_joint(terms)
+gas_joint(terms, drivers = character(0))
 }
 \arguments{
 \item{terms}{A named list of built \code{\link[=GasTerm]{GasTerm()}} objects, named by the
 distribution parameter in whose equation each one sits.}
+
+\item{drivers}{The names of the distribution parameters without a
+\code{\link[=gas]{gas()}} term whose scores the terms load, or an empty vector. A fitting
+layer, which knows the family, checks that they are parameters of it.}
 }
 \value{
 A \code{\link[=GasJoint]{GasJoint()}} object. Its \code{terms} are the input terms with
 \code{cross_with} filled, so their \code{\link[=term_params]{term_params()}} include the cross
-loadings.
+loadings, followed by one \code{\link[=GasDriver]{GasDriver()}} per entry of \code{drivers}; its
+\code{params} are the names of both.
 }
 \description{
 Checks that a set of built \code{\link[=gas]{gas()}} terms can be filtered together and
@@ -24,8 +29,8 @@ term's \code{p_cross} declares added to its parameters.
 The terms must walk the same series: their \code{by} and \code{time} must give the
 same groups and the same order, because each score is read at the
 predictors of every equation at the same time. A term may develop its
-level, its loadings or its persistence with a subformula; its cross
-loadings stay scalar.
+level, its loadings, its persistence or its cross loadings with a
+subformula.
 
 The terms must share one \code{scaling}, because the driving vector is scaled
 by a power of the expected information of all the filtered parameters
@@ -36,10 +41,19 @@ inverse).
 
 The \code{p_cross} of a term names the parameters whose scores its level loads
 besides its own, with the number of lags of each. A parameter that it
-names with a positive count must be one of the joined terms, and a term
-cannot name its own parameter, whose score it loads through its own
-loadings. The cross loadings of a term follow the parameters in the order
-of the joined terms, lag by lag.
+names with a positive count must be one of the joined terms or one of
+\code{drivers}, and a term cannot name its own parameter, whose score it loads
+through its own loadings. The cross loadings of a term follow the
+parameters in the order of the joined terms and then of \code{drivers}, lag by
+lag.
+
+A parameter in \code{drivers} has no level of its own: its predictor is static,
+and its score enters the driving vector so that the levels of the terms
+can load it. It is carried as a \code{\link[=GasDriver]{GasDriver()}} member after the terms, with
+no parameters and a level of zero, which is a score-driven term whose
+loadings and persistence are zero. With a \code{scaling} other than zero the
+driving vector is scaled by the expected information of the filtered
+parameters and the drivers together.
 }
 \examples{
 set.seed(1)
@@ -50,6 +64,13 @@ tm <- list(mu = term_build(gas(p = 1, q = 1, time = t,
            nu = term_build(gas(p = 1, q = 1, time = t), dd))
 jt <- gas_joint(tm)
 lapply(jt@terms, term_params)
+
+# The level of mu loads the score of sigma, whose predictor is static.
+jd <- gas_joint(list(mu = term_build(gas(p = 1, q = 1, time = t,
+                                         p_cross = c(sigma = 1)), dd)),
+                drivers = "sigma")
+jd@params
+term_params(jd)
 
 }
 \seealso{

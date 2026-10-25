@@ -85,6 +85,23 @@ NULL
   for (k in seq_len(K)) {
     pk <- term@params[k]
     tm <- term@terms[[pk]]
+    if (.gas_is_driver(tm)) {
+      # a driver (gas_joint.R): the one slot omega, zero at every row, with
+      # no coordinate in any group
+      bases[[k]] <- "omega"
+      lay[[k]] <- list(names = character(0), idx = list(omega = integer(0)))
+      nlay[k] <- 0L
+      slots[[k]] <- "omega"
+      acts[[k]] <- lapply(bp$order, function(r) integer(0))
+      mem[[k]] <- list(p = 0L, q = 0L, partners = integer(0),
+                       xpar = integer(0), xlag = integer(0), developed = FALSE,
+                       vals = list(list(
+                         v = numeric(n), W = matrix(0, n, 0L),
+                         Z = matrix(0, n, 0L), k2 = numeric(n),
+                         k3 = if (nd >= 1L) numeric(n) else numeric(0),
+                         k4 = if (nd >= 2L) numeric(n) else numeric(0))))
+      next
+    }
     p <- tm@p
     q <- tm@q
     base <- .gas_base_params(p, q)

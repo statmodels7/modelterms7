@@ -25,6 +25,7 @@ NULL
   psi <- .gas_joint_psi(term, psi)
   lapply(seq_along(term@params), function(k) {
     tm <- term@terms[[term@params[k]]]
+    if (.gas_is_driver(tm)) return(.gas_driver_member(tm, term@offsets[k]))
     nm <- term_params(tm)
     u <- unlist(psi[[term@params[k]]][nm], use.names = FALSE)
     if (length(u) != length(nm) || anyNA(u)) {
@@ -55,6 +56,30 @@ NULL
   })
 }
 
+# A driver (gas_joint.R) as a member of the per-row route: a level of zero
+# at every row, with no coordinates, no lags and no cross loadings; `vals`
+# carries the one entry, omega, that the routes read for every member.
+.gas_driver_member <- function(tm, off) {
+  n <- tm@blueprint$n
+  om <- list(idx = integer(0), developed = FALSE, Z = matrix(0, n, 0L),
+             v = numeric(n), W = matrix(0, n, 0L), k2 = numeric(n),
+             k3 = numeric(n), k4 = numeric(n))
+  list(tm = tm, p = 0L, q = 0L, off = off, driver = TRUE,
+       vals = list(omega = om),
+       bd = list(B = matrix(0, n, 0L), DB = list(), pidx = integer(0)),
+       om = numeric(n), A = matrix(0, n, 0L), B = matrix(0, n, 0L),
+       partners = integer(0), xpar = integer(0), xlag = integer(0),
+       cross = matrix(0, n, 0L), cross_names = character(0))
+}
+
+# the groups of a driver for .gas_joint_sub_groups(): no active coordinate
+# and a starting level of zero in each group
+.gas_driver_groups <- function(term) {
+  list(groups = lapply(term@blueprint$order, function(rows)
+    list(act = integer(0), dom = matrix(0, length(rows), 0L), da = list(),
+         dbl = list(), f0 = 0, df0 = numeric(0))))
+}
+
 # The groups of the compiled route. Each group is carried on the union of
 # the members' active coordinates (moved by the member's offset, the cross
 # loadings' included), and every member's derivative rows are scattered onto
@@ -63,9 +88,14 @@ NULL
 .gas_joint_sub_groups <- function(term, mem) {
   bp <- term@blueprint
   K <- length(mem)
-  acts <- lapply(mem, function(m) .gas_sub_active(m$tm, m$vals))
-  preps <- lapply(seq_len(K), function(k)
-    .gas_sub_prep(mem[[k]]$tm, mem[[k]]$vals, mem[[k]]$bd, acts[[k]]))
+  acts <- lapply(mem, function(m) {
+    if (isTRUE(m$driver)) lapply(bp$order, function(r) integer(0))
+    else .gas_sub_active(m$tm, m$vals)
+  })
+  preps <- lapply(seq_len(K), function(k) {
+    if (isTRUE(mem[[k]]$driver)) .gas_driver_groups(term)
+    else .gas_sub_prep(mem[[k]]$tm, mem[[k]]$vals, mem[[k]]$bd, acts[[k]])
+  })
   lapply(seq_along(bp$order), function(l) {
     rows <- bp$order[[l]]
     jact <- sort(unique(as.integer(

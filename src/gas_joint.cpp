@@ -120,7 +120,8 @@ SEXP gas_joint_filter_cpp(NumericMatrix eta, List cf, int M, List order,
                 const JCoef& J = co[k];
                 double ft = J.omega;
                 std::fill(Ft.begin(), Ft.end(), 0.0);
-                Ft[J.col_omega - 1] = 1.0;
+                // a driver's constant level (col_omega 0) has no column
+                if (J.col_omega > 0) Ft[J.col_omega - 1] = 1.0;
                 for (int i = 1; i <= J.p; ++i) {
                     if (t - i < 0) continue;
                     const double ai = J.a[i - 1];

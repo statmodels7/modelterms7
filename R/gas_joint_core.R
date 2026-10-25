@@ -149,6 +149,30 @@ NULL
   out
 }
 
+# The chart of a driver (gas_joint.R): a level of zero with no lags, every
+# derivative zero, in the shape that .gas_chart_prep() returns over m
+# unknowns and nd directions.
+.gas_driver_chart <- function(m, nd) {
+  z1 <- numeric(m)
+  z2 <- matrix(0, m, m)
+  out <- list(omega = 0, a = list(), b = list(), om_u = z1, om_uu = z2,
+              a_u = list(), a_uu = list(), b_u = list(), b_uu = list(),
+              f0 = 0, f0_u = z1, f0_uu = z2)
+  if (nd >= 1L) {
+    out$t_om <- rep(list(z2), nd)
+    out$t_a <- rep(list(list()), nd)
+    out$t_b <- rep(list(list()), nd)
+    out$f0_3 <- rep(list(z2), nd)
+  }
+  if (nd >= 2L) {
+    out$q_om <- z2
+    out$q_a <- list()
+    out$q_b <- list()
+    out$f0_4 <- z2
+  }
+  out
+}
+
 # The joint filter on the compiled route: the term charts lifted to the
 # unknowns by .gas_chart_prep() with the directions the order calls for (none
 # for the second order, one for the third, two for the fourth), flattened to
@@ -168,14 +192,18 @@ NULL
   charts <- vector("list", K)
   for (k in seq_len(K)) {
     tm <- term@terms[[term@params[k]]]
-    base <- .gas_base_params(tm@p, tm@q)
-    links <- term_links(tm)
-    v <- unlist(psi[[term@params[k]]][base])
-    zeta <- vapply(base, function(j)
-      linkfunctions7::linkfun(links[[j]], v[[j]]), numeric(1))
-    gp <- .gas_chart_prep(zeta, tm@p, tm@q, links,
-                          zoff + term@offsets[k] + seq_along(base),
-                          seq_len(m), dirs)
+    if (.gas_is_driver(tm)) {
+      gp <- .gas_driver_chart(m, nd)
+    } else {
+      base <- .gas_base_params(tm@p, tm@q)
+      links <- term_links(tm)
+      v <- unlist(psi[[term@params[k]]][base])
+      zeta <- vapply(base, function(j)
+        linkfunctions7::linkfun(links[[j]], v[[j]]), numeric(1))
+      gp <- .gas_chart_prep(zeta, tm@p, tm@q, links,
+                            zoff + term@offsets[k] + seq_along(base),
+                            seq_len(m), dirs)
+    }
     charts[[k]] <- list(
       omega = gp$omega, om_u = gp$om_u, om_uu = as.numeric(gp$om_uu),
       f0 = gp$f0, f0_u = gp$f0_u, f0_uu = as.numeric(gp$f0_uu),
@@ -288,14 +316,18 @@ NULL
   charts <- vector("list", K)
   for (k in seq_len(K)) {
     tm <- term@terms[[term@params[k]]]
-    base <- .gas_base_params(tm@p, tm@q)
-    links <- term_links(tm)
-    v <- unlist(psi[[term@params[k]]][base])
-    zeta <- vapply(base, function(j)
-      linkfunctions7::linkfun(links[[j]], v[[j]]), numeric(1))
-    gp <- .gas_chart_prep(zeta, tm@p, tm@q, links,
-                          zoff + term@offsets[k] + seq_along(base),
-                          seq_len(m), dirs)
+    if (.gas_is_driver(tm)) {
+      gp <- .gas_driver_chart(m, nd)
+    } else {
+      base <- .gas_base_params(tm@p, tm@q)
+      links <- term_links(tm)
+      v <- unlist(psi[[term@params[k]]][base])
+      zeta <- vapply(base, function(j)
+        linkfunctions7::linkfun(links[[j]], v[[j]]), numeric(1))
+      gp <- .gas_chart_prep(zeta, tm@p, tm@q, links,
+                            zoff + term@offsets[k] + seq_along(base),
+                            seq_len(m), dirs)
+    }
     charts[[k]] <- .gas_jchart(gp, nd)
   }
 
