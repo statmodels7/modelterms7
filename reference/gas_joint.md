@@ -10,7 +10,7 @@ added to its parameters.
 ## Usage
 
 ``` r
-gas_joint(terms)
+gas_joint(terms, drivers = character(0))
 ```
 
 ## Arguments
@@ -22,6 +22,13 @@ gas_joint(terms)
   objects, named by the distribution parameter in whose equation each
   one sits.
 
+- drivers:
+
+  The names of the distribution parameters without a
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  term whose scores the terms load, or an empty vector. A fitting layer,
+  which knows the family, checks that they are parameters of it.
+
 ## Value
 
 A
@@ -29,15 +36,17 @@ A
 object. Its `terms` are the input terms with `cross_with` filled, so
 their
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md)
-include the cross loadings.
+include the cross loadings, followed by one
+[`GasDriver()`](https://statmodels7.github.io/modelterms7/reference/GasDriver.md)
+per entry of `drivers`; its `params` are the names of both.
 
 ## Details
 
 The terms must walk the same series: their `by` and `time` must give the
 same groups and the same order, because each score is read at the
 predictors of every equation at the same time. A term may develop its
-level, its loadings or its persistence with a subformula; its cross
-loadings stay scalar.
+level, its loadings, its persistence or its cross loadings with a
+subformula.
 
 The terms must share one `scaling`, because the driving vector is scaled
 by a power of the expected information of all the filtered parameters
@@ -48,10 +57,20 @@ the inverse).
 
 The `p_cross` of a term names the parameters whose scores its level
 loads besides its own, with the number of lags of each. A parameter that
-it names with a positive count must be one of the joined terms, and a
-term cannot name its own parameter, whose score it loads through its own
-loadings. The cross loadings of a term follow the parameters in the
-order of the joined terms, lag by lag.
+it names with a positive count must be one of the joined terms or one of
+`drivers`, and a term cannot name its own parameter, whose score it
+loads through its own loadings. The cross loadings of a term follow the
+parameters in the order of the joined terms and then of `drivers`, lag
+by lag.
+
+A parameter in `drivers` has no level of its own: its predictor is
+static, and its score enters the driving vector so that the levels of
+the terms can load it. It is carried as a
+[`GasDriver()`](https://statmodels7.github.io/modelterms7/reference/GasDriver.md)
+member after the terms, with no parameters and a level of zero, which is
+a score-driven term whose loadings and persistence are zero. With a
+`scaling` other than zero the driving vector is scaled by the expected
+information of the filtered parameters and the drivers together.
 
 ## See also
 
@@ -78,4 +97,13 @@ lapply(jt@terms, term_params)
 #> $nu
 #> [1] "omega"  "kappa1" "pacf1" 
 #> 
+
+# The level of mu loads the score of sigma, whose predictor is static.
+jd <- gas_joint(list(mu = term_build(gas(p = 1, q = 1, time = t,
+                                         p_cross = c(sigma = 1)), dd)),
+                drivers = "sigma")
+jd@params
+#> [1] "mu"    "sigma"
+term_params(jd)
+#> [1] "mu.omega"        "mu.kappa1"       "mu.pacf1"        "mu.kappa1_sigma"
 ```

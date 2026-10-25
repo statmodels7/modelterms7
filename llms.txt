@@ -514,6 +514,8 @@ through its recursion.
   : Filter Several Score-Driven Terms as One Recursion
 - [`GasJoint()`](https://statmodels7.github.io/modelterms7/reference/GasJoint.md)
   : A Joint Score-Driven Filter
+- [`GasDriver()`](https://statmodels7.github.io/modelterms7/reference/GasDriver.md)
+  : A Static Parameter Whose Score Drives a Joint Filter
 - [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
   : Markov Regime Switching
 - [`RegimeTerm()`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md)

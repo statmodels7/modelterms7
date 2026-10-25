@@ -5,6 +5,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/authors.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/index.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/news/index.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/GasDriver.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/LinparTerm.html</loc></url>
@@ -200,6 +201,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_loglik.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_matrix.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_npar.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_params.GasDriver.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_params.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_params.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_params.MarginalBreakTerm.html</loc></url>

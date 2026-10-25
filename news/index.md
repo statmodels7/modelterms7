@@ -1,5 +1,19 @@
 # Changelog
 
+## modelterms7 0.108.0
+
+- A parameter without a gas() term can drive a joint filter:
+  `gas_joint(terms, drivers = "sigma")` adds a `GasDriver` member, a
+  score-driven term with no parameters and a level of zero, whose score
+  enters the driving vector so that the terms load it through `p_cross`
+  (`y ~ gas(p = 1, q = 1, p_cross = c(sigma = 1)) | sigma ~ x`). With a
+  `scaling` other than zero the driving vector is scaled by the
+  information of the filtered parameters and the drivers together. A
+  driver equals a `gas(p = 1, q = 0)` term on the same parameter whose
+  coordinates are zero, at every order, on the constant and per-row
+  routes, compiled and in
+  18. 
+
 ## modelterms7 0.107.0
 
 - [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)

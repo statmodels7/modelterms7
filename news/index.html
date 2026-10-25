@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.107.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.108.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,12 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.108.0" id="modelterms7-01080">modelterms7 0.108.0<a class="anchor" aria-label="anchor" href="#modelterms7-01080"></a></h2>
+<ul><li>A parameter without a gas() term can drive a joint filter: <code>gas_joint(terms, drivers = "sigma")</code> adds a <code>GasDriver</code> member, a score-driven term with no parameters and a level of zero, whose score enters the driving vector so that the terms load it through <code>p_cross</code> (<code>y ~ gas(p = 1, q = 1, p_cross = c(sigma = 1)) | sigma ~ x</code>). With a <code>scaling</code> other than zero the driving vector is scaled by the information of the filtered parameters and the drivers together. A driver equals a <code>gas(p = 1, q = 0)</code> term on the same parameter whose coordinates are zero, at every order, on the constant and per-row routes, compiled and in
+<ol start="18" style="list-style-type: upper-alpha"><li>
+</li></ol></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.107.0" id="modelterms7-01070">modelterms7 0.107.0<a class="anchor" aria-label="anchor" href="#modelterms7-01070"></a></h2>
 <ul><li>

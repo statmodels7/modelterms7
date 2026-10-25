@@ -11,7 +11,7 @@ term's p_cross declares added to its parameters."><meta property="og:image" cont
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.107.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.108.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,7 +45,7 @@ term's <code>p_cross</code> declares added to its parameters.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">gas_joint</span><span class="op">(</span><span class="va">terms</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">gas_joint</span><span class="op">(</span><span class="va">terms</span>, drivers <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -56,20 +56,27 @@ term's <code>p_cross</code> declares added to its parameters.</p>
 <dd><p>A named list of built <code><a href="GasTerm.html">GasTerm()</a></code> objects, named by the
 distribution parameter in whose equation each one sits.</p></dd>
 
+
+<dt id="arg-drivers">drivers<a class="anchor" aria-label="anchor" href="#arg-drivers"></a></dt>
+<dd><p>The names of the distribution parameters without a
+<code><a href="gas.html">gas()</a></code> term whose scores the terms load, or an empty vector. A fitting
+layer, which knows the family, checks that they are parameters of it.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A <code><a href="GasJoint.html">GasJoint()</a></code> object. Its <code>terms</code> are the input terms with
 <code>cross_with</code> filled, so their <code><a href="term_params.html">term_params()</a></code> include the cross
-loadings.</p>
+loadings, followed by one <code><a href="GasDriver.html">GasDriver()</a></code> per entry of <code>drivers</code>; its
+<code>params</code> are the names of both.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The terms must walk the same series: their <code>by</code> and <code>time</code> must give the
 same groups and the same order, because each score is read at the
 predictors of every equation at the same time. A term may develop its
-level, its loadings or its persistence with a subformula; its cross
-loadings stay scalar.</p>
+level, its loadings, its persistence or its cross loadings with a
+subformula.</p>
 <p>The terms must share one <code>scaling</code>, because the driving vector is scaled
 by a power of the expected information of all the filtered parameters
 together. With more than one term the power is 0, 1/2 or 1: for these the
@@ -78,10 +85,18 @@ symmetric square root through a Sylvester equation per order, and the
 inverse).</p>
 <p>The <code>p_cross</code> of a term names the parameters whose scores its level loads
 besides its own, with the number of lags of each. A parameter that it
-names with a positive count must be one of the joined terms, and a term
-cannot name its own parameter, whose score it loads through its own
-loadings. The cross loadings of a term follow the parameters in the order
-of the joined terms, lag by lag.</p>
+names with a positive count must be one of the joined terms or one of
+<code>drivers</code>, and a term cannot name its own parameter, whose score it loads
+through its own loadings. The cross loadings of a term follow the
+parameters in the order of the joined terms and then of <code>drivers</code>, lag by
+lag.</p>
+<p>A parameter in <code>drivers</code> has no level of its own: its predictor is static,
+and its score enters the driving vector so that the levels of the terms
+can load it. It is carried as a <code><a href="GasDriver.html">GasDriver()</a></code> member after the terms, with
+no parameters and a level of zero, which is a score-driven term whose
+loadings and persistence are zero. With a <code>scaling</code> other than zero the
+driving vector is scaled by the expected information of the filtered
+parameters and the drivers together.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -107,6 +122,15 @@ of the joined terms, lag by lag.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $nu</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "omega"  "kappa1" "pacf1" </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># The level of mu loads the score of sigma, whose predictor is static.</span></span></span>
+<span class="r-in"><span><span class="va">jd</span> <span class="op">&lt;-</span> <span class="fu">gas_joint</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mu <span class="op">=</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span>, time <span class="op">=</span> <span class="va">t</span>,</span></span>
+<span class="r-in"><span>                                         p_cross <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sigma <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                drivers <span class="op">=</span> <span class="st">"sigma"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">jd</span><span class="op">@</span><span class="va">params</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "mu"    "sigma"</span>
+<span class="r-in"><span><span class="fu"><a href="term_params.html">term_params</a></span><span class="op">(</span><span class="va">jd</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "mu.omega"        "mu.kappa1"       "mu.pacf1"        "mu.kappa1_sigma"</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>
