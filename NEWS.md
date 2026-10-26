@@ -1,3 +1,8 @@
+# modelterms7 0.109.0
+
+* `random()` and `s()` have no `...`, and `te()` rejects a named argument
+  among its covariates.
+
 # modelterms7 0.108.0
 
 * A parameter without a gas() term can drive a joint filter:
