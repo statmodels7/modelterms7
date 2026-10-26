@@ -232,10 +232,6 @@ SmoothTerm <- S7::new_class(
 #' @param sparse `TRUE`, `FALSE`, or `NULL` to settle it at build. Only a
 #'   factor `by` admits `TRUE`; without one it is rejected and not ignored.
 #'   See the section above.
-#' @param ... Not used, and accepted only so that an argument that `s()` no
-#'   longer takes is reported with its replacement rather than as R's own
-#'   "unused argument", which names the argument and not what to write.
-#'
 #' @return An unbuilt [SmoothTerm()]: a specification, with `X`, `coef_names`,
 #'   `blueprint` and `penalty` empty until [term_build()] fills them.
 #'
@@ -318,70 +314,13 @@ SmoothTerm <- S7::new_class(
 #' @export
 s <- function(x, smoother = basis7::bspline_smooth(), by = NULL,
               by_hyper = c("shared", "level"), hyper = NULL, id = NULL,
-              label = NULL, sparse = NULL, ...) {
+              label = NULL, sparse = NULL) {
   xe <- substitute(x)
-  retired_smooth_args(list(...), "s")
   .smooth_spec(list(xe), substitute(by), list(smoother), label,
                sprintf("s(%s)", deparse(xe)), hyper, sparse = sparse,
                ids = id, by_hyper = by_hyper)
 }
 
-
-#' Report an Argument That s() and te() No Longer Take
-#'
-#' @description
-#' Names the replacement for each of the arguments that the smooth constructors
-#' carried before the construction became an object. They are reported here
-#' rather than left to R's own "unused argument", which names the argument
-#' and not what to write instead.
-#'
-#' @details
-#' A smooth consists of four decisions (the basis, the penalty, the
-#' null space and the reparametrization), which travel together on a
-#' \pkg{basis7} smoother, so the settings that described the first two belong
-#' there. `k` and `degree` belong to a B-spline and not to smoothers in
-#' general; `linear` named the null space as "linear", which it is only when
-#' the penalty is of order 2. The smoothing parameter `lambda` is now a
-#' hyperparameter of the term, held through `hyper`. An argument that is not
-#' one of these is reported as having no such argument.
-#'
-#' @param dots The `...` of the constructor.
-#' @param fn `"s"` or `"te"`, for the message.
-#'
-#' @return `NULL`, invisibly. The function is called for the error that it
-#'   signals.
-#'
-#' @keywords internal
-retired_smooth_args <- function(dots, fn) {
-  nm <- names(dots)
-  if (is.null(nm) || !length(nm)) {
-    if (length(dots)) {
-      stop(sprintf("'%s' takes no unnamed argument beyond its covariate.", fn),
-           call. = FALSE)
-    }
-    return(invisible(NULL))
-  }
-  arg <- if (identical(fn, "s")) "smoother" else "smooths"
-  moved <- c(
-    k = sprintf("%s = bspline_smooth(k = ...)", arg),
-    degree = sprintf("%s = bspline_smooth(degree = ...)", arg),
-    basis = sprintf("%s = a smoother, or bspline_smooth(lower =, upper =)",
-                    arg),
-    bases = sprintf("%s = a list of smoothers, one per covariate", arg),
-    linear = sprintf("%s = bspline_smooth(null_space = \"keep\"/\"drop\")",
-                     arg),
-    lambda = "hyper = c(lambda = ...)"
-  )
-  hit <- intersect(nm, names(moved))
-  if (length(hit)) {
-    stop(sprintf(paste0(
-      "'%s' no longer takes '%s'. The construction of a smooth is now an",
-      " object:\n  write %s.\n  See ?basis7::bspline_smooth."
-    ), fn, hit[[1L]], moved[[hit[[1L]]]]), call. = FALSE)
-  }
-  stop(sprintf("'%s' has no argument '%s'.", fn, nm[nzchar(nm)][[1L]]),
-       call. = FALSE)
-}
 
 #' Penalized Smooth of Several Covariates
 #'
@@ -549,12 +488,12 @@ te <- function(..., smooths = basis7::bspline_smooth(k = 5), by = NULL,
                by_hyper = c("shared", "level"), anisotropic = TRUE,
                hyper = NULL, id = NULL, label = NULL, sparse = NULL) {
   vars <- as.list(substitute(list(...)))[-1L]
-  # THE COVARIATES ARE THE UNNAMED ARGUMENTS, so a retired one such as
-  # `k = 4` would otherwise be taken for a covariate called "k" -- silently,
-  # since te() has no dots left to catch it in.
+  # THE COVARIATES ARE THE UNNAMED ARGUMENTS: a named entry would be taken
+  # for a covariate called by that name, since te() has no other dots.
   vn <- names(vars)
   if (!is.null(vn) && any(nzchar(vn))) {
-    retired_smooth_args(as.list(vars)[nzchar(vn)], "te")
+    stop(sprintf("'te' has no argument '%s'.", vn[nzchar(vn)][[1L]]),
+         call. = FALSE)
   }
   if (length(vars) < 2L) {
     stop("'te' needs at least two covariates; use s() for one.",

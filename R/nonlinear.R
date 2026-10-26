@@ -420,7 +420,7 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
 .nl_gather_subformulas <- function(dots, subformulas) {
   if (!length(dots)) return(subformulas)
   # a named entry is an argument the signature does not take -- the shape a
-  # mistyped or removed argument arrives in -- and it is reported by name
+  # mistyped argument arrives in -- and it is reported by name
   nms <- names(dots)
   if (!is.null(nms) && any(nzchar(nms))) {
     stop(sprintf(paste("unused argument '%s': '...' takes two-sided",

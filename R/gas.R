@@ -548,7 +548,7 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
 # side names a base parameter, at most one per parameter
 .gas_gather_submodels <- function(dots, base) {
   # a named entry is an argument the signature does not take -- the shape a
-  # mistyped or removed argument arrives in -- and it is reported by name
+  # mistyped argument arrives in -- and it is reported by name
   # rather than swallowed by the formula check below
   nms <- names(dots)
   if (!is.null(nms) && any(nzchar(nms))) {

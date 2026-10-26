@@ -10,8 +10,7 @@ random(
   correlated = TRUE,
   label = "random",
   hyper = NULL,
-  id = NULL,
-  ...
+  id = NULL
 )
 }
 \arguments{
@@ -47,11 +46,6 @@ random effects may be given one variance component. The names are
 \code{hyper}'s, checked at the same point and for the same reason; a single
 unnamed string is accepted where the effects' distribution carries one
 hyperparameter. \code{NULL}, the default, shares nothing. See \code{\link[=term_ids]{term_ids()}}.}
-
-\item{...}{Not used. A named argument is rejected with an error naming it,
-and the removed arguments \code{precision} and \code{kinks} are rejected with a
-message giving the replacement. An unnamed argument beyond those of the
-signature is rejected as well.}
 }
 \value{
 An object of class \code{\link[=RandomTerm]{RandomTerm()}} (a specification;

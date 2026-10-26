@@ -155,7 +155,7 @@ test_that("a penalty is asked for inside the subformula", {
   # the whole of the block is not penalized: the rate is left free
   expect_null(term_penalty(built))
 
-  # the removed arguments are reported by name
+  # a named argument in the dots is reported by name
   expect_error(nl(~ a * x, penalty = penalties7::lasso_penalty),
                "unused argument 'penalty'")
   expect_error(nl(~ a * x, penalize = "a"), "unused argument 'penalize'")

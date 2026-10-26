@@ -292,13 +292,8 @@ test_that("degenerate inputs are rejected", {
   expect_identical(dim(term_matrix(b1)), c(4L, 4L))
 })
 
-test_that("the removed arguments are reported by name", {
-  # a removed argument lands in the dots, where it would be swallowed; it is
-  # named instead, with the spelling that replaces it
-  expect_error(random(~ x | g, precision = parameters7::ar1(2)),
-               "mvgaussian2_distrib")
-  expect_error(random(~ 1 | g, kinks = 0), "distrib_kinks")
-  expect_error(random(~ 1 | g, standardize = TRUE), "no argument")
+test_that("an unknown argument is rejected and two specifications of the distribution conflict", {
+  expect_error(random(~ 1 | g, standardize = TRUE), "unused argument")
   # and two ways of saying the same thing is an error, not a silent winner
   ph <- .centered(distributions7::pseudohuber_distrib(), mu = 0)
   expect_error(random(~ x | g, distrib = ph, correlated = FALSE), "Say it once")

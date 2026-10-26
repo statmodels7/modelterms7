@@ -12,8 +12,7 @@ s(
   hyper = NULL,
   id = NULL,
   label = NULL,
-  sparse = NULL,
-  ...
+  sparse = NULL
 )
 }
 \arguments{
@@ -53,10 +52,6 @@ See \code{\link[=term_ids]{term_ids()}}.}
 \item{sparse}{\code{TRUE}, \code{FALSE}, or \code{NULL} to settle it at build. Only a
 factor \code{by} admits \code{TRUE}; without one it is rejected and not ignored.
 See the section above.}
-
-\item{...}{Not used, and accepted only so that an argument that \code{s()} no
-longer takes is reported with its replacement rather than as R's own
-"unused argument", which names the argument and not what to write.}
 }
 \value{
 An unbuilt \code{\link[=SmoothTerm]{SmoothTerm()}}: a specification, with \code{X}, \code{coef_names},
