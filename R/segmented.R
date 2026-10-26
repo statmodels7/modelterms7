@@ -784,7 +784,7 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   nms <- names(dots)
   for (i in seq_along(dots)) {
     d <- dots[[i]]
-    # a named argument in `...` is a mistyped or removed one, and is
+    # a named argument in `...` is a mistyped one, and is
     # reported as such rather than swallowed by the formula check
     if (!is.null(nms) && nzchar(nms[i])) {
       stop(sprintf("'%s' is not an argument of a break-point term.", nms[i]),

@@ -247,7 +247,7 @@ test_that("the curvature of a developed filter is exact", {
 test_that("the third derivative of a developed filter is exact", {
   # A penalty can only reach a gas term's own parameters through a
   # subformula -- term_penalties() is empty without one, and gas(penalty =)
-  # was retired -- so THIS route, and not the scalar one, is what the exact
+  # does not exist -- so THIS route, and not the scalar one, is what the exact
   # gradient of a marginal criterion calls.
   #
   # The layer is stubbed by l = -log cosh(e - y): four non-zero orders, all

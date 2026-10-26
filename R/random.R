@@ -332,11 +332,6 @@ RandomTerm <- S7::new_class(
 #'   `hyper`'s, checked at the same point and for the same reason; a single
 #'   unnamed string is accepted where the effects' distribution carries one
 #'   hyperparameter. `NULL`, the default, shares nothing. See [term_ids()].
-#' @param ... Not used. A named argument is rejected with an error naming it,
-#'   and the removed arguments `precision` and `kinks` are rejected with a
-#'   message giving the replacement. An unnamed argument beyond those of the
-#'   signature is rejected as well.
-#'
 #' @return An object of class [RandomTerm()] (a specification;
 #'   see [term_build()]).
 #'
@@ -401,13 +396,12 @@ RandomTerm <- S7::new_class(
 #' @seealso [s()], [te()], [nl()]
 #' @export
 random <- function(formula, distrib = NULL, correlated = TRUE,
-                   label = "random", hyper = NULL, id = NULL, ...) {
+                   label = "random", hyper = NULL, id = NULL) {
   parts <- .random_parts(formula)
   if (!is.logical(correlated) || length(correlated) != 1L ||
       is.na(correlated)) {
     stop("'correlated' must be TRUE or FALSE.", call. = FALSE)
   }
-  .random_retired(...)
   if (!is.null(distrib) && !missing(correlated)) {
     stop(paste0(
       "'correlated' and 'distrib' both specify how the effects are\n",
@@ -508,50 +502,6 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
     tag <- as.character(tg)
   }
   list(within = within, group = e[[3L]], tag = tag)
-}
-
-#' Removed Arguments of random()
-#'
-#' @description
-#' Signals an error for any argument passed in the dots of [random()], naming
-#' a removed argument where there is one.
-#'
-#' @details
-#' `precision` and `kinks` are no longer accepted. A structured precision is
-#' the matrix parameter of `mvgaussian2_distrib()`, and the kinks of a prior
-#' are derived from its log-density by \pkg{penalties7}.
-#'
-#' @param ... The dots of [random()].
-#'
-#' @return Invisibly `NULL`; called for its error.
-#'
-#' @keywords internal
-.random_retired <- function(...) {
-  dots <- list(...)
-  if (!length(dots)) return(invisible(NULL))
-  nm <- names(dots)
-  if (is.null(nm) || !any(nzchar(nm))) {
-    stop(paste0("random() takes no unnamed arguments beyond 'formula',\n",
-                "  'distrib', 'correlated', 'label', 'hyper' and 'id'."),
-         call. = FALSE)
-  }
-  if ("precision" %in% nm) {
-    stop(paste0(
-      "'precision' has been removed: a structured precision is the matrix\n",
-      "  parameter of a multivariate Gaussian, so it is written as one --\n",
-      "  distrib = fixed(mvgaussian2_distrib(d, <structure>),\n",
-      "                  mu1 = 0, ..., mud = 0)\n",
-      "  which also determines which of the two matrices the structure is."),
-      call. = FALSE)
-  }
-  if ("kinks" %in% nm) {
-    stop(paste0(
-      "'kinks' has been removed: the kinks are derived from the effects'\n",
-      "  distribution by penalties7::distrib_kinks(), on which every\n",
-      "  other penalized term relies."), call. = FALSE)
-  }
-  stop(sprintf("random() has no argument '%s'.", nm[nzchar(nm)][1L]),
-       call. = FALSE)
 }
 
 #' What a Grouping Variable Has to Be

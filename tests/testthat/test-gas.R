@@ -332,9 +332,8 @@ test_that("the reported quantities are the literature's, with a jacobian", {
   expect_equal(ident$value, c(0.5, 0.2))
 })
 
-test_that("the removed shorthands are reported by name", {
-  # deviations= and penalty= were retired when the subformulas subsumed
-  # them; a call carrying either lands in `...` and is named rather than
+test_that("a named argument in the dots is reported by name", {
+  # `...` takes subformulas; a named entry is named in the error rather than
   # swallowed by the formula check
   expect_error(gas(by = g, deviations = TRUE), "unused argument 'deviations'")
   expect_error(gas(by = g, penalty = penalties7::lasso_penalty),
