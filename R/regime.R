@@ -1103,6 +1103,67 @@ S7::method(term_hessian, structural_term) <- function(term, eta, y, logdens,
                attr(S7::S7_class(term), "name")), call. = FALSE)
 }
 
+#' @title Per-Observation Scores of a Structural Term
+#' @name term_scores
+#' @description
+#' Returns, for each observation, the derivative of the weighted increment
+#' of the term's likelihood in the caller's whole unknown vector. The sum of
+#' the rows is the `gradient` that [term_hessian()] returns.
+#'
+#' @details
+#' For a [regime()] term the increment of observation \eqn{t} is
+#' \eqn{w_t \log p(y_t \mid y_1, \dots, y_{t-1})}, with \eqn{p} the
+#' conditional density given by the scaled forward recursion, and the row is
+#' its derivative. The derivative is carried in forward mode through the
+#' recursion, which is the first-order part of the recursion of
+#' [term_hessian()]. A term class that does not implement the generic
+#' signals an error.
+#'
+#' @param term A built structural term.
+#' @param eta The static predictor.
+#' @param y The response.
+#' @param logdens,grad The log-density and its first derivatives in the
+#'   predictors, as in [term_hessian()].
+#' @param psi The term's parameters on the parameter scale.
+#' @param seed The derivative of each predictor in the caller's unknowns.
+#' @param cols The columns that the term's own parameters occupy.
+#' @param level The distribution parameter that the regimes shift.
+#' @param weights Optional observation weights: one number or one number per
+#'   observation, without missing values. `NULL` gives every observation the
+#'   weight one.
+#' @param ... Passed to methods.
+#'
+#' @return A matrix with one row per observation and one column per unknown
+#'   of the caller, in the order of the rows of the data. Each row is
+#'   multiplied by the weight of its observation.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(t = 1:30, y = c(rnorm(15), rnorm(15, 3)))
+#' term <- term_build(regime(2, time = t), dd)
+#' psi <- list(level1 = 0, gap2 = 3, alr1.1 = 2, alr2.1 = -2)
+#' seed <- list(matrix(c(rep(1, 30), rep(0, 30 * 4)), 30, 5L))
+#' ld <- function(e, i) dnorm(dd$y[i], e, log = TRUE)
+#' gr <- function(e, i) matrix(dd$y[i] - e, ncol = 1L)
+#' U <- term_scores(term, eta = rep(0, 30), y = dd$y, logdens = ld,
+#'                  grad = gr, psi = psi, seed = seed, cols = 2:5,
+#'                  level = 1L)
+#' dim(U)
+#'
+#' @seealso [term_hessian()]
+#' @export
+term_scores <- S7::new_generic("term_scores", "term",
+  function(term, eta, y, logdens, grad, psi, seed, cols, level,
+           weights = NULL, ...) S7::S7_dispatch())
+
+S7::method(term_scores, structural_term) <- function(term, eta, y, logdens,
+                                                     grad, psi, seed, cols,
+                                                     level, weights = NULL,
+                                                     ...) {
+  stop(sprintf("the term class '%s' does not implement term_scores().",
+               attr(S7::S7_class(term), "name")), call. = FALSE)
+}
+
 # The chart of a regime's own parameters, on the unconstrained scale the
 # model layer optimizes on: the levels are cumulative sums of positive
 # gaps, so a gap under its log link contributes itself to both the first
@@ -1358,6 +1419,131 @@ S7::method(term_hessian, RegimeTerm) <- function(term, eta, y, logdens, grad,
 
   hessian <- (hessian + t(hessian)) / 2
   list(loglik = loglik, gradient = gradient, hessian = hessian)
+}
+
+#' @title Per-Observation Scores of a Regime Term
+#' @name term_scores.RegimeTerm
+#' @description
+#' Carries the first derivative, in forward mode, through the scaled forward
+#' recursion and returns the derivative of each weighted increment.
+#' @details
+#' The recursion and the chart of the chain are those of
+#' [term_hessian()] for a [RegimeTerm()], with the derivative of order two
+#' omitted. The increment of an observation is \eqn{\log c_t}, with
+#' \eqn{c_t} the normalizing constant of its step, and its derivative is
+#' \eqn{\dot c_t / c_t}. The callbacks are called once per regime with the
+#' whole index vector.
+#' @param term A built [RegimeTerm()].
+#' @param eta The static predictor.
+#' @param y The response.
+#' @param logdens,grad The log-density and its first derivatives in the
+#'   predictors.
+#' @param psi The term's parameters on the parameter scale.
+#' @param seed The derivative of each predictor in the caller's unknowns.
+#' @param cols The columns that the term's own parameters occupy.
+#' @param level The distribution parameter that the regimes shift.
+#' @param weights Observation weights: one number or one per observation,
+#'   without missing values.
+#' @param ... Unused.
+#' @return A matrix with `n` rows and one column per unknown of the caller.
+#' @keywords internal
+S7::method(term_scores, RegimeTerm) <- function(term, eta, y, logdens, grad,
+                                                psi, seed, cols, level,
+                                                weights = NULL, ...) {
+  bp <- term@blueprint
+  if (!length(bp)) {
+    stop("the term has not been built; call term_build(term, data) first.",
+         call. = FALSE)
+  }
+  nm <- term_params(term)
+  v <- unlist(psi[nm])
+  if (length(v) != length(nm) || anyNA(v)) {
+    stop(sprintf("'psi' must supply %s.", paste(nm, collapse = ", ")),
+         call. = FALSE)
+  }
+  k <- term@k
+  n <- bp$n
+  if (!is.list(seed) || !length(seed)) {
+    stop("'seed' must be a list with one matrix per distribution parameter.",
+         call. = FALSE)
+  }
+  seed <- lapply(seed, as.matrix)
+  m <- ncol(seed[[1L]])
+  npar <- length(seed)
+  if (any(vapply(seed, nrow, 1L) != n) ||
+      any(vapply(seed, ncol, 1L) != m)) {
+    stop(sprintf("every element of 'seed' must be %d by %d.", n, m),
+         call. = FALSE)
+  }
+  cols <- as.integer(cols)
+  level <- as.integer(level)
+  if (length(cols) != length(nm) || any(cols < 1L) || any(cols > m)) {
+    stop(sprintf("'cols' must give the %d columns that the term's parameters occupy.",
+                 length(nm)), call. = FALSE)
+  }
+  if (length(level) != 1L || level < 1L || level > npar) {
+    stop("'level' must index one of the distribution parameters.",
+         call. = FALSE)
+  }
+  w <- .structural_weights(weights, n)
+
+  ch <- .regime_chart(v, k, nm, term@chain)
+  idx <- seq_len(n)
+  LF <- matrix(0, n, k)
+  GM <- vector("list", k)
+  for (j in seq_len(k)) {
+    e <- eta + ch$mu[j]
+    a <- as.numeric(logdens(e, idx))
+    if (length(a) != n) {
+      stop(paste0("'logdens' must return one value per observation when ",
+                  "given the whole index vector."), call. = FALSE)
+    }
+    LF[, j] <- a
+    g <- as.matrix(grad(e, idx))
+    if (nrow(g) != n || ncol(g) != npar) {
+      stop(sprintf("'grad' must return an %d by %d matrix.", n, npar),
+           call. = FALSE)
+    }
+    gm <- matrix(0, n, m)
+    for (q in seq_len(npar)) gm <- gm + g[, q] * seed[[q]]
+    gm[, cols] <- gm[, cols] + outer(g[, level], ch$dmu[j, ])
+    GM[[j]] <- gm
+  }
+
+  P <- ch$P
+  U <- matrix(0, n, m)
+  for (rows in bp$order) {
+    a <- ch$delta
+    da <- matrix(0, k, m)
+    da[, cols] <- t(do.call(rbind, ch$ddelta))
+    for (tt in seq_along(rows)) {
+      row <- rows[tt]
+      lf <- LF[row, ]
+      wv <- exp(lf - max(lf))
+      if (tt == 1L) {
+        pred <- a
+        dpred <- da
+      } else {
+        pred <- as.numeric(a %*% P)
+        dpred <- crossprod(P, da)
+        for (l in seq_len(k)) {
+          Dl <- matrix(ch$dPz[, l, ], k, ch$np)
+          dpred[l, cols] <- dpred[l, cols] + as.numeric(a %*% Dl)
+        }
+      }
+      atil <- wv * pred
+      datil <- matrix(0, k, m)
+      for (l in seq_len(k)) {
+        datil[l, ] <- wv[l] * (GM[[l]][row, ] * pred[l] + dpred[l, ])
+      }
+      ct <- sum(atil)
+      dct <- colSums(datil)
+      U[row, ] <- w[row] * dct / ct
+      a <- atil / ct
+      da <- (datil - outer(atil, dct) / ct) / ct
+    }
+  }
+  U
 }
 
 #' @title Print a Regime Term
