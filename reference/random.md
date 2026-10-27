@@ -15,8 +15,7 @@ random(
   correlated = TRUE,
   label = "random",
   hyper = NULL,
-  id = NULL,
-  ...
+  id = NULL
 )
 ```
 
@@ -66,13 +65,6 @@ random(
   unnamed string is accepted where the effects' distribution carries one
   hyperparameter. `NULL`, the default, shares nothing. See
   [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
-
-- ...:
-
-  Not used. A named argument is rejected with an error naming it, and
-  the removed arguments `precision` and `kinks` are rejected with a
-  message giving the replacement. An unnamed argument beyond those of
-  the signature is rejected as well.
 
 ## Value
 

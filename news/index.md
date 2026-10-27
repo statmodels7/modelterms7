@@ -1,5 +1,13 @@
 # Changelog
 
+## modelterms7 0.109.0
+
+- [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
+  and [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md)
+  have no `...`, and
+  [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md)
+  rejects a named argument among its covariates.
+
 ## modelterms7 0.108.0
 
 - A parameter without a gas() term can drive a joint filter:
