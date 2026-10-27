@@ -1222,36 +1222,15 @@ S7::method(term_scores, structural_term) <- function(term, eta, y, logdens,
        delta = st$delta, ddelta = st$ddelta, d2delta = st$d2delta, np = np)
 }
 
-#' @title Observed Hessian of a Regime Term
-#' @name term_hessian.RegimeTerm
-#' @description
-#' Propagates the derivatives to second order, in forward mode, through the
-#' scaled forward recursion and returns the exact Hessian of the mixed
-#' log-likelihood.
-#' @details
-#' The recursion runs in R over each group in time order. The derivatives in
-#' the term's own parameters are taken on the unconstrained scale: the first
-#' level and the log-ratios as they are, and each gap through its logarithm.
-#' The callbacks `logdens`, `grad` and `hess` are called once per regime with
-#' the whole index vector, and a result of the wrong length or shape signals an
-#' error.
-#' @param term A built [RegimeTerm()].
-#' @param eta The static predictor.
-#' @param y The response.
-#' @param logdens,grad,hess The log-density and its first two derivatives in
-#'   the predictors. The last returns an array of dimension `c(n, p, p)`.
-#' @param psi The term's parameters on the parameter scale.
-#' @param seed The derivative of each predictor in the caller's unknowns.
-#' @param cols The columns that the term's own parameters occupy.
-#' @param level The distribution parameter that the regimes shift.
-#' @param weights Observation weights: one number or one per observation,
-#'   without missing values.
-#' @param ... Unused.
-#' @return A list with `loglik`, `gradient` and `hessian`.
-#' @keywords internal
-S7::method(term_hessian, RegimeTerm) <- function(term, eta, y, logdens, grad,
-                                                 hess, psi, seed, cols, level,
-                                                 weights = NULL, ...) {
+# The scaled forward recursion that term_hessian() and term_scores() share.
+# It carries the derivative of the filter to first order and, when 'hess' is
+# given, to second order. The result holds the log-likelihood increment of
+# each observation ('loglik'), the derivative of each weighted increment
+# ('scores', one row per observation), their sum accumulated in time order
+# ('gradient') and, with 'hess', the Hessian.
+.regime_pass <- function(term, eta, y, logdens, grad, hess, psi, seed, cols,
+                         level, weights) {
+  second <- !is.null(hess)
   bp <- term@blueprint
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
@@ -1309,17 +1288,19 @@ S7::method(term_hessian, RegimeTerm) <- function(term, eta, y, logdens, grad,
     }
     LF[, j] <- a
     g <- as.matrix(grad(e, idx))
-    h <- hess(e, idx)
     if (nrow(g) != n || ncol(g) != npar) {
       stop(sprintf("'grad' must return an %d by %d matrix.", n, npar),
            call. = FALSE)
     }
-    if (length(h) != n * npar * npar) {
-      stop(sprintf("'hess' must return an %d by %d by %d array.", n, npar,
-                   npar), call. = FALSE)
-    }
     GP[[j]] <- g
-    HP[[j]] <- array(as.numeric(h), c(n, npar, npar))
+    if (second) {
+      h <- hess(e, idx)
+      if (length(h) != n * npar * npar) {
+        stop(sprintf("'hess' must return an %d by %d by %d array.", n, npar,
+                     npar), call. = FALSE)
+      }
+      HP[[j]] <- array(as.numeric(h), c(n, npar, npar))
+    }
     # the emission score in the caller's unknowns, vectorized over rows
     gm <- matrix(0, n, m)
     for (q in seq_len(npar)) gm <- gm + g[, q] * seed[[q]]
@@ -1329,8 +1310,9 @@ S7::method(term_hessian, RegimeTerm) <- function(term, eta, y, logdens, grad,
 
   P <- ch$P
   loglik <- numeric(n)
+  scores <- matrix(0, n, m)
   gradient <- numeric(m)
-  hessian <- matrix(0, m, m)
+  hessian <- if (second) matrix(0, m, m)
 
   # the rows of the per-observation predictor derivative, shared by every
   # regime except in the columns the term's own parameters occupy
@@ -1340,11 +1322,13 @@ S7::method(term_hessian, RegimeTerm) <- function(term, eta, y, logdens, grad,
     a <- ch$delta
     da <- matrix(0, k, m)
     da[, cols] <- t(do.call(rbind, ch$ddelta))
-    d2a <- vector("list", k)
-    for (j in seq_len(k)) {
-      M <- matrix(0, m, m)
-      M[cols, cols] <- ch$d2delta[[j]]
-      d2a[[j]] <- M
+    if (second) {
+      d2a <- vector("list", k)
+      for (j in seq_len(k)) {
+        M <- matrix(0, m, m)
+        M[cols, cols] <- ch$d2delta[[j]]
+        d2a[[j]] <- M
+      }
     }
 
     for (tt in seq_along(rows)) {
@@ -1353,72 +1337,119 @@ S7::method(term_hessian, RegimeTerm) <- function(term, eta, y, logdens, grad,
       mx <- max(lf)
       wv <- exp(lf - mx)
 
-      for (q in seq_len(npar)) Abase[q, ] <- seed[[q]][row, ]
+      if (second) for (q in seq_len(npar)) Abase[q, ] <- seed[[q]][row, ]
 
       if (tt == 1L) {
         pred <- a
         dpred <- da
-        d2pred <- d2a
+        if (second) d2pred <- d2a
       } else {
         pred <- as.numeric(a %*% P)
         dpred <- crossprod(P, da)
-        d2pred <- vector("list", k)
+        if (second) d2pred <- vector("list", k)
         for (l in seq_len(k)) {
           Dl <- matrix(ch$dPz[, l, ], k, np)
           # the chain's own contribution: supported on the term's columns
           dpred[l, cols] <- dpred[l, cols] + as.numeric(a %*% Dl)
-          S1 <- matrix(0, m, m)
-          for (j in seq_len(k)) {
-            if (P[j, l] != 0) S1 <- S1 + P[j, l] * d2a[[j]]
+          if (second) {
+            S1 <- matrix(0, m, m)
+            for (j in seq_len(k)) {
+              if (P[j, l] != 0) S1 <- S1 + P[j, l] * d2a[[j]]
+            }
+            V <- crossprod(da, Dl)   # m x np
+            S1[, cols] <- S1[, cols] + V
+            S1[cols, ] <- S1[cols, ] + t(V)
+            S2 <- matrix(0, np, np)
+            for (j in seq_len(k)) S2 <- S2 + a[j] * ch$D2P[[j]][[l]]
+            S1[cols, cols] <- S1[cols, cols] + S2
+            d2pred[[l]] <- S1
           }
-          V <- crossprod(da, Dl)   # m x np
-          S1[, cols] <- S1[, cols] + V
-          S1[cols, ] <- S1[cols, ] + t(V)
-          S2 <- matrix(0, np, np)
-          for (j in seq_len(k)) S2 <- S2 + a[j] * ch$D2P[[j]][[l]]
-          S1[cols, cols] <- S1[cols, cols] + S2
-          d2pred[[l]] <- S1
         }
       }
 
       atil <- wv * pred
       datil <- matrix(0, k, m)
-      d2atil <- vector("list", k)
+      if (second) d2atil <- vector("list", k)
       for (l in seq_len(k)) {
         gl <- GM[[l]][row, ]
         datil[l, ] <- wv[l] * (gl * pred[l] + dpred[l, ])
-        Ak <- Abase
-        Ak[level, cols] <- Ak[level, cols] + ch$dmu[l, ]
-        Hk <- matrix(HP[[l]][row, , ], npar, npar)
-        G <- crossprod(Ak, Hk %*% Ak)
-        G[cols, cols] <- G[cols, cols] + GP[[l]][row, level] * ch$d2mu[[l]]
-        dp <- dpred[l, ]
-        M <- pred[l] * (outer(gl, gl) + G) + d2pred[[l]]
-        M <- M + outer(gl, dp) + outer(dp, gl)
-        d2atil[[l]] <- wv[l] * M
+        if (second) {
+          Ak <- Abase
+          Ak[level, cols] <- Ak[level, cols] + ch$dmu[l, ]
+          Hk <- matrix(HP[[l]][row, , ], npar, npar)
+          G <- crossprod(Ak, Hk %*% Ak)
+          G[cols, cols] <- G[cols, cols] + GP[[l]][row, level] * ch$d2mu[[l]]
+          dp <- dpred[l, ]
+          M <- pred[l] * (outer(gl, gl) + G) + d2pred[[l]]
+          M <- M + outer(gl, dp) + outer(dp, gl)
+          d2atil[[l]] <- wv[l] * M
+        }
       }
 
       ct <- sum(atil)
       dct <- colSums(datil)
-      d2ct <- matrix(0, m, m)
-      for (l in seq_len(k)) d2ct <- d2ct + d2atil[[l]]
-
       gt <- dct / ct
       loglik[row] <- log(ct) + mx
+      scores[row, ] <- w[row] * dct / ct
       gradient <- gradient + w[row] * gt
-      hessian <- hessian + w[row] * (d2ct / ct - outer(gt, gt))
+      if (second) {
+        d2ct <- matrix(0, m, m)
+        for (l in seq_len(k)) d2ct <- d2ct + d2atil[[l]]
+        hessian <- hessian + w[row] * (d2ct / ct - outer(gt, gt))
+      }
 
       a <- atil / ct
       da <- (datil - outer(atil, dct) / ct) / ct
-      for (l in seq_len(k)) {
-        d2a[[l]] <- (d2atil[[l]] - outer(da[l, ], dct) - outer(dct, da[l, ]) -
-                       a[l] * d2ct) / ct
+      if (second) {
+        for (l in seq_len(k)) {
+          d2a[[l]] <- (d2atil[[l]] - outer(da[l, ], dct) - outer(dct, da[l, ]) -
+                         a[l] * d2ct) / ct
+        }
       }
     }
   }
 
-  hessian <- (hessian + t(hessian)) / 2
-  list(loglik = loglik, gradient = gradient, hessian = hessian)
+  if (second) hessian <- (hessian + t(hessian)) / 2
+  list(loglik = loglik, scores = scores, gradient = gradient,
+       hessian = hessian)
+}
+
+#' @title Observed Hessian of a Regime Term
+#' @name term_hessian.RegimeTerm
+#' @description
+#' Propagates the derivatives to second order, in forward mode, through the
+#' scaled forward recursion and returns the exact Hessian of the mixed
+#' log-likelihood.
+#' @details
+#' The recursion runs in R over each group in time order. The derivatives in
+#' the term's own parameters are taken on the unconstrained scale: the first
+#' level and the log-ratios as they are, and each gap through its logarithm.
+#' The callbacks `logdens`, `grad` and `hess` are called once per regime with
+#' the whole index vector, and a result of the wrong length or shape signals an
+#' error.
+#' @param term A built [RegimeTerm()].
+#' @param eta The static predictor.
+#' @param y The response.
+#' @param logdens,grad,hess The log-density and its first two derivatives in
+#'   the predictors. The last returns an array of dimension `c(n, p, p)`.
+#' @param psi The term's parameters on the parameter scale.
+#' @param seed The derivative of each predictor in the caller's unknowns.
+#' @param cols The columns that the term's own parameters occupy.
+#' @param level The distribution parameter that the regimes shift.
+#' @param weights Observation weights: one number or one per observation,
+#'   without missing values.
+#' @param ... Unused.
+#' @return A list with `loglik`, `gradient` and `hessian`.
+#' @keywords internal
+S7::method(term_hessian, RegimeTerm) <- function(term, eta, y, logdens, grad,
+                                                 hess, psi, seed, cols, level,
+                                                 weights = NULL, ...) {
+  if (!is.function(hess)) {
+    stop("'hess' must be a function.", call. = FALSE)
+  }
+  r <- .regime_pass(term, eta, y, logdens, grad, hess, psi, seed, cols, level,
+                    weights)
+  list(loglik = r$loglik, gradient = r$gradient, hessian = r$hessian)
 }
 
 #' @title Per-Observation Scores of a Regime Term
@@ -1450,100 +1481,8 @@ S7::method(term_hessian, RegimeTerm) <- function(term, eta, y, logdens, grad,
 S7::method(term_scores, RegimeTerm) <- function(term, eta, y, logdens, grad,
                                                 psi, seed, cols, level,
                                                 weights = NULL, ...) {
-  bp <- term@blueprint
-  if (!length(bp)) {
-    stop("the term has not been built; call term_build(term, data) first.",
-         call. = FALSE)
-  }
-  nm <- term_params(term)
-  v <- unlist(psi[nm])
-  if (length(v) != length(nm) || anyNA(v)) {
-    stop(sprintf("'psi' must supply %s.", paste(nm, collapse = ", ")),
-         call. = FALSE)
-  }
-  k <- term@k
-  n <- bp$n
-  if (!is.list(seed) || !length(seed)) {
-    stop("'seed' must be a list with one matrix per distribution parameter.",
-         call. = FALSE)
-  }
-  seed <- lapply(seed, as.matrix)
-  m <- ncol(seed[[1L]])
-  npar <- length(seed)
-  if (any(vapply(seed, nrow, 1L) != n) ||
-      any(vapply(seed, ncol, 1L) != m)) {
-    stop(sprintf("every element of 'seed' must be %d by %d.", n, m),
-         call. = FALSE)
-  }
-  cols <- as.integer(cols)
-  level <- as.integer(level)
-  if (length(cols) != length(nm) || any(cols < 1L) || any(cols > m)) {
-    stop(sprintf("'cols' must give the %d columns that the term's parameters occupy.",
-                 length(nm)), call. = FALSE)
-  }
-  if (length(level) != 1L || level < 1L || level > npar) {
-    stop("'level' must index one of the distribution parameters.",
-         call. = FALSE)
-  }
-  w <- .structural_weights(weights, n)
-
-  ch <- .regime_chart(v, k, nm, term@chain)
-  idx <- seq_len(n)
-  LF <- matrix(0, n, k)
-  GM <- vector("list", k)
-  for (j in seq_len(k)) {
-    e <- eta + ch$mu[j]
-    a <- as.numeric(logdens(e, idx))
-    if (length(a) != n) {
-      stop(paste0("'logdens' must return one value per observation when ",
-                  "given the whole index vector."), call. = FALSE)
-    }
-    LF[, j] <- a
-    g <- as.matrix(grad(e, idx))
-    if (nrow(g) != n || ncol(g) != npar) {
-      stop(sprintf("'grad' must return an %d by %d matrix.", n, npar),
-           call. = FALSE)
-    }
-    gm <- matrix(0, n, m)
-    for (q in seq_len(npar)) gm <- gm + g[, q] * seed[[q]]
-    gm[, cols] <- gm[, cols] + outer(g[, level], ch$dmu[j, ])
-    GM[[j]] <- gm
-  }
-
-  P <- ch$P
-  U <- matrix(0, n, m)
-  for (rows in bp$order) {
-    a <- ch$delta
-    da <- matrix(0, k, m)
-    da[, cols] <- t(do.call(rbind, ch$ddelta))
-    for (tt in seq_along(rows)) {
-      row <- rows[tt]
-      lf <- LF[row, ]
-      wv <- exp(lf - max(lf))
-      if (tt == 1L) {
-        pred <- a
-        dpred <- da
-      } else {
-        pred <- as.numeric(a %*% P)
-        dpred <- crossprod(P, da)
-        for (l in seq_len(k)) {
-          Dl <- matrix(ch$dPz[, l, ], k, ch$np)
-          dpred[l, cols] <- dpred[l, cols] + as.numeric(a %*% Dl)
-        }
-      }
-      atil <- wv * pred
-      datil <- matrix(0, k, m)
-      for (l in seq_len(k)) {
-        datil[l, ] <- wv[l] * (GM[[l]][row, ] * pred[l] + dpred[l, ])
-      }
-      ct <- sum(atil)
-      dct <- colSums(datil)
-      U[row, ] <- w[row] * dct / ct
-      a <- atil / ct
-      da <- (datil - outer(atil, dct) / ct) / ct
-    }
-  }
-  U
+  .regime_pass(term, eta, y, logdens, grad, NULL, psi, seed, cols, level,
+               weights)$scores
 }
 
 #' @title Print a Regime Term
