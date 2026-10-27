@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.109.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.110.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,11 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.110.0" id="modelterms7-01100">modelterms7 0.110.0<a class="anchor" aria-label="anchor" href="#modelterms7-01100"></a></h2>
+<ul><li>
+<code><a href="../reference/term_scores.html">term_scores()</a></code> returns the derivative of each weighted increment of a structural term in the caller’s unknown vector, one row per observation. The method for <code><a href="../reference/regime.html">regime()</a></code> carries the first derivative through the scaled forward recursion; the sum of the rows is the gradient of <code><a href="../reference/term_hessian.html">term_hessian()</a></code>, and each row equals the central difference of the increment to 1e-7.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.109.0" id="modelterms7-01090">modelterms7 0.109.0<a class="anchor" aria-label="anchor" href="#modelterms7-01090"></a></h2>
 <ul><li>

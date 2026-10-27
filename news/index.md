@@ -1,5 +1,17 @@
 # Changelog
 
+## modelterms7 0.110.0
+
+- [`term_scores()`](https://statmodels7.github.io/modelterms7/reference/term_scores.md)
+  returns the derivative of each weighted increment of a structural term
+  in the caller’s unknown vector, one row per observation. The method
+  for
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  carries the first derivative through the scaled forward recursion; the
+  sum of the rows is the gradient of
+  [`term_hessian()`](https://statmodels7.github.io/modelterms7/reference/term_hessian.md),
+  and each row equals the central difference of the increment to 1e-7.
+
 ## modelterms7 0.109.0
 
 - [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
