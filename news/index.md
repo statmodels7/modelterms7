@@ -1,5 +1,14 @@
 # Changelog
 
+## modelterms7 0.110.2
+
+- [`term_scores()`](https://statmodels7.github.io/modelterms7/reference/term_scores.md)
+  and
+  [`term_hessian()`](https://statmodels7.github.io/modelterms7/reference/term_hessian.md)
+  for a
+  [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
+  term share one internal forward recursion. Results are unchanged.
+
 ## modelterms7 0.110.1
 
 - The documentation of `gas(scaling = )` states that the expected
