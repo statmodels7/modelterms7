@@ -1,3 +1,12 @@
+# modelterms7 0.110.0
+
+* `term_scores()` returns the derivative of each weighted increment of a
+  structural term in the caller's unknown vector, one row per observation.
+  The method for `regime()` carries the first derivative through the scaled
+  forward recursion; the sum of the rows is the gradient of
+  `term_hessian()`, and each row equals the central difference of the
+  increment to 1e-7.
+
 # modelterms7 0.109.0
 
 * `random()` and `s()` have no `...`, and `te()` rejects a named argument

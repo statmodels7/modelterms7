@@ -160,6 +160,7 @@ reference:
   - term_third
   - term_fourth
   - term_hessian
+  - term_scores
   - term_posterior
   - term_shift_jacobian
   - term_levels

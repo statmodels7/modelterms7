@@ -376,6 +376,104 @@ test_that("term_hessian is the exact Hessian of the mixed likelihood", {
   expect_identical(o$hessian, t(o$hessian))
 })
 
+test_that("term_scores are the derivatives of the increments and sum to the gradient", {
+  # Same two-equation model as the Hessian test, with a reference forward
+  # recursion written out here that returns every increment.
+  set.seed(7)
+  nn <- 60L
+  d2 <- data.frame(t = seq_len(nn), x = stats::rnorm(nn),
+                   z = stats::runif(nn),
+                   y = c(stats::rnorm(30, -1), stats::rnorm(30, 2.5)))
+  tm <- term_build(regime(2, time = t), d2)
+  X <- cbind(1, d2$x)
+  Z <- cbind(1, d2$z)
+  nb <- 4L
+  np <- length(term_params(tm))
+  m <- nb + np
+  cols <- nb + seq_len(np)
+  wts <- stats::runif(nn, 0.5, 2)
+
+  psi_of <- function(u) list(level1 = u[nb + 1L], gap2 = exp(u[nb + 2L]),
+                             alr1.1 = u[nb + 3L], alr2.1 = u[nb + 4L])
+
+  incr <- function(u) {
+    ps <- psi_of(u)
+    mu <- c(ps$level1, ps$level1 + ps$gap2)
+    P <- parameters7::param_value(
+      tm@chain, c(alr1.1 = ps$alr1.1, alr2.1 = ps$alr2.1))
+    A <- diag(2); A <- A - P; A[, 2] <- 1
+    delta <- as.numeric(solve(t(A), c(0, 1)))
+    em <- as.numeric(X %*% u[1:2])
+    es <- as.numeric(Z %*% u[3:4])
+    out <- numeric(nn)
+    a <- delta
+    for (t in seq_len(nn)) {
+      pred <- if (t == 1L) a else as.numeric(a %*% P)
+      w <- exp(stats::dnorm(d2$y[t], em[t] + mu, exp(es[t]), log = TRUE))
+      at <- w * pred
+      ct <- sum(at)
+      out[t] <- log(ct)
+      a <- at / ct
+    }
+    out
+  }
+
+  args <- function(u) {
+    es <- as.numeric(Z %*% u[3:4])
+    list(
+      term = tm, eta = as.numeric(X %*% u[1:2]), y = d2$y,
+      logdens = function(e, i) stats::dnorm(d2$y[i], e, exp(es[i]),
+                                            log = TRUE),
+      grad = function(e, i) {
+        s <- exp(es[i]); r <- (d2$y[i] - e) / s
+        cbind(r / s, r^2 - 1)
+      },
+      psi = psi_of(u),
+      seed = list(cbind(X, matrix(0, nn, 2L + np)),
+                  cbind(matrix(0, nn, 2L), Z, matrix(0, nn, np))),
+      cols = cols, level = 1L)
+  }
+
+  u0 <- c(0.4, -0.3, -0.2, 0.15, 0.1, 0.8, 1.1, -0.9)
+  U <- do.call(term_scores, args(u0))
+  expect_equal(dim(U), c(nn, m))
+  num <- numDeriv::jacobian(incr, u0)
+  expect_lt(max(abs(U - num)) / max(abs(num)), 1e-7)
+
+  # the sum is the term's gradient, with and without weights
+  hargs <- c(args(u0), list(hess = function(e, i) {
+    s <- exp(as.numeric(Z %*% u0[3:4])[i]); r <- (d2$y[i] - e) / s
+    out <- array(0, c(length(i), 2L, 2L))
+    out[, 1, 1] <- -1 / s^2
+    out[, 1, 2] <- -2 * r / s
+    out[, 2, 1] <- -2 * r / s
+    out[, 2, 2] <- -2 * r^2
+    out
+  }))
+  expect_equal(colSums(U), do.call(term_hessian, hargs)$gradient,
+               tolerance = 1e-12)
+  Uw <- do.call(term_scores, c(args(u0), list(weights = wts)))
+  expect_equal(Uw, U * wts, tolerance = 1e-13)
+  expect_equal(colSums(Uw),
+               do.call(term_hessian, c(hargs, list(weights = wts)))$gradient,
+               tolerance = 1e-12)
+})
+
+test_that("term_scores rejects what it cannot use", {
+  d2 <- data.frame(t = 1:20, y = stats::rnorm(20))
+  ld <- function(e, i) stats::dnorm(d2$y[i], e, log = TRUE)
+  gr <- function(e, i) matrix(d2$y[i] - e, ncol = 1L)
+  psi <- list(level1 = 0, gap2 = 2, alr1.1 = 1, alr2.1 = -1)
+  sd <- list(matrix(c(rep(1, 20), rep(0, 80)), 20, 5L))
+  expect_error(term_scores(regime(2), rep(0, 20), d2$y, ld, gr, psi, sd,
+                           2:5, 1L), "not been built")
+  tm <- term_build(regime(2, time = t), d2)
+  expect_error(term_scores(tm, rep(0, 20), d2$y, ld, gr, psi, sd, 2:4, 1L),
+               "'cols' must give")
+  expect_error(term_scores(tm, rep(0, 20), d2$y, ld, gr, psi, sd, 2:5, 2L),
+               "'level' must index")
+})
+
 test_that("the missing states cost information", {
   # Louis's principle, used as the check rather than as the implementation:
   # the complete-data information a smoothed EM step inverts exceeds the
