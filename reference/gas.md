@@ -219,6 +219,25 @@ because the derivatives of the filter reach the fourth derivative of
 information up to
 [`distributions7::distrib_d4expected_hessian()`](https://statmodels7.github.io/distributions7/reference/distrib_d4expected_hessian.html).
 
+\\\mathcal{I}\_t\\ is part of the model and is read in closed form at
+the predictor of every step of the recursion. Every family of
+distributions7 carries the closed form. A family written with its
+density alone supplies it through methods for
+[`distributions7::distrib_expected_hessian()`](https://statmodels7.github.io/distributions7/reference/distrib_expected_hessian.html),
+[`distributions7::distrib_dexpected_hessian()`](https://statmodels7.github.io/distributions7/reference/distrib_dexpected_hessian.html)
+and
+[`distributions7::distrib_d2expected_hessian()`](https://statmodels7.github.io/distributions7/reference/distrib_d2expected_hessian.html);
+without them only `scaling = 0` is available. The two substitutes of
+distributions7 for a missing closed form do not apply here: the outer
+product of the scores
+([`distributions7::expect_opg()`](https://statmodels7.github.io/distributions7/reference/expect_opg.html))
+reads \\\mathcal{I}\_t\\ at the data as \\(\partial \ell_t/\partial
+\eta_t)^2\\, which gives \\s_t = (\partial \ell_t/\partial \eta_t)\\
+\|\partial \ell_t/\partial \eta_t\|^{-2d}\\ and so defines another
+model, and a quadrature
+([`distributions7::expect_integrate()`](https://statmodels7.github.io/distributions7/reference/expect_integrate.html))
+would be evaluated once per step and per derivative order, in sequence.
+
 ### The level beside an intercept
 
 The level \\\omega\\ adds a constant to the recursion, so an intercept

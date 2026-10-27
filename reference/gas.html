@@ -25,7 +25,7 @@ when scaling is not zero."><meta property="og:image" content="https://statmodels
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.110.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.110.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -262,6 +262,22 @@ has an analytic second derivative
 of the filter reach the fourth derivative of \(\mathcal{I}_t\), which is
 read from the derivatives of the expected information up to
 <code><a href="https://statmodels7.github.io/distributions7/reference/distrib_d4expected_hessian.html" class="external-link">distributions7::distrib_d4expected_hessian()</a></code>.</p>
+<p>\(\mathcal{I}_t\) is part of the model and is read in closed form at the
+predictor of every step of the recursion. Every family of
+<span class="pkg">distributions7</span> carries the closed form. A family written with its
+density alone supplies it through methods for
+<code><a href="https://statmodels7.github.io/distributions7/reference/distrib_expected_hessian.html" class="external-link">distributions7::distrib_expected_hessian()</a></code>,
+<code><a href="https://statmodels7.github.io/distributions7/reference/distrib_dexpected_hessian.html" class="external-link">distributions7::distrib_dexpected_hessian()</a></code> and
+<code><a href="https://statmodels7.github.io/distributions7/reference/distrib_d2expected_hessian.html" class="external-link">distributions7::distrib_d2expected_hessian()</a></code>; without them only
+<code>scaling = 0</code> is available. The two substitutes of <span class="pkg">distributions7</span> for
+a missing closed form do not apply here: the outer product of the scores
+(<code><a href="https://statmodels7.github.io/distributions7/reference/expect_opg.html" class="external-link">distributions7::expect_opg()</a></code>) reads \(\mathcal{I}_t\) at the data as
+\((\partial \ell_t/\partial \eta_t)^2\), which gives
+\(s_t = (\partial \ell_t/\partial \eta_t)\,
+|\partial \ell_t/\partial \eta_t|^{-2d}\) and so defines another model, and a
+quadrature
+(<code><a href="https://statmodels7.github.io/distributions7/reference/expect_integrate.html" class="external-link">distributions7::expect_integrate()</a></code>) would be evaluated once per step and
+per derivative order, in sequence.</p>
 </div>
 
 <div class="section">
