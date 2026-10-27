@@ -472,6 +472,9 @@ test_that("term_scores rejects what it cannot use", {
                "'cols' must give")
   expect_error(term_scores(tm, rep(0, 20), d2$y, ld, gr, psi, sd, 2:5, 2L),
                "'level' must index")
+  # the Hessian method shares the recursion and needs its callback
+  expect_error(term_hessian(tm, rep(0, 20), d2$y, ld, gr, NULL, psi, sd,
+                            2:5, 1L), "'hess' must be a function")
 })
 
 test_that("the missing states cost information", {
