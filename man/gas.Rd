@@ -193,6 +193,23 @@ has an analytic second derivative
 of the filter reach the fourth derivative of \eqn{\mathcal{I}_t}, which is
 read from the derivatives of the expected information up to
 \code{\link[distributions7:distrib_d4expected_hessian]{distributions7::distrib_d4expected_hessian()}}.
+
+\eqn{\mathcal{I}_t} is part of the model and is read in closed form at the
+predictor of every step of the recursion. Every family of
+\pkg{distributions7} carries the closed form. A family written with its
+density alone supplies it through methods for
+\code{\link[distributions7:distrib_expected_hessian]{distributions7::distrib_expected_hessian()}},
+\code{\link[distributions7:distrib_dexpected_hessian]{distributions7::distrib_dexpected_hessian()}} and
+\code{\link[distributions7:distrib_d2expected_hessian]{distributions7::distrib_d2expected_hessian()}}; without them only
+\code{scaling = 0} is available. The two substitutes of \pkg{distributions7} for
+a missing closed form do not apply here: the outer product of the scores
+(\code{\link[distributions7:expect_opg]{distributions7::expect_opg()}}) reads \eqn{\mathcal{I}_t} at the data as
+\eqn{(\partial \ell_t/\partial \eta_t)^2}, which gives
+\eqn{s_t = (\partial \ell_t/\partial \eta_t)\,
+|\partial \ell_t/\partial \eta_t|^{-2d}} and so defines another model, and a
+quadrature
+(\code{\link[distributions7:expect_integrate]{distributions7::expect_integrate()}}) would be evaluated once per step and
+per derivative order, in sequence.
 }
 
 \subsection{The level beside an intercept}{
