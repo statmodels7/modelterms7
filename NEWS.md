@@ -1,3 +1,8 @@
+# modelterms7 0.110.2
+
+* `term_scores()` and `term_hessian()` for a `regime()` term share one
+  internal forward recursion. Results are unchanged.
+
 # modelterms7 0.110.1
 
 * The documentation of `gas(scaling = )` states that the expected information
