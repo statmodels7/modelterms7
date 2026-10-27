@@ -1,3 +1,10 @@
+# modelterms7 0.110.1
+
+* The documentation of `gas(scaling = )` states that the expected information
+  is read in closed form at every step, names the three methods with which a
+  family written with its density alone supplies it, and gives the reason
+  why the outer product of the scores and a quadrature do not replace it.
+
 # modelterms7 0.110.0
 
 * `term_scores()` returns the derivative of each weighted increment of a
