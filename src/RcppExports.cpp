@@ -40,8 +40,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // gas_filter_cpp
-List gas_filter_cpp(NumericVector eta, List order, int p, int q, double omega, NumericVector a, NumericVector b, NumericMatrix db, double f0, NumericVector df0, IntegerVector i_a, int np, Function score, Function curvature, Nullable<List> fast, int threads);
-RcppExport SEXP _modelterms7_gas_filter_cpp(SEXP etaSEXP, SEXP orderSEXP, SEXP pSEXP, SEXP qSEXP, SEXP omegaSEXP, SEXP aSEXP, SEXP bSEXP, SEXP dbSEXP, SEXP f0SEXP, SEXP df0SEXP, SEXP i_aSEXP, SEXP npSEXP, SEXP scoreSEXP, SEXP curvatureSEXP, SEXP fastSEXP, SEXP threadsSEXP) {
+List gas_filter_cpp(NumericVector eta, List order, int p, int q, double omega, NumericVector a, NumericVector b, NumericMatrix db, double f0, NumericVector df0, IntegerVector i_a, int np, Function score, Function curvature, Nullable<List> fast, int threads, NumericVector d0);
+RcppExport SEXP _modelterms7_gas_filter_cpp(SEXP etaSEXP, SEXP orderSEXP, SEXP pSEXP, SEXP qSEXP, SEXP omegaSEXP, SEXP aSEXP, SEXP bSEXP, SEXP dbSEXP, SEXP f0SEXP, SEXP df0SEXP, SEXP i_aSEXP, SEXP npSEXP, SEXP scoreSEXP, SEXP curvatureSEXP, SEXP fastSEXP, SEXP threadsSEXP, SEXP d0SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -61,7 +61,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< Function >::type curvature(curvatureSEXP);
     Rcpp::traits::input_parameter< Nullable<List> >::type fast(fastSEXP);
     Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
-    rcpp_result_gen = Rcpp::wrap(gas_filter_cpp(eta, order, p, q, omega, a, b, db, f0, df0, i_a, np, score, curvature, fast, threads));
+    Rcpp::traits::input_parameter< NumericVector >::type d0(d0SEXP);
+    rcpp_result_gen = Rcpp::wrap(gas_filter_cpp(eta, order, p, q, omega, a, b, db, f0, df0, i_a, np, score, curvature, fast, threads, d0));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -382,7 +383,7 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_modelterms7_gas_curvature_gen_cpp", (DL_FUNC) &_modelterms7_gas_curvature_gen_cpp, 19},
-    {"_modelterms7_gas_filter_cpp", (DL_FUNC) &_modelterms7_gas_filter_cpp, 16},
+    {"_modelterms7_gas_filter_cpp", (DL_FUNC) &_modelterms7_gas_filter_cpp, 17},
     {"_modelterms7_gas_filter_sub_cpp", (DL_FUNC) &_modelterms7_gas_filter_sub_cpp, 12},
     {"_modelterms7_gas_joint_filter_cpp", (DL_FUNC) &_modelterms7_gas_joint_filter_cpp, 6},
     {"_modelterms7_gas_joint_adjoint_cpp", (DL_FUNC) &_modelterms7_gas_joint_adjoint_cpp, 4},

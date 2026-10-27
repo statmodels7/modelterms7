@@ -168,6 +168,7 @@ struct GrpSub {
     std::vector<const double*> dbl;  // q of them
     double f0;
     const double* df0;
+    bool direct = false;               // a static start: f[0] is given
 };
 
 } // namespace
@@ -178,10 +179,15 @@ List gas_filter_cpp(NumericVector eta, List order, int p, int q,
                     NumericMatrix db, double f0, NumericVector df0,
                     IntegerVector i_a, int np,
                     Function score, Function curvature,
-                    Nullable<List> fast = R_NilValue, int threads = 1) {
+                    Nullable<List> fast = R_NilValue, int threads = 1,
+                    NumericVector d0 = NumericVector(0)) {
     int n = eta.size();
     NumericVector eta_out(n);
     NumericMatrix jac(n, np);
+    // a static start: the first level of each group is given, it does not
+    // depend on the parameters, and the levels before it equal it
+    const bool direct = d0.size() > 0;
+    const double* d0_p = direct ? d0.begin() : nullptr;
     // the curvature at each step, returned so the adjoint's reverse pass
     // can read it instead of evaluating the callback a second time
     NumericVector curv(n);
@@ -215,13 +221,19 @@ List gas_filter_cpp(NumericVector eta, List order, int p, int q,
         std::vector<double> f(m, 0.0), s(m, 0.0);
         std::vector<double> df(m * np, 0.0), ds(m * np, 0.0);
         std::vector<double> dft(np, 0.0);
+        const double f0g = direct ? d0_p[gi] : f0;
 
         for (int t = 0; t < m; ++t) {
             double ft = omega;
             std::fill(dft.begin(), dft.end(), 0.0);
             dft[0] = 1.0;
+            const bool given = direct && t == 0;
+            if (given) {
+                ft = f0g;
+                dft[0] = 0.0;
+            }
 
-            for (int i = 1; i <= p; ++i) {
+            for (int i = 1; i <= p && !given; ++i) {
                 double s_lag = (t - i >= 0) ? s[t - i] : 0.0;
                 ft += a_p[i - 1] * s_lag;
                 if (t - i >= 0) {
@@ -232,12 +244,12 @@ List gas_filter_cpp(NumericVector eta, List order, int p, int q,
                 dft[ia_p[i - 1] - 1] += s_lag;
             }
 
-            for (int j = 1; j <= q; ++j) {
-                double f_lag = (t - j >= 0) ? f[t - j] : f0;
+            for (int j = 1; j <= q && !given; ++j) {
+                double f_lag = (t - j >= 0) ? f[t - j] : f0g;
                 ft += b_p[j - 1] * f_lag;
                 for (int k = 0; k < np; ++k) {
                     double df_lag = (t - j >= 0) ? df[(t - j) * np + k]
-                                                 : df0_p[k];
+                                                 : (direct ? 0.0 : df0_p[k]);
                     dft[k] += b_p[j - 1] * df_lag + db_p[k * dbn + (j - 1)] * f_lag;
                 }
             }
@@ -330,6 +342,7 @@ List gas_filter_sub_cpp(NumericVector eta, List groups, int p, int q,
         G.f0 = as<double>(grp["f0"]);
         NumericVector df0 = grp["df0"];
         G.df0 = df0.begin();
+        G.direct = grp.containsElementNamed("direct") && as<bool>(grp["direct"]);
         for (int i = 0; i < p; ++i) {
             NumericMatrix dai = da[i];
             G.da.push_back(dai.begin());
@@ -360,8 +373,15 @@ List gas_filter_sub_cpp(NumericVector eta, List groups, int p, int q,
             int r = G.rows[t];
             double ft = om_p[r - 1];
             for (int k = 0; k < na; ++k) dft[k] = G.dom[k * m + t];
+            // a static start: the first level is given, with no derivative
+            // in the parameters
+            const bool given = G.direct && t == 0;
+            if (given) {
+                ft = G.f0;
+                std::fill(dft.begin(), dft.end(), 0.0);
+            }
 
-            for (int i = 1; i <= p; ++i) {
+            for (int i = 1; i <= p && !given; ++i) {
                 double a_r = A_p[(i - 1) * An + (r - 1)];
                 const double* dai = G.da[i - 1];
                 double s_lag = (t - i >= 0) ? s[t - i] : 0.0;
@@ -376,7 +396,7 @@ List gas_filter_sub_cpp(NumericVector eta, List groups, int p, int q,
                 }
             }
 
-            for (int j = 1; j <= q; ++j) {
+            for (int j = 1; j <= q && !given; ++j) {
                 double b_r = B_p[(j - 1) * Bn + (r - 1)];
                 const double* dbj = G.dbl[j - 1];
                 double f_lag = (t - j >= 0) ? f[t - j] : G.f0;

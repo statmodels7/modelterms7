@@ -18,7 +18,8 @@ gas_filter_r(
   i_a,
   np,
   score,
-  curvature
+  curvature,
+  d0 = numeric(0)
 )
 }
 \arguments{
@@ -41,6 +42,9 @@ gas_filter_r(
 \item{np}{The number of parameters.}
 
 \item{score, curvature}{The callbacks of \code{\link[=term_filter]{term_filter()}}.}
+
+\item{d0}{The first level of each group under a static start
+(\code{init = "static"}), or \code{numeric(0)} for the start at \code{f0}.}
 }
 \value{
 A list with \code{eta}, \code{jacobian} and \code{curv}.

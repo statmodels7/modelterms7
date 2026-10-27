@@ -57,6 +57,10 @@ struct JCurvCoef {
     std::vector<int> partners, col_cross, xpar, xlag;
     std::vector<double> cross;
     int nx = 0, xmax = 0;                   // the pairs, and the largest lag
+    // a static start: the first level of each group is d0[group], with the
+    // derivative minus the static row of its equation at the first row
+    bool direct = false;
+    std::vector<double> d0;
 };
 
 // J += A B for two quantities with value, gradient and Hessian: Leibniz's
@@ -89,6 +93,10 @@ inline void read_cross_pairs(JCurvCoef& J, const List& f, int K, int zoff,
     if (J.xlag.size() != J.xpar.size() || J.cross.size() != J.xpar.size() ||
         J.col_cross.size() != J.xpar.size()) {
         stop("the cross loadings of a term must have one partner, lag, value and column per pair.");
+    }
+    if (f.containsElementNamed("direct") && as<bool>(f["direct"])) {
+        J.direct = true;
+        J.d0 = as<std::vector<double> >(f["d0"]);
     }
     J.xmax = 0;
     for (int h = 0; h < J.nx; ++h) {
@@ -218,6 +226,17 @@ List gas_joint_curv_cpp(List seed, List charts, List cf, IntegerVector fp,
         std::vector<double> Ed1(static_cast<std::size_t>(P) * m);
         std::vector<const double*> Ed2(P);
         std::vector<double> TM(static_cast<std::size_t>(m) * P);
+        // the static starts of the members: minus the static row of each
+        // member's equation at the group's first row, and no Hessian
+        std::vector<double> S1(static_cast<std::size_t>(K) * m, 0.0), Z2(mm, 0.0);
+        for (int k = 0; k < K; ++k) {
+            if (!co[k].direct || T == 0) continue;
+            const int r1 = rows[0] - 1;
+            for (int i = 0; i < m; ++i) {
+                S1[static_cast<std::size_t>(k) * m + i] =
+                    -seed_p[fpe[k]][r1 + static_cast<std::size_t>(n) * i];
+            }
+        }
         for (int t = 0; t < T; ++t) {
             const int ts = t % D;
             // the levels of every filtered parameter at this time
@@ -228,6 +247,13 @@ List gas_joint_curv_cpp(List seed, List charts, List cf, IntegerVector fp,
                 double Jv = C.omega;
                 double* J1 = &fd1[cur * m];
                 double* J2 = &fd2[cur * mm];
+                const double* s1 = &S1[static_cast<std::size_t>(k) * m];
+                if (J.direct && t == 0) {
+                    fv[cur] = J.d0[gi];
+                    std::copy(s1, s1 + m, J1);
+                    std::fill(J2, J2 + mm, 0.0);
+                    continue;
+                }
                 std::copy(C.om_u.begin(), C.om_u.end(), J1);
                 std::copy(C.om_uu.begin(), C.om_uu.end(), J2);
                 for (int i = 1; i <= J.p; ++i) {
@@ -264,6 +290,10 @@ List gas_joint_curv_cpp(List seed, List charts, List cf, IntegerVector fp,
                         lv = fv[lag];
                         l1 = &fd1[lag * m];
                         l2 = &fd2[lag * mm];
+                    } else if (J.direct) {
+                        lv = J.d0[gi];
+                        l1 = s1;
+                        l2 = Z2.data();
                     } else {
                         lv = C.f0;
                         l1 = C.f0_u.data();
@@ -815,6 +845,38 @@ List joint_run(int nd, List seed, List charts, List cf, IntegerVector fp,
         std::vector<double> U1v(Ps), U2m(Ps * Ps), U2x(Ps * nd);
         std::vector<double> U3x(Ps * Ps * nd), XU3(ms * Ps * nd), PU2(ms * Ps);
         std::vector<double> Mm(Ps * Ps), U3wv(Ps), U2phi(Ps);
+        // the static starts of the members as quantities: a value, the
+        // gradient minus the static row of the member's equation at the
+        // group's first row, and every higher derivative zero
+        std::vector<double> S1(static_cast<std::size_t>(K) * m, 0.0),
+            Z2(mm, 0.0), Zm(ms, 0.0);
+        std::vector<JetV> S0(K);
+        for (int k = 0; k < K; ++k) {
+            if (!co[k].direct || T == 0) continue;
+            const int r1 = rows[0] - 1;
+            double* s1 = &S1[static_cast<std::size_t>(k) * m];
+            for (int i = 0; i < m; ++i) {
+                s1[i] = -seed_p[fpe[k]][r1 + static_cast<std::size_t>(n) * i];
+            }
+            JetV& V = S0[k];
+            V.v = co[k].d0[gi];
+            V.d1 = s1;
+            V.d2 = Z2.data();
+            V.d3[0] = Z2.data();
+            V.d3[1] = nd == 2 ? Z2.data() : nullptr;
+            V.d4 = nd == 2 ? Z2.data() : nullptr;
+            const double* xs[2] = {x0, x1};
+            for (int d = 0; d < nd; ++d) {
+                double s = 0.0;
+                for (int i = 0; i < m; ++i) s += s1[i] * xs[d][i];
+                V.ad[d] = s;
+                V.d2x[d] = Zm.data();
+            }
+            if (nd == 2) {
+                V.d2vw = 0.0;
+                V.d3vw = Zm.data();
+            }
+        }
         for (int t = 0; t < T; ++t) {
             const int ts = t % D;
             // the levels of every filtered parameter at this time
@@ -828,6 +890,16 @@ List joint_run(int nd, List seed, List charts, List cf, IntegerVector fp,
                 double* J2 = &F.d2[cur * mm];
                 double* J3 = &F.d3[cur * nd * mm];
                 double* J4 = nd == 2 ? &F.d4[cur * mm] : nullptr;
+                if (J.direct && t == 0) {
+                    const double* s1 = &S1[static_cast<std::size_t>(k) * m];
+                    std::copy(s1, s1 + m, J1);
+                    std::fill(J2, J2 + mm, 0.0);
+                    std::fill(J3, J3 + nd * mm, 0.0);
+                    if (nd == 2) std::fill(J4, J4 + mm, 0.0);
+                    F.v[cur] = J.d0[gi];
+                    F.aux(cur, x0, x1);
+                    continue;
+                }
                 std::copy(C.om_u.begin(), C.om_u.end(), J1);
                 std::copy(C.om_uu.begin(), C.om_uu.end(), J2);
                 std::copy(C.om_t.begin(), C.om_t.end(), J3);
@@ -867,7 +939,7 @@ List joint_run(int nd, List seed, List charts, List cf, IntegerVector fp,
                     const JetV A = CJ.b[j - 1];
                     const JetV B = (t - j >= 0)
                         ? F.view(static_cast<std::size_t>(k + K * ((t - j) % D)))
-                        : CJ.f0;
+                        : (J.direct ? S0[k] : CJ.f0);
                     prod_add(m, A.v, A.d1, A.d2, B.v, B.d1, B.d2, &Jv, J1, J2);
                     prod_add3(m, nd, A, B, J3);
                     if (nd == 2) prod_add4(m, A, B, J4);

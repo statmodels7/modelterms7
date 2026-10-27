@@ -79,6 +79,7 @@ struct Grp {
     std::vector<double> df0;           // nd
     const double* dphi0;               // mk x nd
     const double* f0_4;                // mk x mk
+    bool direct = false;               // a static start: f[0] is given
 };
 
 // ---- small dense helpers on mk x mk column-major blocks ---------------------
@@ -332,6 +333,7 @@ List gas_curvature_gen_cpp(NumericVector eta, List groups, int p, int q,
             NumericMatrix dphi0 = grp["dphi0"]; G.dphi0 = dphi0.begin();
         }
         if (fourth) { NumericMatrix f04 = grp["f0_4"]; G.f0_4 = f04.begin(); }
+        G.direct = grp.containsElementNamed("direct") && as<bool>(grp["direct"]);
         Wls[l].assign((std::size_t) G.mk * G.mk, 0.0);
     }
 
@@ -571,8 +573,21 @@ List gas_curvature_gen_cpp(NumericVector eta, List groups, int p, int q,
                 zero(Qt);
                 chart_q(G.om, t, m, mk, v1, v2, 1.0, Qt.data());
             }
+            // a static start: the first level and its derivatives are given
+            const bool given = G.direct && t == 0;
+            if (given) {
+                ft = G.f0;
+                for (int k = 0; k < mk; ++k) Ft[k] = G.f0u[k];
+                std::copy(G.f0uu, G.f0uu + mk2, Pt.begin());
+                if (third) {
+                    for (int d = 0; d < nd; ++d) {
+                        std::copy(G.f0_3[d], G.f0_3[d] + mk2, Tt.begin() + (std::size_t) d * mk2);
+                    }
+                }
+                if (fourth) std::copy(G.f0_4, G.f0_4 + mk2, Qt.begin());
+            }
 
-            for (int i = 1; i <= p; ++i) {
+            for (int i = 1; i <= p && !given; ++i) {
                 int lag = t - i;
                 bool has = lag >= 0;
                 std::size_t ls = has ? slot(lag) : 0;
@@ -631,7 +646,7 @@ List gas_curvature_gen_cpp(NumericVector eta, List groups, int p, int q,
                 }
             }
 
-            if (q > 0) {
+            if (q > 0 && !given) {
                 if (G.varying_b) b_pieces(t);
                 for (int j = 1; j <= q; ++j) {
                     int lag = t - j;

@@ -65,7 +65,7 @@ Xc <- cbind(1, as.numeric(scale(seq_len(nc))) * 0.3)
 # the lags 1..p) or "upper" (mu loads sigma's score at the lags 1..p + 2,
 # beyond its own p, and sigma loads nothing)
 gjc_model <- function(fp, p, q, cross = NULL, by = FALSE, dev = FALSE,
-                      devx = NULL) {
+                      devx = NULL, init = "level") {
   oth <- c(mu = "sigma", sigma = "mu")
   mk <- function(k) {
     cross <- if (identical(cross, "sym")) stats::setNames(p, oth[[k]])
@@ -82,8 +82,15 @@ gjc_model <- function(fp, p, q, cross = NULL, by = FALSE, dev = FALSE,
     else gas(p = p, q = q, time = t, p_cross = cross)
   }
   nmp <- c("mu", "sigma")[fp]
-  jt <- gas_joint(stats::setNames(lapply(nmp, function(k)
-    term_build(mk(k), dc)), nmp))
+  # init = "static" starts every member at a constant of its own
+  cval <- c(mu = 0.8, sigma = 0.2)
+  jt <- gas_joint(stats::setNames(lapply(nmp, function(k) {
+    tm <- term_build(mk(k), dc)
+    if (init == "static") {
+      tm <- S7::set_props(tm, init = "static", init_value = cval[[k]])
+    }
+    tm
+  }), nmp))
   M <- length(term_params(jt))
   mb <- ncol(Xc) + 1L
   m <- mb + M
@@ -124,7 +131,8 @@ gjc_model <- function(fp, p, q, cross = NULL, by = FALSE, dev = FALSE,
   core <- function(u, gw, dirs = NULL) {
     E <- preds(u)
     .gas_joint_core(jt, psi_of(u), gw, seed, gjc_blocks(dc$y, E, fp),
-                    direction = dirs)
+                    direction = dirs,
+                    eta = static(u)[, fp, drop = FALSE])
   }
   list(jt = jt, m = m, M = M, mb = mb, preds = preds, core = core)
 }
@@ -549,5 +557,103 @@ test_that("a core with a developed cross loading is the derivative of the order 
         expect_equal(g2$jacobian[[k]][, j], d[, k], tolerance = 1e-6)
       }
     }
+  }
+})
+
+test_that("a joint filter with static starts has the derivatives of its predictors", {
+  # every check above, with each member's first predictor at a constant:
+  # the Jacobian against central differences of the predictors, the
+  # curvature against those of the Jacobian, the third and fourth orders
+  # against Richardson, and the compiled route against the R one
+  for (cfg in list(list(1:2, 1, 1, NULL, FALSE), list(1:2, 2, 2, "sym", TRUE),
+                   list(1:2, 1, 2, "upper", FALSE), list(2L, 1, 1, NULL, TRUE))) {
+    md <- gjc_model(cfg[[1]], cfg[[2]], cfg[[3]], cross = cfg[[4]],
+                    by = cfg[[5]], init = "static")
+    K <- length(cfg[[1]])
+    lab <- paste(format(cfg), collapse = " ")
+    u0 <- gjc_u0(md, 3)
+    E0 <- md$preds(u0)
+    first <- vapply(md$jt@blueprint$order, `[`, 1L, FUN.VALUE = integer(1))
+    cv <- c(0.8, 0.2)[cfg[[1]]]
+    for (k in seq_len(K)) {
+      expect_equal(E0[first, cfg[[1]][k]], rep(cv[k], length(first)),
+                   tolerance = 1e-14, info = lab)
+    }
+    set.seed(6)
+    gw <- matrix(stats::rnorm(nc * K), nc, K)
+    v <- stats::rnorm(md$m)
+    w <- stats::rnorm(md$m)
+    got <- md$core(u0, gw)
+    h <- 1e-6
+    for (j in seq_len(md$m)) {
+      e <- numeric(md$m)
+      e[j] <- h
+      fd <- (md$preds(u0 + e) - md$preds(u0 - e)) / (2 * h)
+      for (k in seq_len(K)) {
+        expect_equal(got$jacobian[[k]][, j], fd[, cfg[[1]][k]],
+                     tolerance = 1e-7, info = paste(lab, k, j))
+      }
+    }
+    dir_of <- function(f, x, hh) (f(u0 + hh * x) - f(u0 - hh * x)) / (2 * hh)
+    rich <- function(f, x) (4 * dir_of(f, x, 1e-3) - dir_of(f, x, 2e-3)) / 3
+    jac_v <- function(u) {
+      J <- md$core(u, gw)$jacobian
+      Reduce(`+`, lapply(seq_len(K), function(k) crossprod(gw[, k], J[[k]])))
+    }
+    expect_equal(as.numeric(got$curvature %*% v), as.numeric(rich(jac_v, v)),
+                 tolerance = 1e-6, info = lab)
+    g3 <- md$core(u0, gw, v)
+    expect_equal(g3$curvature, rich(function(u) md$core(u, gw)$curvature, v),
+                 tolerance = 1e-6, info = lab)
+    g4 <- md$core(u0, gw, list(v, w))
+    expect_equal(g4$curvature,
+                 rich(function(u) md$core(u, gw, v)$curvature, w),
+                 tolerance = 1e-6, info = lab)
+    old <- options(modelterms7.joint_core_r = TRUE)
+    r2 <- md$core(u0, gw)
+    r3 <- md$core(u0, gw, v)
+    r4 <- md$core(u0, gw, list(v, w))
+    options(old)
+    expect_equal(got$curvature, r2$curvature, tolerance = 1e-12, info = lab)
+    expect_equal(g3$curvature, r3$curvature, tolerance = 1e-12, info = lab)
+    expect_equal(g4$curvature, r4$curvature, tolerance = 1e-11, info = lab)
+    for (k in seq_len(K)) {
+      expect_equal(got$jacobian[[k]], r2$jacobian[[k]], tolerance = 1e-13,
+                   info = lab)
+    }
+    # the adjoint: the derivative of sum(g * eta) in the static predictors
+    E_st <- cbind(as.numeric(Xc %*% u0[1:2]), rep(u0[3], nc))[, cfg[[1]],
+                                                              drop = FALSE]
+    fp <- cfg[[1]]
+    ps <- md$jt
+    sc <- function(e, i) {
+      full <- cbind(as.numeric(Xc %*% u0[1:2]), rep(u0[3], nc))[i, ]
+      full[fp] <- e
+      vapply(fp, function(L) gjc_dl(dc$y[i], full, L), 0)
+    }
+    cu <- function(e, i) {
+      full <- cbind(as.numeric(Xc %*% u0[1:2]), rep(u0[3], nc))[i, ]
+      full[fp] <- e
+      matrix(vapply(fp, function(a) vapply(fp, function(L)
+        gjc_dl(dc$y[i], full, c(L, a)), 0), numeric(K)), K, K)
+    }
+    psi0 <- {
+      z <- u0[md$mb + seq_len(md$M)]
+      out <- list(); at <- 0L
+      for (k in ps@params) {
+        nm <- term_params(ps@terms[[k]]); lk <- term_links(ps@terms[[k]])
+        out[[k]] <- as.list(stats::setNames(vapply(seq_along(nm), function(j)
+          linkfunctions7::linkinv(lk[[nm[j]]], z[at + j]), numeric(1)), nm))
+        at <- at + length(nm)
+      }
+      out
+    }
+    obj <- function(ev) {
+      sum(gw * term_filter(ps, matrix(ev, nc, K), dc$y, sc, cu, psi0)$eta)
+    }
+    ad <- term_adjoint(ps, E_st, dc$y, sc, cu, psi0, gw)
+    num <- numDeriv::grad(obj, as.numeric(E_st))
+    expect_equal(as.numeric(ad$deta), num, tolerance = 1e-7, info = lab)
+    expect_false(is.null(ad$dstart))
   }
 })
