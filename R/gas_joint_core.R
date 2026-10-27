@@ -253,7 +253,7 @@ NULL
 # driving scores' jets formed from the predictors' at every row.
 .gas_joint_core <- function(term, psi, g, seed, blocks, direction = NULL,
                             threads = getOption("modelterms7.joint_threads",
-                                                1L)) {
+                                                1L), eta = NULL) {
   if (.gas_joint_has_sub(term)) {
     return(.gas_joint_sub_core(term, psi, g, seed, blocks,
                                direction = direction, threads = threads))
@@ -303,7 +303,7 @@ NULL
   # parameters are the LAST M columns, in the order of term_params()
   zoff <- m - M
   psi <- .gas_joint_psi(term, psi)
-  cf <- .gas_joint_coefs(term, psi)
+  cf <- .gas_joint_start(term, .gas_joint_coefs(term, psi), eta)
 
   # the second, third and fourth orders on the compiled route; the R
   # recursion below stays reachable with options(modelterms7.joint_core_r =
@@ -337,15 +337,29 @@ NULL
   dpsi <- if (nd >= 2L) lapply(seq_len(K), function(k) matrix(0, n, m))
   W <- matrix(0, m, m)
   zero <- .gas_jzero(0, m, nd)
-  for (rows in bp$order) {
+  for (gi in seq_along(bp$order)) {
+    rows <- bp$order[[gi]]
     T_ <- length(rows)
     fj <- lapply(seq_len(K), function(k) vector("list", T_))
     uj <- lapply(seq_len(K), function(k) vector("list", T_))
+    # a static start: the first level of a member is c minus the static
+    # predictor of its equation at the group's first row, whose derivative
+    # is minus that row of the seed; every higher derivative is zero
+    s0 <- lapply(seq_len(K), function(k) {
+      if (!isTRUE(cf[[k]]$direct)) return(NULL)
+      e <- .gas_jzero(cf[[k]]$d0[[gi]], m, nd)
+      e$d1 <- -as.numeric(seed[[fp[k]]][rows[1L], ])
+      e
+    })
     for (t in seq_len(T_)) {
       row <- rows[t]
       for (k in seq_len(K)) {
         ch <- charts[[k]]
         c_k <- cf[[k]]
+        if (!is.null(s0[[k]]) && t == 1L) {
+          fj[[k]][[t]] <- s0[[k]]
+          next
+        }
         J <- ch$omega
         for (i in seq_len(c_k$p)) {
           if (t - i < 1L) next
@@ -360,7 +374,8 @@ NULL
                                        dirs))
         }
         for (j in seq_len(c_k$q)) {
-          lagj <- if (t - j >= 1L) fj[[k]][[t - j]] else ch$f0
+          lagj <- if (t - j >= 1L) fj[[k]][[t - j]] else
+            if (!is.null(s0[[k]])) s0[[k]] else ch$f0
           J <- .gas_jsum(J, .gas_jprod(ch$b[[j]], lagj, dirs))
         }
         fj[[k]][[t]] <- J
@@ -446,7 +461,7 @@ NULL
 S7::method(term_curvature, GasJoint) <- function(term, eta, y, score,
                                                  curvature, psi, g, seed,
                                                  blocks, ...) {
-  .gas_joint_core(term, psi, g, seed, blocks)
+  .gas_joint_core(term, psi, g, seed, blocks, eta = eta)
 }
 
 #' @title Third Derivatives of a Joint Score-Driven Filter
@@ -466,7 +481,8 @@ S7::method(term_curvature, GasJoint) <- function(term, eta, y, score,
 S7::method(term_third, GasJoint) <- function(term, eta, y, score, curvature,
                                              psi, g, seed, blocks, direction,
                                              ...) {
-  .gas_joint_core(term, psi, g, seed, blocks, direction = direction)
+  .gas_joint_core(term, psi, g, seed, blocks, direction = direction,
+                  eta = eta)
 }
 
 #' @title The Fourth Derivative of a Joint Score-Driven Filter
@@ -492,5 +508,6 @@ S7::method(term_fourth, GasJoint) <- function(term, eta, y, score, curvature,
     stop("'directions' must be a list of two vectors, one per direction.",
          call. = FALSE)
   }
-  .gas_joint_core(term, psi, g, seed, blocks, direction = directions)
+  .gas_joint_core(term, psi, g, seed, blocks, direction = directions,
+                  eta = eta)
 }

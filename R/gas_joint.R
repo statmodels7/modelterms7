@@ -159,6 +159,13 @@ gas_joint <- function(terms, drivers = character(0)) {
            call. = FALSE)
     }
   }
+  if ((length(terms) > 1L || length(drivers)) &&
+      any(vapply(terms, .gas_static, logical(1))) &&
+      any(vapply(terms, function(tm) length(tm@blueprint$sub) > 0L,
+                 logical(1)))) {
+    stop(paste("init = \"static\" is not yet available for a joint filter",
+               "whose terms carry subformulas."), call. = FALSE)
+  }
   bp1 <- terms[[1L]]@blueprint
   for (k in params[-1L]) {
     bp <- terms[[k]]@blueprint
@@ -403,6 +410,30 @@ S7::method(term_params, GasJoint) <- function(term, ...) {
   out
 }
 
+# the start of each member of a joint filter: `direct` and `d0`, the first
+# level of each group under init = "static" (c minus the static predictor of
+# the member's equation at the group's first row), from the static
+# predictors `eta` (n x K)
+.gas_joint_start <- function(term, cf, eta) {
+  K <- length(term@params)
+  for (k in seq_len(K)) {
+    tm <- term@terms[[term@params[k]]]
+    st <- !.gas_is_driver(tm) && .gas_static(tm)
+    cf[[k]]$direct <- st
+    cf[[k]]$d0 <- numeric(0)
+    if (st) {
+      if (is.null(eta)) {
+        stop(paste("the static start of a joint filter is read from the",
+                   "static predictors, and 'eta' was not given."),
+             call. = FALSE)
+      }
+      e <- matrix(as.numeric(eta), term@blueprint$n, K)
+      cf[[k]]$d0 <- .gas_static_start(tm, e[, k])
+    }
+  }
+  cf
+}
+
 # the coefficients of a driver: a level of zero with no lags and no columns
 # (col_omega = 0 says that the constant has no derivative)
 .gas_driver_coefs <- function() {
@@ -479,7 +510,7 @@ S7::method(term_filter, GasJoint) <- function(term, eta, y, score, curvature,
   K <- length(term@params)
   n <- bp$n
   eta <- matrix(as.numeric(eta), n, K)
-  cf <- .gas_joint_coefs(term, psi)
+  cf <- .gas_joint_start(term, .gas_joint_coefs(term, psi), eta)
   M <- length(term_params(term))
   nm <- term_params(term)
   if (!is.null(fast)) {
@@ -496,7 +527,8 @@ S7::method(term_filter, GasJoint) <- function(term, eta, y, score, curvature,
   eta_out <- eta
   jac <- lapply(seq_len(K), function(k) matrix(0, n, M))
   cv <- array(0, c(n, K, K))
-  for (rows in bp$order) {
+  for (gi in seq_along(bp$order)) {
+    rows <- bp$order[[gi]]
     T_ <- length(rows)
     f <- matrix(0, K, T_)
     u <- matrix(0, K, T_)
@@ -505,6 +537,13 @@ S7::method(term_filter, GasJoint) <- function(term, eta, y, score, curvature,
     for (t in seq_len(T_)) {
       for (k in seq_len(K)) {
         c_k <- cf[[k]]
+        # a static start: the first level is given and does not depend on
+        # the parameters, and the levels before it equal it
+        if (isTRUE(c_k$direct) && t == 1L) {
+          f[k, t] <- c_k$d0[[gi]]
+          Fd[k, t, ] <- 0
+          next
+        }
         ft <- c_k$omega
         Ft <- numeric(M)
         if (c_k$col_omega > 0L) Ft[c_k$col_omega] <- 1
@@ -527,6 +566,9 @@ S7::method(term_filter, GasJoint) <- function(term, eta, y, score, curvature,
           if (t - j >= 1L) {
             f_l <- f[k, t - j]
             F_l <- Fd[k, t - j, ]
+          } else if (isTRUE(c_k$direct)) {
+            f_l <- c_k$d0[[gi]]
+            F_l <- numeric(M)
           } else {
             f_l <- c_k$f0
             F_l <- numeric(M)
@@ -604,9 +646,11 @@ S7::method(term_adjoint, GasJoint) <- function(term, eta, y, score, curvature,
     colnames(out$deta) <- colnames(out$dscore) <- term@params
     return(out)
   }
-  out <- gas_joint_adjoint_cpp(as.numeric(cv), g, .gas_joint_coefs(term, psi),
-                               bp$order)
+  cf <- .gas_joint_start(term, .gas_joint_coefs(term, psi), eta)
+  out <- gas_joint_adjoint_cpp(as.numeric(cv), g, cf, bp$order)
   colnames(out$deta) <- colnames(out$dscore) <- term@params
+  if (is.null(out$dstart)) out$dstart <- NULL
+  else colnames(out$dstart) <- term@params
   out
 }
 

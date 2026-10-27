@@ -37,6 +37,9 @@ struct JCoef {
     std::vector<double> a, b, db, df0, cross;   // db: q x nown, cross: one per pair
     std::vector<int> own, col_a, partners, col_cross, xpar, xlag;
     int nown = 0, nx = 0;   // nx: the number of cross pairs (partner, lag)
+    // a static start: the first level of each group is d0[group]
+    bool direct = false;
+    std::vector<double> d0;
 };
 
 std::vector<JCoef> joint_coefs(const List& cf) {
@@ -63,6 +66,10 @@ std::vector<JCoef> joint_coefs(const List& cf) {
         J.xpar = as<std::vector<int> >(c["xpar"]);
         J.xlag = as<std::vector<int> >(c["xlag"]);
         J.nx = J.xpar.size();
+        if (c.containsElementNamed("direct") && as<bool>(c["direct"])) {
+            J.direct = true;
+            J.d0 = as<std::vector<double> >(c["d0"]);
+        }
         if (static_cast<int>(J.xlag.size()) != J.nx ||
             static_cast<int>(J.cross.size()) != J.nx ||
             static_cast<int>(J.col_cross.size()) != J.nx) {
@@ -122,7 +129,14 @@ SEXP gas_joint_filter_cpp(NumericMatrix eta, List cf, int M, List order,
                 std::fill(Ft.begin(), Ft.end(), 0.0);
                 // a driver's constant level (col_omega 0) has no column
                 if (J.col_omega > 0) Ft[J.col_omega - 1] = 1.0;
-                for (int i = 1; i <= J.p; ++i) {
+                // a static start: the first level is given, with no
+                // derivative in the parameters
+                const bool given = J.direct && t == 0;
+                if (given) {
+                    ft = J.d0[gi];
+                    std::fill(Ft.begin(), Ft.end(), 0.0);
+                }
+                for (int i = 1; i <= J.p && !given; ++i) {
                     if (t - i < 0) continue;
                     const double ai = J.a[i - 1];
                     const std::size_t lag = static_cast<std::size_t>(k + K * (t - i));
@@ -133,7 +147,7 @@ SEXP gas_joint_filter_cpp(NumericMatrix eta, List cf, int M, List order,
                 }
                 // the cross loadings: pair h loads the score of partner
                 // xpar[h] at lag xlag[h], which may exceed p
-                for (int h = 0; h < J.nx; ++h) {
+                for (int h = 0; h < J.nx && !given; ++h) {
                     const int xl = J.xlag[h];
                     if (t - xl < 0) continue;
                     const int l = J.xpar[h] - 1;
@@ -144,13 +158,16 @@ SEXP gas_joint_filter_cpp(NumericMatrix eta, List cf, int M, List order,
                     for (int m = 0; m < M; ++m) Ft[m] += ch * sdl[m];
                     Ft[J.col_cross[h] - 1] += u[ll];
                 }
-                for (int j = 1; j <= J.q; ++j) {
+                for (int j = 1; j <= J.q && !given; ++j) {
                     double fl;
                     if (t - j >= 0) {
                         const std::size_t lag = static_cast<std::size_t>(k + K * (t - j));
                         fl = f[lag];
                         const double* fd = &Fd[lag * M];
                         for (int m = 0; m < M; ++m) Fl[m] = fd[m];
+                    } else if (J.direct) {
+                        fl = J.d0[gi];
+                        std::fill(Fl.begin(), Fl.end(), 0.0);
                     } else {
                         fl = J.f0;
                         std::fill(Fl.begin(), Fl.end(), 0.0);
@@ -226,10 +243,16 @@ List gas_joint_adjoint_cpp(NumericVector curv, NumericMatrix g, List cf,
     const int n = g.nrow(), K = g.ncol();
     std::vector<JCoef> co = joint_coefs(cf);
     NumericMatrix deta(n, K), dscore(n, K);
+    bool any_direct = false;
+    for (int k = 0; k < K; ++k) any_direct = any_direct || co[k].direct;
+    NumericMatrix dstart(any_direct ? n : 0, any_direct ? K : 0);
     for (int gi = 0; gi < order.size(); ++gi) {
         IntegerVector rows = order[gi];
         const int T = rows.size();
         std::vector<double> fb(K * T, 0.0), ub(K * T, 0.0);
+        // the adjoint of each member's static start, which is its first
+        // level and every level before it
+        std::vector<double> fs(K, 0.0);
         for (int t = T - 1; t >= 0; --t) {
             const int r = rows[t] - 1;
             for (int k = 0; k < K; ++k) {
@@ -242,8 +265,13 @@ List gas_joint_adjoint_cpp(NumericVector curv, NumericMatrix g, List cf,
             for (int k = 0; k < K; ++k) {
                 const JCoef& J = co[k];
                 const double fbk = fb[k + K * t];
+                if (J.direct && t == 0) {
+                    fs[k] += fbk;
+                    continue;
+                }
                 for (int j = 1; j <= J.q; ++j) {
                     if (t - j >= 0) fb[k + K * (t - j)] += J.b[j - 1] * fbk;
+                    else if (J.direct) fs[k] += J.b[j - 1] * fbk;
                 }
                 for (int i = 1; i <= J.p; ++i) {
                     if (t - i < 0) continue;
@@ -256,6 +284,20 @@ List gas_joint_adjoint_cpp(NumericVector curv, NumericMatrix g, List cf,
                 }
             }
         }
+        // f_1 = c - eta_1: the static predictor of the first row reaches the
+        // objective through the start with the opposite sign
+        if (T > 0) {
+            const int r1 = rows[0] - 1;
+            for (int k = 0; k < K; ++k) {
+                if (!co[k].direct) continue;
+                deta(r1, k) -= fs[k];
+                dstart(r1, k) = -fs[k];
+            }
+        }
+    }
+    if (any_direct) {
+        return List::create(_["deta"] = deta, _["dscore"] = dscore,
+                            _["dstart"] = dstart);
     }
     return List::create(_["deta"] = deta, _["dscore"] = dscore);
 }

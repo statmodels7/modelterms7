@@ -58,7 +58,7 @@ NULL
 # autoregressive coefficients are constant, their derivative blocks read off
 # the shared preparation.
 .gas_gen_groups_scalar <- function(term, zeta, links, base, zcol, gp, bp, m,
-                                   dirs, nd) {
+                                   dirs, nd, d0 = NULL, seed = NULL) {
   p <- term@p
   q <- term@q
   third <- nd >= 1L
@@ -78,7 +78,8 @@ NULL
                  if (fourth) rep(linkfunctions7::d4linkinv(lk, z), mg))
   }
   aj <- if (p > 0L) paste0("kappa", seq_len(p)) else character(0)
-  lapply(bp$order, function(rows) {
+  lapply(seq_along(bp$order), function(l) {
+    rows <- bp$order[[l]]
     mg <- length(rows)
     out <- list(rows = as.integer(rows), act = seq_len(m),
                 om = unit_val("omega", rows),
@@ -98,6 +99,22 @@ NULL
     if (fourth) {
       out$qb <- if (q > 0L) gp$q_b else list()
       out$f0_4 <- gp$f0_4
+    }
+    # a static start (init = "static"): the first level is given, c minus the
+    # static predictor of the group's first row, with derivative minus that
+    # row of the seed and every higher derivative zero
+    if (!is.null(d0)) {
+      z2 <- matrix(0, m, m)
+      out$direct <- TRUE
+      out$f0 <- d0[[l]]
+      out$f0u <- -as.numeric(seed[rows[1L], ])
+      out$f0uu <- z2
+      if (third) {
+        out$f0_3 <- lapply(seq_len(nd), function(d) z2)
+        out$df0 <- vapply(dirs, function(d) sum(out$f0u * d), numeric(1))
+        out$dphi0 <- matrix(0, m, nd)
+      }
+      if (fourth) out$f0_4 <- z2
     }
     out
   })

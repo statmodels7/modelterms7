@@ -232,7 +232,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 # vectorized (one matrix assignment per parameter per group), so the
 # kernel's loop allocates nothing per step. The starting level and its
 # derivative come from the group's first observation, as in the R route.
-.gas_sub_prep <- function(term, vals, bd, acts) {
+.gas_sub_prep <- function(term, vals, bd, acts, d0 = NULL) {
   bp <- term@blueprint
   p <- term@p
   q <- term@q
@@ -263,7 +263,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
     }
     r1 <- rows[1L]
     sb <- if (q > 0L) sum(bd$B[r1, ]) else 0
-    if (abs(1 - sb) < 1e-10) {
+    if (is.null(d0) && abs(1 - sb) < 1e-10) {
       stop("the autoregressive polynomial is at the unit root; the filter has no starting level.",
            call. = FALSE)
     }
@@ -276,6 +276,13 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
     }
     groups[[l]] <- list(rows = rows, act = act, dom = dom, da = da,
                         dbl = dbl, f0 = f0, df0 = df0)
+    # a static start: the first level is given and does not depend on the
+    # parameters, and the levels before it equal it
+    if (!is.null(d0)) {
+      groups[[l]]$f0 <- d0[[l]]
+      groups[[l]]$df0 <- numeric(length(act))
+      groups[[l]]$direct <- TRUE
+    }
   }
   A <- matrix(0, bp$n, p)
   for (i in seq_len(p)) A[, i] <- vals[[aj[i]]]$v
@@ -294,7 +301,8 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
   vals <- .gas_sub_values(term, u, "parameter")
   bd <- .gas_sub_b(term, vals)
   acts <- .gas_sub_active(term, vals)
-  prep <- .gas_sub_prep(term, vals, bd, acts)
+  d0 <- if (.gas_static(term)) .gas_static_start(term, eta) else NULL
+  prep <- .gas_sub_prep(term, vals, bd, acts, d0 = d0)
   res <- gas_filter_sub_cpp(eta, prep$groups, term@p, term@q,
                             prep$om, prep$A, prep$B, length(u),
                             score, curvature,
@@ -316,6 +324,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
   bd <- .gas_sub_b(term, vals)
   acts <- .gas_sub_active(term, vals)
   aj <- if (p > 0L) paste0("kappa", seq_len(p)) else character(0)
+  d0 <- if (.gas_static(term)) .gas_static_start(term, eta) else NULL
 
   eta_out <- numeric(bp$n)
   jac <- matrix(0, bp$n, np)
@@ -354,7 +363,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
     # stationary level its own parameter values imply
     r1 <- rows[1L]
     sb <- if (q > 0L) sum(bd$B[r1, ]) else 0
-    if (abs(1 - sb) < 1e-10) {
+    if (is.null(d0) && abs(1 - sb) < 1e-10) {
       stop("the autoregressive polynomial is at the unit root; the filter has no starting level.",
            call. = FALSE)
     }
@@ -365,12 +374,21 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
       dbsum <- Reduce(`+`, lapply(seq_len(q), function(j) db_of(j, r1)))
       df0 <- df0 + om1 * dbsum / (1 - sb)^2
     }
+    if (!is.null(d0)) {
+      f0 <- d0[[l]]
+      df0 <- numeric(na)
+    }
 
     for (t in seq_len(m)) {
       r <- rows[t]
       ft <- vals$omega$v[r]
       dft <- row_of("omega", r)
-      if (p > 0L) {
+      given <- !is.null(d0) && t == 1L
+      if (given) {
+        ft <- f0
+        dft <- numeric(na)
+      }
+      if (p > 0L && !given) {
         for (i in seq_len(p)) {
           s_lag <- if (t - i >= 1L) s[t - i] else 0
           ds_lag <- if (t - i >= 1L) ds[t - i, ] else numeric(na)
@@ -379,7 +397,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
           dft <- dft + va$v[r] * ds_lag + s_lag * row_of(aj[i], r)
         }
       }
-      if (q > 0L) {
+      if (q > 0L && !given) {
         for (j in seq_len(q)) {
           f_lag <- if (t - j >= 1L) f[t - j] else f0
           df_lag <- if (t - j >= 1L) df[t - j, ] else df0
@@ -415,22 +433,35 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
   aj <- if (p > 0L) paste0("kappa", seq_len(p)) else character(0)
   cvv <- .gas_filter_sub(term, eta, y, score, curvature, u,
                          fast = fast, threads = threads)$curv
+  static <- .gas_static(term)
 
   deta <- numeric(bp$n)
   dscore <- numeric(bp$n)
+  dstart <- if (static) numeric(bp$n) else NULL
   for (rows in bp$order) {
     k <- length(rows)
     fb <- numeric(k)
     sb <- numeric(k)
+    # the adjoint of the static start: the first level and every level
+    # before it
+    fs <- 0
     for (t in rev(seq_len(k))) {
       r <- rows[t]
       eb <- g[r] + sb[t] * cvv[r]
       fb[t] <- fb[t] + eb
       deta[r] <- eb
       dscore[r] <- sb[t]
+      if (static && t == 1L) {
+        fs <- fs + fb[t]
+        next
+      }
       if (q > 0L) {
         for (j in seq_len(q)) {
-          if (t - j >= 1L) fb[t - j] <- fb[t - j] + bd$B[r, j] * fb[t]
+          if (t - j >= 1L) {
+            fb[t - j] <- fb[t - j] + bd$B[r, j] * fb[t]
+          } else if (static) {
+            fs <- fs + bd$B[r, j] * fb[t]
+          }
         }
       }
       if (p > 0L) {
@@ -439,8 +470,14 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
         }
       }
     }
+    if (static) {
+      deta[rows[1L]] <- deta[rows[1L]] - fs
+      dstart[rows[1L]] <- -fs
+    }
   }
-  list(deta = deta, dscore = dscore)
+  out <- list(deta = deta, dscore = dscore)
+  if (static) out$dstart <- dstart
+  out
 }
 
 # the second-order propagation of the submodel route: the forward jacobian
@@ -521,6 +558,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
   # starting level, and the per-row recursion runs in C++. Anything else
   # keeps the R recursion below, which stays the reference
   use_gen <- .gas_gen_ok(score_values, curvature_values, blocks_data, nd)
+  d0 <- if (.gas_static(term)) .gas_static_start(term, eta) else NULL
   gen_groups <- if (use_gen) vector("list", length(bp$order)) else NULL
 
   # does the caller take the active set? A three-argument callback is the
@@ -748,7 +786,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 
     r1 <- rows[1L]
     sbv <- if (q > 0L) sum(bd$B[r1, ]) else 0
-    if (abs(1 - sbv) < 1e-10) {
+    if (is.null(d0) && abs(1 - sbv) < 1e-10) {
       stop("the autoregressive polynomial is at the unit root; the filter has no starting level.",
            call. = FALSE)
     }
@@ -811,6 +849,20 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
                      matrix(0, mk, mk), vks)
       f0_4 <- cst * (om1_4 + .gas_prod4(Sj, fj))
     }
+    # a static start: the first level is c minus the static predictor of the
+    # group's first row, with derivative minus that row of the seed and every
+    # higher derivative zero
+    if (!is.null(d0)) {
+      f0 <- d0[[l]]
+      f0_u <- -as.numeric(seed[r1, act])
+      f0_uu <- matrix(0, mk, mk)
+      if (third) {
+        f0_3 <- lapply(seq_len(nd), function(d) matrix(0, mk, mk))
+        df0 <- lapply(seq_len(nd), function(d) sum(f0_u * vks[[d]]))
+        dphi0 <- lapply(seq_len(nd), function(d) numeric(mk))
+      }
+      if (fourth) f0_4 <- matrix(0, mk, mk)
+    }
 
     if (use_gen) {
       mg <- length(rows)
@@ -836,7 +888,8 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
                     if (any(okp)) M[, ppos[okp]] <- bd$DB[[j]][rows, okp, drop = FALSE]
                     M
                   }),
-                  f0 = f0, f0u = f0_u, f0uu = f0_uu)
+                  f0 = f0, f0u = f0_u, f0uu = f0_uu,
+                  direct = !is.null(d0))
       if (q > 0L) {
         if (varying_b) {
           grp$pa <- lapply(pj, gval)
@@ -883,7 +936,15 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
       Tt <- if (third) lapply(seq_len(nd), function(d) t_of("omega", r, d))
             else NULL
       Qt <- if (fourth) q_of("omega", r) else NULL
-      if (p > 0L) {
+      given <- !is.null(d0) && t == 1L
+      if (given) {
+        ft <- f0
+        Ft <- f0_u
+        Pt <- f0_uu
+        Tt <- if (third) f0_3 else NULL
+        Qt <- if (fourth) f0_4 else NULL
+      }
+      if (p > 0L && !given) {
         for (i in seq_len(p)) {
           lag <- t - i
           s_l <- if (lag >= 1L) s[lag] else 0
@@ -924,7 +985,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
           }
         }
       }
-      if (q > 0L) {
+      if (q > 0L && !given) {
         hb <- if (varying_b) hb_of(r) else hb_const_l
         tb <- if (third) {
           lapply(seq_len(nd), function(d)

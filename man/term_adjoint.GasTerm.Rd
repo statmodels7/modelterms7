@@ -27,7 +27,10 @@ the callbacks are evaluated in the forward pass only, once per
 observation.}
 }
 \value{
-A list with \code{deta} and \code{dscore}.
+A list with \code{deta} and \code{dscore}. With \code{init = "static"} it also
+has \code{dstart}: the part of \code{deta} that reaches the objective through the
+start of the recursion, nonzero only at the first row of each group, which
+a caller that assembles the derivative from \code{dscore} adds itself.
 }
 \description{
 Runs the recursion of \code{\link[=term_filter]{term_filter()}} in reverse, returning the

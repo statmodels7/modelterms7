@@ -1,3 +1,18 @@
+# modelterms7 0.111.0
+
+* `gas()` takes `init`, how the recursion starts. With `init = "level"`, the
+  default and the behaviour of earlier versions, the levels before the first
+  observation of a group equal the fixed point of the recursion. With
+  `init = "static"` the first predictor of every group equals a constant of
+  that group (the property `init_value`, set by the fitting layer), so the
+  first level is that constant minus the static predictor of the group's
+  first row and does not depend on the term's parameters. The filter, the
+  reverse pass (whose result then carries `dstart`, the part that reaches
+  the objective through the start), `term_static_deriv()` and the second,
+  third and fourth derivatives start from it on the scalar route, the route
+  with subformulas and the joint filter, in R and compiled. A joint filter
+  whose terms carry subformulas rejects `init = "static"`.
+
 # modelterms7 0.110.2
 
 * `term_scores()` and `term_hessian()` for a `regime()` term share one

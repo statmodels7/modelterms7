@@ -103,7 +103,10 @@ GasTerm <- S7::new_class(
     submodels = S7::class_list,
     scaling = S7::class_double,
     p_cross = S7::class_integer,
-    cross_with = S7::class_character
+    cross_with = S7::class_character,
+    init = S7::class_character,
+    init_value = S7::class_double,
+    init_source = S7::class_any
   )
 )
 
@@ -288,6 +291,27 @@ GasTerm <- S7::new_class(
 #' Without `time` the rows are taken in the order in which they appear.
 #' }
 #'
+#' \subsection{The start of the recursion}{
+#' With `init = "level"`, the default, the levels before the first
+#' observation of a group equal the fixed point of the recursion,
+#' \eqn{f_0 = \omega / (1 - \sum_j \xi_j)}, and so does the first level, so
+#' the first predictor is the static predictor plus \eqn{f_0}. With
+#' `init = "static"` the first predictor of every group equals a constant
+#' \eqn{c} of that group that does not depend on the parameters: the first
+#' level is \eqn{f_1 = c - \eta^{s}_1}, where \eqn{\eta^{s}_1} is the static
+#' predictor at the group's first row, and the levels before it equal
+#' \eqn{f_1}. The constants are the property `init_value`, one for every group
+#' or one for all of them, which a fitting layer sets; \pkg{statmodels7} sets
+#' them to the predictor of the model without the term at the first row of
+#' each group, and keeps that model in the property `init_source`. With a
+#' persistence close to one the first convention
+#' makes the constant of the equation the starting value of the filter as
+#' well as its level, and the likelihood can then have a second maximum at
+#' which the constant fits the first observations; the second convention
+#' separates the two. `init = "static"` is not yet available for a joint
+#' filter whose terms carry subformulas.
+#' }
+#'
 #' \subsection{A parameter developed with covariates}{
 #' A two-sided formula in `...` whose left side names a parameter
 #' develops it as \eqn{\psi_{j,t} = g_j^{-1}(z_t^\top\gamma_j)}, where the
@@ -380,6 +404,10 @@ GasTerm <- S7::new_class(
 #'   named. The coefficients of a development are
 #'   unconstrained, and the link of the developed parameter is applied inside
 #'   the development.
+#' @param init How the recursion starts: `"level"`, the default, at the
+#'   fixed point of the recursion, or `"static"`, with the first predictor of
+#'   every group equal to the constant `init_value`; see the section on the
+#'   start of the recursion.
 #' @param label A single non-empty string naming the term.
 #'
 #' @return An object of class [GasTerm()] (a specification; see
@@ -480,7 +508,8 @@ GasTerm <- S7::new_class(
 #' }
 #' @export
 gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
-                p_cross = NULL, links = NULL, label = "gas") {
+                p_cross = NULL, links = NULL, init = c("level", "static"),
+                label = "gas") {
   if (inherits(p, "formula") || inherits(q, "formula")) {
     stop(paste("'p' and 'q' are the orders of the filter; a subformula is",
                "given by name after them, as in gas(1, 1, kappa1 ~ x)."),
@@ -505,6 +534,7 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
          call. = FALSE)
   }
   p_cross <- .gas_check_p_cross(p_cross)
+  init <- match.arg(init)
   by <- substitute(by)
   base <- .gas_base_params(p, q)
   submodels <- .gas_gather_submodels(list(...), base)
@@ -558,6 +588,7 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
           scaling = as.double(scaling),
           p_cross = p_cross,
           cross_with = character(0),
+          init = init,
           blueprint = list())
 }
 
@@ -1384,6 +1415,30 @@ S7::method(term_build, GasTerm) <- function(term, data, ...) {
 
 # The coefficients the recursion runs on, and the constants of the chart,
 # from one set of parameter values: the score loadings as given, the
+# whether a term starts its recursion with the first predictor of each group
+# at the constant `init_value` (init = "static") rather than at the fixed
+# point of the recursion
+.gas_static <- function(term) identical(term@init, "static")
+
+# the first level of each group under init = "static": the constant minus the
+# static predictor at the group's first row, so that the first predictor is
+# the constant whatever the parameters are
+.gas_static_start <- function(term, eta) {
+  cval <- term@init_value
+  ng <- length(term@blueprint$order)
+  if (!length(cval)) {
+    stop(paste("gas(init = \"static\") starts at the property 'init_value',",
+               "which is not set; a fitting layer sets it."), call. = FALSE)
+  }
+  if (!(length(cval) %in% c(1L, ng)) || !all(is.finite(cval))) {
+    stop(sprintf(paste0("'init_value' must be one finite constant or one per ",
+                        "group (%d)."), ng), call. = FALSE)
+  }
+  first <- vapply(term@blueprint$order, function(r) as.integer(r[[1L]]),
+                  integer(1))
+  rep_len(cval, ng) - as.numeric(eta)[first]
+}
+
 # autoregressive coefficients through Levinson-Durbin with its jacobian,
 # and the level the recursion starts from.
 .gas_coefs <- function(psi, p, q) {
@@ -1481,9 +1536,10 @@ S7::method(term_filter, GasTerm) <- function(term, eta, y, score, curvature,
   p <- term@p
   q <- term@q
   cf <- .gas_coefs(psi[.gas_base_params(p, q)], p, q)
+  d0 <- if (.gas_static(term)) .gas_static_start(term, eta) else numeric(0)
   out <- gas_filter_cpp(eta, bp$order, p, q, cf$omega, cf$a, cf$b, cf$db,
                         cf$f0, cf$df0, cf$i_a, cf$np, score, curvature,
-                        fast = fast, threads = as.integer(threads))
+                        fast = fast, threads = as.integer(threads), d0 = d0)
   jac <- out$jacobian
   colnames(jac) <- nm
   list(eta = out$eta, jacobian = jac, curv = out$curv)
@@ -1510,7 +1566,10 @@ S7::method(term_filter, GasTerm) <- function(term, eta, y, score, curvature,
 #'   with a covered context the adjoint evaluates no R callback; without one
 #'   the callbacks are evaluated in the forward pass only, once per
 #'   observation.
-#' @return A list with `deta` and `dscore`.
+#' @return A list with `deta` and `dscore`. With `init = "static"` it also
+#'   has `dstart`: the part of `deta` that reaches the objective through the
+#'   start of the recursion, nonzero only at the first row of each group, which
+#'   a caller that assembles the derivative from `dscore` adds itself.
 #' @keywords internal
 S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
                                               psi, g, ..., fast = NULL,
@@ -1546,8 +1605,10 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
   base <- .gas_base_params(p, q)
 
   cf <- .gas_coefs(v[base], p, q)
+  static <- .gas_static(term)
   deta <- numeric(bp$n)
   dscore <- numeric(bp$n)
+  dstart <- if (static) numeric(bp$n) else NULL
   for (l in seq_along(bp$order)) {
     rows <- bp$order[[l]]
     a <- cf$a
@@ -1555,6 +1616,9 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
     k <- length(rows)
     fb <- numeric(k)
     sb <- numeric(k)
+    # the adjoint of the static start, which is the first level and every
+    # level before it
+    fs <- 0
     for (t in rev(seq_len(k))) {
       row <- rows[t]
       # e_t reaches the objective directly and through every later score
@@ -1562,9 +1626,17 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
       fb[t] <- fb[t] + eb
       deta[row] <- eb
       dscore[row] <- sb[t]
+      if (static && t == 1L) {
+        fs <- fs + fb[t]
+        next
+      }
       if (q > 0L) {
         for (j in seq_len(q)) {
-          if (t - j >= 1L) fb[t - j] <- fb[t - j] + b[[j]] * fb[t]
+          if (t - j >= 1L) {
+            fb[t - j] <- fb[t - j] + b[[j]] * fb[t]
+          } else if (static) {
+            fs <- fs + b[[j]] * fb[t]
+          }
         }
       }
       if (p > 0L) {
@@ -1573,8 +1645,16 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
         }
       }
     }
+    # f_1 = c - eta_1, so the static predictor of the first row reaches the
+    # objective through the start with the opposite sign
+    if (static) {
+      deta[rows[1L]] <- deta[rows[1L]] - fs
+      dstart[rows[1L]] <- -fs
+    }
   }
-  list(deta = deta, dscore = dscore)
+  out <- list(deta = deta, dscore = dscore)
+  if (static) out$dstart <- dstart
+  out
 }
 
 # one function of a link applied to each coordinate with that coordinate's
@@ -2144,9 +2224,14 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
 
   # the compiled route, where the caller hands the score and the curvature
   # as lookups and the model's pieces as data (gas_curvature_gen.cpp)
+  # with a static start each group's first level is c minus the static
+  # predictor of its first row, so its derivative is minus that row of the
+  # seed and every higher derivative is zero
+  static <- .gas_static(term)
+  d0 <- if (static) .gas_static_start(term, eta) else NULL
   if (.gas_gen_ok(score_values, curvature_values, blocks_data, nd)) {
     groups <- .gas_gen_groups_scalar(term, zeta, links, base, zcol, shared,
-                                     bp, m, dirs, nd)
+                                     bp, m, dirs, nd, d0 = d0, seed = seed)
     A <- matrix(rep(shared$a, each = bp$n), bp$n, p)
     B <- matrix(rep(shared$b, each = bp$n), bp$n, q)
     return(.gas_gen_run(eta, groups, p, q, nd, rep(shared$omega, bp$n), A, B,
@@ -2180,6 +2265,18 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
     f0_u <- gp$f0_u
     f0_uu <- gp$f0_uu
     vks <- gp$vks
+    st <- list(f0_3 = gp$f0_3, df0 = gp$df0, dphi0 = gp$dphi0, f0_4 = gp$f0_4)
+    if (static) {
+      f0 <- d0[[l]]
+      f0_u <- -seed[rows[1L], act]
+      f0_uu <- matrix(0, mk, mk)
+      if (third) {
+        st$f0_3 <- lapply(seq_len(nd), function(d) matrix(0, mk, mk))
+        st$df0 <- lapply(seq_len(nd), function(d) sum(f0_u * vks[[d]]))
+        st$dphi0 <- lapply(seq_len(nd), function(d) numeric(mk))
+      }
+      if (fourth) st$f0_4 <- matrix(0, mk, mk)
+    }
     k <- length(rows)
     f <- numeric(k)
     s <- numeric(k)
@@ -2203,7 +2300,15 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
       Pt <- om_uu
       Tt <- if (third) gp$t_om else NULL
       Qt <- if (fourth) gp$q_om else NULL
-      if (p > 0L) {
+      given <- static && t == 1L
+      if (given) {
+        ft <- f0
+        Ft <- f0_u
+        Pt <- f0_uu
+        Tt <- if (third) st$f0_3 else NULL
+        Qt <- if (fourth) st$f0_4 else NULL
+      }
+      if (p > 0L && !given) {
         for (i in seq_len(p)) {
           lag <- t - i
           s_l <- if (lag >= 1L) s[lag] else 0
@@ -2238,7 +2343,7 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
           }
         }
       }
-      if (q > 0L) {
+      if (q > 0L && !given) {
         for (j in seq_len(q)) {
           lag <- t - j
           f_l <- if (lag >= 1L) f[lag] else f0
@@ -2251,10 +2356,10 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
           if (third) {
             for (d in seq_len(nd)) {
               vk <- vks[[d]]
-              Psi_l <- if (lag >= 1L) Psi[[d]][[lag]] else gp$f0_3[[d]]
-              dF_l <- if (lag >= 1L) sum(F_l * vk) else gp$df0[[d]]
+              Psi_l <- if (lag >= 1L) Psi[[d]][[lag]] else st$f0_3[[d]]
+              dF_l <- if (lag >= 1L) sum(F_l * vk) else st$df0[[d]]
               dPhi_l <- if (lag >= 1L) as.numeric(Phi_l %*% vk) else
-                gp$dphi0[[d]]
+                st$dphi0[[d]]
               Tt[[d]] <- Tt[[d]] + gp$db[[d]][[j]] * Phi_l + b[[j]] * Psi_l +
                 outer(gp$db2[[d]][[j]], F_l) + outer(F_l, gp$db2[[d]][[j]]) +
                 outer(b_u[[j]], dPhi_l) + outer(dPhi_l, b_u[[j]]) +
@@ -2268,8 +2373,8 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
               .gas_jet(f_l, F_l, Phi_l, Psi[[1L]][[lag]], Psi[[2L]][[lag]],
                        Om[[lag]], vks)
             } else {
-              .gas_jet(f0, f0_u, f0_uu, gp$f0_3[[1L]], gp$f0_3[[2L]],
-                       gp$f0_4, vks)
+              .gas_jet(f0, f0_u, f0_uu, st$f0_3[[1L]], st$f0_3[[2L]],
+                       st$f0_4, vks)
             }
             Qt <- Qt + .gas_prod4(Bj, Fj)
           }
@@ -2540,6 +2645,8 @@ S7::method(print, GasTerm) <- function(x, ...) {
 #' @param a,b The score loadings and the autoregressive coefficients.
 #' @param db The derivative of the coefficients in the parameters.
 #' @param f0,df0 The starting level and its derivative.
+#' @param d0 The first level of each group under a static start
+#'   (`init = "static"`), or `numeric(0)` for the start at `f0`.
 #' @param i_a The positions of the score loadings among the parameters.
 #' @param np The number of parameters.
 #' @param score,curvature The callbacks of [term_filter()].
@@ -2548,20 +2655,37 @@ S7::method(print, GasTerm) <- function(x, ...) {
 #'
 #' @keywords internal
 gas_filter_r <- function(eta, order, p, q, omega, a, b, db, f0, df0,
-                         i_a, np, score, curvature) {
+                         i_a, np, score, curvature, d0 = numeric(0)) {
   n <- length(eta)
   eta_out <- numeric(n)
   jac <- matrix(0, n, np)
   cv <- numeric(n)
+  direct <- length(d0) > 0L
 
-  for (rows in order) {
+  for (l in seq_along(order)) {
+    rows <- order[[l]]
     m <- length(rows)
     f <- numeric(m)
     df <- matrix(0, m, np)
     s <- numeric(m)
     ds <- matrix(0, m, np)
+    # with a static start the first level is given and does not depend on
+    # the parameters, and the levels before it equal it
+    if (direct) {
+      f0 <- d0[[l]]
+      df0 <- numeric(np)
+    }
 
     for (t in seq_len(m)) {
+      if (direct && t == 1L) {
+        f[t] <- f0
+        df[t, ] <- 0
+        e_t <- eta[rows[t]] + f[t]
+        s[t] <- score(e_t, rows[t])
+        cv[rows[t]] <- curvature(e_t, rows[t])
+        ds[t, ] <- 0
+        next
+      }
       f[t] <- omega
       df[t, ] <- 0
       df[t, 1L] <- 1
@@ -2652,12 +2776,21 @@ S7::method(term_static_deriv, GasTerm) <- function(term, curv, X, psi, ...) {
     for (j in seq_len(q)) B[, j] <- bd$B[, j]
   }
   U <- matrix(0, n, k)
+  static <- .gas_static(term)
   for (rows in bp$order) {
     m <- length(rows)
     u <- matrix(0, m, k)
     dv <- matrix(0, m, k)
+    # with a static start the first level is c - X[first row, ] b, so its
+    # derivative is minus that row and the first predictor does not move
+    u0 <- if (static) -X[rows[[1L]], ] else numeric(k)
     for (t in seq_len(m)) {
       r <- rows[[t]]
+      if (static && t == 1L) {
+        u[t, ] <- u0
+        dv[t, ] <- 0
+        next
+      }
       ut <- numeric(k)
       if (p > 0L) {
         for (i in seq_len(p)) {
@@ -2666,7 +2799,11 @@ S7::method(term_static_deriv, GasTerm) <- function(term, curv, X, psi, ...) {
       }
       if (q > 0L) {
         for (j in seq_len(q)) {
-          if (t - j >= 1L) ut <- ut + B[r, j] * u[t - j, ]
+          if (t - j >= 1L) {
+            ut <- ut + B[r, j] * u[t - j, ]
+          } else if (static) {
+            ut <- ut + B[r, j] * u0
+          }
         }
       }
       u[t, ] <- ut
