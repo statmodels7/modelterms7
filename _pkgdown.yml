@@ -128,6 +128,8 @@ reference:
   - seg_polish_exact
   - seg_profile_intervals
   - seg_hold
+  - seg_pin
+  - seg_limits
 - title: Structural terms
   desc: >
     Terms that rewrite the likelihood instead of adding to the

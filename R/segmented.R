@@ -1039,10 +1039,15 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
     pk[[k]] <- .seg_pk(bp, coef, k, prev[[k]])
     z <- Z[[paste0("psi", k)]]
     v <- if (is.null(z)) rep(pk[[k]], n) else as.numeric(z %*% pk[[k]])
-    psi[, k] <- pmin(pmax(v, bp$lim[1L]), bp$lim[2L])
+    lm <- .seg_lim(bp, k)
+    psi[, k] <- pmin(pmax(v, lm[1L]), lm[2L])
   }
   list(psi = psi, pk = pk)
 }
+
+# The confinement interval of break-point k: the term's own, unless seg_pin()
+# narrowed it to one side of a break-point that is held.
+.seg_lim <- function(bp, k) if (is.null(bp$lims)) bp$lim else bp$lims[k, ]
 
 # WHICH SIDE OF A BREAK-POINT AN OBSERVATION SITTING ON IT IS READ ON. The
 # truncated line (x - psi)_+ is continuous there and its derivative in the
@@ -1072,7 +1077,10 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 # | g), smoothed = smooth_probit()) with the break-point below the 5th
 # percentile, the objective was constant to the sixth decimal along the
 # break-point's intercept and the block's gradient read 145 there.
-.seg_inside <- function(bp, psi) psi > bp$lim[1L] & psi < bp$lim[2L]
+.seg_inside <- function(bp, psi, k) {
+  lm <- .seg_lim(bp, k)
+  psi > lm[1L] & psi < lm[2L]
+}
 
 # The rescaled covariate of Fasola, Muggeo and Kuchenhoff: the two
 # intervals on either side of the break-point are shrunk towards the
@@ -1124,7 +1132,7 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   if (bp$kind == "seg") {
     for (k in seq_len(K)) {
       put(paste0("psi", k), -gam[[k]] * .seg_active(bp, xv, psi[, k]) *
-            .seg_inside(bp, psi[, k]))
+            .seg_inside(bp, psi[, k], k))
     }
   } else {
     W <- vector("list", K)
@@ -1157,8 +1165,10 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
   del <- if (bp$kind == "seg") numeric(0) else coef[off + d + seq_len(K)]
   # the positions are read from the coefficient vectors rather than off the
   # matrix of values, which has no rows to read where the subset is empty
-  psi1 <- pmin(pmax(vapply(pos$pk, function(v) v[1L], numeric(1)),
-                    bp$lim[1L]), bp$lim[2L])
+  psi1 <- vapply(seq_len(K), function(k) {
+    lm <- .seg_lim(bp, k)
+    min(max(pos$pk[[k]][1L], lm[1L]), lm[2L])
+  }, numeric(1))
   out <- seg_block_cpp(switch(bp$kind, seg = 0L, jump = 1L, jseg = 2L),
                        xv, psi1, gam, del, cscale,
                        if (bp$linear) coef[1L] else 0, bp$linear,
@@ -1170,7 +1180,8 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
     # linearization, which is not a derivative to gate
     pc <- ncol(X) - K + seq_len(K)
     X[, pc] <- X[, pc, drop = FALSE] *
-      rep(as.numeric(.seg_inside(bp, psi1)), each = nrow(X))
+      rep(vapply(seq_len(K), function(k) as.numeric(.seg_inside(bp, psi1[k], k)),
+                 numeric(1)), each = nrow(X))
   }
   list(X = X, value = out$value, psi = pos$psi, pk = pos$pk)
 }
@@ -1246,7 +1257,7 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
       value <- value + del * S
       dpsi <- dpsi + del * s2 / 2
     }
-    put(paste0("psi", k), -dpsi * .seg_inside(bp, psi[, k]))
+    put(paste0("psi", k), -dpsi * .seg_inside(bp, psi[, k], k))
   }
   list(X = .nl_bind(cols[bp$params]), value = value, psi = psi, pk = pos$pk)
 }
@@ -1727,7 +1738,7 @@ S7::method(term_jacobian_block, SegTerm) <- function(term, ...) {
     S = (1 + .seg_sw(sm$sm, u, wv, 1L)) / 2,
     P = .seg_sw(sm$sm, u, wv, 2L) / 2,
     T = .seg_sw(sm$sm, u, wv, 3L) / 2,
-    free = as.numeric(v > bp$lim[1L] & v < bp$lim[2L])
+    free = as.numeric(v > .seg_lim(bp, k)[1L] & v < .seg_lim(bp, k)[2L])
   )
   if (order >= 4L) out$Q <- .seg_sw(sm$sm, u, wv, 4L) / 2
   out
@@ -1924,7 +1935,7 @@ S7::method(term_block_contract, SegTerm) <- function(term, coef = NULL, A,
     zp <- bp$Z[[pk]]
     v <- if (is.null(zp)) rep(pos$pk[[k]], n) else
       as.numeric(as.matrix(zp) %*% pos$pk[[k]])
-    free <- as.numeric(v > bp$lim[1L] & v < bp$lim[2L])
+    free <- as.numeric(v > .seg_lim(bp, k)[1L] & v < .seg_lim(bp, k)[2L])
 
     # the truncated line (x - psi)_+ has derivative -1(x > psi) in the
     # break-point: bounded, and existing everywhere but at the point itself
@@ -1980,7 +1991,7 @@ S7::method(term_block_deriv, SegTerm) <- function(term, coef = NULL, v, ...) {
     zp <- bp$Z[[pk]]
     vv <- if (is.null(zp)) rep(pos$pk[[k]], n) else
       as.numeric(as.matrix(zp) %*% pos$pk[[k]])
-    free <- as.numeric(vv > bp$lim[1L] & vv < bp$lim[2L])
+    free <- as.numeric(vv > .seg_lim(bp, k)[1L] & vv < .seg_lim(bp, k)[2L])
     # the change column moves with the position, and the position column with
     # the change: the same two pieces term_block_contract() carries, read the
     # other way round
@@ -2042,7 +2053,7 @@ S7::method(term_kinks, SegTerm) <- function(term, coef = NULL, ...) {
   for (k in seq_len(bp$npsi)) {
     psi <- pos$psi[, k]
     on <- which(abs(bp$xv - psi) <= tie &
-                  psi > bp$lim[1L] & psi < bp$lim[2L])
+                  psi > .seg_lim(bp, k)[1L] & psi < .seg_lim(bp, k)[2L])
     if (!length(on)) next
     pk <- paste0("psi", k)
     idx <- bp$index[[pk]]
@@ -2101,7 +2112,7 @@ S7::method(term_kink_constraints, SegTerm) <- function(term, coef = NULL,
   for (k in seq_len(bp$npsi)) {
     psi <- pos$psi[, k]
     on <- which(abs(bp$xv - psi) <= tie &
-                  psi > bp$lim[1L] & psi < bp$lim[2L])
+                  psi > .seg_lim(bp, k)[1L] & psi < .seg_lim(bp, k)[2L])
     if (!length(on)) next
     idx <- bp$index[[paste0("psi", k)]]
     z <- bp$Z[[paste0("psi", k)]]
@@ -2216,8 +2227,15 @@ S7::method(term_block_deriv2, SegTerm) <- function(term, coef = NULL, v, u,
     return(NULL)
   }
   pos <- psi_new[1L, ]
-  o <- order(pos)
-  if (!is.unsorted(pos, strictly = FALSE)) return(NULL)
+  # the labels are exchanged within a group of break-points, and a held one
+  # is a group of its own, so that it keeps its coefficients (see seg_pin())
+  grp <- if (is.null(bp$group)) rep(1L, K) else bp$group
+  o <- seq_len(K)
+  for (g in unique(grp)) {
+    s <- which(grp == g)
+    o[s] <- s[order(pos[s])]
+  }
+  if (identical(o, seq_len(K))) return(NULL)
   relabel <- function(pref) {
     for (j in seq_len(K)) {
       coef[bp$index[[paste0(pref, j)]]] <<-
@@ -3493,7 +3511,8 @@ S7::method(term_readable, SegTerm) <- function(term, zeta, ...) {
   # so that this and seg_psi() cannot report two numbers for one quantity
   pos_at <- function(k) {
     v <- .seg_pk(bp, cf, k, bp$pk[[k]])
-    min(max(v, bp$lim[1L]), bp$lim[2L])
+    lm <- .seg_lim(bp, k)
+    min(max(v, lm[1L]), lm[2L])
   }
   for (k in seq_len(K)) {
     if (dev(paste0("psi", k))) {
