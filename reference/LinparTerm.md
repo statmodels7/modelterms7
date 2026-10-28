@@ -208,7 +208,7 @@ S7::S7_inherits(tm, LinparTerm)
 #> [1] TRUE
 tm@formula
 #> ~x + g
-#> <environment: 0x56380bbf6118>
+#> <environment: 0x55d2f512b148>
 
 # The property keeps the value given; the blueprint records the storage
 # that the build used, and a prediction reads the blueprint.

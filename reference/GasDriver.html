@@ -13,7 +13,7 @@ p_cross. gas_joint() creates it from its argument drivers."><meta property="og:i
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -170,6 +170,22 @@ loads, or an empty vector for a term that loads its own score only.</p></dd>
 <dd><p>The distribution parameters whose scores the level of
 this term loads besides its own, in the order of their loadings. It is
 empty until <code><a href="gas_joint.html">gas_joint()</a></code> fills it from <code>p_cross</code>.</p></dd>
+
+
+<dt id="arg-init">init<a class="anchor" aria-label="anchor" href="#arg-init"></a></dt>
+<dd><p>How the recursion starts: <code>"level"</code>, at the fixed point of the
+recursion, or <code>"static"</code>, with the first predictor of every group equal
+to the constant <code>init_value</code>.</p></dd>
+
+
+<dt id="arg-init-value">init_value<a class="anchor" aria-label="anchor" href="#arg-init-value"></a></dt>
+<dd><p>The constants of a <code>"static"</code> start, one for every group
+or one for all of them, which a fitting layer sets; empty until then.</p></dd>
+
+
+<dt id="arg-init-source">init_source<a class="anchor" aria-label="anchor" href="#arg-init-source"></a></dt>
+<dd><p>The model without the term from which a fitting layer
+computed <code>init_value</code>, or <code>NULL</code> when it is not recorded.</p></dd>
 
 </dl></div>
     <div class="section level2">

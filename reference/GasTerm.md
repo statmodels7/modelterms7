@@ -145,6 +145,22 @@ GasTerm(
   [`gas_joint()`](https://statmodels7.github.io/modelterms7/reference/gas_joint.md)
   fills it from `p_cross`.
 
+- init:
+
+  How the recursion starts: `"level"`, at the fixed point of the
+  recursion, or `"static"`, with the first predictor of every group
+  equal to the constant `init_value`.
+
+- init_value:
+
+  The constants of a `"static"` start, one for every group or one for
+  all of them, which a fitting layer sets; empty until then.
+
+- init_source:
+
+  The model without the term from which a fitting layer computed
+  `init_value`, or `NULL` when it is not recorded.
+
 ## Value
 
 An S7 object of class `GasTerm`, inheriting from

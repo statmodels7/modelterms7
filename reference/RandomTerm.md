@@ -188,7 +188,7 @@ S7::S7_inherits(tm, RandomTerm)
 #> [1] TRUE
 tm@formula
 #> ~x | g
-#> <environment: 0x56380b0269a0>
+#> <environment: 0x55d2ef9074b0>
 tm@correlated
 #> [1] TRUE
 
