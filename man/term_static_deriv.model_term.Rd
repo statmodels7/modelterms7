@@ -6,7 +6,7 @@
 \arguments{
 \item{term}{A term.}
 
-\item{curv, X, psi}{Ignored.}
+\item{curvature, X, psi}{Ignored.}
 
 \item{...}{Ignored.}
 }

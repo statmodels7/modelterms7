@@ -448,7 +448,7 @@ term_filter <- S7::new_generic("term_filter", "term",
 #' nothing from the term.
 #'
 #' @param term A built structural term.
-#' @param curv The curvature at each predictor, as `term_filter`
+#' @param curvature The curvature at each predictor, as `term_filter`
 #'   returns it.
 #' @param X The directions to propagate, one column each. Ordinarily `X` is
 #'   the equation's design, so the result has one row per observation and one
@@ -476,7 +476,7 @@ term_filter <- S7::new_generic("term_filter", "term",
 #' @seealso [term_filter()], [term_adjoint()]
 #' @export
 term_static_deriv <- S7::new_generic("term_static_deriv", "term",
-  function(term, curv, X, psi, ...) S7::S7_dispatch())
+  function(term, curvature, X, psi, ...) S7::S7_dispatch())
 
 #' @title Continuing a Structural Term Past the Observed Series
 #'
@@ -615,13 +615,13 @@ S7::method(term_continue, model_term) <- function(term, psi, f_past, s_past,
 #' The base method returns `NULL`: an ordinary term's contribution at
 #' one observation reads only that observation.
 #' @param term A term.
-#' @param curv,X,psi Ignored.
+#' @param curvature,X,psi Ignored.
 #' @param ... Ignored.
 #' @return `NULL`.
 #' @seealso [term_static_deriv()]
 #' @keywords internal
-S7::method(term_static_deriv, model_term) <- function(term, curv, X, psi,
-                                                      ...) {
+S7::method(term_static_deriv, model_term) <- function(term, curvature, X,
+                                                      psi, ...) {
   NULL
 }
 

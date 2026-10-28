@@ -2746,7 +2746,7 @@ gas_filter_r <- function(eta, order, p, q, omega, a, b, db, f0, df0,
 #' data, carrying all the columns of `X` together.
 #'
 #' @param term A built score-driven term.
-#' @param curv The curvature at each predictor.
+#' @param curvature The curvature at each predictor.
 #' @param X The directions to propagate.
 #' @param psi The term's parameters, on the parameter scale.
 #' @param ... Ignored.
@@ -2756,7 +2756,8 @@ gas_filter_r <- function(eta, order, p, q, omega, a, b, db, f0, df0,
 #' @seealso [term_static_deriv()], [term_filter()]
 #'
 #' @keywords internal
-S7::method(term_static_deriv, GasTerm) <- function(term, curv, X, psi, ...) {
+S7::method(term_static_deriv, GasTerm) <- function(term, curvature, X,
+                                                    psi, ...) {
   bp <- term@build_info
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
@@ -2814,7 +2815,7 @@ S7::method(term_static_deriv, GasTerm) <- function(term, curv, X, psi, ...) {
         }
       }
       u[t, ] <- ut
-      dv[t, ] <- curv[[r]] * (X[r, ] + ut)
+      dv[t, ] <- curvature[[r]] * (X[r, ] + ut)
     }
     U[rows, ] <- u
   }
@@ -2926,12 +2927,12 @@ S7::method(term_continue, GasTerm) <- function(term, psi, f_past, s_past,
     dB_new <- lapply(seq_len(q), function(j) row_of(cf$db[j, ]))
   } else {
     v <- .gas_sub_new(term, u, newdata)
-    om_new <- v$om
+    om_new <- v$omega
     A_new <- v$A
     B_new <- v$B
-    dom_new <- v$dom
-    dA_new <- v$dA
-    dB_new <- v$dB
+    dom_new <- v$d_omega
+    dA_new <- v$d_A
+    dB_new <- v$d_B
   }
 
   # THE DERIVATIVE OF THE CONTINUATION, where the caller asks for one. The

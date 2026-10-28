@@ -196,12 +196,12 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
     }
     if (length(tm@build_info) && !is.null(tm@build_info$sub)) {
       nd <- .gas_sub_new(tm, v[seq_len(nb)], newdata)
-      om <- nd$om
+      om <- nd$omega
       A <- nd$A
       B <- nd$B
-      dom <- lifted(nd$dom)
-      dA <- lapply(nd$dA, lifted)
-      dB <- lapply(nd$dB, lifted)
+      dom <- lifted(nd$d_omega)
+      dA <- lapply(nd$d_A, lifted)
+      dB <- lapply(nd$d_B, lifted)
     } else {
       base <- .gas_base_params(p, q)
       cf <- .gas_coefs(v[base], p, q)

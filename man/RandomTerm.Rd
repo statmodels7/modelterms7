@@ -19,7 +19,7 @@ RandomTerm(
   formula = NULL,
   correlated = logical(0),
   distrib = NULL,
-  tag = character(0)
+  cov_label = character(0)
 )
 }
 \arguments{
@@ -77,7 +77,7 @@ within-group effects correlate. Read only when \code{distrib} is \code{NULL}.}
 a list of them with one per within-group column, or \code{NULL} for the
 default Gaussian.}
 
-\item{tag}{The covariance label from the middle of two bars, or
+\item{cov_label}{The covariance label from the middle of two bars, or
 \code{NA_character_}.}
 }
 \value{
@@ -99,10 +99,10 @@ within-group effects depend on each other. It is read only where \code{distrib}
 is \code{NULL}, since a distribution given in \code{distrib} determines the same
 thing.
 
-\code{tag} is the covariance label written between two bars, \code{~ 1 | u | g}, or
+\code{cov_label} is the covariance label written between two bars, \code{~ 1 | u | g}, or
 \code{NA_character_} where the formula carries one bar. It is reported by
-\code{\link[=term_tag]{term_tag()}}. The \code{tag} and \code{correlated} differ in scope: \code{correlated}
-concerns the columns of this term, and \code{tag} the columns of other terms.
+\code{\link[=term_tag]{term_tag()}}. The \code{cov_label} and \code{correlated} differ in scope: \code{correlated}
+concerns the columns of this term, and \code{cov_label} the columns of other terms.
 
 \code{distrib} is the effects' distribution as supplied, or \code{NULL} for the
 default. The build turns it into a \pkg{penalties7} penalty, read through

@@ -13,7 +13,7 @@
 A single string, possibly \code{NA_character_}.
 }
 \description{
-Returns the term's \code{tag} as a single string, \code{NA_character_} where it
+Returns the term's \code{cov_label} as a single string, \code{NA_character_} where it
 carries none.
 }
 \details{

@@ -1620,8 +1620,8 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
 .seg_sub_factory <- function(subs, name) {
   lb <- sub("::.*$", "", name)
   tm <- subs[[lb]]
-  if (is.null(tm) || !("factory" %in% S7::prop_names(tm))) return(NULL)
-  tm@factory
+  if (is.null(tm) || !("penalty_fun" %in% S7::prop_names(tm))) return(NULL)
+  tm@penalty_fun
 }
 
 #' @title Penalties of a Break-Point Term

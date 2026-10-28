@@ -16,7 +16,7 @@ RegimeTerm(
   k = integer(0),
   by = NULL,
   time = NULL,
-  chain = NULL,
+  transition = NULL,
   n_start = integer(0)
 )
 }
@@ -62,7 +62,7 @@ recursion. \code{NULL} means one group.}
 
 \item{time}{An optional ordering expression. \code{NULL} means row order.}
 
-\item{chain}{A \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}} of side \code{k}.}
+\item{transition}{A \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}} of side \code{k}.}
 
 \item{n_start}{The number of starting points that a fitting layer tries, a
 single whole number of at least 1, as set by \code{\link[=regime]{regime()}}.}
@@ -86,7 +86,7 @@ expressions as written, kept unevaluated. A \code{by} of \code{NULL} means one g
 and a \code{time} of \code{NULL} means that the rows are taken in the order in which
 they are given.
 
-\code{chain} is the \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}} object, whose free values
+\code{transition} is the \code{\link[parameters7:transition_matrix]{parameters7::transition_matrix()}} object, whose free values
 are the additive log-ratios of each row, so every row is a probability
 vector at any coordinate. Its \code{free_names} are the tail of
 \code{\link[=term_params]{term_params()}}.
@@ -105,7 +105,7 @@ dd <- data.frame(t = 1:40, y = c(rnorm(20), rnorm(20, 3)))
 
 tm <- regime(2, time = t)
 S7::S7_inherits(tm, RegimeTerm)
-c(k = tm@k, chain = class(tm@chain)[1])
+c(k = tm@k, transition = class(tm@transition)[1])
 
 # The build resolves the order and fills the build_info.
 b <- term_build(tm, dd)

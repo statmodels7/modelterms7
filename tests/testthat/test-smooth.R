@@ -161,8 +161,8 @@ test_that("a tensor penalty does not depend on the units of its covariates", {
   # the same and the penalty is the only thing the units could reach
   expect_equal(unname(term_matrix(b1)), unname(term_matrix(b2)))
 
-  c1 <- term_penalty(b1)@mats
-  c2 <- term_penalty(b2)@mats
+  c1 <- term_penalty(b1)@matrices
+  c2 <- term_penalty(b2)@matrices
   expect_equal(c1, c2)
 
   # and the two components are of comparable size, which is what a rule that

@@ -62,7 +62,7 @@ S7::method(term_charted, RegimeTerm) <- function(term, ...) {
   lk <- term_links(term)
   nm <- names(lk)[!vapply(lk, function(l) identical(l@link_name, "identity"),
                           logical(1))]
-  c(nm, term@chain@free_names)
+  c(nm, term@transition@free_names)
 }
 
 S7::method(term_charted, NlTerm) <- function(term, ...) {

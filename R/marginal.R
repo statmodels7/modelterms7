@@ -1255,7 +1255,7 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
   h <- rep((hi_pts - lo_pts) / 2, each = nn)
   mid <- rep((hi_pts + lo_pts) / 2, each = nn)
   p <- mid + h * gk$nodes
-  wk <- rep(gk$wk, np)
+  wk <- rep(gk$kronrod_weights, np)
   z <- (p - m) / tau
   lw <- log(wk * h) + stats::dnorm(z, log = TRUE) - log(tau)
   is_edge <- rep(edge, each = nn)
@@ -1397,7 +1397,8 @@ S7::method(term_loglik, MarginalBreakTerm) <- function(term, eta, y, logdens,
   gk <- numericals7::gauss_kronrod15()
   zn <- (xs[length(xs)] - m) / tau
   mr <- numericals7::mills_ratio(-zn)$r
-  marg_seg_nodes_cpp(as.numeric(xs), m, tau, gk$nodes, gk$wk, mr)
+  marg_seg_nodes_cpp(as.numeric(xs), m, tau, gk$nodes, gk$kronrod_weights,
+                     mr)
 }
 
 .marg_seg_shift <- function(term, xg, nd, v) {

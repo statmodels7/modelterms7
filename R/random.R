@@ -20,10 +20,10 @@ NULL
 #' is `NULL`, since a distribution given in `distrib` determines the same
 #' thing.
 #'
-#' `tag` is the covariance label written between two bars, `~ 1 | u | g`, or
+#' `cov_label` is the covariance label written between two bars, `~ 1 | u | g`, or
 #' `NA_character_` where the formula carries one bar. It is reported by
-#' [term_tag()]. The `tag` and `correlated` differ in scope: `correlated`
-#' concerns the columns of this term, and `tag` the columns of other terms.
+#' [term_tag()]. The `cov_label` and `correlated` differ in scope: `correlated`
+#' concerns the columns of this term, and `cov_label` the columns of other terms.
 #'
 #' `distrib` is the effects' distribution as supplied, or `NULL` for the
 #' default. The build turns it into a \pkg{penalties7} penalty, read through
@@ -45,7 +45,7 @@ NULL
 #' @param distrib The effects' distribution, a \pkg{distributions7} object or
 #'   a list of them with one per within-group column, or `NULL` for the
 #'   default Gaussian.
-#' @param tag The covariance label from the middle of two bars, or
+#' @param cov_label The covariance label from the middle of two bars, or
 #'   `NA_character_`.
 #'
 #' @return An S7 object of class `RandomTerm`, inheriting from
@@ -81,7 +81,7 @@ RandomTerm <- S7::new_class(
     formula = S7::class_any,
     correlated = S7::class_logical,
     distrib = S7::class_any,
-    tag = S7::class_character
+    cov_label = S7::class_character
   )
 )
 
@@ -423,7 +423,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
     }
     return(RandomSmoothTerm(
       label = label, formula = formula, correlated = correlated,
-      distrib = distrib, tag = parts$tag,
+      distrib = distrib, cov_label = parts$tag,
       hyper = as_hyper(hyper, label),
       ids = check_ids(id, NULL, label),
       X = NULL, coef_names = character(0),
@@ -431,7 +431,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
       smooth = sm$term, intercept = sm$intercept))
   }
   RandomTerm(label = label, formula = formula, correlated = correlated,
-             distrib = distrib, tag = parts$tag,
+             distrib = distrib, cov_label = parts$tag,
              hyper = as_hyper(hyper, label),
              ids = check_ids(id, NULL, label),
              X = NULL, coef_names = character(0),
@@ -1058,7 +1058,7 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
 #' The Label of a Random-Effect Term, Normalized
 #'
 #' @description
-#' Returns the term's `tag` as a single string, `NA_character_` where it
+#' Returns the term's `cov_label` as a single string, `NA_character_` where it
 #' carries none.
 #'
 #' @details
@@ -1073,7 +1073,8 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
 #'
 #' @keywords internal
 .random_tag <- function(term) {
-  if (!length(term@tag)) NA_character_ else as.character(term@tag)[1L]
+  if (!length(term@cov_label)) NA_character_ else
+    as.character(term@cov_label)[1L]
 }
 
 #' A Labelled Random-Effect Term, Built Without a Penalty

@@ -1144,14 +1144,14 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 #'
 #' @return A list with the following elements:
 #'   \describe{
-#'     \item{`om`}{numeric, one \eqn{\omega_t} per row of `newdata`.}
+#'     \item{`omega`}{numeric, one \eqn{\omega_t} per row of `newdata`.}
 #'     \item{`A`}{`nrow(newdata)` by `p`, the score loadings.}
 #'     \item{`B`}{`nrow(newdata)` by `q`, the autoregressive coefficients,
 #'       obtained by applying Levinson-Durbin row by row. At \eqn{q = 0} it is a
 #'       zero-column matrix.}
-#'     \item{`dom`, `dA`, `dB`}{the derivatives of `om`, of each column of
-#'       `A` and of each column of `B` with respect to `u`, each a
-#'       `nrow(newdata)` by `length(u)` matrix (`dA` and `dB` are lists of
+#'     \item{`d_omega`, `d_A`, `d_B`}{the derivatives of `omega`, of each
+#'       column of `A` and of each column of `B` with respect to `u`, each a
+#'       `nrow(newdata)` by `length(u)` matrix (`d_A` and `d_B` are lists of
 #'       them).}
 #'   }
 #'
@@ -1213,6 +1213,6 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
     }
   }
   xn <- .gas_cross_params(term)
-  list(om = v$omega, A = A, B = B, dom = dv$omega, dA = dA, dB = dB,
-       cross = v[xn], dcross = dv[xn])
+  list(omega = v$omega, A = A, B = B, d_omega = dv$omega, d_A = dA,
+       d_B = dB, cross = v[xn], dcross = dv[xn])
 }

@@ -4,12 +4,12 @@
 \alias{term_static_deriv}
 \title{The Derivative of a Filtered Predictor in the Static One}
 \usage{
-term_static_deriv(term, curv, X, psi, ...)
+term_static_deriv(term, curvature, X, psi, ...)
 }
 \arguments{
 \item{term}{A built structural term.}
 
-\item{curv}{The curvature at each predictor, as \code{term_filter}
+\item{curvature}{The curvature at each predictor, as \code{term_filter}
 returns it.}
 
 \item{X}{The directions to propagate, one column each. Ordinarily \code{X} is

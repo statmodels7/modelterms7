@@ -6,7 +6,7 @@
 \arguments{
 \item{term}{A built score-driven term.}
 
-\item{curv}{The curvature at each predictor.}
+\item{curvature}{The curvature at each predictor.}
 
 \item{X}{The directions to propagate.}
 

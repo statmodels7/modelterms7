@@ -139,7 +139,7 @@ S7::method(term_loglik, structural_term) <- function(term, eta, y, logdens,
 #' and a `time` of `NULL` means that the rows are taken in the order in which
 #' they are given.
 #'
-#' `chain` is the [parameters7::transition_matrix()] object, whose free values
+#' `transition` is the [parameters7::transition_matrix()] object, whose free values
 #' are the additive log-ratios of each row, so every row is a probability
 #' vector at any coordinate. Its `free_names` are the tail of
 #' [term_params()].
@@ -156,7 +156,7 @@ S7::method(term_loglik, structural_term) <- function(term, eta, y, logdens,
 #' @param by An optional grouping expression; each group runs its own
 #'   recursion. `NULL` means one group.
 #' @param time An optional ordering expression. `NULL` means row order.
-#' @param chain A [parameters7::transition_matrix()] of side `k`.
+#' @param transition A [parameters7::transition_matrix()] of side `k`.
 #' @param build_info A named list of the resolved ordering and grouping, empty
 #'   until [term_build()] fills it.
 #' @param n_start The number of starting points that a fitting layer tries, a
@@ -177,7 +177,7 @@ S7::method(term_loglik, structural_term) <- function(term, eta, y, logdens,
 #'
 #' tm <- regime(2, time = t)
 #' S7::S7_inherits(tm, RegimeTerm)
-#' c(k = tm@k, chain = class(tm@chain)[1])
+#' c(k = tm@k, transition = class(tm@transition)[1])
 #'
 #' # The build resolves the order and fills the build_info.
 #' b <- term_build(tm, dd)
@@ -194,7 +194,7 @@ RegimeTerm <- S7::new_class(
     k = S7::class_integer,
     by = S7::class_any,
     time = S7::class_any,
-    chain = S7::class_any,
+    transition = S7::class_any,
     n_start = S7::class_integer
   )
 )
@@ -360,7 +360,7 @@ regime <- function(k = 2, by = NULL, time = NULL, label = "regime",
   k <- as.integer(k)
   RegimeTerm(label = label, k = k,
              by = substitute(by), time = substitute(time),
-             chain = parameters7::transition_matrix(k),
+             transition = parameters7::transition_matrix(k),
              n_start = as.integer(n_start),
              build_info = list())
 }
@@ -401,7 +401,7 @@ regime <- function(k = 2, by = NULL, time = NULL, label = "regime",
 S7::method(term_params, RegimeTerm) <- function(term, ...) {
   c("level1",
     if (term@k > 1L) paste0("gap", seq.int(2L, term@k)),
-    term@chain@free_names)
+    term@transition@free_names)
 }
 
 #' @title The Level of a Regime Term
@@ -442,13 +442,13 @@ S7::method(term_level_param, RegimeTerm) <- function(term, ...) "level1"
 S7::method(term_readable, RegimeTerm) <- function(term, zeta, ...) {
   nm <- term_params(term)
   out <- S7::method(term_readable, model_term)(term, zeta)
-  fr <- term@chain@free_names
+  fr <- term@transition@free_names
   keep <- !(nm %in% fr)
   k <- term@k
   z <- unlist(zeta[nm])
   eta <- z[fr]
-  P <- as.matrix(parameters7::param_value(term@chain, eta))
-  dP <- parameters7::param_d1(term@chain, eta)
+  P <- as.matrix(parameters7::param_value(term@transition, eta))
+  dP <- parameters7::param_d1(term@transition, eta)
   ij <- expand.grid(j = seq_len(k), i = seq_len(k))[, c("i", "j")]
   pn <- sprintf("p%d.%d", ij$i, ij$j)
   Jp <- matrix(0, nrow(ij), length(nm), dimnames = list(pn, nm))
@@ -776,14 +776,14 @@ S7::method(term_loglik, RegimeTerm) <- function(term, eta, y, logdens, score,
   # the chain and its derivatives, from parameters7
   n_lev <- k
   i_tr <- (1L + (k - 1L)) + seq_len(k * (k - 1L))
-  eta_tr <- v[term@chain@free_names]
-  P <- parameters7::param_value(term@chain, eta_tr)
-  dP_list <- parameters7::param_d1(term@chain, eta_tr)
+  eta_tr <- v[term@transition@free_names]
+  P <- parameters7::param_value(term@transition, eta_tr)
+  dP_list <- parameters7::param_d1(term@transition, eta_tr)
   # widened to the term's own parameter vector: zero outside the chain's slots
   dP <- vector("list", np)
   for (i in seq_len(np)) dP[[i]] <- matrix(0, k, k)
-  for (i in seq_along(term@chain@free_names)) {
-    dP[[i_tr[i]]] <- dP_list[[term@chain@free_names[i]]]
+  for (i in seq_along(term@transition@free_names)) {
+    dP[[i_tr[i]]] <- dP_list[[term@transition@free_names[i]]]
   }
 
   st <- regime_stationary(P, dP)
@@ -937,7 +937,7 @@ S7::method(term_posterior, RegimeTerm) <- function(term, eta, y, logdens,
          call. = FALSE)
   }
   mu <- cumsum(c(v[["level1"]], gaps))
-  P <- parameters7::param_value(term@chain, v[term@chain@free_names])
+  P <- parameters7::param_value(term@transition, v[term@transition@free_names])
   st <- regime_stationary(P, list())
   delta <- st$delta
 
@@ -1268,7 +1268,7 @@ S7::method(term_scores, structural_term) <- function(term, eta, y, logdens,
   }
   w <- .structural_weights(weights, n)
 
-  ch <- .regime_chart(v, k, nm, term@chain)
+  ch <- .regime_chart(v, k, nm, term@transition)
   np <- ch$np
 
   # every regime shifts one predictor by a level of its own, so the
@@ -1642,7 +1642,7 @@ S7::method(term_simulate, RegimeTerm) <- function(term, psi, eta, draw, ...) {
   k <- term@k
   v <- unlist(psi[term_params(term)])
   mu <- term_levels(term, psi)
-  P <- parameters7::param_value(term@chain, v[term@chain@free_names])
+  P <- parameters7::param_value(term@transition, v[term@transition@free_names])
   A <- diag(k) - P
   A[, k] <- 1
   delta <- as.numeric(solve(t(A), c(rep(0, k - 1L), 1)))

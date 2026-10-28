@@ -18,7 +18,7 @@ filled. \code{penalty@n_coef} equals \code{ncol(X)}.
 \description{
 Builds the block of a \code{\link[=ridge]{ridge()}}, \code{\link[=lasso]{lasso()}}, \code{\link[=enet]{enet()}}, \code{\link[=scad]{scad()}} or \code{\link[=mcp]{mcp()}}
 term, names its coefficients, records the \code{build_info}, and calls the term's
-factory to produce the \pkg{penalties7} penalty over exactly that many
+\code{penalty_fun} to produce the \pkg{penalties7} penalty over exactly that many
 coefficients. The penalty exists only after this: a specification's
 \code{penalty} property is \code{NULL}, because its width is unknown until the data
 are seen.
@@ -47,8 +47,8 @@ With \code{standardize = TRUE} the column spreads come from \code{\link[=.block_
 into \code{build_info$standardize} and become a \code{\link[Matrix:Diagonal]{Matrix::Diagonal()}} map. The
 design is not touched, so a sparse block stays sparse.
 
-The map is passed to the factory as a second argument, and only when there
-is one. A factory written before standardization existed takes only the
+The map is passed to \code{penalty_fun} as a second argument, and only when there
+is one. A \code{penalty_fun} written before standardization existed takes only the
 count and goes on working, provided it is never standardized.
 }
 

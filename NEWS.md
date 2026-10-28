@@ -1,3 +1,11 @@
+# modelterms7 0.114.0
+
+* Renamed for readability: the property `factory` of `PenalizedTerm` is
+  `penalty_fun`; `tag` of `RandomTerm` and `RandomSmoothTerm` is
+  `cov_label`; `chain` of `RegimeTerm` is `transition`; the argument `curv`
+  of `term_static_deriv()` is `curvature`. Requires basis7 0.17.0,
+  numericals7 0.25.0 and penalties7 0.34.0.
+
 # modelterms7 0.113.0
 
 * The property `blueprint` of every model term is renamed `build_info`. It

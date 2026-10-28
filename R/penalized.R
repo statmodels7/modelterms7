@@ -21,9 +21,9 @@ NULL
 #' formula input as well, and it is read only for a matrix input, so that
 #' [term_predict()] can re-evaluate it in new data.
 #'
-#' `factory` maps a coefficient count to the penalty. The build calls it with
+#' `penalty_fun` maps a coefficient count to the penalty. The build calls it with
 #' the count, once the count is known, and with the diagonal map as a second
-#' argument when `standardize = TRUE`, so a factory that is never used with
+#' argument when `standardize = TRUE`, so a `penalty_fun` that is never used with
 #' standardization may take only the count.
 #'
 #' `standardize` is a single logical on the specification; after a build the
@@ -47,7 +47,7 @@ NULL
 #' @param input_expr The expression that produced the input, kept so that
 #'   [term_predict()] can re-evaluate a matrix input in new data. It is
 #'   recorded on the formula route as well, where it is not read.
-#' @param factory A function of the coefficient count, returning the
+#' @param penalty_fun A function of the coefficient count, returning the
 #'   \pkg{penalties7} penalty over that many coefficients, and taking the
 #'   diagonal map as a second argument when `standardize = TRUE`.
 #' @param sparse `TRUE`, `FALSE` or `NULL` for the formula route's storage;
@@ -93,7 +93,7 @@ PenalizedTerm <- S7::new_class(
   properties = list(
     input = S7::class_any,
     input_expr = S7::class_any,
-    factory = S7::class_function,
+    penalty_fun = S7::class_function,
     standardize = S7::new_property(S7::class_logical, default = FALSE),
     # the FORMULA route's storage. A matrix input is kept in whatever
     # storage it arrives in and needs no argument to say so. NULL until the
@@ -102,7 +102,7 @@ PenalizedTerm <- S7::new_class(
   )
 )
 
-.penalized_spec <- function(x, expr, label, standardize, factory,
+.penalized_spec <- function(x, expr, label, standardize, penalty_fun,
                             hyper = list(), extra = list(), grid = list(),
                             min_ratio = NULL, search = NULL, sparse = NULL,
                             ids = NULL, given = list()) {
@@ -116,7 +116,7 @@ PenalizedTerm <- S7::new_class(
   # written and then the hyperparameters, which is what the caller was most
   # likely reaching for, rather than claiming to list every argument.
   if (length(extra)) {
-    pen <- tryCatch(factory(1L), error = function(e) NULL)
+    pen <- tryCatch(penalty_fun(1L), error = function(e) NULL)
     stop(sprintf(paste0("'%s' has no argument '%s'.\n  Its hyperparameters",
                         " are: %s. Each is held by naming it and is estimated",
                         " when it is left NULL."),
@@ -157,23 +157,24 @@ PenalizedTerm <- S7::new_class(
       stop("a matrix input must be numeric.", call. = FALSE)
     }
   }
-  vals <- check_values(hyper, factory, label)
-  reject_pathless_values(vals, tryCatch(factory(1L), error = function(e) NULL),
+  vals <- check_values(hyper, penalty_fun, label)
+  reject_pathless_values(vals,
+                         tryCatch(penalty_fun(1L), error = function(e) NULL),
                          label)
-  held <- check_hyper(hyper, factory, label)
+  held <- check_hyper(hyper, penalty_fun, label)
   .reject_unswept_args(given, names(held), names(vals), names(grid), label)
   # a MATRIX input is kept in whatever storage it arrives in, so `sparse`
   # governs the FORMULA route, where the model matrix would otherwise be
   # built dense whatever the caller passed
   PenalizedTerm(label = label, input = x, input_expr = expr,
-                factory = factory, standardize = standardize,
+                penalty_fun = penalty_fun, standardize = standardize,
                 sparse = .check_design_opts(sparse, NULL, label)$sparse,
                 hyper = held,
                 values = vals,
-                grid = check_grid(grid, factory, label),
+                grid = check_grid(grid, penalty_fun, label),
                 min_ratio = check_min_ratio(min_ratio, label),
                 search = check_search(search, label),
-                ids = check_ids(ids, .factory_params(factory), label),
+                ids = check_ids(ids, .factory_params(penalty_fun), label),
                 X = NULL, coef_names = character(0),
                 build_info = list(), penalty = NULL)
 }
@@ -458,7 +459,7 @@ NULL
 #' @description
 #' Builds the block of a [ridge()], [lasso()], [enet()], [scad()] or [mcp()]
 #' term, names its coefficients, records the `build_info`, and calls the term's
-#' factory to produce the \pkg{penalties7} penalty over exactly that many
+#' `penalty_fun` to produce the \pkg{penalties7} penalty over exactly that many
 #' coefficients. The penalty exists only after this: a specification's
 #' `penalty` property is `NULL`, because its width is unknown until the data
 #' are seen.
@@ -489,8 +490,8 @@ NULL
 #' into `build_info$standardize` and become a [Matrix::Diagonal()] map. The
 #' design is not touched, so a sparse block stays sparse.
 #'
-#' The map is passed to the factory as a second argument, and only when there
-#' is one. A factory written before standardization existed takes only the
+#' The map is passed to `penalty_fun` as a second argument, and only when there
+#' is one. A `penalty_fun` written before standardization existed takes only the
 #' count and goes on working, provided it is never standardized.
 #'
 #' @param term An unbuilt or built [PenalizedTerm()].
@@ -588,8 +589,8 @@ S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
   # there is one: a subclass written before standardization existed carries a
   # one-argument factory, and it is never standardized, so the old contract
   # goes on working unchanged
-  term@penalty <- if (is.null(map)) term@factory(ncol(X)) else
-    term@factory(ncol(X), map)
+  term@penalty <- if (is.null(map)) term@penalty_fun(ncol(X)) else
+    term@penalty_fun(ncol(X), map)
   term
 }
 

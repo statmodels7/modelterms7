@@ -19,7 +19,7 @@ RandomSmoothTerm(
   formula = NULL,
   correlated = logical(0),
   distrib = NULL,
-  tag = character(0),
+  cov_label = character(0),
   smooth = NULL,
   intercept = logical(0)
 )
@@ -79,7 +79,7 @@ within-group effects correlate. Read only when \code{distrib} is \code{NULL}.}
 a list of them with one per within-group column, or \code{NULL} for the
 default Gaussian.}
 
-\item{tag}{The covariance label from the middle of two bars, or
+\item{cov_label}{The covariance label from the middle of two bars, or
 \code{NA_character_}.}
 
 \item{smooth}{The unbuilt \code{\link[=SmoothTerm]{SmoothTerm()}} of the left side of the bar.}

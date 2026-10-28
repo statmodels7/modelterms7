@@ -161,7 +161,7 @@ S7::method(term_shift_jacobian, RegimeTerm) <- function(term, eta, y, logdens,
   level <- ins$level
   npar <- length(seed)
 
-  ch <- .regime_chart(v, k, nm, term@chain)
+  ch <- .regime_chart(v, k, nm, term@transition)
   np <- ch$np
   P <- ch$P
   # the level of each regime and its derivative in the unknowns

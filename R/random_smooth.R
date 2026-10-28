@@ -173,7 +173,7 @@ RandomSmoothTerm <- S7::new_class(
     return(list(as.matrix(pen@P)))
   }
   if (S7::S7_inherits(pen, penalties7::AdditivePenalty)) {
-    return(lapply(pen@mats, as.matrix))
+    return(lapply(pen@matrices, as.matrix))
   }
   stop(paste0(
     "the smooth on the left side of the bar carries a penalty of its own (a\n",

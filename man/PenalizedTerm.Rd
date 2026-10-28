@@ -18,7 +18,7 @@ PenalizedTerm(
   penalty = NULL,
   input = NULL,
   input_expr = NULL,
-  factory = function() NULL,
+  penalty_fun = function() NULL,
   standardize = FALSE,
   sparse = NULL
 )
@@ -74,7 +74,7 @@ them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 \code{\link[=term_predict]{term_predict()}} can re-evaluate a matrix input in new data. It is
 recorded on the formula route as well, where it is not read.}
 
-\item{factory}{A function of the coefficient count, returning the
+\item{penalty_fun}{A function of the coefficient count, returning the
 \pkg{penalties7} penalty over that many coefficients, and taking the
 diagonal map as a second argument when \code{standardize = TRUE}.}
 
@@ -106,9 +106,9 @@ not restated here.
 formula input as well, and it is read only for a matrix input, so that
 \code{\link[=term_predict]{term_predict()}} can re-evaluate it in new data.
 
-\code{factory} maps a coefficient count to the penalty. The build calls it with
+\code{penalty_fun} maps a coefficient count to the penalty. The build calls it with
 the count, once the count is known, and with the diagonal map as a second
-argument when \code{standardize = TRUE}, so a factory that is never used with
+argument when \code{standardize = TRUE}, so a \code{penalty_fun} that is never used with
 standardization may take only the count.
 
 \code{standardize} is a single logical on the specification; after a build the

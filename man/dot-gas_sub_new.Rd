@@ -19,14 +19,14 @@ carrying every variable that the subformulas name.}
 \value{
 A list with the following elements:
 \describe{
-\item{\code{om}}{numeric, one \eqn{\omega_t} per row of \code{newdata}.}
+\item{\code{omega}}{numeric, one \eqn{\omega_t} per row of \code{newdata}.}
 \item{\code{A}}{\code{nrow(newdata)} by \code{p}, the score loadings.}
 \item{\code{B}}{\code{nrow(newdata)} by \code{q}, the autoregressive coefficients,
 obtained by applying Levinson-Durbin row by row. At \eqn{q = 0} it is a
 zero-column matrix.}
-\item{\code{dom}, \code{dA}, \code{dB}}{the derivatives of \code{om}, of each column of
-\code{A} and of each column of \code{B} with respect to \code{u}, each a
-\code{nrow(newdata)} by \code{length(u)} matrix (\code{dA} and \code{dB} are lists of
+\item{\code{d_omega}, \code{d_A}, \code{d_B}}{the derivatives of \code{omega}, of each
+column of \code{A} and of each column of \code{B} with respect to \code{u}, each a
+\code{nrow(newdata)} by \code{length(u)} matrix (\code{d_A} and \code{d_B} are lists of
 them).}
 }
 }

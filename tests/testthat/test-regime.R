@@ -324,7 +324,7 @@ test_that("term_hessian is the exact Hessian of the mixed likelihood", {
     ps <- psi_of(u)
     mu <- c(ps$level1, ps$level1 + ps$gap2)
     P <- parameters7::param_value(
-      tm@chain, c(alr1.1 = ps$alr1.1, alr2.1 = ps$alr2.1))
+      tm@transition, c(alr1.1 = ps$alr1.1, alr2.1 = ps$alr2.1))
     A <- diag(2); A <- A - P; A[, 2] <- 1
     delta <- as.numeric(solve(t(A), c(0, 1)))
     em <- as.numeric(X %*% u[1:2])
@@ -400,7 +400,7 @@ test_that("term_scores are the derivatives of the increments and sum to the grad
     ps <- psi_of(u)
     mu <- c(ps$level1, ps$level1 + ps$gap2)
     P <- parameters7::param_value(
-      tm@chain, c(alr1.1 = ps$alr1.1, alr2.1 = ps$alr2.1))
+      tm@transition, c(alr1.1 = ps$alr1.1, alr2.1 = ps$alr2.1))
     A <- diag(2); A <- A - P; A[, 2] <- 1
     delta <- as.numeric(solve(t(A), c(0, 1)))
     em <- as.numeric(X %*% u[1:2])
@@ -572,7 +572,7 @@ test_that("a regime reports its transition probabilities, not the log-ratios", {
   z <- c(level1 = 0.5, gap2 = log(2), gap3 = log(1.5), alr1.1 = 0.3,
          alr1.2 = -0.2, alr2.1 = 1, alr2.2 = 0.5, alr3.1 = -1, alr3.2 = 0.1)
   rd <- term_readable(tm, as.list(z))
-  P <- as.matrix(parameters7::param_value(tm@chain, z[tm@chain@free_names]))
+  P <- as.matrix(parameters7::param_value(tm@transition, z[tm@transition@free_names]))
   pn <- sprintf("p%d.%d", rep(1:3, each = 3), rep(1:3, 3))
   expect_identical(rd$name, c("level1", "gap2", "gap3", pn))
   expect_equal(rd$value, c(0.5, 2, 1.5, as.numeric(t(P))), tolerance = 1e-14)
