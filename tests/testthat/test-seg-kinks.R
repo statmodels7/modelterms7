@@ -10,7 +10,7 @@ kink_data <- function() {
 test_that("an observation on the break-point is read on one side whatever its last digits", {
   d <- kink_data()
   b <- term_build(seg(x), d)
-  bp <- b@blueprint
+  bp <- b@build_info
   # the observation at x = 6, reached from either side by the amounts the
   # inner fit locates a mode to
   cols <- lapply(c(-2e-11, 0, 2e-11), function(e) {
@@ -31,7 +31,7 @@ test_that("the compiled block reads the tie as its R twin does", {
   d <- kink_data()
   for (e in c(-2e-11, 0, 2e-11, 1e-3)) {
     b <- term_build(seg(x), d)
-    bp <- b@blueprint
+    bp <- b@build_info
     cf <- c(0.5, 2, 6 + e)
     a <- modelterms7:::.seg_block(bp, d$x, cf, bp$cscale)
     k <- modelterms7:::.seg_block_cpp(bp, d$x, cf, bp$cscale)
@@ -59,8 +59,8 @@ test_that("a developed break-point names its intercept and that group's deviatio
   dd <- data.frame(x = runif(90, 0, 10), id = factor(rep(1:3, each = 30)))
   dd$y <- 1 + dd$x + rnorm(90)
   b <- term_build(seg(x, psi ~ random(~1 | id)), dd)
-  ix <- b@blueprint$index$psi1
-  cf <- b@blueprint$coef
+  ix <- b@build_info$index$psi1
+  cf <- b@build_info$coef
   # group 2's break-point placed on its first observation
   cf[ix[1L]] <- dd$x[dd$id == "2"][1L] - cf[ix[3L]]
   expect_identical(term_kinks(b, cf), ix[c(1L, 3L)])
@@ -78,8 +78,8 @@ test_that("term_kink_constraints() gives the row of the hyperplane a developed b
   set.seed(1)
   dw <- data.frame(x = runif(60, 0, 10), w = runif(60))
   bw <- term_build(seg(x, psi ~ w), dw)
-  ix <- bw@blueprint$index$psi1
-  cf <- bw@blueprint$coef
+  ix <- bw@build_info$index$psi1
+  cf <- bw@build_info$coef
   cf[ix[1L]] <- dw$x[1L] - cf[ix[2L]] * dw$w[1L]
   A <- term_kink_constraints(bw, cf)
   expect_identical(nrow(A), 1L)
@@ -91,8 +91,8 @@ test_that("term_kink_constraints() gives the row of the hyperplane a developed b
   set.seed(1)
   dd <- data.frame(x = runif(90, 0, 10), id = factor(rep(1:3, each = 30)))
   br <- term_build(seg(x, psi ~ random(~1 | id)), dd)
-  ir <- br@blueprint$index$psi1
-  cr <- br@blueprint$coef
+  ir <- br@build_info$index$psi1
+  cr <- br@build_info$coef
   cr[ir[1L]] <- dd$x[dd$id == "2"][1L] - cr[ir[3L]]
   Ar <- term_kink_constraints(br, cr)
   expect_identical(nrow(Ar), 1L)

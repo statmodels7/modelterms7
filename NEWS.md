@@ -1,3 +1,10 @@
+# modelterms7 0.113.0
+
+* The property `blueprint` of every model term is renamed `build_info`. It
+  holds what `term_build()` records from the data (levels, knots, ordering,
+  centering, storage) so that `term_predict()` reapplies the same block on
+  new rows. Requires basis7 0.16.0.
+
 # modelterms7 0.112.1
 
 * The properties `init`, `init_value` and `init_source` of `GasTerm` and

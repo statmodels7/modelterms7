@@ -14,7 +14,7 @@ SmoothTerm(
   ids = character(0),
   X = NULL,
   coef_names = character(0),
-  blueprint = list(),
+  build_info = list(),
   penalty = NULL,
   vars = list(),
   by = NULL,
@@ -60,7 +60,7 @@ two-dimensional \pkg{Matrix}. It is empty until \code{\link[=term_build]{term_bu
 \item{coef_names}{The block's coefficient names, one per column, prefixed by
 \code{label} when there is one. \code{\link[=term_build]{term_build()}} fills it.}
 
-\item{blueprint}{A named list of everything needed to reproduce the mapping
+\item{build_info}{A named list of everything needed to reproduce the mapping
 on new rows. Its contents belong to the subclass, and only the term reads
 them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
@@ -103,7 +103,7 @@ one per covariate, which hold the whole construction; \code{by_hyper}, which
 records whether the levels of a factor \code{by} share a smoothing parameter or
 carry one each; \code{default_label}, which records whether the label was built
 from the call; and, for \code{\link[=te]{te()}}, whether the penalty is anisotropic. What a
-build then computes from the data goes into the blueprint instead: the
+build then computes from the data goes into the \code{build_info} instead: the
 Demmler-Reinsch transform, the centering constraint, the \code{by} levels and the
 penalties that the term declares.
 
@@ -122,10 +122,10 @@ c(s = S7::S7_inherits(s(x), SmoothTerm),
   te = S7::S7_inherits(te(x, z), SmoothTerm))
 
 # The settings are on `spec`, and the quantities computed from the data are
-# in the blueprint.
+# in the build_info.
 tm <- s(x, basis7::bspline_smooth(k = 8))
 names(tm@spec)
-names(term_build(tm, dd)@blueprint)
+names(term_build(tm, dd)@build_info)
 
 }
 \seealso{

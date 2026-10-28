@@ -14,7 +14,7 @@ additive_term(
   ids = character(0),
   X = NULL,
   coef_names = character(0),
-  blueprint = list(),
+  build_info = list(),
   penalty = NULL
 )
 }
@@ -56,7 +56,7 @@ two-dimensional \pkg{Matrix}. It is empty until \code{\link[=term_build]{term_bu
 \item{coef_names}{The block's coefficient names, one per column, prefixed by
 \code{label} when there is one. \code{\link[=term_build]{term_build()}} fills it.}
 
-\item{blueprint}{A named list of everything needed to reproduce the mapping
+\item{build_info}{A named list of everything needed to reproduce the mapping
 on new rows. Its contents belong to the subclass, and only the term reads
 them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
@@ -79,13 +79,13 @@ terms \code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}} and \code{\link[=js
 terms are structural terms instead.
 
 A built term on this branch carries four things beyond the root's
-properties: the block itself, the coefficient names, the blueprint that
+properties: the block itself, the coefficient names, the \code{build_info} that
 reproduces the block on new rows, and the penalty on its coefficients.
 }
 \section{The build}{
-A specification has \code{X} empty and \code{blueprint} an empty list; \code{\link[=term_build]{term_build()}}
-fills \code{X}, \code{coef_names} and \code{blueprint}, and \code{penalty} as well for a term
-that carries a penalty. The blueprint allows \code{\link[=term_predict]{term_predict()}} to reapply
+A specification has \code{X} empty and \code{build_info} an empty list; \code{\link[=term_build]{term_build()}}
+fills \code{X}, \code{coef_names} and \code{build_info}, and \code{penalty} as well for a term
+that carries a penalty. The \code{build_info} allows \code{\link[=term_predict]{term_predict()}} to reapply
 the mapping instead of rebuilding it: the factor levels, the
 contrasts, the knots on which a basis was placed and the spreads that a
 standardization used are recorded there at build time. \code{\link[=check_term]{check_term()}}'s
@@ -124,9 +124,9 @@ the design is large. Code reading a block tests
 d <- data.frame(x = rnorm(20), g = factor(rep(letters[1:4], 5)))
 
 # A specification carries no block; a build fills the block, the names and
-# the blueprint, and the penalty where the term has one.
+# the build_info, and the penalty where the term has one.
 spec <- ridge(~ x + g)
-c(X = length(spec@X), blueprint = length(spec@blueprint))
+c(X = length(spec@X), build_info = length(spec@build_info))
 b <- term_build(spec, d)
 dim(term_matrix(b))
 term_coef_names(b)

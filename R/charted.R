@@ -66,7 +66,7 @@ S7::method(term_charted, RegimeTerm) <- function(term, ...) {
 }
 
 S7::method(term_charted, NlTerm) <- function(term, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
          call. = FALSE)

@@ -13,32 +13,32 @@ test_that("a correct term passes every check", {
 })
 
 # A term whose predict re-derives the factor encoding from the new data
-# instead of reusing the blueprint: the classic mistake the subset check
+# instead of reusing the `build_info`: the classic mistake the subset check
 # exists for.
-NoBlueprint <- S7::new_class("NoBlueprint", parent = additive_term,
+NoBuildInfo <- S7::new_class("NoBuildInfo", parent = additive_term,
                              package = NULL,
                              properties = list(formula = S7::class_any))
-S7::method(term_build, NoBlueprint) <- function(term, data, ...) {
+S7::method(term_build, NoBuildInfo) <- function(term, data, ...) {
   X <- stats::model.matrix(term@formula, data)
   term@X <- X
   term@coef_names <- colnames(X)
-  term@blueprint <- list(formula = term@formula)
+  term@build_info <- list(formula = term@formula)
   term
 }
-S7::method(term_predict, NoBlueprint) <- function(term, newdata, ...) {
-  stats::model.matrix(term@blueprint$formula, newdata)
+S7::method(term_predict, NoBuildInfo) <- function(term, newdata, ...) {
+  stats::model.matrix(term@build_info$formula, newdata)
 }
 
 test_that("a predict that rebuilds instead of reapplying fails the subset check", {
-  bad <- NoBlueprint(label = "", formula = ~ x + g, X = NULL,
-                     coef_names = character(0), blueprint = list(),
+  bad <- NoBuildInfo(label = "", formula = ~ x + g, X = NULL,
+                     coef_names = character(0), build_info = list(),
                      penalty = NULL)
   res <- check_term(bad, dd_factor, verbose = FALSE)
   expect_identical(res$status[res$check == "subset"], "FAILED")
   # and the same defect is invisible on data without factors, which is why
   # the subset check drops a level whenever it can
-  bad_num <- NoBlueprint(label = "", formula = ~x, X = NULL,
-                         coef_names = character(0), blueprint = list(),
+  bad_num <- NoBuildInfo(label = "", formula = ~x, X = NULL,
+                         coef_names = character(0), build_info = list(),
                          penalty = NULL)
   res_num <- check_term(bad_num, data.frame(x = 1:6, g2 = rnorm(6)),
                         verbose = FALSE)
@@ -52,16 +52,16 @@ S7::method(term_build, Skewed) <- function(term, data, ...) {
   X <- stats::model.matrix(term@formula, data)
   term@X <- X
   term@coef_names <- colnames(X)
-  term@blueprint <- list(formula = term@formula)
+  term@build_info <- list(formula = term@formula)
   term
 }
 S7::method(term_predict, Skewed) <- function(term, newdata, ...) {
-  1.05 * stats::model.matrix(term@blueprint$formula, newdata)
+  1.05 * stats::model.matrix(term@build_info$formula, newdata)
 }
 
 test_that("a predict wrong by 5 percent fails the reproduce check", {
   bad <- Skewed(label = "", formula = ~x, X = NULL,
-                coef_names = character(0), blueprint = list(),
+                coef_names = character(0), build_info = list(),
                 penalty = NULL)
   res <- check_term(bad, data.frame(x = 1:6), verbose = FALSE)
   expect_identical(res$status[res$check == "reproduce"], "FAILED")

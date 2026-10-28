@@ -32,7 +32,7 @@ NULL
 #' records the route of the first derivatives; [nl_fderiv()] chooses the route
 #' for each order separately.
 #'
-#' `spec` carries the resolved construction settings. The blueprint carries
+#' `spec` carries the resolved construction settings. The `build_info` carries
 #' what the build computed: the parameter designs, the current coefficients
 #' (the starting ones until [term_refresh()] stores others), the value of the
 #' function at them, and the orders of derivative that are analytic.
@@ -411,7 +411,7 @@ nl <- function(fn, ..., params = NULL, x = NULL, links = NULL,
          spec = list(x = xe, start = start, is_formula = is_formula,
                      supplied = supplied),
          X = NULL, coef_names = character(0),
-         blueprint = list(), penalty = NULL)
+         build_info = list(), penalty = NULL)
 }
 
 # The two spellings of a parameter's subformula, merged: a two-sided formula
@@ -861,7 +861,7 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
   if (length(order) != 1L || is.na(order) || order < 1L || order > 4L) {
     stop("'order' must be 1, 2, 3 or 4.", call. = FALSE)
   }
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) stop("the term is not built.", call. = FALSE)
   cf <- .nl_coef(bp, coef)
   .nl_forder(bp, .nl_theta(bp, cf)$value, order)
@@ -904,7 +904,7 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
 
 # A MOVING sub-term's contribution and block at its coefficients `g`, on the
 # fitting rows or on `newdata`, as a pure function of `g`. A break-point term
-# is assembled directly from its blueprint rather than through
+# is assembled directly from its `build_info` rather than through
 # term_refresh(): for the constructions admitted here -- the continuous one
 # and every smoothed one -- the block and the value depend on the
 # coefficients alone, while a refresh would also relabel crossed
@@ -912,7 +912,7 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
 # to. Anything else goes through the generics.
 .nl_sub_at <- function(sub, g, newdata = NULL) {
   if (S7::S7_inherits(sub, SegTerm)) {
-    sb <- sub@blueprint
+    sb <- sub@build_info
     if (is.null(newdata)) {
       a <- .seg_assemble(sb, sb$xv, g, sb$cscale, sb$Z, sb$pk)
     } else {
@@ -934,7 +934,7 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
 # through seg_psi(). Nothing the evaluation above reads is changed.
 .nl_sub_commit <- function(sub, g) {
   if (S7::S7_inherits(sub, SegTerm)) {
-    sb <- sub@blueprint
+    sb <- sub@build_info
     a <- .seg_assemble(sb, sb$xv, g, sb$cscale, sb$Z, sb$pk)
     X <- a$X
     colnames(X) <- sub@coef_names
@@ -943,7 +943,7 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
     sb$psi <- a$psi
     sb$pk <- a$pk
     sub@X <- X
-    sub@blueprint <- sb
+    sub@build_info <- sb
     return(sub)
   }
   term_refresh(sub, g)
@@ -953,7 +953,7 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
 # predictor, the sum of the sub-terms' contributions, and the design its
 # coefficients multiply, the sub-terms' blocks side by side. A fixed sub-term
 # contributes its stored design times its coefficients; `bp$subX` holds that
-# design on the rows the blueprint is read on.
+# design on the rows the `build_info` is read on.
 .nl_param_at <- function(bp, p, g) {
   subs <- bp$subs[[p]]
   cols <- bp$sub_cols[[p]]
@@ -1026,7 +1026,7 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
 #' On the formula route [stats::deriv()] is tried on the expression, and
 #' `deriv_mode` records whether it succeeded. The expressions of orders two to
 #' four are formed with [stats::D()] where that succeeds, and the orders that
-#' are analytic, whether symbolic or supplied, are recorded in the blueprint.
+#' are analytic, whether symbolic or supplied, are recorded in the `build_info`.
 #' Every function given to `gradient`, `hessian`, `deriv3` or `deriv4` is
 #' called once and its names and lengths are checked against the components of
 #' that order: a name that is not one of them, a missing component, a repeated
@@ -1035,7 +1035,7 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
 #' `links` or `subformulas` that is not a parameter is an error as well.
 #'
 #' Each parameter's subformula goes through [interpret_formula()] and its
-#' terms are built, so their blueprints are recorded and reapplied at
+#' terms are built, so their `build_info` lists are recorded and reapplied at
 #' prediction. A structural sub-term is rejected, and so is one whose own block
 #' moves with its coefficients unless that block is a Jacobian, as for [seg()]
 #' and every smoothed break-point term; such a parameter's design and predictor
@@ -1056,8 +1056,8 @@ nl_fderiv <- function(term, coef = NULL, order = 1L) {
 #' @param ... Unused.
 #'
 #' @return The term, in which `X`, `coef_names`, `nl_params`, `links`,
-#'   `deriv_mode` and `blueprint` are filled. The penalties of the sub-terms
-#'   are kept in the blueprint and reported by [term_penalties()]; the
+#'   `deriv_mode` and `build_info` are filled. The penalties of the sub-terms
+#'   are kept in the `build_info` and reported by [term_penalties()]; the
 #'   `penalty` property stays `NULL`.
 #'
 #' @seealso [nl()], [term_refresh()] for the block at other coefficients,
@@ -1112,7 +1112,7 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
   # the submodel design of each parameter, and where its coefficients sit.
   # A subformula goes through the interpreter, so it takes any term of the
   # package; the built sub-terms are kept, since prediction reapplies each
-  # one's own blueprint, and the penalties they carry are collected here
+  # one's own `build_info`, and the penalties they carry are collected here
   # with the key parameter::subterm
   Z <- stats::setNames(vector("list", length(params)), params)
   subs <- stats::setNames(vector("list", length(params)), params)
@@ -1259,7 +1259,7 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
   term@nl_params <- params
   term@links <- links
   term@deriv_mode <- mode
-  term@blueprint <- bp
+  term@build_info <- bp
   term
 }
 
@@ -1267,7 +1267,7 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
 # sub-term built against the data, the blocks side by side, and the
 # penalties the sub-terms declare with their indices in the bound design.
 # What is kept is the BUILT terms, because prediction reapplies each one's
-# own blueprint (levels, knots, constants) rather than rebuilding it.
+# own `build_info` (levels, knots, constants) rather than rebuilding it.
 .nl_submodel <- function(p, sf, data, allow_moving = FALSE) {
   ir <- interpret_formula(sf, data)
   for (lb in names(ir$terms)) {
@@ -1339,14 +1339,14 @@ S7::method(term_build, NlTerm) <- function(term, data, ...) {
 #' @return A list of entries, as [term_penalties()] documents.
 #' @keywords internal
 S7::method(term_penalties, NlTerm) <- function(term, ...) {
-  pens <- term@blueprint$penalties
+  pens <- term@build_info$penalties
   if (is.null(pens)) list() else pens
 }
 
-# the blueprint of the same term read on other rows: the submodel designs
-# are REAPPLIED through each sub-term's own blueprint, never rebuilt
-.nl_blueprint_at <- function(term, newdata) {
-  bp <- term@blueprint
+# the `build_info` of the same term read on other rows: the submodel designs
+# are REAPPLIED through each sub-term's own `build_info`, never rebuilt
+.nl_build_info_at <- function(term, newdata) {
+  bp <- term@build_info
   nb <- bp
   nb$n <- nrow(newdata)
   nb$one <- numeric(nrow(newdata))
@@ -1380,7 +1380,7 @@ S7::method(term_penalties, NlTerm) <- function(term, ...) {
 #' @description
 #' Returns the Jacobian of \eqn{f} evaluated at the new rows, at the
 #' coefficients that the term currently carries. Each parameter's subformula is
-#' reapplied through its sub-terms' own blueprints, so a basis or a set of
+#' reapplied through its sub-terms' own `build_info` lists, so a basis or a set of
 #' contrasts inside a submodel is not relearned.
 #'
 #' @details
@@ -1423,14 +1423,14 @@ S7::method(term_penalties, NlTerm) <- function(term, ...) {
 #'
 #' # The product of the block and the coefficients is the linearization, not
 #' # the function: the value is the function.
-#' cbind(linear = as.numeric(term_predict(b, nd) %*% b@blueprint$coef),
+#' cbind(linear = as.numeric(term_predict(b, nd) %*% b@build_info$coef),
 #'       value = term_value(b, newdata = nd),
 #'       truth = 2 * exp(-1.3 * nd$x))
 #'
 #' @keywords internal
 S7::method(term_predict, NlTerm) <- function(term, newdata, ...) {
   .assert_built(term)
-  X <- .nl_jacobian(.nl_blueprint_at(term, newdata), term@blueprint$coef)$J
+  X <- .nl_jacobian(.nl_build_info_at(term, newdata), term@build_info$coef)$J
   colnames(X) <- term@coef_names
   X
 }
@@ -1639,7 +1639,7 @@ S7::method(term_block_deriv, model_term) <- function(term, coef = NULL, v,
 }
 
 S7::method(term_block_deriv, NlTerm) <- function(term, coef = NULL, v, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) stop("the term is not built.", call. = FALSE)
   cf <- .nl_coef(bp, coef)
   v <- as.numeric(v)
@@ -1686,7 +1686,7 @@ S7::method(term_block_deriv, NlTerm) <- function(term, coef = NULL, v, ...) {
 }
 
 S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) stop("the term is not built.", call. = FALSE)
   cf <- .nl_coef(bp, coef)
   A <- as.matrix(A)
@@ -1870,7 +1870,7 @@ S7::method(term_block_deriv2, model_term) <- function(term, coef = NULL, v, u,
 
 S7::method(term_block_deriv2, NlTerm) <- function(term, coef = NULL, v, u,
                                                   ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) stop("the term is not built.", call. = FALSE)
   cf <- .nl_coef(bp, coef)
   v <- as.numeric(v)
@@ -1979,7 +1979,7 @@ S7::method(term_block_deriv2, NlTerm) <- function(term, coef = NULL, v, u,
 #' A consumer reads it to report a fitted nonlinear term parameter by
 #' parameter and to place the coordinates of each sub-term. A coefficient name
 #' is meant for display, so the division of the columns cannot be recovered by
-#' parsing the names; the term records it in its blueprint.
+#' parsing the names; the term records it in its `build_info`.
 #'
 #' @param term A built [NlTerm()]. An unbuilt one gives an empty list.
 #' @param ... Unused.
@@ -2006,10 +2006,10 @@ S7::method(term_block_deriv2, NlTerm) <- function(term, coef = NULL, v, u,
 #'
 #' @keywords internal
 S7::method(term_components, NlTerm) <- function(term, ...) {
-  .nl_components(term@blueprint)
+  .nl_components(term@build_info)
 }
 
-# The blueprint already divides the block: `index` says which columns each
+# The `build_info` already divides the block: `index` says which columns each
 # parameter of f owns and `subs` which sub-terms develop it, both settled at
 # the build. Nothing is read back from a coefficient name.
 .nl_components <- function(bp) {
@@ -2122,7 +2122,7 @@ S7::method(term_stalled, model_term) <- function(term, ...) FALSE
 
 S7::method(term_refresh, NlTerm) <- function(term, coef, ...) {
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   coef <- .nl_coef(bp, coef)
   jv <- .nl_jacobian(bp, coef)
   bp$coef <- coef
@@ -2143,7 +2143,7 @@ S7::method(term_refresh, NlTerm) <- function(term, coef, ...) {
   X <- jv$J
   colnames(X) <- term@coef_names
   term@X <- X
-  term@blueprint <- bp
+  term@build_info <- bp
   term
 }
 
@@ -2171,7 +2171,7 @@ S7::method(term_refresh, NlTerm) <- function(term, coef, ...) {
 #'
 #' @keywords internal
 S7::method(term_kinks, NlTerm) <- function(term, coef = NULL, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) stop("the term is not built.", call. = FALSE)
   cf <- .nl_coef(bp, coef)
   out <- integer(0)
@@ -2210,7 +2210,7 @@ S7::method(term_kinks, NlTerm) <- function(term, coef = NULL, ...) {
 #'
 #' @keywords internal
 S7::method(term_kink_constraints, NlTerm) <- function(term, coef = NULL, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) stop("the term is not built.", call. = FALSE)
   cf <- .nl_coef(bp, coef)
   p <- length(cf)
@@ -2249,7 +2249,7 @@ S7::method(term_kink_constraints, NlTerm) <- function(term, coef = NULL, ...) {
 #' drops. For [seg()] that difference is a step at the
 #' break-point in a construction that is continuous. Rows arriving here are
 #' treated as [term_predict()] treats them, through the levels
-#' and constants that the blueprint recorded, never rebuilt.
+#' and constants that the `build_info` recorded, never rebuilt.
 #'
 #' @param term A built term.
 #' @param coef The coefficients. They are optional for a nonlinear term, which
@@ -2292,11 +2292,11 @@ S7::method(term_value, additive_term) <- function(term, coef = NULL,
 S7::method(term_value, NlTerm) <- function(term, coef = NULL, newdata = NULL,
                                            ...) {
   .assert_built(term)
-  bp <- if (is.null(newdata)) term@blueprint else
-    .nl_blueprint_at(term, newdata)
+  bp <- if (is.null(newdata)) term@build_info else
+    .nl_build_info_at(term, newdata)
   if (is.null(coef)) {
     if (is.null(newdata)) return(bp$value)
-    coef <- term@blueprint$coef
+    coef <- term@build_info$coef
   }
   .nl_jacobian(bp, .nl_coef(bp, coef))$value
 }
@@ -2413,12 +2413,12 @@ S7::method(print, NlTerm) <- function(x, ...) {
 #' @keywords internal
 S7::method(term_coef_start, NlTerm) <- function(term, target = NULL, ...) {
   .assert_built(term)
-  coef0 <- term@blueprint$coef
+  coef0 <- term@build_info$coef
   if (is.null(target)) return(coef0)
   auto <- tryCatch(.nl_auto_start(term, target), error = function(e) NULL)
   out <- if (is.null(auto) || length(auto) != length(coef0) ||
              !all(is.finite(auto))) coef0 else auto
-  bp <- term@blueprint
+  bp <- term@build_info
   if (any(unlist(bp$mobile))) {
     out <- tryCatch(.nl_breakpoint_start(bp, out, target),
                     error = function(e) out)
@@ -2485,7 +2485,7 @@ S7::method(term_coef_start, NlTerm) <- function(term, target = NULL, ...) {
     for (k in seq_along(bp$subs[[p]])) {
       sub <- bp$subs[[p]][[k]]
       if (!bp$sub_moves[[p]][[k]] || !S7::S7_inherits(sub, SegTerm)) next
-      sb <- sub@blueprint
+      sb <- sub@build_info
       gi <- idx[bp$sub_cols[[p]][[k]]]
       xin <- sb$xv[sb$xv >= sb$lim[1L] & sb$xv <= sb$lim[2L]]
       grid <- unique(as.numeric(stats::quantile(xin, (1:5) / 6,
@@ -2626,7 +2626,7 @@ S7::method(term_coef_start, NlTerm) <- function(term, target = NULL, ...) {
 # target says nothing usable, in which case the caller keeps what
 # term_build() computed.
 .nl_auto_start <- function(term, target, n_grid = 600L, n_polish = 12L) {
-  bp <- term@blueprint
+  bp <- term@build_info
   params <- bp$params
   y <- suppressWarnings(as.numeric(target))
   if (length(y) != bp$n) return(NULL)

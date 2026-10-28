@@ -1,4 +1,4 @@
-# The unpenalized parametric term: model.matrix semantics and the blueprint.
+# The unpenalized parametric term: model.matrix semantics and the `build_info`.
 
 test_that("linpar builds the model.matrix block", {
   dd <- data.frame(x = 1:6, g = factor(rep(c("a", "b", "c"), 2)))
@@ -19,7 +19,7 @@ test_that("a label prefixes the coefficient names", {
   expect_identical(colnames(term_matrix(built)), term_coef_names(built))
 })
 
-test_that("the blueprint reproduces the mapping on new data", {
+test_that("the build_info reproduces the mapping on new data", {
   dd <- data.frame(x = 1:6, g = factor(rep(c("a", "b", "c"), 2)))
   built <- term_build(linpar(~ x + g), dd)
 
@@ -32,7 +32,7 @@ test_that("the blueprint reproduces the mapping on new data", {
   expect_identical(unname(term_predict(built, sub)),
                    unname(term_matrix(built)[dd$g != "c", , drop = FALSE]))
 
-  # a level unknown to the blueprint is rejected, not re-encoded
+  # a level unknown to the `build_info` is rejected, not re-encoded
   bad <- data.frame(x = 1, g = factor("d"))
   expect_error(term_predict(built, bad), "factor")
 })
@@ -94,7 +94,7 @@ test_that("a block is built sparse where it is asked for, not compressed after",
   expect_lt(as.numeric(utils::object.size(term_matrix(b))),
             as.numeric(utils::object.size(term_matrix(a))) / 5)
 
-  # the STORAGE is part of the blueprint, so prediction does not densify
+  # the STORAGE is part of the `build_info`, so prediction does not densify
   nd <- d[1:20, , drop = FALSE]
   expect_true(methods::is(term_predict(b, nd), "sparseMatrix"))
   expect_equal(unname(as.matrix(term_predict(b, nd))),
@@ -123,7 +123,7 @@ test_that("the storage a NULL settles on is read off the size of the design", {
   # sample size, and the block is dense
   nof <- term_build(linpar(~ z), mk(50000L, 2L))
   expect_true(is.matrix(term_matrix(nof)))
-  # the SETTLED storage is what the blueprint carries, so a prediction on
+  # the SETTLED storage is what the `build_info` carries, so a prediction on
   # twenty rows does not decide again and build a block of the other kind
   nd <- mk(20000L, 400L)[1:20, , drop = FALSE]
   expect_true(methods::is(term_predict(big, nd), "sparseMatrix"))
@@ -153,7 +153,7 @@ test_that("linpar takes the contrasts for its factors", {
   d <- data.frame(g = factor(rep(letters[1:3], 4)), y = stats::rnorm(12))
   a <- term_build(linpar(~ g), d)
   b <- term_build(linpar(~ g, contrasts = list(g = "contr.sum")), d)
-  # the same rank, a different coding, and the blueprint carries it to
+  # the same rank, a different coding, and the `build_info` carries it to
   # prediction rather than letting the session's option decide again
   expect_identical(ncol(term_matrix(a)), ncol(term_matrix(b)))
   expect_false(isTRUE(all.equal(unname(term_matrix(a)),

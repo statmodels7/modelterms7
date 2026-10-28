@@ -24,8 +24,8 @@ at their floor and cannot travel.
 set.seed(1)
 dd <- data.frame(x = sort(runif(100, 0, 10)))
 b <- term_build(jump(x, psi = 4), dd)
-b <- term_refresh(b, b@blueprint$coef)
-identical(seg_reheat(b)@blueprint$cscale, b@blueprint$cscale * 0 + 0.05)
+b <- term_refresh(b, b@build_info$coef)
+identical(seg_reheat(b)@build_info$cscale, b@build_info$cscale * 0 + 0.05)
 
 }
 \seealso{

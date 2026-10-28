@@ -12,7 +12,7 @@ structural_term(
   min_ratio = numeric(0),
   search = character(0),
   ids = character(0),
-  blueprint = list()
+  build_info = list()
 )
 }
 \arguments{
@@ -47,7 +47,7 @@ term's own hyperparameters, or \code{character(0)} for none. The terms
 carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
-\item{blueprint}{A named list of everything needed to reproduce the term
+\item{build_info}{A named list of everything needed to reproduce the term
 on new rows: the design's state, the levels that a factor had, whatever
 the subclass's own filter or recursion needs. Its contents belong to that
 subclass and only the term reads them. It is empty in a specification and
@@ -59,7 +59,7 @@ whether it is built.}
 Nothing: the class is abstract and cannot be instantiated.
 Calling \code{structural_term()} signals an error. As a type it is the parent
 of \code{\link[=gas]{gas()}}, \code{\link[=regime]{regime()}} and the marginal break-point terms, and carries
-the properties of \code{\link[=model_term]{model_term()}} together with \code{blueprint}, the branch's
+the properties of \code{\link[=model_term]{model_term()}} together with \code{build_info}, the branch's
 record of having been built, empty in a specification.
 }
 \description{
@@ -79,7 +79,7 @@ proposes. \code{\link[=term_npar]{term_npar()}} counts those parameters,
 \code{\link[=term_start]{term_start()}} gives their starting values, and a \code{\link[=term_penalties]{term_penalties()}} entry
 indexes into them, where an additive term's entry indexes into columns.
 
-The class adds one property of its own, \code{blueprint}, which records that the
+The class adds one property of its own, \code{build_info}, which records that the
 term has been built. Everything else that a built structural term records is
 held in the root's properties and in the subclass's own slots.
 }

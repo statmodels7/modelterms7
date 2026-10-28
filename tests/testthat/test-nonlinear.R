@@ -217,7 +217,7 @@ test_that("a subformula takes a term, whose penalty the term reports", {
               info = paste(res$check[res$status != "OK"], collapse = ", "))
 })
 
-test_that("a smooth in a subformula predicts through its own blueprint", {
+test_that("a smooth in a subformula predicts through its own build_info", {
   d2 <- dd
   d2$z <- runif(n)
   spec <- nl(~ a * exp(-r * x), a ~ s(z, bspline_smooth(k = 6)), start = list(a = 2, r = 1.3))
@@ -365,7 +365,7 @@ nl_logistic_links <- function() {
        sigma = linkfunctions7::log_link())
 }
 nl_theta_at <- function(b, coef) {
-  bp <- b@blueprint
+  bp <- b@build_info
   vapply(bp$params, function(p) {
     e <- if (is.null(bp$Z[[p]])) coef[bp$index[[p]]] else
       as.numeric(as.matrix(bp$Z[[p]]) %*% coef[bp$index[[p]]])
@@ -377,7 +377,7 @@ test_that("without a target the start is what term_build computed", {
   d <- nl_logistic_data()
   b <- term_build(nl(~ phi / (1 + exp(-(time - theta) / sigma)),
                      links = nl_logistic_links()), d)
-  expect_identical(term_coef_start(b), b@blueprint$coef)
+  expect_identical(term_coef_start(b), b@build_info$coef)
   expect_true(all(term_coef_start(b) == 0))
 })
 
@@ -403,7 +403,7 @@ test_that("start= wins over a target, and pins only what it names", {
   b <- term_build(nl(~ phi / (1 + exp(-(time - theta) / sigma)),
                      links = lk, start = list(phi = 50, theta = 10, sigma = 2)),
                   d)
-  expect_identical(term_coef_start(b, target = d$y), b@blueprint$coef)
+  expect_identical(term_coef_start(b, target = d$y), b@build_info$coef)
 
   b2 <- term_build(nl(~ phi / (1 + exp(-(time - theta) / sigma)),
                       links = lk, start = list(theta = 10)), d)
@@ -456,8 +456,8 @@ test_that("a target that says nothing leaves the built coefficients", {
   b <- term_build(nl(~ phi / (1 + exp(-(time - theta) / sigma)),
                      links = nl_logistic_links()), d)
   expect_identical(term_coef_start(b, target = rep(NA_real_, nrow(d))),
-                   b@blueprint$coef)
-  expect_identical(term_coef_start(b, target = d$y[1:3]), b@blueprint$coef)
+                   b@build_info$coef)
+  expect_identical(term_coef_start(b, target = d$y[1:3]), b@build_info$coef)
 })
 
 test_that("the affine parameters are read off the expression", {

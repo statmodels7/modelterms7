@@ -27,8 +27,8 @@ hyperplane \eqn{z_j^\top\kappa = x_j}.
 set.seed(1)
 d <- data.frame(x = runif(60, 0, 10), w = runif(60))
 b <- term_build(seg(x, psi ~ w), d)
-ix <- b@blueprint$index$psi1
-cf <- b@blueprint$coef
+ix <- b@build_info$index$psi1
+cf <- b@build_info$coef
 # the break-point of the first observation is placed on that observation
 cf[ix[1L]] <- d$x[1L] - cf[ix[2L]] * d$w[1L]
 term_kink_constraints(b, cf)

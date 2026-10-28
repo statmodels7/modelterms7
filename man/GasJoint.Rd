@@ -12,7 +12,7 @@ GasJoint(
   min_ratio = numeric(0),
   search = character(0),
   ids = character(0),
-  blueprint = list(),
+  build_info = list(),
   terms = list(),
   params = character(0),
   offsets = integer(0),
@@ -52,7 +52,7 @@ term's own hyperparameters, or \code{character(0)} for none. The terms
 carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
-\item{blueprint}{The shared ordering: \code{order} (the rows of each group, in
+\item{build_info}{The shared ordering: \code{order} (the rows of each group, in
 time order) and \code{n}. The property is inherited from \code{\link[=structural_term]{structural_term()}}.}
 
 \item{terms}{A named list of built \code{\link[=GasTerm]{GasTerm()}} objects, one per filtered

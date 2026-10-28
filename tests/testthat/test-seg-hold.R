@@ -15,7 +15,7 @@ test_that("seg_polish_exact() reaches the minimum of the profile over every inte
     e <- seg_polish_exact(b, y)
     u <- sort(unique(x))
     m <- (u[-1] + u[-length(u)]) / 2
-    lim <- b@blueprint$lim
+    lim <- b@build_info$lim
     m <- m[m > lim[1] & m < lim[2]]
     r <- vapply(m, function(q) rssq(kind, x, y, q), 1)
     expect_equal(rssq(kind, x, y, seg_psi(e)), min(r), tolerance = 1e-10)
@@ -36,7 +36,7 @@ test_that("seg_polish_exact() agrees with a two-dimensional search under weights
   }
   u <- sort(unique(x))
   m <- (u[-1] + u[-length(u)]) / 2
-  lim <- b@blueprint$lim
+  lim <- b@build_info$lim
   m <- m[m > lim[1] & m < lim[2]]
   best <- Inf
   for (i in seq_along(m)) for (j in seq_along(m)) if (j > i) {
@@ -73,7 +73,7 @@ test_that("a held term carries the exact design and holds its position's slot", 
   # released, the slot carries -delta psi and the read-off returns the position
   rl <- seg_hold(r, hold = FALSE)
   expect_identical(term_held(rl), integer(0))
-  expect_equal(rl@blueprint$coef[4], -1.3 * p)
+  expect_equal(rl@build_info$coef[4], -1.3 * p)
 })
 
 test_that("seg_hold() rejects a continuous or smoothed term", {
@@ -95,7 +95,7 @@ test_that("seg_profile_intervals() is the brute-force profile over every interva
   # one break-point of a jseg
   b <- term_build(jseg(x, psi = 4), d)
   pr <- seg_profile_intervals(b, y, weights = w)
-  lim <- b@blueprint$lim
+  lim <- b@build_info$lim
   expect_equal(pr$psi, m[m > lim[1] & m < lim[2]])
   ref <- vapply(pr$psi, function(q) {
     Z <- cbind(1, x, pmax(x - q, 0), as.numeric(x > q))
@@ -135,10 +135,10 @@ test_that("a held developed jump is polished to the exhaustive per-group minimum
     r <- vapply(cand[[3]], function(v) rss(c(a, bb, v)), 1)
     best <- min(best, r)
   }
-  q <- vapply(1:3, function(j) e@blueprint$psi[which(gi == j)[1], 1], 1)
+  q <- vapply(1:3, function(j) e@build_info$psi[which(gi == j)[1], 1], 1)
   expect_equal(rss(q), best, tolerance = 1e-10)
   # the held positions are reported one per level
-  rd <- term_readable(e, e@blueprint$coef)
+  rd <- term_readable(e, e@build_info$coef)
   expect_identical(rd$name[grepl("^psi", rd$name)], c("psi1.ga", "psi1.gb", "psi1.gc"))
   expect_equal(rd$value[grepl("^psi", rd$name)], unname(q), tolerance = 1e-12)
 })
@@ -154,7 +154,7 @@ test_that("a held jump developed on a continuous covariate reaches the grid mini
   rss <- function(p) sum(stats::.lm.fit(cbind(1, x > p[1] + p[2] * z), y)$residuals^2)
   gr <- expand.grid(p0 = seq(3, 7, by = 0.05), p1 = seq(-1, 4, by = 0.05))
   grid_min <- min(apply(gr, 1, rss))
-  expect_lte(rss(e@blueprint$pk[[1]]), grid_min + 1e-10)
+  expect_lte(rss(e@build_info$pk[[1]]), grid_min + 1e-10)
 })
 
 test_that("a developed term is polished only when held", {

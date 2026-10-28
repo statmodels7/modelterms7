@@ -20,15 +20,15 @@ other object is rejected by the generic, before dispatch, with the error
 }
 \value{
 A built term of the same class as \code{term}. For an additive term the
-\code{X}, \code{coef_names} and \code{blueprint} properties are filled, and \code{penalty} is
-filled where the term is penalized; for a structural term the \code{blueprint}
+\code{X}, \code{coef_names} and \code{build_info} properties are filled, and \code{penalty} is
+filled where the term is penalized; for a structural term the \code{build_info}
 is filled. \code{\link[=term_is_built]{term_is_built()}} is \code{TRUE} either way, because it reads the
 one of the two records that the branch fills.
 }
 \description{
 Turns a term specification into a built term: an additive term computes its
 design block from \code{data}, assigns the coefficient names and records the
-blueprint that will reproduce the mapping on other rows; a structural term
+\code{build_info} that will reproduce the mapping on other rows; a structural term
 records whatever its recursion needs, its grouping and its ordering. The
 returned object is a copy of the specification in which those properties are
 filled, and the specification is unchanged.
@@ -44,7 +44,7 @@ through a penalty on that block's coefficients when it is penalized:
 Building produces \eqn{X_t} from the data and attaches
 \eqn{\rho_t}. \code{\link[=term_matrix]{term_matrix()}} then reads the block, \code{\link[=term_penalties]{term_penalties()}} the
 penalties, and \code{\link[=term_predict]{term_predict()}} reproduces \eqn{X_t} at other rows through
-the blueprint.
+the \code{build_info}.
 
 A structural term has no such block. \code{\link[=gas]{gas()}} records the group to which each
 row belongs and its place in that group's series; \code{\link[=regime]{regime()}} and the marginal

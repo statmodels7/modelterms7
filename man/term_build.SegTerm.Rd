@@ -12,9 +12,9 @@ subformulas name.}
 \item{...}{Unused.}
 }
 \value{
-The term with \code{X}, \code{coef_names} and \code{blueprint} filled. The slot
+The term with \code{X}, \code{coef_names} and \code{build_info} filled. The slot
 \code{penalty} is \code{NULL}; the penalties of the developments are recorded in the
-blueprint and listed by \code{\link[=term_penalties]{term_penalties()}}.
+\code{build_info} and listed by \code{\link[=term_penalties]{term_penalties()}}.
 }
 \description{
 Evaluates the covariate, resolves any development of the term's own
@@ -37,7 +37,7 @@ this term, so \code{\link[=term_coef_start]{term_coef_start()}} returns these po
 of zeros.
 
 Each subformula's right-hand side goes through \code{\link[=interpret_formula]{interpret_formula()}} and its
-terms are built, so their blueprints are recorded and reapplied at
+terms are built, so their \code{build_info} lists are recorded and reapplied at
 prediction. The developments that a term may carry depend on \code{kind}. The
 continuous construction takes any of them. A sharp \code{\link[=jump]{jump()}} takes a
 development of the break-point with a scalar change of level on any design,

@@ -40,7 +40,7 @@ fit should read. \code{\link[=term_penalties]{term_penalties()}} returns an empt
 layer collects the labelled terms and declares one entry over their stacked
 columns.
 
-The blueprint records what the layer needs for that: the within-group
+The \code{build_info} records what the layer needs for that: the within-group
 dimension and the grouping's levels, beside the pieces that
 \code{\link[=term_predict.RandomTerm]{term_predict.RandomTerm()}} already reads.
 

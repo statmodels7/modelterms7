@@ -293,7 +293,7 @@ test_that("a factor by is where a smooth's block can be sparse", {
   expect_lt(as.numeric(utils::object.size(term_matrix(b))),
             as.numeric(utils::object.size(term_matrix(a))) / 5)
 
-  # the storage is in the blueprint, so prediction does not densify
+  # the storage is in the `build_info`, so prediction does not densify
   nd <- d[1:25, , drop = FALSE]
   expect_true(methods::is(term_predict(b, nd), "sparseMatrix"))
   expect_equal(unname(as.matrix(term_predict(b, nd))),

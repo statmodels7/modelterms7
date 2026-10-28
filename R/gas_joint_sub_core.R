@@ -26,7 +26,7 @@ NULL
 .gas_joint_sub_core <- function(term, psi, g, seed, blocks, direction = NULL,
                                 threads = getOption("modelterms7.joint_threads",
                                                     1L)) {
-  bp <- term@blueprint
+  bp <- term@build_info
   K <- length(term@params)
   n <- bp$n
   dirs <- .gas_dirs(direction)
@@ -120,7 +120,7 @@ NULL
     # coefficients of a developed parameter as they are, a scalar parameter or
     # cross loading through the link of its chart
     u <- v[seq_len(nl)]
-    sub <- tm@blueprint$sub
+    sub <- tm@build_info$sub
     for (j in names(lay[[k]]$idx)) {
       if (is.null(sub[[j]])) {
         ix <- lay[[k]]$idx[[j]]

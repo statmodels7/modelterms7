@@ -141,7 +141,7 @@ S7::method(term_shift_jacobian, structural_term) <- function(term, eta, y,
 S7::method(term_shift_jacobian, RegimeTerm) <- function(term, eta, y, logdens,
                                                         grad, psi, seed, cols,
                                                         level, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
          call. = FALSE)
@@ -306,7 +306,7 @@ S7::method(term_shift_jacobian, MarginalBreakTerm) <- function(term, eta, y,
 
 .marg_seg_shift_jacobian <- function(term, eta, logdens, grad, v, ins, nm,
                                      J1) {
-  bp <- term@blueprint
+  bp <- term@build_info
   n <- bp$n
   seed <- ins$seed
   m <- ins$m
@@ -372,7 +372,7 @@ S7::method(term_shift_jacobian, MarginalBreakTerm) <- function(term, eta, y,
 
 .marg_jump_shift_jacobian <- function(term, eta, logdens, grad, v, ins, nm,
                                       J1) {
-  bp <- term@blueprint
+  bp <- term@build_info
   n <- bp$n
   seed <- ins$seed
   m <- ins$m

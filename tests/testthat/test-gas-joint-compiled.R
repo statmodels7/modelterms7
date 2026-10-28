@@ -209,7 +209,7 @@ jc_check_family <- function(nm, d, cov, base = NULL) {
     lab <- sprintf("%s, d = %s", nm, format(scaling))
     cf <- .gas_joint_coefs(jt, psi)
     direct <- gas_joint_filter_cpp(eta, cf, length(term_params(jt)),
-                                   jt@blueprint$order, fast)
+                                   jt@build_info$order, fast)
     if (cov == 2 && scaling != 0) {
       # the expected information is not in the registry for this family
       expect_null(direct, info = lab)
@@ -303,7 +303,7 @@ test_that("a family that the registry does not know leaves the context inert", {
   fast <- jc_fast(d, y, Eall, 1:2, 0)
   fast$family <- "NoSuchDistrib"
   expect_null(gas_joint_filter_cpp(Eall, .gas_joint_coefs(jt, psi),
-                                   length(term_params(jt)), jt@blueprint$order,
+                                   length(term_params(jt)), jt@build_info$order,
                                    fast))
   expect_identical(
     term_filter(jt, Eall, y, cb$score, cb$curvature, psi, fast = fast),

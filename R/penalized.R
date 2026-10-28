@@ -27,12 +27,12 @@ NULL
 #' standardization may take only the count.
 #'
 #' `standardize` is a single logical on the specification; after a build the
-#' spreads themselves are in `blueprint$standardize`, one per column.
+#' spreads themselves are in `build_info$standardize`, one per column.
 #'
 #' `sparse` governs the formula route only, because a matrix input is kept in
 #' the storage in which it arrives. The property stays as the caller wrote it,
 #' `NULL` by default, and the storage that the build settles is recorded in
-#' `blueprint$sparse`.
+#' `build_info$sparse`.
 #'
 #' # What the class does not fix
 #'
@@ -84,7 +84,7 @@ NULL
 #' dd$x3 <- 1000 * dd$x2
 #' bs <- term_build(lasso(~ x1 + x3, standardize = TRUE), dd)
 #' bs@standardize
-#' bs@blueprint$standardize
+#' bs@build_info$standardize
 #'
 #' @export
 PenalizedTerm <- S7::new_class(
@@ -175,7 +175,7 @@ PenalizedTerm <- S7::new_class(
                 search = check_search(search, label),
                 ids = check_ids(ids, .factory_params(factory), label),
                 X = NULL, coef_names = character(0),
-                blueprint = list(), penalty = NULL)
+                build_info = list(), penalty = NULL)
 }
 
 # A path argument given for a hyperparameter that no path sweeps -- held at
@@ -281,7 +281,7 @@ PenalizedTerm <- S7::new_class(
 #'
 #' A formula goes through the [stats::model.matrix()] machinery after its
 #' intercept is removed: a penalized block does not penalize an intercept, and
-#' the model's intercept lives in the parametric block. Its blueprint records
+#' the model's intercept lives in the parametric block. Its `build_info` records
 #' the terms, the factor levels and the contrasts, exactly as [linpar()] does,
 #' so `~ g` and `~ 0 + g` give the same four columns for a four-level factor.
 #'
@@ -364,7 +364,7 @@ PenalizedTerm <- S7::new_class(
 #' intercept is free.
 #'
 #' The spread is computed from the built block by [.block_sd()] and frozen in
-#' `blueprint$standardize`, so the same term standardizes identically in every
+#' `build_info$standardize`, so the same term standardizes identically in every
 #' equation of a distributional model and does not move with the working
 #' weights of a fit. A constant column takes \eqn{s_j = 1}. [print()] shows the
 #' values, because a change of scale changes the meaning of \eqn{\lambda}.
@@ -406,7 +406,7 @@ PenalizedTerm <- S7::new_class(
 #'   `scad(~ x, gamma = 1)` signals `"'scad' has no argument 'gamma'."`.
 #'
 #' @return An unbuilt [PenalizedTerm()]: a specification in which `X`,
-#'   `coef_names`, `blueprint` and `penalty` are all empty until [term_build()]
+#'   `coef_names`, `build_info` and `penalty` are all empty until [term_build()]
 #'   fills them.
 #'
 #' @seealso [ridge()], [lasso()], [enet()], [scad()] and [mcp()] for the five
@@ -457,26 +457,26 @@ NULL
 #'
 #' @description
 #' Builds the block of a [ridge()], [lasso()], [enet()], [scad()] or [mcp()]
-#' term, names its coefficients, records the blueprint, and calls the term's
+#' term, names its coefficients, records the `build_info`, and calls the term's
 #' factory to produce the \pkg{penalties7} penalty over exactly that many
 #' coefficients. The penalty exists only after this: a specification's
 #' `penalty` property is `NULL`, because its width is unknown until the data
 #' are seen.
 #'
 #' @details
-#' # Two input routes, two blueprints
+#' # Two input routes, two `build_info` lists
 #'
 #' A formula is built through [stats::model.frame()] and
 #' [.design_matrix()] after its intercept is removed by
 #' `update(formula, ~ . - 1)`, unless the formula has an intercept and nothing
-#' else, in which case the intercept is kept and is the block. The blueprint
+#' else, in which case the intercept is kept and is the block. The `build_info`
 #' records `kind = "formula"`, the terms object, the levels, the contrasts and
 #' the settled storage.
 #'
 #' A matrix is used as it stands, and its row count must equal
 #' `nrow(data)`; any other row count is an error that gives both numbers. Its
 #' columns take the matrix's own names, or `1`, `2`, ... where it has none. The
-#' blueprint records `kind = "matrix"`, the expression that produced it and
+#' `build_info` records `kind = "matrix"`, the expression that produced it and
 #' those base names.
 #'
 #' Either way every column name is prefixed with the term's label, and the
@@ -486,7 +486,7 @@ NULL
 #' # Standardization is applied to the penalty
 #'
 #' With `standardize = TRUE` the column spreads come from [.block_sd()], go
-#' into `blueprint$standardize` and become a [Matrix::Diagonal()] map. The
+#' into `build_info$standardize` and become a [Matrix::Diagonal()] map. The
 #' design is not touched, so a sparse block stays sparse.
 #'
 #' The map is passed to the factory as a second argument, and only when there
@@ -498,7 +498,7 @@ NULL
 #'   every variable that a formula input names.
 #' @param ... Unused.
 #'
-#' @return The term whose `X`, `coef_names`, `blueprint` and `penalty` are
+#' @return The term whose `X`, `coef_names`, `build_info` and `penalty` are
 #'   filled. `penalty@n_coef` equals `ncol(X)`.
 #'
 #' @seealso [penalized_terms()] for what the five constructors share,
@@ -542,7 +542,7 @@ S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
     b <- .design_matrix(tt, mf, NULL, sp)
     X <- b$X
     base_names <- colnames(X)
-    term@blueprint <- list(
+    term@build_info <- list(
       kind = "formula",
       terms = stats::delete.response(tt),
       xlev = stats::.getXlevels(tt, mf),
@@ -558,7 +558,7 @@ S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
     }
     base_names <- colnames(X)
     if (is.null(base_names)) base_names <- as.character(seq_len(ncol(X)))
-    term@blueprint <- list(
+    term@build_info <- list(
       kind = "matrix",
       expr = term@input_expr,
       base_names = base_names
@@ -581,7 +581,7 @@ S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
   map <- NULL
   if (isTRUE(term@standardize)) {
     s <- stats::setNames(.block_sd(X), cn)
-    term@blueprint$standardize <- s
+    term@build_info$standardize <- s
     map <- Matrix::Diagonal(x = as.numeric(s))
   }
   # the factory's second argument is the map, and it is passed only when
@@ -613,7 +613,7 @@ S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
 #' rows and columns before it is returned.
 #'
 #' @details
-#' The matrix branch evaluates `blueprint$expr` with `newdata` as the data and
+#' The matrix branch evaluates `build_info$expr` with `newdata` as the data and
 #' [baseenv()] as the enclosure, so the calling environment is not on the
 #' search path. A free-standing matrix therefore cannot be found, and the error
 #' message contains the expression and the instruction to supply it as a column
@@ -643,7 +643,7 @@ S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
 #' set.seed(3)
 #' dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
 #'
-#' # A formula input reapplies its blueprint.
+#' # A formula input reapplies its build_info.
 #' b <- term_build(lasso(~ x1 + x2), dd)
 #' all.equal(term_predict(b, dd), term_matrix(b))
 #' dim(term_predict(b, dd[1:5, ]))
@@ -662,7 +662,7 @@ S7::method(term_build, PenalizedTerm) <- function(term, data, ...) {
 #' @keywords internal
 S7::method(term_predict, PenalizedTerm) <- function(term, newdata, ...) {
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   if (identical(bp$kind, "formula")) {
     mf <- stats::model.frame(bp$terms, newdata,
                              na.action = stats::na.pass,

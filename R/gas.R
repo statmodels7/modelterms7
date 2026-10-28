@@ -29,7 +29,7 @@ NULL
 #' `scaling` is the power \eqn{d} of the expected information that multiplies
 #' the score; zero leaves the score as it is.
 #'
-#' The `blueprint` property is inherited from [structural_term()] and is not
+#' The `build_info` property is inherited from [structural_term()] and is not
 #' redeclared by this class. [term_build()] fills it with the row order within
 #' each group, the built sub-terms of each subformula and their designs.
 #'
@@ -69,7 +69,7 @@ NULL
 #'   or one for all of them, which a fitting layer sets; empty until then.
 #' @param init_source The model without the term from which a fitting layer
 #'   computed `init_value`, or `NULL` when it is not recorded.
-#' @param blueprint A named list of the resolved ordering, grouping and
+#' @param build_info A named list of the resolved ordering, grouping and
 #'   sub-term designs, empty until [term_build()] fills it.
 #'
 #' @return An S7 object of class `GasTerm`, inheriting from
@@ -94,7 +94,7 @@ NULL
 #'
 #' # The build resolves the ordering; there is no block to read.
 #' b <- term_build(tm, dd)
-#' names(b@blueprint)
+#' names(b@build_info)
 #' try(term_matrix(b))
 #'
 #' @export
@@ -596,7 +596,7 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
           p_cross = p_cross,
           cross_with = character(0),
           init = init,
-          blueprint = list())
+          build_info = list())
 }
 
 # the per-parameter subformulas of `...`: two-sided formulas whose left
@@ -753,7 +753,7 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
 #'
 #' @keywords internal
 S7::method(term_params, GasTerm) <- function(term, ...) {
-  if (length(term@blueprint) && !is.null(term@blueprint$sub)) {
+  if (length(term@build_info) && !is.null(term@build_info$sub)) {
     # the developed layout covers the base parameters and then the cross
     # loadings of a joint filter, each expanded where it is developed
     return(.gas_sub_layout(term)$names)
@@ -791,7 +791,7 @@ S7::method(term_params, GasTerm) <- function(term, ...) {
 #' @return A character vector, usually of length one.
 #' @keywords internal
 S7::method(term_level_param, GasTerm) <- function(term, ...) {
-  sub <- if (length(term@blueprint)) term@blueprint$sub else NULL
+  sub <- if (length(term@build_info)) term@build_info$sub else NULL
   if (is.null(sub) || is.null(sub$omega)) return("omega")
   # with the level developed, the coordinates that shift the predictor by
   # a constant are the ones whose column is constant; any residual
@@ -816,7 +816,7 @@ S7::method(term_level_param, GasTerm) <- function(term, ...) {
 #' @return A numeric matrix or `NULL`.
 #' @keywords internal
 S7::method(term_level_design, GasTerm) <- function(term, ...) {
-  sub <- if (length(term@blueprint)) term@blueprint$sub else NULL
+  sub <- if (length(term@build_info)) term@build_info$sub else NULL
   if (is.null(sub) || is.null(sub$omega)) return(NULL)
   Z <- as.matrix(sub$omega$Z)
   colnames(Z) <- term_params(term)[.gas_sub_layout(term)$idx$omega]
@@ -992,7 +992,7 @@ S7::method(term_start, GasTerm) <- function(term, ...) {
       linkfunctions7::linkfun(.gas_param_link(term, j), 0.1)
     } else 0
   }
-  sub <- if (length(term@blueprint)) term@blueprint$sub else NULL
+  sub <- if (length(term@build_info)) term@build_info$sub else NULL
   if (!is.null(sub)) {
     lay <- .gas_sub_layout(term)
     for (j in base) {
@@ -1021,7 +1021,7 @@ S7::method(term_start, GasTerm) <- function(term, ...) {
 #' @return A list of entries, as [term_penalties()] documents.
 #' @keywords internal
 S7::method(term_penalties, GasTerm) <- function(term, ...) {
-  sub <- if (length(term@blueprint)) term@blueprint$sub else NULL
+  sub <- if (length(term@build_info)) term@build_info$sub else NULL
   if (is.null(sub)) return(list())
   lay <- .gas_sub_layout(term)
   out <- list()
@@ -1333,15 +1333,15 @@ gas_levinson4 <- function(pacf, v, w) {
 #' @description
 #' Resolves the grouping, the ordering and every subformula against the data,
 #' builds the sub-terms of the developments and records all of it in the
-#' blueprint. The recursion itself runs later, in [term_filter()].
+#' `build_info`. The recursion itself runs later, in [term_filter()].
 #'
 #' @details
 #' `by` and `time` are evaluated in the data. Each must give one non-missing
-#' value per row. The blueprint records the row indices of each group in time
+#' value per row. The `build_info` records the row indices of each group in time
 #' order, and the filter iterates over exactly that order.
 #'
 #' Each subformula's right-hand side goes through [interpret_formula()] and its
-#' terms are built, so their blueprints are recorded and a prediction reapplies
+#' terms are built, so their `build_info` lists are recorded and a prediction reapplies
 #' them. A structural sub-term, and one whose own block moves with its
 #' coefficients, are rejected: a parameter's development must be a fixed
 #' design. The penalties that those sub-terms carry become entries of the
@@ -1357,7 +1357,7 @@ gas_levinson4 <- function(pacf, v, w) {
 #'   name.
 #' @param ... Unused.
 #'
-#' @return The term, whose `blueprint` is filled. [term_is_built()] reads that
+#' @return The term, whose `build_info` is filled. [term_is_built()] reads that
 #'   property on this branch, so it is `TRUE` for the result.
 #'
 #' @seealso [gas()], [term_filter()], [term_penalties()].
@@ -1368,8 +1368,8 @@ gas_levinson4 <- function(pacf, v, w) {
 #'                  g = factor(rep(c("u", "v"), 30)))
 #'
 #' # The first term filters one series, and the second a panel of three.
-#' lengths(term_build(gas(p = 1, q = 1, time = t), dd)@blueprint$order)
-#' lengths(term_build(gas(p = 1, q = 1, by = id, time = t), dd)@blueprint$order)
+#' lengths(term_build(gas(p = 1, q = 1, time = t), dd)@build_info$order)
+#' lengths(term_build(gas(p = 1, q = 1, by = id, time = t), dd)@build_info$order)
 #'
 #' # A development expands the parameter and brings its penalty.
 #' gb <- term_build(gas(p = 1, q = 1, omega ~ ridge(~ g), time = t), dd)
@@ -1398,19 +1398,19 @@ S7::method(term_build, GasTerm) <- function(term, data, ...) {
   # the times are kept beside the ordering because a CONTINUATION of the
   # series has to know where the observed part ends: a new row belongs after
   # the last time of its own group, and nothing else records that
-  term@blueprint <- list(order = ord, n = n, levels = levels(gf),
+  term@build_info <- list(order = ord, n = n, levels = levels(gf),
                          times = tm, group = grp,
                          by = term@by, time = term@time)
   # the developments, each through the interpreter exactly as a parameter
   # of nl(): the built sub-terms are kept, prediction reapplying each
-  # one's own blueprint, and their penalties are collected at
+  # one's own `build_info`, and their penalties are collected at
   # term_penalties() under the key parameter::subterm
   if (length(term@submodels)) {
     sub <- list()
     for (pn in names(term@submodels)) {
       sub[[pn]] <- .nl_submodel(pn, term@submodels[[pn]], data)
     }
-    term@blueprint$sub <- sub
+    term@build_info$sub <- sub
   }
   # a penalty supplied as an object covers a fixed number of coefficients
   # and a development's width is counted here for the first time, so this
@@ -1432,7 +1432,7 @@ S7::method(term_build, GasTerm) <- function(term, data, ...) {
 # the constant whatever the parameters are
 .gas_static_start <- function(term, eta) {
   cval <- term@init_value
-  ng <- length(term@blueprint$order)
+  ng <- length(term@build_info$order)
   if (!length(cval)) {
     stop(paste("gas(init = \"static\") starts at the property 'init_value',",
                "which is not set; a fitting layer sets it."), call. = FALSE)
@@ -1441,7 +1441,7 @@ S7::method(term_build, GasTerm) <- function(term, data, ...) {
     stop(sprintf(paste0("'init_value' must be one finite constant or one per ",
                         "group (%d)."), ng), call. = FALSE)
   }
-  first <- vapply(term@blueprint$order, function(r) as.integer(r[[1L]]),
+  first <- vapply(term@build_info$order, function(r) as.integer(r[[1L]]),
                   integer(1))
   rep_len(cval, ng) - as.numeric(eta)[first]
 }
@@ -1525,7 +1525,7 @@ S7::method(term_build, GasTerm) <- function(term, data, ...) {
 S7::method(term_filter, GasTerm) <- function(term, eta, y, score, curvature,
                                              psi, ..., fast = NULL,
                                              threads = 1L) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
          call. = FALSE)
@@ -1581,7 +1581,7 @@ S7::method(term_filter, GasTerm) <- function(term, eta, y, score, curvature,
 S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
                                               psi, g, ..., fast = NULL,
                                               threads = 1L) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
          call. = FALSE)
@@ -2157,7 +2157,7 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
                                 score_values = NULL,
                                 curvature_values = NULL,
                                 blocks_data = NULL, threads = 1L) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
          call. = FALSE)
@@ -2621,10 +2621,10 @@ S7::method(term_fourth, GasTerm) <- function(term, eta, y, score, curvature,
 #'
 #' @keywords internal
 S7::method(print, GasTerm) <- function(x, ...) {
-  built <- length(x@blueprint) > 0L
+  built <- length(x@build_info) > 0L
   cat(sprintf("<GasTerm> '%s': score-driven, p = %d, q = %d%s\n",
               x@label, x@p, x@q,
-              if (built) sprintf("; %d group(s)", length(x@blueprint$order))
+              if (built) sprintf("; %d group(s)", length(x@build_info$order))
               else " (specification)"))
   if (length(x@submodels)) {
     cat("  developed: ", paste(names(x@submodels), collapse = ", "),
@@ -2757,7 +2757,7 @@ gas_filter_r <- function(eta, order, p, q, omega, a, b, db, f0, df0,
 #'
 #' @keywords internal
 S7::method(term_static_deriv, GasTerm) <- function(term, curv, X, psi, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
          call. = FALSE)
@@ -2877,7 +2877,7 @@ S7::method(term_static_deriv, GasTerm) <- function(term, curv, X, psi, ...) {
 #' @keywords internal
 S7::method(term_continue, GasTerm) <- function(term, psi, f_past, s_past,
                                                newdata, ..., deriv = NULL) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
          call. = FALSE)
@@ -2909,7 +2909,7 @@ S7::method(term_continue, GasTerm) <- function(term, psi, f_past, s_past,
   if (anyNA(tv)) stop("`time` must not be missing.", call. = FALSE)
 
   # the parameters at each row: constant, or the development read at the
-  # NEW rows through each sub-term's own blueprint
+  # NEW rows through each sub-term's own `build_info`
   np <- length(u)
   if (is.null(bp$sub)) {
     cf <- .gas_coefs(u[.gas_base_params(p, q)], p, q)

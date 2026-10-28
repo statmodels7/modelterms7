@@ -30,7 +30,7 @@ list is rejected.}
 }
 \value{
 An unbuilt \code{\link[=LinparTerm]{LinparTerm()}}: a specification in which \code{X},
-\code{coef_names} and \code{blueprint} are empty until \code{\link[=term_build]{term_build()}} fills them,
+\code{coef_names} and \code{build_info} are empty until \code{\link[=term_build]{term_build()}} fills them,
 and \code{penalty} is \code{NULL} permanently.
 }
 \description{
@@ -50,11 +50,11 @@ Building runs \code{\link[stats:model.frame]{stats::model.frame()}} with \code{n
 place and the block stays aligned with the response, and a factor level
 present in the data but used by no row still gets its column.
 
-The blueprint records the terms object, the factor levels
+The \code{build_info} records the terms object, the factor levels
 (\code{\link[stats:checkMFClasses]{stats::.getXlevels()}}), the contrasts actually used, the storage chosen at
 build and the \code{drop_intercept} setting. \code{\link[=term_predict]{term_predict()}} reapplies each of
 them, so a factor column at new rows is encoded against the levels seen at
-build time. A level that the blueprint does not record is rejected by
+build time. A level that the \code{build_info} does not record is rejected by
 \code{\link[stats:model.frame]{stats::model.frame()}} with \code{"factor g has new levels zz"}.
 }
 
@@ -90,7 +90,7 @@ the indicator part: the block is built sparse when \code{n * ncol_ind > 1e5},
 where \code{ncol_ind} is an upper bound on the number of columns coming from
 factors (\code{\link[=.indicator_cols]{.indicator_cols()}}).
 
-The settled storage is part of the blueprint, so \code{\link[=term_predict]{term_predict()}} returns
+The settled storage is part of the \code{build_info}, so \code{\link[=term_predict]{term_predict()}} returns
 the same kind of block at new rows.
 }
 

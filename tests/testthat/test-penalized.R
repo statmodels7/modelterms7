@@ -32,7 +32,7 @@ test_that("the four terms attach their penalty and read smoothness from it", {
   }
 })
 
-test_that("a formula input removes the intercept and keeps the blueprint discipline", {
+test_that("a formula input removes the intercept and keeps the build_info discipline", {
   built <- term_build(ridge(~ x1 + x2), dd)
   ref <- stats::model.matrix(~ x1 + x2 - 1, dd)
   expect_equal(unname(term_matrix(built)), unname(ref), ignore_attr = TRUE)
@@ -208,7 +208,7 @@ test_that("a sparse matrix input is never densified", {
   # a standardized sparse block reads its spreads without densifying
   bstd <- term_build(lasso(R, standardize = TRUE), dat)
   expect_s4_class(term_matrix(bstd), "dgCMatrix")
-  expect_equal(unname(bstd@blueprint$standardize),
+  expect_equal(unname(bstd@build_info$standardize),
                unname(apply(as.matrix(R), 2L, stats::sd)))
 })
 
@@ -222,7 +222,7 @@ test_that("standardize attaches the column spreads as a diagonal map", {
   d$k <- 4                                  # a constant column
   for (ctor in list(ridge, lasso, enet, scad, mcp)) {
     built <- term_build(ctor(~ x1 + x2 + k, standardize = TRUE), d)
-    s <- built@blueprint$standardize
+    s <- built@build_info$standardize
     expect_identical(names(s), term_coef_names(built))
     expect_equal(unname(s[1:2]), c(stats::sd(d$x1), stats::sd(d$x2)))
     # a constant column has no spread to divide by and keeps its own scale
@@ -233,7 +233,7 @@ test_that("standardize attaches the column spreads as a diagonal map", {
   }
   # and without the argument there is no map at all
   expect_null(term_penalty(term_build(lasso(~ x1 + x2), d))@map)
-  expect_null(term_build(lasso(~ x1 + x2), d)@blueprint$standardize)
+  expect_null(term_build(lasso(~ x1 + x2), d)@build_info$standardize)
 })
 
 test_that("the standardized penalty is the penalty on a standardized design", {
@@ -245,7 +245,7 @@ test_that("the standardized penalty is the penalty on a standardized design", {
   set.seed(12)
   d <- data.frame(x1 = rnorm(50, 10, 2), x2 = rnorm(50) * 500)
   built <- term_build(lasso(~ x1 + x2, standardize = TRUE), d)
-  s <- unname(built@blueprint$standardize)
+  s <- unname(built@build_info$standardize)
   X <- term_matrix(built)
   Z <- sweep(X, 2L, s, "/")
   expect_equal(unname(apply(Z, 2L, stats::sd)), c(1, 1))

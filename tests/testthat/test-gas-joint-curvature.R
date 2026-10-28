@@ -573,7 +573,7 @@ test_that("a joint filter with static starts has the derivatives of its predicto
     lab <- paste(format(cfg), collapse = " ")
     u0 <- gjc_u0(md, 3)
     E0 <- md$preds(u0)
-    first <- vapply(md$jt@blueprint$order, `[`, 1L, FUN.VALUE = integer(1))
+    first <- vapply(md$jt@build_info$order, `[`, 1L, FUN.VALUE = integer(1))
     cv <- c(0.8, 0.2)[cfg[[1]]]
     for (k in seq_len(K)) {
       expect_equal(E0[first, cfg[[1]][k]], rep(cv[k], length(first)),

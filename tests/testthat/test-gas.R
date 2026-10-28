@@ -207,7 +207,7 @@ test_that("the compiled filter and the R twin agree exactly", {
       df0 <- df0 + (v[["omega"]] / (1 - sb)^2) *
         colSums(db[seq_len(q_), , drop = FALSE])
     }
-    ref <- gas_filter_r(rep(0.05, n), term@blueprint$order, p_, q_,
+    ref <- gas_filter_r(rep(0.05, n), term@build_info$order, p_, q_,
                         v[["omega"]],
                         if (p_ > 0) v[paste0("kappa", seq_len(p_))] else
                           numeric(0),
@@ -660,7 +660,7 @@ test_that("the curvature of a per-group development has the affine structure", {
   plain <- term_build(gas(p = 1, q = 1, by = g), dd)
   term <- term_build(gas(p = 1, q = 1, omega ~ random(~1 | g), by = g), dd)
   nm <- term_params(term)
-  ng <- length(term@blueprint$order)
+  ng <- length(term@build_info$order)
   u0 <- c(0.3, -0.2, 0.15, 0.25, 0.4)
   a <- at(plain, u0)$curvature
   # the developed layout: omega.(Intercept), the departures, kappa1, pacf1
@@ -714,7 +714,7 @@ test_that("the third derivative of a development has the affine structure", {
   plain <- term_build(gas(p = 1, q = 1, by = g), dd)
   term <- term_build(gas(p = 1, q = 1, omega ~ random(~1 | g), by = g), dd)
   nm <- term_params(term)
-  ng <- length(term@blueprint$order)
+  ng <- length(term@build_info$order)
   u0 <- c(0.3, -0.2, 0.15, -0.25, 0.4)
   i_int <- mb + match("omega.(Intercept)", nm)
   i_dev <- mb + which(startsWith(nm, "omega.random"))

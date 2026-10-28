@@ -28,7 +28,7 @@ The two forms are
   parameters: level1, gap2, alr1.1, alr2.1
 }\if{html}{\out{</div>}}
 
-The group count is \code{length(blueprint$order)}, which is 1 unless the term
+The group count is \code{length(build_info$order)}, which is 1 unless the term
 was given a \code{by}. The parameter list is \code{\link[=term_params]{term_params()}}, which is the same
 before and after a build because only \code{k} determines it.
 

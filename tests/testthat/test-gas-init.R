@@ -41,7 +41,7 @@ test_that("a static start puts the first predictor of every group at the constan
     }
     e0 <- as.numeric(X %*% u0[seq_len(mb)])
     out <- term_filter(term, e0, dd$y, sc, cu, psi_of(u0))
-    first <- vapply(term@blueprint$order, `[`, 1L, FUN.VALUE = integer(1))
+    first <- vapply(term@build_info$order, `[`, 1L, FUN.VALUE = integer(1))
     expect_equal(out$eta[first], rep(cval, length(first)), tolerance = 1e-15,
                  info = lab)
     expect_true(all(out$jacobian[first, ] == 0), info = lab)
@@ -49,7 +49,7 @@ test_that("a static start puts the first predictor of every group at the constan
     # the R twin
     cf <- .gas_coefs(unlist(psi_of(u0))[.gas_base_params(term@p, term@q)],
                      term@p, term@q)
-    tw <- gas_filter_r(e0, term@blueprint$order, term@p, term@q, cf$omega,
+    tw <- gas_filter_r(e0, term@build_info$order, term@p, term@q, cf$omega,
                        cf$a, cf$b, cf$db, cf$f0, cf$df0, cf$i_a, cf$np, sc, cu,
                        d0 = .gas_static_start(term, e0))
     expect_equal(tw$eta, out$eta, tolerance = 1e-14, info = lab)
@@ -222,7 +222,7 @@ test_that("a static start with subformulas has the derivatives of its predictor"
                              init = "static")))) {
     lab <- paste(deparse(cfg), collapse = "")
     term <- term_build(eval(cfg), dd)
-    ng <- length(term@blueprint$order)
+    ng <- length(term@build_info$order)
     cval <- log(mean(dd$y)) + 0.05 * seq_len(ng)
     term <- S7::set_props(term, init_value = cval)
     nm <- term_params(term)
@@ -240,7 +240,7 @@ test_that("a static start with subformulas has the derivatives of its predictor"
     }
     e0 <- as.numeric(X %*% u0[seq_len(mb)])
     out <- term_filter(term, e0, dd$y, sc, cu, psi_of(u0))
-    first <- vapply(term@blueprint$order, `[`, 1L, FUN.VALUE = integer(1))
+    first <- vapply(term@build_info$order, `[`, 1L, FUN.VALUE = integer(1))
     expect_equal(out$eta[first], cval, tolerance = 1e-15, info = lab)
     tw <- .gas_filter_sub_r(term, e0, dd$y, sc, cu, unlist(psi_of(u0)))
     expect_equal(tw$eta, out$eta, tolerance = 1e-13, info = lab)

@@ -25,7 +25,7 @@ are not recomputed from the new rows, which supply only the values of the
 covariates and of the \code{by} variable.
 }
 \details{
-The basis object in \code{blueprint$core} carries the knots and the transform, so
+The basis object in \code{build_info$core} carries the knots and the transform, so
 the columns at new rows are the same functions of the covariate as the
 fitted ones, and \eqn{\tilde{X}\beta} is the fitted smooth evaluated
 there. Rebuilding on the new rows would place the knots on their range and
@@ -33,7 +33,7 @@ compute another transform. Predicting on the first rows of the data
 reproduces those rows of the block exactly, and rebuilding on them gives a
 different block (see the examples).
 
-A factor \code{by} is expanded against \code{blueprint$by_levels}, so \code{newdata} need
+A factor \code{by} is expanded against \code{build_info$by_levels}, so \code{newdata} need
 carry only the levels that its own rows use, and the block still has every
 column and is built in the storage chosen at the build. A level that
 was not present at build signals an error.

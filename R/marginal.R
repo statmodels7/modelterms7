@@ -220,7 +220,7 @@ S7::method(term_latent, RegimeTerm) <- function(term, eta, y, logdens, psi,
 #'
 #' The class defines the properties `kind`, `var`, `npsi`, `linear`, `group`,
 #' `prior` and `spec`, and inherits the others from [structural_term()] and
-#' [model_term()], among them `blueprint`.
+#' [model_term()], among them `build_info`.
 #'
 #' `kind` is `"jump"`, `"seg"` or `"jseg"`; `var` is the covariate expression;
 #' `npsi` is the number of break-points per group; `linear` records whether
@@ -234,7 +234,7 @@ S7::method(term_latent, RegimeTerm) <- function(term, eta, y, logdens, psi,
 #' names one. The location of that distribution must be fixed at zero, since
 #' `psi1.mean` carries the position.
 #'
-#' `spec` holds the resolved construction settings. `blueprint` is inherited
+#' `spec` holds the resolved construction settings. `build_info` is inherited
 #' from [structural_term()] and holds the grouping and the covariate that
 #' [term_build()] records.
 #'
@@ -270,7 +270,7 @@ S7::method(term_latent, RegimeTerm) <- function(term, eta, y, logdens, psi,
 #' @param prior The latent's distribution: `NULL` for the Gaussian, or a
 #'   \pkg{distributions7} object whose location is held at zero.
 #' @param spec A named list of the resolved construction settings.
-#' @param blueprint A named list that records the number of rows, the
+#' @param build_info A named list that records the number of rows, the
 #'   covariate, the rows of each group and the group labels. It is empty until
 #'   [term_build()] fills it.
 #'
@@ -483,7 +483,7 @@ MarginalBreakTerm <- S7::new_class(
 
   MarginalBreakTerm(label = label, kind = kind, var = var, npsi = npsi,
                     linear = linear, group = rp$group, prior = prior,
-                    spec = list(psi = psi), blueprint = list())
+                    spec = list(psi = psi), build_info = list())
 }
 
 # The names of the prior's own parameters for one break-point: the
@@ -607,7 +607,7 @@ S7::method(term_links, MarginalBreakTerm) <- function(term, ...) {
 #'
 #' @description
 #' Evaluates the covariate and the grouping variable, orders the rows of each
-#' group by the covariate, and records the result in the blueprint. The
+#' group by the covariate, and records the result in the `build_info`. The
 #' interval structure over which the marginal likelihood is summed or
 #' integrated follows from that ordering.
 #'
@@ -616,7 +616,7 @@ S7::method(term_links, MarginalBreakTerm) <- function(term, ...) {
 #' and is rejected. The grouping variable must give one value per row and must
 #' not contain missing values.
 #'
-#' The blueprint records the number of rows (`n`), the covariate in the order
+#' The `build_info` records the number of rows (`n`), the covariate in the order
 #' of the data (`x`), for each group the row indices ordered by the covariate
 #' (`groups`), and the labels of the groups (`labels`). The intervals over
 #' which the likelihood decomposes are the gaps between a group's ordered
@@ -633,7 +633,7 @@ S7::method(term_links, MarginalBreakTerm) <- function(term, ...) {
 #' @param data A data frame carrying the covariate and the grouping variable.
 #' @param ... Unused.
 #'
-#' @return The term in which `blueprint` is filled. [term_is_built()] reads that
+#' @return The term in which `build_info` is filled. [term_is_built()] reads that
 #'   property on this branch, so it is `TRUE` for the result.
 #'
 #' @seealso [jump()], [term_loglik()], [term_start()].
@@ -644,8 +644,8 @@ S7::method(term_links, MarginalBreakTerm) <- function(term, ...) {
 #' dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
 #'
 #' b <- term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd)
-#' names(b@blueprint)
-#' b@blueprint$labels
+#' names(b@build_info)
+#' b@build_info$labels
 #'
 #' # Without a target the start uses the covariate's quantiles and spread, and
 #' # the change of level starts at zero.
@@ -673,7 +673,7 @@ S7::method(term_build, MarginalBreakTerm) <- function(term, data, ...) {
   }
   f <- factor(g)
   rows <- split(seq_len(n), f)
-  term@blueprint <- list(
+  term@build_info <- list(
     n = n, x = xv,
     # each group's rows sorted by the covariate: the intervals between them
     # are where the sum (or the quadrature) runs
@@ -833,7 +833,7 @@ S7::method(term_build, MarginalBreakTerm) <- function(term, data, ...) {
 }
 
 .marg_built <- function(term) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
          call. = FALSE)
@@ -1867,7 +1867,7 @@ S7::method(term_start, MarginalBreakTerm) <- function(term, ...,
   nm <- term_params(term)
   links <- term_links(term)
   out <- stats::setNames(numeric(length(nm)), nm)
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) return(out)
   xv <- bp$x
   K <- term@npsi
@@ -2227,7 +2227,7 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
 # before the propagation so the result needs no chart correction.
 .marg_jump_hessian <- function(term, eta, y, logdens, grad, hess, psi, seed,
                                cols, level, w) {
-  bp <- term@blueprint
+  bp <- term@build_info
   v <- .marg_check_psi(term, psi)
   nm <- term_params(term)
   links <- term_links(term)
@@ -2412,7 +2412,7 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
 # scale of the prior's spread, added where the identity ends.
 .marg_seg_hessian <- function(term, eta, y, logdens, grad, hess, psi, seed,
                               cols, level, w) {
-  bp <- term@blueprint
+  bp <- term@build_info
   v <- .marg_check_psi(term, psi)
   nm <- term_params(term)
   links <- term_links(term)
@@ -2540,7 +2540,7 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
 # the interval sum differentiated twice
 .marg_jump1_hessian <- function(term, eta, y, logdens, grad, hess, psi, seed,
                                 cols, level, w) {
-  bp <- term@blueprint
+  bp <- term@build_info
   v <- .marg_check_psi(term, psi)
   m <- v[[.marg_mname(1L)]]
   tau <- v[[.marg_tname(1L)]]
@@ -2685,11 +2685,11 @@ S7::method(term_hessian, MarginalBreakTerm) <- function(term, eta, y, logdens,
 #'
 #' @keywords internal
 S7::method(print, MarginalBreakTerm) <- function(x, ...) {
-  built <- length(x@blueprint) > 0L
+  built <- length(x@build_info) > 0L
   cat(sprintf(paste0("<MarginalBreakTerm> '%s' (%s): %d latent break-point%s",
                      " per group, integrated out%s\n"), x@label, x@kind,
               x@npsi, if (x@npsi > 1L) "s" else "",
-              if (built) sprintf(" (%d groups)", length(x@blueprint$groups))
+              if (built) sprintf(" (%d groups)", length(x@build_info$groups))
               else " (specification)"))
   cat("  parameters: ", paste(term_params(x), collapse = ", "), "\n",
       sep = "")

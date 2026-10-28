@@ -55,7 +55,7 @@ See the section above.}
 }
 \value{
 An unbuilt \code{\link[=SmoothTerm]{SmoothTerm()}}: a specification, with \code{X}, \code{coef_names},
-\code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}} fills them.
+\code{build_info} and \code{penalty} empty until \code{\link[=term_build]{term_build()}} fills them.
 }
 \description{
 Constructs a smooth function of one covariate, expanded in a \pkg{basis7}
@@ -113,7 +113,7 @@ parameter is therefore BIC, and not the marginal likelihood.
 The Demmler-Reinsch transform (Demmler and Reinsch, 1975; used for effect
 selection by Bach and Klein, 2024) takes the inner product at the observed
 covariate values, so it is computed when the term is built and stored in
-the blueprint. Prediction is the parent basis evaluated at the new points
+the \code{build_info}. Prediction is the parent basis evaluated at the new points
 and multiplied by that same transform, so the separation of the linear from
 the nonlinear part holds at new rows as it does at old.
 

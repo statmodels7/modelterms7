@@ -300,7 +300,7 @@ test_that("a joint filter is a structural term with prefixed parameters", {
   expect_true(all(r$jacobian[1:5, 6:10] == 0))
   # building again keeps the groups and the label
   jb <- term_build(jt, dj[1:60, ])
-  expect_identical(jb@blueprint$n, 60L)
+  expect_identical(jb@build_info$n, 60L)
   expect_identical(term_params(jb), nm)
   expect_output(print(jt), "mu: p = 1, q = 2, loads sigma")
 })

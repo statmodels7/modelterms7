@@ -67,7 +67,7 @@ factor \code{by} admits \code{TRUE}. See \code{\link[=s]{s()}}.}
 }
 \value{
 An unbuilt \code{\link[=SmoothTerm]{SmoothTerm()}}: a specification, with \code{X}, \code{coef_names},
-\code{blueprint} and \code{penalty} empty until \code{\link[=term_build]{term_build()}} fills them.
+\code{build_info} and \code{penalty} empty until \code{\link[=term_build]{term_build()}} fills them.
 }
 \description{
 Constructs a tensor-product smooth: a \pkg{basis7} basis in each covariate,
@@ -126,7 +126,7 @@ to machine precision;
 and the penalty follows by congruence and keeps its rank, because the
 direction that was removed was one of its null directions.
 
-The transform is stored in the blueprint and reapplied by \code{\link[=term_predict]{term_predict()}},
+The transform is stored in the \code{build_info} and reapplied by \code{\link[=term_predict]{term_predict()}},
 as the Demmler-Reinsch transform of \code{\link[=s]{s()}} is.
 
 The level of the surface is then the model's intercept, so a formula that

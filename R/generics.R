@@ -6,7 +6,7 @@ NULL
 #' @description
 #' Turns a term specification into a built term: an additive term computes its
 #' design block from `data`, assigns the coefficient names and records the
-#' blueprint that will reproduce the mapping on other rows; a structural term
+#' `build_info` that will reproduce the mapping on other rows; a structural term
 #' records whatever its recursion needs, its grouping and its ordering. The
 #' returned object is a copy of the specification in which those properties are
 #' filled, and the specification is unchanged.
@@ -24,7 +24,7 @@ NULL
 #' Building produces \eqn{X_t} from the data and attaches
 #' \eqn{\rho_t}. [term_matrix()] then reads the block, [term_penalties()] the
 #' penalties, and [term_predict()] reproduces \eqn{X_t} at other rows through
-#' the blueprint.
+#' the `build_info`.
 #'
 #' A structural term has no such block. [gas()] records the group to which each
 #' row belongs and its place in that group's series; [regime()] and the marginal
@@ -56,8 +56,8 @@ NULL
 #' @param ... Passed to methods. The shipped methods do not use it.
 #'
 #' @return A built term of the same class as `term`. For an additive term the
-#'   `X`, `coef_names` and `blueprint` properties are filled, and `penalty` is
-#'   filled where the term is penalized; for a structural term the `blueprint`
+#'   `X`, `coef_names` and `build_info` properties are filled, and `penalty` is
+#'   filled where the term is penalized; for a structural term the `build_info`
 #'   is filled. [term_is_built()] is `TRUE` either way, because it reads the
 #'   one of the two records that the branch fills.
 #'
@@ -123,17 +123,17 @@ S7::method(term_build, model_term) <- function(term, data, ...) {
 #' reads the record of each branch. An additive term is built when it has
 #' coefficient names, `length(term@coef_names) > 0L`; a structural term
 #' contributes no design columns and so has none to count, and is built when
-#' its blueprint is filled, `length(term@blueprint) > 0L`.
+#' its `build_info` is filled, `length(term@build_info) > 0L`.
 #'
 #' A built additive term with no columns would give `FALSE`. The shipped
 #' constructors do not produce one: a formula that gives no columns, such as
 #' `~ 0`, is rejected when [term_build()] runs.
 #'
-#' The `blueprint` property is read directly. It is declared on
+#' The `build_info` property is read directly. It is declared on
 #' [additive_term()] and on the abstract [structural_term()], which the
 #' three shipped structural classes inherit, so every term inheriting from
 #' [model_term()] has one. A structural class written outside the package
-#' inherits an empty blueprint, which reads as not built until [term_build()]
+#' inherits an empty `build_info`, which reads as not built until [term_build()]
 #' fills it, and the predicate returns a logical for such a term as well.
 #'
 #' @param term An object inheriting from [model_term()]. Any other object is
@@ -153,7 +153,7 @@ S7::method(term_build, model_term) <- function(term, data, ...) {
 #' try(term_matrix(linpar(~ x)))
 #'
 #' # A structural term carries no design block, so the predicate reads its
-#' # blueprint instead.
+#' # build_info instead.
 #' gs <- gas(p = 1, q = 1)
 #' gb <- term_build(gs, data.frame(y = rnorm(20)))
 #' c(spec = term_is_built(gs), built = term_is_built(gb))
@@ -165,16 +165,16 @@ term_is_built <- function(term) {
     stop("'term' must inherit from 'model_term'.", call. = FALSE)
   }
   # The two branches record being built in different places: an additive term
-  # in its coefficient names, a structural one in its blueprint, having no
+  # in its coefficient names, a structural one in its `build_info`, having no
   # design block to name coefficients of.
   #
-  # `blueprint` is declared on additive_term and on the abstract
+  # `build_info` is declared on additive_term and on the abstract
   # structural_term, so every model_term has one and it can be read rather
   # than asked for. A class written outside the package inherits an empty
   # list, which reads as not built, rather than raising S7's "Can't find
   # property" from inside a predicate whose guard promises a logical.
   if (S7::S7_inherits(term, structural_term)) {
-    return(length(term@blueprint) > 0L)
+    return(length(term@build_info) > 0L)
   }
   S7::S7_inherits(term, additive_term) && length(term@coef_names) > 0L
 }
@@ -1554,9 +1554,9 @@ S7::method(term_smooth, model_term) <- function(term, ...) {
 #' Applies a built term's recorded mapping to new rows, returning the block that
 #' the term would have produced had those rows been in the data on which it was
 #' built. Factor levels, contrasts, spline knots and a Demmler-Reinsch
-#' reparametrization come from the blueprint and are reused; the spreads of a
+#' reparametrization come from the `build_info` and are reused; the spreads of a
 #' standardization enter the penalty only and are not applied to the block. A
-#' factor level that the blueprint does not contain is rejected, except for the
+#' factor level that the `build_info` does not contain is rejected, except for the
 #' grouping levels of a [random()] term with `unseen = "zero"`.
 #'
 #' @details
@@ -1593,7 +1593,7 @@ S7::method(term_smooth, model_term) <- function(term, ...) {
 #'   any number of rows. Any other object is rejected by the generic, before
 #'   dispatch, with the error `"'newdata' must be a data frame."`. A factor here
 #'   need carry only the levels that its own rows use; the rest come from the
-#'   blueprint.
+#'   `build_info`.
 #' @param ... Passed to methods. The method for [random()] reads `unseen`. Its
 #'   default `"error"` rejects a grouping level that was absent at the build
 #'   and a missing grouping value; with `unseen = "zero"` such a row receives a
@@ -1604,7 +1604,7 @@ S7::method(term_smooth, model_term) <- function(term, ...) {
 #'   object where the block is sparse.
 #'
 #' @seealso [term_matrix()] for the block on the fitting data, [term_build()]
-#'   for what records the blueprint, [check_term()] for the check that takes
+#'   for what records the `build_info`, [check_term()] for the check that takes
 #'   this identity as its subject, and [term_continue()] for a structural term.
 #'
 #' @examples
@@ -1617,7 +1617,7 @@ S7::method(term_smooth, model_term) <- function(term, ...) {
 #' # On the fitting data it returns the block itself.
 #' all.equal(term_predict(b, d), term_matrix(b))
 #'
-#' # A subset that drops a level keeps the blueprint's columns, where a
+#' # A subset that drops a level keeps the build_info's columns, where a
 #' # rebuild would lose one.
 #' nd <- droplevels(d[d$g != "c", ])
 #' dim(term_predict(b, nd))

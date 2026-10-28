@@ -9,14 +9,14 @@ MatTerm <- S7::new_class("MatTerm", parent = additive_term, package = NULL,
 mat_term <- function(m, label = "mat") {
   MatTerm(label = label, mat = as.matrix(m),
           X = NULL, coef_names = character(0),
-          blueprint = list(), penalty = NULL)
+          build_info = list(), penalty = NULL)
 }
 S7::method(term_build, MatTerm) <- function(term, data, ...) {
   X <- term@mat
   colnames(X) <- paste(term@label, seq_len(ncol(X)), sep = ".")
   term@X <- X
   term@coef_names <- colnames(X)
-  term@blueprint <- list(ncol = ncol(X))
+  term@build_info <- list(ncol = ncol(X))
   term
 }
 
@@ -92,7 +92,7 @@ test_that("a structural class without term_build is named, like an additive one"
 test_that("a term class without term_build is told which class is missing it", {
   Bare <- S7::new_class("BareTerm", parent = additive_term, package = NULL)
   b <- Bare(label = "", X = NULL, coef_names = character(0),
-            blueprint = list(), penalty = NULL)
+            build_info = list(), penalty = NULL)
   expect_error(term_build(b, data.frame(x = 1)), "BareTerm")
 })
 

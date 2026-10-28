@@ -201,7 +201,7 @@ test_that("a driver has no parameters and is printed as static", {
   jb <- term_build(jt, dd[1:20, ])
   expect_identical(jb@params, c("mu", "sigma"))
   expect_true(S7::S7_inherits(jb@terms$sigma, GasDriver))
-  expect_identical(jb@blueprint$n, 20L)
+  expect_identical(jb@build_info$n, 20L)
 })
 
 test_that("gas_joint rejects drivers that it cannot use", {

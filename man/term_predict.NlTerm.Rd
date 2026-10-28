@@ -19,7 +19,7 @@ term's coefficient names as column names.
 \description{
 Returns the Jacobian of \eqn{f} evaluated at the new rows, at the
 coefficients that the term currently carries. Each parameter's subformula is
-reapplied through its sub-terms' own blueprints, so a basis or a set of
+reapplied through its sub-terms' own \code{build_info} lists, so a basis or a set of
 contrasts inside a submodel is not relearned.
 }
 \details{
@@ -49,7 +49,7 @@ term_predict(b, nd)
 
 # The product of the block and the coefficients is the linearization, not
 # the function: the value is the function.
-cbind(linear = as.numeric(term_predict(b, nd) \%*\% b@blueprint$coef),
+cbind(linear = as.numeric(term_predict(b, nd) \%*\% b@build_info$coef),
       value = term_value(b, newdata = nd),
       truth = 2 * exp(-1.3 * nd$x))
 

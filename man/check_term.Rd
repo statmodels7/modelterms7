@@ -82,7 +82,7 @@ columns are not examined.
 \code{\link[=droplevels]{droplevels()}} is applied to the subset before it is passed on, because new
 data reach \code{\link[=term_predict]{term_predict()}} in that form: a factor column there carries only
 the levels that its own rows use, and the remaining levels are recorded only
-in the blueprint. Without the call a plain row subset carries the original
+in the \code{build_info}. Without the call a plain row subset carries the original
 level set along with it and the check cannot fail.
 }
 
@@ -109,11 +109,11 @@ res <- check_term(linpar(~ x + g), dd)
 all(res$status == "OK")
 
 # This is what the subset check tests. The chosen rows drop level "c", and
-# the reapplied block keeps the four columns that the blueprint recorded.
+# the reapplied block keeps the four columns that the build_info recorded.
 b  <- term_build(linpar(~ x + g), dd)
 nd <- droplevels(dd[c(1, 2, 4, 5), ])
 levels(nd$g)
-dim(term_predict(b, nd))              # 4 x 4, the blueprint's levels
+dim(term_predict(b, nd))              # 4 x 4, the build_info's levels
 dim(model.matrix(~ x + g, nd))        # 4 x 3, what a rebuild gives
 
 # The same failure occurs for a basis: rebuilding places the knots on the

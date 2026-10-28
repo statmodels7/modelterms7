@@ -20,7 +20,7 @@ term's coefficient names as column names.
 Returns the working block evaluated at \code{newdata}, at the break-points and
 the coefficients that the term currently carries. The positions are not
 re-derived from the new rows, and any development of a coefficient is
-reapplied through its sub-terms' own blueprints.
+reapplied through its sub-terms' own \code{build_info} lists.
 }
 \details{
 Re-deriving the break-points would give a different model at every set of

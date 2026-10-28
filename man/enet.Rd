@@ -79,7 +79,7 @@ an argument named after another penalty's hyperparameter:
 }
 \value{
 An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification whose \code{X},
-\code{coef_names}, \code{blueprint} and \code{penalty} are empty until \code{\link[=term_build]{term_build()}}
+\code{coef_names}, \code{build_info} and \code{penalty} are empty until \code{\link[=term_build]{term_build()}}
 fills them. The build attaches the penalty over the block's columns.
 }
 \description{

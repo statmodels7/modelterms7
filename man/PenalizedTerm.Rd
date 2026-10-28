@@ -14,7 +14,7 @@ PenalizedTerm(
   ids = character(0),
   X = NULL,
   coef_names = character(0),
-  blueprint = list(),
+  build_info = list(),
   penalty = NULL,
   input = NULL,
   input_expr = NULL,
@@ -61,7 +61,7 @@ two-dimensional \pkg{Matrix}. It is empty until \code{\link[=term_build]{term_bu
 \item{coef_names}{The block's coefficient names, one per column, prefixed by
 \code{label} when there is one. \code{\link[=term_build]{term_build()}} fills it.}
 
-\item{blueprint}{A named list of everything needed to reproduce the mapping
+\item{build_info}{A named list of everything needed to reproduce the mapping
 on new rows. Its contents belong to the subclass, and only the term reads
 them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
@@ -112,12 +112,12 @@ argument when \code{standardize = TRUE}, so a factory that is never used with
 standardization may take only the count.
 
 \code{standardize} is a single logical on the specification; after a build the
-spreads themselves are in \code{blueprint$standardize}, one per column.
+spreads themselves are in \code{build_info$standardize}, one per column.
 
 \code{sparse} governs the formula route only, because a matrix input is kept in
 the storage in which it arrives. The property stays as the caller wrote it,
 \code{NULL} by default, and the storage that the build settles is recorded in
-\code{blueprint$sparse}.
+\code{build_info$sparse}.
 }
 
 \section{What the class does not fix}{
@@ -147,7 +147,7 @@ b@penalty@n_coef
 dd$x3 <- 1000 * dd$x2
 bs <- term_build(lasso(~ x1 + x3, standardize = TRUE), dd)
 bs@standardize
-bs@blueprint$standardize
+bs@build_info$standardize
 
 }
 \seealso{

@@ -20,7 +20,7 @@ intercept, the covariates of a random slope, one column per coordinate of
 the effect.
 }
 \details{
-The design is read from the blueprint that the build recorded, so a factor
+The design is read from the \code{build_info} that the build recorded, so a factor
 keeps its levels and contrasts. It does not depend on the grouping, so a
 caller can integrate the effect of a group that is absent from the fitting
 data: the effect is \eqn{z_i^\top b} with \eqn{z_i} this row and \eqn{b}

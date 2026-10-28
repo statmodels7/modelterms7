@@ -14,7 +14,7 @@ test_that("the default is NULL and the working construction is untouched", {
   dd <- sm_data()
   b <- term_build(jump(x), dd)
   expect_null(b@spec$smoothed)
-  expect_null(b@blueprint$smooth)
+  expect_null(b@build_info$smooth)
   expect_false(term_jacobian_block(jump(x)))
   # the auxiliary coefficient of the identity of Fasola et al. is still there
   expect_true(any(grepl("\\.g1$", term_coef_names(b))))
@@ -27,13 +27,13 @@ test_that("a smoothed term is a Jacobian block of any kind", {
     spec <- ctor(x, psi = 4, smoothed = sm)
     expect_true(term_jacobian_block(spec))
     b <- term_build(spec, dd)
-    expect_false(is.null(b@blueprint$smooth))
+    expect_false(is.null(b@build_info$smooth))
     # no auxiliary coordinates: the break-point is held directly
     expect_true(any(grepl("\\.psi1$", term_coef_names(b))))
     expect_false(any(grepl("\\.g1$", term_coef_names(b))))
     # the block is the derivative of the contribution: every column against
     # a central difference of term_value in that coefficient
-    cf <- b@blueprint$coef
+    cf <- b@build_info$coef
     X <- as.matrix(term_matrix(term_refresh(b, cf)))
     for (j in seq_along(cf)) {
       h <- 1e-6 * max(1, abs(cf[j]))
@@ -43,7 +43,7 @@ test_that("a smoothed term is a Jacobian block of any kind", {
       expect_lt(max(abs(X[, j] - fd)), 1e-5 * max(1, max(abs(fd))))
     }
     # and the reported position is the coefficient itself
-    expect_equal(as.numeric(seg_psi(b, cf)), cf[b@blueprint$index$psi1])
+    expect_equal(as.numeric(seg_psi(b, cf)), cf[b@build_info$index$psi1])
   }
 })
 
@@ -59,7 +59,7 @@ test_that("smoothed developments of a break-point are legal, penalized ones
   expect_true(length(term_penalties(b)) >= 1L)
   # a jseg development of psi, refused outright before, builds too
   b2 <- term_build(jseg(x, psi ~ 0 + g, smoothed = sm), dd)
-  expect_equal(length(b2@blueprint$index$psi1), 4L)
+  expect_equal(length(b2@build_info$index$psi1), 4L)
 })
 
 test_that("c0 is ignored with a message on a smoothed discontinuous term", {
@@ -74,13 +74,13 @@ test_that("the width is resolved at build from the covariate's spacing", {
   dd <- sm_data()
   gap <- stats::median(diff(sort(unique(dd$x))))
   b <- term_build(jump(x, smoothed = numericals7::smooth_probit()), dd)
-  expect_equal(b@blueprint$smooth$width, gap)
+  expect_equal(b@build_info$smooth$width, gap)
   # the hyperbolic's parameter is a squared length
   b2 <- term_build(jump(x, smoothed = numericals7::smooth_hyperbolic()), dd)
-  expect_equal(b2@blueprint$smooth$width, gap^2)
+  expect_equal(b2@build_info$smooth$width, gap^2)
   # a width the smoother holds wins
   b3 <- term_build(jump(x, smoothed = numericals7::smooth_probit(h = 0.5)), dd)
-  expect_equal(b3@blueprint$smooth$width, 0.5)
+  expect_equal(b3@build_info$smooth$width, 0.5)
   # and one below the derived floor is rejected, naming the bound
   expect_error(
     term_build(jump(x, smoothed = numericals7::smooth_probit(h = 1e-12)), dd),
@@ -94,8 +94,8 @@ test_that("a per-group width needs a partition development and gives one
   sm <- numericals7::smooth_probit(per_group = TRUE)
   expect_error(term_build(jump(x, smoothed = sm), dd), "per-group")
   b <- term_build(jump(x, psi ~ 0 + g, smoothed = sm), dd)
-  expect_equal(length(b@blueprint$smooth$w_group), 4L)
-  expect_true(all(b@blueprint$smooth$w_group > 0))
+  expect_equal(length(b@build_info$smooth$w_group), 4L)
+  expect_true(all(b@build_info$smooth$w_group > 0))
 })
 
 test_that("the closed second derivatives agree with a brute-force dX/dbeta", {
@@ -103,7 +103,7 @@ test_that("the closed second derivatives agree with a brute-force dX/dbeta", {
   sm <- numericals7::smooth_probit(h = 0.4)
   for (ctor in list(seg, jump, jseg)) {
     b <- term_build(ctor(x, psi = 5, smoothed = sm), dd)
-    cf <- b@blueprint$coef
+    cf <- b@build_info$coef
     m <- length(cf)
     n <- nrow(dd)
     D <- array(0, c(n, m, m))
@@ -130,11 +130,11 @@ test_that("the closed second derivatives agree with a brute-force dX/dbeta", {
 })
 
 test_that("a smoothed term predicts and values on new data through its own
-          blueprint", {
+          build_info", {
   dd <- sm_data()
   sm <- numericals7::smooth_probit(h = 0.3)
   b <- term_build(jseg(x, psi = 6, smoothed = sm), dd)
-  cf <- b@blueprint$coef
+  cf <- b@build_info$coef
   nd <- dd[seq(1, 200, by = 7), , drop = FALSE]
   expect_equal(term_value(b, cf, newdata = nd),
                term_value(b, cf)[seq(1, 200, by = 7)])
@@ -161,7 +161,7 @@ test_that("a smoothed seg converges to the sharp answer on a smooth truth", {
   dd$y <- 1 + 0.5 * dd$x + 2 * pmax(dd$x - 6, 0) + rnorm(300, sd = 0.2)
   fit_gn <- function(spec) {
     b <- term_build(spec, dd)
-    cf <- b@blueprint$coef
+    cf <- b@build_info$coef
     for (it in 1:60) {
       b <- term_refresh(b, cf)
       X <- cbind(1, as.matrix(term_matrix(b)))
@@ -191,14 +191,14 @@ test_that("the quintic's width covers half of the largest gap a break-point may 
   g <- stats::median(diff(u))
   expect_gt(mg, 2 * 5 * g / (2 * log(2)))
   tm <- term_build(jump(x, smoothed = numericals7::smooth_quintic()), d)
-  expect_equal(tm@blueprint$smooth$width, 0.55 * mg)
+  expect_equal(tm@build_info$smooth$width, 0.55 * mg)
   # a break-point at the middle of that gap keeps an observation inside
   # its width, so its column is not zero
   j <- k[which.max(diff(u)[k])]
   mid <- (u[j] + u[j + 1L]) / 2
   expect_gt(min(abs(d$x - mid)), 0)
-  expect_lt(min(abs(d$x - mid)), tm@blueprint$smooth$width)
+  expect_lt(min(abs(d$x - mid)), tm@build_info$smooth$width)
   # the probit, which is not exact outside a radius, keeps its width
   tp <- term_build(jump(x, smoothed = numericals7::smooth_probit()), d)
-  expect_equal(tp@blueprint$smooth$width, g)
+  expect_equal(tp@build_info$smooth$width, g)
 })

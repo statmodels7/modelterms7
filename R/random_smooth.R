@@ -305,7 +305,7 @@ RandomSmoothTerm <- S7::new_class(
 #'   covariates.
 #' @param ... Unused.
 #'
-#' @return The term with `X` (a `dgCMatrix`), `coef_names`, `blueprint` and
+#' @return The term with `X` (a `dgCMatrix`), `coef_names`, `build_info` and
 #'   `penalty` filled.
 #'
 #' @seealso [random()], [term_build.RandomTerm()], [term_penalties()].
@@ -404,7 +404,7 @@ S7::method(term_build, RandomSmoothTerm) <- function(term, data, ...) {
 
   term@X <- Z
   term@coef_names <- cn
-  term@blueprint <- list(
+  term@build_info <- list(
     kind = "smooth", gexpr = parts$group, glevels = levels(g),
     inner = sb, transform = sp$T, intercept = isTRUE(term@intercept),
     entries = entries, dim = d, nnull = d0, wnames = wn

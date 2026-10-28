@@ -34,7 +34,7 @@ NULL
     }
     p <- tm@p
     q <- tm@q
-    n <- tm@blueprint$n
+    n <- tm@build_info$n
     off <- term@offsets[k]
     nl <- length(.gas_sub_layout(tm)$names)
     vals <- .gas_sub_values(tm, u, "parameter")
@@ -60,7 +60,7 @@ NULL
 # at every row, with no coordinates, no lags and no cross loadings; `vals`
 # carries the one entry, omega, that the routes read for every member.
 .gas_driver_member <- function(tm, off) {
-  n <- tm@blueprint$n
+  n <- tm@build_info$n
   om <- list(idx = integer(0), developed = FALSE, Z = matrix(0, n, 0L),
              v = numeric(n), W = matrix(0, n, 0L), k2 = numeric(n),
              k3 = numeric(n), k4 = numeric(n))
@@ -75,7 +75,7 @@ NULL
 # the groups of a driver for .gas_joint_sub_groups(): no active coordinate
 # and a starting level of zero in each group
 .gas_driver_groups <- function(term) {
-  list(groups = lapply(term@blueprint$order, function(rows)
+  list(groups = lapply(term@build_info$order, function(rows)
     list(act = integer(0), dom = matrix(0, length(rows), 0L), da = list(),
          dbl = list(), f0 = 0, df0 = numeric(0))))
 }
@@ -86,7 +86,7 @@ NULL
 # it once, from the single term's .gas_sub_prep(); the cross loadings' rows
 # are scattered here.
 .gas_joint_sub_groups <- function(term, mem) {
-  bp <- term@blueprint
+  bp <- term@build_info
   K <- length(mem)
   acts <- lapply(mem, function(m) {
     if (isTRUE(m$driver)) lapply(bp$order, function(r) integer(0))
@@ -129,7 +129,7 @@ NULL
 # the arguments and the value of term_filter() of GasJoint
 .gas_joint_sub_filter <- function(term, eta, y, score, curvature, psi,
                                   fast = NULL, threads = 1L) {
-  bp <- term@blueprint
+  bp <- term@build_info
   K <- length(term@params)
   n <- bp$n
   eta <- matrix(as.numeric(eta), n, K)
@@ -249,7 +249,7 @@ NULL
 # filtered predictors; the reverse pass reads each coefficient at the row
 # whose equation it enters
 .gas_joint_sub_adjoint <- function(term, cv, g, psi) {
-  bp <- term@blueprint
+  bp <- term@build_info
   K <- length(term@params)
   n <- bp$n
   g <- matrix(as.numeric(g), n, K)

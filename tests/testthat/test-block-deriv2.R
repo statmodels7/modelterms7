@@ -89,7 +89,7 @@ test_that("the second derivative matches one stencil on the first", {
   set.seed(11)
   for (nm in names(bd2_cases())) {
     tm <- bd2_cases()[[nm]]
-    cf <- tm@blueprint$coef
+    cf <- tm@build_info$coef
     k <- length(cf)
     v <- rnorm(k)
     u <- rnorm(k)
@@ -114,8 +114,8 @@ test_that("an opaque function is right to the accuracy its stencils have", {
   opq <- term_build(nl(function(x, theta) theta$a * exp(-theta$r * x),
                        params = c("a", "r"), x = x,
                        start = list(a = 2, r = 1.3)), db2)
-  expect_identical(sym@blueprint$mode, "symbolic")
-  expect_identical(opq@blueprint$mode, "numeric")
+  expect_identical(sym@build_info$mode, "symbolic")
+  expect_identical(opq@build_info$mode, "numeric")
   set.seed(3)
   v <- rnorm(2)
   u <- rnorm(2)
@@ -160,7 +160,7 @@ test_that("the qualification on the links is necessary", {
   u <- rnorm(k)
   D <- term_block_deriv2(tm, v = v, u = u)
   expect_gt(max(abs(D)), 1e-6)
-  R <- bd2_ref(tm, tm@blueprint$coef, v, u, 1e-4)
+  R <- bd2_ref(tm, tm@build_info$coef, v, u, 1e-4)
   expect_lt(max(abs(D - R)) / max(abs(R)), 1e-6)
 })
 
@@ -169,7 +169,7 @@ test_that("a sparse development is scaled in its own storage", {
   # the sub-design: at order three this runs once per PAIR of hyperparameters
   tm <- term_build(nl(~ a * exp(-r * x), a ~ 0 + random(~ 1 | id),
                       start = list(r = 1.3)), db2)
-  Z <- tm@blueprint$Z[["a"]]
+  Z <- tm@build_info$Z[["a"]]
   expect_true(inherits(Z, "Matrix"))
   acc <- runif(nrow(db2))
   expect_true(inherits(Z * acc, "Matrix"))
@@ -252,7 +252,7 @@ test_that("the smoothed second derivative matches one stencil on the first", {
   set.seed(17)
   for (nm in names(sm_cases())) {
     tm <- sm_cases()[[nm]]
-    cf <- tm@blueprint$coef
+    cf <- tm@build_info$coef
     k <- length(cf)
     v <- rnorm(k)
     u <- rnorm(k)
@@ -281,13 +281,13 @@ test_that("a confined break-point contributes exactly zero, at both orders", {
   for (tm in list(term_build(seg(x, smoothed = sp), dsm),
                   term_build(jump(x, smoothed = sp), dsm),
                   term_build(jseg(x, smoothed = sp), dsm))) {
-    cf <- tm@blueprint$coef
+    cf <- tm@build_info$coef
     nms <- term_coef_names(tm)
     k <- length(cf)
     set.seed(2)
     v <- rnorm(k)
     expect_gt(max(abs(term_block_deriv(tm, coef = cf, v = v))), 1e-6)
-    cf[grep("psi[0-9]*$", nms)] <- tm@blueprint$lim[2L] + 5
+    cf[grep("psi[0-9]*$", nms)] <- tm@build_info$lim[2L] + 5
     expect_true(all(term_block_deriv2(tm, coef = cf, v = rnorm(k),
                                       u = rnorm(k)) == 0))
     d1 <- term_block_deriv(tm, coef = cf, v = v)
@@ -303,7 +303,7 @@ test_that("under the quintic the answer is exactly zero outside the width", {
   # says the method reads the smoother's own higher orders and not something
   # standing in for them.
   tm <- term_build(seg(x, smoothed = numericals7::smooth_quintic()), dsm)
-  bp <- tm@blueprint
+  bp <- tm@build_info
   k <- length(bp$coef)
   set.seed(3)
   D <- term_block_deriv2(tm, v = rnorm(k), u = rnorm(k))
@@ -348,7 +348,7 @@ test_that("a sharp seg's second derivative is exactly zero away from psi", {
   # not carry across the break-point the difference is identically zero,
   # whatever the step.
   tm <- term_build(seg(x), dsh)
-  bp <- tm@blueprint
+  bp <- tm@build_info
   ip <- bp$index[["psi1"]]
   k <- length(bp$coef)
   set.seed(7)
@@ -375,7 +375,7 @@ test_that("the one exception is a point mass and behaves like one", {
   # Without this the test above is satisfied by a sample that happens to have
   # no observation near the break-point, which asks nothing.
   tm <- term_build(seg(x), dsh)
-  bp <- tm@blueprint
+  bp <- tm@build_info
   ip <- bp$index[["psi1"]]
   k <- length(bp$coef)
   set.seed(7)
@@ -401,11 +401,11 @@ test_that("order one IS a derivative for seg and is not for jump or jseg", {
   # weight rather than a Jacobian: the zeros there are a refusal and not a
   # description.
   blk <- function(tm, cf, cs) {
-    b <- tm@blueprint
+    b <- tm@build_info
     as.matrix(.seg_assemble(b, b$xv, cf, cscale = cs)$X)
   }
   tm <- term_build(seg(x), dsh)
-  bp <- tm@blueprint
+  bp <- tm@build_info
   set.seed(7)
   u <- rnorm(length(bp$coef))
   A <- term_block_deriv(tm, coef = bp$coef, v = u)
@@ -416,7 +416,7 @@ test_that("order one IS a derivative for seg and is not for jump or jseg", {
   }
   for (kind in c("jump", "jseg")) {
     tj <- term_build(if (kind == "jump") jump(x) else jseg(x), dsh)
-    bpj <- tj@blueprint
+    bpj <- tj@build_info
     kj <- length(bpj$coef)
     set.seed(7)
     uj <- rnorm(kj)

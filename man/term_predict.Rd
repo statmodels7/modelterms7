@@ -15,7 +15,7 @@ signals the error
 any number of rows. Any other object is rejected by the generic, before
 dispatch, with the error \code{"'newdata' must be a data frame."}. A factor here
 need carry only the levels that its own rows use; the rest come from the
-blueprint.}
+\code{build_info}.}
 
 \item{...}{Passed to methods. The method for \code{\link[=random]{random()}} reads \code{unseen}. Its
 default \code{"error"} rejects a grouping level that was absent at the build
@@ -31,9 +31,9 @@ object where the block is sparse.
 Applies a built term's recorded mapping to new rows, returning the block that
 the term would have produced had those rows been in the data on which it was
 built. Factor levels, contrasts, spline knots and a Demmler-Reinsch
-reparametrization come from the blueprint and are reused; the spreads of a
+reparametrization come from the \code{build_info} and are reused; the spreads of a
 standardization enter the penalty only and are not applied to the block. A
-factor level that the blueprint does not contain is rejected, except for the
+factor level that the \code{build_info} does not contain is rejected, except for the
 grouping levels of a \code{\link[=random]{random()}} term with \code{unseen = "zero"}.
 }
 \section{The identity that makes it useful}{
@@ -72,7 +72,7 @@ term_predict(b, data.frame(x = c(0.5, 2.5), g = factor(c("a", "c"))))
 # On the fitting data it returns the block itself.
 all.equal(term_predict(b, d), term_matrix(b))
 
-# A subset that drops a level keeps the blueprint's columns, where a
+# A subset that drops a level keeps the build_info's columns, where a
 # rebuild would lose one.
 nd <- droplevels(d[d$g != "c", ])
 dim(term_predict(b, nd))
@@ -91,6 +91,6 @@ max(abs(term_matrix(term_build(s(x, basis7::bspline_smooth(k = 6)), d2[sub, , dr
 }
 \seealso{
 \code{\link[=term_matrix]{term_matrix()}} for the block on the fitting data, \code{\link[=term_build]{term_build()}}
-for what records the blueprint, \code{\link[=check_term]{check_term()}} for the check that takes
+for what records the \code{build_info}, \code{\link[=check_term]{check_term()}} for the check that takes
 this identity as its subject, and \code{\link[=term_continue]{term_continue()}} for a structural term.
 }

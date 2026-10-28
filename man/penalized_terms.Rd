@@ -28,7 +28,7 @@ an argument named after another penalty's hyperparameter:
 }
 \value{
 An unbuilt \code{\link[=PenalizedTerm]{PenalizedTerm()}}: a specification in which \code{X},
-\code{coef_names}, \code{blueprint} and \code{penalty} are all empty until \code{\link[=term_build]{term_build()}}
+\code{coef_names}, \code{build_info} and \code{penalty} are all empty until \code{\link[=term_build]{term_build()}}
 fills them.
 }
 \description{
@@ -46,7 +46,7 @@ term.
 \section{The two inputs}{
 A formula goes through the \code{\link[stats:model.matrix]{stats::model.matrix()}} machinery after its
 intercept is removed: a penalized block does not penalize an intercept, and
-the model's intercept lives in the parametric block. Its blueprint records
+the model's intercept lives in the parametric block. Its \code{build_info} records
 the terms, the factor levels and the contrasts, exactly as \code{\link[=linpar]{linpar()}} does,
 so \code{~ g} and \code{~ 0 + g} give the same four columns for a four-level factor.
 
@@ -132,7 +132,7 @@ fit is invariant to a translation of a penalized column wherever an
 intercept is free.
 
 The spread is computed from the built block by \code{\link[=.block_sd]{.block_sd()}} and frozen in
-\code{blueprint$standardize}, so the same term standardizes identically in every
+\code{build_info$standardize}, so the same term standardizes identically in every
 equation of a distributional model and does not move with the working
 weights of a fit. A constant column takes \eqn{s_j = 1}. \code{\link[=print]{print()}} shows the
 values, because a change of scale changes the meaning of \eqn{\lambda}.

@@ -13,7 +13,7 @@ within-group covariates.}
 }
 \value{
 The term with \code{X} (a \code{dgCMatrix} of \eqn{md} columns),
-\code{coef_names}, \code{blueprint} and \code{penalty} filled.
+\code{coef_names}, \code{build_info} and \code{penalty} filled.
 }
 \description{
 Builds the within-group design from the left of the bar, interacts it with

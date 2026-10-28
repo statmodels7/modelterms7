@@ -22,11 +22,11 @@ NULL
 #' place and the block stays aligned with the response, and a factor level
 #' present in the data but used by no row still gets its column.
 #'
-#' The blueprint records the terms object, the factor levels
+#' The `build_info` records the terms object, the factor levels
 #' ([stats::.getXlevels()]), the contrasts actually used, the storage chosen at
 #' build and the `drop_intercept` setting. [term_predict()] reapplies each of
 #' them, so a factor column at new rows is encoded against the levels seen at
-#' build time. A level that the blueprint does not record is rejected by
+#' build time. A level that the `build_info` does not record is rejected by
 #' [stats::model.frame()] with `"factor g has new levels zz"`.
 #'
 #' # Several parametric blocks
@@ -60,7 +60,7 @@ NULL
 #' where `ncol_ind` is an upper bound on the number of columns coming from
 #' factors ([.indicator_cols()]).
 #'
-#' The settled storage is part of the blueprint, so [term_predict()] returns
+#' The settled storage is part of the `build_info`, so [term_predict()] returns
 #' the same kind of block at new rows.
 #'
 #' @param formula A one-sided formula, `~ x1 + x2`. A two-sided formula is
@@ -82,7 +82,7 @@ NULL
 #'   list is rejected.
 #'
 #' @return An unbuilt [LinparTerm()]: a specification in which `X`,
-#'   `coef_names` and `blueprint` are empty until [term_build()] fills them,
+#'   `coef_names` and `build_info` are empty until [term_build()] fills them,
 #'   and `penalty` is `NULL` permanently.
 #'
 #' @seealso [ridge()], [lasso()], [scad()], [mcp()] and [enet()] for the
@@ -148,7 +148,7 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
   LinparTerm(label = label, formula = formula, sparse = o$sparse,
              contrasts = o$contrasts,
              X = NULL, coef_names = character(0),
-             blueprint = list(), penalty = NULL)
+             build_info = list(), penalty = NULL)
 }
 
 #' The Model Matrix of a Formula, in Either Storage
@@ -164,7 +164,7 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 #' forms a dense intermediate.
 #'
 #' The contrasts are returned beside the block and are not kept on it. A
-#' consumer reads the block, and the blueprint records the contrasts.
+#' consumer reads the block, and the `build_info` records the contrasts.
 #'
 #' @param tt A terms object, from [stats::model.frame()] or
 #'   [stats::delete.response()].
@@ -325,7 +325,7 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 #' @description
 #' Builds the model matrix of a [linpar()] term's formula against `data`,
 #' prefixes the coefficient names with the term's label, and records the
-#' blueprint that [term_predict()] will reapply: the terms object from which the
+#' `build_info` that [term_predict()] will reapply: the terms object from which the
 #' response is deleted, the factor levels, the contrasts used, the storage
 #' chosen at build and `drop_intercept`.
 #'
@@ -343,7 +343,7 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 #'
 #' Where the constructor left `sparse = NULL`, [.resolve_sparse()] settles it
 #' from `n` times the indicator column count. The value settled on goes into
-#' `blueprint$sparse` and the `sparse` property is left as the caller wrote it,
+#' `build_info$sparse` and the `sparse` property is left as the caller wrote it,
 #' because new data may have any number of rows, and if a prediction settled
 #' the storage again, it could build a block of a different kind from the
 #' fitted one.
@@ -352,7 +352,7 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 #' @param data A data frame carrying every variable that the formula names.
 #' @param ... Unused.
 #'
-#' @return The term, in which `X`, `coef_names` and `blueprint` are filled, so
+#' @return The term, in which `X`, `coef_names` and `build_info` are filled, so
 #'   that [term_is_built()] is `TRUE`. The block has `nrow(data)` rows, and its
 #'   column names are the coefficient names.
 #'
@@ -362,7 +362,7 @@ linpar <- function(formula, label = "", sparse = NULL, contrasts = NULL) {
 #' dd <- data.frame(x = 1:8, g = factor(rep(c("a", "b", "c", "d"), 2)))
 #' b <- term_build(linpar(~ x + g), dd)
 #' term_matrix(b)
-#' names(b@blueprint)
+#' names(b@build_info)
 #'
 #' # A missing value keeps its row.
 #' term_matrix(term_build(linpar(~ x), data.frame(x = c(1, NA, 3))))
@@ -375,7 +375,7 @@ S7::method(term_build, LinparTerm) <- function(term, data, ...) {
   tt <- attr(mf, "terms")
   # the block is a plain numeric matrix, or a dgCMatrix where the caller
   # asked for one or where the design is large enough that one pays: the
-  # model.matrix bookkeeping lives in the blueprint, not on the result
+  # model.matrix bookkeeping lives in the `build_info`, not on the result
   sp <- .resolve_sparse(term@sparse, nrow(mf), .indicator_cols(tt, mf))
   b <- .design_matrix(tt, mf,
                       if (length(term@contrasts)) term@contrasts else NULL,
@@ -386,7 +386,7 @@ S7::method(term_build, LinparTerm) <- function(term, data, ...) {
   colnames(X) <- cn
   term@X <- X
   term@coef_names <- cn
-  term@blueprint <- list(
+  term@build_info <- list(
     terms = stats::delete.response(tt),
     xlev = stats::.getXlevels(tt, mf),
     contrasts = b$contrasts,
@@ -416,17 +416,17 @@ S7::method(term_build, LinparTerm) <- function(term, data, ...) {
 #' time, then the model matrix with the recorded contrasts and in the recorded
 #' storage, and labels the columns with the term's coefficient names. The
 #' terms object, the levels, the contrasts, the storage and the intercept
-#' setting are all read from the blueprint, and the new rows supply only the
+#' setting are all read from the `build_info`, and the new rows supply only the
 #' values of the variables.
 #'
 #' @details
-#' The levels come from `blueprint$xlev`, so a factor in `newdata` need carry
+#' The levels come from `build_info$xlev`, so a factor in `newdata` need carry
 #' only the levels that its own rows use and still gets the full set of
-#' columns. A level that the blueprint does not record is rejected by
+#' columns. A level that the `build_info` does not record is rejected by
 #' [stats::model.frame()] with `"factor g has new levels zz"`, because the fit
 #' did not estimate a coefficient for that level.
 #'
-#' The storage comes from `blueprint$sparse` rather than being decided again,
+#' The storage comes from `build_info$sparse` rather than being decided again,
 #' so a prediction builds the same kind of block as the fit and does not
 #' densify a sparse block at new rows. `na.action = na.pass` again keeps every
 #' row.
@@ -441,7 +441,7 @@ S7::method(term_build, LinparTerm) <- function(term, data, ...) {
 #'   names.
 #'
 #' @seealso [term_predict()] for the generic and the identity that it satisfies,
-#'   [term_build.LinparTerm()] for what recorded the blueprint.
+#'   [term_build.LinparTerm()] for what recorded the `build_info`.
 #'
 #' @examples
 #' dd <- data.frame(x = 1:8, g = factor(rep(c("a", "b", "c", "d"), 2)))
@@ -463,11 +463,11 @@ S7::method(term_build, LinparTerm) <- function(term, data, ...) {
 #' @keywords internal
 S7::method(term_predict, LinparTerm) <- function(term, newdata, ...) {
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   mf <- stats::model.frame(bp$terms, newdata,
                            na.action = stats::na.pass,
                            xlev = bp$xlev)
-  # the STORAGE is part of the blueprint: a prediction that densified would
+  # the STORAGE is part of the `build_info`: a prediction that densified would
   # spend at new data what the build was careful not to
   X <- .design_matrix(bp$terms, mf, bp$contrasts, isTRUE(bp$sparse))$X
   X <- .drop_intercept_col(X, bp$drop_intercept)

@@ -12,7 +12,7 @@ GasDriver(
   min_ratio = numeric(0),
   search = character(0),
   ids = character(0),
-  blueprint = list(),
+  build_info = list(),
   p = integer(0),
   q = integer(0),
   by = NULL,
@@ -59,7 +59,7 @@ term's own hyperparameters, or \code{character(0)} for none. The terms
 carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
-\item{blueprint}{A named list of the resolved ordering, grouping and
+\item{build_info}{A named list of the resolved ordering, grouping and
 sub-term designs, empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{p}{The number of score lags, an integer of at least 1.}

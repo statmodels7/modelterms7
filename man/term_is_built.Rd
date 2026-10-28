@@ -25,17 +25,17 @@ The two branches record being built in different places, so the predicate
 reads the record of each branch. An additive term is built when it has
 coefficient names, \code{length(term@coef_names) > 0L}; a structural term
 contributes no design columns and so has none to count, and is built when
-its blueprint is filled, \code{length(term@blueprint) > 0L}.
+its \code{build_info} is filled, \code{length(term@build_info) > 0L}.
 
 A built additive term with no columns would give \code{FALSE}. The shipped
 constructors do not produce one: a formula that gives no columns, such as
 \code{~ 0}, is rejected when \code{\link[=term_build]{term_build()}} runs.
 
-The \code{blueprint} property is read directly. It is declared on
+The \code{build_info} property is read directly. It is declared on
 \code{\link[=additive_term]{additive_term()}} and on the abstract \code{\link[=structural_term]{structural_term()}}, which the
 three shipped structural classes inherit, so every term inheriting from
 \code{\link[=model_term]{model_term()}} has one. A structural class written outside the package
-inherits an empty blueprint, which reads as not built until \code{\link[=term_build]{term_build()}}
+inherits an empty \code{build_info}, which reads as not built until \code{\link[=term_build]{term_build()}}
 fills it, and the predicate returns a logical for such a term as well.
 }
 \examples{
@@ -47,7 +47,7 @@ term_is_built(term_build(linpar(~ x), d))
 try(term_matrix(linpar(~ x)))
 
 # A structural term carries no design block, so the predicate reads its
-# blueprint instead.
+# build_info instead.
 gs <- gas(p = 1, q = 1)
 gb <- term_build(gs, data.frame(y = rnorm(20)))
 c(spec = term_is_built(gs), built = term_is_built(gb))

@@ -12,21 +12,21 @@ name.}
 \item{...}{Unused.}
 }
 \value{
-The term, whose \code{blueprint} is filled. \code{\link[=term_is_built]{term_is_built()}} reads that
+The term, whose \code{build_info} is filled. \code{\link[=term_is_built]{term_is_built()}} reads that
 property on this branch, so it is \code{TRUE} for the result.
 }
 \description{
 Resolves the grouping, the ordering and every subformula against the data,
 builds the sub-terms of the developments and records all of it in the
-blueprint. The recursion itself runs later, in \code{\link[=term_filter]{term_filter()}}.
+\code{build_info}. The recursion itself runs later, in \code{\link[=term_filter]{term_filter()}}.
 }
 \details{
 \code{by} and \code{time} are evaluated in the data. Each must give one non-missing
-value per row. The blueprint records the row indices of each group in time
+value per row. The \code{build_info} records the row indices of each group in time
 order, and the filter iterates over exactly that order.
 
 Each subformula's right-hand side goes through \code{\link[=interpret_formula]{interpret_formula()}} and its
-terms are built, so their blueprints are recorded and a prediction reapplies
+terms are built, so their \code{build_info} lists are recorded and a prediction reapplies
 them. A structural sub-term, and one whose own block moves with its
 coefficients, are rejected: a parameter's development must be a fixed
 design. The penalties that those sub-terms carry become entries of the
@@ -43,8 +43,8 @@ dd <- data.frame(t = 1:60, y = rnorm(60), id = rep(1:3, each = 20),
                  g = factor(rep(c("u", "v"), 30)))
 
 # The first term filters one series, and the second a panel of three.
-lengths(term_build(gas(p = 1, q = 1, time = t), dd)@blueprint$order)
-lengths(term_build(gas(p = 1, q = 1, by = id, time = t), dd)@blueprint$order)
+lengths(term_build(gas(p = 1, q = 1, time = t), dd)@build_info$order)
+lengths(term_build(gas(p = 1, q = 1, by = id, time = t), dd)@build_info$order)
 
 # A development expands the parameter and brings its penalty.
 gb <- term_build(gas(p = 1, q = 1, omega ~ ridge(~ g), time = t), dd)

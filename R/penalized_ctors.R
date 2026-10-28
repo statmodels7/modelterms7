@@ -46,7 +46,7 @@ NULL
 #'   default, shares nothing. See [term_ids()] for the meaning of the labels
 #'   and the restrictions on their use.
 #' @return An unbuilt [PenalizedTerm()]: a specification whose `X`,
-#'   `coef_names`, `blueprint` and `penalty` are empty until [term_build()]
+#'   `coef_names`, `build_info` and `penalty` are empty until [term_build()]
 #'   fills them. The build attaches the penalty over the block's columns.
 #'
 #' @examples
@@ -157,7 +157,7 @@ ridge <- function(x, label = "ridge", standardize = FALSE,
 #'   Only the sweep by kink size reads it, and it signals an error when given
 #'   explicitly while `lambda` is held or written out.
 #' @return An unbuilt [PenalizedTerm()]: a specification whose `X`,
-#'   `coef_names`, `blueprint` and `penalty` are empty until [term_build()]
+#'   `coef_names`, `build_info` and `penalty` are empty until [term_build()]
 #'   fills them. The build attaches the penalty over the block's columns.
 #'
 #' @examples
@@ -283,7 +283,7 @@ lasso <- function(x, label = "lasso", standardize = FALSE,
 #'   Only the sweep by kink size reads it, and it signals an error when given
 #'   explicitly while `lambda` is held or written out.
 #' @return An unbuilt [PenalizedTerm()]: a specification whose `X`,
-#'   `coef_names`, `blueprint` and `penalty` are empty until [term_build()]
+#'   `coef_names`, `build_info` and `penalty` are empty until [term_build()]
 #'   fills them. The build attaches the penalty over the block's columns.
 #'
 #' @examples
@@ -432,7 +432,7 @@ enet <- function(x, label = "enet", standardize = FALSE,
 #'   Only the sweep by kink size reads it, and it signals an error when given
 #'   explicitly while `lambda` is held or written out.
 #' @return An unbuilt [PenalizedTerm()]: a specification whose `X`,
-#'   `coef_names`, `blueprint` and `penalty` are empty until [term_build()]
+#'   `coef_names`, `build_info` and `penalty` are empty until [term_build()]
 #'   fills them. The build attaches the penalty over the block's columns.
 #'
 #' @examples
@@ -582,7 +582,7 @@ scad <- function(x, label = "scad", standardize = FALSE,
 #'   Only the sweep by kink size reads it, and it signals an error when given
 #'   explicitly while `lambda` is held or written out.
 #' @return An unbuilt [PenalizedTerm()]: a specification whose `X`,
-#'   `coef_names`, `blueprint` and `penalty` are empty until [term_build()]
+#'   `coef_names`, `build_info` and `penalty` are empty until [term_build()]
 #'   fills them. The build attaches the penalty over the block's columns.
 #'
 #' @examples

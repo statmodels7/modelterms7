@@ -225,7 +225,7 @@ NULL
     }
   }
   u_mat <- matrix(as.numeric(u_at), nrow(g), K)
-  ord <- term@blueprint$order
+  ord <- term@build_info$order
   out <- if (nd == 0L) {
     gas_joint_curv_cpp(seed, charts, cf, as.integer(fp), g, u_mat,
                        as.numeric(U1), as.numeric(U2), ord, as.integer(m),
@@ -258,7 +258,7 @@ NULL
     return(.gas_joint_sub_core(term, psi, g, seed, blocks,
                                direction = direction, threads = threads))
   }
-  bp <- term@blueprint
+  bp <- term@build_info
   K <- length(term@params)
   n <- bp$n
   dirs <- .gas_dirs(direction)

@@ -21,7 +21,7 @@ NULL
 # expanded in place
 .gas_sub_layout <- function(term) {
   base <- c(.gas_base_params(term@p, term@q), .gas_cross_params(term))
-  sub <- term@blueprint$sub
+  sub <- term@build_info$sub
   nm <- character(0)
   idx <- list()
   pos <- 0L
@@ -80,7 +80,7 @@ NULL
 #'
 #' @keywords internal
 S7::method(term_components, GasTerm) <- function(term, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) return(list())
   # a structural term contributes no design columns, so what divides here is
   # the PARAMETER vector: `index` gives positions in term_params(), which is
@@ -121,11 +121,11 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
                             second = FALSE, third = FALSE,
                             fourth = FALSE) {
   scale <- match.arg(scale)
-  sub <- term@blueprint$sub
+  sub <- term@build_info$sub
   lay <- .gas_sub_layout(term)
   # the base parameters and the cross loadings, in the layout's order
   base <- names(lay$idx)
-  n <- term@blueprint$n
+  n <- term@build_info$n
   out <- list()
   for (j in base) {
     idx <- lay$idx[[j]]
@@ -168,7 +168,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 # the groups where its column is not identically zero
 .gas_sub_active <- function(term, vals) {
   base <- names(.gas_sub_layout(term)$idx)
-  lapply(term@blueprint$order, function(rows) {
+  lapply(term@build_info$order, function(rows) {
     act <- integer(0)
     for (j in base) {
       vj <- vals[[j]]
@@ -191,7 +191,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 # (pidx), every other entry being exactly zero.
 .gas_sub_b <- function(term, vals) {
   q <- term@q
-  n <- term@blueprint$n
+  n <- term@build_info$n
   if (q == 0L) return(list(B = NULL, DB = NULL, pidx = integer(0)))
   pj <- paste0("pacf", seq_len(q))
   pidx <- sort(unlist(lapply(pj, function(j) vals[[j]]$idx)))
@@ -233,7 +233,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 # kernel's loop allocates nothing per step. The starting level and its
 # derivative come from the group's first observation, as in the R route.
 .gas_sub_prep <- function(term, vals, bd, acts, d0 = NULL) {
-  bp <- term@blueprint
+  bp <- term@build_info
   p <- term@p
   q <- term@q
   aj <- if (p > 0L) paste0("kappa", seq_len(p)) else character(0)
@@ -315,7 +315,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 # tests (a compiler is free to contract a multiply-add, so identity is a
 # statement about one compiler rather than about the arithmetic)
 .gas_filter_sub_r <- function(term, eta, y, score, curvature, u) {
-  bp <- term@blueprint
+  bp <- term@build_info
   p <- term@p
   q <- term@q
   np <- length(u)
@@ -425,7 +425,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 # evaluating the callback a second time at the same points.
 .gas_adjoint_sub <- function(term, eta, y, score, curvature, u, g,
                              fast = NULL, threads = 1L) {
-  bp <- term@blueprint
+  bp <- term@build_info
   p <- term@p
   q <- term@q
   vals <- .gas_sub_values(term, u, "parameter")
@@ -488,7 +488,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
                                seed, blocks, direction = NULL,
                                score_values = NULL, curvature_values = NULL,
                                blocks_data = NULL, threads = 1L) {
-  bp <- term@blueprint
+  bp <- term@build_info
   p <- term@p
   q <- term@q
   # one direction propagates the third order, two the fourth as well, and
@@ -1114,7 +1114,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 #' at each row of `newdata`, so that [term_continue()] can carry a score-driven
 #' filter past the end of its series. A parameter carrying a subformula is read
 #' by calling [term_predict()] on each of its sub-terms, which reapplies the
-#' blueprint that each sub-term recorded at build time; a basis or a set of
+#' `build_info` that each sub-term recorded at build time; a basis or a set of
 #' contrasts is therefore not relearned on the new rows. A parameter with no
 #' subformula is constant over the rows.
 #'
@@ -1135,7 +1135,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 #' `u = c(0.3, 0.4, 0.7)` gives \eqn{\omega_t = 0.3 z_t},
 #' \eqn{\kappa_1 = 0.4} and a partial autocorrelation of 0.7.
 #'
-#' @param term A built `GasTerm` whose blueprint carries at least one
+#' @param term A built `GasTerm` whose `build_info` carries at least one
 #'   subformula. A term without a subformula is handled by `.gas_coefs()`.
 #' @param u The term's parameter vector, in [term_params()] order, on the mixed
 #'   scale described above.
@@ -1160,7 +1160,7 @@ S7::method(term_components, GasTerm) <- function(term, ...) {
 #'
 #' @keywords internal
 .gas_sub_new <- function(term, u, newdata) {
-  bp <- term@blueprint
+  bp <- term@build_info
   p <- term@p
   q <- term@q
   nn <- nrow(newdata)

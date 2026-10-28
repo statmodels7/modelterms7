@@ -147,7 +147,7 @@ S7::method(term_loglik, structural_term) <- function(term, eta, y, logdens,
 #' `n_start` is the number of starting points that a fitting layer tries, a
 #' whole number of at least 1.
 #'
-#' The property `blueprint` is inherited from [structural_term()], which
+#' The property `build_info` is inherited from [structural_term()], which
 #' declares it. [term_build()] fills it with the row order within each group
 #' and the observation count.
 #'
@@ -157,7 +157,7 @@ S7::method(term_loglik, structural_term) <- function(term, eta, y, logdens,
 #'   recursion. `NULL` means one group.
 #' @param time An optional ordering expression. `NULL` means row order.
 #' @param chain A [parameters7::transition_matrix()] of side `k`.
-#' @param blueprint A named list of the resolved ordering and grouping, empty
+#' @param build_info A named list of the resolved ordering and grouping, empty
 #'   until [term_build()] fills it.
 #' @param n_start The number of starting points that a fitting layer tries, a
 #'   single whole number of at least 1, as set by [regime()].
@@ -165,7 +165,7 @@ S7::method(term_loglik, structural_term) <- function(term, eta, y, logdens,
 #' @return An S7 object of class `RegimeTerm`, inheriting from
 #'   [structural_term()] and [model_term()], with the five properties above in
 #'   addition to the eight that [structural_term()] supplies (the seven of
-#'   [model_term()] and `blueprint`).
+#'   [model_term()] and `build_info`).
 #'
 #' @seealso [regime()], the constructor; [term_loglik()] for what it computes;
 #'   [term_posterior()] for the smoothed states; [gas()] for the other
@@ -179,9 +179,9 @@ S7::method(term_loglik, structural_term) <- function(term, eta, y, logdens,
 #' S7::S7_inherits(tm, RegimeTerm)
 #' c(k = tm@k, chain = class(tm@chain)[1])
 #'
-#' # The build resolves the order and fills the blueprint.
+#' # The build resolves the order and fills the build_info.
 #' b <- term_build(tm, dd)
-#' names(b@blueprint)
+#' names(b@build_info)
 #'
 #' # It is on the structural branch, so there is no block.
 #' try(term_matrix(b))
@@ -281,7 +281,7 @@ RegimeTerm <- S7::new_class(
 #'   kept. `1`, the default, fits from the first start alone. The model is
 #'   fitted once from each start.
 #'
-#' @return An unbuilt [RegimeTerm()]: a specification, whose `blueprint` is
+#' @return An unbuilt [RegimeTerm()]: a specification, whose `build_info` is
 #'   empty until [term_build()] resolves the ordering.
 #'
 #' @references
@@ -362,7 +362,7 @@ regime <- function(k = 2, by = NULL, time = NULL, label = "regime",
              by = substitute(by), time = substitute(time),
              chain = parameters7::transition_matrix(k),
              n_start = as.integer(n_start),
-             blueprint = list())
+             build_info = list())
 }
 
 #' @title The Parameters of a Regime Term
@@ -589,7 +589,7 @@ S7::method(term_starts, RegimeTerm) <- function(term, ..., target = NULL) {
 #'
 #' @description
 #' Resolves the grouping and the ordering against the data and records them in
-#' the blueprint. The method does not compute anything else: the term has no
+#' the `build_info`. The method does not compute anything else: the term has no
 #' design block, its chain structure is fixed by the constructor, and its
 #' levels are parameters supplied at each evaluation.
 #'
@@ -598,7 +598,7 @@ S7::method(term_starts, RegimeTerm) <- function(term, ..., target = NULL) {
 #' Each must give one non-missing value per row; both are checked here, since
 #' this is the first point at which they meet data.
 #'
-#' The blueprint holds `order`, the row indices of each group sorted by time,
+#' The `build_info` holds `order`, the row indices of each group sorted by time,
 #' and `n`, the observation count. [term_loglik()] runs one forward recursion
 #' per group in that order, each from the chain's stationary distribution, so
 #' a panel of independent series is fitted by giving `by`.
@@ -613,7 +613,7 @@ S7::method(term_starts, RegimeTerm) <- function(term, ..., target = NULL) {
 #' @param data A data frame carrying whatever `by` and `time` name.
 #' @param ... Unused.
 #'
-#' @return The term, in which `blueprint` is filled. [term_is_built()] reads
+#' @return The term, in which `build_info` is filled. [term_is_built()] reads
 #'   that property on this branch, so it is `TRUE` for the result.
 #'
 #' @seealso [regime()], [term_loglik()].
@@ -625,12 +625,12 @@ S7::method(term_starts, RegimeTerm) <- function(term, ..., target = NULL) {
 #'
 #' # The rows form one group in row order.
 #' b <- term_build(regime(2, time = t), dd)
-#' names(b@blueprint)
-#' lengths(b@blueprint$order)
+#' names(b@build_info)
+#' lengths(b@build_info$order)
 #'
 #' # The rows form two independent series, and each has its own recursion.
 #' b2 <- term_build(regime(2, by = id, time = t), dd)
-#' lengths(b2@blueprint$order)
+#' lengths(b2@build_info$order)
 #'
 #' # Both must give one value per row.
 #' try(term_build(regime(2, time = c(1, 2)), dd))
@@ -651,7 +651,7 @@ S7::method(term_build, RegimeTerm) <- function(term, data, ...) {
     stop("'by' and 'time' must not contain missing values.", call. = FALSE)
   }
   ord <- split(order(grp, tm), grp[order(grp, tm)])
-  term@blueprint <- list(order = ord, n = n)
+  term@build_info <- list(order = ord, n = n)
   term
 }
 
@@ -745,7 +745,7 @@ regime_stationary <- function(P, dP, d2P = NULL) {
 #' @keywords internal
 S7::method(term_loglik, RegimeTerm) <- function(term, eta, y, logdens, score,
                                                 psi, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
          call. = FALSE)
@@ -917,7 +917,7 @@ S7::method(term_posterior, structural_term) <- function(term, eta, y, logdens,
 #' @keywords internal
 S7::method(term_posterior, RegimeTerm) <- function(term, eta, y, logdens,
                                                    psi, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
          call. = FALSE)
@@ -1231,7 +1231,7 @@ S7::method(term_scores, structural_term) <- function(term, eta, y, logdens,
 .regime_pass <- function(term, eta, y, logdens, grad, hess, psi, seed, cols,
                          level, weights) {
   second <- !is.null(hess)
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
          call. = FALSE)
@@ -1505,7 +1505,7 @@ S7::method(term_scores, RegimeTerm) <- function(term, eta, y, logdens, grad,
 #'   parameters: level1, gap2, alr1.1, alr2.1
 #' ```
 #'
-#' The group count is `length(blueprint$order)`, which is 1 unless the term
+#' The group count is `length(build_info$order)`, which is 1 unless the term
 #' was given a `by`. The parameter list is [term_params()], which is the same
 #' before and after a build because only `k` determines it.
 #'
@@ -1535,9 +1535,9 @@ S7::method(term_scores, RegimeTerm) <- function(term, eta, y, logdens, grad,
 #'
 #' @keywords internal
 S7::method(print, RegimeTerm) <- function(x, ...) {
-  built <- length(x@blueprint) > 0L
+  built <- length(x@build_info) > 0L
   cat(sprintf("<RegimeTerm> '%s': %d regimes%s\n", x@label, x@k,
-              if (built) sprintf("; %d group(s)", length(x@blueprint$order))
+              if (built) sprintf("; %d group(s)", length(x@build_info$order))
               else " (specification)"))
   cat("  parameters: ", paste(term_params(x), collapse = ", "), "\n", sep = "")
   invisible(x)
@@ -1603,7 +1603,7 @@ S7::method(print, RegimeTerm) <- function(x, ...) {
 #' the observation occupies.
 #'
 #' @details
-#' One chain is drawn for each group of the blueprint, in time order, and each
+#' One chain is drawn for each group of the `build_info`, in time order, and each
 #' starts from the chain's stationary distribution. [term_loglik()] and
 #' [term_posterior()] read the data in this way, and the likelihood is written
 #' with that initial law, so
@@ -1633,7 +1633,7 @@ S7::method(print, RegimeTerm) <- function(x, ...) {
 #'
 #' @keywords internal
 S7::method(term_simulate, RegimeTerm) <- function(term, psi, eta, draw, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
          call. = FALSE)

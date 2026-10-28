@@ -40,7 +40,7 @@ not the contribution, and the two differ by whatever the linearization
 drops. For \code{\link[=seg]{seg()}} that difference is a step at the
 break-point in a construction that is continuous. Rows arriving here are
 treated as \code{\link[=term_predict]{term_predict()}} treats them, through the levels
-and constants that the blueprint recorded, never rebuilt.
+and constants that the \code{build_info} recorded, never rebuilt.
 }
 \examples{
 dd <- data.frame(x = seq(0, 2, length.out = 20))

@@ -21,17 +21,17 @@ Rebuilds the model frame at \code{newdata} against the levels recorded at build
 time, then the model matrix with the recorded contrasts and in the recorded
 storage, and labels the columns with the term's coefficient names. The
 terms object, the levels, the contrasts, the storage and the intercept
-setting are all read from the blueprint, and the new rows supply only the
+setting are all read from the \code{build_info}, and the new rows supply only the
 values of the variables.
 }
 \details{
-The levels come from \code{blueprint$xlev}, so a factor in \code{newdata} need carry
+The levels come from \code{build_info$xlev}, so a factor in \code{newdata} need carry
 only the levels that its own rows use and still gets the full set of
-columns. A level that the blueprint does not record is rejected by
+columns. A level that the \code{build_info} does not record is rejected by
 \code{\link[stats:model.frame]{stats::model.frame()}} with \code{"factor g has new levels zz"}, because the fit
 did not estimate a coefficient for that level.
 
-The storage comes from \code{blueprint$sparse} rather than being decided again,
+The storage comes from \code{build_info$sparse} rather than being decided again,
 so a prediction builds the same kind of block as the fit and does not
 densify a sparse block at new rows. \code{na.action = na.pass} again keeps every
 row.
@@ -56,6 +56,6 @@ try(term_predict(b, bad))
 }
 \seealso{
 \code{\link[=term_predict]{term_predict()}} for the generic and the identity that it satisfies,
-\code{\link[=term_build.LinparTerm]{term_build.LinparTerm()}} for what recorded the blueprint.
+\code{\link[=term_build.LinparTerm]{term_build.LinparTerm()}} for what recorded the \code{build_info}.
 }
 \keyword{internal}

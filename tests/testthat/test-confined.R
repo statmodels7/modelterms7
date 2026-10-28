@@ -24,12 +24,12 @@ confined_terms <- function(dd) {
 }
 
 push_out <- function(b) {
-  cf <- b@blueprint$coef
+  cf <- b@build_info$coef
   # the first coefficient that places the break-point: the whole break-point
   # where it is not developed, one group's where it is, the others staying
   # inside the data
-  i <- b@blueprint$index[["psi1"]][1L]
-  cf[i] <- b@blueprint$lim[1L] - 2
+  i <- b@build_info$index[["psi1"]][1L]
+  cf[i] <- b@build_info$lim[1L] - 2
   cf
 }
 
@@ -51,11 +51,11 @@ test_that("a confined break-point's block is the Jacobian of the contribution", 
     X <- as.matrix(term_matrix(term_refresh(b, cf)))
     J <- do.call(cbind, num_jac(function(p) term_value(b, p), cf))
     expect_lt(max(abs(X - J)), 1e-6 * max(1, max(abs(J))), label = nm)
-    i <- b@blueprint$index[["psi1"]][1L]
+    i <- b@build_info$index[["psi1"]][1L]
     expect_equal(max(abs(X[, i])), 0, label = nm)
     # and the position did leave the data, or the test would be empty
-    pos <- .seg_positions(b@blueprint, cf, nrow(dd))$psi[, 1L]
-    expect_true(any(pos == b@blueprint$lim[1L]), label = nm)
+    pos <- .seg_positions(b@build_info, cf, nrow(dd))$psi[, 1L]
+    expect_true(any(pos == b@build_info$lim[1L]), label = nm)
     expect_gt(max(abs(J)), 0, label = nm)
   }
 })

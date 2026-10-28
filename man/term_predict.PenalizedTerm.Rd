@@ -25,7 +25,7 @@ as \code{\link[=linpar]{linpar()}}'s is. A matrix input has its expression re-ev
 rows and columns before it is returned.
 }
 \details{
-The matrix branch evaluates \code{blueprint$expr} with \code{newdata} as the data and
+The matrix branch evaluates \code{build_info$expr} with \code{newdata} as the data and
 \code{\link[=baseenv]{baseenv()}} as the enclosure, so the calling environment is not on the
 search path. A free-standing matrix therefore cannot be found, and the error
 message contains the expression and the instruction to supply it as a column
@@ -42,7 +42,7 @@ column count that differs from the build's.
 set.seed(3)
 dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
 
-# A formula input reapplies its blueprint.
+# A formula input reapplies its build_info.
 b <- term_build(lasso(~ x1 + x2), dd)
 all.equal(term_predict(b, dd), term_matrix(b))
 dim(term_predict(b, dd[1:5, ]))

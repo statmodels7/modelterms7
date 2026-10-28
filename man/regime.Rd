@@ -34,7 +34,7 @@ kept. \code{1}, the default, fits from the first start alone. The model is
 fitted once from each start.}
 }
 \value{
-An unbuilt \code{\link[=RegimeTerm]{RegimeTerm()}}: a specification, whose \code{blueprint} is
+An unbuilt \code{\link[=RegimeTerm]{RegimeTerm()}}: a specification, whose \code{build_info} is
 empty until \code{\link[=term_build]{term_build()}} resolves the ordering.
 }
 \description{

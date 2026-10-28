@@ -14,7 +14,7 @@ NlTerm(
   ids = character(0),
   X = NULL,
   coef_names = character(0),
-  blueprint = list(),
+  build_info = list(),
   penalty = NULL,
   fn = NULL,
   nl_params = character(0),
@@ -62,7 +62,7 @@ two-dimensional \pkg{Matrix}. It is empty until \code{\link[=term_build]{term_bu
 \item{coef_names}{The block's coefficient names, one per column, prefixed by
 \code{label} when there is one. \code{\link[=term_build]{term_build()}} fills it.}
 
-\item{blueprint}{A named list of everything needed to reproduce the mapping
+\item{build_info}{A named list of everything needed to reproduce the mapping
 on new rows. Its contents belong to the subclass, and only the term reads
 them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
@@ -116,7 +116,7 @@ carries \code{"symbolic"} until \code{\link[=term_build]{term_build()}} sets the
 records the route of the first derivatives; \code{\link[=nl_fderiv]{nl_fderiv()}} chooses the route
 for each order separately.
 
-\code{spec} carries the resolved construction settings. The blueprint carries
+\code{spec} carries the resolved construction settings. The \code{build_info} carries
 what the build computed: the parameter designs, the current coefficients
 (the starting ones until \code{\link[=term_refresh]{term_refresh()}} stores others), the value of the
 function at them, and the orders of derivative that are analytic.

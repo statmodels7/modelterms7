@@ -16,7 +16,7 @@ NULL
 # alone, and only something that is neither is sent through as.matrix().
 .as_block <- function(x) if (.is_block(x)) x else as.matrix(x)
 
-# Rows whose removal is most likely to expose a blueprint defect: when the
+# Rows whose removal is most likely to expose a `build_info` defect: when the
 # data carry a factor, dropping every row of one level makes a rebuilt (as
 # opposed to reapplied) encoding lose a column, so the subset check below
 # fails for exactly the mistake it exists to catch.
@@ -79,7 +79,7 @@ NULL
 #' [droplevels()] is applied to the subset before it is passed on, because new
 #' data reach [term_predict()] in that form: a factor column there carries only
 #' the levels that its own rows use, and the remaining levels are recorded only
-#' in the blueprint. Without the call a plain row subset carries the original
+#' in the `build_info`. Without the call a plain row subset carries the original
 #' level set along with it and the check cannot fail.
 #'
 #' # What is not checked
@@ -138,11 +138,11 @@ NULL
 #' all(res$status == "OK")
 #'
 #' # This is what the subset check tests. The chosen rows drop level "c", and
-#' # the reapplied block keeps the four columns that the blueprint recorded.
+#' # the reapplied block keeps the four columns that the build_info recorded.
 #' b  <- term_build(linpar(~ x + g), dd)
 #' nd <- droplevels(dd[c(1, 2, 4, 5), ])
 #' levels(nd$g)
-#' dim(term_predict(b, nd))              # 4 x 4, the blueprint's levels
+#' dim(term_predict(b, nd))              # 4 x 4, the build_info's levels
 #' dim(model.matrix(~ x + g, nd))        # 4 x 3, what a rebuild gives
 #'
 #' # The same failure occurs for a basis: rebuilding places the knots on the
@@ -231,7 +231,7 @@ check_term <- function(term, data, verbose = TRUE) {
 
   idx <- .check_subset_rows(data)
   # droplevels reproduces how new data actually arrive: a factor there
-  # carries only the levels it uses, and only the blueprint knows the rest
+  # carries only the levels it uses, and only the `build_info` knows the rest
   nd <- droplevels(data[idx, , drop = FALSE])
   Xs <- tryCatch(term_predict(built, nd), error = function(e) e)
   add("subset",

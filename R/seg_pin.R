@@ -69,7 +69,7 @@ seg_pin <- function(term, held, start = NULL, min_obs = 2L) {
     stop("'term' must be a break-point term.", call. = FALSE)
   }
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!identical(bp$kind, "seg")) {
     stop("only a seg() term can be pinned: the positions of a jump() or a ",
          "jseg() are held by seg_hold().", call. = FALSE)
@@ -152,7 +152,7 @@ seg_pin <- function(term, held, start = NULL, min_obs = 2L) {
   bp$lims <- lims
   bp$group <- group
   bp$pin <- list(held = fixed, position = pos, min_obs = min_obs)
-  term@blueprint <- bp
+  term@build_info <- bp
   term
 }
 
@@ -183,7 +183,7 @@ seg_limits <- function(term) {
     stop("'term' must be a break-point term.", call. = FALSE)
   }
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   K <- bp$npsi
   out <- if (is.null(bp$lims)) matrix(rep(bp$lim, each = K), K, 2L) else bp$lims
   dimnames(out) <- list(paste0("psi", seq_len(K)), c("lower", "upper"))

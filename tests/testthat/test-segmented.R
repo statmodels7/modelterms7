@@ -7,7 +7,7 @@
 # for the discontinuous one -- the term supplies the block, nothing here
 # knows which construction it is looking at.
 seg_iterate <- function(built, y, iters = 40, damp = 1, stop_early = TRUE) {
-  b <- built@blueprint$coef
+  b <- built@build_info$coef
   cur <- built
   for (it in seq_len(iters)) {
     # the term is chained rather than rebuilt, because the scaling
@@ -189,7 +189,7 @@ test_that("the compiled block agrees with the R twin", {
           spec <- if (kind == "jump") ctor(x, npsi = npsi) else
             ctor(x, npsi = npsi, linear = linear)
           built <- term_build(spec, dd)
-          bp <- built@blueprint
+          bp <- built@build_info
           npar <- ncol(built@X)
           cf <- runif(npar, 0.5, 2) * sample(c(-1, 1), npar, TRUE)
           a <- modelterms7:::.seg_block(bp, dd$x, cf, bp$cscale)
@@ -207,8 +207,8 @@ test_that("the compiled block agrees with the R twin", {
   # A subset can be empty, which is how check_term reaches this: taking the
   # address of the first element of a matrix with no rows is out of bounds.
   built <- term_build(jseg(x), data.frame(x = sort(runif(50, 0, 10))))
-  e <- modelterms7:::.seg_block_cpp(built@blueprint, numeric(0),
-                                    c(1, 1, 2, -4), built@blueprint$cscale)
+  e <- modelterms7:::.seg_block_cpp(built@build_info, numeric(0),
+                                    c(1, 1, 2, -4), built@build_info$cscale)
   expect_identical(dim(e$X), c(0L, 4L))
   expect_identical(e$value, numeric(0))
 })
@@ -465,7 +465,7 @@ test_that("term_value on other rows is the contribution, not the block", {
   # a discontinuous term has no such gap: there the block times the
   # coefficients IS the contribution, the break-point being read off them
   bj <- term_build(jump(x, psi = 6), dd)
-  cj <- bj@blueprint$coef
+  cj <- bj@build_info$coef
   expect_equal(as.numeric(term_predict(bj, nd) %*% cj),
                term_value(bj, coef = cj, newdata = nd), tolerance = 1e-10)
 })
@@ -616,7 +616,7 @@ test_that("a break-point term says where its own coefficients begin", {
   # the start term_build() computed: unit changes and the break-points at
   # the positions asked for
   b <- term_build(jump(x, npsi = 2, psi = c(3, 7)), dd)
-  expect_identical(term_coef_start(b), b@blueprint$coef)
+  expect_identical(term_coef_start(b), b@build_info$coef)
   expect_equal(term_coef_start(b), c(1, 1, -3, -7), tolerance = 1e-12)
   expect_equal(seg_psi(term_refresh(b, term_coef_start(b))), c(3, 7),
                tolerance = 1e-12)
@@ -681,19 +681,19 @@ test_that("a fitted break-point term reports psi, not the pair it is read from",
   d2 <- dd
   d2$g <- factor(rep(c("a", "b"), length.out = n))
   bd <- term_build(seg(x, by = ~0 + g), d2)
-  expect_null(term_readable(bd, bd@blueprint$coef))
+  expect_null(term_readable(bd, bd@build_info$coef))
 
   # and the parameters BESIDE a developed one are unaffected: they are what
   # a reader wants, and refusing them along with it would leave a summary
   # printing the working coefficients instead
   bs <- term_build(seg(x, gamma ~ 0 + g, psi = 6), d2)
-  rs <- term_readable(bs, bs@blueprint$coef)
+  rs <- term_readable(bs, bs@build_info$coef)
   expect_identical(rs$name, c("beta", "psi1"))
   expect_identical(dim(rs$jacobian), c(2L, length(term_coef_names(bs))))
   # a developed break-point is the other way round: the changes are numbers
   # and are reported, the position is not
   bj <- term_build(jseg(x, psi ~ 0 + g, psi = 6), d2)
-  rj <- term_readable(bj, bj@blueprint$coef)
+  rj <- term_readable(bj, bj@build_info$coef)
   expect_identical(rj$name, c("beta", "gamma1", "delta1"))
 })
 
@@ -795,20 +795,20 @@ test_that("crossed break-point lineages are relabeled at a refresh", {
   # g = (-7, -3), i.e. the triples out of order
   tm <- term_build(jump(x, npsi = 2, psi = c(2, 8)), d)
   cf <- term_coef_start(tm)
-  cf[tm@blueprint$index[["psi1"]]] <- -7
-  cf[tm@blueprint$index[["psi2"]]] <- -3
+  cf[tm@build_info$index[["psi1"]]] <- -7
+  cf[tm@build_info$index[["psi2"]]] <- -3
   tm2 <- term_refresh(tm, cf)
   psi <- seg_psi(tm2)
   expect_equal(psi, sort(psi))
   expect_equal(psi, c(3, 7), tolerance = 1e-8)
   # relabeling moves no value: the contribution is the same sum over k
-  expect_equal(tm2@blueprint$value,
+  expect_equal(tm2@build_info$value,
                1 * (d$x > 3) + 1 * (d$x > 7), tolerance = 1e-12)
   # and the coefficients the term stored are the relabeled ones, which is
   # what a caller continues from
-  cf2 <- tm2@blueprint$coef
-  expect_equal(unname(cf2[tm@blueprint$index[["psi1"]]]), -3)
-  expect_equal(unname(cf2[tm@blueprint$index[["psi2"]]]), -7)
+  cf2 <- tm2@build_info$coef
+  expect_equal(unname(cf2[tm@build_info$index[["psi1"]]]), -3)
+  expect_equal(unname(cf2[tm@build_info$index[["psi2"]]]), -7)
 })
 
 test_that("ordered lineages are left exactly alone", {
@@ -819,7 +819,7 @@ test_that("ordered lineages are left exactly alone", {
   tm2 <- term_refresh(tm, cf)
   psi <- seg_psi(tm2)
   expect_equal(psi, sort(psi))
-  expect_equal(unname(tm2@blueprint$coef), unname(cf))
+  expect_equal(unname(tm2@build_info$coef), unname(cf))
 })
 
 test_that("n_boot is declared on the term and validated", {
@@ -839,22 +839,22 @@ test_that("seg_reheat resets the schedule and seg_relocate places psi", {
   cf <- term_coef_start(b)
   for (i in 1:6) b <- term_refresh(b, cf)
   b2 <- seg_reheat(b)
-  expect_equal(b2@blueprint$cscale, rep(0.05, 1))
-  expect_identical(b2@blueprint$nref, 0L)
+  expect_equal(b2@build_info$cscale, rep(0.05, 1))
+  expect_identical(b2@build_info$nref, 0L)
   expect_true(is.na(seg_step(b2)))
   # relocation: positions given come back exactly, the changes kept
   b3 <- seg_relocate(b, 6)
   expect_equal(unname(seg_psi(b3)), 6)
-  expect_equal(b3@blueprint$value, as.numeric(d$x > 6) *
-                 b@blueprint$coef[b@blueprint$index[["delta1"]]],
+  expect_equal(b3@build_info$value, as.numeric(d$x > 6) *
+                 b@build_info$coef[b@build_info$index[["delta1"]]],
                tolerance = 1e-12)
   # confined and sorted
   bj <- term_build(jseg(x, npsi = 2), d)
   bj2 <- seg_relocate(bj, c(9.9, 0.01))
   psi <- unname(seg_psi(bj2))
   expect_equal(psi, sort(psi))
-  expect_gte(psi[1], bj@blueprint$lim[1])
-  expect_lte(psi[2], bj@blueprint$lim[2])
+  expect_gte(psi[1], bj@build_info$lim[1])
+  expect_lte(psi[2], bj@build_info$lim[2])
   expect_error(seg_relocate(bj, 1), "positions")
 })
 
@@ -876,7 +876,7 @@ test_that("the profile is read at a point and swept, weighted or not", {
   # and a weighted sweep runs and returns positions in the interval
   w <- tabulate(sample.int(400, 400, replace = TRUE), nbins = 400)
   pw <- unname(seg_psi(seg_polish(b, d$y, weights = w)))
-  expect_true(all(pw >= b@blueprint$lim[1] & pw <= b@blueprint$lim[2]))
+  expect_true(all(pw >= b@build_info$lim[1] & pw <= b@build_info$lim[2]))
   expect_error(seg_profile_rss(b, d$y, weights = rep(-1, 400)), "weights")
 })
 
@@ -886,7 +886,7 @@ test_that("term_stalled reports a break-point moving at its scaling floor", {
   d$y <- 1 + 0.4 * d$x + 2 * pmax(d$x - 6, 0) + 1.5 * (d$x > 6) +
     stats::rnorm(n, sd = 0.3)
   walk <- function(tm, k) {
-    b <- term_build(tm, d); cf <- b@blueprint$coef
+    b <- term_build(tm, d); cf <- b@build_info$coef
     seen <- logical(k)
     for (it in seq_len(k)) {
       b <- term_refresh(b, cf)
@@ -899,7 +899,7 @@ test_that("term_stalled reports a break-point moving at its scaling floor", {
   # moves (measured at the 43rd refresh), and the term says so
   w <- walk(jseg(x, psi = 5), 60)
   expect_true(any(w$seen))
-  expect_true(all(w$b@blueprint$floor[w$b@blueprint$step >= w$b@blueprint$delta]))
+  expect_true(all(w$b@build_info$floor[w$b@build_info$step >= w$b@build_info$delta]))
   # a start inside the basin settles without ever touching the floor
   w2 <- walk(jseg(x, psi = 6.5), 25)
   expect_false(any(w2$seen))
@@ -909,6 +909,6 @@ test_that("term_stalled reports a break-point moving at its scaling floor", {
   expect_false(term_stalled(term_build(jseg(x, psi = 5), d)))
   expect_false(term_stalled(term_build(linpar(~x), d)))
   # a reheated schedule clears the record
-  expect_null(seg_reheat(w$b)@blueprint$floor)
+  expect_null(seg_reheat(w$b)@build_info$floor)
   expect_false(term_stalled(seg_reheat(w$b)))
 })

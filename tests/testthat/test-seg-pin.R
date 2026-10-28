@@ -60,49 +60,49 @@ test_that("the position of a free break-point is clamped inside its interval", {
   b <- term_build(seg(x, npsi = 2, psi = c(3, 7)), d)
   p <- seg_pin(b, held = c(seg.psi2 = 5), start = c(3, 7))
   o <- pin_obs(d, 5)
-  cf <- b@blueprint$coef
-  cf[b@blueprint$index$psi1] <- 8
-  cf[b@blueprint$index$psi2] <- 5
+  cf <- b@build_info$coef
+  cf[b@build_info$index$psi1] <- 8
+  cf[b@build_info$index$psi2] <- 5
   r <- term_refresh(p, cf)
-  expect_equal(unname(r@blueprint$psi[1, ]), c(o[["left"]], 5))
+  expect_equal(unname(r@build_info$psi[1, ]), c(o[["left"]], 5))
   # its column of the block is zero there, as at a confinement limit, and the
   # coefficients are not exchanged
   expect_true(all(term_matrix(r)[, "seg.psi1"] == 0))
-  expect_identical(r@blueprint$coef, cf)
+  expect_identical(r@build_info$coef, cf)
   # without the pin the crossed break-points exchange their coefficients
   r0 <- term_refresh(b, cf)
-  expect_equal(unname(r0@blueprint$psi[1, ]), c(5, 8))
-  expect_false(identical(r0@blueprint$coef, cf))
+  expect_equal(unname(r0@build_info$psi[1, ]), c(5, 8))
+  expect_false(identical(r0@build_info$coef, cf))
 })
 
 test_that("a held change of slope keeps its slot when the positions cross", {
   d <- pin_data()
   b <- term_build(seg(x, npsi = 2, psi = c(3, 7)), d)
   p <- seg_pin(b, held = c(seg.gamma2 = 1.5), start = c(3, 7))
-  cf <- b@blueprint$coef
-  cf[b@blueprint$index$gamma1] <- -2
-  cf[b@blueprint$index$gamma2] <- 1.5
-  cf[b@blueprint$index$psi1] <- 8
-  cf[b@blueprint$index$psi2] <- 4
+  cf <- b@build_info$coef
+  cf[b@build_info$index$gamma1] <- -2
+  cf[b@build_info$index$gamma2] <- 1.5
+  cf[b@build_info$index$psi1] <- 8
+  cf[b@build_info$index$psi2] <- 4
   # no position is held, so the intervals are the term's own
   expect_identical(seg_limits(p), seg_limits(b))
-  expect_identical(term_refresh(p, cf)@blueprint$coef, cf)
-  expect_false(identical(term_refresh(b, cf)@blueprint$coef, cf))
+  expect_identical(term_refresh(p, cf)@build_info$coef, cf)
+  expect_false(identical(term_refresh(b, cf)@build_info$coef, cf))
 })
 
 test_that("free break-points on one side of a held one still exchange their labels", {
   d <- pin_data()
   b <- term_build(seg(x, npsi = 3, psi = c(2, 4, 8)), d)
   p <- seg_pin(b, held = c(seg.psi3 = 8), start = c(2, 4, 8))
-  idx <- b@blueprint$index
-  cf <- b@blueprint$coef
+  idx <- b@build_info$index
+  cf <- b@build_info$coef
   cf[idx$psi1] <- 4
   cf[idx$psi2] <- 2
   cf[idx$gamma1] <- 1
   cf[idx$gamma2] <- -1
   cf[idx$psi3] <- 8
   cf[idx$gamma3] <- 0.5
-  r <- term_refresh(p, cf)@blueprint$coef
+  r <- term_refresh(p, cf)@build_info$coef
   expect_equal(unname(r[c(idx$psi1, idx$psi2, idx$psi3)]), c(2, 4, 8))
   expect_equal(unname(r[c(idx$gamma1, idx$gamma2, idx$gamma3)]), c(-1, 1, 0.5))
 })
@@ -113,10 +113,10 @@ test_that("a smoothed term is pinned like a sharp one", {
                       smoothed = numericals7::smooth_probit()), d)
   p <- seg_pin(b, held = c(seg.psi2 = 5), start = c(3, 7))
   expect_lt(seg_limits(p)[1, "upper"], 5)
-  cf <- b@blueprint$coef
-  cf[b@blueprint$index$psi1] <- 8
-  cf[b@blueprint$index$psi2] <- 5
-  expect_identical(term_refresh(p, cf)@blueprint$coef, cf)
+  cf <- b@build_info$coef
+  cf[b@build_info$index$psi1] <- 8
+  cf[b@build_info$index$psi2] <- 5
+  expect_identical(term_refresh(p, cf)@build_info$coef, cf)
 })
 
 test_that("seg_pin rejects what it cannot pin", {

@@ -427,7 +427,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
       hyper = as_hyper(hyper, label),
       ids = check_ids(id, NULL, label),
       X = NULL, coef_names = character(0),
-      blueprint = list(), penalty = NULL,
+      build_info = list(), penalty = NULL,
       smooth = sm$term, intercept = sm$intercept))
   }
   RandomTerm(label = label, formula = formula, correlated = correlated,
@@ -435,7 +435,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
              hyper = as_hyper(hyper, label),
              ids = check_ids(id, NULL, label),
              X = NULL, coef_names = character(0),
-             blueprint = list(), penalty = NULL)
+             build_info = list(), penalty = NULL)
 }
 
 #' The Three Pieces of a Bar Formula
@@ -881,7 +881,7 @@ random <- function(formula, distrib = NULL, correlated = TRUE,
 #' @param ... Unused.
 #'
 #' @return The term with `X` (a `dgCMatrix` of \eqn{md} columns),
-#'   `coef_names`, `blueprint` and `penalty` filled.
+#'   `coef_names`, `build_info` and `penalty` filled.
 #'
 #' @seealso [random()], [term_predict.RandomTerm()], [term_penalties()].
 #'
@@ -971,7 +971,7 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
 
   term@X <- Z
   term@coef_names <- cn
-  term@blueprint <- list(
+  term@build_info <- list(
     gexpr = parts$group, glevels = levels(g),
     terms = stats::delete.response(tt),
     xlev = stats::.getXlevels(tt, mf),
@@ -1004,7 +1004,7 @@ S7::method(term_build, RandomTerm) <- function(term, data, ...) {
 #' @return A list of entries, as [term_penalties()] documents.
 #' @keywords internal
 S7::method(term_penalties, RandomTerm) <- function(term, ...) {
-  ent <- term@blueprint$entries
+  ent <- term@build_info$entries
   if (is.null(ent)) list() else ent
 }
 
@@ -1030,7 +1030,7 @@ S7::method(term_tag, RandomTerm) <- function(term, ...) .random_tag(term)
 #' Returns the grouping expression, its levels, the number of within-group
 #' columns and their names, or `NULL` on an unbuilt term.
 #' @details
-#' These come from the blueprint, where the build recorded them. `dim` is
+#' These come from the `build_info`, where the build recorded them. `dim` is
 #' the within-group column count, so the block's level \eqn{i} occupies
 #' positions \eqn{(i-1)d + 1} to \eqn{id}, which is the group-major order that
 #' the blockwise penalty reads. `names` holds the column names of the
@@ -1041,7 +1041,7 @@ S7::method(term_tag, RandomTerm) <- function(term, ...) .random_tag(term)
 #' @seealso [term_group()] for the generic.
 #' @keywords internal
 S7::method(term_group, RandomTerm) <- function(term, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp) || is.null(bp$glevels)) return(NULL)
   d <- bp$dim
   if (is.null(d)) d <- as.integer(term_npar(term) / length(bp$glevels))
@@ -1092,7 +1092,7 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
 #' layer collects the labelled terms and declares one entry over their stacked
 #' columns.
 #'
-#' The blueprint records what the layer needs for that: the within-group
+#' The `build_info` records what the layer needs for that: the within-group
 #' dimension and the grouping's levels, beside the pieces that
 #' [term_predict.RandomTerm()] already reads.
 #'
@@ -1171,7 +1171,7 @@ S7::method(term_group, RandomTerm) <- function(term, ...) {
   }
   term@X <- Z
   term@coef_names <- cn
-  term@blueprint <- list(
+  term@build_info <- list(
     gexpr = parts$group, glevels = levels(g),
     terms = stats::delete.response(tt),
     xlev = stats::.getXlevels(tt, mf),
@@ -1246,14 +1246,14 @@ S7::method(term_predict, RandomTerm) <- function(term, newdata,
                                                  ...) {
   unseen <- match.arg(unseen)
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   g <- .random_group(bp$gexpr, newdata, levels = bp$glevels, unseen = unseen)
   Z <- .random_block(g, .random_within(bp, newdata))
   colnames(Z) <- term@coef_names
   Z
 }
 
-# The within-group design at new rows, from the blueprint the build recorded.
+# The within-group design at new rows, from the `build_info` the build recorded.
 # A smooth random effect evaluates its smooth there and applies the map the
 # build computed; every other one rebuilds its model matrix.
 .random_within <- function(bp, newdata) {
@@ -1276,7 +1276,7 @@ S7::method(term_predict, RandomTerm) <- function(term, newdata,
 #' the effect.
 #'
 #' @details
-#' The design is read from the blueprint that the build recorded, so a factor
+#' The design is read from the `build_info` that the build recorded, so a factor
 #' keeps its levels and contrasts. It does not depend on the grouping, so a
 #' caller can integrate the effect of a group that is absent from the fitting
 #' data: the effect is \eqn{z_i^\top b} with \eqn{z_i} this row and \eqn{b}
@@ -1299,7 +1299,7 @@ S7::method(term_predict, RandomTerm) <- function(term, newdata,
 #' @keywords internal
 S7::method(term_within, RandomTerm) <- function(term, newdata, ...) {
   .assert_built(term)
-  W <- .random_within(term@blueprint, newdata)
+  W <- .random_within(term@build_info, newdata)
   gr <- term_group(term)
   if (!is.null(gr) && ncol(W) == length(gr$names)) colnames(W) <- gr$names
   attr(W, "assign") <- NULL

@@ -7,7 +7,7 @@ make_data <- function(n_id = 12, seed = 1) {
 }
 
 psi_of <- function(tm, cf) {
-  p <- term_refresh(tm, cf)@blueprint$psi
+  p <- term_refresh(tm, cf)@build_info$psi
   apply(p, 2, mean)
 }
 
@@ -15,7 +15,7 @@ psi_of <- function(tm, cf) {
 # own, and a mean over groups pinned at both limits sits comfortably in the
 # middle while not one of them is where it should be.
 psi_cells <- function(tm, cf) {
-  as.numeric(term_refresh(tm, cf)@blueprint$psi)
+  as.numeric(term_refresh(tm, cf)@build_info$psi)
 }
 
 test_that("a term with no opinion hands the draw back untouched", {
@@ -40,7 +40,7 @@ test_that("a break-point is drawn inside the covariate, where a plain draw is no
     "jseg" = jseg(x, npsi = 1))
   for (nm in names(shapes)) {
     tm <- term_build(shapes[[nm]], dd)
-    lim <- tm@blueprint$lim
+    lim <- tm@build_info$lim
     set.seed(3)
     R <- 60
     drawn <- unlist(replicate(R, psi_cells(tm, term_coef_draw(
@@ -64,11 +64,11 @@ test_that("the position is written exactly where the construction holds it", {
   set.seed(5)
   for (kind in c("seg", "jump")) {
     tm <- term_build(get(kind)(x, npsi = 1), dd)
-    ix <- tm@blueprint$index[["psi1"]]
+    ix <- tm@build_info$index[["psi1"]]
     gap <- replicate(40, {
       cf <- term_coef_draw(tm, stats::rnorm(term_npar(tm)))$coef
       aim <- if (kind == "seg") cf[ix] else
-        -cf[ix] / cf[tm@blueprint$index[["delta1"]]]
+        -cf[ix] / cf[tm@build_info$index[["delta1"]]]
       abs(seg_psi(term_refresh(tm, cf)) - aim)
     })
     expect_lt(max(gap), 1e-12)
@@ -78,7 +78,7 @@ test_that("the position is written exactly where the construction holds it", {
 test_that("the draw spreads from the covariate and not from where the term sits", {
   dd <- make_data()
   tm <- term_build(seg(x, npsi = 1), dd)
-  lim <- tm@blueprint$lim
+  lim <- tm@build_info$lim
   # A CALLER MAY HAND OVER A TERM SITTING ANYWHERE: a simulation builds its
   # specification against a placeholder response, and a break-point chosen
   # on a least-squares profile of noise lands against a limit as readily as
@@ -120,7 +120,7 @@ test_that("the width is the derived one", {
   dd <- make_data()
   for (K in 1:3) {
     tm <- term_build(seg(x, npsi = K), dd)
-    lim <- tm@blueprint$lim
+    lim <- tm@build_info$lim
     d <- term_coef_draw(tm, stats::rnorm(term_npar(tm)))
     expect_equal(d$scale[[1L]], (lim[2L] - lim[1L]) / (6 * (K + 1)),
                  tolerance = 1e-12)

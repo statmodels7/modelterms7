@@ -26,7 +26,7 @@ observation, which is the static predictor plus the level of the state that
 the observation occupies.
 }
 \details{
-One chain is drawn for each group of the blueprint, in time order, and each
+One chain is drawn for each group of the \code{build_info}, in time order, and each
 starts from the chain's stationary distribution. \code{\link[=term_loglik]{term_loglik()}} and
 \code{\link[=term_posterior]{term_posterior()}} read the data in this way, and the likelihood is written
 with that initial law, so

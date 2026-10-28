@@ -12,7 +12,7 @@ covariates.}
 \item{...}{Unused.}
 }
 \value{
-The term with \code{X} (a \code{dgCMatrix}), \code{coef_names}, \code{blueprint} and
+The term with \code{X} (a \code{dgCMatrix}), \code{coef_names}, \code{build_info} and
 \code{penalty} filled.
 }
 \description{

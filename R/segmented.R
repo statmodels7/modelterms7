@@ -331,7 +331,7 @@ seg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
                       linear = linear))
   }
   # a continuous term has no scaling factor, its working block being
-  # bounded already; the value is carried so that one blueprint serves the
+  # bounded already; the value is carried so that one `build_info` serves the
   # three constructions
   .seg_spec("seg", substitute(x), npsi, psi, linear, 0.05, n_boot, label,
             list(...), .seg_by_formula(substitute(by), parent.frame()),
@@ -856,7 +856,7 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
           spec = list(psi = psi, c0 = c0, n_boot = as.integer(n_boot),
                       smoothed = smoothed),
           X = NULL, coef_names = character(0),
-          blueprint = list(), penalty = NULL)
+          build_info = list(), penalty = NULL)
 }
 
 # The stem of each own coefficient's name. It is the parameter's own name
@@ -1333,7 +1333,7 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 #' of zeros.
 #'
 #' Each subformula's right-hand side goes through [interpret_formula()] and its
-#' terms are built, so their blueprints are recorded and reapplied at
+#' terms are built, so their `build_info` lists are recorded and reapplied at
 #' prediction. The developments that a term may carry depend on `kind`. The
 #' continuous construction takes any of them. A sharp [jump()] takes a
 #' development of the break-point with a scalar change of level on any design,
@@ -1361,9 +1361,9 @@ jseg <- function(x, ..., npsi = 1, psi = NULL, by = NULL, linear = TRUE,
 #'   subformulas name.
 #' @param ... Unused.
 #'
-#' @return The term with `X`, `coef_names` and `blueprint` filled. The slot
+#' @return The term with `X`, `coef_names` and `build_info` filled. The slot
 #'   `penalty` is `NULL`; the penalties of the developments are recorded in the
-#'   blueprint and listed by [term_penalties()].
+#'   `build_info` and listed by [term_penalties()].
 #'
 #' @seealso [seg()], [jump()], [jseg()]; [term_refresh.SegTerm()] for the block
 #'   as the break-points move; [seg_start()] for a better starting position
@@ -1569,7 +1569,7 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
   bp$pk <- asm$pk
   term@X <- X
   term@coef_names <- cn
-  term@blueprint <- bp
+  term@build_info <- bp
   term@penalty <- NULL
   term
 }
@@ -1641,7 +1641,7 @@ S7::method(term_build, SegTerm) <- function(term, data, ...) {
 #' @return A list of entries, as [term_penalties()] documents.
 #' @keywords internal
 S7::method(term_penalties, SegTerm) <- function(term, ...) {
-  pens <- term@blueprint$penalties
+  pens <- term@build_info$penalties
   if (is.null(pens)) list() else pens
 }
 
@@ -1704,7 +1704,7 @@ S7::method(term_penalties, SegTerm) <- function(term, ...) {
 #' @keywords internal
 S7::method(term_jacobian_block, SegTerm) <- function(term, ...) {
   identical(term@kind, "seg") || !is.null(term@spec$smoothed) ||
-    isTRUE(term@blueprint$held)
+    isTRUE(term@build_info$held)
 }
 
 # How a smoothed block moves with the coefficients, in the two shapes the
@@ -1879,7 +1879,7 @@ S7::method(term_jacobian_block, SegTerm) <- function(term, ...) {
 
 S7::method(term_block_contract, SegTerm) <- function(term, coef = NULL, A,
                                                      ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) stop("the term is not built.", call. = FALSE)
   cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
   A <- as.matrix(A)
@@ -1951,7 +1951,7 @@ S7::method(term_block_contract, SegTerm) <- function(term, coef = NULL, A,
 
 
 S7::method(term_block_deriv, SegTerm) <- function(term, coef = NULL, v, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) stop("the term is not built.", call. = FALSE)
   cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
   ncoef <- length(term_coef_names(term))
@@ -2042,7 +2042,7 @@ S7::method(term_block_deriv, SegTerm) <- function(term, coef = NULL, v, ...) {
 #'
 #' @keywords internal
 S7::method(term_kinks, SegTerm) <- function(term, coef = NULL, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) stop("the term is not built.", call. = FALSE)
   if (!identical(bp$kind, "seg") || !is.null(bp$smooth)) return(integer(0))
   cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
@@ -2091,8 +2091,8 @@ S7::method(term_kinks, SegTerm) <- function(term, coef = NULL, ...) {
 #' set.seed(1)
 #' d <- data.frame(x = runif(60, 0, 10), w = runif(60))
 #' b <- term_build(seg(x, psi ~ w), d)
-#' ix <- b@blueprint$index$psi1
-#' cf <- b@blueprint$coef
+#' ix <- b@build_info$index$psi1
+#' cf <- b@build_info$coef
 #' # the break-point of the first observation is placed on that observation
 #' cf[ix[1L]] <- d$x[1L] - cf[ix[2L]] * d$w[1L]
 #' term_kink_constraints(b, cf)
@@ -2100,7 +2100,7 @@ S7::method(term_kinks, SegTerm) <- function(term, coef = NULL, ...) {
 #' @keywords internal
 S7::method(term_kink_constraints, SegTerm) <- function(term, coef = NULL,
                                                       ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) stop("the term is not built.", call. = FALSE)
   cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
   p <- length(cf)
@@ -2166,7 +2166,7 @@ S7::method(term_kink_constraints, SegTerm) <- function(term, coef = NULL,
 #'
 #' @keywords internal
 S7::method(term_components, SegTerm) <- function(term, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) return(list())
   # the same division the block is assembled from: `index` per parameter --
   # beta, the changes, the break-points -- and `subs` where one of them is
@@ -2184,7 +2184,7 @@ S7::method(term_components, SegTerm) <- function(term, ...) {
 
 S7::method(term_block_deriv2, SegTerm) <- function(term, coef = NULL, v, u,
                                                    ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp)) stop("the term is not built.", call. = FALSE)
   cf <- if (is.null(coef)) bp$coef else as.numeric(coef)
   ncoef <- length(term_coef_names(term))
@@ -2215,7 +2215,7 @@ S7::method(term_block_deriv2, SegTerm) <- function(term, coef = NULL, v, u,
 
 # The relabeling itself: NULL where there is nothing to do. The per-k
 # coefficient stretches are permuted along with every per-break-point
-# field of the blueprint, so a lineage keeps its own previous position,
+# field of the `build_info`, so a lineage keeps its own previous position,
 # its scaling factor and its direction under the new label.
 .seg_reorder <- function(bp, coef, psi_new) {
   K <- bp$npsi
@@ -2314,7 +2314,7 @@ S7::method(term_block_deriv2, SegTerm) <- function(term, coef = NULL, v, u,
 #' b <- term_build(seg(x, npsi = 1), d)
 #'
 #' # Moving the break-point coefficient moves the block.
-#' cf <- b@blueprint$coef
+#' cf <- b@build_info$coef
 #' r <- term_refresh(b, c(cf[1], cf[2], 6))
 #' c(before = seg_psi(b), after = seg_psi(r))
 #' max(abs(term_matrix(r) - term_matrix(b))) > 0
@@ -2325,7 +2325,7 @@ S7::method(term_block_deriv2, SegTerm) <- function(term, coef = NULL, v, u,
 #' @keywords internal
 S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   coef <- as.numeric(coef)
   if (length(coef) != ncol(term@X)) {
     stop(sprintf("'coef' must have length %d.", ncol(term@X)), call. = FALSE)
@@ -2360,7 +2360,7 @@ S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
     bp$coef <- coef
     bp$value <- asm$value
     term@X <- X
-    term@blueprint <- bp
+    term@build_info <- bp
     return(term)
   }
   psi_new <- .seg_positions(bp, coef, length(bp$xv))$psi
@@ -2391,7 +2391,7 @@ S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
     bp$psi <- asm$psi
     bp$pk <- asm$pk
     term@X <- X
-    term@blueprint <- bp
+    term@build_info <- bp
     return(term)
   }
 
@@ -2429,12 +2429,12 @@ S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
   bp$psi <- asm$psi
   bp$pk <- asm$pk
   term@X <- X
-  term@blueprint <- bp
+  term@build_info <- bp
   term
 }
 
 # The developments' designs on other rows, each sub-term reapplied through
-# its own blueprint
+# its own `build_info`
 .seg_z_at <- function(bp, newdata) {
   if (!bp$developed) return(bp$Z)
   lapply(stats::setNames(bp$params, bp$params), function(p) {
@@ -2486,21 +2486,21 @@ S7::method(term_refresh, SegTerm) <- function(term, coef, ...) {
 #' # seg: the block is the Jacobian, so X beta is the linearization and
 #' # differs from the contribution.
 #' b <- term_refresh(term_build(seg(x, npsi = 1), d), c(0.5, 2, 6))
-#' max(abs(as.numeric(term_matrix(b) %*% b@blueprint$coef) - term_value(b)))
+#' max(abs(as.numeric(term_matrix(b) %*% b@build_info$coef) - term_value(b)))
 #'
 #' # jump: the columns reproduce the contribution to rounding error.
 #' bj <- term_build(jump(x, npsi = 1), d)
-#' max(abs(as.numeric(term_matrix(bj) %*% bj@blueprint$coef) - term_value(bj)))
+#' max(abs(as.numeric(term_matrix(bj) %*% bj@build_info$coef) - term_value(bj)))
 #'
 #' # And the seg contribution really is the broken line at psi.
-#' cf <- b@blueprint$coef
+#' cf <- b@build_info$coef
 #' max(abs(term_value(b) - (cf[1] * d$x + cf[2] * pmax(d$x - cf[3], 0))))
 #'
 #' @keywords internal
 S7::method(term_value, SegTerm) <- function(term, coef = NULL, newdata = NULL,
                                             ...) {
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!is.null(newdata)) {
     # the break-points are the ones the term carries, as term_predict()
     # reapplies them: refreshing here would read them off the new rows
@@ -2510,7 +2510,7 @@ S7::method(term_value, SegTerm) <- function(term, coef = NULL, newdata = NULL,
                          bp$pk)$value)
   }
   if (is.null(coef)) return(bp$value)
-  term_refresh(term, coef)@blueprint$value
+  term_refresh(term, coef)@build_info$value
 }
 
 #' @title A Break-Point Term's Block at New Rows
@@ -2520,7 +2520,7 @@ S7::method(term_value, SegTerm) <- function(term, coef = NULL, newdata = NULL,
 #' Returns the working block evaluated at `newdata`, at the break-points and
 #' the coefficients that the term currently carries. The positions are not
 #' re-derived from the new rows, and any development of a coefficient is
-#' reapplied through its sub-terms' own blueprints.
+#' reapplied through its sub-terms' own `build_info` lists.
 #'
 #' @details
 #' Re-deriving the break-points would give a different model at every set of
@@ -2562,7 +2562,7 @@ S7::method(term_value, SegTerm) <- function(term, coef = NULL, newdata = NULL,
 #' @keywords internal
 S7::method(term_predict, SegTerm) <- function(term, newdata, ...) {
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   xv <- .seg_x(bp$var, newdata)
   X <- .seg_assemble(bp, xv, bp$coef, bp$cscale, .seg_z_at(bp, newdata),
                      bp$pk)$X
@@ -2600,7 +2600,7 @@ seg_psi <- function(term, coef = NULL) {
   }
   .assert_built(term)
   tm <- if (is.null(coef)) term else term_refresh(term, coef)
-  .seg_psi_report(tm@blueprint)
+  .seg_psi_report(tm@build_info)
 }
 
 # The positions as a reader wants them: one number per break-point where
@@ -2657,7 +2657,7 @@ seg_psi <- function(term, coef = NULL) {
 #' dd <- data.frame(x = sort(runif(100, 0, 10)))
 #' dd$y <- 2 * (dd$x > 6) + rnorm(100, sd = 0.3)
 #' b <- term_build(jump(x, psi = 4), dd)
-#' cf <- b@blueprint$coef
+#' cf <- b@build_info$coef
 #' for (it in 1:30) {
 #'   b <- term_refresh(b, cf)
 #'   X <- term_matrix(b)
@@ -2673,14 +2673,14 @@ seg_step <- function(term) {
     stop("'term' must be a break-point term.", call. = FALSE)
   }
   .assert_built(term)
-  term@blueprint$step
+  term@build_info$step
 }
 
 #' @rdname seg_step
 #' @export
 seg_converged <- function(term) {
   st <- seg_step(term)
-  !anyNA(st) && max(st) < term@blueprint$delta
+  !anyNA(st) && max(st) < term@build_info$delta
 }
 
 #' Reset a Break-Point Term's Scaling Schedule
@@ -2701,8 +2701,8 @@ seg_converged <- function(term) {
 #' set.seed(1)
 #' dd <- data.frame(x = sort(runif(100, 0, 10)))
 #' b <- term_build(jump(x, psi = 4), dd)
-#' b <- term_refresh(b, b@blueprint$coef)
-#' identical(seg_reheat(b)@blueprint$cscale, b@blueprint$cscale * 0 + 0.05)
+#' b <- term_refresh(b, b@build_info$coef)
+#' identical(seg_reheat(b)@build_info$cscale, b@build_info$cscale * 0 + 0.05)
 #'
 #' @seealso [seg_step()], [term_refresh()]
 #' @export
@@ -2711,13 +2711,13 @@ seg_reheat <- function(term) {
     stop("'term' must be a break-point term.", call. = FALSE)
   }
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   bp$cscale <- rep(term@spec$c0, bp$npsi)
   bp$sgn <- rep(0, bp$npsi)
   bp$step <- rep(NA_real_, bp$npsi)
   bp$nref <- 0L
   bp$floor <- NULL
-  term@blueprint <- bp
+  term@build_info <- bp
   term
 }
 
@@ -2760,7 +2760,7 @@ seg_relocate <- function(term, psi) {
     stop("'term' must be a break-point term.", call. = FALSE)
   }
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   K <- bp$npsi
   if (!is.numeric(psi) || length(psi) != K || !all(is.finite(psi))) {
     stop(sprintf("'psi' must give %d finite positions.", K), call. = FALSE)
@@ -2804,7 +2804,7 @@ seg_relocate <- function(term, psi) {
   bp$psi <- asm$psi
   bp$pk <- asm$pk
   term@X <- X
-  term@blueprint <- bp
+  term@build_info <- bp
   term
 }
 
@@ -2821,7 +2821,7 @@ seg_relocate <- function(term, psi) {
 #' @return A single logical.
 #' @keywords internal
 S7::method(term_converged, SegTerm) <- function(term, ...) {
-  isTRUE(term@blueprint$held) || isTRUE(seg_converged(term))
+  isTRUE(term@build_info$held) || isTRUE(seg_converged(term))
 }
 
 #' @title Whether a Break-Point Term Has Stalled
@@ -2840,7 +2840,7 @@ S7::method(term_converged, SegTerm) <- function(term, ...) {
 #' @return A single logical.
 #' @keywords internal
 S7::method(term_stalled, SegTerm) <- function(term, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!is.null(bp$smooth) || !bp$kind %in% c("jump", "jseg") ||
       isTRUE(bp$held)) return(FALSE)
   st <- bp$step
@@ -3073,7 +3073,7 @@ seg_profile_rss <- function(term, y, weights = NULL) {
     stop("'term' must be a break-point term.", call. = FALSE)
   }
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   K <- bp$npsi
   perk <- c(if (bp$kind %in% c("seg", "jseg")) paste0("gamma", seq_len(K)),
             if (bp$kind %in% c("jump", "jseg")) paste0("delta", seq_len(K)),
@@ -3178,7 +3178,7 @@ S7::method(print, SegTerm) <- function(x, ...) {
                 x@npsi, if (x@npsi == 1L) "" else "s",
                 if (length(dv))
                   sprintf("; %s developed", paste(dv, collapse = ", ")) else ""))
-    sm <- x@blueprint$smooth
+    sm <- x@build_info$smooth
     if (!is.null(sm)) {
       # the width is the transition's, the bent-cable reading, so it is
       # reported rather than treated as a detail
@@ -3188,7 +3188,7 @@ S7::method(print, SegTerm) <- function(x, ...) {
                     format(min(sm$w_group), digits = 3),
                     format(max(sm$w_group), digits = 3)) else ""))
     }
-    psi <- .seg_psi_report(x@blueprint)
+    psi <- .seg_psi_report(x@build_info)
     if (is.matrix(psi)) {
       # a developed break-point has one position per observation; what a
       # reader wants is where each one ranges
@@ -3229,7 +3229,7 @@ S7::method(print, SegTerm) <- function(x, ...) {
 #' @keywords internal
 S7::method(term_coef_start, SegTerm) <- function(term, target = NULL, ...) {
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   cf <- bp$coef
   y <- if (is.null(target)) NULL else
     tryCatch(suppressWarnings(as.numeric(target)), error = function(e) NULL)
@@ -3349,7 +3349,7 @@ S7::method(term_coef_draw, SegTerm) <- function(term, coef, sd = 1, ...) {
   if (!is.numeric(sd) || length(sd) != 1L || !is.finite(sd) || sd < 0) {
     stop("'sd' must be one finite non-negative number.", call. = FALSE)
   }
-  bp <- term@blueprint
+  bp <- term@build_info
   coef <- as.numeric(coef)
   if (length(coef) != length(bp$coef)) {
     stop(sprintf("'coef' must give %d values, one per column of the block.",
@@ -3469,7 +3469,7 @@ S7::method(term_coef_draw, SegTerm) <- function(term, coef, sd = 1, ...) {
 #' @keywords internal
 S7::method(term_readable, SegTerm) <- function(term, zeta, ...) {
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   cf <- as.numeric(zeta)
   # QUANTITY BY QUANTITY and not all or nothing. A developed parameter is a
   # vector of coefficients over covariates and has no one value to report,

@@ -34,7 +34,7 @@ cost of producing it. The sparse route builds the matrix sparse and never
 forms a dense intermediate.
 
 The contrasts are returned beside the block and are not kept on it. A
-consumer reads the block, and the blueprint records the contrasts.
+consumer reads the block, and the \code{build_info} records the contrasts.
 }
 \seealso{
 \code{\link[=linpar]{linpar()}}, whose build and prediction both call this;

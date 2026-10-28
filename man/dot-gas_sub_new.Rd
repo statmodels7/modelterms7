@@ -7,7 +7,7 @@
 .gas_sub_new(term, u, newdata)
 }
 \arguments{
-\item{term}{A built \code{GasTerm} whose blueprint carries at least one
+\item{term}{A built \code{GasTerm} whose \code{build_info} carries at least one
 subformula. A term without a subformula is handled by \code{.gas_coefs()}.}
 
 \item{u}{The term's parameter vector, in \code{\link[=term_params]{term_params()}} order, on the mixed
@@ -35,7 +35,7 @@ Evaluates the recursion's coefficients \eqn{(\omega_t, \kappa_t, \xi_t)}
 at each row of \code{newdata}, so that \code{\link[=term_continue]{term_continue()}} can carry a score-driven
 filter past the end of its series. A parameter carrying a subformula is read
 by calling \code{\link[=term_predict]{term_predict()}} on each of its sub-terms, which reapplies the
-blueprint that each sub-term recorded at build time; a basis or a set of
+\code{build_info} that each sub-term recorded at build time; a basis or a set of
 contrasts is therefore not relearned on the new rows. A parameter with no
 subformula is constant over the rows.
 }

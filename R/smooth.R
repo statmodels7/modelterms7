@@ -24,7 +24,7 @@ NULL
 #' records whether the levels of a factor `by` share a smoothing parameter or
 #' carry one each; `default_label`, which records whether the label was built
 #' from the call; and, for [te()], whether the penalty is anisotropic. What a
-#' build then computes from the data goes into the blueprint instead: the
+#' build then computes from the data goes into the `build_info` instead: the
 #' Demmler-Reinsch transform, the centering constraint, the `by` levels and the
 #' penalties that the term declares.
 #'
@@ -61,10 +61,10 @@ NULL
 #'   te = S7::S7_inherits(te(x, z), SmoothTerm))
 #'
 #' # The settings are on `spec`, and the quantities computed from the data are
-#' # in the blueprint.
+#' # in the build_info.
 #' tm <- s(x, basis7::bspline_smooth(k = 8))
 #' names(tm@spec)
-#' names(term_build(tm, dd)@blueprint)
+#' names(term_build(tm, dd)@build_info)
 #'
 #' @export
 SmoothTerm <- S7::new_class(
@@ -78,7 +78,7 @@ SmoothTerm <- S7::new_class(
     # its own level, a density of 1/m. The basis itself is dense by
     # construction -- the Demmler-Reinsch rotation makes it so -- and so is
     # a numeric `by`, which merely multiplies it. NULL until the build
-    # settles it; the settled value is what the blueprint carries.
+    # settles it; the settled value is what the `build_info` carries.
     sparse = S7::class_any
   )
 )
@@ -144,7 +144,7 @@ SmoothTerm <- S7::new_class(
 #' The Demmler-Reinsch transform (Demmler and Reinsch, 1975; used for effect
 #' selection by Bach and Klein, 2024) takes the inner product at the observed
 #' covariate values, so it is computed when the term is built and stored in
-#' the blueprint. Prediction is the parent basis evaluated at the new points
+#' the `build_info`. Prediction is the parent basis evaluated at the new points
 #' and multiplied by that same transform, so the separation of the linear from
 #' the nonlinear part holds at new rows as it does at old.
 #'
@@ -233,7 +233,7 @@ SmoothTerm <- S7::new_class(
 #'   factor `by` admits `TRUE`; without one it is rejected and not ignored.
 #'   See the section above.
 #' @return An unbuilt [SmoothTerm()]: a specification, with `X`, `coef_names`,
-#'   `blueprint` and `penalty` empty until [term_build()] fills them.
+#'   `build_info` and `penalty` empty until [term_build()] fills them.
 #'
 #' @references
 #' Demmler, A. and Reinsch, C. (1975). Oscillation matrices with spline
@@ -381,7 +381,7 @@ s <- function(x, smoother = basis7::bspline_smooth(), by = NULL,
 #' and the penalty follows by congruence and keeps its rank, because the
 #' direction that was removed was one of its null directions.
 #'
-#' The transform is stored in the blueprint and reapplied by [term_predict()],
+#' The transform is stored in the `build_info` and reapplied by [term_predict()],
 #' as the Demmler-Reinsch transform of [s()] is.
 #'
 #' The level of the surface is then the model's intercept, so a formula that
@@ -429,7 +429,7 @@ s <- function(x, smoother = basis7::bspline_smooth(), by = NULL,
 #'   factor `by` admits `TRUE`. See [s()].
 #'
 #' @return An unbuilt [SmoothTerm()]: a specification, with `X`, `coef_names`,
-#'   `blueprint` and `penalty` empty until [term_build()] fills them.
+#'   `build_info` and `penalty` empty until [term_build()] fills them.
 #'
 #' @references
 #' Wood, S. N. (2006). Low-rank scale-invariant tensor product smooths for
@@ -642,7 +642,7 @@ te_smoothers <- function(smooths, nv) {
                      else smooth_hyper(hyper, names, label),
              ids = check_ids(ids, if (deferred) NULL else names, label),
              X = NULL, coef_names = character(0),
-             blueprint = list(), penalty = NULL)
+             build_info = list(), penalty = NULL)
 }
 
 # A roughness matrix with a zero row and column in front, for the constant
@@ -721,7 +721,7 @@ te_smoothers <- function(smooths, nv) {
 #' applies the reparametrization that the construction requires, multiplies by a
 #' `by` variable where there is one, and attaches the roughness penalty. Two
 #' quantities are computed from the data here and recorded in the
-#' blueprint, so that [term_predict()] reapplies them instead of deriving them
+#' `build_info`, so that [term_predict()] reapplies them instead of deriving them
 #' again: the Demmler-Reinsch transform for [s()], and the centering constraint
 #' for [te()].
 #'
@@ -740,7 +740,7 @@ te_smoothers <- function(smooths, nv) {
 #' [basis7::bspline_smooth()] (`null_space = "keep"`) a column
 #' \eqn{(x - \bar{x})/s_x} is prepended and the penalty is
 #' \eqn{\mathrm{diag}(0, 1, \dots, 1)}; the center and the scale go into the
-#' blueprint with the transform. With `null_space = "drop"` that
+#' `build_info` with the transform. With `null_space = "drop"` that
 #' column is absent and the penalty is the identity.
 #'
 #' # Several covariates
@@ -771,7 +771,7 @@ te_smoothers <- function(smooths, nv) {
 #' @param data A data frame carrying the covariates and the `by` variable.
 #' @param ... Unused.
 #'
-#' @return The term, in which `X`, `coef_names` and `blueprint` are filled, and
+#' @return The term, in which `X`, `coef_names` and `build_info` are filled, and
 #'   `penalty` is filled except where the term declares penalties of its own (a
 #'   penalty factory on the smoother, or `by_hyper = "level"`), in which case
 #'   `penalty` is `NULL` and [term_penalties()] returns them.
@@ -785,8 +785,8 @@ te_smoothers <- function(smooths, nv) {
 #'
 #' # The build records the following for a one-covariate smooth.
 #' b <- term_build(s(x, basis7::bspline_smooth(k = 8)), dd)
-#' names(b@blueprint)
-#' b@blueprint$core$kind
+#' names(b@build_info)
+#' b@build_info$core$kind
 #'
 #' # For a tensor product, the block has one column fewer than 4 x 4.
 #' bt <- term_build(te(x, z, smooths = basis7::bspline_smooth(k = 4)), dd)
@@ -818,7 +818,7 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
     # space is the constant the model's intercept already carries.
     unpen <- out$unpenalized
     core <- list(kind = "smoother", smoother = sms[[1L]],
-                 blueprint = out$blueprint)
+                 build_info = out$build_info)
   } else {
     tb <- basis7::tensor_basis(marg)
     xm <- do.call(cbind, xs)
@@ -893,7 +893,7 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
   kcol <- ncol(Z)
 
   by_blocks <- 1L
-  # settled here and carried to the blueprint: without a factor `by` there is
+  # settled here and carried to the `build_info`: without a factor `by` there is
   # nothing sparse to build, so the answer is FALSE whatever was asked
   sp <- FALSE
   if (!is.null(by)) {
@@ -963,7 +963,7 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
     })))
   }
 
-  term@blueprint <- list(core = core, marg = marg, spec = sp,
+  term@build_info <- list(core = core, marg = marg, spec = sp,
                          vars = term@vars, by = term@by,
                          by_levels = if (!is.null(by) &&
                                          identical(by$kind, "factor"))
@@ -1060,7 +1060,7 @@ S7::method(term_build, SmoothTerm) <- function(term, data, ...) {
 #' @return A list of entries, as [term_penalties()] documents.
 #' @keywords internal
 S7::method(term_penalties, SmoothTerm) <- function(term, ...) {
-  ent <- term@blueprint$penalties
+  ent <- term@build_info$penalties
   if (is.null(ent)) return(S7::method(term_penalties, model_term)(term, ...))
   ent
 }
@@ -1077,7 +1077,7 @@ S7::method(term_penalties, SmoothTerm) <- function(term, ...) {
 #' covariates and of the `by` variable.
 #'
 #' @details
-#' The basis object in `blueprint$core` carries the knots and the transform, so
+#' The basis object in `build_info$core` carries the knots and the transform, so
 #' the columns at new rows are the same functions of the covariate as the
 #' fitted ones, and \eqn{\tilde{X}\beta} is the fitted smooth evaluated
 #' there. Rebuilding on the new rows would place the knots on their range and
@@ -1085,7 +1085,7 @@ S7::method(term_penalties, SmoothTerm) <- function(term, ...) {
 #' reproduces those rows of the block exactly, and rebuilding on them gives a
 #' different block (see the examples).
 #'
-#' A factor `by` is expanded against `blueprint$by_levels`, so `newdata` need
+#' A factor `by` is expanded against `build_info$by_levels`, so `newdata` need
 #' carry only the levels that its own rows use, and the block still has every
 #' column and is built in the storage chosen at the build. A level that
 #' was not present at build signals an error.
@@ -1127,12 +1127,12 @@ S7::method(term_penalties, SmoothTerm) <- function(term, ...) {
 #' @keywords internal
 S7::method(term_predict, SmoothTerm) <- function(term, newdata, ...) {
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   xs <- .smooth_x(bp$vars, newdata)
   core <- bp$core
 
   if (identical(core$kind, "smoother")) {
-    Z <- basis7::smoother_apply(core$smoother, core$blueprint, xs[[1L]])
+    Z <- basis7::smoother_apply(core$smoother, core$build_info, xs[[1L]])
   } else {
     Z <- basis7::basis_eval(core$basis, do.call(cbind, xs))
   }
@@ -1140,7 +1140,7 @@ S7::method(term_predict, SmoothTerm) <- function(term, newdata, ...) {
   by <- .smooth_by(bp$by, newdata, levels = bp$by_levels)
   if (!is.null(by)) {
     if (identical(by$kind, "factor")) {
-      # the STORAGE is part of the blueprint: a prediction that densified
+      # the STORAGE is part of the `build_info`: a prediction that densified
       # would spend at new data what the build was careful not to
       Z <- .smooth_by_block(Z, by$value, length(bp$by_levels),
                             isTRUE(bp$sparse))

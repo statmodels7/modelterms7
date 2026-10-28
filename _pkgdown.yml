@@ -196,6 +196,6 @@ reference:
   desc: >
     The structural checks of an additive term against a data frame,
     among them the subset check that a term fails when it rebuilds its
-    block instead of reapplying its blueprint.
+    block instead of reapplying its `build_info`.
   contents:
   - check_term

@@ -179,15 +179,15 @@ model_term <- S7::new_class(
 #' terms are structural terms instead.
 #'
 #' A built term on this branch carries four things beyond the root's
-#' properties: the block itself, the coefficient names, the blueprint that
+#' properties: the block itself, the coefficient names, the `build_info` that
 #' reproduces the block on new rows, and the penalty on its coefficients.
 #'
 #' @details
 #' # The build
 #'
-#' A specification has `X` empty and `blueprint` an empty list; [term_build()]
-#' fills `X`, `coef_names` and `blueprint`, and `penalty` as well for a term
-#' that carries a penalty. The blueprint allows [term_predict()] to reapply
+#' A specification has `X` empty and `build_info` an empty list; [term_build()]
+#' fills `X`, `coef_names` and `build_info`, and `penalty` as well for a term
+#' that carries a penalty. The `build_info` allows [term_predict()] to reapply
 #' the mapping instead of rebuilding it: the factor levels, the
 #' contrasts, the knots on which a basis was placed and the spreads that a
 #' standardization used are recorded there at build time. [check_term()]'s
@@ -226,7 +226,7 @@ model_term <- S7::new_class(
 #'   two-dimensional \pkg{Matrix}. It is empty until [term_build()] fills it.
 #' @param coef_names The block's coefficient names, one per column, prefixed by
 #'   `label` when there is one. [term_build()] fills it.
-#' @param blueprint A named list of everything needed to reproduce the mapping
+#' @param build_info A named list of everything needed to reproduce the mapping
 #'   on new rows. Its contents belong to the subclass, and only the term reads
 #'   them. It is empty until [term_build()] fills it.
 #' @param penalty A \pkg{penalties7} penalty on the block's coefficients, or
@@ -245,9 +245,9 @@ model_term <- S7::new_class(
 #' d <- data.frame(x = rnorm(20), g = factor(rep(letters[1:4], 5)))
 #'
 #' # A specification carries no block; a build fills the block, the names and
-#' # the blueprint, and the penalty where the term has one.
+#' # the build_info, and the penalty where the term has one.
 #' spec <- ridge(~ x + g)
-#' c(X = length(spec@X), blueprint = length(spec@blueprint))
+#' c(X = length(spec@X), build_info = length(spec@build_info))
 #' b <- term_build(spec, d)
 #' dim(term_matrix(b))
 #' term_coef_names(b)
@@ -270,7 +270,7 @@ additive_term <- S7::new_class(
   properties = list(
     X = S7::class_any,
     coef_names = S7::class_character,
-    blueprint = S7::class_list,
+    build_info = S7::class_list,
     penalty = S7::class_any
   )
 )
@@ -297,7 +297,7 @@ additive_term <- S7::new_class(
 #' [term_start()] gives their starting values, and a [term_penalties()] entry
 #' indexes into them, where an additive term's entry indexes into columns.
 #'
-#' The class adds one property of its own, `blueprint`, which records that the
+#' The class adds one property of its own, `build_info`, which records that the
 #' term has been built. Everything else that a built structural term records is
 #' held in the root's properties and in the subclass's own slots.
 #'
@@ -323,7 +323,7 @@ additive_term <- S7::new_class(
 #' jointly as one [GasJoint()].
 #'
 #' @inheritParams model_term
-#' @param blueprint A named list of everything needed to reproduce the term
+#' @param build_info A named list of everything needed to reproduce the term
 #'   on new rows: the design's state, the levels that a factor had, whatever
 #'   the subclass's own filter or recursion needs. Its contents belong to that
 #'   subclass and only the term reads them. It is empty in a specification and
@@ -334,7 +334,7 @@ additive_term <- S7::new_class(
 #' @return Nothing: the class is abstract and cannot be instantiated.
 #'   Calling `structural_term()` signals an error. As a type it is the parent
 #'   of [gas()], [regime()] and the marginal break-point terms, and carries
-#'   the properties of [model_term()] together with `blueprint`, the branch's
+#'   the properties of [model_term()] together with `build_info`, the branch's
 #'   record of having been built, empty in a specification.
 #'
 #' @seealso [additive_term()] for the other branch, [gas()] and [regime()] for
@@ -369,7 +369,7 @@ structural_term <- S7::new_class(
     # test its length -- so a structural class written outside the package
     # inherits the contract instead of having to know about it. The default
     # is an empty list, which is what a specification carries.
-    blueprint = S7::class_list
+    build_info = S7::class_list
   )
 )
 
@@ -395,7 +395,7 @@ structural_term <- S7::new_class(
 #'
 #' `sparse` holds the value that the caller gave, and `NULL` where the caller
 #' gave no value. The build leaves it unchanged and records in
-#' `blueprint$sparse` the storage that it resolved, which is the value that
+#' `build_info$sparse` the storage that it resolved, which is the value that
 #' [term_predict()] reads, so the block and a prediction from it never differ
 #' in storage. A formula naming a factor of many levels has one non-zero per
 #' row, and building the dense model matrix of it is the memory use that
@@ -403,11 +403,11 @@ structural_term <- S7::new_class(
 #'
 #' `contrasts` is a named list, one entry per factor, or empty for the
 #' session's own `options("contrasts")`. Whatever is used is recorded in the
-#' blueprint and reapplied, so a fit and a prediction always use the same
+#' `build_info` and reapplied, so a fit and a prediction always use the same
 #' coding.
 #'
 #' `drop_intercept` is `FALSE` by default. When it is `TRUE`, the build removes
-#' the column `(Intercept)` after the coding, and the blueprint records the
+#' the column `(Intercept)` after the coding, and the `build_info` records the
 #' setting so that a prediction applies it again.
 #'
 #' The class carries no penalty: `penalty` is `NULL` on every `LinparTerm`, and
@@ -421,7 +421,7 @@ structural_term <- S7::new_class(
 #' @param sparse `TRUE` to build the block as a `dgCMatrix` through
 #'   [Matrix::sparse.model.matrix()], `FALSE` for a base matrix, `NULL` to let
 #'   the build choose. It is kept as given; the storage actually used is in
-#'   `blueprint$sparse`.
+#'   `build_info$sparse`.
 #' @param contrasts A named list of contrasts for the formula's factors, in
 #'   [stats::model.matrix()]'s own form, or an empty list for the session's
 #'   defaults.
@@ -446,11 +446,11 @@ structural_term <- S7::new_class(
 #' S7::S7_inherits(tm, LinparTerm)
 #' tm@formula
 #'
-#' # The property keeps the value given; the blueprint records the storage
-#' # that the build used, and a prediction reads the blueprint.
+#' # The property keeps the value given; the build_info records the storage
+#' # that the build used, and a prediction reads the build_info.
 #' bt <- term_build(tm, d)
-#' c(sparse_is_null = is.null(bt@sparse), settled = bt@blueprint$sparse)
-#' term_build(linpar(~ g, sparse = TRUE), d)@blueprint$sparse
+#' c(sparse_is_null = is.null(bt@sparse), settled = bt@build_info$sparse)
+#' term_build(linpar(~ g, sparse = TRUE), d)@build_info$sparse
 #'
 #' # The contrasts are recorded and reapplied, so the coding cannot drift.
 #' b <- term_build(linpar(~ g, contrasts = list(g = "contr.sum")), d)
@@ -470,7 +470,7 @@ LinparTerm <- S7::new_class(
     # formula carrying a factor of many levels has one non-zero per row, and
     # the dense model matrix of it is the memory the choice exists to avoid.
     # NULL until the build settles it from the design; the settled value is
-    # what the blueprint carries.
+    # what the `build_info` carries.
     sparse = S7::class_any,
     contrasts = S7::new_property(S7::class_list, default = quote(list())),
     # the formula's intercept lives in the implicit block, so a linpar()

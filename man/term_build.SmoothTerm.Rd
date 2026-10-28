@@ -11,7 +11,7 @@
 \item{...}{Unused.}
 }
 \value{
-The term, in which \code{X}, \code{coef_names} and \code{blueprint} are filled, and
+The term, in which \code{X}, \code{coef_names} and \code{build_info} are filled, and
 \code{penalty} is filled except where the term declares penalties of its own (a
 penalty factory on the smoother, or \code{by_hyper = "level"}), in which case
 \code{penalty} is \code{NULL} and \code{\link[=term_penalties]{term_penalties()}} returns them.
@@ -21,7 +21,7 @@ Builds the basis of an \code{\link[=s]{s()}} or \code{\link[=te]{te()}} term at 
 applies the reparametrization that the construction requires, multiplies by a
 \code{by} variable where there is one, and attaches the roughness penalty. Two
 quantities are computed from the data here and recorded in the
-blueprint, so that \code{\link[=term_predict]{term_predict()}} reapplies them instead of deriving them
+\code{build_info}, so that \code{\link[=term_predict]{term_predict()}} reapplies them instead of deriving them
 again: the Demmler-Reinsch transform for \code{\link[=s]{s()}}, and the centering constraint
 for \code{\link[=te]{te()}}.
 }
@@ -38,7 +38,7 @@ Demmler-Reinsch inner product at the observed values. With the default
 \code{\link[basis7:bspline_smooth]{basis7::bspline_smooth()}} (\code{null_space = "keep"}) a column
 \eqn{(x - \bar{x})/s_x} is prepended and the penalty is
 \eqn{\mathrm{diag}(0, 1, \dots, 1)}; the center and the scale go into the
-blueprint with the transform. With \code{null_space = "drop"} that
+\code{build_info} with the transform. With \code{null_space = "drop"} that
 column is absent and the penalty is the identity.
 }
 
@@ -72,8 +72,8 @@ dd <- data.frame(x = sort(runif(80)), z = runif(80))
 
 # The build records the following for a one-covariate smooth.
 b <- term_build(s(x, basis7::bspline_smooth(k = 8)), dd)
-names(b@blueprint)
-b@blueprint$core$kind
+names(b@build_info)
+b@build_info$core$kind
 
 # For a tensor product, the block has one column fewer than 4 x 4.
 bt <- term_build(te(x, z, smooths = basis7::bspline_smooth(k = 4)), dd)

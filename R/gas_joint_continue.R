@@ -51,7 +51,7 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
   out <- matrix(0, nn, K, dimnames = list(NULL, term@params))
   if (!nn) return(out)
   tm1 <- term@terms[[1L]]
-  bp1 <- tm1@blueprint
+  bp1 <- tm1@build_info
   if (is.null(tm1@time)) {
     stop("continuing a score-driven term past the series needs its `time`: ",
          "without one, a row's place in the series is its position in the ",
@@ -194,7 +194,7 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
       G[, off + seq_len(ncol(D))] <- D
       G
     }
-    if (length(tm@blueprint) && !is.null(tm@blueprint$sub)) {
+    if (length(tm@build_info) && !is.null(tm@build_info$sub)) {
       nd <- .gas_sub_new(tm, v[seq_len(nb)], newdata)
       om <- nd$om
       A <- nd$A
@@ -228,7 +228,7 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
     xp <- .gas_cross_pairs(tm)
     xv <- vector("list", length(xn))
     xd <- vector("list", length(xn))
-    developed <- length(tm@blueprint) && !is.null(tm@blueprint$sub)
+    developed <- length(tm@build_info) && !is.null(tm@build_info$sub)
     for (h in seq_along(xn)) {
       if (developed) {
         xv[[h]] <- nd$cross[[xn[h]]]
@@ -282,7 +282,7 @@ S7::method(term_continue, GasJoint) <- function(term, psi, f_past, s_past,
 #' @keywords internal
 S7::method(term_simulate, GasJoint) <- function(term, psi, eta, draw,
                                                 score, curvature, ...) {
-  n <- term@blueprint$n
+  n <- term@build_info$n
   yv <- rep(NA_real_, n)
   get <- function(e, i) {
     if (is.na(yv[[i]])) yv[[i]] <<- as.numeric(draw(e, i))

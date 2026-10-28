@@ -11,12 +11,12 @@
 \item{...}{Unused.}
 }
 \value{
-The term, in which \code{blueprint} is filled. \code{\link[=term_is_built]{term_is_built()}} reads
+The term, in which \code{build_info} is filled. \code{\link[=term_is_built]{term_is_built()}} reads
 that property on this branch, so it is \code{TRUE} for the result.
 }
 \description{
 Resolves the grouping and the ordering against the data and records them in
-the blueprint. The method does not compute anything else: the term has no
+the \code{build_info}. The method does not compute anything else: the term has no
 design block, its chain structure is fixed by the constructor, and its
 levels are parameters supplied at each evaluation.
 }
@@ -25,7 +25,7 @@ levels are parameters supplied at each evaluation.
 Each must give one non-missing value per row; both are checked here, since
 this is the first point at which they meet data.
 
-The blueprint holds \code{order}, the row indices of each group sorted by time,
+The \code{build_info} holds \code{order}, the row indices of each group sorted by time,
 and \code{n}, the observation count. \code{\link[=term_loglik]{term_loglik()}} runs one forward recursion
 per group in that order, each from the chain's stationary distribution, so
 a panel of independent series is fitted by giving \code{by}.
@@ -43,12 +43,12 @@ dd <- data.frame(t = 1:40, id = rep(1:2, each = 20),
 
 # The rows form one group in row order.
 b <- term_build(regime(2, time = t), dd)
-names(b@blueprint)
-lengths(b@blueprint$order)
+names(b@build_info)
+lengths(b@build_info$order)
 
 # The rows form two independent series, and each has its own recursion.
 b2 <- term_build(regime(2, by = id, time = t), dd)
-lengths(b2@blueprint$order)
+lengths(b2@build_info$order)
 
 # Both must give one value per row.
 try(term_build(regime(2, time = c(1, 2)), dd))

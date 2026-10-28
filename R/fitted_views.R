@@ -238,7 +238,7 @@ S7::method(edf, model_term) <- function(term, coef = NULL, hessian = NULL,
 #' `standardize = TRUE` the penalty is evaluated at the coefficients multiplied
 #' by those spreads; these products are the coefficients of the columns after
 #' each is divided by its spread. The spreads are computed once at build time
-#' and recorded in the blueprint. They enter the penalty only: the design block
+#' and recorded in the `build_info`. They enter the penalty only: the design block
 #' is not rescaled, so prediction at new rows does not use them.
 #'
 #' @param x A [PenalizedTerm()], built or not.
@@ -272,7 +272,7 @@ S7::method(print, PenalizedTerm) <- function(x, ...) {
                 lab, ncol(x@X), if (ncol(x@X) == 1L) "" else "s",
                 pen@penalty_name, paste(pen@params, collapse = ", ")))
     # the scale a hyperparameter is read against belongs on the page
-    s <- x@blueprint$standardize
+    s <- x@build_info$standardize
     if (!is.null(s)) {
       cat("  standardized by: ",
           paste(sprintf("%s = %.4g", names(s), s), collapse = ", "),

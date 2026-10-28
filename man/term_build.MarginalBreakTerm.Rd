@@ -11,12 +11,12 @@
 \item{...}{Unused.}
 }
 \value{
-The term in which \code{blueprint} is filled. \code{\link[=term_is_built]{term_is_built()}} reads that
+The term in which \code{build_info} is filled. \code{\link[=term_is_built]{term_is_built()}} reads that
 property on this branch, so it is \code{TRUE} for the result.
 }
 \description{
 Evaluates the covariate and the grouping variable, orders the rows of each
-group by the covariate, and records the result in the blueprint. The
+group by the covariate, and records the result in the \code{build_info}. The
 interval structure over which the marginal likelihood is summed or
 integrated follows from that ordering.
 }
@@ -25,7 +25,7 @@ The covariate must vary: a constant covariate has no break-point to place
 and is rejected. The grouping variable must give one value per row and must
 not contain missing values.
 
-The blueprint records the number of rows (\code{n}), the covariate in the order
+The \code{build_info} records the number of rows (\code{n}), the covariate in the order
 of the data (\code{x}), for each group the row indices ordered by the covariate
 (\code{groups}), and the labels of the groups (\code{labels}). The intervals over
 which the likelihood decomposes are the gaps between a group's ordered
@@ -44,8 +44,8 @@ dd <- data.frame(id = rep(1:3, each = 8), x = rep(1:8, 3))
 dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
 
 b <- term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd)
-names(b@blueprint)
-b@blueprint$labels
+names(b@build_info)
+b@build_info$labels
 
 # Without a target the start uses the covariate's quantiles and spread, and
 # the change of level starts at zero.

@@ -12,7 +12,7 @@ GasTerm(
   min_ratio = numeric(0),
   search = character(0),
   ids = character(0),
-  blueprint = list(),
+  build_info = list(),
   p = integer(0),
   q = integer(0),
   by = NULL,
@@ -59,7 +59,7 @@ term's own hyperparameters, or \code{character(0)} for none. The terms
 carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
-\item{blueprint}{A named list of the resolved ordering, grouping and
+\item{build_info}{A named list of the resolved ordering, grouping and
 sub-term designs, empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{p}{The number of score lags, an integer of at least 1.}
@@ -128,7 +128,7 @@ side per parameter developed over covariates.
 \code{scaling} is the power \eqn{d} of the expected information that multiplies
 the score; zero leaves the score as it is.
 
-The \code{blueprint} property is inherited from \code{\link[=structural_term]{structural_term()}} and is not
+The \code{build_info} property is inherited from \code{\link[=structural_term]{structural_term()}} and is not
 redeclared by this class. \code{\link[=term_build]{term_build()}} fills it with the row order within
 each group, the built sub-terms of each subformula and their designs.
 }
@@ -156,7 +156,7 @@ vapply(term_links(tm), function(l) l@link_name, character(1))
 
 # The build resolves the ordering; there is no block to read.
 b <- term_build(tm, dd)
-names(b@blueprint)
+names(b@build_info)
 try(term_matrix(b))
 
 }

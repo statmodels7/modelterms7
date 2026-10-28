@@ -41,7 +41,7 @@ NULL
 #'   its own.
 #' @param keys The names under which a fitting layer knew each term before
 #'   joining them, named by the parameter, or an empty vector.
-#' @param blueprint The shared ordering: `order` (the rows of each group, in
+#' @param build_info The shared ordering: `order` (the rows of each group, in
 #'   time order) and `n`. The property is inherited from [structural_term()].
 #'
 #' @return An S7 object of class `GasJoint`, inheriting from
@@ -154,21 +154,21 @@ gas_joint <- function(terms, drivers = character(0)) {
     if (!S7::S7_inherits(tm, GasTerm)) {
       stop(sprintf("the term of '%s' is not a gas() term.", k), call. = FALSE)
     }
-    if (!length(tm@blueprint)) {
+    if (!length(tm@build_info)) {
       stop(sprintf("the gas() term of '%s' has not been built.", k),
            call. = FALSE)
     }
   }
   if ((length(terms) > 1L || length(drivers)) &&
       any(vapply(terms, .gas_static, logical(1))) &&
-      any(vapply(terms, function(tm) length(tm@blueprint$sub) > 0L,
+      any(vapply(terms, function(tm) length(tm@build_info$sub) > 0L,
                  logical(1)))) {
     stop(paste("init = \"static\" is not yet available for a joint filter",
                "whose terms carry subformulas."), call. = FALSE)
   }
-  bp1 <- terms[[1L]]@blueprint
+  bp1 <- terms[[1L]]@build_info
   for (k in params[-1L]) {
-    bp <- terms[[k]]@blueprint
+    bp <- terms[[k]]@build_info
     if (!identical(bp$n, bp1$n) || !identical(bp$order, bp1$order)) {
       stop(sprintf(paste0(
         "the gas() terms of '%s' and '%s' walk different series:\n",
@@ -236,17 +236,17 @@ gas_joint <- function(terms, drivers = character(0)) {
   np <- vapply(terms, function(tm) length(term_params(tm)), integer(1))
   GasJoint(label = "gas_joint", terms = terms, params = all_par,
            offsets = as.integer(cumsum(np) - np), partners = partners,
-           blueprint = list(order = bp1$order, n = bp1$n))
+           build_info = list(order = bp1$order, n = bp1$n))
 }
 
 # a driver beside the term `like`: its series, its scaling, no parameters
 .gas_driver <- function(like, scaling) {
-  bp <- like@blueprint
+  bp <- like@build_info
   bp$sub <- NULL
   GasDriver(label = "driver", p = 0L, q = 0L, by = like@by, time = like@time,
             links = list(), submodels = list(), scaling = as.double(scaling),
             p_cross = stats::setNames(integer(0), character(0)),
-            cross_with = character(0), blueprint = bp)
+            cross_with = character(0), build_info = bp)
 }
 
 # whether a member of a joint filter is a driver
@@ -344,7 +344,7 @@ S7::method(term_params, GasJoint) <- function(term, ...) {
 # which makes the recursion's coefficients vary by observation
 .gas_joint_has_sub <- function(term) {
   any(vapply(term@terms, function(tm)
-    length(tm@blueprint) > 0L && !is.null(tm@blueprint$sub), logical(1)))
+    length(tm@build_info) > 0L && !is.null(tm@build_info$sub), logical(1)))
 }
 
 # The parameters as a list with one entry per filtered parameter. A caller
@@ -427,7 +427,7 @@ S7::method(term_params, GasJoint) <- function(term, ...) {
                    "static predictors, and 'eta' was not given."),
              call. = FALSE)
       }
-      e <- matrix(as.numeric(eta), term@blueprint$n, K)
+      e <- matrix(as.numeric(eta), term@build_info$n, K)
       cf[[k]]$d0 <- .gas_static_start(tm, e[, k])
     }
   }
@@ -506,7 +506,7 @@ S7::method(term_filter, GasJoint) <- function(term, eta, y, score, curvature,
     return(.gas_joint_sub_filter(term, eta, y, score, curvature, psi,
                                  fast = fast, threads = threads))
   }
-  bp <- term@blueprint
+  bp <- term@build_info
   K <- length(term@params)
   n <- bp$n
   eta <- matrix(as.numeric(eta), n, K)
@@ -627,7 +627,7 @@ S7::method(term_filter, GasJoint) <- function(term, eta, y, score, curvature,
 S7::method(term_adjoint, GasJoint) <- function(term, eta, y, score, curvature,
                                                psi, g, ..., stored_curv = NULL,
                                                fast = NULL, threads = 1L) {
-  bp <- term@blueprint
+  bp <- term@build_info
   K <- length(term@params)
   n <- bp$n
   g <- matrix(as.numeric(g), n, K)
@@ -858,7 +858,7 @@ S7::method(print, GasJoint) <- function(x, ...) {
   drv <- .gas_joint_drivers(x)
   cat(sprintf("<GasJoint> '%s': %d filtered parameters, %d group(s)\n",
               x@label, length(x@params) - length(drv),
-              length(x@blueprint$order)))
+              length(x@build_info$order)))
   for (k in x@params) {
     tm <- x@terms[[k]]
     if (.gas_is_driver(tm)) {

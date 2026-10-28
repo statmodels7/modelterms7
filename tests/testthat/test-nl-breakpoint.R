@@ -45,7 +45,7 @@ test_that("the block and its derivatives are exact at every order", {
     b <- term_build(nlbp_specs()[[nm]], d)
     m <- length(b@coef_names)
     set.seed(2)
-    cf <- b@blueprint$coef + stats::rnorm(m, sd = 0.05)
+    cf <- b@build_info$coef + stats::rnorm(m, sd = 0.05)
     v <- stats::rnorm(m)
     u <- stats::rnorm(m)
     A <- matrix(stats::rnorm(n * m), n, m)
@@ -74,7 +74,7 @@ test_that("the block and its derivatives are exact at every order", {
 test_that("a nested break-point is read the same way on new rows", {
   d <- nlbp_data()
   b <- term_build(nlbp_specs()$developed, d)
-  cf <- b@blueprint$coef + 0.03
+  cf <- b@build_info$coef + 0.03
   r <- term_refresh(b, cf)
   expect_equal(term_value(r, newdata = d), term_value(r), tolerance = 1e-12)
   expect_equal(as.matrix(term_predict(r, d)), as.matrix(term_matrix(r)),
@@ -86,8 +86,8 @@ test_that("the position is confined to the sub-term's interval", {
   d <- nlbp_data()
   b <- term_build(nlbp_specs()$jump_smoothed, d)
   pi <- grep("psi", b@coef_names)
-  lim <- term_components(b)$r$subs[[2L]]@blueprint$lim
-  far <- b@blueprint$coef
+  lim <- term_components(b)$r$subs[[2L]]@build_info$lim
+  far <- b@build_info$coef
   at <- far
   far[pi] <- 1e6
   at[pi] <- lim[2L]
@@ -117,7 +117,7 @@ test_that("the start search finds the break-point from the response", {
 test_that("a sharp seg's kink is carried to the term's coefficients", {
   d <- nlbp_data()
   b <- term_build(nlbp_specs()$seg_sharp, d)
-  cf <- b@blueprint$coef
+  cf <- b@build_info$coef
   pi <- grep("psi", b@coef_names)
   cf[pi] <- d$t[60]
   expect_identical(term_kinks(b, cf), pi)

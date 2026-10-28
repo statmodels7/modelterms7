@@ -13,8 +13,8 @@ and whatever the subformulas name.}
 }
 \value{
 The term, in which \code{X}, \code{coef_names}, \code{nl_params}, \code{links},
-\code{deriv_mode} and \code{blueprint} are filled. The penalties of the sub-terms
-are kept in the blueprint and reported by \code{\link[=term_penalties]{term_penalties()}}; the
+\code{deriv_mode} and \code{build_info} are filled. The penalties of the sub-terms
+are kept in the \code{build_info} and reported by \code{\link[=term_penalties]{term_penalties()}}; the
 \code{penalty} property stays \code{NULL}.
 }
 \description{
@@ -28,7 +28,7 @@ returns the right components.
 On the formula route \code{\link[stats:deriv]{stats::deriv()}} is tried on the expression, and
 \code{deriv_mode} records whether it succeeded. The expressions of orders two to
 four are formed with \code{\link[stats:deriv]{stats::D()}} where that succeeds, and the orders that
-are analytic, whether symbolic or supplied, are recorded in the blueprint.
+are analytic, whether symbolic or supplied, are recorded in the \code{build_info}.
 Every function given to \code{gradient}, \code{hessian}, \code{deriv3} or \code{deriv4} is
 called once and its names and lengths are checked against the components of
 that order: a name that is not one of them, a missing component, a repeated
@@ -37,7 +37,7 @@ does not fall back to the numerical route in these cases. A name in \code{start}
 \code{links} or \code{subformulas} that is not a parameter is an error as well.
 
 Each parameter's subformula goes through \code{\link[=interpret_formula]{interpret_formula()}} and its
-terms are built, so their blueprints are recorded and reapplied at
+terms are built, so their \code{build_info} lists are recorded and reapplied at
 prediction. A structural sub-term is rejected, and so is one whose own block
 moves with its coefficients unless that block is a Jacobian, as for \code{\link[=seg]{seg()}}
 and every smoothed break-point term; such a parameter's design and predictor

@@ -53,15 +53,15 @@ season <- function(x, period, k = 3, lambda = NULL) {
     spec = list(period = period, k = k),
     hyper = if (is.null(lambda)) list() else list(lambda = lambda),
     X = NULL, coef_names = character(0),
-    blueprint = list(), penalty = NULL
+    build_info = list(), penalty = NULL
   )
 }
 ```
 
 `term_build()` evaluates the expression in the data and fills `X`,
-`coef_names`, `blueprint` and `penalty`. The blueprint stores what
+`coef_names`, `build_info` and `penalty`. The `build_info` stores what
 `term_predict()` needs later, so that prediction reapplies recorded quantities
-and does not recompute them from the new rows. Storing the blueprint at build
+and does not recompute them from the new rows. Storing the `build_info` at build
 time is the second requirement on a new term.
 
 ```{r}
@@ -81,7 +81,7 @@ S7::method(term_build, SeasonTerm) <- function(term, data, ...) {
     X = .season_X(x, sp$period, sp$k),
     coef_names = c(sprintf("cos%d", seq_len(sp$k)),
                    sprintf("sin%d", seq_len(sp$k))),
-    blueprint = sp,
+    build_info = sp,
     penalty = penalties7::quadratic_penalty(diag(rep(seq_len(sp$k)^2, 2)))
   )
 }
@@ -121,17 +121,17 @@ The truth is `sin1 = 2`, `cos3 = 0.4` and zero for the other coefficients.
 ## Prediction at new data
 
 `term_predict()` has no base method, so a term that is used for prediction or
-for cross-validation defines one. The method reapplies the blueprint:
+for cross-validation defines one. The method reapplies the `build_info`:
 
 ```{r}
 S7::method(term_predict, SeasonTerm) <- function(term, newdata, ...) {
   x <- as.numeric(eval(term@expr, newdata, baseenv()))
-  bp <- term@blueprint
+  bp <- term@build_info
   .season_X(x, bp$period, bp$k)
 }
 ```
 
-The period comes from the blueprint and never from the new data. A term that
+The period comes from the `build_info` and never from the new data. A term that
 recomputed it would be a different term on every subset. The identity that
 detects this mistake is that prediction on the rows of the fit must return the
 block of the fit:
@@ -268,10 +268,10 @@ or `term_loglik()`, and `term_adjoint()` carries the derivative of a filter.
 ## Summary
 
 * Minimum to define an additive term: a subclass of `additive_term` and a
-  `term_build()` method that fills `X`, `coef_names`, `blueprint` and
+  `term_build()` method that fills `X`, `coef_names`, `build_info` and
   `penalty`. Any state of its own is a property of the subclass.
 * The constructor captures the covariate unevaluated and computes nothing.
-* `term_predict()` has no base method. Write one, reapply the blueprint, and
+* `term_predict()` has no base method. Write one, reapply the `build_info`, and
   evaluate in the new data with `baseenv()` as the enclosure.
 * `check_term()` runs six checks, and the last one runs on a `droplevels()`
   subset, which exposes a rebuild.

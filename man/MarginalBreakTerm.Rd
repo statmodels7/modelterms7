@@ -12,7 +12,7 @@ MarginalBreakTerm(
   min_ratio = numeric(0),
   search = character(0),
   ids = character(0),
-  blueprint = list(),
+  build_info = list(),
   kind = character(0),
   var = NULL,
   npsi = integer(0),
@@ -54,7 +54,7 @@ term's own hyperparameters, or \code{character(0)} for none. The terms
 carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
-\item{blueprint}{A named list that records the number of rows, the
+\item{build_info}{A named list that records the number of rows, the
 covariate, the rows of each group and the group labels. It is empty until
 \code{\link[=term_build]{term_build()}} fills it.}
 
@@ -95,7 +95,7 @@ are estimated by plain maximum likelihood.
 \section{Properties}{
 The class defines the properties \code{kind}, \code{var}, \code{npsi}, \code{linear}, \code{group},
 \code{prior} and \code{spec}, and inherits the others from \code{\link[=structural_term]{structural_term()}} and
-\code{\link[=model_term]{model_term()}}, among them \code{blueprint}.
+\code{\link[=model_term]{model_term()}}, among them \code{build_info}.
 
 \code{kind} is \code{"jump"}, \code{"seg"} or \code{"jseg"}; \code{var} is the covariate expression;
 \code{npsi} is the number of break-points per group; \code{linear} records whether
@@ -109,7 +109,7 @@ the Gaussian, or a \pkg{distributions7} object where \code{random(distrib = )}
 names one. The location of that distribution must be fixed at zero, since
 \code{psi1.mean} carries the position.
 
-\code{spec} holds the resolved construction settings. \code{blueprint} is inherited
+\code{spec} holds the resolved construction settings. \code{build_info} is inherited
 from \code{\link[=structural_term]{structural_term()}} and holds the grouping and the covariate that
 \code{\link[=term_build]{term_build()}} records.
 }

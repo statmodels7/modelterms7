@@ -14,7 +14,7 @@ RandomTerm(
   ids = character(0),
   X = NULL,
   coef_names = character(0),
-  blueprint = list(),
+  build_info = list(),
   penalty = NULL,
   formula = NULL,
   correlated = logical(0),
@@ -60,7 +60,7 @@ two-dimensional \pkg{Matrix}. It is empty until \code{\link[=term_build]{term_bu
 \item{coef_names}{The block's coefficient names, one per column, prefixed by
 \code{label} when there is one. \code{\link[=term_build]{term_build()}} fills it.}
 
-\item{blueprint}{A named list of everything needed to reproduce the mapping
+\item{build_info}{A named list of everything needed to reproduce the mapping
 on new rows. Its contents belong to the subclass, and only the term reads
 them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 

@@ -12,7 +12,7 @@ RegimeTerm(
   min_ratio = numeric(0),
   search = character(0),
   ids = character(0),
-  blueprint = list(),
+  build_info = list(),
   k = integer(0),
   by = NULL,
   time = NULL,
@@ -52,7 +52,7 @@ term's own hyperparameters, or \code{character(0)} for none. The terms
 carrying the same label for the same hyperparameter estimate one value.
 See \code{\link[=term_ids]{term_ids()}}.}
 
-\item{blueprint}{A named list of the resolved ordering and grouping, empty
+\item{build_info}{A named list of the resolved ordering and grouping, empty
 until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{k}{The number of regimes, an integer of at least 2.}
@@ -71,7 +71,7 @@ single whole number of at least 1, as set by \code{\link[=regime]{regime()}}.}
 An S7 object of class \code{RegimeTerm}, inheriting from
 \code{\link[=structural_term]{structural_term()}} and \code{\link[=model_term]{model_term()}}, with the five properties above in
 addition to the eight that \code{\link[=structural_term]{structural_term()}} supplies (the seven of
-\code{\link[=model_term]{model_term()}} and \code{blueprint}).
+\code{\link[=model_term]{model_term()}} and \code{build_info}).
 }
 \description{
 \code{RegimeTerm} is the subclass of \code{\link[=structural_term]{structural_term()}} that holds a latent
@@ -94,7 +94,7 @@ vector at any coordinate. Its \code{free_names} are the tail of
 \code{n_start} is the number of starting points that a fitting layer tries, a
 whole number of at least 1.
 
-The property \code{blueprint} is inherited from \code{\link[=structural_term]{structural_term()}}, which
+The property \code{build_info} is inherited from \code{\link[=structural_term]{structural_term()}}, which
 declares it. \code{\link[=term_build]{term_build()}} fills it with the row order within each group
 and the observation count.
 }
@@ -107,9 +107,9 @@ tm <- regime(2, time = t)
 S7::S7_inherits(tm, RegimeTerm)
 c(k = tm@k, chain = class(tm@chain)[1])
 
-# The build resolves the order and fills the blueprint.
+# The build resolves the order and fills the build_info.
 b <- term_build(tm, dd)
-names(b@blueprint)
+names(b@build_info)
 
 # It is on the structural branch, so there is no block.
 try(term_matrix(b))

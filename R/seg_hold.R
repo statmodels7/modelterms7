@@ -53,7 +53,7 @@ S7::method(term_held, model_term) <- function(term, ...) integer(0)
 #' @return An integer vector of positions in the term's coefficients.
 #' @keywords internal
 S7::method(term_held, SegTerm) <- function(term, ...) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!length(bp) || !isTRUE(bp$held)) return(integer(0))
   as.integer(unlist(bp$index[paste0("psi", seq_len(bp$npsi))],
                     use.names = FALSE))
@@ -124,7 +124,7 @@ seg_hold <- function(term, hold = TRUE) {
     stop("'term' must be a break-point term.", call. = FALSE)
   }
   .assert_built(term)
-  bp <- term@blueprint
+  bp <- term@build_info
   if (identical(bp$kind, "seg") || !is.null(bp$smooth)) {
     stop(paste("only a sharp jump() or jseg() term can be held: the",
                "break-points of a seg() or a smoothed term are ordinary",
@@ -153,7 +153,7 @@ seg_hold <- function(term, hold = TRUE) {
   bp$psi <- asm$psi
   bp$pk <- asm$pk
   term@X <- X
-  term@blueprint <- bp
+  term@build_info <- bp
   term
 }
 
@@ -277,9 +277,9 @@ seg_hold <- function(term, hold = TRUE) {
 #'
 #' @export
 seg_polish_exact <- function(term, y, sweeps = 10, weights = NULL) {
-  if (S7::S7_inherits(term, SegTerm) && isTRUE(term@blueprint$developed) &&
-      !identical(term@blueprint$kind, "seg") &&
-      is.null(term@blueprint$smooth)) {
+  if (S7::S7_inherits(term, SegTerm) && isTRUE(term@build_info$developed) &&
+      !identical(term@build_info$kind, "seg") &&
+      is.null(term@build_info$smooth)) {
     return(.seg_polish_developed(term, y, weights, sweeps))
   }
   ev <- .seg_interval_eval(term, y, weights)
@@ -287,7 +287,7 @@ seg_polish_exact <- function(term, y, sweeps = 10, weights = NULL) {
   mid <- ev$mid
   if (!length(mid)) return(term)
   K <- term@npsi
-  psi <- as.numeric(term@blueprint$psi[1L, ])
+  psi <- as.numeric(term@build_info$psi[1L, ])
   best <- pr$rss(psi)
   for (s in seq_len(as.integer(sweeps))) {
     moved <- FALSE
@@ -348,7 +348,7 @@ seg_profile_intervals <- function(term, y, k = 1L, weights = NULL) {
     stop(sprintf("'k' must be one of 1 to %d.", K), call. = FALSE)
   }
   if (!length(ev$mid)) return(data.frame(psi = numeric(0), rss = numeric(0)))
-  psi <- as.numeric(term@blueprint$psi[1L, ])
+  psi <- as.numeric(term@build_info$psi[1L, ])
   v <- ev$rss_at(k, psi)
   at <- attr(v, "psi")
   data.frame(psi = if (is.null(at)) ev$mid else at, rss = as.numeric(v))
@@ -358,7 +358,7 @@ seg_profile_intervals <- function(term, y, k = 1L, weights = NULL) {
 # break-point j over every midpoint, the other positions given.
 .seg_interval_eval <- function(term, y, weights = NULL) {
   pr <- .seg_profile(term, y, weights)
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!is.null(bp$smooth)) {
     stop("only a sharp seg(), jump() or jseg() term is polished over intervals.",
          call. = FALSE)
@@ -485,7 +485,7 @@ seg_profile_intervals <- function(term, y, k = 1L, weights = NULL) {
 # line searches in the coefficients p_k of each position, psi_i = w_i'p_k.
 # See seg_polish_exact().
 .seg_polish_developed <- function(term, y, weights = NULL, sweeps = 10) {
-  bp <- term@blueprint
+  bp <- term@build_info
   if (!isTRUE(bp$held)) {
     stop("a break-point term with a development is polished held; see seg_hold().",
          call. = FALSE)
@@ -519,7 +519,7 @@ seg_profile_intervals <- function(term, y, k = 1L, weights = NULL) {
     if (is.finite(out)) out else Inf
   }
   at_pk <- function(tm, k, p) {
-    b <- tm@blueprint
+    b <- tm@build_info
     b$pk[[k]] <- p
     asm <- .seg_assemble(b, b$xv, b$coef)
     X <- asm$X
@@ -528,7 +528,7 @@ seg_profile_intervals <- function(term, y, k = 1L, weights = NULL) {
     b$psi <- asm$psi
     b$pk <- asm$pk
     tm@X <- X
-    tm@blueprint <- b
+    tm@build_info <- b
     tm
   }
   design_of <- function(k) {
@@ -540,7 +540,7 @@ seg_profile_intervals <- function(term, y, k = 1L, weights = NULL) {
   # only inside `range`; NULL where no candidate improves
   line <- function(tm, k, v, range, cur) {
     Zk <- design_of(k)
-    p0 <- as.numeric(tm@blueprint$pk[[k]])
+    p0 <- as.numeric(tm@build_info$pk[[k]])
     s <- as.numeric(Zk %*% v)
     psi0 <- as.numeric(Zk %*% p0)
     mv <- abs(s) > 1e-12 * max(abs(s))
@@ -656,7 +656,7 @@ seg_profile_intervals <- function(term, y, k = 1L, weights = NULL) {
     for (k in seq_len(K)) {
       pl <- plans[[k]]
       if (is.null(pl$groups)) next
-      psi <- tm@blueprint$psi
+      psi <- tm@build_info$psi
       qk <- numeric(length(pl$dirs))
       for (j in seq_along(pl$dirs)) {
         d <- pl$dirs[[j]]

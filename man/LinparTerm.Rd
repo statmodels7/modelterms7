@@ -14,7 +14,7 @@ LinparTerm(
   ids = character(0),
   X = NULL,
   coef_names = character(0),
-  blueprint = list(),
+  build_info = list(),
   penalty = NULL,
   formula = NULL,
   sparse = NULL,
@@ -60,7 +60,7 @@ two-dimensional \pkg{Matrix}. It is empty until \code{\link[=term_build]{term_bu
 \item{coef_names}{The block's coefficient names, one per column, prefixed by
 \code{label} when there is one. \code{\link[=term_build]{term_build()}} fills it.}
 
-\item{blueprint}{A named list of everything needed to reproduce the mapping
+\item{build_info}{A named list of everything needed to reproduce the mapping
 on new rows. Its contents belong to the subclass, and only the term reads
 them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
@@ -74,7 +74,7 @@ absent from the data.}
 \item{sparse}{\code{TRUE} to build the block as a \code{dgCMatrix} through
 \code{\link[Matrix:sparse.model.matrix]{Matrix::sparse.model.matrix()}}, \code{FALSE} for a base matrix, \code{NULL} to let
 the build choose. It is kept as given; the storage actually used is in
-\code{blueprint$sparse}.}
+\code{build_info$sparse}.}
 
 \item{contrasts}{A named list of contrasts for the formula's factors, in
 \code{\link[stats:model.matrix]{stats::model.matrix()}}'s own form, or an empty list for the session's
@@ -108,7 +108,7 @@ that the data do not carry is still found where the formula was written.
 
 \code{sparse} holds the value that the caller gave, and \code{NULL} where the caller
 gave no value. The build leaves it unchanged and records in
-\code{blueprint$sparse} the storage that it resolved, which is the value that
+\code{build_info$sparse} the storage that it resolved, which is the value that
 \code{\link[=term_predict]{term_predict()}} reads, so the block and a prediction from it never differ
 in storage. A formula naming a factor of many levels has one non-zero per
 row, and building the dense model matrix of it is the memory use that
@@ -116,11 +116,11 @@ sparse storage avoids.
 
 \code{contrasts} is a named list, one entry per factor, or empty for the
 session's own \code{options("contrasts")}. Whatever is used is recorded in the
-blueprint and reapplied, so a fit and a prediction always use the same
+\code{build_info} and reapplied, so a fit and a prediction always use the same
 coding.
 
 \code{drop_intercept} is \code{FALSE} by default. When it is \code{TRUE}, the build removes
-the column \code{(Intercept)} after the coding, and the blueprint records the
+the column \code{(Intercept)} after the coding, and the \code{build_info} records the
 setting so that a prediction applies it again.
 
 The class carries no penalty: \code{penalty} is \code{NULL} on every \code{LinparTerm}, and
@@ -136,11 +136,11 @@ tm <- linpar(~ x + g)
 S7::S7_inherits(tm, LinparTerm)
 tm@formula
 
-# The property keeps the value given; the blueprint records the storage
-# that the build used, and a prediction reads the blueprint.
+# The property keeps the value given; the build_info records the storage
+# that the build used, and a prediction reads the build_info.
 bt <- term_build(tm, d)
-c(sparse_is_null = is.null(bt@sparse), settled = bt@blueprint$sparse)
-term_build(linpar(~ g, sparse = TRUE), d)@blueprint$sparse
+c(sparse_is_null = is.null(bt@sparse), settled = bt@build_info$sparse)
+term_build(linpar(~ g, sparse = TRUE), d)@build_info$sparse
 
 # The contrasts are recorded and reapplied, so the coding cannot drift.
 b <- term_build(linpar(~ g, contrasts = list(g = "contr.sum")), d)
