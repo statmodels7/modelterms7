@@ -87,4 +87,5 @@ Collate:
     'random_smooth.R'
     'response.R'
     'seg_hold.R'
+    'seg_pin.R'
     'shift_jacobian.R'
