@@ -22,6 +22,7 @@ gas(
   scaling = 0,
   p_cross = NULL,
   links = NULL,
+  init = c("level", "static"),
   label = "gas"
 )
 ```
@@ -89,6 +90,13 @@ gas(
   before any development, and the cross loadings `kappa<i>_<parameter>`,
   can be named. The coefficients of a development are unconstrained, and
   the link of the developed parameter is applied inside the development.
+
+- init:
+
+  How the recursion starts: `"level"`, the default, at the fixed point
+  of the recursion, or `"static"`, with the first predictor of every
+  group equal to the constant `init_value`; see the section on the start
+  of the recursion.
 
 - label:
 
@@ -270,6 +278,26 @@ confounded with the part of its span that the equation's design shares.
 and `time` gives the order within a group. Only the order of the times
 matters: a gap between two times counts as one step of the recursion.
 Without `time` the rows are taken in the order in which they appear.
+
+### The start of the recursion
+
+With `init = "level"`, the default, the levels before the first
+observation of a group equal the fixed point of the recursion, \\f_0 =
+\omega / (1 - \sum_j \xi_j)\\, and so does the first level, so the first
+predictor is the static predictor plus \\f_0\\. With `init = "static"`
+the first predictor of every group equals a constant \\c\\ of that group
+that does not depend on the parameters: the first level is \\f_1 = c -
+\eta^{s}\_1\\, where \\\eta^{s}\_1\\ is the static predictor at the
+group's first row, and the levels before it equal \\f_1\\. The constants
+are the property `init_value`, one for every group or one for all of
+them, which a fitting layer sets; statmodels7 sets them to the predictor
+of the model without the term at the first row of each group, and keeps
+that model in the property `init_source`. With a persistence close to
+one the first convention makes the constant of the equation the starting
+value of the filter as well as its level, and the likelihood can then
+have a second maximum at which the constant fits the first observations;
+the second convention separates the two. `init = "static"` is not yet
+available for a joint filter whose terms carry subformulas.
 
 ### A parameter developed with covariates
 

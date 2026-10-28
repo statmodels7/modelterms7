@@ -13,7 +13,7 @@ callbacks return."><meta property="og:image" content="https://statmodels7.github
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.110.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -91,7 +91,10 @@ observation.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list with <code>deta</code> and <code>dscore</code>.</p>
+    <p>A list with <code>deta</code> and <code>dscore</code>. With <code>init = "static"</code> it also
+has <code>dstart</code>: the part of <code>deta</code> that reaches the objective through the
+start of the recursion, nonzero only at the first row of each group, which
+a caller that assembles the derivative from <code>dscore</code> adds itself.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

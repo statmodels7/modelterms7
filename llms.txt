@@ -498,6 +498,10 @@ an ordinary parameter, and the grid rule chooses where to start.
   : The Profile of One Break-Point Over Every Interval
 - [`seg_hold()`](https://statmodels7.github.io/modelterms7/reference/seg_hold.md)
   : Hold a Break-Point Term at Its Positions
+- [`seg_pin()`](https://statmodels7.github.io/modelterms7/reference/seg_pin.md)
+  : Confine the Free Break-Points of a Term Away From the Held Ones
+- [`seg_limits()`](https://statmodels7.github.io/modelterms7/reference/seg_limits.md)
+  : Confinement Intervals of the Break-Points of a Term
 
 ## Structural terms
 

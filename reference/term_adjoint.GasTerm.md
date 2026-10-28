@@ -50,4 +50,7 @@ respect to the sequence of scores that the callbacks return.
 
 ## Value
 
-A list with `deta` and `dscore`.
+A list with `deta` and `dscore`. With `init = "static"` it also has
+`dstart`: the part of `deta` that reaches the objective through the
+start of the recursion, nonzero only at the first row of each group,
+which a caller that assembles the derivative from `dscore` adds itself.

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.110.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,17 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.112.0" id="modelterms7-01120">modelterms7 0.112.0<a class="anchor" aria-label="anchor" href="#modelterms7-01120"></a></h2>
+<ul><li>
+<code><a href="../reference/seg_pin.html">seg_pin()</a></code> prepares a continuous <code><a href="../reference/seg.html">seg()</a></code> term for a fit in which some of its coefficients are held. Each break-point whose position is not held stays in the interval between the held positions that surround it, with at least <code>min_obs</code> observations (two by default) between it and each of them, and the coefficients of a break-point of which a coefficient is held are not exchanged with those of another when the positions cross. <code><a href="../reference/seg_limits.html">seg_limits()</a></code> returns the interval of each break-point.</li>
+<li>The confinement limit of a <code><a href="../reference/seg.html">seg()</a></code> term is read for each break-point, and <code><a href="../reference/term_refresh.html">term_refresh()</a></code> exchanges the labels of crossed break-points within the groups that <code><a href="../reference/seg_pin.html">seg_pin()</a></code> sets. A term that is not pinned behaves as before.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.111.0" id="modelterms7-01110">modelterms7 0.111.0<a class="anchor" aria-label="anchor" href="#modelterms7-01110"></a></h2>
+<ul><li>
+<code><a href="../reference/gas.html">gas()</a></code> takes <code>init</code>, how the recursion starts. With <code>init = "level"</code>, the default and the behaviour of earlier versions, the levels before the first observation of a group equal the fixed point of the recursion. With <code>init = "static"</code> the first predictor of every group equals a constant of that group (the property <code>init_value</code>, set by the fitting layer), so the first level is that constant minus the static predictor of the group’s first row and does not depend on the term’s parameters. The filter, the reverse pass (whose result then carries <code>dstart</code>, the part that reaches the objective through the start), <code><a href="../reference/term_static_deriv.html">term_static_deriv()</a></code> and the second, third and fourth derivatives start from it on the scalar route, the route with subformulas and the joint filter, in R and compiled. A joint filter whose terms carry subformulas rejects <code>init = "static"</code>.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.110.2" id="modelterms7-01102">modelterms7 0.110.2<a class="anchor" aria-label="anchor" href="#modelterms7-01102"></a></h2>
 <ul><li>

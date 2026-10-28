@@ -32,7 +32,10 @@ GasTerm(
   submodels = list(),
   scaling = numeric(0),
   p_cross = integer(0),
-  cross_with = character(0)
+  cross_with = character(0),
+  init = character(0),
+  init_value = numeric(0),
+  init_source = NULL
 )
 ```
 

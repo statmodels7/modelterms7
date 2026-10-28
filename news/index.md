@@ -1,5 +1,44 @@
 # Changelog
 
+## modelterms7 0.112.0
+
+- [`seg_pin()`](https://statmodels7.github.io/modelterms7/reference/seg_pin.md)
+  prepares a continuous
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  term for a fit in which some of its coefficients are held. Each
+  break-point whose position is not held stays in the interval between
+  the held positions that surround it, with at least `min_obs`
+  observations (two by default) between it and each of them, and the
+  coefficients of a break-point of which a coefficient is held are not
+  exchanged with those of another when the positions cross.
+  [`seg_limits()`](https://statmodels7.github.io/modelterms7/reference/seg_limits.md)
+  returns the interval of each break-point.
+- The confinement limit of a
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
+  term is read for each break-point, and
+  [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
+  exchanges the labels of crossed break-points within the groups that
+  [`seg_pin()`](https://statmodels7.github.io/modelterms7/reference/seg_pin.md)
+  sets. A term that is not pinned behaves as before.
+
+## modelterms7 0.111.0
+
+- [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  takes `init`, how the recursion starts. With `init = "level"`, the
+  default and the behaviour of earlier versions, the levels before the
+  first observation of a group equal the fixed point of the recursion.
+  With `init = "static"` the first predictor of every group equals a
+  constant of that group (the property `init_value`, set by the fitting
+  layer), so the first level is that constant minus the static predictor
+  of the group’s first row and does not depend on the term’s parameters.
+  The filter, the reverse pass (whose result then carries `dstart`, the
+  part that reaches the objective through the start),
+  [`term_static_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_static_deriv.md)
+  and the second, third and fourth derivatives start from it on the
+  scalar route, the route with subformulas and the joint filter, in R
+  and compiled. A joint filter whose terms carry subformulas rejects
+  `init = "static"`.
+
 ## modelterms7 0.110.2
 
 - [`term_scores()`](https://statmodels7.github.io/modelterms7/reference/term_scores.md)

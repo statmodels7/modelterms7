@@ -25,7 +25,7 @@ when scaling is not zero."><meta property="og:image" content="https://statmodels
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.110.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,6 +75,7 @@ when <code>scaling</code> is not zero.</p>
 <span>  scaling <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  p_cross <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  links <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level"</span>, <span class="st">"static"</span><span class="op">)</span>,</span>
 <span>  label <span class="op">=</span> <span class="st">"gas"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -143,6 +144,13 @@ development, and the cross loadings <code>kappa&lt;i&gt;_&lt;parameter&gt;</code
 named. The coefficients of a development are
 unconstrained, and the link of the developed parameter is applied inside
 the development.</p></dd>
+
+
+<dt id="arg-init">init<a class="anchor" aria-label="anchor" href="#arg-init"></a></dt>
+<dd><p>How the recursion starts: <code>"level"</code>, the default, at the
+fixed point of the recursion, or <code>"static"</code>, with the first predictor of
+every group equal to the constant <code>init_value</code>; see the section on the
+start of the recursion.</p></dd>
 
 
 <dt id="arg-label">label<a class="anchor" aria-label="anchor" href="#arg-label"></a></dt>
@@ -315,6 +323,28 @@ its span that the equation's design shares.</p>
 and <code>time</code> gives the order within a group. Only the order of the times
 matters: a gap between two times counts as one step of the recursion.
 Without <code>time</code> the rows are taken in the order in which they appear.</p>
+</div>
+
+<div class="section">
+<h3 id="the-start-of-the-recursion">The start of the recursion<a class="anchor" aria-label="anchor" href="#the-start-of-the-recursion"></a></h3>
+<p>With <code>init = "level"</code>, the default, the levels before the first
+observation of a group equal the fixed point of the recursion,
+\(f_0 = \omega / (1 - \sum_j \xi_j)\), and so does the first level, so
+the first predictor is the static predictor plus \(f_0\). With
+<code>init = "static"</code> the first predictor of every group equals a constant
+\(c\) of that group that does not depend on the parameters: the first
+level is \(f_1 = c - \eta^{s}_1\), where \(\eta^{s}_1\) is the static
+predictor at the group's first row, and the levels before it equal
+\(f_1\). The constants are the property <code>init_value</code>, one for every group
+or one for all of them, which a fitting layer sets; <span class="pkg">statmodels7</span> sets
+them to the predictor of the model without the term at the first row of
+each group, and keeps that model in the property <code>init_source</code>. With a
+persistence close to one the first convention
+makes the constant of the equation the starting value of the filter as
+well as its level, and the likelihood can then have a second maximum at
+which the constant fits the first observations; the second convention
+separates the two. <code>init = "static"</code> is not yet available for a joint
+filter whose terms carry subformulas.</p>
 </div>
 
 <div class="section">

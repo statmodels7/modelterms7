@@ -21,7 +21,8 @@ gas_filter_r(
   i_a,
   np,
   score,
-  curvature
+  curvature,
+  d0 = numeric(0)
 )
 ```
 
@@ -67,6 +68,11 @@ gas_filter_r(
 
   The callbacks of
   [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md).
+
+- d0:
+
+  The first level of each group under a static start
+  (`init = "static"`), or `numeric(0)` for the start at `f0`.
 
 ## Value
 
