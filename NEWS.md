@@ -1,3 +1,16 @@
+# modelterms7 0.112.0
+
+* `seg_pin()` prepares a continuous `seg()` term for a fit in which some of
+  its coefficients are held. Each break-point whose position is not held stays
+  in the interval between the held positions that surround it, with at least
+  `min_obs` observations (two by default) between it and each of them, and the
+  coefficients of a break-point of which a coefficient is held are not
+  exchanged with those of another when the positions cross. `seg_limits()`
+  returns the interval of each break-point.
+* The confinement limit of a `seg()` term is read for each break-point, and
+  `term_refresh()` exchanges the labels of crossed break-points within the
+  groups that `seg_pin()` sets. A term that is not pinned behaves as before.
+
 # modelterms7 0.111.0
 
 * `gas()` takes `init`, how the recursion starts. With `init = "level"`, the
