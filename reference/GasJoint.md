@@ -17,7 +17,7 @@ GasJoint(
   min_ratio = numeric(0),
   search = character(0),
   ids = character(0),
-  blueprint = list(),
+  build_info = list(),
   terms = list(),
   params = character(0),
   offsets = integer(0),
@@ -79,7 +79,7 @@ GasJoint(
   the same label for the same hyperparameter estimate one value. See
   [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
 
-- blueprint:
+- build_info:
 
   The shared ordering: `order` (the rows of each group, in time order)
   and `n`. The property is inherited from

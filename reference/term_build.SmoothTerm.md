@@ -6,7 +6,7 @@ Builds the basis of an
 at the observed covariates, applies the reparametrization that the
 construction requires, multiplies by a `by` variable where there is one,
 and attaches the roughness penalty. Two quantities are computed from the
-data here and recorded in the blueprint, so that
+data here and recorded in the `build_info`, so that
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 reapplies them instead of deriving them again: the Demmler-Reinsch
 transform for
@@ -31,7 +31,7 @@ the centering constraint for
 
 ## Value
 
-The term, in which `X`, `coef_names` and `blueprint` are filled, and
+The term, in which `X`, `coef_names` and `build_info` are filled, and
 `penalty` is filled except where the term declares penalties of its own
 (a penalty factory on the smoother, or `by_hyper = "level"`), in which
 case `penalty` is `NULL` and
@@ -56,7 +56,7 @@ With the default
 [`basis7::bspline_smooth()`](https://statmodels7.github.io/basis7/reference/bspline_smooth.html)
 (`null_space = "keep"`) a column \\(x - \bar{x})/s_x\\ is prepended and
 the penalty is \\\mathrm{diag}(0, 1, \dots, 1)\\; the center and the
-scale go into the blueprint with the transform. With
+scale go into the `build_info` with the transform. With
 `null_space = "drop"` that column is absent and the penalty is the
 identity.
 
@@ -102,10 +102,10 @@ dd <- data.frame(x = sort(runif(80)), z = runif(80))
 
 # The build records the following for a one-covariate smooth.
 b <- term_build(s(x, basis7::bspline_smooth(k = 8)), dd)
-names(b@blueprint)
+names(b@build_info)
 #> [1] "core"      "marg"      "spec"      "vars"      "by"        "by_levels"
 #> [7] "sparse"    "penalties" "nblock"   
-b@blueprint$core$kind
+b@build_info$core$kind
 #> [1] "smoother"
 
 # For a tensor product, the block has one column fewer than 4 x 4.

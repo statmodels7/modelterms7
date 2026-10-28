@@ -35,8 +35,8 @@ observation, in the order of the data.
 
 ## Details
 
-One chain is drawn for each group of the blueprint, in time order, and
-each starts from the chain's stationary distribution.
+One chain is drawn for each group of the `build_info`, in time order,
+and each starts from the chain's stationary distribution.
 [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
 and
 [`term_posterior()`](https://statmodels7.github.io/modelterms7/reference/term_posterior.md)

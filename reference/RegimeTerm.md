@@ -21,11 +21,11 @@ RegimeTerm(
   min_ratio = numeric(0),
   search = character(0),
   ids = character(0),
-  blueprint = list(),
+  build_info = list(),
   k = integer(0),
   by = NULL,
   time = NULL,
-  chain = NULL,
+  transition = NULL,
   n_start = integer(0)
 )
 ```
@@ -83,7 +83,7 @@ RegimeTerm(
   the same label for the same hyperparameter estimate one value. See
   [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
 
-- blueprint:
+- build_info:
 
   A named list of the resolved ordering and grouping, empty until
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
@@ -102,7 +102,7 @@ RegimeTerm(
 
   An optional ordering expression. `NULL` means row order.
 
-- chain:
+- transition:
 
   A
   [`parameters7::transition_matrix()`](https://statmodels7.github.io/parameters7/reference/transition_matrix.html)
@@ -124,7 +124,7 @@ with the five properties above in addition to the eight that
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
 supplies (the seven of
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)
-and `blueprint`).
+and `build_info`).
 
 ## The five properties of its own
 
@@ -133,7 +133,7 @@ ordering expressions as written, kept unevaluated. A `by` of `NULL`
 means one group, and a `time` of `NULL` means that the rows are taken in
 the order in which they are given.
 
-`chain` is the
+`transition` is the
 [`parameters7::transition_matrix()`](https://statmodels7.github.io/parameters7/reference/transition_matrix.html)
 object, whose free values are the additive log-ratios of each row, so
 every row is a probability vector at any coordinate. Its `free_names`
@@ -143,7 +143,7 @@ are the tail of
 `n_start` is the number of starting points that a fitting layer tries, a
 whole number of at least 1.
 
-The property `blueprint` is inherited from
+The property `build_info` is inherited from
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md),
 which declares it.
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
@@ -169,13 +169,13 @@ dd <- data.frame(t = 1:40, y = c(rnorm(20), rnorm(20, 3)))
 tm <- regime(2, time = t)
 S7::S7_inherits(tm, RegimeTerm)
 #> [1] TRUE
-c(k = tm@k, chain = class(tm@chain)[1])
-#>                                    k                                chain 
+c(k = tm@k, transition = class(tm@transition)[1])
+#>                                    k                           transition 
 #>                                  "2" "parameters7::TransitionMatrixParam" 
 
-# The build resolves the order and fills the blueprint.
+# The build resolves the order and fills the build_info.
 b <- term_build(tm, dd)
-names(b@blueprint)
+names(b@build_info)
 #> [1] "order" "n"    
 
 # It is on the structural branch, so there is no block.

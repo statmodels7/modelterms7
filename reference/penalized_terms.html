@@ -23,7 +23,7 @@ term."><meta property="og:image" content="https://statmodels7.github.io/modelter
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -101,14 +101,14 @@ an argument named after another penalty's hyperparameter:
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An unbuilt <code><a href="PenalizedTerm.html">PenalizedTerm()</a></code>: a specification in which <code>X</code>,
-<code>coef_names</code>, <code>blueprint</code> and <code>penalty</code> are all empty until <code><a href="term_build.html">term_build()</a></code>
+<code>coef_names</code>, <code>build_info</code> and <code>penalty</code> are all empty until <code><a href="term_build.html">term_build()</a></code>
 fills them.</p>
     </div>
     <div class="section level2">
     <h2 id="the-two-inputs">The two inputs<a class="anchor" aria-label="anchor" href="#the-two-inputs"></a></h2>
     <p>A formula goes through the <code><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">stats::model.matrix()</a></code> machinery after its
 intercept is removed: a penalized block does not penalize an intercept, and
-the model's intercept lives in the parametric block. Its blueprint records
+the model's intercept lives in the parametric block. Its <code>build_info</code> records
 the terms, the factor levels and the contrasts, exactly as <code><a href="linpar.html">linpar()</a></code> does,
 so <code>~ g</code> and <code>~ 0 + g</code> give the same four columns for a four-level factor.</p>
 <p>The exception is a formula that has an intercept and nothing else.
@@ -184,7 +184,7 @@ Third, centering, which would destroy sparsity, is not needed, because the
 fit is invariant to a translation of a penalized column wherever an
 intercept is free.</p>
 <p>The spread is computed from the built block by <code><a href="dot-block_sd.html">.block_sd()</a></code> and frozen in
-<code>blueprint$standardize</code>, so the same term standardizes identically in every
+<code>build_info$standardize</code>, so the same term standardizes identically in every
 equation of a distributional model and does not move with the working
 weights of a fit. A constant column takes \(s_j = 1\). <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the
 values, because a change of scale changes the meaning of \(\lambda\).</p>

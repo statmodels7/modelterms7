@@ -2,7 +2,7 @@
 
 Resolves the grouping, the ordering and every subformula against the
 data, builds the sub-terms of the developments and records all of it in
-the blueprint. The recursion itself runs later, in
+the `build_info`. The recursion itself runs later, in
 [`term_filter()`](https://statmodels7.github.io/modelterms7/reference/term_filter.md).
 
 ## Arguments
@@ -22,19 +22,20 @@ the blueprint. The recursion itself runs later, in
 
 ## Value
 
-The term, whose `blueprint` is filled.
+The term, whose `build_info` is filled.
 [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
 reads that property on this branch, so it is `TRUE` for the result.
 
 ## Details
 
 `by` and `time` are evaluated in the data. Each must give one
-non-missing value per row. The blueprint records the row indices of each
-group in time order, and the filter iterates over exactly that order.
+non-missing value per row. The `build_info` records the row indices of
+each group in time order, and the filter iterates over exactly that
+order.
 
 Each subformula's right-hand side goes through
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
-and its terms are built, so their blueprints are recorded and a
+and its terms are built, so their `build_info` lists are recorded and a
 prediction reapplies them. A structural sub-term, and one whose own
 block moves with its coefficients, are rejected: a parameter's
 development must be a fixed design. The penalties that those sub-terms
@@ -61,10 +62,10 @@ dd <- data.frame(t = 1:60, y = rnorm(60), id = rep(1:3, each = 20),
                  g = factor(rep(c("u", "v"), 30)))
 
 # The first term filters one series, and the second a panel of three.
-lengths(term_build(gas(p = 1, q = 1, time = t), dd)@blueprint$order)
+lengths(term_build(gas(p = 1, q = 1, time = t), dd)@build_info$order)
 #>  1 
 #> 60 
-lengths(term_build(gas(p = 1, q = 1, by = id, time = t), dd)@blueprint$order)
+lengths(term_build(gas(p = 1, q = 1, by = id, time = t), dd)@build_info$order)
 #>  1  2  3 
 #> 20 20 20 
 

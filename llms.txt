@@ -610,7 +610,7 @@ kinked penalty, and one trace over the remaining parameters.
 
 The structural checks of an additive term against a data frame, among
 them the subset check that a term fails when it rebuilds its block
-instead of reapplying its blueprint.
+instead of reapplying its `build_info`.
 
 - [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
   : Structural Checks on a Model Term

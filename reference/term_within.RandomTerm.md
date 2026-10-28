@@ -26,7 +26,7 @@ columns, named as `term_group(term)$names`.
 
 ## Details
 
-The design is read from the blueprint that the build recorded, so a
+The design is read from the `build_info` that the build recorded, so a
 factor keeps its levels and contrasts. It does not depend on the
 grouping, so a caller can integrate the effect of a group that is absent
 from the fitting data: the effect is \\z_i^\top b\\ with \\z_i\\ this

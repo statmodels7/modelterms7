@@ -80,7 +80,7 @@ d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0) + rnorm(120, sd = 0.4)
 b <- term_build(seg(x, npsi = 1), d)
 
 # Moving the break-point coefficient moves the block.
-cf <- b@blueprint$coef
+cf <- b@build_info$coef
 r <- term_refresh(b, c(cf[1], cf[2], 6))
 c(before = seg_psi(b), after = seg_psi(r))
 #>   before    after 

@@ -1,7 +1,7 @@
 # Build a Marginal Break-Point Term
 
 Evaluates the covariate and the grouping variable, orders the rows of
-each group by the covariate, and records the result in the blueprint.
+each group by the covariate, and records the result in the `build_info`.
 The interval structure over which the marginal likelihood is summed or
 integrated follows from that ordering.
 
@@ -22,7 +22,7 @@ integrated follows from that ordering.
 
 ## Value
 
-The term in which `blueprint` is filled.
+The term in which `build_info` is filled.
 [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
 reads that property on this branch, so it is `TRUE` for the result.
 
@@ -32,7 +32,7 @@ The covariate must vary: a constant covariate has no break-point to
 place and is rejected. The grouping variable must give one value per row
 and must not contain missing values.
 
-The blueprint records the number of rows (`n`), the covariate in the
+The `build_info` records the number of rows (`n`), the covariate in the
 order of the data (`x`), for each group the row indices ordered by the
 covariate (`groups`), and the labels of the groups (`labels`). The
 intervals over which the likelihood decomposes are the gaps between a
@@ -62,9 +62,9 @@ dd <- data.frame(id = rep(1:3, each = 8), x = rep(1:8, 3))
 dd$y <- rnorm(24, 2 * (dd$x >= 4.5), 0.4)
 
 b <- term_build(jump(x, psi ~ random(~ 1 | id), marginal = TRUE), dd)
-names(b@blueprint)
+names(b@build_info)
 #> [1] "n"      "x"      "groups" "labels"
-b@blueprint$labels
+b@build_info$labels
 #> [1] "1" "2" "3"
 
 # Without a target the start uses the covariate's quantiles and spread, and

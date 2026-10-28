@@ -89,8 +89,8 @@ s(
 
 An unbuilt
 [`SmoothTerm()`](https://statmodels7.github.io/modelterms7/reference/SmoothTerm.md):
-a specification, with `X`, `coef_names`, `blueprint` and `penalty` empty
-until
+a specification, with `X`, `coef_names`, `build_info` and `penalty`
+empty until
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 fills them.
 
@@ -145,9 +145,10 @@ therefore BIC, and not the marginal likelihood.
 The Demmler-Reinsch transform (Demmler and Reinsch, 1975; used for
 effect selection by Bach and Klein, 2024) takes the inner product at the
 observed covariate values, so it is computed when the term is built and
-stored in the blueprint. Prediction is the parent basis evaluated at the
-new points and multiplied by that same transform, so the separation of
-the linear from the nonlinear part holds at new rows as it does at old.
+stored in the `build_info`. Prediction is the parent basis evaluated at
+the new points and multiplied by that same transform, so the separation
+of the linear from the nonlinear part holds at new rows as it does at
+old.
 
 Rebuilding on other rows instead would place the knots on their range
 and compute another transform, so the columns would be different

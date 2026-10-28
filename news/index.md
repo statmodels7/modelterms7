@@ -1,5 +1,25 @@
 # Changelog
 
+## modelterms7 0.114.0
+
+- Renamed for readability: the property `factory` of `PenalizedTerm` is
+  `penalty_fun`; `tag` of `RandomTerm` and `RandomSmoothTerm` is
+  `cov_label`; `chain` of `RegimeTerm` is `transition`; the argument
+  `curv` of
+  [`term_static_deriv()`](https://statmodels7.github.io/modelterms7/reference/term_static_deriv.md)
+  is `curvature`. Requires basis7 0.17.0, numericals7 0.25.0 and
+  penalties7 0.34.0.
+
+## modelterms7 0.113.0
+
+- The property `blueprint` of every model term is renamed `build_info`.
+  It holds what
+  [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
+  records from the data (levels, knots, ordering, centering, storage) so
+  that
+  [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
+  reapplies the same block on new rows. Requires basis7 0.16.0.
+
 ## modelterms7 0.112.1
 
 - The properties `init`, `init_value` and `init_source` of `GasTerm` and

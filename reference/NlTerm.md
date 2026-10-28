@@ -23,7 +23,7 @@ NlTerm(
   ids = character(0),
   X = NULL,
   coef_names = character(0),
-  blueprint = list(),
+  build_info = list(),
   penalty = NULL,
   fn = NULL,
   nl_params = character(0),
@@ -101,7 +101,7 @@ NlTerm(
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
-- blueprint:
+- build_info:
 
   A named list of everything needed to reproduce the mapping on new
   rows. Its contents belong to the subclass, and only the term reads
@@ -178,9 +178,9 @@ sets the value. The property records the route of the first derivatives;
 [`nl_fderiv()`](https://statmodels7.github.io/modelterms7/reference/nl_fderiv.md)
 chooses the route for each order separately.
 
-`spec` carries the resolved construction settings. The blueprint carries
-what the build computed: the parameter designs, the current coefficients
-(the starting ones until
+`spec` carries the resolved construction settings. The `build_info`
+carries what the build computed: the parameter designs, the current
+coefficients (the starting ones until
 [`term_refresh()`](https://statmodels7.github.io/modelterms7/reference/term_refresh.md)
 stores others), the value of the function at them, and the orders of
 derivative that are analytic.

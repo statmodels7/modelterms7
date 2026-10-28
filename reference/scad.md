@@ -112,7 +112,7 @@ scad(
 
 An unbuilt
 [`PenalizedTerm()`](https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.md):
-a specification whose `X`, `coef_names`, `blueprint` and `penalty` are
+a specification whose `X`, `coef_names`, `build_info` and `penalty` are
 empty until
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 fills them. The build attaches the penalty over the block's columns.

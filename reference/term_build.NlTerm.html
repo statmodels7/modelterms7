@@ -15,7 +15,7 @@ returns the right components."><meta property="og:image" content="https://statmo
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,8 +70,8 @@ and whatever the subformulas name.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>The term, in which <code>X</code>, <code>coef_names</code>, <code>nl_params</code>, <code>links</code>,
-<code>deriv_mode</code> and <code>blueprint</code> are filled. The penalties of the sub-terms
-are kept in the blueprint and reported by <code><a href="term_penalties.html">term_penalties()</a></code>; the
+<code>deriv_mode</code> and <code>build_info</code> are filled. The penalties of the sub-terms
+are kept in the <code>build_info</code> and reported by <code><a href="term_penalties.html">term_penalties()</a></code>; the
 <code>penalty</code> property stays <code>NULL</code>.</p>
     </div>
     <div class="section level2">
@@ -79,7 +79,7 @@ are kept in the blueprint and reported by <code><a href="term_penalties.html">te
     <p>On the formula route <code><a href="https://rdrr.io/r/stats/deriv.html" class="external-link">stats::deriv()</a></code> is tried on the expression, and
 <code>deriv_mode</code> records whether it succeeded. The expressions of orders two to
 four are formed with <code><a href="https://rdrr.io/r/stats/deriv.html" class="external-link">stats::D()</a></code> where that succeeds, and the orders that
-are analytic, whether symbolic or supplied, are recorded in the blueprint.
+are analytic, whether symbolic or supplied, are recorded in the <code>build_info</code>.
 Every function given to <code>gradient</code>, <code>hessian</code>, <code>deriv3</code> or <code>deriv4</code> is
 called once and its names and lengths are checked against the components of
 that order: a name that is not one of them, a missing component, a repeated
@@ -87,7 +87,7 @@ one or a component of a length other than 1 or <code>n</code> is an error here. 
 does not fall back to the numerical route in these cases. A name in <code>start</code>,
 <code>links</code> or <code>subformulas</code> that is not a parameter is an error as well.</p>
 <p>Each parameter's subformula goes through <code><a href="interpret_formula.html">interpret_formula()</a></code> and its
-terms are built, so their blueprints are recorded and reapplied at
+terms are built, so their <code>build_info</code> lists are recorded and reapplied at
 prediction. A structural sub-term is rejected, and so is one whose own block
 moves with its coefficients unless that block is a Jacobian, as for <code><a href="seg.html">seg()</a></code>
 and every smoothed break-point term; such a parameter's design and predictor

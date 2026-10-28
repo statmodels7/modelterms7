@@ -1,7 +1,7 @@
 # Build a Regime Term
 
 Resolves the grouping and the ordering against the data and records them
-in the blueprint. The method does not compute anything else: the term
+in the `build_info`. The method does not compute anything else: the term
 has no design block, its chain structure is fixed by the constructor,
 and its levels are parameters supplied at each evaluation.
 
@@ -22,7 +22,7 @@ and its levels are parameters supplied at each evaluation.
 
 ## Value
 
-The term, in which `blueprint` is filled.
+The term, in which `build_info` is filled.
 [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
 reads that property on this branch, so it is `TRUE` for the result.
 
@@ -33,7 +33,7 @@ reads that property on this branch, so it is `TRUE` for the result.
 Each must give one non-missing value per row; both are checked here,
 since this is the first point at which they meet data.
 
-The blueprint holds `order`, the row indices of each group sorted by
+The `build_info` holds `order`, the row indices of each group sorted by
 time, and `n`, the observation count.
 [`term_loglik()`](https://statmodels7.github.io/modelterms7/reference/term_loglik.md)
 runs one forward recursion per group in that order, each from the
@@ -60,15 +60,15 @@ dd <- data.frame(t = 1:40, id = rep(1:2, each = 20),
 
 # The rows form one group in row order.
 b <- term_build(regime(2, time = t), dd)
-names(b@blueprint)
+names(b@build_info)
 #> [1] "order" "n"    
-lengths(b@blueprint$order)
+lengths(b@build_info$order)
 #>  1 
 #> 40 
 
 # The rows form two independent series, and each has its own recursion.
 b2 <- term_build(regime(2, by = id, time = t), dd)
-lengths(b2@blueprint$order)
+lengths(b2@build_info$order)
 #>  1  2 
 #> 20 20 
 

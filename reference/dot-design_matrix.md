@@ -49,7 +49,7 @@ the cost of producing it. The sparse route builds the matrix sparse and
 never forms a dense intermediate.
 
 The contrasts are returned beside the block and are not kept on it. A
-consumer reads the block, and the blueprint records the contrasts.
+consumer reads the block, and the `build_info` records the contrasts.
 
 ## See also
 

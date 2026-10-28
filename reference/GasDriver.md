@@ -19,7 +19,7 @@ GasDriver(
   min_ratio = numeric(0),
   search = character(0),
   ids = character(0),
-  blueprint = list(),
+  build_info = list(),
   p = integer(0),
   q = integer(0),
   by = NULL,
@@ -88,7 +88,7 @@ GasDriver(
   the same label for the same hyperparameter estimate one value. See
   [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
 
-- blueprint:
+- build_info:
 
   A named list of the resolved ordering, grouping and sub-term designs,
   empty until

@@ -35,7 +35,7 @@ names as column names and no row names.
 
 ## Details
 
-The matrix branch evaluates `blueprint$expr` with `newdata` as the data
+The matrix branch evaluates `build_info$expr` with `newdata` as the data
 and [`baseenv()`](https://rdrr.io/r/base/environment.html) as the
 enclosure, so the calling environment is not on the search path. A
 free-standing matrix therefore cannot be found, and the error message
@@ -62,7 +62,7 @@ for why a matrix input belongs in the data frame.
 set.seed(3)
 dd <- data.frame(x1 = rnorm(20), x2 = rnorm(20))
 
-# A formula input reapplies its blueprint.
+# A formula input reapplies its build_info.
 b <- term_build(lasso(~ x1 + x2), dd)
 all.equal(term_predict(b, dd), term_matrix(b))
 #> [1] TRUE

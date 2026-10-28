@@ -21,7 +21,7 @@ whether the column (Intercept) is dropped after the coding."><meta property="og:
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,7 +70,7 @@ whether the column <code>(Intercept)</code> is dropped after the coding.</p>
 <span>  ids <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  X <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  coef_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
-<span>  blueprint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  build_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  formula <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  sparse <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -138,7 +138,7 @@ two-dimensional <span class="pkg">Matrix</span>. It is empty until <code><a href
 <code>label</code> when there is one. <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
 
 
-<dt id="arg-blueprint">blueprint<a class="anchor" aria-label="anchor" href="#arg-blueprint"></a></dt>
+<dt id="arg-build-info">build_info<a class="anchor" aria-label="anchor" href="#arg-build-info"></a></dt>
 <dd><p>A named list of everything needed to reproduce the mapping
 on new rows. Its contents belong to the subclass, and only the term reads
 them. It is empty until <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
@@ -159,7 +159,7 @@ absent from the data.</p></dd>
 <dd><p><code>TRUE</code> to build the block as a <code>dgCMatrix</code> through
 <code><a href="https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html" class="external-link">Matrix::sparse.model.matrix()</a></code>, <code>FALSE</code> for a base matrix, <code>NULL</code> to let
 the build choose. It is kept as given; the storage actually used is in
-<code>blueprint$sparse</code>.</p></dd>
+<code>build_info$sparse</code>.</p></dd>
 
 
 <dt id="arg-contrasts">contrasts<a class="anchor" aria-label="anchor" href="#arg-contrasts"></a></dt>
@@ -188,17 +188,17 @@ beside the properties that it inherits.</p>
 that the data do not carry is still found where the formula was written.</p>
 <p><code>sparse</code> holds the value that the caller gave, and <code>NULL</code> where the caller
 gave no value. The build leaves it unchanged and records in
-<code>blueprint$sparse</code> the storage that it resolved, which is the value that
+<code>build_info$sparse</code> the storage that it resolved, which is the value that
 <code><a href="term_predict.html">term_predict()</a></code> reads, so the block and a prediction from it never differ
 in storage. A formula naming a factor of many levels has one non-zero per
 row, and building the dense model matrix of it is the memory use that
 sparse storage avoids.</p>
 <p><code>contrasts</code> is a named list, one entry per factor, or empty for the
 session's own <code>options("contrasts")</code>. Whatever is used is recorded in the
-blueprint and reapplied, so a fit and a prediction always use the same
+<code>build_info</code> and reapplied, so a fit and a prediction always use the same
 coding.</p>
 <p><code>drop_intercept</code> is <code>FALSE</code> by default. When it is <code>TRUE</code>, the build removes
-the column <code>(Intercept)</code> after the coding, and the blueprint records the
+the column <code>(Intercept)</code> after the coding, and the <code>build_info</code> records the
 setting so that a prediction applies it again.</p>
 <p>The class carries no penalty: <code>penalty</code> is <code>NULL</code> on every <code>LinparTerm</code>, and
 <code><a href="term_penalties.html">term_penalties()</a></code> returns an empty list, so <code><a href="edf.html">edf()</a></code> counts its columns
@@ -220,15 +220,15 @@ builds one implicitly; <code><a href="term_build.html">term_build()</a></code> a
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span><span class="va">tm</span><span class="op">@</span><span class="va">formula</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> ~x + g</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x55d2f512b148&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;environment: 0x5625c6d81d60&gt;</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># The property keeps the value given; the blueprint records the storage</span></span></span>
-<span class="r-in"><span><span class="co"># that the build used, and a prediction reads the blueprint.</span></span></span>
+<span class="r-in"><span><span class="co"># The property keeps the value given; the build_info records the storage</span></span></span>
+<span class="r-in"><span><span class="co"># that the build used, and a prediction reads the build_info.</span></span></span>
 <span class="r-in"><span><span class="va">bt</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="va">tm</span>, <span class="va">d</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sparse_is_null <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">bt</span><span class="op">@</span><span class="va">sparse</span><span class="op">)</span>, settled <span class="op">=</span> <span class="va">bt</span><span class="op">@</span><span class="va">blueprint</span><span class="op">$</span><span class="va">sparse</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>sparse_is_null <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">bt</span><span class="op">@</span><span class="va">sparse</span><span class="op">)</span>, settled <span class="op">=</span> <span class="va">bt</span><span class="op">@</span><span class="va">build_info</span><span class="op">$</span><span class="va">sparse</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> sparse_is_null        settled </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           TRUE          FALSE </span>
-<span class="r-in"><span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="linpar.html">linpar</a></span><span class="op">(</span><span class="op">~</span> <span class="va">g</span>, sparse <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span><span class="op">@</span><span class="va">blueprint</span><span class="op">$</span><span class="va">sparse</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="linpar.html">linpar</a></span><span class="op">(</span><span class="op">~</span> <span class="va">g</span>, sparse <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span><span class="op">@</span><span class="va">build_info</span><span class="op">$</span><span class="va">sparse</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The contrasts are recorded and reapplied, so the coding cannot drift.</span></span></span>

@@ -21,7 +21,7 @@ are estimated by plain maximum likelihood."><meta property="og:image" content="h
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,7 +68,7 @@ are estimated by plain maximum likelihood.</p>
 <span>  min_ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  search <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  ids <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
-<span>  blueprint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  build_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  kind <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  var <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  npsi <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
@@ -128,7 +128,7 @@ carrying the same label for the same hyperparameter estimate one value.
 See <code><a href="term_ids.html">term_ids()</a></code>.</p></dd>
 
 
-<dt id="arg-blueprint">blueprint<a class="anchor" aria-label="anchor" href="#arg-blueprint"></a></dt>
+<dt id="arg-build-info">build_info<a class="anchor" aria-label="anchor" href="#arg-build-info"></a></dt>
 <dd><p>A named list that records the number of rows, the
 covariate, the rows of each group and the group labels. It is empty until
 <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
@@ -176,7 +176,7 @@ beside the inherited ones.</p>
     <h2 id="properties">Properties<a class="anchor" aria-label="anchor" href="#properties"></a></h2>
     <p>The class defines the properties <code>kind</code>, <code>var</code>, <code>npsi</code>, <code>linear</code>, <code>group</code>,
 <code>prior</code> and <code>spec</code>, and inherits the others from <code><a href="structural_term.html">structural_term()</a></code> and
-<code><a href="model_term.html">model_term()</a></code>, among them <code>blueprint</code>.</p>
+<code><a href="model_term.html">model_term()</a></code>, among them <code>build_info</code>.</p>
 <p><code>kind</code> is <code>"jump"</code>, <code>"seg"</code> or <code>"jseg"</code>; <code>var</code> is the covariate expression;
 <code>npsi</code> is the number of break-points per group; <code>linear</code> records whether
 the term carries the linear effect as a parameter of its own. It is <code>TRUE</code>
@@ -187,7 +187,7 @@ subformula. <code>prior</code> is the distribution of the latent positions: <cod
 the Gaussian, or a <span class="pkg">distributions7</span> object where <code>random(distrib = )</code>
 names one. The location of that distribution must be fixed at zero, since
 <code>psi1.mean</code> carries the position.</p>
-<p><code>spec</code> holds the resolved construction settings. <code>blueprint</code> is inherited
+<p><code>spec</code> holds the resolved construction settings. <code>build_info</code> is inherited
 from <code><a href="structural_term.html">structural_term()</a></code> and holds the grouping and the covariate that
 <code><a href="term_build.html">term_build()</a></code> records.</p>
     </div>

@@ -2,7 +2,7 @@
 
 Turns a term specification into a built term: an additive term computes
 its design block from `data`, assigns the coefficient names and records
-the blueprint that will reproduce the mapping on other rows; a
+the `build_info` that will reproduce the mapping on other rows; a
 structural term records whatever its recursion needs, its grouping and
 its ordering. The returned object is a copy of the specification in
 which those properties are filled, and the specification is unchanged.
@@ -34,9 +34,9 @@ term_build(term, data, ...)
 ## Value
 
 A built term of the same class as `term`. For an additive term the `X`,
-`coef_names` and `blueprint` properties are filled, and `penalty` is
+`coef_names` and `build_info` properties are filled, and `penalty` is
 filled where the term is penalized; for a structural term the
-`blueprint` is filled.
+`build_info` is filled.
 [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
 is `TRUE` either way, because it reads the one of the two records that
 the branch fills.
@@ -55,7 +55,7 @@ then reads the block,
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md)
 the penalties, and
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-reproduces \\X_t\\ at other rows through the blueprint.
+reproduces \\X_t\\ at other rows through the `build_info`.
 
 A structural term has no such block.
 [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)

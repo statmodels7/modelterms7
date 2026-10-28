@@ -55,7 +55,7 @@ linpar(formula, label = "", sparse = NULL, contrasts = NULL)
 
 An unbuilt
 [`LinparTerm()`](https://statmodels7.github.io/modelterms7/reference/LinparTerm.md):
-a specification in which `X`, `coef_names` and `blueprint` are empty
+a specification in which `X`, `coef_names` and `build_info` are empty
 until
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 fills them, and `penalty` is `NULL` permanently.
@@ -69,14 +69,14 @@ missing covariate keeps its place and the block stays aligned with the
 response, and a factor level present in the data but used by no row
 still gets its column.
 
-The blueprint records the terms object, the factor levels
+The `build_info` records the terms object, the factor levels
 ([`stats::.getXlevels()`](https://rdrr.io/r/stats/checkMFClasses.html)),
 the contrasts actually used, the storage chosen at build and the
 `drop_intercept` setting.
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 reapplies each of them, so a factor column at new rows is encoded
-against the levels seen at build time. A level that the blueprint does
-not record is rejected by
+against the levels seen at build time. A level that the `build_info`
+does not record is rejected by
 [`stats::model.frame()`](https://rdrr.io/r/stats/model.frame.html) with
 `"factor g has new levels zz"`.
 
@@ -118,7 +118,7 @@ of the indicator part: the block is built sparse when
 of columns coming from factors
 ([`.indicator_cols()`](https://statmodels7.github.io/modelterms7/reference/dot-indicator_cols.md)).
 
-The settled storage is part of the blueprint, so
+The settled storage is part of the `build_info`, so
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 returns the same kind of block at new rows.
 

@@ -15,7 +15,7 @@ values of the parameters, and term_refresh() recomputes it as they move."><meta 
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,7 @@ values of the parameters, and <code><a href="term_refresh.html">term_refresh()</
 <span>  ids <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  X <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  coef_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
-<span>  blueprint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  build_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  fn <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  nl_params <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
@@ -131,7 +131,7 @@ two-dimensional <span class="pkg">Matrix</span>. It is empty until <code><a href
 <code>label</code> when there is one. <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
 
 
-<dt id="arg-blueprint">blueprint<a class="anchor" aria-label="anchor" href="#arg-blueprint"></a></dt>
+<dt id="arg-build-info">build_info<a class="anchor" aria-label="anchor" href="#arg-build-info"></a></dt>
 <dd><p>A named list of everything needed to reproduce the mapping
 on new rows. Its contents belong to the subclass, and only the term reads
 them. It is empty until <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
@@ -193,7 +193,7 @@ whose derivatives are differenced. A specification built from a formula
 carries <code>"symbolic"</code> until <code><a href="term_build.html">term_build()</a></code> sets the value. The property
 records the route of the first derivatives; <code><a href="nl_fderiv.html">nl_fderiv()</a></code> chooses the route
 for each order separately.</p>
-<p><code>spec</code> carries the resolved construction settings. The blueprint carries
+<p><code>spec</code> carries the resolved construction settings. The <code>build_info</code> carries
 what the build computed: the parameter designs, the current coefficients
 (the starting ones until <code><a href="term_refresh.html">term_refresh()</a></code> stores others), the value of the
 function at them, and the orders of derivative that are analytic.</p>

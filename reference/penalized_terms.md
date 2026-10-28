@@ -56,7 +56,7 @@ the term.
 
 An unbuilt
 [`PenalizedTerm()`](https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.md):
-a specification in which `X`, `coef_names`, `blueprint` and `penalty`
+a specification in which `X`, `coef_names`, `build_info` and `penalty`
 are all empty until
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 fills them.
@@ -67,7 +67,7 @@ A formula goes through the
 [`stats::model.matrix()`](https://rdrr.io/r/stats/model.matrix.html)
 machinery after its intercept is removed: a penalized block does not
 penalize an intercept, and the model's intercept lives in the parametric
-block. Its blueprint records the terms, the factor levels and the
+block. Its `build_info` records the terms, the factor levels and the
 contrasts, exactly as
 [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
 does, so `~ g` and `~ 0 + g` give the same four columns for a four-level
@@ -157,7 +157,7 @@ column wherever an intercept is free.
 
 The spread is computed from the built block by
 [`.block_sd()`](https://statmodels7.github.io/modelterms7/reference/dot-block_sd.md)
-and frozen in `blueprint$standardize`, so the same term standardizes
+and frozen in `build_info$standardize`, so the same term standardizes
 identically in every equation of a distributional model and does not
 move with the working weights of a fit. A constant column takes \\s_j =
 1\\. [`print()`](https://rdrr.io/r/base/print.html) shows the values,

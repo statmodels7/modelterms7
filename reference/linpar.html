@@ -21,7 +21,7 @@ count exactly."><meta property="og:image" content="https://statmodels7.github.io
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -99,7 +99,7 @@ list is rejected.</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An unbuilt <code><a href="LinparTerm.html">LinparTerm()</a></code>: a specification in which <code>X</code>,
-<code>coef_names</code> and <code>blueprint</code> are empty until <code><a href="term_build.html">term_build()</a></code> fills them,
+<code>coef_names</code> and <code>build_info</code> are empty until <code><a href="term_build.html">term_build()</a></code> fills them,
 and <code>penalty</code> is <code>NULL</code> permanently.</p>
     </div>
     <div class="section level2">
@@ -108,11 +108,11 @@ and <code>penalty</code> is <code>NULL</code> permanently.</p>
 <code>drop.unused.levels = FALSE</code>, so a row with a missing covariate keeps its
 place and the block stays aligned with the response, and a factor level
 present in the data but used by no row still gets its column.</p>
-<p>The blueprint records the terms object, the factor levels
+<p>The <code>build_info</code> records the terms object, the factor levels
 (<code><a href="https://rdrr.io/r/stats/checkMFClasses.html" class="external-link">stats::.getXlevels()</a></code>), the contrasts actually used, the storage chosen at
 build and the <code>drop_intercept</code> setting. <code><a href="term_predict.html">term_predict()</a></code> reapplies each of
 them, so a factor column at new rows is encoded against the levels seen at
-build time. A level that the blueprint does not record is rejected by
+build time. A level that the <code>build_info</code> does not record is rejected by
 <code><a href="https://rdrr.io/r/stats/model.frame.html" class="external-link">stats::model.frame()</a></code> with <code>"factor g has new levels zz"</code>.</p>
     </div>
     <div class="section level2">
@@ -145,7 +145,7 @@ block has few zero entries, and sparse storage then costs more than it saves.</p
 the indicator part: the block is built sparse when <code>n * ncol_ind &gt; 1e5</code>,
 where <code>ncol_ind</code> is an upper bound on the number of columns coming from
 factors (<code><a href="dot-indicator_cols.html">.indicator_cols()</a></code>).</p>
-<p>The settled storage is part of the blueprint, so <code><a href="term_predict.html">term_predict()</a></code> returns
+<p>The settled storage is part of the <code>build_info</code>, so <code><a href="term_predict.html">term_predict()</a></code> returns
 the same kind of block at new rows.</p>
     </div>
     <div class="section level2">

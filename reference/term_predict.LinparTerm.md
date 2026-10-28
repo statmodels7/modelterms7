@@ -4,7 +4,7 @@ Rebuilds the model frame at `newdata` against the levels recorded at
 build time, then the model matrix with the recorded contrasts and in the
 recorded storage, and labels the columns with the term's coefficient
 names. The terms object, the levels, the contrasts, the storage and the
-intercept setting are all read from the blueprint, and the new rows
+intercept setting are all read from the `build_info`, and the new rows
 supply only the values of the variables.
 
 ## Arguments
@@ -33,14 +33,14 @@ names as column names.
 
 ## Details
 
-The levels come from `blueprint$xlev`, so a factor in `newdata` need
+The levels come from `build_info$xlev`, so a factor in `newdata` need
 carry only the levels that its own rows use and still gets the full set
-of columns. A level that the blueprint does not record is rejected by
+of columns. A level that the `build_info` does not record is rejected by
 [`stats::model.frame()`](https://rdrr.io/r/stats/model.frame.html) with
 `"factor g has new levels zz"`, because the fit did not estimate a
 coefficient for that level.
 
-The storage comes from `blueprint$sparse` rather than being decided
+The storage comes from `build_info$sparse` rather than being decided
 again, so a prediction builds the same kind of block as the fit and does
 not densify a sparse block at new rows. `na.action = na.pass` again
 keeps every row.
@@ -50,7 +50,7 @@ keeps every row.
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 for the generic and the identity that it satisfies,
 [`term_build.LinparTerm()`](https://statmodels7.github.io/modelterms7/reference/term_build.LinparTerm.md)
-for what recorded the blueprint.
+for what recorded the `build_info`.
 
 ## Examples
 

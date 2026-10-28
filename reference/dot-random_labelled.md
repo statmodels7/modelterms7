@@ -61,7 +61,7 @@ rule for which the fit should read.
 returns an empty list, and the fitting layer collects the labelled terms
 and declares one entry over their stacked columns.
 
-The blueprint records what the layer needs for that: the within-group
+The `build_info` records what the layer needs for that: the within-group
 dimension and the grouping's levels, beside the pieces that
 [`term_predict.RandomTerm()`](https://statmodels7.github.io/modelterms7/reference/term_predict.RandomTerm.md)
 already reads.

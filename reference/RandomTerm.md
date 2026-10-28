@@ -22,12 +22,12 @@ RandomTerm(
   ids = character(0),
   X = NULL,
   coef_names = character(0),
-  blueprint = list(),
+  build_info = list(),
   penalty = NULL,
   formula = NULL,
   correlated = logical(0),
   distrib = NULL,
-  tag = character(0)
+  cov_label = character(0)
 )
 ```
 
@@ -98,7 +98,7 @@ RandomTerm(
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
-- blueprint:
+- build_info:
 
   A named list of everything needed to reproduce the mapping on new
   rows. Its contents belong to the subclass, and only the term reads
@@ -126,7 +126,7 @@ RandomTerm(
   The effects' distribution, a distributions7 object or a list of them
   with one per within-group column, or `NULL` for the default Gaussian.
 
-- tag:
+- cov_label:
 
   The covariance label from the middle of two bars, or `NA_character_`.
 
@@ -147,11 +147,12 @@ lets the within-group effects depend on each other. It is read only
 where `distrib` is `NULL`, since a distribution given in `distrib`
 determines the same thing.
 
-`tag` is the covariance label written between two bars, `~ 1 | u | g`,
-or `NA_character_` where the formula carries one bar. It is reported by
+`cov_label` is the covariance label written between two bars,
+`~ 1 | u | g`, or `NA_character_` where the formula carries one bar. It
+is reported by
 [`term_tag()`](https://statmodels7.github.io/modelterms7/reference/term_tag.md).
-The `tag` and `correlated` differ in scope: `correlated` concerns the
-columns of this term, and `tag` the columns of other terms.
+The `cov_label` and `correlated` differ in scope: `correlated` concerns
+the columns of this term, and `cov_label` the columns of other terms.
 
 `distrib` is the effects' distribution as supplied, or `NULL` for the
 default. The build turns it into a penalties7 penalty, read through
@@ -188,7 +189,7 @@ S7::S7_inherits(tm, RandomTerm)
 #> [1] TRUE
 tm@formula
 #> ~x | g
-#> <environment: 0x55d2ef9074b0>
+#> <environment: 0x5625c15e14a8>
 tm@correlated
 #> [1] TRUE
 

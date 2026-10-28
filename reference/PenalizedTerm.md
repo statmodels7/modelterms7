@@ -27,11 +27,11 @@ PenalizedTerm(
   ids = character(0),
   X = NULL,
   coef_names = character(0),
-  blueprint = list(),
+  build_info = list(),
   penalty = NULL,
   input = NULL,
   input_expr = NULL,
-  factory = function() NULL,
+  penalty_fun = function() NULL,
   standardize = FALSE,
   sparse = NULL
 )
@@ -104,7 +104,7 @@ PenalizedTerm(
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
-- blueprint:
+- build_info:
 
   A named list of everything needed to reproduce the mapping on new
   rows. Its contents belong to the subclass, and only the term reads
@@ -128,7 +128,7 @@ PenalizedTerm(
   can re-evaluate a matrix input in new data. It is recorded on the
   formula route as well, where it is not read.
 
-- factory:
+- penalty_fun:
 
   A function of the coefficient count, returning the penalties7 penalty
   over that many coefficients, and taking the diagonal map as a second
@@ -165,18 +165,18 @@ that
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 can re-evaluate it in new data.
 
-`factory` maps a coefficient count to the penalty. The build calls it
-with the count, once the count is known, and with the diagonal map as a
-second argument when `standardize = TRUE`, so a factory that is never
-used with standardization may take only the count.
+`penalty_fun` maps a coefficient count to the penalty. The build calls
+it with the count, once the count is known, and with the diagonal map as
+a second argument when `standardize = TRUE`, so a `penalty_fun` that is
+never used with standardization may take only the count.
 
 `standardize` is a single logical on the specification; after a build
-the spreads themselves are in `blueprint$standardize`, one per column.
+the spreads themselves are in `build_info$standardize`, one per column.
 
 `sparse` governs the formula route only, because a matrix input is kept
 in the storage in which it arrives. The property stays as the caller
 wrote it, `NULL` by default, and the storage that the build settles is
-recorded in `blueprint$sparse`.
+recorded in `build_info$sparse`.
 
 ## What the class does not fix
 
@@ -231,7 +231,7 @@ dd$x3 <- 1000 * dd$x2
 bs <- term_build(lasso(~ x1 + x3, standardize = TRUE), dd)
 bs@standardize
 #> [1] TRUE
-bs@blueprint$standardize
+bs@build_info$standardize
 #>    lasso.x1    lasso.x3 
 #>   0.7822996 886.9946868 
 ```

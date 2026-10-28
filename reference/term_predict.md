@@ -3,9 +3,9 @@
 Applies a built term's recorded mapping to new rows, returning the block
 that the term would have produced had those rows been in the data on
 which it was built. Factor levels, contrasts, spline knots and a
-Demmler-Reinsch reparametrization come from the blueprint and are
+Demmler-Reinsch reparametrization come from the `build_info` and are
 reused; the spreads of a standardization enter the penalty only and are
-not applied to the block. A factor level that the blueprint does not
+not applied to the block. A factor level that the `build_info` does not
 contain is rejected, except for the grouping levels of a
 [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
 term with `unseen = "zero"`.
@@ -31,7 +31,7 @@ term_predict(term, newdata, ...)
   number of rows. Any other object is rejected by the generic, before
   dispatch, with the error `"'newdata' must be a data frame."`. A factor
   here need carry only the levels that its own rows use; the rest come
-  from the blueprint.
+  from the `build_info`.
 
 - ...:
 
@@ -87,7 +87,7 @@ is the corresponding operation there.
 [`term_matrix()`](https://statmodels7.github.io/modelterms7/reference/term_matrix.md)
 for the block on the fitting data,
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-for what records the blueprint,
+for what records the `build_info`,
 [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)
 for the check that takes this identity as its subject, and
 [`term_continue()`](https://statmodels7.github.io/modelterms7/reference/term_continue.md)
@@ -109,7 +109,7 @@ term_predict(b, data.frame(x = c(0.5, 2.5), g = factor(c("a", "c"))))
 all.equal(term_predict(b, d), term_matrix(b))
 #> [1] TRUE
 
-# A subset that drops a level keeps the blueprint's columns, where a
+# A subset that drops a level keeps the build_info's columns, where a
 # rebuild would lose one.
 nd <- droplevels(d[d$g != "c", ])
 dim(term_predict(b, nd))

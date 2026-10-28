@@ -29,7 +29,7 @@ MarginalBreakTerm(
   min_ratio = numeric(0),
   search = character(0),
   ids = character(0),
-  blueprint = list(),
+  build_info = list(),
   kind = character(0),
   var = NULL,
   npsi = integer(0),
@@ -93,7 +93,7 @@ MarginalBreakTerm(
   the same label for the same hyperparameter estimate one value. See
   [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
 
-- blueprint:
+- build_info:
 
   A named list that records the number of rows, the covariate, the rows
   of each group and the group labels. It is empty until
@@ -148,7 +148,7 @@ The class defines the properties `kind`, `var`, `npsi`, `linear`,
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
 and
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md),
-among them `blueprint`.
+among them `build_info`.
 
 `kind` is `"jump"`, `"seg"` or `"jseg"`; `var` is the covariate
 expression; `npsi` is the number of break-points per group; `linear`
@@ -167,7 +167,7 @@ for the Gaussian, or a distributions7 object where `random(distrib = )`
 names one. The location of that distribution must be fixed at zero,
 since `psi1.mean` carries the position.
 
-`spec` holds the resolved construction settings. `blueprint` is
+`spec` holds the resolved construction settings. `build_info` is
 inherited from
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
 and holds the grouping and the covariate that

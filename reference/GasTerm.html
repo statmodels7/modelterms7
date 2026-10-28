@@ -15,7 +15,7 @@ implements term_filter() and has no term_matrix() method at all."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,7 @@ implements <code><a href="term_filter.html">term_filter()</a></code> and has no 
 <span>  min_ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  search <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  ids <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
-<span>  blueprint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  build_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  p <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  q <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -124,7 +124,7 @@ carrying the same label for the same hyperparameter estimate one value.
 See <code><a href="term_ids.html">term_ids()</a></code>.</p></dd>
 
 
-<dt id="arg-blueprint">blueprint<a class="anchor" aria-label="anchor" href="#arg-blueprint"></a></dt>
+<dt id="arg-build-info">build_info<a class="anchor" aria-label="anchor" href="#arg-build-info"></a></dt>
 <dd><p>A named list of the resolved ordering, grouping and
 sub-term designs, empty until <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
 
@@ -210,7 +210,7 @@ rhobit on each partial autocorrelation. <code>submodels</code> holds one right-h
 side per parameter developed over covariates.</p>
 <p><code>scaling</code> is the power \(d\) of the expected information that multiplies
 the score; zero leaves the score as it is.</p>
-<p>The <code>blueprint</code> property is inherited from <code><a href="structural_term.html">structural_term()</a></code> and is not
+<p>The <code>build_info</code> property is inherited from <code><a href="structural_term.html">structural_term()</a></code> and is not
 redeclared by this class. <code><a href="term_build.html">term_build()</a></code> fills it with the row order within
 each group, the built sub-terms of each subformula and their designs.</p>
     </div>
@@ -251,7 +251,7 @@ the other dynamic term.</p></div>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The build resolves the ordering; there is no block to read.</span></span></span>
 <span class="r-in"><span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="va">tm</span>, <span class="va">dd</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">b</span><span class="op">@</span><span class="va">blueprint</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">b</span><span class="op">@</span><span class="va">build_info</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "order"  "n"      "levels" "times"  "group"  "by"     "time"  </span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu"><a href="term_matrix.html">term_matrix</a></span><span class="op">(</span><span class="va">b</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Error : Can't find method for `term_matrix(&lt;modelterms7::GasTerm&gt;)`.</span>

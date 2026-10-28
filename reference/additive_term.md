@@ -21,8 +21,9 @@ With `marginal = TRUE` the break-point terms are structural terms
 instead.
 
 A built term on this branch carries four things beyond the root's
-properties: the block itself, the coefficient names, the blueprint that
-reproduces the block on new rows, and the penalty on its coefficients.
+properties: the block itself, the coefficient names, the `build_info`
+that reproduces the block on new rows, and the penalty on its
+coefficients.
 
 ## Usage
 
@@ -37,7 +38,7 @@ additive_term(
   ids = character(0),
   X = NULL,
   coef_names = character(0),
-  blueprint = list(),
+  build_info = list(),
   penalty = NULL
 )
 ```
@@ -109,7 +110,7 @@ additive_term(
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
-- blueprint:
+- build_info:
 
   A named list of everything needed to reproduce the mapping on new
   rows. Its contents belong to the subclass, and only the term reads
@@ -132,10 +133,10 @@ beside those of
 
 ## The build
 
-A specification has `X` empty and `blueprint` an empty list;
+A specification has `X` empty and `build_info` an empty list;
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-fills `X`, `coef_names` and `blueprint`, and `penalty` as well for a
-term that carries a penalty. The blueprint allows
+fills `X`, `coef_names` and `build_info`, and `penalty` as well for a
+term that carries a penalty. The `build_info` allows
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 to reapply the mapping instead of rebuilding it: the factor levels, the
 contrasts, the knots on which a basis was placed and the spreads that a
@@ -208,11 +209,11 @@ for the simplest term on this branch.
 d <- data.frame(x = rnorm(20), g = factor(rep(letters[1:4], 5)))
 
 # A specification carries no block; a build fills the block, the names and
-# the blueprint, and the penalty where the term has one.
+# the build_info, and the penalty where the term has one.
 spec <- ridge(~ x + g)
-c(X = length(spec@X), blueprint = length(spec@blueprint))
-#>         X blueprint 
-#>         0         0 
+c(X = length(spec@X), build_info = length(spec@build_info))
+#>          X build_info 
+#>          0          0 
 b <- term_build(spec, d)
 dim(term_matrix(b))
 #> [1] 20  5

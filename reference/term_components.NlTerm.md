@@ -29,7 +29,7 @@ describes.
 A consumer reads it to report a fitted nonlinear term parameter by
 parameter and to place the coordinates of each sub-term. A coefficient
 name is meant for display, so the division of the columns cannot be
-recovered by parsing the names; the term records it in its blueprint.
+recovered by parsing the names; the term records it in its `build_info`.
 
 ## See also
 

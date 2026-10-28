@@ -13,7 +13,7 @@ or a te() call, as in random(~ s(x) | g)."><meta property="og:image" content="ht
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -58,12 +58,12 @@ or a <code><a href="te.html">te()</a></code> call, as in <code>random(~ s(x) | g
 <span>  ids <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  X <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  coef_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
-<span>  blueprint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  build_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  formula <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  correlated <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  distrib <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  tag <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
+<span>  cov_label <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  smooth <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  intercept <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -128,7 +128,7 @@ two-dimensional <span class="pkg">Matrix</span>. It is empty until <code><a href
 <code>label</code> when there is one. <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
 
 
-<dt id="arg-blueprint">blueprint<a class="anchor" aria-label="anchor" href="#arg-blueprint"></a></dt>
+<dt id="arg-build-info">build_info<a class="anchor" aria-label="anchor" href="#arg-build-info"></a></dt>
 <dd><p>A named list of everything needed to reproduce the mapping
 on new rows. Its contents belong to the subclass, and only the term reads
 them. It is empty until <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
@@ -155,7 +155,7 @@ a list of them with one per within-group column, or <code>NULL</code> for the
 default Gaussian.</p></dd>
 
 
-<dt id="arg-tag">tag<a class="anchor" aria-label="anchor" href="#arg-tag"></a></dt>
+<dt id="arg-cov-label">cov_label<a class="anchor" aria-label="anchor" href="#arg-cov-label"></a></dt>
 <dd><p>The covariance label from the middle of two bars, or
 <code>NA_character_</code>.</p></dd>
 

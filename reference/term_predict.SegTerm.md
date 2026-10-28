@@ -3,7 +3,7 @@
 Returns the working block evaluated at `newdata`, at the break-points
 and the coefficients that the term currently carries. The positions are
 not re-derived from the new rows, and any development of a coefficient
-is reapplied through its sub-terms' own blueprints.
+is reapplied through its sub-terms' own `build_info` lists.
 
 ## Arguments
 

@@ -7,7 +7,7 @@ penalized terms, random(), s() and te(), nl() and the break-point
 terms seg(), jump() and jseg(). With marginal = TRUE the break-point
 terms are structural terms instead.
 A built term on this branch carries four things beyond the root's
-properties: the block itself, the coefficient names, the blueprint that
+properties: the block itself, the coefficient names, the build_info that
 reproduces the block on new rows, and the penalty on its coefficients."><meta property="og:description" content="additive_term is the branch of model_term() whose terms contribute a
 block of design columns \(X_j \beta_j\) to the linear predictor of one
 distribution parameter. Every term that a formula can write and that is not
@@ -16,7 +16,7 @@ penalized terms, random(), s() and te(), nl() and the break-point
 terms seg(), jump() and jseg(). With marginal = TRUE the break-point
 terms are structural terms instead.
 A built term on this branch carries four things beyond the root's
-properties: the block itself, the coefficient names, the blueprint that
+properties: the block itself, the coefficient names, the build_info that
 reproduces the block on new rows, and the penalty on its coefficients."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
@@ -25,7 +25,7 @@ reproduces the block on new rows, and the penalty on its coefficients."><meta pr
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -60,7 +60,7 @@ penalized terms, <code><a href="random.html">random()</a></code>, <code><a href=
 terms <code><a href="seg.html">seg()</a></code>, <code><a href="jump.html">jump()</a></code> and <code><a href="jseg.html">jseg()</a></code>. With <code>marginal = TRUE</code> the break-point
 terms are structural terms instead.</p>
 <p>A built term on this branch carries four things beyond the root's
-properties: the block itself, the coefficient names, the blueprint that
+properties: the block itself, the coefficient names, the <code>build_info</code> that
 reproduces the block on new rows, and the penalty on its coefficients.</p>
     </div>
 
@@ -76,7 +76,7 @@ reproduces the block on new rows, and the penalty on its coefficients.</p>
 <span>  ids <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  X <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  coef_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
-<span>  blueprint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  build_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -140,7 +140,7 @@ two-dimensional <span class="pkg">Matrix</span>. It is empty until <code><a href
 <code>label</code> when there is one. <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
 
 
-<dt id="arg-blueprint">blueprint<a class="anchor" aria-label="anchor" href="#arg-blueprint"></a></dt>
+<dt id="arg-build-info">build_info<a class="anchor" aria-label="anchor" href="#arg-build-info"></a></dt>
 <dd><p>A named list of everything needed to reproduce the mapping
 on new rows. Its contents belong to the subclass, and only the term reads
 them. It is empty until <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
@@ -160,9 +160,9 @@ above beside those of <code><a href="model_term.html">model_term()</a></code>.</
     </div>
     <div class="section level2">
     <h2 id="the-build">The build<a class="anchor" aria-label="anchor" href="#the-build"></a></h2>
-    <p>A specification has <code>X</code> empty and <code>blueprint</code> an empty list; <code><a href="term_build.html">term_build()</a></code>
-fills <code>X</code>, <code>coef_names</code> and <code>blueprint</code>, and <code>penalty</code> as well for a term
-that carries a penalty. The blueprint allows <code><a href="term_predict.html">term_predict()</a></code> to reapply
+    <p>A specification has <code>X</code> empty and <code>build_info</code> an empty list; <code><a href="term_build.html">term_build()</a></code>
+fills <code>X</code>, <code>coef_names</code> and <code>build_info</code>, and <code>penalty</code> as well for a term
+that carries a penalty. The <code>build_info</code> allows <code><a href="term_predict.html">term_predict()</a></code> to reapply
 the mapping instead of rebuilding it: the factor levels, the
 contrasts, the knots on which a basis was placed and the spreads that a
 standardization used are recorded there at build time. <code><a href="check_term.html">check_term()</a></code>'s
@@ -206,11 +206,11 @@ the design is large. Code reading a block tests
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span>, g <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="va">letters</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">]</span>, <span class="fl">5</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A specification carries no block; a build fills the block, the names and</span></span></span>
-<span class="r-in"><span><span class="co"># the blueprint, and the penalty where the term has one.</span></span></span>
+<span class="r-in"><span><span class="co"># the build_info, and the penalty where the term has one.</span></span></span>
 <span class="r-in"><span><span class="va">spec</span> <span class="op">&lt;-</span> <span class="fu"><a href="ridge.html">ridge</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span> <span class="op">+</span> <span class="va">g</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">spec</span><span class="op">@</span><span class="va">X</span><span class="op">)</span>, blueprint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">spec</span><span class="op">@</span><span class="va">blueprint</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         X blueprint </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         0         0 </span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>X <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">spec</span><span class="op">@</span><span class="va">X</span><span class="op">)</span>, build_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">spec</span><span class="op">@</span><span class="va">build_info</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          X build_info </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>          0          0 </span>
 <span class="r-in"><span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="va">spec</span>, <span class="va">d</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="fu"><a href="term_matrix.html">term_matrix</a></span><span class="op">(</span><span class="va">b</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 20  5</span>

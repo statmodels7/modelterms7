@@ -20,8 +20,8 @@ A list with `expr`, `levels`, `dim` and `names`, or `NULL`.
 
 ## Details
 
-These come from the blueprint, where the build recorded them. `dim` is
-the within-group column count, so the block's level \\i\\ occupies
+These come from the `build_info`, where the build recorded them. `dim`
+is the within-group column count, so the block's level \\i\\ occupies
 positions \\(i-1)d + 1\\ to \\id\\, which is the group-major order that
 the blockwise penalty reads. `names` holds the column names of the
 within-group design.

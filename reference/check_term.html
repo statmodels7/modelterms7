@@ -31,7 +31,7 @@ fails this one."><meta property="og:image" content="https://statmodels7.github.i
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -150,7 +150,7 @@ columns are not examined.</p>
 <p><code><a href="https://rdrr.io/r/base/droplevels.html" class="external-link">droplevels()</a></code> is applied to the subset before it is passed on, because new
 data reach <code><a href="term_predict.html">term_predict()</a></code> in that form: a factor column there carries only
 the levels that its own rows use, and the remaining levels are recorded only
-in the blueprint. Without the call a plain row subset carries the original
+in the <code>build_info</code>. Without the call a plain row subset carries the original
 level set along with it and the check cannot fail.</p>
     </div>
     <div class="section level2">
@@ -190,12 +190,12 @@ for reading a whole formula into terms.</p></div>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># This is what the subset check tests. The chosen rows drop level "c", and</span></span></span>
-<span class="r-in"><span><span class="co"># the reapplied block keeps the four columns that the blueprint recorded.</span></span></span>
+<span class="r-in"><span><span class="co"># the reapplied block keeps the four columns that the build_info recorded.</span></span></span>
 <span class="r-in"><span><span class="va">b</span>  <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="linpar.html">linpar</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span> <span class="op">+</span> <span class="va">g</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">nd</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/droplevels.html" class="external-link">droplevels</a></span><span class="op">(</span><span class="va">dd</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">4</span>, <span class="fl">5</span><span class="op">)</span>, <span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/levels.html" class="external-link">levels</a></span><span class="op">(</span><span class="va">nd</span><span class="op">$</span><span class="va">g</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "a" "b"</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="fu"><a href="term_predict.html">term_predict</a></span><span class="op">(</span><span class="va">b</span>, <span class="va">nd</span><span class="op">)</span><span class="op">)</span>              <span class="co"># 4 x 4, the blueprint's levels</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="fu"><a href="term_predict.html">term_predict</a></span><span class="op">(</span><span class="va">b</span>, <span class="va">nd</span><span class="op">)</span><span class="op">)</span>              <span class="co"># 4 x 4, the build_info's levels</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4 4</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/model.matrix.html" class="external-link">model.matrix</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span> <span class="op">+</span> <span class="va">g</span>, <span class="va">nd</span><span class="op">)</span><span class="op">)</span>        <span class="co"># 4 x 3, what a rebuild gives</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 4 3</span>

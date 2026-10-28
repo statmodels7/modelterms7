@@ -32,8 +32,8 @@ The two forms are
     <RegimeTerm> 'regime': 2 regimes; 1 group(s)
       parameters: level1, gap2, alr1.1, alr2.1
 
-The group count is `length(blueprint$order)`, which is 1 unless the term
-was given a `by`. The parameter list is
+The group count is `length(build_info$order)`, which is 1 unless the
+term was given a `by`. The parameter list is
 [`term_params()`](https://statmodels7.github.io/modelterms7/reference/term_params.md),
 which is the same before and after a build because only `k` determines
 it.

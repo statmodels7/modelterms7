@@ -2,8 +2,8 @@
 
 Returns the Jacobian of \\f\\ evaluated at the new rows, at the
 coefficients that the term currently carries. Each parameter's
-subformula is reapplied through its sub-terms' own blueprints, so a
-basis or a set of contrasts inside a submodel is not relearned.
+subformula is reapplied through its sub-terms' own `build_info` lists,
+so a basis or a set of contrasts inside a submodel is not relearned.
 
 ## Arguments
 
@@ -75,7 +75,7 @@ term_predict(b, nd)
 
 # The product of the block and the coefficients is the linearization, not
 # the function: the value is the function.
-cbind(linear = as.numeric(term_predict(b, nd) %*% b@blueprint$coef),
+cbind(linear = as.numeric(term_predict(b, nd) %*% b@build_info$coef),
       value = term_value(b, newdata = nd),
       truth = 2 * exp(-1.3 * nd$x))
 #>          linear      value      truth

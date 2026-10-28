@@ -26,7 +26,7 @@ maps new rows onto the same ones.
 ## Value
 
 The term with `X` (a `dgCMatrix` of \\md\\ columns), `coef_names`,
-`blueprint` and `penalty` filled.
+`build_info` and `penalty` filled.
 
 ## The block
 

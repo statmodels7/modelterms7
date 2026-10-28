@@ -29,7 +29,7 @@ LinparTerm(
   ids = character(0),
   X = NULL,
   coef_names = character(0),
-  blueprint = list(),
+  build_info = list(),
   penalty = NULL,
   formula = NULL,
   sparse = NULL,
@@ -105,7 +105,7 @@ LinparTerm(
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
-- blueprint:
+- build_info:
 
   A named list of everything needed to reproduce the mapping on new
   rows. Its contents belong to the subclass, and only the term reads
@@ -129,7 +129,7 @@ LinparTerm(
   `TRUE` to build the block as a `dgCMatrix` through
   [`Matrix::sparse.model.matrix()`](https://rdrr.io/pkg/Matrix/man/sparse.model.matrix.html),
   `FALSE` for a base matrix, `NULL` to let the build choose. It is kept
-  as given; the storage actually used is in `blueprint$sparse`.
+  as given; the storage actually used is in `build_info$sparse`.
 
 - contrasts:
 
@@ -164,7 +164,8 @@ written.
 
 `sparse` holds the value that the caller gave, and `NULL` where the
 caller gave no value. The build leaves it unchanged and records in
-`blueprint$sparse` the storage that it resolved, which is the value that
+`build_info$sparse` the storage that it resolved, which is the value
+that
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 reads, so the block and a prediction from it never differ in storage. A
 formula naming a factor of many levels has one non-zero per row, and
@@ -173,11 +174,11 @@ storage avoids.
 
 `contrasts` is a named list, one entry per factor, or empty for the
 session's own `options("contrasts")`. Whatever is used is recorded in
-the blueprint and reapplied, so a fit and a prediction always use the
+the `build_info` and reapplied, so a fit and a prediction always use the
 same coding.
 
 `drop_intercept` is `FALSE` by default. When it is `TRUE`, the build
-removes the column `(Intercept)` after the coding, and the blueprint
+removes the column `(Intercept)` after the coding, and the `build_info`
 records the setting so that a prediction applies it again.
 
 The class carries no penalty: `penalty` is `NULL` on every `LinparTerm`,
@@ -208,15 +209,15 @@ S7::S7_inherits(tm, LinparTerm)
 #> [1] TRUE
 tm@formula
 #> ~x + g
-#> <environment: 0x55d2f512b148>
+#> <environment: 0x5625c6d81d60>
 
-# The property keeps the value given; the blueprint records the storage
-# that the build used, and a prediction reads the blueprint.
+# The property keeps the value given; the build_info records the storage
+# that the build used, and a prediction reads the build_info.
 bt <- term_build(tm, d)
-c(sparse_is_null = is.null(bt@sparse), settled = bt@blueprint$sparse)
+c(sparse_is_null = is.null(bt@sparse), settled = bt@build_info$sparse)
 #> sparse_is_null        settled 
 #>           TRUE          FALSE 
-term_build(linpar(~ g, sparse = TRUE), d)@blueprint$sparse
+term_build(linpar(~ g, sparse = TRUE), d)@build_info$sparse
 #> [1] TRUE
 
 # The contrasts are recorded and reapplied, so the coding cannot drift.

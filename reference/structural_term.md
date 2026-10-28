@@ -25,7 +25,7 @@ structural_term(
   min_ratio = numeric(0),
   search = character(0),
   ids = character(0),
-  blueprint = list()
+  build_info = list()
 )
 ```
 
@@ -82,7 +82,7 @@ structural_term(
   the same label for the same hyperparameter estimate one value. See
   [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
 
-- blueprint:
+- build_info:
 
   A named list of everything needed to reproduce the term on new rows:
   the design's state, the levels that a factor had, whatever the
@@ -103,7 +103,7 @@ Nothing: the class is abstract and cannot be instantiated. Calling
 [`regime()`](https://statmodels7.github.io/modelterms7/reference/regime.md)
 and the marginal break-point terms, and carries the properties of
 [`model_term()`](https://statmodels7.github.io/modelterms7/reference/model_term.md)
-together with `blueprint`, the branch's record of having been built,
+together with `build_info`, the branch's record of having been built,
 empty in a specification.
 
 ## The parameters of a structural term
@@ -122,7 +122,7 @@ gives their starting values, and a
 entry indexes into them, where an additive term's entry indexes into
 columns.
 
-The class adds one property of its own, `blueprint`, which records that
+The class adds one property of its own, `build_info`, which records that
 the term has been built. Everything else that a built structural term
 records is held in the root's properties and in the subclass's own
 slots.

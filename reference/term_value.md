@@ -50,7 +50,7 @@ and the two differ by whatever the linearization drops. For
 that difference is a step at the break-point in a construction that is
 continuous. Rows arriving here are treated as
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-treats them, through the levels and constants that the blueprint
+treats them, through the levels and constants that the `build_info`
 recorded, never rebuilt.
 
 ## See also

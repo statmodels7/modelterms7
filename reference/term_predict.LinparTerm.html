@@ -3,12 +3,12 @@
 time, then the model matrix with the recorded contrasts and in the recorded
 storage, and labels the columns with the term's coefficient names. The
 terms object, the levels, the contrasts, the storage and the intercept
-setting are all read from the blueprint, and the new rows supply only the
+setting are all read from the build_info, and the new rows supply only the
 values of the variables."><meta property="og:description" content="Rebuilds the model frame at newdata against the levels recorded at build
 time, then the model matrix with the recorded contrasts and in the recorded
 storage, and labels the columns with the term's coefficient names. The
 terms object, the levels, the contrasts, the storage and the intercept
-setting are all read from the blueprint, and the new rows supply only the
+setting are all read from the build_info, and the new rows supply only the
 values of the variables."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
@@ -17,7 +17,7 @@ values of the variables."><meta property="og:image" content="https://statmodels7
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -48,7 +48,7 @@ values of the variables."><meta property="og:image" content="https://statmodels7
 time, then the model matrix with the recorded contrasts and in the recorded
 storage, and labels the columns with the term's coefficient names. The
 terms object, the levels, the contrasts, the storage and the intercept
-setting are all read from the blueprint, and the new rows supply only the
+setting are all read from the <code>build_info</code>, and the new rows supply only the
 values of the variables.</p>
     </div>
 
@@ -78,12 +78,12 @@ names.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The levels come from <code>blueprint$xlev</code>, so a factor in <code>newdata</code> need carry
+    <p>The levels come from <code>build_info$xlev</code>, so a factor in <code>newdata</code> need carry
 only the levels that its own rows use and still gets the full set of
-columns. A level that the blueprint does not record is rejected by
+columns. A level that the <code>build_info</code> does not record is rejected by
 <code><a href="https://rdrr.io/r/stats/model.frame.html" class="external-link">stats::model.frame()</a></code> with <code>"factor g has new levels zz"</code>, because the fit
 did not estimate a coefficient for that level.</p>
-<p>The storage comes from <code>blueprint$sparse</code> rather than being decided again,
+<p>The storage comes from <code>build_info$sparse</code> rather than being decided again,
 so a prediction builds the same kind of block as the fit and does not
 densify a sparse block at new rows. <code>na.action = na.pass</code> again keeps every
 row.</p>
@@ -91,7 +91,7 @@ row.</p>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="term_predict.html">term_predict()</a></code> for the generic and the identity that it satisfies,
-<code><a href="term_build.LinparTerm.html">term_build.LinparTerm()</a></code> for what recorded the blueprint.</p></div>
+<code><a href="term_build.LinparTerm.html">term_build.LinparTerm()</a></code> for what recorded the <code>build_info</code>.</p></div>
     </div>
 
     <div class="section level2">

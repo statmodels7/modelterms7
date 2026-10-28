@@ -9,7 +9,7 @@ observation reads only that observation.
 
   A term.
 
-- curv, X, psi:
+- curvature, X, psi:
 
   Ignored.
 

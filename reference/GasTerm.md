@@ -23,7 +23,7 @@ GasTerm(
   min_ratio = numeric(0),
   search = character(0),
   ids = character(0),
-  blueprint = list(),
+  build_info = list(),
   p = integer(0),
   q = integer(0),
   by = NULL,
@@ -92,7 +92,7 @@ GasTerm(
   the same label for the same hyperparameter estimate one value. See
   [`term_ids()`](https://statmodels7.github.io/modelterms7/reference/term_ids.md).
 
-- blueprint:
+- build_info:
 
   A named list of the resolved ordering, grouping and sub-term designs,
   empty until
@@ -188,7 +188,7 @@ side per parameter developed over covariates.
 `scaling` is the power \\d\\ of the expected information that multiplies
 the score; zero leaves the score as it is.
 
-The `blueprint` property is inherited from
+The `build_info` property is inherited from
 [`structural_term()`](https://statmodels7.github.io/modelterms7/reference/structural_term.md)
 and is not redeclared by this class.
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
@@ -237,7 +237,7 @@ vapply(term_links(tm), function(l) l@link_name, character(1))
 
 # The build resolves the ordering; there is no block to read.
 b <- term_build(tm, dd)
-names(b@blueprint)
+names(b@build_info)
 #> [1] "order"  "n"      "levels" "times"  "group"  "by"     "time"  
 try(term_matrix(b))
 #> Error : Can't find method for `term_matrix(<modelterms7::GasTerm>)`.

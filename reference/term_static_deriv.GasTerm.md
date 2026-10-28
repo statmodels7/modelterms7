@@ -10,7 +10,7 @@ for a score-driven term.
 
   A built score-driven term.
 
-- curv:
+- curvature:
 
   The curvature at each predictor.
 

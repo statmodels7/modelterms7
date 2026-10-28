@@ -15,7 +15,7 @@ functions."><meta property="og:image" content="https://statmodels7.github.io/mod
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,15 +73,15 @@ rejected with the error <code>"'term' must inherit from 'model_term'."</code>.</
 reads the record of each branch. An additive term is built when it has
 coefficient names, <code>length(term@coef_names) &gt; 0L</code>; a structural term
 contributes no design columns and so has none to count, and is built when
-its blueprint is filled, <code>length(term@blueprint) &gt; 0L</code>.</p>
+its <code>build_info</code> is filled, <code>length(term@build_info) &gt; 0L</code>.</p>
 <p>A built additive term with no columns would give <code>FALSE</code>. The shipped
 constructors do not produce one: a formula that gives no columns, such as
 <code>~ 0</code>, is rejected when <code><a href="term_build.html">term_build()</a></code> runs.</p>
-<p>The <code>blueprint</code> property is read directly. It is declared on
+<p>The <code>build_info</code> property is read directly. It is declared on
 <code><a href="additive_term.html">additive_term()</a></code> and on the abstract <code><a href="structural_term.html">structural_term()</a></code>, which the
 three shipped structural classes inherit, so every term inheriting from
 <code><a href="model_term.html">model_term()</a></code> has one. A structural class written outside the package
-inherits an empty blueprint, which reads as not built until <code><a href="term_build.html">term_build()</a></code>
+inherits an empty <code>build_info</code>, which reads as not built until <code><a href="term_build.html">term_build()</a></code>
 fills it, and the predicate returns a logical for such a term as well.</p>
     </div>
     <div class="section level2">
@@ -104,7 +104,7 @@ fills it, and the predicate returns a logical for such a term as well.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Error : the term has not been built; call term_build(term, data) first.</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A structural term carries no design block, so the predicate reads its</span></span></span>
-<span class="r-in"><span><span class="co"># blueprint instead.</span></span></span>
+<span class="r-in"><span><span class="co"># build_info instead.</span></span></span>
 <span class="r-in"><span><span class="va">gs</span> <span class="op">&lt;-</span> <span class="fu"><a href="gas.html">gas</a></span><span class="op">(</span>p <span class="op">=</span> <span class="fl">1</span>, q <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">gb</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="va">gs</span>, <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>spec <span class="op">=</span> <span class="fu">term_is_built</span><span class="op">(</span><span class="va">gs</span><span class="op">)</span>, built <span class="op">=</span> <span class="fu">term_is_built</span><span class="op">(</span><span class="va">gb</span><span class="op">)</span><span class="op">)</span></span></span>

@@ -17,7 +17,7 @@ standardized."><meta property="og:image" content="https://statmodels7.github.io/
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -79,7 +79,7 @@ names: <code>lambda</code> for a ridge or a lasso, <code>lambda, alpha</code> fo
 <code>standardize = TRUE</code> the penalty is evaluated at the coefficients multiplied
 by those spreads; these products are the coefficients of the columns after
 each is divided by its spread. The spreads are computed once at build time
-and recorded in the blueprint. They enter the penalty only: the design block
+and recorded in the <code>build_info</code>. They enter the penalty only: the design block
 is not rescaled, so prediction at new rows does not use them.</p>
     </div>
     <div class="section level2">

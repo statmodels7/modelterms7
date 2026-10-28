@@ -13,7 +13,7 @@ its own, so the surface may be rough in one direction and smooth in another."><m
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -133,7 +133,7 @@ factor <code>by</code> admits <code>TRUE</code>. See <code><a href="s.html">s()<
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An unbuilt <code><a href="SmoothTerm.html">SmoothTerm()</a></code>: a specification, with <code>X</code>, <code>coef_names</code>,
-<code>blueprint</code> and <code>penalty</code> empty until <code><a href="term_build.html">term_build()</a></code> fills them.</p>
+<code>build_info</code> and <code>penalty</code> empty until <code><a href="term_build.html">term_build()</a></code> fills them.</p>
     </div>
     <div class="section level2">
     <h2 id="the-block-and-its-penalty">The block and its penalty<a class="anchor" aria-label="anchor" href="#the-block-and-its-penalty"></a></h2>
@@ -183,7 +183,7 @@ and not 16; every column sums to zero over the data on which it was built,
 to machine precision;
 and the penalty follows by congruence and keeps its rank, because the
 direction that was removed was one of its null directions.</p>
-<p>The transform is stored in the blueprint and reapplied by <code><a href="term_predict.html">term_predict()</a></code>,
+<p>The transform is stored in the <code>build_info</code> and reapplied by <code><a href="term_predict.html">term_predict()</a></code>,
 as the Demmler-Reinsch transform of <code><a href="s.html">s()</a></code> is.</p>
 <p>The level of the surface is then the model's intercept, so a formula that
 removes it, <code>y ~ te(x, z) - 1</code>, fits a surface constrained to average zero

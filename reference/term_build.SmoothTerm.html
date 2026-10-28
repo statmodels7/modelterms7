@@ -3,13 +3,13 @@
 applies the reparametrization that the construction requires, multiplies by a
 by variable where there is one, and attaches the roughness penalty. Two
 quantities are computed from the data here and recorded in the
-blueprint, so that term_predict() reapplies them instead of deriving them
+build_info, so that term_predict() reapplies them instead of deriving them
 again: the Demmler-Reinsch transform for s(), and the centering constraint
 for te()."><meta property="og:description" content="Builds the basis of an s() or te() term at the observed covariates,
 applies the reparametrization that the construction requires, multiplies by a
 by variable where there is one, and attaches the roughness penalty. Two
 quantities are computed from the data here and recorded in the
-blueprint, so that term_predict() reapplies them instead of deriving them
+build_info, so that term_predict() reapplies them instead of deriving them
 again: the Demmler-Reinsch transform for s(), and the centering constraint
 for te()."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -19,7 +19,7 @@ for te()."><meta property="og:image" content="https://statmodels7.github.io/mode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,7 @@ for te()."><meta property="og:image" content="https://statmodels7.github.io/mode
 applies the reparametrization that the construction requires, multiplies by a
 <code>by</code> variable where there is one, and attaches the roughness penalty. Two
 quantities are computed from the data here and recorded in the
-blueprint, so that <code><a href="term_predict.html">term_predict()</a></code> reapplies them instead of deriving them
+<code>build_info</code>, so that <code><a href="term_predict.html">term_predict()</a></code> reapplies them instead of deriving them
 again: the Demmler-Reinsch transform for <code><a href="s.html">s()</a></code>, and the centering constraint
 for <code><a href="te.html">te()</a></code>.</p>
     </div>
@@ -74,7 +74,7 @@ for <code><a href="te.html">te()</a></code>.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The term, in which <code>X</code>, <code>coef_names</code> and <code>blueprint</code> are filled, and
+    <p>The term, in which <code>X</code>, <code>coef_names</code> and <code>build_info</code> are filled, and
 <code>penalty</code> is filled except where the term declares penalties of its own (a
 penalty factory on the smoother, or <code>by_hyper = "level"</code>), in which case
 <code>penalty</code> is <code>NULL</code> and <code><a href="term_penalties.html">term_penalties()</a></code> returns them.</p>
@@ -93,7 +93,7 @@ Demmler-Reinsch inner product at the observed values. With the default
 <code><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">basis7::bspline_smooth()</a></code> (<code>null_space = "keep"</code>) a column
 \((x - \bar{x})/s_x\) is prepended and the penalty is
 \(\mathrm{diag}(0, 1, \dots, 1)\); the center and the scale go into the
-blueprint with the transform. With <code>null_space = "drop"</code> that
+<code>build_info</code> with the transform. With <code>null_space = "drop"</code> that
 column is absent and the penalty is the identity.</p>
     </div>
     <div class="section level2">
@@ -132,10 +132,10 @@ factor <code>by</code>.</p>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The build records the following for a one-covariate smooth.</span></span></span>
 <span class="r-in"><span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="s.html">s</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">8</span><span class="op">)</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">b</span><span class="op">@</span><span class="va">blueprint</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">b</span><span class="op">@</span><span class="va">build_info</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "core"      "marg"      "spec"      "vars"      "by"        "by_levels"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [7] "sparse"    "penalties" "nblock"   </span>
-<span class="r-in"><span><span class="va">b</span><span class="op">@</span><span class="va">blueprint</span><span class="op">$</span><span class="va">core</span><span class="op">$</span><span class="va">kind</span></span></span>
+<span class="r-in"><span><span class="va">b</span><span class="op">@</span><span class="va">build_info</span><span class="op">$</span><span class="va">core</span><span class="op">$</span><span class="va">kind</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "smoother"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># For a tensor product, the block has one column fewer than 4 x 4.</span></span></span>

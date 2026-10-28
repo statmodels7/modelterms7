@@ -1,7 +1,7 @@
 # The Label of a Random-Effect Term, Normalized
 
-Returns the term's `tag` as a single string, `NA_character_` where it
-carries none.
+Returns the term's `cov_label` as a single string, `NA_character_` where
+it carries none.
 
 ## Usage
 

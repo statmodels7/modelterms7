@@ -23,7 +23,7 @@ SmoothTerm(
   ids = character(0),
   X = NULL,
   coef_names = character(0),
-  blueprint = list(),
+  build_info = list(),
   penalty = NULL,
   vars = list(),
   by = NULL,
@@ -99,7 +99,7 @@ SmoothTerm(
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
-- blueprint:
+- build_info:
 
   A named list of everything needed to reproduce the mapping on new
   rows. Its contents belong to the subclass, and only the term reads
@@ -160,9 +160,9 @@ or carry one each; `default_label`, which records whether the label was
 built from the call; and, for
 [`te()`](https://statmodels7.github.io/modelterms7/reference/te.md),
 whether the penalty is anisotropic. What a build then computes from the
-data goes into the blueprint instead: the Demmler-Reinsch transform, the
-centering constraint, the `by` levels and the penalties that the term
-declares.
+data goes into the `build_info` instead: the Demmler-Reinsch transform,
+the centering constraint, the `by` levels and the penalties that the
+term declares.
 
 `sparse` is `NULL` until the build settles it. A smooth's block is
 sparse only under a factor `by`, where each row sits in the block of its
@@ -192,11 +192,11 @@ c(s = S7::S7_inherits(s(x), SmoothTerm),
 #> TRUE TRUE 
 
 # The settings are on `spec`, and the quantities computed from the data are
-# in the blueprint.
+# in the build_info.
 tm <- s(x, basis7::bspline_smooth(k = 8))
 names(tm@spec)
 #> [1] "smoothers"     "by_hyper"      "default_label"
-names(term_build(tm, dd)@blueprint)
+names(term_build(tm, dd)@build_info)
 #> [1] "core"      "marg"      "spec"      "vars"      "by"        "by_levels"
 #> [7] "sparse"    "penalties" "nblock"   
 ```

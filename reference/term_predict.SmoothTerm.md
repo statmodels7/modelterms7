@@ -36,7 +36,7 @@ names as column names and no row names.
 
 ## Details
 
-The basis object in `blueprint$core` carries the knots and the
+The basis object in `build_info$core` carries the knots and the
 transform, so the columns at new rows are the same functions of the
 covariate as the fitted ones, and \\\tilde{X}\beta\\ is the fitted
 smooth evaluated there. Rebuilding on the new rows would place the knots
@@ -44,7 +44,7 @@ on their range and compute another transform. Predicting on the first
 rows of the data reproduces those rows of the block exactly, and
 rebuilding on them gives a different block (see the examples).
 
-A factor `by` is expanded against `blueprint$by_levels`, so `newdata`
+A factor `by` is expanded against `build_info$by_levels`, so `newdata`
 need carry only the levels that its own rows use, and the block still
 has every column and is built in the storage chosen at the build. A
 level that was not present at build signals an error.

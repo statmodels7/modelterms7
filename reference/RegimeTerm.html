@@ -15,7 +15,7 @@ has no predictor to report."><meta property="og:image" content="https://statmode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,11 +59,11 @@ has no predictor to report.</p>
 <span>  min_ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  search <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  ids <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
-<span>  blueprint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  build_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  k <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  time <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  chain <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  transition <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  n_start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -117,7 +117,7 @@ carrying the same label for the same hyperparameter estimate one value.
 See <code><a href="term_ids.html">term_ids()</a></code>.</p></dd>
 
 
-<dt id="arg-blueprint">blueprint<a class="anchor" aria-label="anchor" href="#arg-blueprint"></a></dt>
+<dt id="arg-build-info">build_info<a class="anchor" aria-label="anchor" href="#arg-build-info"></a></dt>
 <dd><p>A named list of the resolved ordering and grouping, empty
 until <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
 
@@ -135,7 +135,7 @@ recursion. <code>NULL</code> means one group.</p></dd>
 <dd><p>An optional ordering expression. <code>NULL</code> means row order.</p></dd>
 
 
-<dt id="arg-chain">chain<a class="anchor" aria-label="anchor" href="#arg-chain"></a></dt>
+<dt id="arg-transition">transition<a class="anchor" aria-label="anchor" href="#arg-transition"></a></dt>
 <dd><p>A <code><a href="https://statmodels7.github.io/parameters7/reference/transition_matrix.html" class="external-link">parameters7::transition_matrix()</a></code> of side <code>k</code>.</p></dd>
 
 
@@ -149,7 +149,7 @@ single whole number of at least 1, as set by <code><a href="regime.html">regime(
     <p>An S7 object of class <code>RegimeTerm</code>, inheriting from
 <code><a href="structural_term.html">structural_term()</a></code> and <code><a href="model_term.html">model_term()</a></code>, with the five properties above in
 addition to the eight that <code><a href="structural_term.html">structural_term()</a></code> supplies (the seven of
-<code><a href="model_term.html">model_term()</a></code> and <code>blueprint</code>).</p>
+<code><a href="model_term.html">model_term()</a></code> and <code>build_info</code>).</p>
     </div>
     <div class="section level2">
     <h2 id="the-five-properties-of-its-own">The five properties of its own<a class="anchor" aria-label="anchor" href="#the-five-properties-of-its-own"></a></h2>
@@ -157,13 +157,13 @@ addition to the eight that <code><a href="structural_term.html">structural_term(
 expressions as written, kept unevaluated. A <code>by</code> of <code>NULL</code> means one group,
 and a <code>time</code> of <code>NULL</code> means that the rows are taken in the order in which
 they are given.</p>
-<p><code>chain</code> is the <code><a href="https://statmodels7.github.io/parameters7/reference/transition_matrix.html" class="external-link">parameters7::transition_matrix()</a></code> object, whose free values
+<p><code>transition</code> is the <code><a href="https://statmodels7.github.io/parameters7/reference/transition_matrix.html" class="external-link">parameters7::transition_matrix()</a></code> object, whose free values
 are the additive log-ratios of each row, so every row is a probability
 vector at any coordinate. Its <code>free_names</code> are the tail of
 <code><a href="term_params.html">term_params()</a></code>.</p>
 <p><code>n_start</code> is the number of starting points that a fitting layer tries, a
 whole number of at least 1.</p>
-<p>The property <code>blueprint</code> is inherited from <code><a href="structural_term.html">structural_term()</a></code>, which
+<p>The property <code>build_info</code> is inherited from <code><a href="structural_term.html">structural_term()</a></code>, which
 declares it. <code><a href="term_build.html">term_build()</a></code> fills it with the row order within each group
 and the observation count.</p>
     </div>
@@ -182,13 +182,13 @@ dynamic term.</p></div>
 <span class="r-in"><span><span class="va">tm</span> <span class="op">&lt;-</span> <span class="fu"><a href="regime.html">regime</a></span><span class="op">(</span><span class="fl">2</span>, time <span class="op">=</span> <span class="va">t</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/S7_inherits.html" class="external-link">S7_inherits</a></span><span class="op">(</span><span class="va">tm</span>, <span class="va">RegimeTerm</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>k <span class="op">=</span> <span class="va">tm</span><span class="op">@</span><span class="va">k</span>, chain <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">tm</span><span class="op">@</span><span class="va">chain</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                                    k                                chain </span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>k <span class="op">=</span> <span class="va">tm</span><span class="op">@</span><span class="va">k</span>, transition <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">tm</span><span class="op">@</span><span class="va">transition</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                    k                           transition </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                  "2" "parameters7::TransitionMatrixParam" </span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># The build resolves the order and fills the blueprint.</span></span></span>
+<span class="r-in"><span><span class="co"># The build resolves the order and fills the build_info.</span></span></span>
 <span class="r-in"><span><span class="va">b</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="va">tm</span>, <span class="va">dd</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">b</span><span class="op">@</span><span class="va">blueprint</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">b</span><span class="op">@</span><span class="va">build_info</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "order" "n"    </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># It is on the structural branch, so there is no block.</span></span></span>

@@ -23,9 +23,9 @@ scaling schedule and, where the term is smoothed, the transition width.
 
 ## Value
 
-The term with `X`, `coef_names` and `blueprint` filled. The slot
+The term with `X`, `coef_names` and `build_info` filled. The slot
 `penalty` is `NULL`; the penalties of the developments are recorded in
-the blueprint and listed by
+the `build_info` and listed by
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md).
 
 ## The quantities set at build
@@ -47,9 +47,9 @@ returns these positions and not a vector of zeros.
 
 Each subformula's right-hand side goes through
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
-and its terms are built, so their blueprints are recorded and reapplied
-at prediction. The developments that a term may carry depend on `kind`.
-The continuous construction takes any of them. A sharp
+and its terms are built, so their `build_info` lists are recorded and
+reapplied at prediction. The developments that a term may carry depend
+on `kind`. The continuous construction takes any of them. A sharp
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
 takes a development of the break-point with a scalar change of level on
 any design, or one development shared by the change of level and the

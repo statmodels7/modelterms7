@@ -7,7 +7,7 @@ column per direction that the caller supplies.
 ## Usage
 
 ``` r
-term_static_deriv(term, curv, X, psi, ...)
+term_static_deriv(term, curvature, X, psi, ...)
 ```
 
 ## Arguments
@@ -16,7 +16,7 @@ term_static_deriv(term, curv, X, psi, ...)
 
   A built structural term.
 
-- curv:
+- curvature:
 
   The curvature at each predictor, as `term_filter` returns it.
 

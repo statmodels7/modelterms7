@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,14 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.114.0" id="modelterms7-01140">modelterms7 0.114.0<a class="anchor" aria-label="anchor" href="#modelterms7-01140"></a></h2>
+<ul><li>Renamed for readability: the property <code>factory</code> of <code>PenalizedTerm</code> is <code>penalty_fun</code>; <code>tag</code> of <code>RandomTerm</code> and <code>RandomSmoothTerm</code> is <code>cov_label</code>; <code>chain</code> of <code>RegimeTerm</code> is <code>transition</code>; the argument <code>curv</code> of <code><a href="../reference/term_static_deriv.html">term_static_deriv()</a></code> is <code>curvature</code>. Requires basis7 0.17.0, numericals7 0.25.0 and penalties7 0.34.0.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.113.0" id="modelterms7-01130">modelterms7 0.113.0<a class="anchor" aria-label="anchor" href="#modelterms7-01130"></a></h2>
+<ul><li>The property <code>blueprint</code> of every model term is renamed <code>build_info</code>. It holds what <code><a href="../reference/term_build.html">term_build()</a></code> records from the data (levels, knots, ordering, centering, storage) so that <code><a href="../reference/term_predict.html">term_predict()</a></code> reapplies the same block on new rows. Requires basis7 0.16.0.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.112.1" id="modelterms7-01121">modelterms7 0.112.1<a class="anchor" aria-label="anchor" href="#modelterms7-01121"></a></h2>
 <ul><li>The properties <code>init</code>, <code>init_value</code> and <code>init_source</code> of <code>GasTerm</code> and <code>GasDriver</code> are documented.</li>

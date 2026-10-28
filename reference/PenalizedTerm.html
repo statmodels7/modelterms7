@@ -19,7 +19,7 @@ not restated here."><meta property="og:image" content="https://statmodels7.githu
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -67,11 +67,11 @@ not restated here.</p>
 <span>  ids <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  X <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  coef_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
-<span>  blueprint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  build_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  input <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  input_expr <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  factory <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="cn">NULL</span>,</span>
+<span>  penalty_fun <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="op">)</span> <span class="cn">NULL</span>,</span>
 <span>  standardize <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  sparse <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -136,7 +136,7 @@ two-dimensional <span class="pkg">Matrix</span>. It is empty until <code><a href
 <code>label</code> when there is one. <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
 
 
-<dt id="arg-blueprint">blueprint<a class="anchor" aria-label="anchor" href="#arg-blueprint"></a></dt>
+<dt id="arg-build-info">build_info<a class="anchor" aria-label="anchor" href="#arg-build-info"></a></dt>
 <dd><p>A named list of everything needed to reproduce the mapping
 on new rows. Its contents belong to the subclass, and only the term reads
 them. It is empty until <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
@@ -157,7 +157,7 @@ them. It is empty until <code><a href="term_build.html">term_build()</a></code> 
 recorded on the formula route as well, where it is not read.</p></dd>
 
 
-<dt id="arg-factory">factory<a class="anchor" aria-label="anchor" href="#arg-factory"></a></dt>
+<dt id="arg-penalty-fun">penalty_fun<a class="anchor" aria-label="anchor" href="#arg-penalty-fun"></a></dt>
 <dd><p>A function of the coefficient count, returning the
 <span class="pkg">penalties7</span> penalty over that many coefficients, and taking the
 diagonal map as a second argument when <code>standardize = TRUE</code>.</p></dd>
@@ -187,16 +187,16 @@ beside those that the two parent classes supply.</p>
 <code>input_expr</code> is the expression that produced the input. It is recorded for a
 formula input as well, and it is read only for a matrix input, so that
 <code><a href="term_predict.html">term_predict()</a></code> can re-evaluate it in new data.</p>
-<p><code>factory</code> maps a coefficient count to the penalty. The build calls it with
+<p><code>penalty_fun</code> maps a coefficient count to the penalty. The build calls it with
 the count, once the count is known, and with the diagonal map as a second
-argument when <code>standardize = TRUE</code>, so a factory that is never used with
+argument when <code>standardize = TRUE</code>, so a <code>penalty_fun</code> that is never used with
 standardization may take only the count.</p>
 <p><code>standardize</code> is a single logical on the specification; after a build the
-spreads themselves are in <code>blueprint$standardize</code>, one per column.</p>
+spreads themselves are in <code>build_info$standardize</code>, one per column.</p>
 <p><code>sparse</code> governs the formula route only, because a matrix input is kept in
 the storage in which it arrives. The property stays as the caller wrote it,
 <code>NULL</code> by default, and the storage that the build settles is recorded in
-<code>blueprint$sparse</code>.</p>
+<code>build_info$sparse</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="what-the-class-does-not-fix">What the class does not fix<a class="anchor" aria-label="anchor" href="#what-the-class-does-not-fix"></a></h2>
@@ -239,7 +239,7 @@ for the other four, read from each penalty's kink set.</p>
 <span class="r-in"><span><span class="va">bs</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="lasso.html">lasso</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x1</span> <span class="op">+</span> <span class="va">x3</span>, standardize <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, <span class="va">dd</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bs</span><span class="op">@</span><span class="va">standardize</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
-<span class="r-in"><span><span class="va">bs</span><span class="op">@</span><span class="va">blueprint</span><span class="op">$</span><span class="va">standardize</span></span></span>
+<span class="r-in"><span><span class="va">bs</span><span class="op">@</span><span class="va">build_info</span><span class="op">$</span><span class="va">standardize</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>    lasso.x1    lasso.x3 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   0.7822996 886.9946868 </span>
 <span class="r-in"><span></span></span>

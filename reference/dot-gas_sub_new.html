@@ -3,13 +3,13 @@
 at each row of newdata, so that term_continue() can carry a score-driven
 filter past the end of its series. A parameter carrying a subformula is read
 by calling term_predict() on each of its sub-terms, which reapplies the
-blueprint that each sub-term recorded at build time; a basis or a set of
+build_info that each sub-term recorded at build time; a basis or a set of
 contrasts is therefore not relearned on the new rows. A parameter with no
 subformula is constant over the rows."><meta property="og:description" content="Evaluates the recursion's coefficients \((\omega_t, \kappa_t, \xi_t)\)
 at each row of newdata, so that term_continue() can carry a score-driven
 filter past the end of its series. A parameter carrying a subformula is read
 by calling term_predict() on each of its sub-terms, which reapplies the
-blueprint that each sub-term recorded at build time; a basis or a set of
+build_info that each sub-term recorded at build time; a basis or a set of
 contrasts is therefore not relearned on the new rows. A parameter with no
 subformula is constant over the rows."><meta property="og:image" content="https://statmodels7.github.io/modelterms7/logo.png"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -19,7 +19,7 @@ subformula is constant over the rows."><meta property="og:image" content="https:
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -50,7 +50,7 @@ subformula is constant over the rows."><meta property="og:image" content="https:
 at each row of <code>newdata</code>, so that <code><a href="term_continue.html">term_continue()</a></code> can carry a score-driven
 filter past the end of its series. A parameter carrying a subformula is read
 by calling <code><a href="term_predict.html">term_predict()</a></code> on each of its sub-terms, which reapplies the
-blueprint that each sub-term recorded at build time; a basis or a set of
+<code>build_info</code> that each sub-term recorded at build time; a basis or a set of
 contrasts is therefore not relearned on the new rows. A parameter with no
 subformula is constant over the rows.</p>
     </div>
@@ -65,7 +65,7 @@ subformula is constant over the rows.</p>
 
 
 <dl><dt id="arg-term">term<a class="anchor" aria-label="anchor" href="#arg-term"></a></dt>
-<dd><p>A built <code>GasTerm</code> whose blueprint carries at least one
+<dd><p>A built <code>GasTerm</code> whose <code>build_info</code> carries at least one
 subformula. A term without a subformula is handled by <code>.gas_coefs()</code>.</p></dd>
 
 
@@ -81,7 +81,7 @@ carrying every variable that the subformulas name.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A list with the following elements:</p><dl><dt><code>om</code></dt>
+    <p>A list with the following elements:</p><dl><dt><code>omega</code></dt>
 <dd><p>numeric, one \(\omega_t\) per row of <code>newdata</code>.</p></dd>
 
 <dt><code>A</code></dt>
@@ -92,10 +92,10 @@ carrying every variable that the subformulas name.</p></dd>
 obtained by applying Levinson-Durbin row by row. At \(q = 0\) it is a
 zero-column matrix.</p></dd>
 
-<dt><code>dom</code>, <code>dA</code>, <code>dB</code></dt>
-<dd><p>the derivatives of <code>om</code>, of each column of
-<code>A</code> and of each column of <code>B</code> with respect to <code>u</code>, each a
-<code>nrow(newdata)</code> by <code>length(u)</code> matrix (<code>dA</code> and <code>dB</code> are lists of
+<dt><code>d_omega</code>, <code>d_A</code>, <code>d_B</code></dt>
+<dd><p>the derivatives of <code>omega</code>, of each
+column of <code>A</code> and of each column of <code>B</code> with respect to <code>u</code>, each a
+<code>nrow(newdata)</code> by <code>length(u)</code> matrix (<code>d_A</code> and <code>d_B</code> are lists of
 them).</p></dd>
 
 

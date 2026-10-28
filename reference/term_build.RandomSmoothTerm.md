@@ -23,7 +23,7 @@ space and one to the penalized coordinates.
 
 ## Value
 
-The term with `X` (a `dgCMatrix`), `coef_names`, `blueprint` and
+The term with `X` (a `dgCMatrix`), `coef_names`, `build_info` and
 `penalty` filled.
 
 ## The within-group design

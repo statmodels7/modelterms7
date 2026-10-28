@@ -23,12 +23,12 @@ RandomSmoothTerm(
   ids = character(0),
   X = NULL,
   coef_names = character(0),
-  blueprint = list(),
+  build_info = list(),
   penalty = NULL,
   formula = NULL,
   correlated = logical(0),
   distrib = NULL,
-  tag = character(0),
+  cov_label = character(0),
   smooth = NULL,
   intercept = logical(0)
 )
@@ -101,7 +101,7 @@ RandomSmoothTerm(
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
   fills it.
 
-- blueprint:
+- build_info:
 
   A named list of everything needed to reproduce the mapping on new
   rows. Its contents belong to the subclass, and only the term reads
@@ -129,7 +129,7 @@ RandomSmoothTerm(
   The effects' distribution, a distributions7 object or a list of them
   with one per within-group column, or `NULL` for the default Gaussian.
 
-- tag:
+- cov_label:
 
   The covariance label from the middle of two bars, or `NA_character_`.
 

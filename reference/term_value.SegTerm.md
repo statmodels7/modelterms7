@@ -73,16 +73,16 @@ d$y <- 1 + 0.5 * d$x + 2 * pmax(d$x - 6, 0) + rnorm(120, sd = 0.4)
 # seg: the block is the Jacobian, so X beta is the linearization and
 # differs from the contribution.
 b <- term_refresh(term_build(seg(x, npsi = 1), d), c(0.5, 2, 6))
-max(abs(as.numeric(term_matrix(b) %*% b@blueprint$coef) - term_value(b)))
+max(abs(as.numeric(term_matrix(b) %*% b@build_info$coef) - term_value(b)))
 #> [1] 12
 
 # jump: the columns reproduce the contribution to rounding error.
 bj <- term_build(jump(x, npsi = 1), d)
-max(abs(as.numeric(term_matrix(bj) %*% bj@blueprint$coef) - term_value(bj)))
+max(abs(as.numeric(term_matrix(bj) %*% bj@build_info$coef) - term_value(bj)))
 #> [1] 4.440892e-16
 
 # And the seg contribution really is the broken line at psi.
-cf <- b@blueprint$coef
+cf <- b@build_info$coef
 max(abs(term_value(b) - (cf[1] * d$x + cf[2] * pmax(d$x - cf[3], 0))))
 #> [1] 0
 ```

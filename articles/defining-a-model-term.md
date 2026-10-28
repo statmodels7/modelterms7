@@ -44,17 +44,17 @@ season <- function(x, period, k = 3, lambda = NULL) {
     spec = list(period = period, k = k),
     hyper = if (is.null(lambda)) list() else list(lambda = lambda),
     X = NULL, coef_names = character(0),
-    blueprint = list(), penalty = NULL
+    build_info = list(), penalty = NULL
   )
 }
 ```
 
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 evaluates the expression in the data and fills `X`, `coef_names`,
-`blueprint` and `penalty`. The blueprint stores what
+`build_info` and `penalty`. The `build_info` stores what
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 needs later, so that prediction reapplies recorded quantities and does
-not recompute them from the new rows. Storing the blueprint at build
+not recompute them from the new rows. Storing the `build_info` at build
 time is the second requirement on a new term.
 
 ``` r
@@ -75,7 +75,7 @@ S7::method(term_build, SeasonTerm) <- function(term, data, ...) {
     X = .season_X(x, sp$period, sp$k),
     coef_names = c(sprintf("cos%d", seq_len(sp$k)),
                    sprintf("sin%d", seq_len(sp$k))),
-    blueprint = sp,
+    build_info = sp,
     penalty = penalties7::quadratic_penalty(diag(rep(seq_len(sp$k)^2, 2)))
   )
 }
@@ -131,19 +131,19 @@ coefficients.
 
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 has no base method, so a term that is used for prediction or for
-cross-validation defines one. The method reapplies the blueprint:
+cross-validation defines one. The method reapplies the `build_info`:
 
 ``` r
 
 S7::method(term_predict, SeasonTerm) <- function(term, newdata, ...) {
   x <- as.numeric(eval(term@expr, newdata, baseenv()))
-  bp <- term@blueprint
+  bp <- term@build_info
   .season_X(x, bp$period, bp$k)
 }
 ```
 
-The period comes from the blueprint and never from the new data. A term
-that recomputed it would be a different term on every subset. The
+The period comes from the `build_info` and never from the new data. A
+term that recomputed it would be a different term on every subset. The
 identity that detects this mistake is that prediction on the rows of the
 fit must return the block of the fit:
 
@@ -354,13 +354,13 @@ fits at most one structural term in a formula.
 - Minimum to define an additive term: a subclass of `additive_term` and
   a
   [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
-  method that fills `X`, `coef_names`, `blueprint` and `penalty`. Any
+  method that fills `X`, `coef_names`, `build_info` and `penalty`. Any
   state of its own is a property of the subclass.
 - The constructor captures the covariate unevaluated and computes
   nothing.
 - [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-  has no base method. Write one, reapply the blueprint, and evaluate in
-  the new data with
+  has no base method. Write one, reapply the `build_info`, and evaluate
+  in the new data with
   [`baseenv()`](https://rdrr.io/r/base/environment.html) as the
   enclosure.
 - [`check_term()`](https://statmodels7.github.io/modelterms7/reference/check_term.md)

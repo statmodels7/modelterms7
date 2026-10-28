@@ -58,7 +58,7 @@ regime(k = 2, by = NULL, time = NULL, label = "regime", n_start = 1)
 
 An unbuilt
 [`RegimeTerm()`](https://statmodels7.github.io/modelterms7/reference/RegimeTerm.md):
-a specification, whose `blueprint` is empty until
+a specification, whose `build_info` is empty until
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 resolves the ordering.
 

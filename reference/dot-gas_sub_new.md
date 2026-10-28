@@ -6,7 +6,7 @@ at each row of `newdata`, so that
 can carry a score-driven filter past the end of its series. A parameter
 carrying a subformula is read by calling
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
-on each of its sub-terms, which reapplies the blueprint that each
+on each of its sub-terms, which reapplies the `build_info` that each
 sub-term recorded at build time; a basis or a set of contrasts is
 therefore not relearned on the new rows. A parameter with no subformula
 is constant over the rows.
@@ -21,8 +21,8 @@ is constant over the rows.
 
 - term:
 
-  A built `GasTerm` whose blueprint carries at least one subformula. A
-  term without a subformula is handled by `.gas_coefs()`.
+  A built `GasTerm` whose `build_info` carries at least one subformula.
+  A term without a subformula is handled by `.gas_coefs()`.
 
 - u:
 
@@ -39,7 +39,7 @@ is constant over the rows.
 
 A list with the following elements:
 
-- `om`:
+- `omega`:
 
   numeric, one \\\omega_t\\ per row of `newdata`.
 
@@ -53,11 +53,11 @@ A list with the following elements:
   applying Levinson-Durbin row by row. At \\q = 0\\ it is a zero-column
   matrix.
 
-- `dom`, `dA`, `dB`:
+- `d_omega`, `d_A`, `d_B`:
 
-  the derivatives of `om`, of each column of `A` and of each column of
-  `B` with respect to `u`, each a `nrow(newdata)` by `length(u)` matrix
-  (`dA` and `dB` are lists of them).
+  the derivatives of `omega`, of each column of `A` and of each column
+  of `B` with respect to `u`, each a `nrow(newdata)` by `length(u)`
+  matrix (`d_A` and `d_B` are lists of them).
 
 ## Details
 

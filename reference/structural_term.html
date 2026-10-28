@@ -19,7 +19,7 @@ and no term_matrix() method."><meta property="og:image" content="https://statmod
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,7 +65,7 @@ and no <code><a href="term_matrix.html">term_matrix()</a></code> method.</p>
 <span>  min_ratio <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  search <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  ids <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
-<span>  blueprint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
+<span>  build_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -118,7 +118,7 @@ carrying the same label for the same hyperparameter estimate one value.
 See <code><a href="term_ids.html">term_ids()</a></code>.</p></dd>
 
 
-<dt id="arg-blueprint">blueprint<a class="anchor" aria-label="anchor" href="#arg-blueprint"></a></dt>
+<dt id="arg-build-info">build_info<a class="anchor" aria-label="anchor" href="#arg-build-info"></a></dt>
 <dd><p>A named list of everything needed to reproduce the term
 on new rows: the design's state, the levels that a factor had, whatever
 the subclass's own filter or recursion needs. Its contents belong to that
@@ -133,7 +133,7 @@ whether it is built.</p></dd>
     <p>Nothing: the class is abstract and cannot be instantiated.
 Calling <code>structural_term()</code> signals an error. As a type it is the parent
 of <code><a href="gas.html">gas()</a></code>, <code><a href="regime.html">regime()</a></code> and the marginal break-point terms, and carries
-the properties of <code><a href="model_term.html">model_term()</a></code> together with <code>blueprint</code>, the branch's
+the properties of <code><a href="model_term.html">model_term()</a></code> together with <code>build_info</code>, the branch's
 record of having been built, empty in a specification.</p>
     </div>
     <div class="section level2">
@@ -144,7 +144,7 @@ inside \((-1, 1)\) and a loading stays positive whatever an optimizer
 proposes. <code><a href="term_npar.html">term_npar()</a></code> counts those parameters,
 <code><a href="term_start.html">term_start()</a></code> gives their starting values, and a <code><a href="term_penalties.html">term_penalties()</a></code> entry
 indexes into them, where an additive term's entry indexes into columns.</p>
-<p>The class adds one property of its own, <code>blueprint</code>, which records that the
+<p>The class adds one property of its own, <code>build_info</code>, which records that the
 term has been built. Everything else that a built structural term records is
 held in the root's properties and in the subclass's own slots.</p>
     </div>

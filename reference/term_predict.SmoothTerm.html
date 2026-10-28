@@ -17,7 +17,7 @@ covariates and of the by variable."><meta property="og:image" content="https://s
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -78,14 +78,14 @@ column names and no row names.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The basis object in <code>blueprint$core</code> carries the knots and the transform, so
+    <p>The basis object in <code>build_info$core</code> carries the knots and the transform, so
 the columns at new rows are the same functions of the covariate as the
 fitted ones, and \(\tilde{X}\beta\) is the fitted smooth evaluated
 there. Rebuilding on the new rows would place the knots on their range and
 compute another transform. Predicting on the first rows of the data
 reproduces those rows of the block exactly, and rebuilding on them gives a
 different block (see the examples).</p>
-<p>A factor <code>by</code> is expanded against <code>blueprint$by_levels</code>, so <code>newdata</code> need
+<p>A factor <code>by</code> is expanded against <code>build_info$by_levels</code>, so <code>newdata</code> need
 carry only the levels that its own rows use, and the block still has every
 column and is built in the storage chosen at the build. A level that
 was not present at build signals an error.</p>

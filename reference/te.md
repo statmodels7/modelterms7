@@ -98,8 +98,8 @@ te(
 
 An unbuilt
 [`SmoothTerm()`](https://statmodels7.github.io/modelterms7/reference/SmoothTerm.md):
-a specification, with `X`, `coef_names`, `blueprint` and `penalty` empty
-until
+a specification, with `X`, `coef_names`, `build_info` and `penalty`
+empty until
 [`term_build()`](https://statmodels7.github.io/modelterms7/reference/term_build.md)
 fills them.
 
@@ -156,7 +156,7 @@ to machine precision; and the penalty follows by congruence and keeps
 its rank, because the direction that was removed was one of its null
 directions.
 
-The transform is stored in the blueprint and reapplied by
+The transform is stored in the `build_info` and reapplied by
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md),
 as the Demmler-Reinsch transform of
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) is.

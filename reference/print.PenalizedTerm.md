@@ -40,9 +40,9 @@ The standardization line is needed to read a fitted hyperparameter. With
 `standardize = TRUE` the penalty is evaluated at the coefficients
 multiplied by those spreads; these products are the coefficients of the
 columns after each is divided by its spread. The spreads are computed
-once at build time and recorded in the blueprint. They enter the penalty
-only: the design block is not rescaled, so prediction at new rows does
-not use them.
+once at build time and recorded in the `build_info`. They enter the
+penalty only: the design block is not rescaled, so prediction at new
+rows does not use them.
 
 ## See also
 

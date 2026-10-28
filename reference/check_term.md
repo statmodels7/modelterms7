@@ -107,9 +107,9 @@ of a numeric covariate. Character columns are not examined.
 the subset before it is passed on, because new data reach
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 in that form: a factor column there carries only the levels that its own
-rows use, and the remaining levels are recorded only in the blueprint.
-Without the call a plain row subset carries the original level set along
-with it and the check cannot fail.
+rows use, and the remaining levels are recorded only in the
+`build_info`. Without the call a plain row subset carries the original
+level set along with it and the check cannot fail.
 
 ## What is not checked
 
@@ -168,12 +168,12 @@ all(res$status == "OK")
 #> [1] TRUE
 
 # This is what the subset check tests. The chosen rows drop level "c", and
-# the reapplied block keeps the four columns that the blueprint recorded.
+# the reapplied block keeps the four columns that the build_info recorded.
 b  <- term_build(linpar(~ x + g), dd)
 nd <- droplevels(dd[c(1, 2, 4, 5), ])
 levels(nd$g)
 #> [1] "a" "b"
-dim(term_predict(b, nd))              # 4 x 4, the blueprint's levels
+dim(term_predict(b, nd))              # 4 x 4, the build_info's levels
 #> [1] 4 4
 dim(model.matrix(~ x + g, nd))        # 4 x 3, what a rebuild gives
 #> [1] 4 3

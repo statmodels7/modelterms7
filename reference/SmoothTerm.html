@@ -15,7 +15,7 @@ that they attach, not in the class."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +61,7 @@ that they attach, not in the class.</p>
 <span>  ids <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  X <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  coef_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
-<span>  blueprint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  build_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  penalty <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  vars <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  by <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -129,7 +129,7 @@ two-dimensional <span class="pkg">Matrix</span>. It is empty until <code><a href
 <code>label</code> when there is one. <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
 
 
-<dt id="arg-blueprint">blueprint<a class="anchor" aria-label="anchor" href="#arg-blueprint"></a></dt>
+<dt id="arg-build-info">build_info<a class="anchor" aria-label="anchor" href="#arg-build-info"></a></dt>
 <dd><p>A named list of everything needed to reproduce the mapping
 on new rows. Its contents belong to the subclass, and only the term reads
 them. It is empty until <code><a href="term_build.html">term_build()</a></code> fills it.</p></dd>
@@ -178,7 +178,7 @@ one per covariate, which hold the whole construction; <code>by_hyper</code>, whi
 records whether the levels of a factor <code>by</code> share a smoothing parameter or
 carry one each; <code>default_label</code>, which records whether the label was built
 from the call; and, for <code><a href="te.html">te()</a></code>, whether the penalty is anisotropic. What a
-build then computes from the data goes into the blueprint instead: the
+build then computes from the data goes into the <code>build_info</code> instead: the
 Demmler-Reinsch transform, the centering constraint, the <code>by</code> levels and the
 penalties that the term declares.</p>
 <p><code>sparse</code> is <code>NULL</code> until the build settles it. A smooth's block is sparse
@@ -204,11 +204,11 @@ roughness penalty; <code><a href="edf.html">edf()</a></code> for what a fitted s
 <span class="r-out co"><span class="r-pr">#&gt;</span> TRUE TRUE </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># The settings are on `spec`, and the quantities computed from the data are</span></span></span>
-<span class="r-in"><span><span class="co"># in the blueprint.</span></span></span>
+<span class="r-in"><span><span class="co"># in the build_info.</span></span></span>
 <span class="r-in"><span><span class="va">tm</span> <span class="op">&lt;-</span> <span class="fu"><a href="s.html">s</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">8</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">tm</span><span class="op">@</span><span class="va">spec</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "smoothers"     "by_hyper"      "default_label"</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="va">tm</span>, <span class="va">dd</span><span class="op">)</span><span class="op">@</span><span class="va">blueprint</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="va">tm</span>, <span class="va">dd</span><span class="op">)</span><span class="op">@</span><span class="va">build_info</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "core"      "marg"      "spec"      "vars"      "by"        "by_levels"</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [7] "sparse"    "penalties" "nblock"   </span>
 <span class="r-in"><span></span></span>

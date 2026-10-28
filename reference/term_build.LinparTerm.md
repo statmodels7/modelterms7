@@ -3,7 +3,7 @@
 Builds the model matrix of a
 [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
 term's formula against `data`, prefixes the coefficient names with the
-term's label, and records the blueprint that
+term's label, and records the `build_info` that
 [`term_predict()`](https://statmodels7.github.io/modelterms7/reference/term_predict.md)
 will reapply: the terms object from which the response is deleted, the
 factor levels, the contrasts used, the storage chosen at build and
@@ -26,7 +26,8 @@ factor levels, the contrasts used, the storage chosen at build and
 
 ## Value
 
-The term, in which `X`, `coef_names` and `blueprint` are filled, so that
+The term, in which `X`, `coef_names` and `build_info` are filled, so
+that
 [`term_is_built()`](https://statmodels7.github.io/modelterms7/reference/term_is_built.md)
 is `TRUE`. The block has `nrow(data)` rows, and its column names are the
 coefficient names.
@@ -46,9 +47,9 @@ the block aligned with the coefficients of the fit.
 Where the constructor left `sparse = NULL`,
 [`.resolve_sparse()`](https://statmodels7.github.io/modelterms7/reference/dot-resolve_sparse.md)
 settles it from `n` times the indicator column count. The value settled
-on goes into `blueprint$sparse` and the `sparse` property is left as the
-caller wrote it, because new data may have any number of rows, and if a
-prediction settled the storage again, it could build a block of a
+on goes into `build_info$sparse` and the `sparse` property is left as
+the caller wrote it, because new data may have any number of rows, and
+if a prediction settled the storage again, it could build a block of a
 different kind from the fitted one.
 
 ## See also
@@ -72,7 +73,7 @@ term_matrix(b)
 #> 6           1 6  1  0  0
 #> 7           1 7  0  1  0
 #> 8           1 8  0  0  1
-names(b@blueprint)
+names(b@build_info)
 #> [1] "terms"          "xlev"           "contrasts"      "sparse"        
 #> [5] "drop_intercept"
 

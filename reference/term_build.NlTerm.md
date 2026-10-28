@@ -25,8 +25,8 @@ supplied returns the right components.
 ## Value
 
 The term, in which `X`, `coef_names`, `nl_params`, `links`, `deriv_mode`
-and `blueprint` are filled. The penalties of the sub-terms are kept in
-the blueprint and reported by
+and `build_info` are filled. The penalties of the sub-terms are kept in
+the `build_info` and reported by
 [`term_penalties()`](https://statmodels7.github.io/modelterms7/reference/term_penalties.md);
 the `penalty` property stays `NULL`.
 
@@ -38,7 +38,7 @@ expression, and `deriv_mode` records whether it succeeded. The
 expressions of orders two to four are formed with
 [`stats::D()`](https://rdrr.io/r/stats/deriv.html) where that succeeds,
 and the orders that are analytic, whether symbolic or supplied, are
-recorded in the blueprint. Every function given to `gradient`,
+recorded in the `build_info`. Every function given to `gradient`,
 `hessian`, `deriv3` or `deriv4` is called once and its names and lengths
 are checked against the components of that order: a name that is not one
 of them, a missing component, a repeated one or a component of a length
@@ -48,10 +48,10 @@ numerical route in these cases. A name in `start`, `links` or
 
 Each parameter's subformula goes through
 [`interpret_formula()`](https://statmodels7.github.io/modelterms7/reference/interpret_formula.md)
-and its terms are built, so their blueprints are recorded and reapplied
-at prediction. A structural sub-term is rejected, and so is one whose
-own block moves with its coefficients unless that block is a Jacobian,
-as for
+and its terms are built, so their `build_info` lists are recorded and
+reapplied at prediction. A structural sub-term is rejected, and so is
+one whose own block moves with its coefficients unless that block is a
+Jacobian, as for
 [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md)
 and every smoothed break-point term; such a parameter's design and
 predictor are then read at the coefficients rather than stored.

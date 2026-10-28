@@ -9,7 +9,7 @@ the block and its names as usual, and no penalty entry at all."><meta property="
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -95,7 +95,7 @@ here would give two priors for the same block, with no rule for which the
 fit should read. <code><a href="term_penalties.html">term_penalties()</a></code> returns an empty list, and the fitting
 layer collects the labelled terms and declares one entry over their stacked
 columns.</p>
-<p>The blueprint records what the layer needs for that: the within-group
+<p>The <code>build_info</code> records what the layer needs for that: the within-group
 dimension and the grouping's levels, beside the pieces that
 <code><a href="term_predict.RandomTerm.html">term_predict.RandomTerm()</a></code> already reads.</p>
 <p>The function rejects <code>hyper</code>, <code>id</code> and <code>correlated = FALSE</code> on a labelled

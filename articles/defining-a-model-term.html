@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.112.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -102,16 +102,16 @@ a specification is not a block and the data are not yet in scope.</p>
 <span>    spec <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>period <span class="op">=</span> <span class="va">period</span>, k <span class="op">=</span> <span class="va">k</span><span class="op">)</span>,</span>
 <span>    hyper <span class="op">=</span> <span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/NULL.html" class="external-link">is.null</a></span><span class="op">(</span><span class="va">lambda</span><span class="op">)</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span> <span class="kw">else</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>lambda <span class="op">=</span> <span class="va">lambda</span><span class="op">)</span>,</span>
 <span>    X <span class="op">=</span> <span class="cn">NULL</span>, coef_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
-<span>    blueprint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, penalty <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>    build_info <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, penalty <span class="op">=</span> <span class="cn">NULL</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
 <p><code><a href="../reference/term_build.html">term_build()</a></code> evaluates the expression in the data and
-fills <code>X</code>, <code>coef_names</code>, <code>blueprint</code>
-and <code>penalty</code>. The blueprint stores what
+fills <code>X</code>, <code>coef_names</code>, <code>build_info</code>
+and <code>penalty</code>. The <code>build_info</code> stores what
 <code><a href="../reference/term_predict.html">term_predict()</a></code> needs later, so that prediction reapplies
 recorded quantities and does not recompute them from the new rows.
-Storing the blueprint at build time is the second requirement on a new
-term.</p>
+Storing the <code>build_info</code> at build time is the second
+requirement on a new term.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">.season_X</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">x</span>, <span class="va">period</span>, <span class="va">k</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">j</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">k</span><span class="op">)</span></span>
@@ -129,7 +129,7 @@ term.</p>
 <span>    X <span class="op">=</span> <span class="fu">.season_X</span><span class="op">(</span><span class="va">x</span>, <span class="va">sp</span><span class="op">$</span><span class="va">period</span>, <span class="va">sp</span><span class="op">$</span><span class="va">k</span><span class="op">)</span>,</span>
 <span>    coef_names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"cos%d"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">sp</span><span class="op">$</span><span class="va">k</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>                   <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"sin%d"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">sp</span><span class="op">$</span><span class="va">k</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    blueprint <span class="op">=</span> <span class="va">sp</span>,</span>
+<span>    build_info <span class="op">=</span> <span class="va">sp</span>,</span>
 <span>    penalty <span class="op">=</span> <span class="fu">penalties7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/penalties7/reference/quadratic_penalty.html" class="external-link">quadratic_penalty</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/diag.html" class="external-link">diag</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">sp</span><span class="op">$</span><span class="va">k</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
@@ -184,17 +184,17 @@ for the other coefficients.</p>
 </h2>
 <p><code><a href="../reference/term_predict.html">term_predict()</a></code> has no base method, so a term that is
 used for prediction or for cross-validation defines one. The method
-reapplies the blueprint:</p>
+reapplies the <code>build_info</code>:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">S7</span><span class="fu">::</span><span class="fu"><a href="https://rconsortium.github.io/S7/reference/method.html" class="external-link">method</a></span><span class="op">(</span><span class="va">term_predict</span>, <span class="va">SeasonTerm</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">term</span>, <span class="va">newdata</span>, <span class="va">...</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/eval.html" class="external-link">eval</a></span><span class="op">(</span><span class="va">term</span><span class="op">@</span><span class="va">expr</span>, <span class="va">newdata</span>, <span class="fu"><a href="https://rdrr.io/r/base/environment.html" class="external-link">baseenv</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="va">bp</span> <span class="op">&lt;-</span> <span class="va">term</span><span class="op">@</span><span class="va">blueprint</span></span>
+<span>  <span class="va">bp</span> <span class="op">&lt;-</span> <span class="va">term</span><span class="op">@</span><span class="va">build_info</span></span>
 <span>  <span class="fu">.season_X</span><span class="op">(</span><span class="va">x</span>, <span class="va">bp</span><span class="op">$</span><span class="va">period</span>, <span class="va">bp</span><span class="op">$</span><span class="va">k</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<p>The period comes from the blueprint and never from the new data. A
-term that recomputed it would be a different term on every subset. The
-identity that detects this mistake is that prediction on the rows of the
-fit must return the block of the fit:</p>
+<p>The period comes from the <code>build_info</code> and never from the
+new data. A term that recomputed it would be a different term on every
+subset. The identity that detects this mistake is that prediction on the
+rows of the fit must return the block of the fit:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rows</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">40</span>, <span class="fl">111</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/all.equal.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu"><a href="../reference/term_predict.html">term_predict</a></span><span class="op">(</span><span class="va">tm</span>, <span class="va">d</span><span class="op">[</span><span class="va">rows</span>, , drop <span class="op">=</span> <span class="cn">FALSE</span><span class="op">]</span><span class="op">)</span>,</span>
@@ -347,15 +347,15 @@ one structural term in a formula.</p>
 <ul>
 <li>Minimum to define an additive term: a subclass of
 <code>additive_term</code> and a <code><a href="../reference/term_build.html">term_build()</a></code> method that
-fills <code>X</code>, <code>coef_names</code>, <code>blueprint</code>
+fills <code>X</code>, <code>coef_names</code>, <code>build_info</code>
 and <code>penalty</code>. Any state of its own is a property of the
 subclass.</li>
 <li>The constructor captures the covariate unevaluated and computes
 nothing.</li>
 <li>
 <code><a href="../reference/term_predict.html">term_predict()</a></code> has no base method. Write one, reapply
-the blueprint, and evaluate in the new data with <code><a href="https://rdrr.io/r/base/environment.html" class="external-link">baseenv()</a></code>
-as the enclosure.</li>
+the <code>build_info</code>, and evaluate in the new data with
+<code><a href="https://rdrr.io/r/base/environment.html" class="external-link">baseenv()</a></code> as the enclosure.</li>
 <li>
 <code><a href="../reference/check_term.html">check_term()</a></code> runs six checks, and the last one runs on
 a <code><a href="https://rdrr.io/r/base/droplevels.html" class="external-link">droplevels()</a></code> subset, which exposes a rebuild.</li>
