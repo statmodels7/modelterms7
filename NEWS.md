@@ -1,3 +1,8 @@
+# modelterms7 0.112.1
+
+* The properties `init`, `init_value` and `init_source` of `GasTerm` and
+  `GasDriver` are documented.
+
 # modelterms7 0.112.0
 
 * `seg_pin()` prepares a continuous `seg()` term for a fit in which some of

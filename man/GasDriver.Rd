@@ -89,6 +89,16 @@ loads, or an empty vector for a term that loads its own score only.}
 \item{cross_with}{The distribution parameters whose scores the level of
 this term loads besides its own, in the order of their loadings. It is
 empty until \code{\link[=gas_joint]{gas_joint()}} fills it from \code{p_cross}.}
+
+\item{init}{How the recursion starts: \code{"level"}, at the fixed point of the
+recursion, or \code{"static"}, with the first predictor of every group equal
+to the constant \code{init_value}.}
+
+\item{init_value}{The constants of a \code{"static"} start, one for every group
+or one for all of them, which a fitting layer sets; empty until then.}
+
+\item{init_source}{The model without the term from which a fitting layer
+computed \code{init_value}, or \code{NULL} when it is not recorded.}
 }
 \value{
 An S7 object of class \code{GasDriver}, inheriting from \code{\link[=GasTerm]{GasTerm()}}.

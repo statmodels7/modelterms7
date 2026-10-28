@@ -62,6 +62,13 @@ NULL
 #' @param cross_with The distribution parameters whose scores the level of
 #'   this term loads besides its own, in the order of their loadings. It is
 #'   empty until [gas_joint()] fills it from `p_cross`.
+#' @param init How the recursion starts: `"level"`, at the fixed point of the
+#'   recursion, or `"static"`, with the first predictor of every group equal
+#'   to the constant `init_value`.
+#' @param init_value The constants of a `"static"` start, one for every group
+#'   or one for all of them, which a fitting layer sets; empty until then.
+#' @param init_source The model without the term from which a fitting layer
+#'   computed `init_value`, or `NULL` when it is not recorded.
 #' @param blueprint A named list of the resolved ordering, grouping and
 #'   sub-term designs, empty until [term_build()] fills it.
 #'
