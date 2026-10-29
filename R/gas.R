@@ -1993,8 +1993,8 @@ S7::method(term_adjoint, GasTerm) <- function(term, eta, y, score, curvature,
 #'   parameter index), and for the third and fourth orders `D4` and `D5`, one
 #'   column per index triple and quadruple after the filter's own, laid out
 #'   the same way. Only the compiled route reads it.
-#' @param threads Threads for the compiled route's group loop, as
-#'   `numericals7::n_threads()` counts them; 1 is sequential.
+#' @param threads Threads for the compiled route's group loop, a whole number
+#'   (see `numericals7::local_threads()`); 1 is sequential.
 #' @return A list with `jacobian` and `curvature`.
 #' @keywords internal
 S7::method(term_curvature, GasTerm) <- function(term, eta, y, score,

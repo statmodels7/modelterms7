@@ -1,3 +1,8 @@
+# modelterms7 0.114.1
+
+* Documentation: the `threads` argument of `term_curvature()` is a whole
+  number, following numericals7 0.26.0.
+
 # modelterms7 0.114.0
 
 * Renamed for readability: the property `factory` of `PenalizedTerm` is

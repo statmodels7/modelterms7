@@ -42,8 +42,8 @@ parameter index), and for the third and fourth orders \code{D4} and \code{D5}, o
 column per index triple and quadruple after the filter's own, laid out
 the same way. Only the compiled route reads it.}
 
-\item{threads}{Threads for the compiled route's group loop, as
-\code{numericals7::n_threads()} counts them; 1 is sequential.}
+\item{threads}{Threads for the compiled route's group loop, a whole number
+(see \code{numericals7::local_threads()}); 1 is sequential.}
 }
 \value{
 A list with \code{jacobian} and \code{curvature}.
