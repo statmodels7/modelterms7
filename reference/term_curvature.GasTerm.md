@@ -69,9 +69,9 @@ weights, and propagates both through the recursion beside the state.
 
 - threads:
 
-  Threads for the compiled route's group loop, as
-  [`numericals7::n_threads()`](https://statmodels7.github.io/numericals7/reference/n_threads.html)
-  counts them; 1 is sequential.
+  Threads for the compiled route's group loop, a whole number (see
+  [`numericals7::local_threads()`](https://statmodels7.github.io/numericals7/reference/local_threads.html));
+  1 is sequential.
 
 ## Value
 
