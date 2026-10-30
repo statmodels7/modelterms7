@@ -7,6 +7,9 @@
   of the persistence at 0.9, 0.5, 0.97 and 0.7. The likelihood of a filter
   can have a local maximum at a low persistence, which the start without
   persistence reaches.
+* `term_starts()` of a joint filter (`gas_joint()`) returns its first start
+  and then the further starts of each of its terms in turn, the other terms
+  at their first start.
 
 # modelterms7 0.114.1
 

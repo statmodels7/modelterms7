@@ -76,3 +76,17 @@ test_that("n_start must be a whole number of at least one", {
   expect_error(regime(k = 2, n_start = c(2, 3)), "n_start")
   expect_identical(regime(k = 2, n_start = 5)@n_start, 5L)
 })
+
+
+test_that("a joint filter tries the further starts of each term in turn", {
+  dd <- data.frame(t = 1:20)
+  jt <- gas_joint(list(mu = term_build(gas(1, 1, time = t), dd),
+                       sigma = term_build(gas(1, 1, time = t, n_start = 3), dd)))
+  st <- term_starts(jt)
+  expect_length(st, 1L + 1L + 2L)
+  expect_identical(st[[1]], term_start(jt))
+  lk <- term_links(gas(1, 1))$pacf1
+  pv <- function(z, k) linkfunctions7::linkinv(lk, z[[paste0(k, ".pacf1")]])
+  expect_equal(vapply(st, pv, numeric(1), k = "mu"), c(0, 0.9, 0, 0))
+  expect_equal(vapply(st, pv, numeric(1), k = "sigma"), c(0, 0, 0.9, 0.5))
+})
