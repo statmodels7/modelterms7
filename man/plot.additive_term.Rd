@@ -5,9 +5,14 @@
 \alias{autoplot_additive_term}
 \title{Plot an Additive Term's Coefficients}
 \usage{
+\method{plot}{additive_term}(x, coef = NULL, ...)
+
 autoplot_additive_term(object, coef = NULL, ...)
 }
 \arguments{
+\item{x, object}{A built additive term. An unbuilt term signals the error
+\code{"the term has not been built; call term_build(term, data) first."}.}
+
 \item{coef}{The coefficients to draw, a numeric vector of length
 \code{term_npar(x)}. Required: \code{NULL} signals the error
 \code{"'coef' is required: a term is displayed at fitted coefficients."}, and a
@@ -15,9 +20,6 @@ vector of any other length signals an error that gives the required
 length.}
 
 \item{...}{Unused; an argument passed here signals an error.}
-
-\item{x, object}{A built additive term. An unbuilt term signals the error
-\code{"the term has not been built; call term_build(term, data) first."}.}
 }
 \value{
 \code{autoplot()} returns a ggplot2 object; \code{plot()} prints the same

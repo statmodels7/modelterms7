@@ -347,11 +347,13 @@ S7::method(print, PenalizedTerm) <- function(x, ...) {
 #' try(plot(b, coef = 1))
 #'
 #' @keywords internal
-S7::method(plot, additive_term) <- function(x, coef = NULL, ...) {
+#' @export
+plot.additive_term <- function(x, coef = NULL, ...) {
   p <- autoplot_additive_term(x, coef = coef, ...)
   print(p)
   invisible(p)
 }
+S7::method(plot, additive_term) <- plot.additive_term
 
 #' @rdname plot.additive_term
 autoplot_additive_term <- function(object, coef = NULL, ...) {
