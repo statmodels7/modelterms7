@@ -1,4 +1,4 @@
-#' @include term_classes.R generics.R penalized.R
+#' @include term_classes.R generics.R penalized.R ggplot.R
 NULL
 
 #' Effective Degrees of Freedom of a Term
@@ -289,51 +289,52 @@ S7::method(print, PenalizedTerm) <- function(x, ...) {
 #' @name plot.additive_term
 #'
 #' @description
-#' Draws the coefficients of a built additive term as a stem plot: one point
-#' per coefficient against its position in the block, a stem down to zero, a
-#' dotted line at zero, and the coefficient names rotated along the horizontal
-#' axis. It shows which coefficients a penalty has driven to zero and how large
-#' the survivors are, so the effect of a lasso or a smooth is visible at a
-#' glance.
+#' `autoplot()` returns a graph of the coefficients of a built additive term
+#' as a stem plot, and `plot()` prints that graph: one point per coefficient
+#' against its position in the block, a stem down to zero, a grey line at
+#' zero, and the coefficient names along the horizontal axis. It shows which
+#' coefficients a penalty has driven to zero and how large the survivors are,
+#' so the effect of a lasso or a smooth is visible at a glance.
 #'
 #' The coefficients are supplied by the caller. A term holds a design block and
 #' no fit, so there is nothing to display without them, and `coef = NULL` is
 #' rejected.
 #'
 #' @details
-#' The panel's title is the term's `label` when it has one, so `"ridge"` or
-#' `"s(x)"`, and the class name otherwise. The bottom margin is widened to
-#' seven lines so that the coefficient names fit, and [graphics::par()] is
-#' restored on exit.
+#' The title of the graph is the term's `label` when it has one, so `"ridge"`
+#' or `"s(x)"`, and the class name otherwise.
 #'
 #' The horizontal axis is the coefficient's position in the block, so the
-#' plot shows the block and not the covariate. For [s()], whose block is a
+#' graph shows the block and not the covariate. For [s()], whose block is a
 #' Demmler-Reinsch reparametrization, the columns are ordered from the smoothest
 #' to the most wiggly, and a penalized fit shows a decaying profile.
 #'
-#' @param x A built additive term. An unbuilt term signals the error
+#' The graph is drawn with \pkg{ggplot2}, which is suggested; the methods
+#' signal an error that names it when it is not installed. The graph has one
+#' element, the coefficients, which the vertical axis names, and so it has no
+#' legend.
+#'
+#' @param x,object A built additive term. An unbuilt term signals the error
 #'   `"the term has not been built; call term_build(term, data) first."`.
 #' @param coef The coefficients to draw, a numeric vector of length
 #'   `term_npar(x)`. Required: `NULL` signals the error
 #'   `"'coef' is required: a term is displayed at fitted coefficients."`, and a
 #'   vector of any other length signals an error that gives the required
 #'   length.
-#' @param ... Passed to [graphics::plot()], so `col`, `ylim`, `cex` and the
-#'   other usual graphical arguments are accepted. The method sets `xaxt`,
-#'   `xlab`, `ylab`, `main` and `pch` itself, and passing any of them signals an
-#'   error.
+#' @param ... Unused; an argument passed here signals an error.
 #'
-#' @return `x`, invisibly. The method is called for the plot.
+#' @return `autoplot()` returns a ggplot2 object; `plot()` prints the same
+#'   object and returns it invisibly.
 #'
 #' @seealso [term_coef_names()] for the axis labels, [edf()] for what the same
 #'   coefficients cost in degrees of freedom.
 #'
-#' @examples
+#' @examplesIf requireNamespace("ggplot2", quietly = TRUE)
 #' set.seed(5)
 #' d <- data.frame(x1 = rnorm(30), x2 = rnorm(30), x3 = rnorm(30))
 #' b <- term_build(lasso(~ x1 + x2 + x3), d)
 #'
-#' # The plot shows two survivors and one coefficient at exactly zero.
+#' # The graph shows two survivors and one coefficient at exactly zero.
 #' plot(b, coef = c(0.8, 0, -0.35))
 #'
 #' # A smooth's block runs from least to most wiggly.
@@ -347,6 +348,18 @@ S7::method(print, PenalizedTerm) <- function(x, ...) {
 #'
 #' @keywords internal
 S7::method(plot, additive_term) <- function(x, coef = NULL, ...) {
+  p <- autoplot_additive_term(x, coef = coef, ...)
+  print(p)
+  invisible(p)
+}
+
+#' @rdname plot.additive_term
+autoplot_additive_term <- function(object, coef = NULL, ...) {
+  if (...length()) {
+    stop("The graph of a term takes no further arguments; modify the ",
+         "returned object instead.", call. = FALSE)
+  }
+  x <- object
   .assert_built(x)
   if (is.null(coef)) {
     stop("'coef' is required: a term is displayed at fitted coefficients.",
@@ -356,14 +369,23 @@ S7::method(plot, additive_term) <- function(x, coef = NULL, ...) {
   if (length(coef) != k) {
     stop(sprintf("'coef' must have length %d.", k), call. = FALSE)
   }
+  need_ggplot()
   cn <- term_coef_names(x)
-  op <- graphics::par(mar = c(7, 4, 3, 1))
-  on.exit(graphics::par(op))
+  d <- data.frame(pos = seq_len(k), coef = as.numeric(coef))
   main <- if (nzchar(x@label)) x@label else attr(S7::S7_class(x), "name")
-  graphics::plot(seq_len(k), coef, pch = 19, xaxt = "n", xlab = "",
-                 ylab = "coefficient", main = main, ...)
-  graphics::abline(h = 0, lty = 3)
-  graphics::segments(seq_len(k), 0, seq_len(k), coef)
-  graphics::axis(1, at = seq_len(k), labels = cn, las = 2, cex.axis = 0.8)
-  invisible(x)
+  .data <- ggplot2::.data
+  ggplot2::ggplot(d, ggplot2::aes(x = .data$pos, y = .data$coef)) +
+    ggplot2::geom_hline(yintercept = 0, colour = "grey50") +
+    ggplot2::geom_segment(ggplot2::aes(xend = .data$pos, yend = 0),
+                          colour = "#1f5fa8", linewidth = 0.7) +
+    ggplot2::geom_point(colour = "#1f5fa8", size = 2) +
+    ggplot2::scale_x_continuous(breaks = seq_len(k), labels = cn,
+                                minor_breaks = NULL) +
+    ggplot2::labs(title = main, x = NULL, y = "coefficient") +
+    ggplot2::theme_bw() +
+    ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90,
+                                                       hjust = 1,
+                                                       vjust = 0.5))
 }
+
+S7::method(autoplot, additive_term) <- autoplot_additive_term

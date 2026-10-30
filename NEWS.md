@@ -1,3 +1,11 @@
+# modelterms7 0.115.0
+
+* The graph of a built additive term's coefficients is drawn with ggplot2,
+  which is suggested. `autoplot()` returns the graph and `plot()` prints it
+  and returns it invisibly, where it returned the term. The graphical
+  arguments that `plot()` passed to `graphics::plot()` are removed: the
+  returned object is modified instead. `graphics` is no longer imported.
+
 # modelterms7 0.114.1
 
 * Documentation: the `threads` argument of `term_curvature()` is a whole

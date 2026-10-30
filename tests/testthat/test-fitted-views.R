@@ -111,15 +111,21 @@ test_that("print shows the penalty of a built penalized term", {
 })
 
 test_that("plot draws a built term at supplied coefficients", {
+  skip_if_not_installed("ggplot2")
   built <- term_build(ridge(~ x1 + x2), dd)
-  tf <- tempfile(fileext = ".pdf")
-  grDevices::pdf(tf)
-  on.exit({
-    grDevices::dev.off()
-    unlink(tf)
-  })
-  expect_silent(plot(built, coef = c(0.5, -1)))
+  grDevices::pdf(NULL)
+  on.exit(grDevices::dev.off())
+  p <- plot(built, coef = c(0.5, -1))
+  expect_s3_class(p, "ggplot")
+  expect_identical(p$labels$title, "ridge")
+  expect_equal(p$data$coef, c(0.5, -1))
+  b <- ggplot2::ggplot_build(p)
+  expect_identical(b$layout$panel_params[[1]]$x$get_labels(),
+                   term_coef_names(built))
+  expect_s3_class(ggplot2::autoplot(built, coef = c(0.5, -1)), "ggplot")
   expect_error(plot(built), "'coef' is required")
   expect_error(plot(built, coef = 1), "length 2")
+  expect_error(plot(built, coef = c(0.5, -1), col = "red"),
+               "no further arguments")
   expect_error(plot(linpar(~x1)), "not been built")
 })

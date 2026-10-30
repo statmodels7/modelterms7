@@ -1,6 +1,6 @@
 Package: modelterms7
 Title: Model Terms as Objects for Formula-Based Modeling
-Version: 0.114.1
+Version: 0.115.0
 Authors@R:
     person("Giovanni", "Tinervia", , "giovannitinervia9@gmail.com", role = c("aut", "cre"))
 Description: Model terms as 'S7' objects: the mapping from a data frame to a
@@ -24,7 +24,6 @@ Imports:
     numericals7 (>= 0.26.0),
     Rcpp,
     RcppParallel,
-    graphics,
     linkfunctions7 (>= 0.5.0),
     Matrix,
     methods,
@@ -33,6 +32,7 @@ Imports:
     S7,
     stats
 Suggests:
+    ggplot2 (>= 3.5.0),
     grDevices,
     numDeriv,
     pkgdown,
@@ -65,6 +65,7 @@ Collate:
     'regime.R'
     'charted.R'
     'check_term.R'
+    'ggplot.R'
     'penalized.R'
     'fitted_views.R'
     'linpar.R'

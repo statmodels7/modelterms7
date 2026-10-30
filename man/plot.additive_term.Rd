@@ -2,54 +2,60 @@
 % Please edit documentation in R/fitted_views.R
 \name{plot.additive_term}
 \alias{plot.additive_term}
+\alias{autoplot_additive_term}
 \title{Plot an Additive Term's Coefficients}
+\usage{
+autoplot_additive_term(object, coef = NULL, ...)
+}
 \arguments{
-\item{x}{A built additive term. An unbuilt term signals the error
-\code{"the term has not been built; call term_build(term, data) first."}.}
-
 \item{coef}{The coefficients to draw, a numeric vector of length
 \code{term_npar(x)}. Required: \code{NULL} signals the error
 \code{"'coef' is required: a term is displayed at fitted coefficients."}, and a
 vector of any other length signals an error that gives the required
 length.}
 
-\item{...}{Passed to \code{\link[graphics:plot.default]{graphics::plot()}}, so \code{col}, \code{ylim}, \code{cex} and the
-other usual graphical arguments are accepted. The method sets \code{xaxt},
-\code{xlab}, \code{ylab}, \code{main} and \code{pch} itself, and passing any of them signals an
-error.}
+\item{...}{Unused; an argument passed here signals an error.}
+
+\item{x, object}{A built additive term. An unbuilt term signals the error
+\code{"the term has not been built; call term_build(term, data) first."}.}
 }
 \value{
-\code{x}, invisibly. The method is called for the plot.
+\code{autoplot()} returns a ggplot2 object; \code{plot()} prints the same
+object and returns it invisibly.
 }
 \description{
-Draws the coefficients of a built additive term as a stem plot: one point
-per coefficient against its position in the block, a stem down to zero, a
-dotted line at zero, and the coefficient names rotated along the horizontal
-axis. It shows which coefficients a penalty has driven to zero and how large
-the survivors are, so the effect of a lasso or a smooth is visible at a
-glance.
+\code{autoplot()} returns a graph of the coefficients of a built additive term
+as a stem plot, and \code{plot()} prints that graph: one point per coefficient
+against its position in the block, a stem down to zero, a grey line at
+zero, and the coefficient names along the horizontal axis. It shows which
+coefficients a penalty has driven to zero and how large the survivors are,
+so the effect of a lasso or a smooth is visible at a glance.
 
 The coefficients are supplied by the caller. A term holds a design block and
 no fit, so there is nothing to display without them, and \code{coef = NULL} is
 rejected.
 }
 \details{
-The panel's title is the term's \code{label} when it has one, so \code{"ridge"} or
-\code{"s(x)"}, and the class name otherwise. The bottom margin is widened to
-seven lines so that the coefficient names fit, and \code{\link[graphics:par]{graphics::par()}} is
-restored on exit.
+The title of the graph is the term's \code{label} when it has one, so \code{"ridge"}
+or \code{"s(x)"}, and the class name otherwise.
 
 The horizontal axis is the coefficient's position in the block, so the
-plot shows the block and not the covariate. For \code{\link[=s]{s()}}, whose block is a
+graph shows the block and not the covariate. For \code{\link[=s]{s()}}, whose block is a
 Demmler-Reinsch reparametrization, the columns are ordered from the smoothest
 to the most wiggly, and a penalized fit shows a decaying profile.
+
+The graph is drawn with \pkg{ggplot2}, which is suggested; the methods
+signal an error that names it when it is not installed. The graph has one
+element, the coefficients, which the vertical axis names, and so it has no
+legend.
 }
 \examples{
+\dontshow{if (requireNamespace("ggplot2", quietly = TRUE)) withAutoprint(\{ # examplesIf}
 set.seed(5)
 d <- data.frame(x1 = rnorm(30), x2 = rnorm(30), x3 = rnorm(30))
 b <- term_build(lasso(~ x1 + x2 + x3), d)
 
-# The plot shows two survivors and one coefficient at exactly zero.
+# The graph shows two survivors and one coefficient at exactly zero.
 plot(b, coef = c(0.8, 0, -0.35))
 
 # A smooth's block runs from least to most wiggly.
@@ -60,7 +66,7 @@ plot(bs, coef = c(1.2, 0.9, -0.4, 0.2, -0.1, 0.05, -0.02))
 # Coefficients are required, and must fit the block.
 try(plot(b))
 try(plot(b, coef = 1))
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[=term_coef_names]{term_coef_names()}} for the axis labels, \code{\link[=edf]{edf()}} for what the same
