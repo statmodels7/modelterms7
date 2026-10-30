@@ -1,11 +1,26 @@
-# term_starts(): one start by default, n_start of them for regime(), the first
-# always term_start()'s.
+# term_starts(): n_start starts for gas() (two by default) and regime() (one
+# by default), the first always term_start()'s.
 
-test_that("the base method returns term_start() alone", {
-  g <- gas(p = 1, q = 1)
+test_that("gas() returns n_start starts, the first term_start()'s", {
+  g <- gas(p = 1, q = 1, n_start = 1)
   st <- term_starts(g)
   expect_length(st, 1L)
   expect_identical(st[[1]], term_start(g))
+  g2 <- gas(p = 1, q = 2)
+  expect_identical(g2@n_start, 2L)
+  st2 <- term_starts(g2)
+  expect_length(st2, 2L)
+  expect_identical(st2[[1]], term_start(g2))
+  lk <- term_links(g2)
+  expect_equal(linkfunctions7::linkinv(lk$pacf1, st2[[2]][["pacf1"]]), 0.9)
+  expect_identical(st2[[2]][names(st2[[2]]) != "pacf1"],
+                   st2[[1]][names(st2[[1]]) != "pacf1"])
+  st5 <- term_starts(gas(p = 1, q = 1, n_start = 5))
+  expect_equal(vapply(st5, function(z) linkfunctions7::linkinv(lk$pacf1, z[["pacf1"]]),
+                      numeric(1)), c(0, 0.9, 0.5, 0.97, 0.7))
+  expect_length(term_starts(gas(p = 1, q = 0)), 1L)
+  expect_error(gas(1, 1, n_start = 6), "from 1 to 5")
+  expect_error(gas(1, 1, n_start = 0), "from 1 to 5")
 })
 
 test_that("regime() returns one start unless asked for more", {
@@ -60,4 +75,18 @@ test_that("n_start must be a whole number of at least one", {
   expect_error(regime(k = 2, n_start = NA), "n_start")
   expect_error(regime(k = 2, n_start = c(2, 3)), "n_start")
   expect_identical(regime(k = 2, n_start = 5)@n_start, 5L)
+})
+
+
+test_that("a joint filter tries the further starts of each term in turn", {
+  dd <- data.frame(t = 1:20)
+  jt <- gas_joint(list(mu = term_build(gas(1, 1, time = t), dd),
+                       sigma = term_build(gas(1, 1, time = t, n_start = 3), dd)))
+  st <- term_starts(jt)
+  expect_length(st, 1L + 1L + 2L)
+  expect_identical(st[[1]], term_start(jt))
+  lk <- term_links(gas(1, 1))$pacf1
+  pv <- function(z, k) linkfunctions7::linkinv(lk, z[[paste0(k, ".pacf1")]])
+  expect_equal(vapply(st, pv, numeric(1), k = "mu"), c(0, 0.9, 0, 0))
+  expect_equal(vapply(st, pv, numeric(1), k = "sigma"), c(0, 0, 0.9, 0.5))
 })

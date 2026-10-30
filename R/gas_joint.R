@@ -713,6 +713,36 @@ S7::method(term_start, GasJoint) <- function(term, ...) {
   out
 }
 
+#' @title The Starting Points of a Joint Score-Driven Filter
+#' @name term_starts.GasJoint
+#' @description
+#' Returns the first start, [term_start()]'s, and then, for each term of the
+#' filter in turn, one start for each of that term's further starts
+#' ([term_starts()] of the term), with the other terms at their first start.
+#' The number of starts is therefore one plus the sum, over the terms, of
+#' their starts beyond the first.
+#' @param term A [GasJoint()].
+#' @param ... Unused.
+#' @param target Unused.
+#' @return A non-empty list of named numeric vectors on the unconstrained
+#'   scale, named as [term_params()].
+#' @keywords internal
+S7::method(term_starts, GasJoint) <- function(term, ..., target = NULL) {
+  z0 <- term_start(term)
+  out <- list(z0)
+  for (k in term@params) {
+    tk <- term@terms[[k]]
+    if (.gas_is_driver(tk)) next
+    sk <- term_starts(tk)
+    for (s in sk[-1L]) {
+      z <- z0
+      z[paste0(k, ".", names(s))] <- s
+      out[[length(out) + 1L]] <- z
+    }
+  }
+  out
+}
+
 #' @title The Levels of a Joint Score-Driven Filter
 #' @name term_level_param.GasJoint
 #' @description

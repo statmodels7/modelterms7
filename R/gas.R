@@ -69,6 +69,9 @@ NULL
 #'   or one for all of them, which a fitting layer sets; empty until then.
 #' @param init_source The model without the term from which a fitting layer
 #'   computed `init_value`, or `NULL` when it is not recorded.
+#' @param n_start The number of starting points of the term's own parameters
+#'   that a fitting layer tries, a whole number from 1 to 5, as set by
+#'   [gas()].
 #' @param build_info A named list of the resolved ordering, grouping and
 #'   sub-term designs, empty until [term_build()] fills it.
 #'
@@ -113,7 +116,8 @@ GasTerm <- S7::new_class(
     cross_with = S7::class_character,
     init = S7::class_character,
     init_value = S7::class_double,
-    init_source = S7::class_any
+    init_source = S7::class_any,
+    n_start = S7::class_integer
   )
 )
 
@@ -319,6 +323,19 @@ GasTerm <- S7::new_class(
 #' filter whose terms carry subformulas.
 #' }
 #'
+#' \subsection{The starting points}{
+#' A fitting layer fits the model from each of `n_start` starting points of
+#' the term's own parameters and keeps the best ([term_starts()]). Every
+#' start has the level at zero and each score loading at \eqn{0.1}; they
+#' differ in the first partial autocorrelation of the persistence, which is
+#' \eqn{0} in the first start and \eqn{0.9}, \eqn{0.5}, \eqn{0.97} and
+#' \eqn{0.7} in the following ones, the other partial autocorrelations
+#' staying at zero. The likelihood of a filter can have a local maximum at a
+#' low persistence beside the one at a high persistence, and a start without
+#' persistence reaches the first; the start at \eqn{0.9} reaches the second.
+#' `n_start = 1` fits from the first start only.
+#' }
+#'
 #' \subsection{A parameter developed with covariates}{
 #' A two-sided formula in `...` whose left side names a parameter
 #' develops it as \eqn{\psi_{j,t} = g_j^{-1}(z_t^\top\gamma_j)}, where the
@@ -415,6 +432,9 @@ GasTerm <- S7::new_class(
 #'   fixed point of the recursion, or `"static"`, with the first predictor of
 #'   every group equal to the constant `init_value`; see the section on the
 #'   start of the recursion.
+#' @param n_start The number of starting points of the term's own parameters
+#'   that a fitting layer tries, a whole number from 1 to 5; see the section
+#'   on the starting points.
 #' @param label A single non-empty string naming the term.
 #'
 #' @return An object of class [GasTerm()] (a specification; see
@@ -516,7 +536,7 @@ GasTerm <- S7::new_class(
 #' @export
 gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
                 p_cross = NULL, links = NULL, init = c("level", "static"),
-                label = "gas") {
+                n_start = 2, label = "gas") {
   if (inherits(p, "formula") || inherits(q, "formula")) {
     stop(paste("'p' and 'q' are the orders of the filter; a subformula is",
                "given by name after them, as in gas(1, 1, kappa1 ~ x)."),
@@ -542,6 +562,10 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
   }
   p_cross <- .gas_check_p_cross(p_cross)
   init <- match.arg(init)
+  if (!is.numeric(n_start) || length(n_start) != 1L || !is.finite(n_start) ||
+      n_start < 1 || n_start > 5 || n_start != round(n_start)) {
+    stop("'n_start' must be a single whole number from 1 to 5.", call. = FALSE)
+  }
   by <- substitute(by)
   base <- .gas_base_params(p, q)
   submodels <- .gas_gather_submodels(list(...), base)
@@ -596,6 +620,7 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
           p_cross = p_cross,
           cross_with = character(0),
           init = init,
+          n_start = as.integer(n_start),
           build_info = list())
 }
 
@@ -984,12 +1009,21 @@ S7::method(term_links, GasTerm) <- function(term, ...) {
 #' @return A named numeric vector on the unconstrained scale.
 #' @keywords internal
 S7::method(term_start, GasTerm) <- function(term, ...) {
+  .gas_start(term, 0)
+}
+
+# a start of the term's own parameters: the level at zero, each loading at
+# 0.1 on the parameter scale and the first partial autocorrelation at
+# `persistence`, through the link of each
+.gas_start <- function(term, persistence) {
   nm <- term_params(term)
   z <- stats::setNames(numeric(length(nm)), nm)
   base <- .gas_base_params(term@p, term@q)
   target <- function(j) {
     if (startsWith(j, "kappa")) {
       linkfunctions7::linkfun(.gas_param_link(term, j), 0.1)
+    } else if (identical(j, "pacf1") && persistence != 0) {
+      linkfunctions7::linkfun(.gas_param_link(term, j), persistence)
     } else 0
   }
   sub <- if (length(term@build_info)) term@build_info$sub else NULL
@@ -1005,6 +1039,28 @@ S7::method(term_start, GasTerm) <- function(term, ...) {
   }
   for (j in base) z[[j]] <- target(j)
   z
+}
+
+#' @title The Starting Points of a Score-Driven Term
+#' @name term_starts.GasTerm
+#' @description
+#' Returns `n_start` starting points. The first is [term_start()]'s; the
+#' following ones put the first partial autocorrelation of the persistence at
+#' \eqn{0.9}, \eqn{0.5}, \eqn{0.97} and \eqn{0.7}, in this order, the other
+#' parameters starting as in the first.
+#' @param term A [GasTerm()].
+#' @param ... Unused.
+#' @param target Unused.
+#' @return A list of `term@n_start` named numeric vectors on the unconstrained
+#'   scale; one vector when `n_start` is empty, 1, or the term has no
+#'   persistence.
+#' @keywords internal
+S7::method(term_starts, GasTerm) <- function(term, ..., target = NULL) {
+  n <- term@n_start
+  z0 <- .gas_start(term, 0)
+  if (!length(n) || n <= 1L || term@q < 1L) return(list(z0))
+  scale <- c(0.9, 0.5, 0.97, 0.7)[seq_len(min(n, 5L) - 1L)]
+  c(list(z0), lapply(scale, function(v) .gas_start(term, v)))
 }
 
 #' @title Penalties of a Score-Driven Term

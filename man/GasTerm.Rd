@@ -24,7 +24,8 @@ GasTerm(
   cross_with = character(0),
   init = character(0),
   init_value = numeric(0),
-  init_source = NULL
+  init_source = NULL,
+  n_start = integer(0)
 )
 }
 \arguments{
@@ -99,6 +100,10 @@ or one for all of them, which a fitting layer sets; empty until then.}
 
 \item{init_source}{The model without the term from which a fitting layer
 computed \code{init_value}, or \code{NULL} when it is not recorded.}
+
+\item{n_start}{The number of starting points of the term's own parameters
+that a fitting layer tries, a whole number from 1 to 5, as set by
+\code{\link[=gas]{gas()}}.}
 }
 \value{
 An S7 object of class \code{GasTerm}, inheriting from

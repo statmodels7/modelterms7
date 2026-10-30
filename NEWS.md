@@ -1,3 +1,16 @@
+# modelterms7 0.116.0
+
+* `gas()` has the argument `n_start`, the number of starting points of the
+  term's own parameters that a fitting layer tries, 2 by default and at most
+  5. `term_starts()` of a `GasTerm` returns them: the first is
+  `term_start()`'s, the following ones put the first partial autocorrelation
+  of the persistence at 0.9, 0.5, 0.97 and 0.7. The likelihood of a filter
+  can have a local maximum at a low persistence, which the start without
+  persistence reaches.
+* `term_starts()` of a joint filter (`gas_joint()`) returns its first start
+  and then the further starts of each of its terms in turn, the other terms
+  at their first start.
+
 # modelterms7 0.115.0
 
 * The graph of a built additive term's coefficients is drawn with ggplot2,
