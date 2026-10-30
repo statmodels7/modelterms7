@@ -1,5 +1,38 @@
 # Changelog
 
+## modelterms7 0.116.0
+
+- [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  has the argument `n_start`, the number of starting points of the
+  term’s own parameters that a fitting layer tries, 2 by default and at
+  most
+  5.  [`term_starts()`](https://statmodels7.github.io/modelterms7/reference/term_starts.md)
+      of a `GasTerm` returns them: the first is
+      [`term_start()`](https://statmodels7.github.io/modelterms7/reference/term_start.md)’s,
+      the following ones put the first partial autocorrelation of the
+      persistence at 0.9, 0.5, 0.97 and 0.7. The likelihood of a filter
+      can have a local maximum at a low persistence, which the start
+      without persistence reaches.
+- [`term_starts()`](https://statmodels7.github.io/modelterms7/reference/term_starts.md)
+  of a joint filter
+  ([`gas_joint()`](https://statmodels7.github.io/modelterms7/reference/gas_joint.md))
+  returns its first start and then the further starts of each of its
+  terms in turn, the other terms at their first start.
+
+## modelterms7 0.115.0
+
+- The graph of a built additive term’s coefficients is drawn with
+  ggplot2, which is suggested.
+  [`autoplot()`](https://statmodels7.github.io/modelterms7/reference/autoplot.md)
+  returns the graph and
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) prints it and
+  returns it invisibly, where it returned the term. The graphical
+  arguments that
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) passed to
+  [`graphics::plot()`](https://rdrr.io/r/graphics/plot.default.html) are
+  removed: the returned object is modified instead. `graphics` is no
+  longer imported.
+
 ## modelterms7 0.114.1
 
 - Documentation: the `threads` argument of

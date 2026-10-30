@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.116.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,20 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.116.0" id="modelterms7-01160">modelterms7 0.116.0<a class="anchor" aria-label="anchor" href="#modelterms7-01160"></a></h2>
+<ul><li>
+<code><a href="../reference/gas.html">gas()</a></code> has the argument <code>n_start</code>, the number of starting points of the term’s own parameters that a fitting layer tries, 2 by default and at most
+<ol start="5" style="list-style-type: decimal"><li>
+<code><a href="../reference/term_starts.html">term_starts()</a></code> of a <code>GasTerm</code> returns them: the first is <code><a href="../reference/term_start.html">term_start()</a></code>’s, the following ones put the first partial autocorrelation of the persistence at 0.9, 0.5, 0.97 and 0.7. The likelihood of a filter can have a local maximum at a low persistence, which the start without persistence reaches.</li>
+</ol></li>
+<li>
+<code><a href="../reference/term_starts.html">term_starts()</a></code> of a joint filter (<code><a href="../reference/gas_joint.html">gas_joint()</a></code>) returns its first start and then the further starts of each of its terms in turn, the other terms at their first start.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.115.0" id="modelterms7-01150">modelterms7 0.115.0<a class="anchor" aria-label="anchor" href="#modelterms7-01150"></a></h2>
+<ul><li>The graph of a built additive term’s coefficients is drawn with ggplot2, which is suggested. <code><a href="../reference/autoplot.html">autoplot()</a></code> returns the graph and <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> prints it and returns it invisibly, where it returned the term. The graphical arguments that <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> passed to <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">graphics::plot()</a></code> are removed: the returned object is modified instead. <code>graphics</code> is no longer imported.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.114.1" id="modelterms7-01141">modelterms7 0.114.1<a class="anchor" aria-label="anchor" href="#modelterms7-01141"></a></h2>
 <ul><li>Documentation: the <code>threads</code> argument of <code><a href="../reference/term_curvature.html">term_curvature()</a></code> is a whole number, following numericals7 0.26.0.</li>

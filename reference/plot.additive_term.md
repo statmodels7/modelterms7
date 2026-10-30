@@ -1,19 +1,30 @@
 # Plot an Additive Term's Coefficients
 
-Draws the coefficients of a built additive term as a stem plot: one
-point per coefficient against its position in the block, a stem down to
-zero, a dotted line at zero, and the coefficient names rotated along the
-horizontal axis. It shows which coefficients a penalty has driven to
-zero and how large the survivors are, so the effect of a lasso or a
-smooth is visible at a glance.
+[`autoplot()`](https://statmodels7.github.io/modelterms7/reference/autoplot.md)
+returns a graph of the coefficients of a built additive term as a stem
+plot, and [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+prints that graph: one point per coefficient against its position in the
+block, a stem down to zero, a grey line at zero, and the coefficient
+names along the horizontal axis. It shows which coefficients a penalty
+has driven to zero and how large the survivors are, so the effect of a
+lasso or a smooth is visible at a glance.
 
 The coefficients are supplied by the caller. A term holds a design block
 and no fit, so there is nothing to display without them, and
 `coef = NULL` is rejected.
 
+## Usage
+
+``` r
+# S3 method for class 'additive_term'
+plot(x, coef = NULL, ...)
+
+autoplot_additive_term(object, coef = NULL, ...)
+```
+
 ## Arguments
 
-- x:
+- x, object:
 
   A built additive term. An unbuilt term signals the error
   `"the term has not been built; call term_build(term, data) first."`.
@@ -28,30 +39,31 @@ and no fit, so there is nothing to display without them, and
 
 - ...:
 
-  Passed to
-  [`graphics::plot()`](https://rdrr.io/r/graphics/plot.default.html), so
-  `col`, `ylim`, `cex` and the other usual graphical arguments are
-  accepted. The method sets `xaxt`, `xlab`, `ylab`, `main` and `pch`
-  itself, and passing any of them signals an error.
+  Unused; an argument passed here signals an error.
 
 ## Value
 
-`x`, invisibly. The method is called for the plot.
+[`autoplot()`](https://statmodels7.github.io/modelterms7/reference/autoplot.md)
+returns a ggplot2 object;
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) prints the same
+object and returns it invisibly.
 
 ## Details
 
-The panel's title is the term's `label` when it has one, so `"ridge"` or
-`"s(x)"`, and the class name otherwise. The bottom margin is widened to
-seven lines so that the coefficient names fit, and
-[`graphics::par()`](https://rdrr.io/r/graphics/par.html) is restored on
-exit.
+The title of the graph is the term's `label` when it has one, so
+`"ridge"` or `"s(x)"`, and the class name otherwise.
 
 The horizontal axis is the coefficient's position in the block, so the
-plot shows the block and not the covariate. For
+graph shows the block and not the covariate. For
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md), whose
 block is a Demmler-Reinsch reparametrization, the columns are ordered
 from the smoothest to the most wiggly, and a penalized fit shows a
 decaying profile.
+
+The graph is drawn with ggplot2, which is suggested; the methods signal
+an error that names it when it is not installed. The graph has one
+element, the coefficients, which the vertical axis names, and so it has
+no legend.
 
 ## See also
 
@@ -67,7 +79,7 @@ set.seed(5)
 d <- data.frame(x1 = rnorm(30), x2 = rnorm(30), x3 = rnorm(30))
 b <- term_build(lasso(~ x1 + x2 + x3), d)
 
-# The plot shows two survivors and one coefficient at exactly zero.
+# The graph shows two survivors and one coefficient at exactly zero.
 plot(b, coef = c(0.8, 0, -0.35))
 
 

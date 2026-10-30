@@ -15,7 +15,7 @@ implements term_filter() and has no term_matrix() method at all."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.114.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.116.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,7 +71,8 @@ implements <code><a href="term_filter.html">term_filter()</a></code> and has no 
 <span>  cross_with <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  init_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
-<span>  init_source <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  init_source <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  n_start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -189,6 +190,12 @@ or one for all of them, which a fitting layer sets; empty until then.</p></dd>
 <dt id="arg-init-source">init_source<a class="anchor" aria-label="anchor" href="#arg-init-source"></a></dt>
 <dd><p>The model without the term from which a fitting layer
 computed <code>init_value</code>, or <code>NULL</code> when it is not recorded.</p></dd>
+
+
+<dt id="arg-n-start">n_start<a class="anchor" aria-label="anchor" href="#arg-n-start"></a></dt>
+<dd><p>The number of starting points of the term's own parameters
+that a fitting layer tries, a whole number from 1 to 5, as set by
+<code><a href="gas.html">gas()</a></code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

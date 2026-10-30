@@ -65,7 +65,7 @@ for a term that returns several.
 
 ``` r
 length(term_starts(gas(p = 1, q = 1)))
-#> [1] 1
+#> [1] 2
 st <- term_starts(regime(k = 2, n_start = 3))
 length(st)
 #> [1] 3

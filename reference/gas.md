@@ -23,6 +23,7 @@ gas(
   p_cross = NULL,
   links = NULL,
   init = c("level", "static"),
+  n_start = 2,
   label = "gas"
 )
 ```
@@ -97,6 +98,12 @@ gas(
   of the recursion, or `"static"`, with the first predictor of every
   group equal to the constant `init_value`; see the section on the start
   of the recursion.
+
+- n_start:
+
+  The number of starting points of the term's own parameters that a
+  fitting layer tries, a whole number from 1 to 5; see the section on
+  the starting points.
 
 - label:
 
@@ -298,6 +305,20 @@ value of the filter as well as its level, and the likelihood can then
 have a second maximum at which the constant fits the first observations;
 the second convention separates the two. `init = "static"` is not yet
 available for a joint filter whose terms carry subformulas.
+
+### The starting points
+
+A fitting layer fits the model from each of `n_start` starting points of
+the term's own parameters and keeps the best
+([`term_starts()`](https://statmodels7.github.io/modelterms7/reference/term_starts.md)).
+Every start has the level at zero and each score loading at \\0.1\\;
+they differ in the first partial autocorrelation of the persistence,
+which is \\0\\ in the first start and \\0.9\\, \\0.5\\, \\0.97\\ and
+\\0.7\\ in the following ones, the other partial autocorrelations
+staying at zero. The likelihood of a filter can have a local maximum at
+a low persistence beside the one at a high persistence, and a start
+without persistence reaches the first; the start at \\0.9\\ reaches the
+second. `n_start = 1` fits from the first start only.
 
 ### A parameter developed with covariates
 

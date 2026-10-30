@@ -19,6 +19,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/SmoothTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/additive_term.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/as_hyper.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/autoplot.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/cens.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/censored_response.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/check_grid.html</loc></url>
@@ -77,6 +78,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/mcp.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/model_term.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/modelterms7-package.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/need_ggplot.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/nl.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/nl_fderiv.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/penalized_terms.html</loc></url>
@@ -253,6 +255,8 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_start.MarginalBreakTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_start.RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_start.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_starts.GasJoint.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_starts.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_starts.RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_starts.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_static_deriv.GasTerm.html</loc></url>
