@@ -1,11 +1,26 @@
-# term_starts(): one start by default, n_start of them for regime(), the first
-# always term_start()'s.
+# term_starts(): n_start starts for gas() (two by default) and regime() (one
+# by default), the first always term_start()'s.
 
-test_that("the base method returns term_start() alone", {
-  g <- gas(p = 1, q = 1)
+test_that("gas() returns n_start starts, the first term_start()'s", {
+  g <- gas(p = 1, q = 1, n_start = 1)
   st <- term_starts(g)
   expect_length(st, 1L)
   expect_identical(st[[1]], term_start(g))
+  g2 <- gas(p = 1, q = 2)
+  expect_identical(g2@n_start, 2L)
+  st2 <- term_starts(g2)
+  expect_length(st2, 2L)
+  expect_identical(st2[[1]], term_start(g2))
+  lk <- term_links(g2)
+  expect_equal(linkfunctions7::linkinv(lk$pacf1, st2[[2]][["pacf1"]]), 0.9)
+  expect_identical(st2[[2]][names(st2[[2]]) != "pacf1"],
+                   st2[[1]][names(st2[[1]]) != "pacf1"])
+  st5 <- term_starts(gas(p = 1, q = 1, n_start = 5))
+  expect_equal(vapply(st5, function(z) linkfunctions7::linkinv(lk$pacf1, z[["pacf1"]]),
+                      numeric(1)), c(0, 0.9, 0.5, 0.97, 0.7))
+  expect_length(term_starts(gas(p = 1, q = 0)), 1L)
+  expect_error(gas(1, 1, n_start = 6), "from 1 to 5")
+  expect_error(gas(1, 1, n_start = 0), "from 1 to 5")
 })
 
 test_that("regime() returns one start unless asked for more", {

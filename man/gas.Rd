@@ -14,6 +14,7 @@ gas(
   p_cross = NULL,
   links = NULL,
   init = c("level", "static"),
+  n_start = 2,
   label = "gas"
 )
 }
@@ -68,6 +69,10 @@ the development.}
 fixed point of the recursion, or \code{"static"}, with the first predictor of
 every group equal to the constant \code{init_value}; see the section on the
 start of the recursion.}
+
+\item{n_start}{The number of starting points of the term's own parameters
+that a fitting layer tries, a whole number from 1 to 5; see the section
+on the starting points.}
 
 \item{label}{A single non-empty string naming the term.}
 }
@@ -273,6 +278,19 @@ well as its level, and the likelihood can then have a second maximum at
 which the constant fits the first observations; the second convention
 separates the two. \code{init = "static"} is not yet available for a joint
 filter whose terms carry subformulas.
+}
+
+\subsection{The starting points}{
+A fitting layer fits the model from each of \code{n_start} starting points of
+the term's own parameters and keeps the best (\code{\link[=term_starts]{term_starts()}}). Every
+start has the level at zero and each score loading at \eqn{0.1}; they
+differ in the first partial autocorrelation of the persistence, which is
+\eqn{0} in the first start and \eqn{0.9}, \eqn{0.5}, \eqn{0.97} and
+\eqn{0.7} in the following ones, the other partial autocorrelations
+staying at zero. The likelihood of a filter can have a local maximum at a
+low persistence beside the one at a high persistence, and a start without
+persistence reaches the first; the start at \eqn{0.9} reaches the second.
+\code{n_start = 1} fits from the first start only.
 }
 
 \subsection{A parameter developed with covariates}{

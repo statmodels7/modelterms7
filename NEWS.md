@@ -1,3 +1,13 @@
+# modelterms7 0.115.0
+
+* `gas()` has the argument `n_start`, the number of starting points of the
+  term's own parameters that a fitting layer tries, 2 by default and at most
+  5. `term_starts()` of a `GasTerm` returns them: the first is
+  `term_start()`'s, the following ones put the first partial autocorrelation
+  of the persistence at 0.9, 0.5, 0.97 and 0.7. The likelihood of a filter
+  can have a local maximum at a low persistence, which the start without
+  persistence reaches.
+
 # modelterms7 0.114.1
 
 * Documentation: the `threads` argument of `term_curvature()` is a whole
