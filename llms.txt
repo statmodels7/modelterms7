@@ -435,6 +435,30 @@ product, anisotropic by default.
 - [`SmoothTerm()`](https://statmodels7.github.io/modelterms7/reference/SmoothTerm.md)
   : S7 Class for Smooth Terms
 
+## Shape-constrained smooths
+
+A smooth of one covariate constrained to be monotone, convex or concave,
+through a map from free coefficients to the B-spline coefficients, with
+a penalty on the free coefficients.
+
+- [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
+  : Shape-Constrained Smooth of One Covariate
+- [`ScsTerm()`](https://statmodels7.github.io/modelterms7/reference/ScsTerm.md)
+  : S7 Class for Shape-Constrained Smooth Terms
+- [`shape_increasing()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  [`shape_decreasing()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  [`shape_convex()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  [`shape_concave()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  : Shape Constraints for a Smooth
+- [`shape_constraint()`](https://statmodels7.github.io/modelterms7/reference/shape_constraint.md)
+  [`ShapeMonotone()`](https://statmodels7.github.io/modelterms7/reference/shape_constraint.md)
+  [`ShapeCurvature()`](https://statmodels7.github.io/modelterms7/reference/shape_constraint.md)
+  : S7 Class for Shape Constraints
+- [`shape_map()`](https://statmodels7.github.io/modelterms7/reference/shape_map.md)
+  : The Map of a Shape Constraint
+- [`shape_start()`](https://statmodels7.github.io/modelterms7/reference/shape_start.md)
+  : The Starting Value of a Shape Constraint
+
 ## Nonlinear terms
 
 A contribution nonlinear in its own parameters, whose block is the
@@ -558,6 +582,9 @@ through its recursion.
   : Third Derivatives of a Structural Term's Predictor, in One Direction
 - [`term_fourth()`](https://statmodels7.github.io/modelterms7/reference/term_fourth.md)
   : Fourth Derivatives of a Structural Term's Predictor, in Two
+  Directions
+- [`term_fifth()`](https://statmodels7.github.io/modelterms7/reference/term_fifth.md)
+  : Fifth Derivatives of a Structural Term's Predictor, in Three
   Directions
 - [`term_hessian()`](https://statmodels7.github.io/modelterms7/reference/term_hessian.md)
   : The Observed Hessian of a Likelihood Mixed Over States

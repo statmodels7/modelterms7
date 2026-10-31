@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.116.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.118.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -377,6 +377,57 @@
 
         </dt>
         <dd>S7 Class for Smooth Terms</dd>
+      </dl></div><div class="section level2">
+      <h2 id="shape-constrained-smooths">Shape-constrained smooths<a class="anchor" aria-label="anchor" href="#shape-constrained-smooths"></a></h2>
+
+      <div class="section-desc"><p>A smooth of one covariate constrained to be monotone, convex or concave, through a map from free coefficients to the B-spline coefficients, with a penalty on the free coefficients.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="scs.html">scs()</a></code>
+
+        </dt>
+        <dd>Shape-Constrained Smooth of One Covariate</dd>
+
+        <dt>
+
+          <code><a href="ScsTerm.html">ScsTerm()</a></code>
+
+        </dt>
+        <dd>S7 Class for Shape-Constrained Smooth Terms</dd>
+
+        <dt>
+
+          <code><a href="shape_constructors.html">shape_increasing()</a></code> <code><a href="shape_constructors.html">shape_decreasing()</a></code> <code><a href="shape_constructors.html">shape_convex()</a></code> <code><a href="shape_constructors.html">shape_concave()</a></code>
+
+        </dt>
+        <dd>Shape Constraints for a Smooth</dd>
+
+        <dt>
+
+          <code><a href="shape_constraint.html">shape_constraint()</a></code> <code><a href="shape_constraint.html">ShapeMonotone()</a></code> <code><a href="shape_constraint.html">ShapeCurvature()</a></code>
+
+        </dt>
+        <dd>S7 Class for Shape Constraints</dd>
+
+        <dt>
+
+          <code><a href="shape_map.html">shape_map()</a></code>
+
+        </dt>
+        <dd>The Map of a Shape Constraint</dd>
+
+        <dt>
+
+          <code><a href="shape_start.html">shape_start()</a></code>
+
+        </dt>
+        <dd>The Starting Value of a Shape Constraint</dd>
       </dl></div><div class="section level2">
       <h2 id="nonlinear-terms">Nonlinear terms<a class="anchor" aria-label="anchor" href="#nonlinear-terms"></a></h2>
 
@@ -754,6 +805,13 @@
 
         </dt>
         <dd>Fourth Derivatives of a Structural Term's Predictor, in Two Directions</dd>
+
+        <dt>
+
+          <code><a href="term_fifth.html">term_fifth()</a></code>
+
+        </dt>
+        <dd>Fifth Derivatives of a Structural Term's Predictor, in Three Directions</dd>
 
         <dt>
 

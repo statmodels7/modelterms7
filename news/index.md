@@ -1,5 +1,45 @@
 # Changelog
 
+## modelterms7 0.118.0
+
+- [`term_fifth()`](https://statmodels7.github.io/modelterms7/reference/term_fifth.md)
+  returns the fifth derivative of a structural term’s predictor,
+  contracted against the caller’s weights and three directions, with the
+  lower orders along the same directions. It is implemented for
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  terms, with and without subformulas (a partial autocorrelation with a
+  subformula included), and for joint filters, on compiled routes
+  written out order by order. The model’s derivatives reach it as arrays
+  (`H` to `D6`, or `U1` to `U5` for a joint filter).
+
+## modelterms7 0.117.0
+
+- [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
+  is a smooth of one covariate constrained to a shape, with the
+  signature of
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
+  the shape as second argument. The shapes are
+  [`shape_increasing()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md),
+  [`shape_decreasing()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  (both with `min_slope`),
+  [`shape_convex()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  and
+  [`shape_concave()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md),
+  subclasses of `shape_constraint` with the generics
+  [`shape_map()`](https://statmodels7.github.io/modelterms7/reference/shape_map.md)
+  and
+  [`shape_start()`](https://statmodels7.github.io/modelterms7/reference/shape_start.md).
+  The B-spline coefficients are written as `A b(gamma)`, cumulative sums
+  of slopes or of second divided differences on the Greville abscissae,
+  with the constrained coordinates through the inverse of a link onto
+  (0, Inf), so every coefficient vector gives a curve of the shape. The
+  block is the Jacobian at the current coefficients, as for
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md),
+  with diagonal derivatives; the penalty is the quadratic penalty of
+  first differences of the constrained coordinates. A `by` variable is
+  not yet supported, and the smoother must be `bspline_smooth()` or
+  `pspline_smooth()`.
+
 ## modelterms7 0.116.0
 
 - [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
