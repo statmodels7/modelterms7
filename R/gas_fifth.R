@@ -940,11 +940,17 @@ S7::method(term_fifth, GasJoint) <- function(term, eta, y, score, psi, g, seed,
   if (is.null(blocks_data$U5)) {
     stop("'blocks_data' must carry U5 for the fifth order.", call. = FALSE)
   }
-  if (.gas_joint_has_sub(term)) {
-    return(.gas_joint_fifth(term, psi, g, seed, blocks_data, directions,
-                            eta = eta, sub = TRUE))
-  }
-  .gas_joint_fifth(term, psi, g, seed, blocks_data, directions, eta = eta)
+  seed <- lapply(seed, as.matrix)
+  m <- ncol(seed[[1L]])
+  dirs <- lapply(directions, function(d) {
+    d <- as.numeric(d)
+    if (length(d) != m) {
+      stop(sprintf("each direction must have one value per unknown (%d).", m),
+           call. = FALSE)
+    }
+    d
+  })
+  .gas_joint_fifth_compiled(term, psi, g, seed, blocks_data, dirs, eta = eta)
 }
 
 #' @rdname term_fifth.GasJoint
@@ -1245,5 +1251,185 @@ S7::method(term_fifth, GasJoint) <- function(term, eta, y, score, psi, g, seed,
                            if (is.null(score_values)) score else NULL,
                            as.numeric(g), arrays,
                            lapply(bd$Vs, as.matrix), as.matrix(seed))
+  out
+}
+
+
+#' The Chart of One Member for the Compiled Fifth Order
+#'
+#' @description
+#' Returns, for a built score-driven term, the values that the compiled
+#' kernels read per row (the level, the loadings and the cross loadings, as
+#' design rows over the unknowns with their links' derivatives of orders zero
+#' to five) and a function that lifts the constant autoregressive
+#' coefficients' derivatives onto a group's active unknowns.
+#'
+#' @param tm A built score-driven term.
+#' @param psiv Its parameters in the order of [term_params()].
+#' @param cols The columns of those parameters among the unknowns.
+#' @param dirs The three directions over the unknowns.
+#'
+#' @return A list with `vals` (named by the layout's slots), `bjets(act)` and
+#'   `active`, the term's coordinates active in each group.
+#'
+#' @keywords internal
+.gas_fifth_member <- function(tm, psiv, cols, dirs) {
+  bp <- tm@build_info
+  p <- tm@p
+  q <- tm@q
+  lay <- .gas_sub_layout(tm)
+  base <- .gas_base_params(p, q)
+  slots <- names(lay$idx)
+  sub <- bp$sub
+  pj <- if (q > 0L) paste0("pacf", seq_len(q)) else character(0)
+  if (any(vapply(pj, function(j) !is.null(sub[[j]]), logical(1)))) {
+    stop("the fifth order of a filter has no compiled route where a partial autocorrelation carries a subformula.",
+         call. = FALSE)
+  }
+  u <- as.numeric(psiv)
+  for (j in slots) {
+    if (is.null(sub[[j]])) {
+      u[lay$idx[[j]]] <- linkfunctions7::linkfun(.gas_param_link(tm, j),
+                                                 u[lay$idx[[j]]])
+    }
+  }
+  dl <- list(linkfunctions7::linkinv, linkfunctions7::dlinkinv,
+             linkfunctions7::d2linkinv, linkfunctions7::d3linkinv,
+             linkfunctions7::d4linkinv, linkfunctions7::d5linkinv)
+  vals <- lapply(stats::setNames(slots, slots), function(j) {
+    idx <- lay$idx[[j]]
+    lk <- .gas_param_link(tm, j)
+    if (!is.null(sub[[j]])) {
+      Z <- as.matrix(sub[[j]]$Z)
+      e <- as.numeric(Z %*% u[idx])
+    } else {
+      Z <- matrix(1, bp$n, 1L)
+      e <- rep(u[[idx]], bp$n)
+    }
+    list(cols = cols[idx], Z = Z,
+         K = matrix(vapply(dl, function(f) f(lk, e), numeric(bp$n)), bp$n))
+  })
+  bjets <- function(act) NULL
+  if (q > 0L) {
+    bcols <- vapply(base, function(j) {
+      if (is.null(sub[[j]])) cols[lay$idx[[j]]] else NA_integer_
+    }, integer(1))
+    zeta <- stats::setNames(numeric(length(base)), base)
+    links <- stats::setNames(lapply(base, function(j) .gas_param_link(tm, j)),
+                             base)
+    for (j in pj) zeta[[j]] <- u[[lay$idx[[j]]]]
+    dsub <- lapply(0:7, function(mask) {
+      S <- which(bitwAnd(mask, c(1L, 2L, 4L)) > 0L)
+      .gas_chart_contract(zeta, p, q, links, lapply(dirs[S], function(d) {
+        x <- d[bcols]
+        x[is.na(x)] <- 0
+        x
+      }))
+    })
+    rho <- vapply(pj, function(j) linkfunctions7::linkinv(links[[j]], zeta[[j]]),
+                  numeric(1))
+    k1 <- vapply(pj, function(j) linkfunctions7::dlinkinv(links[[j]], zeta[[j]]),
+                 numeric(1))
+    ld <- gas_levinson2(rho)
+    pcols <- cols[vapply(pj, function(j) lay$idx[[j]], integer(1))]
+    bjets <- function(act) {
+      mk <- length(act)
+      A <- matrix(0, length(bcols), mk)
+      at <- match(bcols, act)
+      ok <- !is.na(at)
+      A[cbind(which(ok), at[ok])] <- 1
+      d1 <- matrix(0, mk, q)
+      mats <- numeric(0)
+      for (j in seq_len(q)) {
+        dj <- numeric(mk)
+        dj[match(pcols, act)] <- ld$jacobian[j, ] * k1
+        d1[, j] <- dj
+        for (k in seq_along(dsub)) {
+          mats <- c(mats, as.numeric(crossprod(A, dsub[[k]]$b[[j]] %*% A)))
+        }
+      }
+      list(b = ld$phi, b_d1 = d1, b_mats = mats)
+    }
+  }
+  active <- if (is.null(sub)) {
+    lapply(bp$order, function(r) seq_along(u))
+  } else {
+    .gas_sub_active(tm, .gas_sub_values(tm, u, "zeta"))
+  }
+  list(vals = vals, bjets = bjets, active = active, p = p, q = q)
+}
+
+#' The Fifth Order of a Joint Filter, Compiled
+#'
+#' @description
+#' Builds the groups that `gas_fifth_joint_cpp()` reads and runs it, for a
+#' joint filter whose members carry subformulas or not.
+#'
+#' @inheritParams term_fifth.GasJoint
+#' @param dirs The three directions.
+#'
+#' @return As [term_fifth.GasJoint()].
+#'
+#' @keywords internal
+.gas_joint_fifth_compiled <- function(term, psi, g, seed, blocks_data, dirs,
+                                      eta = NULL) {
+  bp <- term@build_info
+  K <- length(term@params)
+  n <- bp$n
+  seed <- lapply(seed, as.matrix)
+  m <- ncol(seed[[1L]])
+  M <- length(term_params(term))
+  zoff <- m - M
+  fp <- as.integer(blocks_data$filtered)
+  psi <- .gas_joint_psi(term, psi)
+  cf <- .gas_joint_start(term, .gas_joint_coefs(term, psi), eta)
+  mem <- lapply(seq_len(K), function(k) {
+    tm <- term@terms[[term@params[k]]]
+    if (.gas_is_driver(tm)) return(NULL)
+    nm <- term_params(tm)
+    .gas_fifth_member(tm, unlist(psi[[term@params[k]]][nm]),
+                      zoff + term@offsets[k] + seq_along(nm), dirs)
+  })
+  groups <- lapply(seq_along(bp$order), function(l) {
+    rows <- as.integer(bp$order[[l]])
+    act <- sort(unique(c(seq_len(zoff), unlist(lapply(seq_len(K), function(k) {
+      if (is.null(mem[[k]])) return(integer(0))
+      zoff + term@offsets[k] + mem[[k]]$active[[l]]
+    })))))
+    mk <- length(act)
+    rowval <- function(v) {
+      Z <- matrix(0, length(rows), mk)
+      at <- match(v$cols, act)
+      ok <- !is.na(at)
+      Z[, at[ok]] <- v$Z[rows, ok, drop = FALSE]
+      list(Z = Z, K = v$K[rows, , drop = FALSE])
+    }
+    members <- lapply(seq_len(K), function(k) {
+      direct <- isTRUE(cf[[k]]$direct)
+      d0 <- if (direct) cf[[k]]$d0[[l]] else 0
+      if (is.null(mem[[k]])) {
+        return(list(driver = TRUE, direct = direct, d0 = d0))
+      }
+      tm <- term@terms[[term@params[k]]]
+      mb <- mem[[k]]
+      xp <- .gas_cross_pairs(tm)
+      out <- list(driver = FALSE, direct = direct, d0 = d0, p = mb$p,
+                  q = mb$q, omega = rowval(mb$vals$omega),
+                  a = lapply(seq_len(mb$p), function(i)
+                    rowval(mb$vals[[paste0("kappa", i)]])),
+                  x = lapply(xp$name, function(j) rowval(mb$vals[[j]])),
+                  xpar = as.integer(match(xp$partner, term@params)),
+                  xlag = as.integer(xp$lag))
+      c(out, mb$bjets(act))
+    })
+    list(rows = rows, act = as.integer(act), members = members)
+  })
+  bl <- blocks_data
+  arrays <- lapply(list(bl$U1, bl$U2, bl$U3, bl$U4, bl$U5), as.numeric)
+  out <- gas_fifth_joint_cpp(groups, K, do.call(cbind, dirs), seed, fp,
+                             matrix(as.numeric(g), n, K),
+                             matrix(as.numeric(bl$u), n, K), arrays)
+  names(out$jacobian) <- names(out$dphi) <- names(out$dpsi) <-
+    names(out$domega) <- term@params
   out
 }

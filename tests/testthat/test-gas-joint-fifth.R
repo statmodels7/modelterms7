@@ -176,7 +176,7 @@ gjf_model <- function(fp, p, q, cross = NULL, by = FALSE, dev = FALSE,
                gw, seed, blocks, dirs)
   }
   list(jt = jt, m = m, M = M, mb = mb, preds = preds, core = core,
-       fifth = fifth)
+       fifth = fifth, psi_of = psi_of, seed = seed, static = static)
 }
 
 gjf_u0 <- function(md, seed = 2) {
@@ -212,6 +212,16 @@ test_that("the joint fifth order is the derivative of the joint fourth", {
     dir_of <- function(f, h) (f(u0 + h * x) - f(u0 - h * x)) / (2 * h)
     rich <- function(f) (4 * dir_of(f, 1e-3) - dir_of(f, 2e-3)) / 3
     g5 <- md$fifth(u0, gw, list(v, w, x))
+    # the compiled route against the R twin, to rounding
+    E0 <- md$preds(u0)
+    twin <- .gas_joint_fifth(md$jt, md$psi_of(u0), gw, md$seed,
+                             gjf_blocks(df5$y, E0, cfg[[1]]), list(v, w, x),
+                             eta = md$static(u0)[, cfg[[1]], drop = FALSE],
+                             sub = .gas_joint_has_sub(md$jt))
+    expect_equal(g5, twin, tolerance = 1e-12, info = lab)
+    bad5 <- g5
+    bad5$curvature <- bad5$curvature * (1 + 1e-10)
+    expect_false(isTRUE(all.equal(bad5, twin, tolerance = 1e-12)), info = lab)
     ref <- rich(function(u) md$core(u, gw, list(v, w))$curvature)
     expect_equal(g5$curvature, ref, tolerance = 1e-6, info = lab)
     for (k in seq_len(K)) {
