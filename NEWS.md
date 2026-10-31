@@ -1,3 +1,13 @@
+# modelterms7 0.118.0
+
+* `term_fifth()` returns the fifth derivative of a structural term's
+  predictor, contracted against the caller's weights and three directions,
+  with the lower orders along the same directions. It is implemented for
+  `gas()` terms, with and without subformulas (a partial autocorrelation with
+  a subformula included), and for joint filters, on compiled routes written
+  out order by order. The model's derivatives reach it as arrays (`H` to
+  `D6`, or `U1` to `U5` for a joint filter).
+
 # modelterms7 0.117.0
 
 * `scs()` is a smooth of one covariate constrained to a shape, with the
