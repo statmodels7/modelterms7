@@ -1,3 +1,13 @@
+# modelterms7 0.120.0
+
+* `jfp()` puts a Jeffreys prior |I(beta)|^power on a block of
+  coefficients (`JeffreysTerm`, `JeffreysPenalty`), with `power = 0.5` fixed
+  and `intercept = NULL` deciding whether the constant direction enters the
+  determinant. A formula is coded with its contrasts, so `jfp(~ g)` gives
+  k - 1 columns and `jfp(~ 0 + g)` gives k; linearly dependent columns are
+  rejected. The penalty is evaluated by the fitting layer on the model's
+  expected information.
+
 # modelterms7 0.119.0
 
 * `shape_increasing_convex()`, `shape_increasing_concave()`,
