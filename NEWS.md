@@ -1,3 +1,17 @@
+# modelterms7 0.121.0
+
+* `shape_unimodal()` makes `scs()` rise to a mode and fall after it. The
+  mode sits at a Greville abscissa of the basis; `mode =` places it at the
+  abscissa nearest to a value of the covariate. The penalty is one random
+  walk on the free coefficients through the mode, whose null space is the
+  same at every mode, so fits at different modes are compared by their
+  criterion.
+* `term_pilot()` and `term_variants()` describe a term that carries a
+  discrete choice: the term that stands in for it in a pilot fit, and the
+  versions to try given the pilot's contribution. For `scs()` with
+  `shape_unimodal()` and no mode, the versions are the modes at the five
+  Greville abscissae around the pilot's maximum.
+
 # modelterms7 0.120.0
 
 * `jfp()` puts a Jeffreys prior |I(beta)|^power on a block of

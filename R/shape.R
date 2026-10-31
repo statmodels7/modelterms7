@@ -68,6 +68,62 @@ ShapeMonotone <- S7::new_class("ShapeMonotone", parent = shape_constraint)
 #' @export
 ShapeCurvature <- S7::new_class("ShapeCurvature", parent = shape_constraint)
 
+#' @rdname shape_constraint
+#' @export
+ShapeUnimodal <- S7::new_class("ShapeUnimodal", parent = shape_constraint)
+
+#' A Unimodal Shape
+#'
+#' @description
+#' Constructs the shape that makes a smooth increase up to a mode and
+#' decrease after it, for [scs()].
+#'
+#' @details
+#' The mode sits at a Greville abscissa \eqn{\xi_M} of the basis: the slopes
+#' of the coefficients are \eqn{+g^{-1}(\gamma_j)} up to index \eqn{M} and
+#' \eqn{-g^{-1}(\gamma_j)} after it, so the coefficients, and with them the
+#' curve, rise to a single maximum. \eqn{M = 1} is a decreasing curve and
+#' \eqn{M = K} an increasing one. The penalty of [scs()] is one random walk on
+#' \eqn{\gamma} through the mode, whose null space is the same for every
+#' \eqn{M}, so fits at different \eqn{M} are compared by their criterion.
+#'
+#' With `mode` given, \eqn{M} is the index of the Greville abscissa nearest to
+#' it and the model is fitted once. With `mode = NULL` the fitting layer
+#' chooses \eqn{M}: a pilot fit with [s()] in place of the term gives the
+#' abscissa nearest to its maximum, \eqn{M_0}, and the model is fitted at the
+#' indices \eqn{M_0 - 2, \dots, M_0 + 2}; the best criterion decides (see
+#' [term_pilot()] and [term_variants()]).
+#'
+#' @param link A \pkg{linkfunctions7} link onto \eqn{(0, \infty)}.
+#' @param mode `NULL`, or a single number: the value of the covariate at
+#'   which the mode is placed.
+#' @param index `NULL`, or the index \eqn{M} itself, which a fitting layer
+#'   sets on the versions it tries. It takes precedence over `mode`.
+#'
+#' @return An S7 object of class `ShapeUnimodal`, inheriting from
+#'   [shape_constraint].
+#'
+#' @seealso [scs()], [shape_increasing()].
+#'
+#' @examples
+#' shape_unimodal()
+#' shape_unimodal(mode = 0.4)
+#'
+#' @export
+shape_unimodal <- function(link = linkfunctions7::log_link(), mode = NULL,
+                           index = NULL) {
+  if (!is.null(mode) && (!is.numeric(mode) || length(mode) != 1L || !is.finite(mode))) {
+    stop("'mode' must be NULL or a single finite number.", call. = FALSE)
+  }
+  if (!is.null(index) && (!is.numeric(index) || length(index) != 1L ||
+                          !is.finite(index) || index < 1 || index != round(index))) {
+    stop("'index' must be NULL or a single positive whole number.", call. = FALSE)
+  }
+  ShapeUnimodal(shape_name = "unimodal", link = .check_shape_link(link),
+                shape_params = list(mode = mode,
+                                    index = if (is.null(index)) NULL else as.integer(index)))
+}
+
 #' Shape Constraints for a Smooth
 #' @name shape_constructors
 #'
@@ -195,6 +251,8 @@ S7::method(print, shape_constraint) <- function(x, ...) {
   p <- x@shape_params
   extra <- if (!is.null(p$min_slope) && p$min_slope > 0)
     sprintf(", min_slope = %s", format(p$min_slope)) else ""
+  if (!is.null(p$index)) extra <- sprintf("%s, mode at index %d", extra, p$index)
+  else if (!is.null(p$mode)) extra <- sprintf("%s, mode = %s", extra, format(p$mode))
   cat(sprintf("<shape: %s, link = %s%s>\n", x@shape_name, x@link@link_name, extra))
   invisible(x)
 }
@@ -291,6 +349,22 @@ S7::method(shape_map, ShapeCurvature) <- function(shape, xi, ...) {
        pen = if (mono == 0) 3:K else 2:K)
 }
 
+S7::method(shape_map, ShapeUnimodal) <- function(shape, xi, ...) {
+  xi <- .check_greville(xi)
+  K <- length(xi); h <- diff(xi)
+  M <- shape@shape_params$index
+  if (is.null(M)) {
+    stop(paste0("the index of the mode is not set: scs() sets it from 'mode',",
+                " or a fitting\n  layer from its pilot."), call. = FALSE)
+  }
+  if (M > K) stop(sprintf("the index of the mode (%d) exceeds the basis (%d).", M, K),
+                  call. = FALSE)
+  L <- lower.tri(diag(K), diag = TRUE) * 1
+  # slopes s_2..s_M rise, s_{M+1}..s_K fall: beta_j = beta_{j-1} + h s_j
+  sg <- c(1, ifelse(2:K <= M, 1, -1))
+  list(A = L %*% diag(c(1, h) * sg, K), cons = 2:K, lower = rep(0, K), pen = 2:K)
+}
+
 .check_greville <- function(xi) {
   if (!is.numeric(xi) || length(xi) < 3L || anyNA(xi) || any(diff(xi) <= 0)) {
     stop("'xi' must be a strictly increasing numeric vector of length 3 or more.",
@@ -372,6 +446,24 @@ S7::method(shape_start, ShapeCurvature) <- function(shape, x, target, xi, ...) {
     rep(c2, K - 2L))
 }
 
+
+S7::method(shape_start, ShapeUnimodal) <- function(shape, x, target, xi, ...) {
+  xi <- .check_greville(xi); K <- length(xi)
+  M <- shape@shape_params$index
+  if (is.null(M)) M <- (K + 1L) %/% 2L
+  fl <- .shape_floor(x, target)
+  if (is.null(target)) return(c(0, rep(fl, K - 1L)))
+  # one least-squares line on each side of the mode, a floor where a side has
+  # too few points or the wrong sign
+  xm <- xi[M]
+  side <- function(sel) {
+    if (sum(sel) < 3L) return(0)
+    stats::coef(stats::lm.fit(cbind(1, x[sel]), target[sel]))[[2L]]
+  }
+  up <- max(side(x <= xm), fl)
+  dn <- max(-side(x >= xm), fl)
+  c(0, rep(up, max(M - 1L, 0L)), rep(dn, K - M))
+}
 
 # b(gamma) and its derivatives of order k, componentwise: on the constrained
 # coordinates lower + g^{-1}(gamma) and (g^{-1})^{(k)}(gamma); on the free

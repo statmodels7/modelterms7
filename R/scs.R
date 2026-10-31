@@ -1,4 +1,4 @@
-#' @include term_classes.R generics.R nonlinear.R shape.R
+#' @include term_classes.R generics.R nonlinear.R variants.R shape.R
 NULL
 
 #' @title S7 Class for Shape-Constrained Smooth Terms
@@ -48,9 +48,9 @@ ScsTerm <- S7::new_class(
 #' @description
 #' Constructs a smooth function of one covariate constrained to a shape:
 #' monotone ([shape_increasing()], [shape_decreasing()]), of constant
-#' curvature ([shape_convex()], [shape_concave()]), or both
-#' ([shape_increasing_convex()] and the other three combinations). The term
-#' enters the
+#' curvature ([shape_convex()], [shape_concave()]), both
+#' ([shape_increasing_convex()] and the other three combinations), or
+#' unimodal ([shape_unimodal()]). The term enters the
 #' formula of any distribution parameter, like [s()].
 #'
 #' @details
@@ -224,19 +224,20 @@ S7::method(term_build, ScsTerm) <- function(term, data, ...) {
   sm <- term@spec$smoother
   b <- basis7::smoother_basis(sm, x)
   xi <- .scs_greville(b)
-  m <- shape_map(term@shape, xi)
+  shape <- .scs_resolve_shape(term@shape, xi)
+  m <- shape_map(shape, xi)
   K <- length(xi)
   A1 <- m$A[, -1L, drop = FALSE]
   cons <- m$cons - 1L
   lower <- m$lower[-1L]
   bp <- list(basis = b, xi = xi, A1 = A1, center = numeric(K - 1L), cons = cons,
              lower = lower, link = term@shape@link, ncoef = K - 1L, n = length(x),
-             var = term@var, x = x)
+             var = term@var, x = x, shape = shape)
   W <- .scs_W(bp, x)
   bp$center <- colMeans(W)
   W <- sweep(W, 2L, bp$center)
   bp$W <- W
-  b0 <- shape_start(term@shape, x, NULL, xi)[-1L]
+  b0 <- shape_start(shape, x, NULL, xi)[-1L]
   coef <- .shape_gamma(bp$link, b0, cons, lower)
   bp$coef0 <- coef
   # first differences of the coordinates the shape declares penalized; zero
@@ -331,11 +332,62 @@ S7::method(term_coef_start, ScsTerm) <- function(term, target = NULL, ...) {
   bp <- term@build_info
   if (is.null(target)) return(bp$coef0)
   x <- .scs_x_built(term)
-  b0 <- tryCatch(shape_start(term@shape, x, as.numeric(target), bp$xi)[-1L],
+  b0 <- tryCatch(shape_start(bp$shape, x, as.numeric(target), bp$xi)[-1L],
                  error = function(e) NULL)
   if (is.null(b0)) return(bp$coef0)
   g <- .shape_gamma(bp$link, b0, bp$cons, bp$lower)
   if (!all(is.finite(g))) bp$coef0 else g
+}
+
+# THE INDEX OF A UNIMODAL SHAPE IS SETTLED AT THE BUILD, where the Greville
+# abscissae exist: the index the shape carries, else the abscissa nearest to
+# its mode, else the middle one, which a fitting layer replaces through
+# term_variants()
+.scs_resolve_shape <- function(shape, xi) {
+  if (!S7::S7_inherits(shape, ShapeUnimodal)) return(shape)
+  p <- shape@shape_params
+  if (!is.null(p$index)) {
+    if (p$index > length(xi)) {
+      stop(sprintf("the index of the mode (%d) exceeds the basis (%d).",
+                   p$index, length(xi)), call. = FALSE)
+    }
+    return(shape)
+  }
+  M <- if (!is.null(p$mode)) which.min(abs(xi - p$mode)) else (length(xi) + 1L) %/% 2L
+  shape@shape_params$index <- as.integer(M)
+  shape
+}
+
+.scs_auto_mode <- function(term) {
+  S7::S7_inherits(term@shape, ShapeUnimodal) &&
+    is.null(term@shape@shape_params$index) && is.null(term@shape@shape_params$mode)
+}
+
+S7::method(term_pilot, ScsTerm) <- function(term, ...) {
+  if (!.scs_auto_mode(term)) return(NULL)
+  # an unconstrained smooth on the same basis, under the term's own label
+  eval(as.call(list(s, term@var, smoother = term@spec$smoother, label = term@label)))
+}
+
+S7::method(term_variants, ScsTerm) <- function(term, pilot = NULL, ...) {
+  if (!.scs_auto_mode(term)) return(list(term))
+  .assert_built(term)
+  bp <- term@build_info
+  K <- length(bp$xi)
+  M0 <- if (is.null(pilot) || length(pilot) != bp$n || !any(is.finite(pilot))) {
+    (K + 1L) %/% 2L
+  } else {
+    which.min(abs(bp$xi - bp$x[which.max(pilot)]))
+  }
+  Ms <- intersect(M0 + (-2L):2L, seq_len(K))
+  out <- lapply(Ms, function(M) {
+    v <- term
+    v@shape <- shape_unimodal(link = term@shape@link, index = M)
+    v@X <- NULL; v@coef_names <- character(0); v@build_info <- list(); v@penalty <- NULL
+    v
+  })
+  names(out) <- sprintf("M = %d", Ms)
+  out
 }
 
 # the covariate at the build's rows, recovered from the stored design: the
