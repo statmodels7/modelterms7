@@ -39,6 +39,46 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// gas_fifth_gen_cpp
+List gas_fifth_gen_cpp(NumericVector eta, List groups, int p, int q, NumericMatrix dirs_full, int ap, NumericVector s_at, Nullable<Function> score_fn, NumericVector g, List arrays, List Vs, NumericMatrix seed);
+RcppExport SEXP _modelterms7_gas_fifth_gen_cpp(SEXP etaSEXP, SEXP groupsSEXP, SEXP pSEXP, SEXP qSEXP, SEXP dirs_fullSEXP, SEXP apSEXP, SEXP s_atSEXP, SEXP score_fnSEXP, SEXP gSEXP, SEXP arraysSEXP, SEXP VsSEXP, SEXP seedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type eta(etaSEXP);
+    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
+    Rcpp::traits::input_parameter< int >::type p(pSEXP);
+    Rcpp::traits::input_parameter< int >::type q(qSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type dirs_full(dirs_fullSEXP);
+    Rcpp::traits::input_parameter< int >::type ap(apSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type s_at(s_atSEXP);
+    Rcpp::traits::input_parameter< Nullable<Function> >::type score_fn(score_fnSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type g(gSEXP);
+    Rcpp::traits::input_parameter< List >::type arrays(arraysSEXP);
+    Rcpp::traits::input_parameter< List >::type Vs(VsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type seed(seedSEXP);
+    rcpp_result_gen = Rcpp::wrap(gas_fifth_gen_cpp(eta, groups, p, q, dirs_full, ap, s_at, score_fn, g, arrays, Vs, seed));
+    return rcpp_result_gen;
+END_RCPP
+}
+// gas_fifth_joint_cpp
+List gas_fifth_joint_cpp(List groups, int K, NumericMatrix dirs_full, List seeds, IntegerVector fp, NumericMatrix g, NumericMatrix u_at, List arrays);
+RcppExport SEXP _modelterms7_gas_fifth_joint_cpp(SEXP groupsSEXP, SEXP KSEXP, SEXP dirs_fullSEXP, SEXP seedsSEXP, SEXP fpSEXP, SEXP gSEXP, SEXP u_atSEXP, SEXP arraysSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type groups(groupsSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type dirs_full(dirs_fullSEXP);
+    Rcpp::traits::input_parameter< List >::type seeds(seedsSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type fp(fpSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type g(gSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type u_at(u_atSEXP);
+    Rcpp::traits::input_parameter< List >::type arrays(arraysSEXP);
+    rcpp_result_gen = Rcpp::wrap(gas_fifth_joint_cpp(groups, K, dirs_full, seeds, fp, g, u_at, arrays));
+    return rcpp_result_gen;
+END_RCPP
+}
 // gas_filter_cpp
 List gas_filter_cpp(NumericVector eta, List order, int p, int q, double omega, NumericVector a, NumericVector b, NumericMatrix db, double f0, NumericVector df0, IntegerVector i_a, int np, Function score, Function curvature, Nullable<List> fast, int threads, NumericVector d0);
 RcppExport SEXP _modelterms7_gas_filter_cpp(SEXP etaSEXP, SEXP orderSEXP, SEXP pSEXP, SEXP qSEXP, SEXP omegaSEXP, SEXP aSEXP, SEXP bSEXP, SEXP dbSEXP, SEXP f0SEXP, SEXP df0SEXP, SEXP i_aSEXP, SEXP npSEXP, SEXP scoreSEXP, SEXP curvatureSEXP, SEXP fastSEXP, SEXP threadsSEXP, SEXP d0SEXP) {
@@ -383,6 +423,8 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_modelterms7_gas_curvature_gen_cpp", (DL_FUNC) &_modelterms7_gas_curvature_gen_cpp, 19},
+    {"_modelterms7_gas_fifth_gen_cpp", (DL_FUNC) &_modelterms7_gas_fifth_gen_cpp, 12},
+    {"_modelterms7_gas_fifth_joint_cpp", (DL_FUNC) &_modelterms7_gas_fifth_joint_cpp, 8},
     {"_modelterms7_gas_filter_cpp", (DL_FUNC) &_modelterms7_gas_filter_cpp, 17},
     {"_modelterms7_gas_filter_sub_cpp", (DL_FUNC) &_modelterms7_gas_filter_sub_cpp, 12},
     {"_modelterms7_gas_joint_filter_cpp", (DL_FUNC) &_modelterms7_gas_joint_filter_cpp, 6},

@@ -75,6 +75,7 @@ Collate:
     'gas_curvature_gen.R'
     'gas_joint.R'
     'gas_joint_core.R'
+    'gas_fifth.R'
     'gas_joint_continue.R'
     'gas_joint_sub.R'
     'gas_joint_sub_core.R'
