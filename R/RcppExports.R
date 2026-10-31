@@ -5,6 +5,10 @@ gas_curvature_gen_cpp <- function(eta, groups, p, q, nd, om, A, B, ap, s_at, c_a
     .Call(`_modelterms7_gas_curvature_gen_cpp`, eta, groups, p, q, nd, om, A, B, ap, s_at, c_at, g, Hc, D3m, D4m, D5m, Vs, seed, threads)
 }
 
+gas_fifth_gen_cpp <- function(eta, groups, p, q, dirs_full, ap, s_at, score_fn, g, arrays, Vs, seed) {
+    .Call(`_modelterms7_gas_fifth_gen_cpp`, eta, groups, p, q, dirs_full, ap, s_at, score_fn, g, arrays, Vs, seed)
+}
+
 gas_filter_cpp <- function(eta, order, p, q, omega, a, b, db, f0, df0, i_a, np, score, curvature, fast = NULL, threads = 1L, d0 = numeric(0)) {
     .Call(`_modelterms7_gas_filter_cpp`, eta, order, p, q, omega, a, b, db, f0, df0, i_a, np, score, curvature, fast, threads, d0)
 }

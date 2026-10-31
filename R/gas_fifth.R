@@ -853,11 +853,18 @@ gas_levinson5 <- function(pacf, v, w, x) {
 #' derivatives come from [.gas_chart_contract()] and [gas_levinson5()], the
 #' score's from the family's arrays by [.gas_score_jet()].
 #'
+#' The compiled kernel ([.gas_fifth_compiled()]) is the route; the R
+#' functions `.gas_fifth_scalar()` and `.gas_fifth_sub()` are an independent
+#' computation kept for the tests.
+#'
 #' @inheritParams term_fifth
+#' @param score_values `NULL`, or the driving score at every observation,
+#'   read instead of evaluating `score`.
 #' @return As [term_fifth()].
 #' @keywords internal
 S7::method(term_fifth, GasTerm) <- function(term, eta, y, score, psi, g, seed,
-                                            blocks_data, directions, ...) {
+                                            blocks_data, directions, ...,
+                                            score_values = NULL) {
   bp <- term@build_info
   if (!length(bp)) {
     stop("the term has not been built; call term_build(term, data) first.",
@@ -891,11 +898,8 @@ S7::method(term_fifth, GasTerm) <- function(term, eta, y, score, psi, g, seed,
     }
     d
   })
-  if (!is.null(bp$sub)) {
-    return(.gas_fifth_sub(term, eta, y, score, psi, g, seed, blocks_data,
-                          dirs))
-  }
-  .gas_fifth_scalar(term, eta, y, score, psi, g, seed, blocks_data, dirs)
+  .gas_fifth_compiled(term, eta, score, psi, g, seed, blocks_data, dirs,
+                      score_values = score_values)
 }
 
 
@@ -1084,4 +1088,162 @@ S7::method(term_fifth, GasJoint) <- function(term, eta, y, score, psi, g, seed,
   W <- (W + t(W)) / 2
   names(jac) <- names(dphi) <- names(dpsi) <- names(dom) <- term@params
   list(jacobian = jac, dphi = dphi, dpsi = dpsi, domega = dom, curvature = W)
+}
+
+
+#' The Fifth Order of a Score-Driven Term, Compiled
+#'
+#' @description
+#' Builds the groups that `gas_fifth_gen_cpp()` reads and runs it: for each
+#' group its rows and active unknowns, the level and the loadings as design
+#' rows with their links' derivatives of orders zero to five per row, and the
+#' autoregressive coefficients with their derivatives along every subset of
+#' the directions.
+#'
+#' @details
+#' The autoregressive coefficients are constant over the rows unless a
+#' partial autocorrelation carries a subformula; that case has no compiled
+#' route at the fifth order and signals an error. Their derivatives are those
+#' of [.gas_chart_contract()], lifted to the unknowns.
+#'
+#' @inheritParams term_fifth
+#' @param dirs The three directions.
+#' @param score_values `NULL`, or the driving score at every observation;
+#'   with `NULL` the callback `score` is evaluated at each predictor.
+#'
+#' @return As [term_fifth()].
+#'
+#' @keywords internal
+.gas_fifth_compiled <- function(term, eta, score, psi, g, seed, blocks_data,
+                                dirs, score_values = NULL) {
+  bp <- term@build_info
+  p <- term@p
+  q <- term@q
+  nm <- term_params(term)
+  np <- length(nm)
+  m <- ncol(seed)
+  zcol <- m - np + seq_len(np)
+  lay <- .gas_sub_layout(term)
+  base <- .gas_base_params(p, q)
+  sub <- bp$sub
+  psiv <- unlist(psi[nm])
+  pj <- if (q > 0L) paste0("pacf", seq_len(q)) else character(0)
+  if (any(vapply(pj, function(j) !is.null(sub[[j]]), logical(1)))) {
+    stop("the fifth order of a filter has no compiled route where a partial autocorrelation carries a subformula.",
+         call. = FALSE)
+  }
+  u <- as.numeric(psiv)
+  for (j in base) {
+    if (is.null(sub[[j]])) {
+      u[lay$idx[[j]]] <- linkfunctions7::linkfun(.gas_param_link(term, j),
+                                                 u[lay$idx[[j]]])
+    }
+  }
+  dl <- list(linkfunctions7::linkinv, linkfunctions7::dlinkinv,
+             linkfunctions7::d2linkinv, linkfunctions7::d3linkinv,
+             linkfunctions7::d4linkinv, linkfunctions7::d5linkinv)
+  # each value read per row: its design over the unknowns and its link's
+  # derivatives
+  per_row <- function(j) {
+    idx <- lay$idx[[j]]
+    lk <- .gas_param_link(term, j)
+    if (!is.null(sub[[j]])) {
+      Z <- as.matrix(sub[[j]]$Z)
+      e <- as.numeric(Z %*% u[idx])
+    } else {
+      Z <- matrix(1, bp$n, 1L)
+      e <- rep(u[[idx]], bp$n)
+    }
+    list(cols = zcol[idx], Z = Z,
+         K = matrix(vapply(dl, function(f) f(lk, e), numeric(bp$n)), bp$n))
+  }
+  vals <- lapply(stats::setNames(c("omega", if (p > 0L) paste0("kappa", seq_len(p))),
+                                 c("omega", if (p > 0L) paste0("kappa", seq_len(p)))),
+                 per_row)
+  # the constant autoregressive coefficients over the base coordinates
+  bchart <- NULL
+  if (q > 0L) {
+    # one column per base parameter; a developed one is not read by the
+    # autoregressive coefficients and has none
+    bcols <- vapply(base, function(j) {
+      if (is.null(sub[[j]])) zcol[lay$idx[[j]]] else NA_integer_
+    }, integer(1))
+    zeta <- stats::setNames(numeric(length(base)), base)
+    links <- stats::setNames(lapply(base, function(j) .gas_param_link(term, j)),
+                             base)
+    for (j in pj) zeta[[j]] <- u[[lay$idx[[j]]]]
+    # one per subset of the directions, by bit mask (bit 0 the first)
+    dsub <- lapply(0:7, function(mask) {
+      S <- which(bitwAnd(mask, c(1L, 2L, 4L)) > 0L)
+      .gas_chart_contract(zeta, p, q, links,
+                          lapply(dirs[S], function(d) {
+                            x <- d[bcols]
+                            x[is.na(x)] <- 0
+                            x
+                          }))
+    })
+    rho <- vapply(pj, function(j) linkfunctions7::linkinv(links[[j]], zeta[[j]]),
+                  numeric(1))
+    k1 <- vapply(pj, function(j) linkfunctions7::dlinkinv(links[[j]], zeta[[j]]),
+                 numeric(1))
+    ld <- gas_levinson2(rho)
+    pcols <- zcol[vapply(pj, function(j) lay$idx[[j]], integer(1))]
+    bchart <- list(dsub = dsub, phi = ld$phi, jac = ld$jacobian, k1 = k1,
+                   pcols = pcols, bcols = bcols)
+  }
+  acts <- if (is.null(sub)) {
+    lapply(bp$order, function(r) seq_len(m))
+  } else {
+    vl <- .gas_sub_values(term, u, "zeta")
+    lapply(.gas_sub_active(term, vl), function(a) c(seq_len(m - np), zcol[a]))
+  }
+  static <- .gas_static(term)
+  d0 <- if (static) .gas_static_start(term, eta) else NULL
+  groups <- lapply(seq_along(bp$order), function(l) {
+    rows <- as.integer(bp$order[[l]])
+    act <- as.integer(acts[[l]])
+    mk <- length(act)
+    rowval <- function(v) {
+      Z <- matrix(0, length(rows), mk)
+      at <- match(v$cols, act)
+      ok <- !is.na(at)
+      Z[, at[ok]] <- v$Z[rows, ok, drop = FALSE]
+      list(Z = Z, K = v$K[rows, , drop = FALSE])
+    }
+    out <- list(rows = rows, act = act, omega = rowval(vals$omega),
+                a = lapply(seq_len(p), function(i) rowval(vals[[paste0("kappa", i)]])),
+                direct = static, d0 = if (static) d0[[l]] else 0)
+    if (q > 0L) {
+      A <- matrix(0, length(bchart$bcols), mk)
+      at <- match(bchart$bcols, act)
+      ok <- !is.na(at)
+      A[cbind(which(ok), at[ok])] <- 1
+      lift2 <- function(h) crossprod(A, h %*% A)
+      d1 <- matrix(0, mk, q)
+      mats <- numeric(0)
+      for (j in seq_len(q)) {
+        dj <- numeric(mk)
+        at <- match(bchart$pcols, act)
+        dj[at] <- bchart$jac[j, ] * bchart$k1
+        d1[, j] <- dj
+        for (k in seq_along(bchart$dsub)) {
+          mats <- c(mats, as.numeric(lift2(bchart$dsub[[k]]$b[[j]])))
+        }
+      }
+      out$b <- bchart$phi
+      out$b_d1 <- d1
+      out$b_mats <- mats
+    }
+    out
+  })
+  bd <- blocks_data
+  arrays <- lapply(list(bd$H, bd$D3, bd$D4, bd$D5, bd$D6), as.matrix)
+  out <- gas_fifth_gen_cpp(as.numeric(eta), groups, p, q,
+                           do.call(cbind, dirs), as.integer(bd$ap),
+                           if (is.null(score_values)) numeric(0)
+                           else as.numeric(score_values),
+                           if (is.null(score_values)) score else NULL,
+                           as.numeric(g), arrays,
+                           lapply(bd$Vs, as.matrix), as.matrix(seed))
+  out
 }

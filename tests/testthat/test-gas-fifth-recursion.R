@@ -64,6 +64,16 @@ test_that("the fifth-order recursion is the derivative of the fourth", {
     got <- term_fifth(term, eta0(u0), d2$y, st$sc,
                       psi_of(u0[mb + seq_len(np)]), gw, seed,
                       arrays_of(st, e, m), list(v, w, x))
+    twin <- .gas_fifth_scalar(term, eta0(u0), d2$y, st$sc,
+                              psi_of(u0[mb + seq_len(np)]), gw, seed,
+                              arrays_of(st, e, m), list(v, w, x))
+    expect_equal(got, twin, tolerance = 1e-12)
+    # the driving score read as values gives the same result
+    sv <- st$sc(e, seq_len(nn))
+    expect_equal(term_fifth(term, eta0(u0), d2$y, st$sc,
+                            psi_of(u0[mb + seq_len(np)]), gw, seed,
+                            arrays_of(st, e, m), list(v, w, x),
+                            score_values = sv), got, tolerance = 1e-13)
     at <- function(u) term_fourth(term, eta0(u), d2$y, st$sc, st$cu,
       psi_of(u[mb + seq_len(np)]), gw, seed, blk4_of(st, v, w), list(v, w))
     dir_of <- function(h, f) (f(at(u0 + h * x)) - f(at(u0 - h * x))) / (2 * h)
@@ -206,6 +216,9 @@ test_that("the fifth order reads the other equation's predictor", {
   got <- term_fifth(term, eta0(u0), d2$y, c0$sc,
                     psi_of(u0[4L + seq_len(np)]), gw, seed, arr,
                     list(v, w, x))
+  expect_equal(got, .gas_fifth_scalar(term, eta0(u0), d2$y, c0$sc,
+                                      psi_of(u0[4L + seq_len(np)]), gw, seed,
+                                      arr, list(v, w, x)), tolerance = 1e-12)
   dir_of <- function(h, f) (f(at(u0 + h * x)) - f(at(u0 - h * x))) / (2 * h)
   rich <- function(f) (4 * dir_of(1e-3, f) - dir_of(2e-3, f)) / 3
   ref <- rich(function(r) r$curvature)
@@ -266,8 +279,24 @@ test_that("the fifth order reaches a term whose parameters are developed", {
     gw <- stats::rnorm(nn, 0, 0.6)
     zcol <- m - np + seq_len(np)
     e <- term_filter(term, eta, d3$y, st$sc, st$cu, psi_of(zeta))$eta
-    got <- term_fifth(term, eta, d3$y, st$sc, psi_of(zeta), gw, seed,
-                      arrays_of(st, e, m), list(v, w, x))
+    twin <- .gas_fifth_sub(term, eta, d3$y, st$sc, psi_of(zeta), gw, seed,
+                           arrays_of(st, e, m), list(v, w, x))
+    if (any(startsWith(nm, "pacf1."))) {
+      # no compiled route where a partial autocorrelation is developed
+      expect_error(term_fifth(term, eta, d3$y, st$sc, psi_of(zeta), gw, seed,
+                              arrays_of(st, e, m), list(v, w, x)),
+                   "no compiled route")
+      got <- twin
+    } else {
+      got <- term_fifth(term, eta, d3$y, st$sc, psi_of(zeta), gw, seed,
+                        arrays_of(st, e, m), list(v, w, x))
+      # the compiled route against the R twin, to rounding
+      expect_equal(got, twin, tolerance = 1e-12)
+      # the negative control on the twin comparison
+      bad <- got
+      bad$curvature <- bad$curvature * (1 + 1e-10)
+      expect_false(isTRUE(all.equal(bad, twin, tolerance = 1e-12)))
+    }
     at <- function(h) {
       term_fourth(term, eta + h * as.numeric(seed %*% x), d3$y, st$sc, st$cu,
                   psi_of(zeta + h * x[zcol]), gw, seed, blk4_of(st, v, w),
@@ -285,8 +314,8 @@ test_that("the fifth order reaches a term whose parameters are developed", {
     expect_equal(got$dpsi[[1L]], f4$dpsi, tolerance = 1e-11, info = lab)
     bad <- arrays_of(st, e, m)
     bad$D6 <- bad$D6 * 1.05
-    wrong <- term_fifth(term, eta, d3$y, st$sc, psi_of(zeta), gw, seed, bad,
-                        list(v, w, x))
+    wrong <- .gas_fifth_sub(term, eta, d3$y, st$sc, psi_of(zeta), gw, seed,
+                            bad, list(v, w, x))
     expect_false(isTRUE(all.equal(wrong$curvature, ref, tolerance = 1e-5)),
                  info = lab)
   }
