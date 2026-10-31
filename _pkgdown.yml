@@ -90,6 +90,18 @@ reference:
   - s
   - te
   - SmoothTerm
+- title: Shape-constrained smooths
+  desc: >
+    A smooth of one covariate constrained to be monotone, convex or concave,
+    through a map from free coefficients to the B-spline coefficients, with a
+    penalty on the free coefficients.
+  contents:
+  - scs
+  - ScsTerm
+  - shape_constructors
+  - shape_constraint
+  - shape_map
+  - shape_start
 - title: Nonlinear terms
   desc: >
     A contribution nonlinear in its own parameters, whose block is

@@ -1,3 +1,19 @@
+# modelterms7 0.117.0
+
+* `scs()` is a smooth of one covariate constrained to a shape, with the
+  signature of `s()` and the shape as second argument. The shapes are
+  `shape_increasing()`, `shape_decreasing()` (both with `min_slope`),
+  `shape_convex()` and `shape_concave()`, subclasses of `shape_constraint`
+  with the generics `shape_map()` and `shape_start()`. The B-spline
+  coefficients are written as `A b(gamma)`, cumulative sums of slopes or of
+  second divided differences on the Greville abscissae, with the constrained
+  coordinates through the inverse of a link onto (0, Inf), so every
+  coefficient vector gives a curve of the shape. The block is the Jacobian at
+  the current coefficients, as for `nl()`, with diagonal derivatives; the
+  penalty is the quadratic penalty of first differences of the constrained
+  coordinates. A `by` variable is not yet supported, and the smoother must be
+  `bspline_smooth()` or `pspline_smooth()`.
+
 # modelterms7 0.116.0
 
 * `gas()` has the argument `n_start`, the number of starting points of the

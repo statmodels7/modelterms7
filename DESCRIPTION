@@ -1,6 +1,6 @@
 Package: modelterms7
 Title: Model Terms as Objects for Formula-Based Modeling
-Version: 0.116.0
+Version: 0.117.0
 Authors@R:
     person("Giovanni", "Tinervia", , "giovannitinervia9@gmail.com", role = c("aut", "cre"))
 Description: Model terms as 'S7' objects: the mapping from a data frame to a
@@ -87,6 +87,8 @@ Collate:
     'smooth.R'
     'random_smooth.R'
     'response.R'
+    'shape.R'
+    'scs.R'
     'seg_hold.R'
     'seg_pin.R'
     'shift_jacobian.R'
