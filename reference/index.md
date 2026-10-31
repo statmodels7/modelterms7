@@ -95,6 +95,20 @@ column of the data.
 - [`PenalizedTerm()`](https://statmodels7.github.io/modelterms7/reference/PenalizedTerm.md)
   : S7 Class for Penalized Parametric Terms
 
+## The Jeffreys term
+
+A block of coefficients under a Jeffreys prior on the expected
+information of its coefficients, the penalty of Firth (1993) over every
+coefficient of a binomial regression.
+
+- [`jfp()`](https://statmodels7.github.io/modelterms7/reference/jfp.md)
+  : Jeffreys Prior on a Block of Coefficients
+- [`JeffreysTerm()`](https://statmodels7.github.io/modelterms7/reference/JeffreysTerm.md)
+  : S7 Class for the Jeffreys Term
+- [`JeffreysPenalty()`](https://statmodels7.github.io/modelterms7/reference/JeffreysPenalty.md)
+  [`jeffreys_penalty()`](https://statmodels7.github.io/modelterms7/reference/JeffreysPenalty.md)
+  : S7 Class for the Jeffreys Penalty
+
 ## The random-effect term
 
 Grouped intercepts, slopes and smooth curves, in which the distribution
@@ -135,6 +149,10 @@ a penalty on the free coefficients.
   [`shape_decreasing()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
   [`shape_convex()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
   [`shape_concave()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  [`shape_increasing_convex()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  [`shape_increasing_concave()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  [`shape_decreasing_convex()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  [`shape_decreasing_concave()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
   : Shape Constraints for a Smooth
 - [`shape_constraint()`](https://statmodels7.github.io/modelterms7/reference/shape_constraint.md)
   [`ShapeMonotone()`](https://statmodels7.github.io/modelterms7/reference/shape_constraint.md)

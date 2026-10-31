@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.118.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.120.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,18 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.120.0" id="modelterms7-01200">modelterms7 0.120.0<a class="anchor" aria-label="anchor" href="#modelterms7-01200"></a></h2>
+<ul><li>
+<code><a href="../reference/jfp.html">jfp()</a></code> puts a Jeffreys prior |I(beta)|^power on a block of coefficients (<code>JeffreysTerm</code>, <code>JeffreysPenalty</code>), with <code>power = 0.5</code> fixed and <code>intercept = NULL</code> deciding whether the constant direction enters the determinant. A formula is coded with its contrasts, so <code>jfp(~ g)</code> gives k - 1 columns and <code>jfp(~ 0 + g)</code> gives k; linearly dependent columns are rejected. The penalty is evaluated by the fitting layer on the model’s expected information.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.119.0" id="modelterms7-01190">modelterms7 0.119.0<a class="anchor" aria-label="anchor" href="#modelterms7-01190"></a></h2>
+<ul><li>
+<code><a href="../reference/shape_constructors.html">shape_increasing_convex()</a></code>, <code><a href="../reference/shape_constructors.html">shape_increasing_concave()</a></code>, <code><a href="../reference/shape_constructors.html">shape_decreasing_convex()</a></code> and <code><a href="../reference/shape_constructors.html">shape_decreasing_concave()</a></code> combine a monotonicity with a sign of curvature in <code><a href="../reference/scs.html">scs()</a></code>. The slope is constrained at the end where it is smallest in absolute value (the left end when the two signs agree, the right end otherwise), and the second divided differences are summed from there, so every slope keeps its sign. The anchored slope is the first coordinate of the penalized differences.</li>
+<li>
+<code><a href="../reference/shape_map.html">shape_map()</a></code> returns <code>pen</code>, the coordinates whose first differences <code><a href="../reference/scs.html">scs()</a></code> penalizes; a method that returns none has its <code>cons</code> penalized.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.118.0" id="modelterms7-01180">modelterms7 0.118.0<a class="anchor" aria-label="anchor" href="#modelterms7-01180"></a></h2>
 <ul><li>

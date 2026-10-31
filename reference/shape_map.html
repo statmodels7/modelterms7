@@ -11,7 +11,7 @@ positions of the constrained coordinates and their lower bounds."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.118.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.120.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -68,9 +68,13 @@ numeric vector of length \(K \ge 3\).</p></dd>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A list with <code>A</code>, a \(K \times K\) matrix; <code>cons</code>, the integer
-positions of the constrained coordinates; and <code>lower</code>, a numeric vector of
+positions of the constrained coordinates; <code>lower</code>, a numeric vector of
 length \(K\), the bound \(\ell_j\) added to \(g^{-1}(\gamma_j)\) on a
-constrained coordinate (zero elsewhere).</p>
+constrained coordinate (zero elsewhere); and <code>pen</code>, the positions whose
+first differences <code><a href="scs.html">scs()</a></code> penalizes (the constrained slopes of a monotone
+shape; the second divided differences of a curvature shape, preceded by
+the anchored slope in a combination). A method that returns no <code>pen</code> has
+its <code>cons</code> penalized.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

@@ -5,7 +5,10 @@ Construct the shapes that
 imposes on a smooth. `shape_increasing()` and `shape_decreasing()` give
 a monotone curve, with a slope of at least `min_slope` in absolute
 value; `shape_convex()` and `shape_concave()` give a curve of constant
-sign of curvature.
+sign of curvature; the four combinations `shape_increasing_convex()`,
+`shape_increasing_concave()`, `shape_decreasing_convex()` and
+`shape_decreasing_concave()` give a monotone curve of constant sign of
+curvature.
 
 ## Usage
 
@@ -17,6 +20,14 @@ shape_decreasing(link = linkfunctions7::log_link(), min_slope = 0)
 shape_convex(link = linkfunctions7::log_link())
 
 shape_concave(link = linkfunctions7::log_link())
+
+shape_increasing_convex(link = linkfunctions7::log_link())
+
+shape_increasing_concave(link = linkfunctions7::log_link())
+
+shape_decreasing_convex(link = linkfunctions7::log_link())
+
+shape_decreasing_concave(link = linkfunctions7::log_link())
 ```
 
 ## Arguments
@@ -35,8 +46,8 @@ shape_concave(link = linkfunctions7::log_link())
 ## Value
 
 An S7 object of class `ShapeMonotone` (`shape_increasing()`,
-`shape_decreasing()`) or `ShapeCurvature` (`shape_convex()`,
-`shape_concave()`), both inheriting from
+`shape_decreasing()`) or `ShapeCurvature` (the other six), both
+inheriting from
 [shape_constraint](https://statmodels7.github.io/modelterms7/reference/shape_constraint.md).
 
 ## Details
@@ -45,7 +56,11 @@ A monotone shape parametrizes the slopes of the B-spline coefficients on
 the Greville abscissae, \\s_j = \pm(\delta + g^{-1}(\gamma_j))\\ with
 \\\delta\\ = `min_slope`. A curvature shape keeps the slope at the left
 end free and parametrizes the second divided differences, \\\pm
-g^{-1}(\gamma_j)\\. See
+g^{-1}(\gamma_j)\\. A combination constrains the slope as well, at the
+end where the slope is smallest in absolute value: the left end for an
+increasing convex or a decreasing concave curve, the right end for an
+increasing concave or a decreasing convex one, so that every slope keeps
+its sign. See
 [shape_constraint](https://statmodels7.github.io/modelterms7/reference/shape_constraint.md)
 for the map.
 
@@ -63,6 +78,8 @@ shape_decreasing(min_slope = 0.1)
 #> <shape: decreasing, link = log, min_slope = 0.1>
 shape_convex(link = linkfunctions7::softplus_link())
 #> <shape: convex, link = softplus(a=1)>
+shape_increasing_concave()
+#> <shape: increasing concave, link = log>
 
 # A link onto the whole real line is rejected.
 try(shape_concave(link = linkfunctions7::identity_link()))

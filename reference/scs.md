@@ -3,11 +3,14 @@
 Constructs a smooth function of one covariate constrained to a shape:
 monotone
 ([`shape_increasing()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md),
-[`shape_decreasing()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md))
-or of constant curvature
+[`shape_decreasing()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)),
+of constant curvature
 ([`shape_convex()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md),
-[`shape_concave()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)).
-The term enters the formula of any distribution parameter, like
+[`shape_concave()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)),
+or both
+([`shape_increasing_convex()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+and the other three combinations). The term enters the formula of any
+distribution parameter, like
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md).
 
 ## Usage
@@ -102,7 +105,10 @@ averages to zero there. The coefficients are therefore \\\gamma_2,
 
 The penalty is the quadratic penalty of first differences of the
 constrained coordinates of \\\gamma\\, under one smoothing parameter
-`lambda` selected with the rest of the model. Under a strong penalty a
+`lambda` selected with the rest of the model. For a convex or concave
+smooth these are the second divided differences, and the slope at the
+left end stays free; for a combination the anchored slope is constrained
+and is the first coordinate of the differences. Under a strong penalty a
 monotone smooth approaches a straight line, and a convex or concave one
 the curve whose coefficients have constant second divided differences,
 which is a parabola in the interior and has a smaller curvature in the

@@ -29,9 +29,15 @@ shape_map(shape, xi, ...)
 ## Value
 
 A list with `A`, a \\K \times K\\ matrix; `cons`, the integer positions
-of the constrained coordinates; and `lower`, a numeric vector of length
+of the constrained coordinates; `lower`, a numeric vector of length
 \\K\\, the bound \\\ell_j\\ added to \\g^{-1}(\gamma_j)\\ on a
-constrained coordinate (zero elsewhere).
+constrained coordinate (zero elsewhere); and `pen`, the positions whose
+first differences
+[`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
+penalizes (the constrained slopes of a monotone shape; the second
+divided differences of a curvature shape, preceded by the anchored slope
+in a combination). A method that returns no `pen` has its `cons`
+penalized.
 
 ## Details
 

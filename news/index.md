@@ -1,5 +1,35 @@
 # Changelog
 
+## modelterms7 0.120.0
+
+- [`jfp()`](https://statmodels7.github.io/modelterms7/reference/jfp.md)
+  puts a Jeffreys prior \|I(beta)\|^power on a block of coefficients
+  (`JeffreysTerm`, `JeffreysPenalty`), with `power = 0.5` fixed and
+  `intercept = NULL` deciding whether the constant direction enters the
+  determinant. A formula is coded with its contrasts, so `jfp(~ g)`
+  gives k - 1 columns and `jfp(~ 0 + g)` gives k; linearly dependent
+  columns are rejected. The penalty is evaluated by the fitting layer on
+  the model’s expected information.
+
+## modelterms7 0.119.0
+
+- [`shape_increasing_convex()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md),
+  [`shape_increasing_concave()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md),
+  [`shape_decreasing_convex()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  and
+  [`shape_decreasing_concave()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  combine a monotonicity with a sign of curvature in
+  [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md).
+  The slope is constrained at the end where it is smallest in absolute
+  value (the left end when the two signs agree, the right end
+  otherwise), and the second divided differences are summed from there,
+  so every slope keeps its sign. The anchored slope is the first
+  coordinate of the penalized differences.
+- [`shape_map()`](https://statmodels7.github.io/modelterms7/reference/shape_map.md)
+  returns `pen`, the coordinates whose first differences
+  [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
+  penalizes; a method that returns none has its `cons` penalized.
+
 ## modelterms7 0.118.0
 
 - [`term_fifth()`](https://statmodels7.github.io/modelterms7/reference/term_fifth.md)
