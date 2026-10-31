@@ -1,5 +1,27 @@
 # Changelog
 
+## modelterms7 0.121.0
+
+- [`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_unimodal.md)
+  makes
+  [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
+  rise to a mode and fall after it. The mode sits at a Greville abscissa
+  of the basis; `mode =` places it at the abscissa nearest to a value of
+  the covariate. The penalty is one random walk on the free coefficients
+  through the mode, whose null space is the same at every mode, so fits
+  at different modes are compared by their criterion.
+- [`term_pilot()`](https://statmodels7.github.io/modelterms7/reference/term_pilot.md)
+  and
+  [`term_variants()`](https://statmodels7.github.io/modelterms7/reference/term_variants.md)
+  describe a term that carries a discrete choice: the term that stands
+  in for it in a pilot fit, and the versions to try given the pilot’s
+  contribution. For
+  [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
+  with
+  [`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_unimodal.md)
+  and no mode, the versions are the modes at the five Greville abscissae
+  around the pilot’s maximum.
+
 ## modelterms7 0.120.0
 
 - [`jfp()`](https://statmodels7.github.io/modelterms7/reference/jfp.md)

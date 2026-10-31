@@ -133,6 +133,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/shape_constructors.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/shape_map.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/shape_start.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/shape_unimodal.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/smooth_hyper.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/structural_term.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/te.html</loc></url>
@@ -242,6 +243,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_penalties.SmoothTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_penalties.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_penalty.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_pilot.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_posterior.MarginalBreakTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_posterior.RegimeTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_posterior.html</loc></url>
@@ -294,6 +296,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_value.SegTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_value.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_values.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_variants.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_within.RandomTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_within.html</loc></url>
 </urlset>

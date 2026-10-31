@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.120.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.121.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,13 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.121.0" id="modelterms7-01210">modelterms7 0.121.0<a class="anchor" aria-label="anchor" href="#modelterms7-01210"></a></h2>
+<ul><li>
+<code><a href="../reference/shape_unimodal.html">shape_unimodal()</a></code> makes <code><a href="../reference/scs.html">scs()</a></code> rise to a mode and fall after it. The mode sits at a Greville abscissa of the basis; <code>mode =</code> places it at the abscissa nearest to a value of the covariate. The penalty is one random walk on the free coefficients through the mode, whose null space is the same at every mode, so fits at different modes are compared by their criterion.</li>
+<li>
+<code><a href="../reference/term_pilot.html">term_pilot()</a></code> and <code><a href="../reference/term_variants.html">term_variants()</a></code> describe a term that carries a discrete choice: the term that stands in for it in a pilot fit, and the versions to try given the pilot’s contribution. For <code><a href="../reference/scs.html">scs()</a></code> with <code><a href="../reference/shape_unimodal.html">shape_unimodal()</a></code> and no mode, the versions are the modes at the five Greville abscissae around the pilot’s maximum.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.120.0" id="modelterms7-01200">modelterms7 0.120.0<a class="anchor" aria-label="anchor" href="#modelterms7-01200"></a></h2>
 <ul><li>

@@ -7,10 +7,11 @@ monotone
 of constant curvature
 ([`shape_convex()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md),
 [`shape_concave()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)),
-or both
+both
 ([`shape_increasing_convex()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
-and the other three combinations). The term enters the formula of any
-distribution parameter, like
+and the other three combinations), or unimodal
+([`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_unimodal.md)).
+The term enters the formula of any distribution parameter, like
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md).
 
 ## Usage

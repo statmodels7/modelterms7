@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.120.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.121.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -84,8 +84,8 @@ from the prior.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">6</span><span class="op">)</span>, g <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"a"</span>, <span class="st">"b"</span>, <span class="st">"c"</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">term_within</span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="random.html">random</a></span><span class="op">(</span><span class="op">~</span> <span class="fl">1</span> <span class="op">+</span> <span class="va">x</span> <span class="op">|</span> <span class="va">g</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span>, <span class="va">d</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, <span class="op">]</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   (Intercept)          x</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1           1 -1.2313234</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2           1  0.9838956</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1           1  0.3981059</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2           1 -0.6120264</span>
 <span class="r-in"><span><span class="fu">term_within</span><span class="op">(</span><span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="linpar.html">linpar</a></span><span class="op">(</span><span class="op">~</span> <span class="va">x</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
 <span class="r-in"><span></span></span>

@@ -22,6 +22,8 @@ shape_constraint(shape_name = character(0), link = NULL, shape_params = list())
 ShapeMonotone(shape_name = character(0), link = NULL, shape_params = list())
 
 ShapeCurvature(shape_name = character(0), link = NULL, shape_params = list())
+
+ShapeUnimodal(shape_name = character(0), link = NULL, shape_params = list())
 ```
 
 ## Arguments

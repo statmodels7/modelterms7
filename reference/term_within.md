@@ -53,8 +53,8 @@ for the method.
 d <- data.frame(x = rnorm(6), g = factor(rep(c("a", "b", "c"), 2)))
 term_within(term_build(random(~ 1 + x | g), d), d[1:2, ])
 #>   (Intercept)          x
-#> 1           1 -1.2313234
-#> 2           1  0.9838956
+#> 1           1  0.3981059
+#> 2           1 -0.6120264
 term_within(term_build(linpar(~ x), d), d)
 #> NULL
 ```
