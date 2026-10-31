@@ -62,6 +62,7 @@ Collate:
     'generics.R'
     'nonlinear.R'
     'block_deriv3.R'
+    'block_deriv4.R'
     'structural.R'
     'regime.R'
     'charted.R'
