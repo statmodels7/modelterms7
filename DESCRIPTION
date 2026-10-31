@@ -93,6 +93,7 @@ Collate:
     'response.R'
     'shape.R'
     'scs.R'
+    'seg_deriv34.R'
     'seg_hold.R'
     'seg_pin.R'
     'shift_jacobian.R'
