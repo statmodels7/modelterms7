@@ -20,6 +20,11 @@ JeffreysPenalty(
 jeffreys_penalty(n_coef, power = 0.5, intercept = NULL)
 }
 \arguments{
+\item{penalty_name, map, params, params_bounds, link_params, params_smooth}{Properties inherited from \code{\link[penalties7:penalty]{penalties7::penalty()}}. The penalty has no map
+and no hyperparameters, so \code{jeffreys_penalty()} sets the name
+\code{"jeffreys"}, \code{map = NULL}, an empty \code{params}, empty lists of bounds and
+links, and an empty logical \code{params_smooth}.}
+
 \item{n_coef}{The number of coefficients in the block.}
 
 \item{power}{The power \eqn{a} of the determinant, a single positive

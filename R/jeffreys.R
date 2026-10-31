@@ -28,6 +28,11 @@ NULL
 #' @param intercept `NULL`, `TRUE` or `FALSE`, the setting of the constant
 #'   direction (see [jfp()]).
 #' @param n_coef The number of coefficients in the block.
+#' @param penalty_name,map,params,params_bounds,link_params,params_smooth
+#'   Properties inherited from [penalties7::penalty()]. The penalty has no map
+#'   and no hyperparameters, so `jeffreys_penalty()` sets the name
+#'   `"jeffreys"`, `map = NULL`, an empty `params`, empty lists of bounds and
+#'   links, and an empty logical `params_smooth`.
 #'
 #' @return `jeffreys_penalty()` returns an S7 object of class
 #'   `JeffreysPenalty`, inheriting from [penalties7::penalty()].
