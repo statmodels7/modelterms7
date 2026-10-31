@@ -5,6 +5,9 @@
 \alias{.gas_subsets}
 \alias{.gas_jet_get}
 \alias{.gas_prodn}
+\alias{.gas_prodS}
+\alias{.gas_subsets_of}
+\alias{.gas_jet_key}
 \title{A Jet over a Set of Directions, and Its Product Rule}
 \usage{
 .gas_jetn(v0, d1, mats, dirs)
@@ -14,6 +17,12 @@
 .gas_jet_get(A, S, free)
 
 .gas_prodn(A, B)
+
+.gas_prodS(A, B, S)
+
+.gas_subsets_of(S)
+
+.gas_jet_key(S)
 }
 \arguments{
 \item{v0}{The value.}
@@ -27,6 +36,9 @@ positions of the directions in increasing order.}
 \item{dirs}{The directions.}
 
 \item{A, B}{Two jets over the same directions.}
+
+\item{S}{The subset of the directions along which to differentiate, by
+position.}
 }
 \value{
 \code{.gas_jetn()} a jet; \code{.gas_prodn()} a matrix.

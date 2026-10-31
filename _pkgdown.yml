@@ -161,6 +161,7 @@ reference:
   - term_curvature
   - term_third
   - term_fourth
+  - term_fifth
   - term_hessian
   - term_scores
   - term_posterior
