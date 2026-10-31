@@ -61,6 +61,7 @@ Collate:
     'term_classes.R'
     'generics.R'
     'nonlinear.R'
+    'block_deriv3.R'
     'structural.R'
     'regime.R'
     'charted.R'

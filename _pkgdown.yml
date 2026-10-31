@@ -124,6 +124,7 @@ reference:
   - term_block_contract
   - term_block_deriv
   - term_block_deriv2
+  - term_block_deriv3
   - term_value
   - term_converged
   - term_stalled
