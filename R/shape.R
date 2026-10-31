@@ -75,14 +75,21 @@ ShapeCurvature <- S7::new_class("ShapeCurvature", parent = shape_constraint)
 #' Construct the shapes that [scs()] imposes on a smooth.
 #' `shape_increasing()` and `shape_decreasing()` give a monotone curve, with
 #' a slope of at least `min_slope` in absolute value; `shape_convex()` and
-#' `shape_concave()` give a curve of constant sign of curvature.
+#' `shape_concave()` give a curve of constant sign of curvature; the four
+#' combinations `shape_increasing_convex()`, `shape_increasing_concave()`,
+#' `shape_decreasing_convex()` and `shape_decreasing_concave()` give a monotone
+#' curve of constant sign of curvature.
 #'
 #' @details
 #' A monotone shape parametrizes the slopes of the B-spline coefficients on
 #' the Greville abscissae, \eqn{s_j = \pm(\delta + g^{-1}(\gamma_j))} with
 #' \eqn{\delta} = `min_slope`. A curvature shape keeps the slope at the left
 #' end free and parametrizes the second divided differences,
-#' \eqn{\pm g^{-1}(\gamma_j)}. See [shape_constraint] for the map.
+#' \eqn{\pm g^{-1}(\gamma_j)}. A combination constrains the slope as well,
+#' at the end where the slope is smallest in absolute value: the left end for
+#' an increasing convex or a decreasing concave curve, the right end for an
+#' increasing concave or a decreasing convex one, so that every slope keeps
+#' its sign. See [shape_constraint] for the map.
 #'
 #' @param link A \pkg{linkfunctions7} link onto \eqn{(0, \infty)}, by default
 #'   [linkfunctions7::log_link()]. [linkfunctions7::softplus_link()] is the
@@ -91,8 +98,8 @@ ShapeCurvature <- S7::new_class("ShapeCurvature", parent = shape_constraint)
 #'   absolute value.
 #'
 #' @return An S7 object of class `ShapeMonotone` (`shape_increasing()`,
-#'   `shape_decreasing()`) or `ShapeCurvature` (`shape_convex()`,
-#'   `shape_concave()`), both inheriting from [shape_constraint].
+#'   `shape_decreasing()`) or `ShapeCurvature` (the other six), both
+#'   inheriting from [shape_constraint].
 #'
 #' @seealso [scs()], [shape_constraint].
 #'
@@ -100,6 +107,7 @@ ShapeCurvature <- S7::new_class("ShapeCurvature", parent = shape_constraint)
 #' shape_increasing()
 #' shape_decreasing(min_slope = 0.1)
 #' shape_convex(link = linkfunctions7::softplus_link())
+#' shape_increasing_concave()
 #'
 #' # A link onto the whole real line is rejected.
 #' try(shape_concave(link = linkfunctions7::identity_link()))
@@ -155,6 +163,34 @@ shape_concave <- function(link = linkfunctions7::log_link()) {
                  shape_params = list(sign = -1))
 }
 
+#' @rdname shape_constructors
+#' @export
+shape_increasing_convex <- function(link = linkfunctions7::log_link()) {
+  ShapeCurvature(shape_name = "increasing convex", link = .check_shape_link(link),
+                 shape_params = list(sign = 1, mono = 1))
+}
+
+#' @rdname shape_constructors
+#' @export
+shape_increasing_concave <- function(link = linkfunctions7::log_link()) {
+  ShapeCurvature(shape_name = "increasing concave", link = .check_shape_link(link),
+                 shape_params = list(sign = -1, mono = 1))
+}
+
+#' @rdname shape_constructors
+#' @export
+shape_decreasing_convex <- function(link = linkfunctions7::log_link()) {
+  ShapeCurvature(shape_name = "decreasing convex", link = .check_shape_link(link),
+                 shape_params = list(sign = 1, mono = -1))
+}
+
+#' @rdname shape_constructors
+#' @export
+shape_decreasing_concave <- function(link = linkfunctions7::log_link()) {
+  ShapeCurvature(shape_name = "decreasing concave", link = .check_shape_link(link),
+                 shape_params = list(sign = -1, mono = -1))
+}
+
 S7::method(print, shape_constraint) <- function(x, ...) {
   p <- x@shape_params
   extra <- if (!is.null(p$min_slope) && p$min_slope > 0)
@@ -182,9 +218,13 @@ S7::method(print, shape_constraint) <- function(x, ...) {
 #' @param ... Passed to methods.
 #'
 #' @return A list with `A`, a \eqn{K \times K} matrix; `cons`, the integer
-#'   positions of the constrained coordinates; and `lower`, a numeric vector of
+#'   positions of the constrained coordinates; `lower`, a numeric vector of
 #'   length \eqn{K}, the bound \eqn{\ell_j} added to \eqn{g^{-1}(\gamma_j)} on a
-#'   constrained coordinate (zero elsewhere).
+#'   constrained coordinate (zero elsewhere); and `pen`, the positions whose
+#'   first differences [scs()] penalizes (the constrained slopes of a monotone
+#'   shape; the second divided differences of a curvature shape, preceded by
+#'   the anchored slope in a combination). A method that returns no `pen` has
+#'   its `cons` penalized.
 #'
 #' @seealso [shape_constraint], [shape_start()].
 #'
@@ -207,25 +247,48 @@ S7::method(shape_map, ShapeMonotone) <- function(shape, xi, ...) {
   L <- lower.tri(diag(K), diag = TRUE) * 1
   # beta_j = beta_{j-1} + h_{j-1} s_j, with s_j = sign * b_j
   A <- L %*% diag(c(1, sg * h), K)
-  list(A = A, cons = 2:K, lower = c(0, rep(shape@shape_params$min_slope, K - 1L)))
+  list(A = A, cons = 2:K, lower = c(0, rep(shape@shape_params$min_slope, K - 1L)),
+       pen = 2:K)
 }
 
 S7::method(shape_map, ShapeCurvature) <- function(shape, xi, ...) {
   xi <- .check_greville(xi)
   K <- length(xi); h <- diff(xi); sg <- shape@shape_params$sign
+  mono <- shape@shape_params$mono
+  if (is.null(mono)) mono <- 0
   # slopes s_2..s_K: s_2 = b_2 (free), s_j = s_{j-1} + sign * b_j (xi_j - xi_{j-2})/2,
   # so that a constant b gives constant second divided differences of the
   # coefficients: a parabola inside, a smaller curvature in the end panels
   # where the knots repeat (0.83 of it, measured); then
   # beta_j = beta_{j-1} + h_{j-1} s_j
+  # A COMBINATION ANCHORS THE SLOPE b_2, constrained with the sign of the
+  # monotonicity, at the end where the slope is smallest in absolute value:
+  # the left end when the two signs agree (increasing convex, decreasing
+  # concave), the right end when they differ. The second divided differences
+  # b_3..b_K keep their meaning; only the end from which they are summed
+  # moves, so every slope keeps the sign of the anchor.
+  w <- c(0, 0, (xi[3:K] - xi[1:(K - 2L)]) / 2)
+  right <- mono != 0 && mono != sg
   Ms <- matrix(0, K, K)
   for (j in 2:K) {
-    Ms[j, 2L] <- 1
-    if (j >= 3L) for (i in 3:j) Ms[j, i] <- sg * (xi[i] - xi[i - 2L]) / 2
+    Ms[j, 2L] <- if (mono == 0) 1 else mono
+    if (right) {
+      if (j < K) for (i in (j + 1L):K) Ms[j, i] <- -sg * w[i]
+    } else if (j >= 3L) {
+      for (i in 3:j) Ms[j, i] <- sg * w[i]
+    }
   }
   A <- matrix(0, K, K); A[1L, 1L] <- 1
   for (j in 2:K) A[j, ] <- A[j - 1L, ] + h[j - 1L] * Ms[j, ]
-  list(A = A, cons = 3:K, lower = rep(0, K))
+  # THE ANCHOR IS THE FIRST STEP OF THE PENALIZED WALK. Left out, it is the
+  # one coordinate nothing holds: where the slope at its end is near zero it
+  # runs to -Inf on a flat likelihood (measured on five curves, 40 fits each:
+  # a flat direction in 114 fits of 200, 39 not converged, 5 errors; inside
+  # the walk none of the three, at 5-20 per cent of RMSE where the end slope
+  # is exactly zero; misure_scs/fase2/anchor2.R). The free slope of a plain
+  # curvature shape stays outside, as the linear part of s() does.
+  list(A = A, cons = if (mono == 0) 3:K else 2:K, lower = rep(0, K),
+       pen = if (mono == 0) 3:K else 2:K)
 }
 
 .check_greville <- function(xi) {
@@ -247,8 +310,8 @@ S7::method(shape_map, ShapeCurvature) <- function(shape, xi, ...) {
 #' @details
 #' A monotone shape starts from equal slopes, the slope of the least-squares
 #' line when its sign agrees with the shape. A curvature shape starts from
-#' the least-squares parabola: its slope at the left end and its second
-#' derivative. A slope or a curvature of the wrong sign, or below the lower
+#' the least-squares parabola: its slope at the left end (for a combination,
+#' at the anchored end) and its second derivative. A slope or a curvature of the wrong sign, or below the lower
 #' bound, is replaced by a floor of one hundredth of the scale of the
 #' response over the range of the covariate, so that \eqn{g(b_j - \ell_j)} is
 #' finite.
@@ -294,12 +357,18 @@ S7::method(shape_start, ShapeMonotone) <- function(shape, x, target, xi, ...) {
 S7::method(shape_start, ShapeCurvature) <- function(shape, x, target, xi, ...) {
   xi <- .check_greville(xi); K <- length(xi)
   sg <- shape@shape_params$sign
+  mono <- shape@shape_params$mono
+  if (is.null(mono)) mono <- 0
   fl <- .shape_floor(x, target)
-  if (is.null(target)) return(c(0, 0, rep(fl, K - 2L)))
+  if (is.null(target)) return(c(0, if (mono == 0) 0 else fl, rep(fl, K - 2L)))
   cf <- stats::coef(stats::lm.fit(cbind(1, x, x^2), target))
   c2 <- max(sg * 2 * cf[[3L]], fl)
+  # the slope of the parabola at the anchor: the left end, or the right end
+  # for a combination whose two signs differ
+  xa <- if (mono != 0 && mono != sg) xi[K] else xi[1L]
+  sl <- cf[[2L]] + 2 * cf[[3L]] * xa
   c(cf[[1L]] + cf[[2L]] * xi[1L] + cf[[3L]] * xi[1L]^2,
-    cf[[2L]] + 2 * cf[[3L]] * xi[1L],
+    if (mono == 0) sl else max(mono * sl, fl),
     rep(c2, K - 2L))
 }
 

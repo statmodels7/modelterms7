@@ -16,9 +16,13 @@ numeric vector of length \eqn{K \ge 3}.}
 }
 \value{
 A list with \code{A}, a \eqn{K \times K} matrix; \code{cons}, the integer
-positions of the constrained coordinates; and \code{lower}, a numeric vector of
+positions of the constrained coordinates; \code{lower}, a numeric vector of
 length \eqn{K}, the bound \eqn{\ell_j} added to \eqn{g^{-1}(\gamma_j)} on a
-constrained coordinate (zero elsewhere).
+constrained coordinate (zero elsewhere); and \code{pen}, the positions whose
+first differences \code{\link[=scs]{scs()}} penalizes (the constrained slopes of a monotone
+shape; the second divided differences of a curvature shape, preceded by
+the anchored slope in a combination). A method that returns no \code{pen} has
+its \code{cons} penalized.
 }
 \description{
 Returns the linear part of the map \eqn{\beta = A\,b(\gamma)} of a shape on

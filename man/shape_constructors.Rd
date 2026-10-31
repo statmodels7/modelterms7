@@ -6,6 +6,10 @@
 \alias{shape_decreasing}
 \alias{shape_convex}
 \alias{shape_concave}
+\alias{shape_increasing_convex}
+\alias{shape_increasing_concave}
+\alias{shape_decreasing_convex}
+\alias{shape_decreasing_concave}
 \title{Shape Constraints for a Smooth}
 \usage{
 shape_increasing(link = linkfunctions7::log_link(), min_slope = 0)
@@ -15,6 +19,14 @@ shape_decreasing(link = linkfunctions7::log_link(), min_slope = 0)
 shape_convex(link = linkfunctions7::log_link())
 
 shape_concave(link = linkfunctions7::log_link())
+
+shape_increasing_convex(link = linkfunctions7::log_link())
+
+shape_increasing_concave(link = linkfunctions7::log_link())
+
+shape_decreasing_convex(link = linkfunctions7::log_link())
+
+shape_decreasing_concave(link = linkfunctions7::log_link())
 }
 \arguments{
 \item{link}{A \pkg{linkfunctions7} link onto \eqn{(0, \infty)}, by default
@@ -26,26 +38,34 @@ absolute value.}
 }
 \value{
 An S7 object of class \code{ShapeMonotone} (\code{shape_increasing()},
-\code{shape_decreasing()}) or \code{ShapeCurvature} (\code{shape_convex()},
-\code{shape_concave()}), both inheriting from \link{shape_constraint}.
+\code{shape_decreasing()}) or \code{ShapeCurvature} (the other six), both
+inheriting from \link{shape_constraint}.
 }
 \description{
 Construct the shapes that \code{\link[=scs]{scs()}} imposes on a smooth.
 \code{shape_increasing()} and \code{shape_decreasing()} give a monotone curve, with
 a slope of at least \code{min_slope} in absolute value; \code{shape_convex()} and
-\code{shape_concave()} give a curve of constant sign of curvature.
+\code{shape_concave()} give a curve of constant sign of curvature; the four
+combinations \code{shape_increasing_convex()}, \code{shape_increasing_concave()},
+\code{shape_decreasing_convex()} and \code{shape_decreasing_concave()} give a monotone
+curve of constant sign of curvature.
 }
 \details{
 A monotone shape parametrizes the slopes of the B-spline coefficients on
 the Greville abscissae, \eqn{s_j = \pm(\delta + g^{-1}(\gamma_j))} with
 \eqn{\delta} = \code{min_slope}. A curvature shape keeps the slope at the left
 end free and parametrizes the second divided differences,
-\eqn{\pm g^{-1}(\gamma_j)}. See \link{shape_constraint} for the map.
+\eqn{\pm g^{-1}(\gamma_j)}. A combination constrains the slope as well,
+at the end where the slope is smallest in absolute value: the left end for
+an increasing convex or a decreasing concave curve, the right end for an
+increasing concave or a decreasing convex one, so that every slope keeps
+its sign. See \link{shape_constraint} for the map.
 }
 \examples{
 shape_increasing()
 shape_decreasing(min_slope = 0.1)
 shape_convex(link = linkfunctions7::softplus_link())
+shape_increasing_concave()
 
 # A link onto the whole real line is rejected.
 try(shape_concave(link = linkfunctions7::identity_link()))

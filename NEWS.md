@@ -1,3 +1,15 @@
+# modelterms7 0.119.0
+
+* `shape_increasing_convex()`, `shape_increasing_concave()`,
+  `shape_decreasing_convex()` and `shape_decreasing_concave()` combine a
+  monotonicity with a sign of curvature in `scs()`. The slope is constrained
+  at the end where it is smallest in absolute value (the left end when the
+  two signs agree, the right end otherwise), and the second divided
+  differences are summed from there, so every slope keeps its sign. The
+  anchored slope is the first coordinate of the penalized differences.
+* `shape_map()` returns `pen`, the coordinates whose first differences
+  `scs()` penalizes; a method that returns none has its `cons` penalized.
+
 # modelterms7 0.118.0
 
 * `term_fifth()` returns the fifth derivative of a structural term's

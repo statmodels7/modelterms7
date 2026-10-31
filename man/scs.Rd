@@ -44,8 +44,10 @@ An unbuilt \link{ScsTerm}.
 }
 \description{
 Constructs a smooth function of one covariate constrained to a shape:
-monotone (\code{\link[=shape_increasing]{shape_increasing()}}, \code{\link[=shape_decreasing]{shape_decreasing()}}) or of constant
-curvature (\code{\link[=shape_convex]{shape_convex()}}, \code{\link[=shape_concave]{shape_concave()}}). The term enters the
+monotone (\code{\link[=shape_increasing]{shape_increasing()}}, \code{\link[=shape_decreasing]{shape_decreasing()}}), of constant
+curvature (\code{\link[=shape_convex]{shape_convex()}}, \code{\link[=shape_concave]{shape_concave()}}), or both
+(\code{\link[=shape_increasing_convex]{shape_increasing_convex()}} and the other three combinations). The term
+enters the
 formula of any distribution parameter, like \code{\link[=s]{s()}}.
 }
 \section{The construction}{
@@ -67,7 +69,10 @@ The coefficients are therefore \eqn{\gamma_2, \dots, \gamma_K}, named
 \section{The penalty}{
 The penalty is the quadratic penalty of first differences of the
 constrained coordinates of \eqn{\gamma}, under one smoothing parameter
-\code{lambda} selected with the rest of the model. Under a strong penalty a
+\code{lambda} selected with the rest of the model. For a convex or concave
+smooth these are the second divided differences, and the slope at the left
+end stays free; for a combination the anchored slope is constrained and
+is the first coordinate of the differences. Under a strong penalty a
 monotone smooth approaches a straight line, and a convex or concave one the
 curve whose coefficients have constant second divided differences, which is
 a parabola in the interior and has a smaller curvature in the end panels of
