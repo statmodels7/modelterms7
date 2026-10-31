@@ -281,13 +281,7 @@ test_that("the fifth order reaches a term whose parameters are developed", {
     e <- term_filter(term, eta, d3$y, st$sc, st$cu, psi_of(zeta))$eta
     twin <- .gas_fifth_sub(term, eta, d3$y, st$sc, psi_of(zeta), gw, seed,
                            arrays_of(st, e, m), list(v, w, x))
-    if (any(startsWith(nm, "pacf1."))) {
-      # no compiled route where a partial autocorrelation is developed
-      expect_error(term_fifth(term, eta, d3$y, st$sc, psi_of(zeta), gw, seed,
-                              arrays_of(st, e, m), list(v, w, x)),
-                   "no compiled route")
-      got <- twin
-    } else {
+    {
       got <- term_fifth(term, eta, d3$y, st$sc, psi_of(zeta), gw, seed,
                         arrays_of(st, e, m), list(v, w, x))
       # the compiled route against the R twin, to rounding

@@ -197,7 +197,8 @@ test_that("the joint fifth order is the derivative of the joint fourth", {
   cfgs <- list(list(1:2, 1, 1, "sym", FALSE, FALSE, NULL),
                list(1:2, 2, 1, "upper", TRUE, FALSE, NULL),
                list(1:2, 1, 2, "sym", TRUE, TRUE, NULL),
-               list(1:2, 1, 1, "sym", TRUE, FALSE, kappa1_sigma ~ x))
+               list(1:2, 1, 1, "sym", TRUE, FALSE, kappa1_sigma ~ x),
+               list(1:2, 1, 2, "sym", TRUE, FALSE, pacf1 ~ x))
   for (cfg in cfgs) {
     md <- gjf_model(cfg[[1]], cfg[[2]], cfg[[3]], cross = cfg[[4]],
                     by = cfg[[5]], dev = cfg[[6]], devx = cfg[[7]])

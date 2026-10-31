@@ -4,17 +4,34 @@
 using namespace Rcpp;
 
 // The fifth order of a score-driven term's recursion, compiled, for the
-// route without subformulas and the route with them. The level and the
-// loadings are read per row as h(z'u), with z the row of their design among
-// the group's active unknowns (a unit vector for a parameter without a
-// subformula) and K the link's derivatives of orders zero to five there.
-// The autoregressive coefficients are constant over the rows and come with
-// their derivatives along every subset of the directions, from R. The
-// driving score's derivatives are read from the arrays H, D3, D4, D5 and D6.
-//
-// The state of a row is the level with its derivatives along every subset of
-// the three directions, the score likewise, in ring buffers of max(p, q) + 1
-// slots.
+// route without subformulas and the route with them. Every value of the
+// recursion (the level, the loadings, the partial autocorrelations) is read
+// per row as h(z'u), with z its design row among the group's active unknowns
+// (a unit vector for a parameter without a subformula) and K its link's
+// derivatives of orders zero to five there. The autoregressive coefficients
+// are the Levinson-Durbin map of the partial autocorrelations, composed by
+// order (compose2 .. compose5 of gas_fifth_core.h) once per group where the
+// partial autocorrelations are constant and once per row where one carries a
+// subformula. The driving score is composed the same way from the arrays H,
+// D3, D4, D5 and D6. All storage is allocated once per group.
+
+namespace {
+
+struct RowVal {
+    NumericMatrix Z, K;
+};
+
+inline void value_jet(const RowVal& V, int t, int mk, mt7f::dvec& z,
+                      mt7f::dvec& zd, double* Kt, const double* const* dirs,
+                      mt7f::Jet5& J) {
+    for (int k = 0; k < mk; ++k) z[k] = V.Z(t, k);
+    for (int o = 0; o < 6; ++o) Kt[o] = V.K(t, o);
+    for (int d = 0; d < 3; ++d) zd[d] = mt7f::dt(z.data(), dirs[d], mk);
+    mt7f::rank_one(Kt, z.data(), zd.data(), J);
+    J.finish(dirs);
+}
+
+} // namespace
 
 // [[Rcpp::export]]
 List gas_fifth_gen_cpp(NumericVector eta, List groups, int p, int q,
@@ -32,25 +49,22 @@ List gas_fifth_gen_cpp(NumericVector eta, List groups, int p, int q,
         dpsi.push_back(NumericMatrix(n, m_full));
     }
     NumericMatrix W(m_full, m_full);
-    Arrays Ar;
-    Ar.npar = P;
-    Ar.n = n;
-    std::vector<NumericMatrix> keep_arr;
+    std::vector<NumericMatrix> keep;
+    ArrayGet AG;
+    AG.n = n;
+    AG.P = P;
     for (int k = 0; k < 5; ++k) {
-        NumericMatrix x = arrays[k];
-        keep_arr.push_back(x);
-        Ar.a[k] = keep_arr.back().begin();
+        keep.push_back(as<NumericMatrix>(arrays[k]));
+        AG.a[k] = keep.back().begin();
     }
     std::vector<NumericMatrix> Vs_m;
     for (int r = 0; r < P; ++r) Vs_m.push_back(as<NumericMatrix>(Vs[r]));
     bool use_fn = s_at.size() == 0;
-    Function* fn = nullptr;
     Function fn_obj("identity");
-    if (use_fn) {
-        fn_obj = Function(score_fn.get());
-        fn = &fn_obj;
-    }
-    const int pairs[3] = {3, 5, 6};
+    if (use_fn) fn_obj = Function(score_fn.get());
+    Outer<ArrayGet> US;
+    US.get = &AG;
+    US.P = P;
 
     for (int gi = 0; gi < groups.size(); ++gi) {
         List G = groups[gi];
@@ -58,76 +72,74 @@ List gas_fifth_gen_cpp(NumericVector eta, List groups, int p, int q,
         IntegerVector act = G["act"];
         int m = rows.size(), mk = act.size();
         std::size_t mk2 = (std::size_t) mk * mk;
-        // the directions on the active set
         dvec dv((std::size_t) 3 * mk);
         for (int d = 0; d < 3; ++d) {
             for (int k = 0; k < mk; ++k) dv[(std::size_t) d * mk + k] = dirs_full(act[k] - 1, d);
         }
         const double* dirs[3] = {&dv[0], &dv[mk], &dv[2 * mk]};
-        // the values read per row: Z is m x mk, K is m x 6
-        List om = G["omega"];
-        List al = G["a"];
-        NumericMatrix omZ = om["Z"], omK = om["K"];
-        std::vector<NumericMatrix> aZ, aK;
-        for (int i = 0; i < p; ++i) {
-            List ai = al[i];
-            aZ.push_back(as<NumericMatrix>(ai["Z"]));
-            aK.push_back(as<NumericMatrix>(ai["K"]));
-        }
-        // the constant autoregressive coefficients' jets
-        std::vector<J5> bj(q);
-        J5 Ssum;
-        Ssum.init(mk);
-        if (q > 0) {
-            NumericVector bval = G["b"];
-            NumericMatrix bd1 = G["b_d1"];       // mk x q
-            NumericVector bmats = G["b_mats"];   // mk x mk x 8 x q
-            for (int j = 0; j < q; ++j) {
-                bj[j].init(mk);
-                bj[j].v = bval[j];
-                for (int k = 0; k < mk; ++k) bj[j].d1[k] = bd1(k, j);
-                std::copy(bmats.begin() + (std::size_t) j * 8 * mk2,
-                          bmats.begin() + (std::size_t)(j + 1) * 8 * mk2,
-                          bj[j].M.begin());
-                bj[j].finish(dirs);
-                Ssum.v += bj[j].v;
-                for (int k = 0; k < mk; ++k) Ssum.d1[k] += bj[j].d1[k];
-                for (std::size_t e = 0; e < 8 * mk2; ++e) Ssum.M[e] += bj[j].M[e];
-            }
-            Ssum.finish(dirs);
-        }
+        RowVal om;
+        { List x = G["omega"]; om.Z = as<NumericMatrix>(x["Z"]); om.K = as<NumericMatrix>(x["K"]); }
+        std::vector<RowVal> al(p), pa(q);
+        { List x = G["a"]; for (int i = 0; i < p; ++i) { List y = x[i]; al[i].Z = as<NumericMatrix>(y["Z"]); al[i].K = as<NumericMatrix>(y["K"]); } }
+        { List x = G["pa"]; for (int j = 0; j < q; ++j) { List y = x[j]; pa[j].Z = as<NumericMatrix>(y["Z"]); pa[j].K = as<NumericMatrix>(y["K"]); } }
+        bool varying_b = as<bool>(G["varying_b"]);
         bool direct = as<bool>(G["direct"]);
         double d0 = as<double>(G["d0"]);
 
-        auto value_jet = [&](const NumericMatrix& Z, const NumericMatrix& K,
-                             int t, J5& J) {
-            dvec z(mk), Kt(6), zd(3);
-            for (int k = 0; k < mk; ++k) z[k] = Z(t, k);
-            for (int o = 0; o < 6; ++o) Kt[o] = K(t, o);
-            for (int d = 0; d < 3; ++d) zd[d] = dt(z.data(), dirs[d], mk);
-            rank_one(Kt.data(), z.data(), zd.data(), J);
-            J.finish(dirs);
-        };
-
+        // the storage of the group, allocated once
+        dvec z(mk), zd(3), Kt(6), rho(q), vrow(mk), Wl(mk2, 0.0);
         int L = std::max(p, q) + 1;
-        std::vector<J5> fj(L), sj(L);
-        for (int i = 0; i < L; ++i) { fj[i].init(mk); sj[i].init(mk); }
-        J5 f0, omj, aj, ft, ej, zero_j;
-        f0.init(mk); omj.init(mk); aj.init(mk); ft.init(mk); ej.init(mk);
-        zero_j.init(mk);
+        std::vector<Jet5> fj(L), sj(L), rj(q), bj(q), lin(P);
+        for (auto& x : fj) x.alloc(mk);
+        for (auto& x : sj) x.alloc(mk);
+        for (auto& x : rj) x.alloc(mk);
+        for (auto& x : bj) x.alloc(mk);
+        for (auto& x : lin) x.alloc(mk);
+        Jet5 omj, aj, ft, ej, f0, Ssum, zero_j;
+        omj.alloc(mk); aj.alloc(mk); ft.alloc(mk); ej.alloc(mk); f0.alloc(mk);
+        Ssum.alloc(mk); zero_j.alloc(mk);
         zero_j.finish(dirs);
+        CompWork CW, CB;
+        CW.alloc(P, mk);
+        CB.alloc(std::max(q, 1), mk);
+        Levinson5 Lv;
+        Lv.alloc(std::max(q, 1));
+        std::vector<const Jet5*> Eb(q), E(P);
+        for (int j = 0; j < q; ++j) Eb[j] = &rj[j];
+
+        // the autoregressive coefficients at row t, composed from the
+        // partial autocorrelations
+        auto b_at = [&](int t) {
+            for (int k = 0; k < q; ++k) {
+                value_jet(pa[k], t, mk, z, zd, Kt.data(), dirs, rj[k]);
+                rho[k] = rj[k].v;
+            }
+            Lv.run(rho.data());
+            Ssum.clear();
+            for (int j = 0; j < q; ++j) {
+                LevGet LG;
+                LG.L = &Lv;
+                LG.j = j;
+                Outer<LevGet> UB;
+                UB.get = &LG;
+                UB.P = q;
+                compose(UB, Eb, Lv.phi[j], CB, bj[j], dirs);
+                Ssum.v += bj[j].v;
+                for (int k = 0; k < mk; ++k) Ssum.d1[k] += bj[j].d1[k];
+                for (std::size_t e = 0; e < 8 * mk2; ++e) Ssum.buf[e] += bj[j].buf[e];
+            }
+            Ssum.finish(dirs);
+        };
+        if (q > 0) b_at(0);
         if (direct) {
+            f0.clear();
             f0.v = d0;
             for (int k = 0; k < mk; ++k) f0.d1[k] = -seed(rows[0] - 1, act[k] - 1);
             f0.finish(dirs);
         } else {
-            value_jet(omZ, omK, 0, omj);
+            value_jet(om, 0, mk, z, zd, Kt.data(), dirs, omj);
             start_level(omj, Ssum, f0, dirs);
         }
-        std::vector<J5> lin(P);
-        for (int r = 0; r < P; ++r) lin[r].init(mk);
-        std::vector<const J5*> E(P);
-        dvec Wl(mk2, 0.0), vrow(mk);
 
         for (int t = 0; t < m; ++t) {
             int row = rows[t] - 1;
@@ -135,11 +147,11 @@ List gas_fifth_gen_cpp(NumericVector eta, List groups, int p, int q,
             if (direct && t == 0) {
                 ft = f0;
             } else {
-                value_jet(omZ, omK, t, omj);
-                ft = omj;
+                if (q > 0 && varying_b && t > 0) b_at(t);
+                value_jet(om, t, mk, z, zd, Kt.data(), dirs, ft);
                 for (int i = 1; i <= p; ++i) {
                     int lag = t - i;
-                    value_jet(aZ[i - 1], aK[i - 1], t, aj);
+                    value_jet(al[i - 1], t, mk, z, zd, Kt.data(), dirs, aj);
                     prod_into(aj, lag >= 0 ? sj[lag % L] : zero_j, ft);
                 }
                 for (int j = 1; j <= q; ++j) {
@@ -155,30 +167,29 @@ List gas_fifth_gen_cpp(NumericVector eta, List groups, int p, int q,
             ej.finish(dirs);
             for (int k = 0; k < mk; ++k) D(row, act[k] - 1) = ej.d1[k];
             for (int d = 0; d < 3; ++d) {
-                const double* r1 = ej.row(1 << d);
-                const double* r2 = ej.row(pairs[d]);
+                const double* r1 = ej.r2[d];
+                const double* r2 = ej.r3[d];
                 for (int k = 0; k < mk; ++k) {
                     dphi[d](row, act[k] - 1) = r1[k];
                     dpsi[d](row, act[k] - 1) = r2[k];
                 }
             }
-            const double* r3 = ej.row(7);
-            for (int k = 0; k < mk; ++k) dom(row, act[k] - 1) = r3[k];
-            const double* top = ft.mat(7);
-            for (std::size_t e = 0; e < mk2; ++e) Wl[e] += g[row] * top[e];
+            for (int k = 0; k < mk; ++k) dom(row, act[k] - 1) = ej.r4[k];
+            for (std::size_t e = 0; e < mk2; ++e) Wl[e] += g[row] * ft.P5[e];
 
             // the driving score's jet at this row
             for (int r = 0; r < P; ++r) {
                 if (r == ap - 1) { E[r] = &ej; continue; }
-                for (int k = 0; k < mk; ++k) vrow[k] = Vs_m[r](row, act[k] - 1);
-                linear_jet(0.0, vrow.data(), dirs, lin[r]);
-                E[r] = &lin[r];
+                Jet5& Lr = lin[r];
+                Lr.high = false;
+                Lr.v = 0.0;
+                for (int k = 0; k < mk; ++k) Lr.d1[k] = Vs_m[r](row, act[k] - 1);
+                Lr.finish(dirs);
+                E[r] = &Lr;
             }
-            double sv = use_fn ? as<double>((*fn)(ej.v, row + 1)) : s_at[row];
-            Contract C;
-            C.A = &Ar;
-            C.row = row;
-            score_jet(C, E, sv, sj[ts], dirs);
+            double sv = use_fn ? as<double>(fn_obj(ej.v, row + 1)) : s_at[row];
+            AG.row = row;
+            compose(US, E, sv, CW, sj[ts], dirs);
         }
         for (int j = 0; j < mk; ++j) {
             for (int k = 0; k < mk; ++k) {
@@ -186,7 +197,6 @@ List gas_fifth_gen_cpp(NumericVector eta, List groups, int p, int q,
             }
         }
     }
-    // symmetric to a rounding, made so exactly
     for (int j = 0; j < m_full; ++j) {
         for (int k = j + 1; k < m_full; ++k) {
             double a = 0.5 * (W(j, k) + W(k, j));

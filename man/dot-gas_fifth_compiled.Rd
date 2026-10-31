@@ -44,15 +44,11 @@ As \code{\link[=term_fifth]{term_fifth()}}.
 }
 \description{
 Builds the groups that \code{gas_fifth_gen_cpp()} reads and runs it: for each
-group its rows and active unknowns, the level and the loadings as design
-rows with their links' derivatives of orders zero to five per row, and the
-autoregressive coefficients with their derivatives along every subset of
-the directions.
-}
-\details{
-The autoregressive coefficients are constant over the rows unless a
-partial autocorrelation carries a subformula; that case has no compiled
-route at the fifth order and signals an error. Their derivatives are those
-of \code{\link[=.gas_chart_contract]{.gas_chart_contract()}}, lifted to the unknowns.
+group its rows and active unknowns, and every value of the recursion (the
+level, the loadings and the partial autocorrelations) as design rows over
+the active unknowns with its link's derivatives of orders zero to five per
+row. The kernel composes the autoregressive coefficients from the partial
+autocorrelations by the Levinson-Durbin map, once per group or, where a
+partial autocorrelation carries a subformula, once per row.
 }
 \keyword{internal}
