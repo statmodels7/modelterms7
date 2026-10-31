@@ -3,6 +3,10 @@
 \name{term_fifth.GasTerm}
 \alias{term_fifth.GasTerm}
 \title{The Score-Driven Recursion's Fifth Derivative}
+\arguments{
+\item{score_values}{\code{NULL}, or the driving score at every observation,
+read instead of evaluating \code{score}.}
+}
 \value{
 As \code{\link[=term_fifth]{term_fifth()}}.
 }
@@ -17,5 +21,9 @@ every subset of the three directions, and each product of the recursion is
 differentiated by the product rule over those subsets. The chart's
 derivatives come from \code{\link[=.gas_chart_contract]{.gas_chart_contract()}} and \code{\link[=gas_levinson5]{gas_levinson5()}}, the
 score's from the family's arrays by \code{\link[=.gas_score_jet]{.gas_score_jet()}}.
+
+The compiled kernel (\code{\link[=.gas_fifth_compiled]{.gas_fifth_compiled()}}) is the route; the R
+functions \code{.gas_fifth_scalar()} and \code{.gas_fifth_sub()} are an independent
+computation kept for the tests.
 }
 \keyword{internal}
