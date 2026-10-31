@@ -31,8 +31,8 @@ shapes) fitted by least squares to a working response.
 \details{
 A monotone shape starts from equal slopes, the slope of the least-squares
 line when its sign agrees with the shape. A curvature shape starts from
-the least-squares parabola: its slope at the left end and its second
-derivative. A slope or a curvature of the wrong sign, or below the lower
+the least-squares parabola: its slope at the left end (for a combination,
+at the anchored end) and its second derivative. A slope or a curvature of the wrong sign, or below the lower
 bound, is replaced by a floor of one hundredth of the scale of the
 response over the range of the covariate, so that \eqn{g(b_j - \ell_j)} is
 finite.

@@ -47,8 +47,10 @@ ScsTerm <- S7::new_class(
 #'
 #' @description
 #' Constructs a smooth function of one covariate constrained to a shape:
-#' monotone ([shape_increasing()], [shape_decreasing()]) or of constant
-#' curvature ([shape_convex()], [shape_concave()]). The term enters the
+#' monotone ([shape_increasing()], [shape_decreasing()]), of constant
+#' curvature ([shape_convex()], [shape_concave()]), or both
+#' ([shape_increasing_convex()] and the other three combinations). The term
+#' enters the
 #' formula of any distribution parameter, like [s()].
 #'
 #' @details
@@ -72,7 +74,10 @@ ScsTerm <- S7::new_class(
 #'
 #' The penalty is the quadratic penalty of first differences of the
 #' constrained coordinates of \eqn{\gamma}, under one smoothing parameter
-#' `lambda` selected with the rest of the model. Under a strong penalty a
+#' `lambda` selected with the rest of the model. For a convex or concave
+#' smooth these are the second divided differences, and the slope at the left
+#' end stays free; for a combination the anchored slope is constrained and
+#' is the first coordinate of the differences. Under a strong penalty a
 #' monotone smooth approaches a straight line, and a convex or concave one the
 #' curve whose coefficients have constant second divided differences, which is
 #' a parabola in the interior and has a smaller curvature in the end panels of
@@ -234,12 +239,14 @@ S7::method(term_build, ScsTerm) <- function(term, data, ...) {
   b0 <- shape_start(term@shape, x, NULL, xi)[-1L]
   coef <- .shape_gamma(bp$link, b0, cons, lower)
   bp$coef0 <- coef
-  # first differences of the constrained coordinates; zero on the free slope
-  # of a curvature shape, which the penalty does not see
+  # first differences of the coordinates the shape declares penalized; zero
+  # on the free slope of a plain curvature shape, which the penalty does not
+  # see (the anchored slope of a combination is in the walk)
+  pen <- (if (is.null(m$pen)) m$cons else m$pen) - 1L
   P <- matrix(0, K - 1L, K - 1L)
-  if (length(cons) > 1L) {
-    D <- diff(diag(length(cons)))
-    P[cons, cons] <- crossprod(D)
+  if (length(pen) > 1L) {
+    D <- diff(diag(length(pen)))
+    P[pen, pen] <- crossprod(D)
   }
   term@coef_names <- sprintf("%s.g%d", term@label, seq_len(K - 1L))
   term@penalty <- penalties7::quadratic_penalty(P)
