@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.121.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.122.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -410,7 +410,7 @@
       </dl></div><div class="section level2">
       <h2 id="shape-constrained-smooths">Shape-constrained smooths<a class="anchor" aria-label="anchor" href="#shape-constrained-smooths"></a></h2>
 
-      <div class="section-desc"><p>A smooth of one covariate constrained to be monotone, convex, concave or unimodal, through a map from free coefficients to the B-spline coefficients, with a penalty on the free coefficients.</p></div>
+      <div class="section-desc"><p>A smooth of one covariate constrained to be monotone, convex, concave, unimodal or sigmoid, through a map from free coefficients to the B-spline coefficients, with a penalty on the free coefficients.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -440,7 +440,7 @@
 
         <dt>
 
-          <code><a href="shape_constraint.html">shape_constraint()</a></code> <code><a href="shape_constraint.html">ShapeMonotone()</a></code> <code><a href="shape_constraint.html">ShapeCurvature()</a></code> <code><a href="shape_constraint.html">ShapeUnimodal()</a></code>
+          <code><a href="shape_constraint.html">shape_constraint()</a></code> <code><a href="shape_constraint.html">ShapeMonotone()</a></code> <code><a href="shape_constraint.html">ShapeCurvature()</a></code> <code><a href="shape_constraint.html">ShapeLocated()</a></code> <code><a href="shape_constraint.html">ShapeUnimodal()</a></code> <code><a href="shape_constraint.html">ShapeSigmoid()</a></code>
 
         </dt>
         <dd>S7 Class for Shape Constraints</dd>
@@ -461,10 +461,10 @@
 
         <dt>
 
-          <code><a href="shape_unimodal.html">shape_unimodal()</a></code>
+          <code><a href="shape_located.html">shape_unimodal()</a></code> <code><a href="shape_located.html">shape_sigmoid()</a></code>
 
         </dt>
-        <dd>A Unimodal Shape</dd>
+        <dd>Unimodal and Sigmoid Shapes</dd>
 
         <dt>
 

@@ -15,7 +15,7 @@ term_variants() from the contribution that the stand-in fits."><meta property="o
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.121.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.122.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -45,7 +45,7 @@ term_variants() from the contribution that the stand-in fits."><meta property="o
     <p>Returns the unbuilt term with which a fitting layer replaces <code>term</code> in a
 pilot fit, or <code>NULL</code> when the term needs no pilot. A term returns one when
 it carries a discrete choice that the data must settle (the index of the
-mode of <code><a href="shape_unimodal.html">shape_unimodal()</a></code>), which the layer makes with
+mode of <code><a href="shape_located.html">shape_unimodal()</a></code>), which the layer makes with
 <code><a href="term_variants.html">term_variants()</a></code> from the contribution that the stand-in fits.</p>
     </div>
 
@@ -79,11 +79,11 @@ mode of <code><a href="shape_unimodal.html">shape_unimodal()</a></code>), which 
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu">term_pilot</span><span class="op">(</span><span class="fu"><a href="s.html">s</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="fu">term_pilot</span><span class="op">(</span><span class="fu"><a href="scs.html">scs</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu"><a href="shape_unimodal.html">shape_unimodal</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="fu">term_pilot</span><span class="op">(</span><span class="fu"><a href="scs.html">scs</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu"><a href="shape_located.html">shape_unimodal</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "modelterms7::SmoothTerm"</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A mode given in the shape needs no pilot.</span></span></span>
-<span class="r-in"><span><span class="fu">term_pilot</span><span class="op">(</span><span class="fu"><a href="scs.html">scs</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu"><a href="shape_unimodal.html">shape_unimodal</a></span><span class="op">(</span>mode <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">term_pilot</span><span class="op">(</span><span class="fu"><a href="scs.html">scs</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu"><a href="shape_located.html">shape_unimodal</a></span><span class="op">(</span>mode <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> NULL</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

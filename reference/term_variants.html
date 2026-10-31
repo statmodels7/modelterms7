@@ -13,7 +13,7 @@ model with each and keeps the best."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.121.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.122.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -75,10 +75,11 @@ which <code>term</code> was built, or <code>NULL</code>.</p></dd>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The base method returns <code>term</code> alone. For <code><a href="scs.html">scs()</a></code> with <code><a href="shape_unimodal.html">shape_unimodal()</a></code>
-and no mode, the pilot's maximum gives the Greville abscissa
-\(\xi_{M_0}\) nearest to it, and the versions are the shape with the mode
-at the indices \(M_0 - 2, \dots, M_0 + 2\) that exist, named <code>"M = j"</code>.</p>
+    <p>The base method returns <code>term</code> alone. For <code><a href="scs.html">scs()</a></code> with <code><a href="shape_located.html">shape_unimodal()</a></code>
+or <code><a href="shape_located.html">shape_sigmoid()</a></code> and no location, the pilot's extremum (unimodal) or
+steepest point (sigmoid) gives the Greville abscissa \(\xi_{M_0}\)
+nearest to it, and the versions are the shape located at the indices
+\(M_0 - 2, \dots, M_0 + 2\) that exist, named <code>"M = j"</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -89,7 +90,7 @@ at the indices \(M_0 - 2, \dots, M_0 + 2\) that exist, named <code>"M = j"</code
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">tm</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="scs.html">scs</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu"><a href="shape_unimodal.html">shape_unimodal</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">tm</span> <span class="op">&lt;-</span> <span class="fu"><a href="term_build.html">term_build</a></span><span class="op">(</span><span class="fu"><a href="scs.html">scs</a></span><span class="op">(</span><span class="va">x</span>, <span class="fu"><a href="shape_located.html">shape_unimodal</a></span><span class="op">(</span><span class="op">)</span>, <span class="fu">basis7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/basis7/reference/bspline_smooth.html" class="external-link">bspline_smooth</a></span><span class="op">(</span>k <span class="op">=</span> <span class="fl">10</span><span class="op">)</span><span class="op">)</span>, <span class="va">d</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="fu">term_variants</span><span class="op">(</span><span class="va">tm</span>, pilot <span class="op">=</span> <span class="op">-</span><span class="op">(</span><span class="va">d</span><span class="op">$</span><span class="va">x</span> <span class="op">-</span> <span class="fl">0.3</span><span class="op">)</span><span class="op">^</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] "M = 2" "M = 3" "M = 4" "M = 5" "M = 6"</span>
 <span class="r-in"><span></span></span>

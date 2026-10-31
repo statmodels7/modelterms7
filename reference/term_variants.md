@@ -37,11 +37,13 @@ A non-empty named list of unbuilt terms carrying the label of `term`.
 The base method returns `term` alone. For
 [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
 with
-[`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_unimodal.md)
-and no mode, the pilot's maximum gives the Greville abscissa
-\\\xi\_{M_0}\\ nearest to it, and the versions are the shape with the
-mode at the indices \\M_0 - 2, \dots, M_0 + 2\\ that exist, named
-`"M = j"`.
+[`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md)
+or
+[`shape_sigmoid()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md)
+and no location, the pilot's extremum (unimodal) or steepest point
+(sigmoid) gives the Greville abscissa \\\xi\_{M_0}\\ nearest to it, and
+the versions are the shape located at the indices \\M_0 - 2, \dots,
+M_0 + 2\\ that exist, named `"M = j"`.
 
 ## See also
 

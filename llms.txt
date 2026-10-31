@@ -451,9 +451,9 @@ product, anisotropic by default.
 
 ## Shape-constrained smooths
 
-A smooth of one covariate constrained to be monotone, convex, concave or
-unimodal, through a map from free coefficients to the B-spline
-coefficients, with a penalty on the free coefficients.
+A smooth of one covariate constrained to be monotone, convex, concave,
+unimodal or sigmoid, through a map from free coefficients to the
+B-spline coefficients, with a penalty on the free coefficients.
 
 - [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
   : Shape-Constrained Smooth of One Covariate
@@ -471,14 +471,17 @@ coefficients, with a penalty on the free coefficients.
 - [`shape_constraint()`](https://statmodels7.github.io/modelterms7/reference/shape_constraint.md)
   [`ShapeMonotone()`](https://statmodels7.github.io/modelterms7/reference/shape_constraint.md)
   [`ShapeCurvature()`](https://statmodels7.github.io/modelterms7/reference/shape_constraint.md)
+  [`ShapeLocated()`](https://statmodels7.github.io/modelterms7/reference/shape_constraint.md)
   [`ShapeUnimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_constraint.md)
+  [`ShapeSigmoid()`](https://statmodels7.github.io/modelterms7/reference/shape_constraint.md)
   : S7 Class for Shape Constraints
 - [`shape_map()`](https://statmodels7.github.io/modelterms7/reference/shape_map.md)
   : The Map of a Shape Constraint
 - [`shape_start()`](https://statmodels7.github.io/modelterms7/reference/shape_start.md)
   : The Starting Value of a Shape Constraint
-- [`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_unimodal.md)
-  : A Unimodal Shape
+- [`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md)
+  [`shape_sigmoid()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md)
+  : Unimodal and Sigmoid Shapes
 - [`term_pilot()`](https://statmodels7.github.io/modelterms7/reference/term_pilot.md)
   : The Term That Stands in for a Term During a Pilot Fit
 - [`term_variants()`](https://statmodels7.github.io/modelterms7/reference/term_variants.md)

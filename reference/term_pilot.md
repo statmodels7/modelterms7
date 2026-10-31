@@ -4,7 +4,7 @@ Returns the unbuilt term with which a fitting layer replaces `term` in a
 pilot fit, or `NULL` when the term needs no pilot. A term returns one
 when it carries a discrete choice that the data must settle (the index
 of the mode of
-[`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_unimodal.md)),
+[`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md)),
 which the layer makes with
 [`term_variants()`](https://statmodels7.github.io/modelterms7/reference/term_variants.md)
 from the contribution that the stand-in fits.

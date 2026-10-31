@@ -23,7 +23,11 @@ ShapeMonotone(shape_name = character(0), link = NULL, shape_params = list())
 
 ShapeCurvature(shape_name = character(0), link = NULL, shape_params = list())
 
+ShapeLocated(shape_name = character(0), link = NULL, shape_params = list())
+
 ShapeUnimodal(shape_name = character(0), link = NULL, shape_params = list())
+
+ShapeSigmoid(shape_name = character(0), link = NULL, shape_params = list())
 ```
 
 ## Arguments

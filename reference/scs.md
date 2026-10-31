@@ -9,8 +9,9 @@ of constant curvature
 [`shape_concave()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)),
 both
 ([`shape_increasing_convex()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
-and the other three combinations), or unimodal
-([`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_unimodal.md)).
+and the other three combinations), or unimodal or sigmoid
+([`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md),
+[`shape_sigmoid()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md)).
 The term enters the formula of any distribution parameter, like
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md).
 
