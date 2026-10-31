@@ -5,6 +5,7 @@
 \alias{.gas_start_jet}
 \alias{.gas_fifth_scalar}
 \alias{.gas_fifth_sub}
+\alias{.gas_sub_chart_fun}
 \title{The Score-Driven Recursion's Derivatives to the Fifth Order, R Route}
 \usage{
 .gas_fifth_run(term, eta, score, g, seed, blocks_data, dirs, chart_at)
@@ -14,6 +15,8 @@
 .gas_fifth_scalar(term, eta, y, score, psi, g, seed, blocks_data, dirs)
 
 .gas_fifth_sub(term, eta, y, score, psi, g, seed, blocks_data, dirs)
+
+.gas_sub_chart_fun(tm, psiv, cols, m, dirs)
 }
 \arguments{
 \item{term}{A built term.}
@@ -43,6 +46,14 @@ unknowns.}
 \item{y}{The response.}
 
 \item{psi}{The term's parameters, named as \code{\link[=term_params]{term_params()}}.}
+
+\item{tm}{A built score-driven term, with or without subformulas.}
+
+\item{psiv}{Its parameters in the order of \code{\link[=term_params]{term_params()}}: the parameter
+scale for a parameter without a subformula, the coefficients for a
+developed one.}
+
+\item{cols}{The columns of those parameters among the unknowns.}
 }
 \value{
 \code{.gas_start_jet()} the jet of the starting level; the others as
@@ -65,5 +76,13 @@ so this route is a second, independent computation of what
 \code{\link[=term_curvature]{term_curvature()}}, \code{\link[=term_third]{term_third()}} and \code{\link[=term_fourth]{term_fourth()}} return. The
 starting level of a group is read off the fixed point at the group's first
 observation, as at the lower orders.
+
+\code{.gas_sub_chart_fun()} returns the chart at a row for a term
+whose values are read per observation: each base parameter and each cross
+loading is \eqn{h(z^\top u)}, with \eqn{z} its design row among the
+unknowns (a unit vector for a parameter without a subformula), and the
+autoregressive coefficients come from \code{\link[=.gas_map_jets]{.gas_map_jets()}}. The result at a
+row carries \code{x}, the cross loadings' jets in the order of the term's
+pairs (partner, lag).
 }
 \keyword{internal}

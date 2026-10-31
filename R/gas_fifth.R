@@ -1,3 +1,6 @@
+#' @include structural.R gas.R gas_submodels.R gas_joint.R gas_joint_core.R
+NULL
+
 # The pieces of the score-driven recursion's fifth order that do not depend on
 # how the model's derivatives reach the recursion: the fifth derivative of the
 # Levinson-Durbin map, the chart's derivatives of any order up to five in a
@@ -367,41 +370,43 @@ gas_levinson5 <- function(pacf, v, w, x) {
 }
 
 
-#' The Score's Jet at One Observation, from the Family's Derivative Arrays
+#' The Jet of a Function of Several Predictors
 #'
 #' @description
-#' Composes the family's derivatives of the driving score in the predictors
-#' with the jets of the predictors, by Faa di Bruno's formula over the set
-#' partitions of the slots: the directions of a subset and the two free
-#' slots.
+#' Composes the derivatives of a function \eqn{u(e_1, \dots, e_P)} of the
+#' predictors of every equation with the jets of those predictors, by Faa di
+#' Bruno's formula over the set partitions of the slots: the directions of a
+#' subset and the two free slots. `.gas_score_jet()` is the case of one
+#' filtered equation, whose predictor alone has derivatives above the first.
 #'
 #' @details
-#' The score \eqn{s = \ell_p(e_1, \dots, e_Q)} is read at the predictors of
-#' every equation. The predictor \eqn{e_p} of the filter's own equation has
-#' derivatives of every order; the others are linear in the unknowns, with
-#' first derivative \eqn{V_r}. A block of a partition with two or more slots
-#' therefore lands on \eqn{e_p} only, and a block of one slot on any
-#' equation. The coefficient of a partition with \eqn{k} blocks is
-#' \eqn{\ell_{p r_1 \dots r_k}}, read from `H`, `D3`, ..., `D6`.
+#' A partition with \eqn{k} blocks contributes
+#' \eqn{\sum_{r_1,\dots,r_k} u_{r_1\dots r_k}\prod_\beta
+#' \partial^{|\beta|}e_{r_\beta}[\beta]}, where each factor is the
+#' derivative of one predictor along the slots of its block: a number for a
+#' block without a free slot, a row for a block with one, a matrix for a
+#' block with both. The coefficients \eqn{u_{r_1\dots r_k}} are read from
+#' `ell`, the arrays of the driving quantity's derivatives in the predictors
+#' at the observation (`H`, `D3`, ..., `D6` of [term_fifth()], or `U1` to
+#' `U5` of a joint filter).
 #'
-#' @param ell A list whose element \eqn{k} is the array of
-#'   \eqn{\ell_{p r_1\dots r_k}} at the observation, with \eqn{k} dimensions
-#'   of `npar` each.
-#' @param s0 The score's value.
-#' @param ej The jet of the filter's own predictor.
-#' @param V A `npar` by `m` matrix of the predictors' first derivatives (the
+#' @param ell A list whose element \eqn{k} is the array of the derivatives
+#'   of order \eqn{k}, with \eqn{k} dimensions of `P` each.
+#' @param s0 The value.
+#' @param E A list of `P` jets, one per equation's predictor.
+#' @param ej The jet of the filtered predictor.
+#' @param V A `P` by `m` matrix of the predictors' first derivatives (the
 #'   row `ap` is replaced by the jet's).
-#' @param ap The index of the filter's own parameter.
+#' @param ap The index of the filtered equation.
 #'
-#' @return The score's jet.
+#' @return A jet.
 #'
 #' @keywords internal
-.gas_score_jet <- function(ell, s0, ej, V, ap) {
-  dirs <- ej$dirs
+.gas_compose <- function(ell, s0, E) {
+  dirs <- E[[1L]]$dirs
   nd <- length(dirs)
-  npar <- nrow(V)
-  V[ap, ] <- ej$d1
-  m <- ncol(V)
+  P <- length(E)
+  m <- length(E[[1L]]$d1)
   mats <- list()
   for (S in .gas_subsets(nd)) {
     ns <- length(S)
@@ -409,54 +414,38 @@ gas_levinson5 <- function(pacf, v, w, x) {
     acc <- matrix(0, m, m)
     for (part in numericals7::set_partitions(ns + 2L)) {
       k <- length(part)
-      # per block: a coefficient vector over the equations for the scalar
-      # blocks, and the free part for the blocks holding a free slot
       cvec <- list()
       free <- list()
       for (bi in seq_along(part)) {
         sl <- slots[part[[bi]]]
         dset <- sl[sl > 0L]
         nfree <- sum(sl < 0L)
-        if (length(sl) == 1L) {
-          if (nfree == 0L) {
-            cvec[[bi]] <- as.numeric(V %*% dirs[[dset]])
-          } else {
-            free[[length(free) + 1L]] <- list(block = bi, rows = V,
-                                              a = -1L %in% sl)
-          }
+        if (nfree == 0L) {
+          cvec[[bi]] <- vapply(E, function(e) .gas_jet_get(e, dset, 0L),
+                               numeric(1))
+        } else if (nfree == 1L) {
+          rows <- t(vapply(E, function(e) .gas_jet_get(e, dset, 1L),
+                           numeric(m)))
+          free[[length(free) + 1L]] <- list(block = bi, rows = rows,
+                                            a = -1L %in% sl)
         } else {
-          val <- .gas_jet_get(ej, dset, nfree)
-          if (nfree == 0L) {
-            u <- numeric(npar)
-            u[ap] <- val
-            cvec[[bi]] <- u
-          } else if (nfree == 1L) {
-            rows <- matrix(0, npar, m)
-            rows[ap, ] <- val
-            free[[length(free) + 1L]] <- list(block = bi, rows = rows,
-                                              a = -1L %in% sl)
-          } else {
-            free[[length(free) + 1L]] <- list(block = bi, mat = val)
-          }
+          free[[length(free) + 1L]] <- list(
+            block = bi, mats = lapply(E, function(e) .gas_jet_get(e, dset, 2L)))
         }
       }
-      # contract the coefficient array over the scalar blocks
-      arr <- ell[[k]]
-      if (k == 1L) arr <- array(arr, npar)
       fb <- vapply(free, function(f) f$block, integer(1))
       sc <- setdiff(seq_len(k), fb)
-      arr <- aperm(array(arr, rep(npar, k)), c(sc, fb))
+      arr <- aperm(array(ell[[k]], rep(P, k)), c(sc, fb))
       for (bi in sc) {
-        arr <- array(arr, c(npar, length(arr) / npar))
+        arr <- array(arr, c(P, length(arr) / P))
         arr <- as.numeric(crossprod(cvec[[bi]], arr))
       }
       if (length(free) == 1L) {
-        # the two free slots in one block of two or more slots: e_p only
-        acc <- acc + arr[ap] * free[[1L]]$mat
+        for (r in seq_len(P)) {
+          if (arr[r] != 0) acc <- acc + arr[r] * free[[1L]]$mats[[r]]
+        }
       } else {
-        # the first remaining index is the first free block's; the matrix
-        # is laid out with the slot a in its rows
-        cmat <- matrix(arr, npar, npar)
+        cmat <- matrix(arr, P, P)
         if (free[[1L]]$a) {
           acc <- acc + crossprod(free[[1L]]$rows, cmat %*% free[[2L]]$rows)
         } else {
@@ -466,8 +455,17 @@ gas_levinson5 <- function(pacf, v, w, x) {
     }
     mats[[.gas_jet_key(S)]] <- acc / 2 + t(acc) / 2
   }
-  d1 <- as.numeric(crossprod(V, as.numeric(ell[[1L]])))
-  .gas_jetn(s0, d1, mats, dirs)
+  Vm <- t(vapply(E, function(e) e$d1, numeric(m)))
+  .gas_jetn(s0, as.numeric(crossprod(Vm, as.numeric(ell[[1L]]))), mats, dirs)
+}
+
+#' @rdname dot-gas_compose
+.gas_score_jet <- function(ell, s0, ej, V, ap) {
+  m <- ncol(V)
+  E <- lapply(seq_len(nrow(V)), function(r) {
+    if (r == ap) ej else .gas_jet_const(0, as.numeric(V[r, ]), m, ej$dirs)
+  })
+  .gas_compose(ell, s0, E)
 }
 
 
@@ -685,56 +683,70 @@ gas_levinson5 <- function(pacf, v, w, x) {
 #' @rdname dot-gas_fifth_run
 .gas_fifth_sub <- function(term, eta, y, score, psi, g, seed, blocks_data,
                            dirs) {
-  bp <- term@build_info
-  p <- term@p
-  q <- term@q
   nm <- term_params(term)
-  np <- length(nm)
   m <- ncol(seed)
-  zcol <- m - np + seq_len(np)
-  lay <- .gas_sub_layout(term)
-  base <- .gas_base_params(p, q)
-  psiv <- unlist(psi[nm])
-  # the chart's coordinates: a developed parameter's own coefficients, the
-  # link of a scalar one
-  u <- psiv
-  for (j in base) {
-    if (is.null(bp$sub[[j]])) {
-      u[lay$idx[[j]]] <- linkfunctions7::linkfun(.gas_param_link(term, j),
-                                                 psiv[[lay$idx[[j]]]])
+  zcol <- m - length(nm) + seq_along(nm)
+  chart_at <- .gas_sub_chart_fun(term, unlist(psi[nm]), zcol, m, dirs)
+  .gas_fifth_run(term, eta, score, g, seed, blocks_data, dirs, chart_at)
+}
+
+#' @rdname dot-gas_fifth_run
+#' @param tm A built score-driven term, with or without subformulas.
+#' @param psiv Its parameters in the order of [term_params()]: the parameter
+#'   scale for a parameter without a subformula, the coefficients for a
+#'   developed one.
+#' @param cols The columns of those parameters among the unknowns.
+#' @details `.gas_sub_chart_fun()` returns the chart at a row for a term
+#'   whose values are read per observation: each base parameter and each cross
+#'   loading is \eqn{h(z^\top u)}, with \eqn{z} its design row among the
+#'   unknowns (a unit vector for a parameter without a subformula), and the
+#'   autoregressive coefficients come from [.gas_map_jets()]. The result at a
+#'   row carries `x`, the cross loadings' jets in the order of the term's
+#'   pairs (partner, lag).
+.gas_sub_chart_fun <- function(tm, psiv, cols, m, dirs) {
+  bp <- tm@build_info
+  p <- tm@p
+  q <- tm@q
+  lay <- .gas_sub_layout(tm)
+  slots <- names(lay$idx)
+  sub <- bp$sub
+  u <- as.numeric(psiv)
+  for (j in slots) {
+    if (is.null(sub[[j]])) {
+      u[lay$idx[[j]]] <- linkfunctions7::linkfun(.gas_param_link(tm, j),
+                                                 u[lay$idx[[j]]])
     }
   }
   dl <- list(linkfunctions7::linkinv, linkfunctions7::dlinkinv,
              linkfunctions7::d2linkinv, linkfunctions7::d3linkinv,
              linkfunctions7::d4linkinv, linkfunctions7::d5linkinv)
-  # per base parameter, its row in the unknowns and its link's derivatives
-  # of orders zero to five at every observation
-  rowinfo <- lapply(stats::setNames(base, base), function(j) {
+  rowinfo <- lapply(stats::setNames(slots, slots), function(j) {
     idx <- lay$idx[[j]]
-    lk <- .gas_param_link(term, j)
-    if (!is.null(bp$sub[[j]])) {
-      Z <- as.matrix(bp$sub[[j]]$Z)
+    lk <- .gas_param_link(tm, j)
+    if (!is.null(sub[[j]])) {
+      Z <- as.matrix(sub[[j]]$Z)
       e <- as.numeric(Z %*% u[idx])
     } else {
       Z <- matrix(1, bp$n, 1L)
       e <- rep(u[[idx]], bp$n)
     }
-    list(cols = zcol[idx], Z = Z,
-         K = vapply(dl, function(f) f(lk, e), numeric(bp$n)))
+    list(cols = cols[idx], Z = Z,
+         K = matrix(vapply(dl, function(f) f(lk, e), numeric(bp$n)), bp$n))
   })
   scalar_jet <- function(info, r) {
     z <- numeric(m)
     z[info$cols] <- info$Z[r, ]
     K <- info$K[r, ]
     mats <- list()
-    for (S in .gas_subsets(3L)) {
+    for (S in .gas_subsets(length(dirs))) {
       f <- K[3L + length(S)]
       for (s in S) f <- f * sum(z * dirs[[s]])
       mats[[.gas_jet_key(S)]] <- f * outer(z, z)
     }
     .gas_jetn(K[1L], K[2L] * z, mats, dirs)
   }
-  chart_at <- function(r) {
+  cn <- .gas_cross_params(tm)
+  function(r) {
     a <- lapply(seq_len(p), function(i)
       scalar_jet(rowinfo[[paste0("kappa", i)]], r))
     b <- list()
@@ -748,9 +760,9 @@ gas_levinson5 <- function(pacf, v, w, x) {
       K <- t(vapply(pj, function(j) rowinfo[[j]]$K[r, ], numeric(6L)))
       b <- .gas_map_jets(K, zs, dirs)
     }
-    list(omega = scalar_jet(rowinfo$omega, r), a = a, b = b)
+    list(omega = scalar_jet(rowinfo$omega, r), a = a, b = b,
+         x = lapply(cn, function(j) scalar_jet(rowinfo[[j]], r)))
   }
-  .gas_fifth_run(term, eta, score, g, seed, blocks_data, dirs, chart_at)
 }
 
 
@@ -884,4 +896,192 @@ S7::method(term_fifth, GasTerm) <- function(term, eta, y, score, psi, g, seed,
                           dirs))
   }
   .gas_fifth_scalar(term, eta, y, score, psi, g, seed, blocks_data, dirs)
+}
+
+
+#' @title The Fifth Derivative of a Joint Score-Driven Filter
+#' @name term_fifth.GasJoint
+#'
+#' @description
+#' Computes the fifth derivative of the filtered predictors contracted
+#' against the caller's weights and three directions, with the lower orders'
+#' contractions along the same directions, through jets over every subset of
+#' the directions.
+#'
+#' @details
+#' The levels' jets are sums of products of the chart's jets with the jets
+#' of earlier driving scores and levels, as at the lower orders of
+#' [term_fourth()]. The jet of each driving score is composed from the jets
+#' of the predictors of every equation by [.gas_compose()], with the
+#' driving score's derivatives in those predictors given as data in
+#' `blocks_data`: `filtered`, `u`, `U1`, `U2`, `U3`, `U4` as for the lower
+#' orders, and `U5`, an array with the observation, the driving score and five
+#' predictor indices.
+#'
+#' @inheritParams term_fifth
+#' @param g The weights, one column per filtered parameter.
+#' @param seed A list of one matrix of static rows per equation.
+#'
+#' @return A list with `jacobian`, `dphi`, `dpsi` and `domega`, each with one
+#'   element per filtered parameter (`dphi` and `dpsi` lists of three), and
+#'   `curvature`.
+#'
+#' @keywords internal
+S7::method(term_fifth, GasJoint) <- function(term, eta, y, score, psi, g, seed,
+                                             blocks_data, directions, ...) {
+  if (!is.list(directions) || length(directions) != 3L) {
+    stop("'directions' must be a list of three vectors, one per direction.",
+         call. = FALSE)
+  }
+  if (is.null(blocks_data$U5)) {
+    stop("'blocks_data' must carry U5 for the fifth order.", call. = FALSE)
+  }
+  if (.gas_joint_has_sub(term)) {
+    return(.gas_joint_fifth(term, psi, g, seed, blocks_data, directions,
+                            eta = eta, sub = TRUE))
+  }
+  .gas_joint_fifth(term, psi, g, seed, blocks_data, directions, eta = eta)
+}
+
+#' @rdname term_fifth.GasJoint
+#' @param sub Whether the members carry subformulas, whose charts are then
+#'   read per observation.
+.gas_joint_fifth <- function(term, psi, g, seed, blocks_data, directions,
+                             eta = NULL, sub = FALSE) {
+  bp <- term@build_info
+  K <- length(term@params)
+  n <- bp$n
+  seed <- lapply(seed, as.matrix)
+  P <- length(seed)
+  m <- ncol(seed[[1L]])
+  M <- length(term_params(term))
+  blocks <- blocks_data
+  fp <- blocks$filtered
+  g <- matrix(as.numeric(g), n, K)
+  dirs <- lapply(directions, function(d) {
+    d <- as.numeric(d)
+    if (length(d) != m) {
+      stop(sprintf("each direction must have one value per unknown (%d).", m),
+           call. = FALSE)
+    }
+    d
+  })
+  u_at <- matrix(blocks$u, n, K)
+  zoff <- m - M
+  psi <- .gas_joint_psi(term, psi)
+  cf <- .gas_joint_start(term, .gas_joint_coefs(term, psi), eta)
+  zero <- .gas_jet_const(0, numeric(m), m, dirs)
+  # each member's chart at a row: the constant jets of a member without
+  # subformulas, the per-row jets of one with them, nothing for a driver
+  charts <- lapply(seq_len(K), function(k) {
+    tm <- term@terms[[term@params[k]]]
+    if (.gas_is_driver(tm)) return(function(row) NULL)
+    cols <- zoff + term@offsets[k] + seq_along(term_params(tm))
+    if (sub) {
+      return(.gas_sub_chart_fun(tm, unlist(psi[[term@params[k]]][term_params(tm)]),
+                                cols, m, dirs))
+    }
+    base <- .gas_base_params(tm@p, tm@q)
+    links <- term_links(tm)
+    v <- unlist(psi[[term@params[k]]][base])
+    zeta <- vapply(base, function(j)
+      linkfunctions7::linkfun(links[[j]], v[[j]]), numeric(1))
+    ch <- .gas_chart_jets(zeta, tm@p, tm@q, links, cols[seq_along(base)], m,
+                          dirs)
+    function(row) ch
+  })
+  # the cross loadings of each member as pairs (partner, lag): the layout's
+  # order with subformulas, the coefficients' order without
+  xpairs <- lapply(seq_len(K), function(k) {
+    tm <- term@terms[[term@params[k]]]
+    if (sub && !.gas_is_driver(tm)) {
+      xp <- .gas_cross_pairs(tm)
+      list(par = as.integer(match(xp$partner, term@params)),
+           lag = as.integer(xp$lag))
+    } else {
+      list(par = cf[[k]]$xpar, lag = cf[[k]]$xlag)
+    }
+  })
+  pairs <- list(c(1L, 2L), c(1L, 3L), c(2L, 3L))
+  nm0 <- function() lapply(seq_len(K), function(k) matrix(0, n, m))
+  jac <- nm0()
+  dom <- nm0()
+  dphi <- lapply(seq_len(K), function(k) lapply(1:3, function(d) matrix(0, n, m)))
+  dpsi <- lapply(seq_len(K), function(k) lapply(1:3, function(d) matrix(0, n, m)))
+  W <- matrix(0, m, m)
+  arrs <- list(blocks$U1, blocks$U2, blocks$U3, blocks$U4, blocks$U5)
+  for (gi in seq_along(bp$order)) {
+    rows <- bp$order[[gi]]
+    T_ <- length(rows)
+    fj <- lapply(seq_len(K), function(k) vector("list", T_))
+    uj <- lapply(seq_len(K), function(k) vector("list", T_))
+    f0 <- lapply(seq_len(K), function(k) {
+      if (isTRUE(cf[[k]]$direct)) {
+        return(.gas_jet_const(cf[[k]]$d0[[gi]],
+                              -as.numeric(seed[[fp[k]]][rows[1L], ]), m, dirs))
+      }
+      ch <- charts[[k]](rows[1L])
+      if (is.null(ch)) zero else .gas_start_jet(ch, m, dirs)
+    })
+    for (t in seq_len(T_)) {
+      row <- rows[t]
+      for (k in seq_len(K)) {
+        c_k <- cf[[k]]
+        if (isTRUE(c_k$direct) && t == 1L) {
+          fj[[k]][[t]] <- f0[[k]]
+          next
+        }
+        ch <- charts[[k]](row)
+        J <- if (is.null(ch)) zero else ch$omega
+        for (i in seq_len(c_k$p)) {
+          if (t - i < 1L) next
+          J <- .gas_jet_add(J, .gas_jet_times(ch$a[[i]], uj[[k]][[t - i]]))
+        }
+        xs <- xpairs[[k]]
+        for (h in seq_along(xs$par)) {
+          if (t - xs$lag[h] < 1L) next
+          if (sub) {
+            cj <- ch$x[[h]]
+          } else {
+            d1 <- numeric(m)
+            d1[zoff + c_k$col_cross[h]] <- 1
+            cj <- .gas_jet_const(c_k$cross[h], d1, m, dirs)
+          }
+          J <- .gas_jet_add(J, .gas_jet_times(cj, uj[[xs$par[h]]][[t - xs$lag[h]]]))
+        }
+        for (j in seq_len(c_k$q)) {
+          lagj <- if (t - j >= 1L) fj[[k]][[t - j]] else f0[[k]]
+          J <- .gas_jet_add(J, .gas_jet_times(ch$b[[j]], lagj))
+        }
+        fj[[k]][[t]] <- J
+      }
+      E <- lapply(seq_len(P), function(a) {
+        .gas_jet_const(0, as.numeric(seed[[a]][row, ]), m, dirs)
+      })
+      for (k in seq_len(K)) {
+        a <- fp[k]
+        J <- fj[[k]][[t]]
+        E[[a]]$d1 <- E[[a]]$d1 + J$d1
+        E[[a]]$mats <- J$mats
+        jac[[k]][row, ] <- E[[a]]$d1
+        for (d in 1:3) dphi[[k]][[d]][row, ] <- .gas_jet_get(E[[a]], d, 1L)
+        for (pp in 1:3) {
+          dpsi[[k]][[pp]][row, ] <- .gas_jet_get(E[[a]], pairs[[pp]], 1L)
+        }
+        dom[[k]][row, ] <- .gas_jet_get(E[[a]], 1:3, 1L)
+        W <- W + g[row, k] * J$mats$s123
+      }
+      for (l in seq_len(K)) {
+        ell <- lapply(seq_len(5L), function(o) {
+          x <- arrs[[o]]
+          idx <- c(list(row, l), rep(list(seq_len(P)), o))
+          array(do.call(`[`, c(list(x), idx, list(drop = FALSE))), rep(P, o))
+        })
+        uj[[l]][[t]] <- .gas_compose(ell, u_at[row, l], E)
+      }
+    }
+  }
+  W <- (W + t(W)) / 2
+  names(jac) <- names(dphi) <- names(dpsi) <- names(dom) <- term@params
+  list(jacobian = jac, dphi = dphi, dpsi = dpsi, domega = dom, curvature = W)
 }

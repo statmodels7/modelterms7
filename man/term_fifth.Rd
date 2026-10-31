@@ -51,7 +51,7 @@ with the contractions of every lower order along the three directions.
 \details{
 The fifth derivative of the predictor is contracted against three
 directions \eqn{v}, \eqn{w} and \eqn{x} and the caller's weights, which
-leaves an \eqn{m 	imes m} matrix, as at the orders below. The full
+leaves an \eqn{m \times m} matrix, as at the orders below. The full
 derivative is never formed: the recursion propagates one matrix per subset
 of the three directions.
 
