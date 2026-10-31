@@ -41,9 +41,10 @@ S7::method(term_pilot, model_term) <- function(term, ...) NULL
 #'
 #' @details
 #' The base method returns `term` alone. For [scs()] with [shape_unimodal()]
-#' and no mode, the pilot's maximum gives the Greville abscissa
-#' \eqn{\xi_{M_0}} nearest to it, and the versions are the shape with the mode
-#' at the indices \eqn{M_0 - 2, \dots, M_0 + 2} that exist, named `"M = j"`.
+#' or [shape_sigmoid()] and no location, the pilot's extremum (unimodal) or
+#' steepest point (sigmoid) gives the Greville abscissa \eqn{\xi_{M_0}}
+#' nearest to it, and the versions are the shape located at the indices
+#' \eqn{M_0 - 2, \dots, M_0 + 2} that exist, named `"M = j"`.
 #'
 #' @param term A built term.
 #' @param pilot A numeric vector, the contribution of the pilot at the rows on

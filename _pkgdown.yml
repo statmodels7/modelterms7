@@ -101,8 +101,8 @@ reference:
   - SmoothTerm
 - title: Shape-constrained smooths
   desc: >
-    A smooth of one covariate constrained to be monotone, convex, concave or
-    unimodal,
+    A smooth of one covariate constrained to be monotone, convex, concave,
+    unimodal or sigmoid,
     through a map from free coefficients to the B-spline coefficients, with a
     penalty on the free coefficients.
   contents:
@@ -112,7 +112,7 @@ reference:
   - shape_constraint
   - shape_map
   - shape_start
-  - shape_unimodal
+  - shape_located
   - term_pilot
   - term_variants
 - title: Nonlinear terms

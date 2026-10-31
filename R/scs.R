@@ -50,7 +50,8 @@ ScsTerm <- S7::new_class(
 #' monotone ([shape_increasing()], [shape_decreasing()]), of constant
 #' curvature ([shape_convex()], [shape_concave()]), both
 #' ([shape_increasing_convex()] and the other three combinations), or
-#' unimodal ([shape_unimodal()]). The term enters the
+#' unimodal or sigmoid ([shape_unimodal()], [shape_sigmoid()]). The term
+#' enters the
 #' formula of any distribution parameter, like [s()].
 #'
 #' @details
@@ -339,50 +340,68 @@ S7::method(term_coef_start, ScsTerm) <- function(term, target = NULL, ...) {
   if (!all(is.finite(g))) bp$coef0 else g
 }
 
-# THE INDEX OF A UNIMODAL SHAPE IS SETTLED AT THE BUILD, where the Greville
+# THE INDEX OF A LOCATED SHAPE IS SETTLED AT THE BUILD, where the Greville
 # abscissae exist: the index the shape carries, else the abscissa nearest to
-# its mode, else the middle one, which a fitting layer replaces through
-# term_variants()
+# its location (mode or inflection), else the middle one, which a fitting
+# layer replaces through term_variants()
 .scs_resolve_shape <- function(shape, xi) {
-  if (!S7::S7_inherits(shape, ShapeUnimodal)) return(shape)
+  if (!S7::S7_inherits(shape, ShapeLocated)) return(shape)
   p <- shape@shape_params
+  K <- length(xi)
+  rng <- .shape_index_range(shape, K)
   if (!is.null(p$index)) {
-    if (p$index > length(xi)) {
-      stop(sprintf("the index of the mode (%d) exceeds the basis (%d).",
-                   p$index, length(xi)), call. = FALSE)
+    if (!p$index %in% rng) {
+      stop(sprintf("the index of the location (%d) is outside %d to %d.",
+                   p$index, min(rng), K), call. = FALSE)
     }
     return(shape)
   }
-  M <- if (!is.null(p$mode)) which.min(abs(xi - p$mode)) else (length(xi) + 1L) %/% 2L
+  M <- if (!is.null(p$at)) rng[which.min(abs(xi[rng] - p$at))] else rng[(length(rng) + 1L) %/% 2L]
   shape@shape_params$index <- as.integer(M)
   shape
 }
 
-.scs_auto_mode <- function(term) {
-  S7::S7_inherits(term@shape, ShapeUnimodal) &&
-    is.null(term@shape@shape_params$index) && is.null(term@shape@shape_params$mode)
+.scs_auto_location <- function(term) {
+  S7::S7_inherits(term@shape, ShapeLocated) &&
+    is.null(term@shape@shape_params$index) && is.null(term@shape@shape_params$at)
+}
+
+# where the pilot puts the location: its extremum for a unimodal shape, its
+# steepest point for a sigmoid, read at the build's rows
+.scs_pilot_center <- function(shape, x, pilot) {
+  sg <- shape@shape_params$sign
+  if (S7::S7_inherits(shape, ShapeSigmoid)) {
+    o <- order(x); xs <- x[o]; ps <- pilot[o]
+    keep <- diff(xs) > 0
+    if (!any(keep)) return(NA_real_)
+    sl <- (diff(ps) / diff(xs))[keep]
+    mid <- ((xs[-1L] + xs[-length(xs)]) / 2)[keep]
+    return(mid[which.max(sg * sl)])
+  }
+  x[which.max(sg * pilot)]
 }
 
 S7::method(term_pilot, ScsTerm) <- function(term, ...) {
-  if (!.scs_auto_mode(term)) return(NULL)
+  if (!.scs_auto_location(term)) return(NULL)
   # an unconstrained smooth on the same basis, under the term's own label
   eval(as.call(list(s, term@var, smoother = term@spec$smoother, label = term@label)))
 }
 
 S7::method(term_variants, ScsTerm) <- function(term, pilot = NULL, ...) {
-  if (!.scs_auto_mode(term)) return(list(term))
+  if (!.scs_auto_location(term)) return(list(term))
   .assert_built(term)
   bp <- term@build_info
   K <- length(bp$xi)
-  M0 <- if (is.null(pilot) || length(pilot) != bp$n || !any(is.finite(pilot))) {
-    (K + 1L) %/% 2L
-  } else {
-    which.min(abs(bp$xi - bp$x[which.max(pilot)]))
-  }
-  Ms <- intersect(M0 + (-2L):2L, seq_len(K))
+  rng <- .shape_index_range(term@shape, K)
+  x0 <- if (is.null(pilot) || length(pilot) != bp$n || !any(is.finite(pilot))) NA_real_
+        else .scs_pilot_center(term@shape, bp$x, pilot)
+  M0 <- if (is.na(x0)) rng[(length(rng) + 1L) %/% 2L] else rng[which.min(abs(bp$xi[rng] - x0))]
+  Ms <- intersect(M0 + (-2L):2L, rng)
   out <- lapply(Ms, function(M) {
     v <- term
-    v@shape <- shape_unimodal(link = term@shape@link, index = M)
+    sh <- term@shape
+    sh@shape_params$index <- as.integer(M)
+    v@shape <- sh
     v@X <- NULL; v@coef_names <- character(0); v@build_info <- list(); v@penalty <- NULL
     v
   })

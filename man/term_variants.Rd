@@ -26,9 +26,10 @@ model with each and keeps the best.
 }
 \details{
 The base method returns \code{term} alone. For \code{\link[=scs]{scs()}} with \code{\link[=shape_unimodal]{shape_unimodal()}}
-and no mode, the pilot's maximum gives the Greville abscissa
-\eqn{\xi_{M_0}} nearest to it, and the versions are the shape with the mode
-at the indices \eqn{M_0 - 2, \dots, M_0 + 2} that exist, named \code{"M = j"}.
+or \code{\link[=shape_sigmoid]{shape_sigmoid()}} and no location, the pilot's extremum (unimodal) or
+steepest point (sigmoid) gives the Greville abscissa \eqn{\xi_{M_0}}
+nearest to it, and the versions are the shape located at the indices
+\eqn{M_0 - 2, \dots, M_0 + 2} that exist, named \code{"M = j"}.
 }
 \examples{
 set.seed(1)

@@ -4,7 +4,9 @@
 \alias{shape_constraint}
 \alias{ShapeMonotone}
 \alias{ShapeCurvature}
+\alias{ShapeLocated}
 \alias{ShapeUnimodal}
+\alias{ShapeSigmoid}
 \title{S7 Class for Shape Constraints}
 \usage{
 shape_constraint(shape_name = character(0), link = NULL, shape_params = list())
@@ -13,7 +15,11 @@ ShapeMonotone(shape_name = character(0), link = NULL, shape_params = list())
 
 ShapeCurvature(shape_name = character(0), link = NULL, shape_params = list())
 
+ShapeLocated(shape_name = character(0), link = NULL, shape_params = list())
+
 ShapeUnimodal(shape_name = character(0), link = NULL, shape_params = list())
+
+ShapeSigmoid(shape_name = character(0), link = NULL, shape_params = list())
 }
 \arguments{
 \item{shape_name}{A single string naming the shape.}

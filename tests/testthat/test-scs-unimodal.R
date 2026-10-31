@@ -7,7 +7,7 @@ un_d <- data.frame(x = runif(120))
 un_sm <- basis7::bspline_smooth(k = 10)
 
 test_that("the constructor checks mode and index", {
-  expect_null(shape_unimodal()@shape_params$mode)
+  expect_null(shape_unimodal()@shape_params$at)
   expect_identical(shape_unimodal(index = 4)@shape_params$index, 4L)
   expect_error(shape_unimodal(mode = c(1, 2)), "single finite")
   expect_error(shape_unimodal(index = 0), "positive whole")
@@ -29,7 +29,7 @@ test_that("shape_map rises to the index and falls after it", {
     expect_identical(which.max(beta), M)
   }
   expect_error(shape_map(shape_unimodal(), xi), "not set")
-  expect_error(shape_map(shape_unimodal(index = K + 1L), xi), "exceeds")
+  expect_error(shape_map(shape_unimodal(index = K + 1L), xi), "outside")
 })
 
 test_that("random coefficients give a slope that changes sign at most once", {
