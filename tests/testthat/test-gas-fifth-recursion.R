@@ -221,3 +221,73 @@ test_that("the fifth order reads the other equation's predictor", {
                       list(v, w, x))
   expect_false(isTRUE(all.equal(wrong$curvature, ref, tolerance = 1e-6)))
 })
+
+test_that("the fifth order reaches a term whose parameters are developed", {
+  set.seed(5)
+  nn <- 60L
+  ng <- 3L
+  d3 <- data.frame(t = rep(seq_len(nn %/% ng), ng), y = stats::rnorm(nn),
+                   z = stats::runif(nn, -1, 1),
+                   id = factor(rep(seq_len(ng), each = nn %/% ng)))
+  st <- tanh_stub(d3$y)
+  specs <- list(
+    quote(gas(p = 1, q = 1, by = id, time = t, omega ~ 1 + z)),
+    quote(gas(p = 1, q = 1, by = id, time = t, kappa1 ~ 1 + z)),
+    quote(gas(p = 1, q = 2, by = id, time = t, pacf1 ~ 1 + z)))
+  for (sp in specs) {
+    term <- term_build(eval(sp), d3)
+    nm <- term_params(term)
+    np <- length(nm)
+    lk <- term_links(term)
+    m <- 2L + np
+    set.seed(9)
+    seed <- matrix(stats::rnorm(nn * m, 0, 0.2), nn, m)
+    eta <- stats::rnorm(nn, 0, 0.1)
+    dev <- grepl(".", nm, fixed = TRUE)
+    u0 <- stats::setNames(rep(0.2, np), nm)
+    u0[startsWith(nm, "pacf")] <- 0.35
+    u0[startsWith(nm, "kappa")] <- 0.25
+    u0[dev] <- 0.15
+    zeta <- u0
+    for (j in seq_along(nm)) {
+      if (!dev[j]) zeta[j] <- linkfunctions7::linkfun(lk[[nm[j]]], u0[[j]])
+    }
+    psi_of <- function(z) {
+      uu <- z
+      for (j in seq_along(nm)) {
+        if (!dev[j]) uu[j] <- linkfunctions7::linkinv(lk[[nm[j]]], z[[j]])
+      }
+      as.list(uu)
+    }
+    set.seed(21)
+    v <- stats::rnorm(m, 0, 0.4)
+    w <- stats::rnorm(m, 0, 0.4)
+    x <- stats::rnorm(m, 0, 0.4)
+    gw <- stats::rnorm(nn, 0, 0.6)
+    zcol <- m - np + seq_len(np)
+    e <- term_filter(term, eta, d3$y, st$sc, st$cu, psi_of(zeta))$eta
+    got <- term_fifth(term, eta, d3$y, st$sc, psi_of(zeta), gw, seed,
+                      arrays_of(st, e, m), list(v, w, x))
+    at <- function(h) {
+      term_fourth(term, eta + h * as.numeric(seed %*% x), d3$y, st$sc, st$cu,
+                  psi_of(zeta + h * x[zcol]), gw, seed, blk4_of(st, v, w),
+                  list(v, w))
+    }
+    dir_of <- function(h, f) (f(at(h)) - f(at(-h))) / (2 * h)
+    rich <- function(f) (4 * dir_of(1e-3, f) - dir_of(2e-3, f)) / 3
+    lab <- deparse(sp)[[1L]]
+    ref <- rich(function(r) r$curvature)
+    expect_equal(got$curvature, ref, tolerance = 1e-5, info = lab)
+    expect_equal(got$domega, rich(function(r) r$dpsi), tolerance = 1e-5,
+                 info = lab)
+    f4 <- at(0)
+    expect_equal(got$jacobian, f4$jacobian, tolerance = 1e-12, info = lab)
+    expect_equal(got$dpsi[[1L]], f4$dpsi, tolerance = 1e-11, info = lab)
+    bad <- arrays_of(st, e, m)
+    bad$D6 <- bad$D6 * 1.05
+    wrong <- term_fifth(term, eta, d3$y, st$sc, psi_of(zeta), gw, seed, bad,
+                        list(v, w, x))
+    expect_false(isTRUE(all.equal(wrong$curvature, ref, tolerance = 1e-5)),
+                 info = lab)
+  }
+})

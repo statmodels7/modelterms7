@@ -544,8 +544,10 @@ gas_levinson5 <- function(pacf, v, w, x) {
 #'
 #' @description
 #' Propagates the jets of the filtered predictor over three directions
-#' through the recursion, for a term without subformulas, and returns the
-#' contractions of [term_fifth()].
+#' through the recursion and returns the contractions of [term_fifth()].
+#' `.gas_fifth_scalar()` serves a term without subformulas, whose chart is the
+#' same at every observation, and `.gas_fifth_sub()` a term with subformulas,
+#' whose chart is read per observation; both run `.gas_fifth_run()`.
 #'
 #' @details
 #' At each observation the level is
@@ -554,32 +556,28 @@ gas_levinson5 <- function(pacf, v, w, x) {
 #' is composed from the family's derivative arrays by [.gas_score_jet()]. The
 #' orders below the fifth are carried along every subset of the directions,
 #' so this route is a second, independent computation of what
-#' [term_curvature()], [term_third()] and [term_fourth()] return.
+#' [term_curvature()], [term_third()] and [term_fourth()] return. The
+#' starting level of a group is read off the fixed point at the group's first
+#' observation, as at the lower orders.
 #'
 #' @inheritParams term_fifth
 #' @param dirs The three directions.
+#' @param chart_at A function of a row returning the jets `omega`, `a` and
+#'   `b` there.
+#' @param ch The chart's jets at the group's first observation.
+#' @param m The number of unknowns.
 #'
-#' @return As [term_fifth()].
+#' @return `.gas_start_jet()` the jet of the starting level; the others as
+#'   [term_fifth()].
 #'
 #' @keywords internal
-.gas_fifth_scalar <- function(term, eta, y, score, psi, g, seed, blocks_data,
-                              dirs) {
+.gas_fifth_run <- function(term, eta, score, g, seed, blocks_data, dirs,
+                           chart_at) {
   bp <- term@build_info
-  nm <- term_params(term)
-  links <- term_links(term)
-  psiv <- unlist(psi[nm])
-  base <- .gas_base_params(term@p, term@q)
-  nb <- length(base)
-  zeta <- vapply(base, function(j)
-    linkfunctions7::linkfun(links[[j]], psiv[[j]]), numeric(1))
-  seed <- as.matrix(seed)
   m <- ncol(seed)
-  np <- length(nm)
   n <- bp$n
-  zcol <- m - np + seq_len(np)
   p <- term@p
   q <- term@q
-  ch <- .gas_chart_jets(zeta, p, q, links, zcol[seq_len(nb)], m, dirs)
   static <- .gas_static(term)
   d0 <- if (static) .gas_static_start(term, eta) else NULL
   bd <- blocks_data
@@ -604,8 +602,11 @@ gas_levinson5 <- function(pacf, v, w, x) {
   for (l in seq_along(bp$order)) {
     rows <- bp$order[[l]]
     k <- length(rows)
-    f0j <- ch$f0
-    if (static) f0j <- .gas_jet_const(d0[[l]], -seed[rows[1L], ], m, dirs)
+    f0j <- if (static) {
+      .gas_jet_const(d0[[l]], -seed[rows[1L], ], m, dirs)
+    } else {
+      .gas_start_jet(chart_at(rows[1L]), m, dirs)
+    }
     fj <- vector("list", k)
     sj <- vector("list", k)
     for (t in seq_len(k)) {
@@ -613,6 +614,7 @@ gas_levinson5 <- function(pacf, v, w, x) {
       if (static && t == 1L) {
         ft <- f0j
       } else {
+        ch <- chart_at(row)
         ft <- ch$omega
         for (i in seq_len(p)) {
           lag <- t - i
@@ -640,6 +642,187 @@ gas_levinson5 <- function(pacf, v, w, x) {
   }
   W <- (W + t(W)) / 2
   list(jacobian = D, dphi = dphi, dpsi = dpsi, domega = dom, curvature = W)
+}
+
+#' @rdname dot-gas_fifth_run
+.gas_start_jet <- function(ch, m, dirs) {
+  Sj <- .gas_jet_const(0, numeric(m), m, dirs)
+  for (bj in ch$b) Sj <- .gas_jet_add(Sj, bj)
+  if (abs(1 - Sj$v) < 1e-10) {
+    stop("the autoregressive polynomial is at the unit root; the filter has no starting level.",
+         call. = FALSE)
+  }
+  cst <- 1 / (1 - Sj$v)
+  omj <- ch$omega
+  f0 <- omj$v * cst
+  f0j <- .gas_jet_const(f0, cst * (omj$d1 + Sj$d1 * f0), m, dirs)
+  for (S in .gas_subsets(length(dirs))) {
+    key <- .gas_jet_key(S)
+    f0j$mats[[key]] <- cst * (omj$mats[[key]] + .gas_prodS(Sj, f0j, S))
+  }
+  f0j
+}
+
+#' @rdname dot-gas_fifth_run
+.gas_fifth_scalar <- function(term, eta, y, score, psi, g, seed, blocks_data,
+                              dirs) {
+  nm <- term_params(term)
+  links <- term_links(term)
+  psiv <- unlist(psi[nm])
+  base <- .gas_base_params(term@p, term@q)
+  nb <- length(base)
+  zeta <- vapply(base, function(j)
+    linkfunctions7::linkfun(links[[j]], psiv[[j]]), numeric(1))
+  m <- ncol(seed)
+  np <- length(nm)
+  zcol <- m - np + seq_len(np)
+  ch <- .gas_chart_jets(zeta, term@p, term@q, links, zcol[seq_len(nb)], m,
+                        dirs)
+  .gas_fifth_run(term, eta, score, g, seed, blocks_data, dirs,
+                 function(row) ch)
+}
+
+#' @rdname dot-gas_fifth_run
+.gas_fifth_sub <- function(term, eta, y, score, psi, g, seed, blocks_data,
+                           dirs) {
+  bp <- term@build_info
+  p <- term@p
+  q <- term@q
+  nm <- term_params(term)
+  np <- length(nm)
+  m <- ncol(seed)
+  zcol <- m - np + seq_len(np)
+  lay <- .gas_sub_layout(term)
+  base <- .gas_base_params(p, q)
+  psiv <- unlist(psi[nm])
+  # the chart's coordinates: a developed parameter's own coefficients, the
+  # link of a scalar one
+  u <- psiv
+  for (j in base) {
+    if (is.null(bp$sub[[j]])) {
+      u[lay$idx[[j]]] <- linkfunctions7::linkfun(.gas_param_link(term, j),
+                                                 psiv[[lay$idx[[j]]]])
+    }
+  }
+  dl <- list(linkfunctions7::linkinv, linkfunctions7::dlinkinv,
+             linkfunctions7::d2linkinv, linkfunctions7::d3linkinv,
+             linkfunctions7::d4linkinv, linkfunctions7::d5linkinv)
+  # per base parameter, its row in the unknowns and its link's derivatives
+  # of orders zero to five at every observation
+  rowinfo <- lapply(stats::setNames(base, base), function(j) {
+    idx <- lay$idx[[j]]
+    lk <- .gas_param_link(term, j)
+    if (!is.null(bp$sub[[j]])) {
+      Z <- as.matrix(bp$sub[[j]]$Z)
+      e <- as.numeric(Z %*% u[idx])
+    } else {
+      Z <- matrix(1, bp$n, 1L)
+      e <- rep(u[[idx]], bp$n)
+    }
+    list(cols = zcol[idx], Z = Z,
+         K = vapply(dl, function(f) f(lk, e), numeric(bp$n)))
+  })
+  scalar_jet <- function(info, r) {
+    z <- numeric(m)
+    z[info$cols] <- info$Z[r, ]
+    K <- info$K[r, ]
+    mats <- list()
+    for (S in .gas_subsets(3L)) {
+      f <- K[3L + length(S)]
+      for (s in S) f <- f * sum(z * dirs[[s]])
+      mats[[.gas_jet_key(S)]] <- f * outer(z, z)
+    }
+    .gas_jetn(K[1L], K[2L] * z, mats, dirs)
+  }
+  chart_at <- function(r) {
+    a <- lapply(seq_len(p), function(i)
+      scalar_jet(rowinfo[[paste0("kappa", i)]], r))
+    b <- list()
+    if (q > 0L) {
+      pj <- paste0("pacf", seq_len(q))
+      zs <- t(vapply(pj, function(j) {
+        z <- numeric(m)
+        z[rowinfo[[j]]$cols] <- rowinfo[[j]]$Z[r, ]
+        z
+      }, numeric(m)))
+      K <- t(vapply(pj, function(j) rowinfo[[j]]$K[r, ], numeric(6L)))
+      b <- .gas_map_jets(K, zs, dirs)
+    }
+    list(omega = scalar_jet(rowinfo$omega, r), a = a, b = b)
+  }
+  .gas_fifth_run(term, eta, score, g, seed, blocks_data, dirs, chart_at)
+}
+
+
+#' The Autoregressive Coefficients' Jets from Rank-One Partial Autocorrelations
+#'
+#' @description
+#' Returns the jets of the coefficients \eqn{\xi_j(\rho)} of the
+#' Levinson-Durbin map, where each partial autocorrelation is
+#' \eqn{\rho_k = h_k(z_k^\top u)}.
+#'
+#' @details
+#' The derivative of order \eqn{n} of \eqn{\rho_k} is
+#' \eqn{h_k^{(n)} z_k^{\otimes n}}, so Faa di Bruno's formula over the set
+#' partitions of the slots reads, for each block, a vector over the partial
+#' autocorrelations (a block without a free slot), a \eqn{q \times m} matrix
+#' (a block with one free slot) or a weighted sum of \eqn{z_k z_k^\top} (a
+#' block with both). The map's derivatives come from
+#' [.gas_levinson_contract()]. With \eqn{z_k} a unit vector this is
+#' [.gas_chart_contract()] lifted to the unknowns.
+#'
+#' @param K A `q` by 6 matrix: the inverse links and their derivatives of
+#'   orders one to five, per partial autocorrelation.
+#' @param zs A `q` by `m` matrix of the rows \eqn{z_k}.
+#' @param dirs The directions.
+#'
+#' @return A list of `q` jets.
+#'
+#' @keywords internal
+.gas_map_jets <- function(K, zs, dirs) {
+  q <- nrow(K)
+  m <- ncol(zs)
+  rho <- K[, 1L]
+  ld <- gas_levinson2(rho)
+  jac <- ld$jacobian
+  zd <- lapply(dirs, function(d) as.numeric(zs %*% d))
+  mats <- replicate(q, list(), simplify = FALSE)
+  for (S in .gas_subsets(length(dirs))) {
+    ns <- length(S)
+    slots <- c(S, -1L, -2L)
+    acc <- replicate(q, matrix(0, m, m), simplify = FALSE)
+    for (part in numericals7::set_partitions(ns + 2L)) {
+      fixed <- list()
+      Ca <- Cb <- cab <- NULL
+      for (blk in part) {
+        sl <- slots[blk]
+        co <- K[, 1L + length(blk)]
+        for (s in sl[sl > 0L]) co <- co * zd[[s]]
+        if (all(c(-1L, -2L) %in% sl)) cab <- co
+        else if (-1L %in% sl) Ca <- co * zs
+        else if (-2L %in% sl) Cb <- co * zs
+        else fixed[[length(fixed) + 1L]] <- co
+      }
+      J <- length(part)
+      for (cf in seq_len(q)) {
+        if (!is.null(cab)) {
+          vec <- if (J == 1L) jac[cf, ] else {
+            mm <- .gas_levinson_contract(rho, fixed[-length(fixed)])[[cf]]
+            as.numeric(mm %*% fixed[[length(fixed)]])
+          }
+          acc[[cf]] <- acc[[cf]] + crossprod(zs, (vec * cab) * zs)
+        } else {
+          mm <- .gas_levinson_contract(rho, fixed)[[cf]]
+          acc[[cf]] <- acc[[cf]] + crossprod(Ca, mm %*% Cb)
+        }
+      }
+    }
+    for (cf in seq_len(q)) mats[[cf]][[.gas_jet_key(S)]] <- acc[[cf]]
+  }
+  lapply(seq_len(q), function(cf) {
+    .gas_jetn(ld$phi[cf], as.numeric(crossprod(zs, jac[cf, ] * K[, 2L])),
+              mats[[cf]], dirs)
+  })
 }
 
 
