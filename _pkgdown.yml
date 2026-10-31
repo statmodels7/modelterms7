@@ -72,6 +72,15 @@ reference:
   - mcp
   - penalized_terms
   - PenalizedTerm
+- title: The Jeffreys term
+  desc: >
+    A block of coefficients under a Jeffreys prior on the expected
+    information of its coefficients, the penalty of Firth (1993) over
+    every coefficient of a binomial regression.
+  contents:
+  - jfp
+  - JeffreysTerm
+  - JeffreysPenalty
 - title: The random-effect term
   desc: >
     Grouped intercepts, slopes and smooth curves, in which the distribution
