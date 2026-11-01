@@ -1,3 +1,9 @@
+# modelterms7 0.123.1
+
+* The documentation of `scs()` states that a positive or bounded parameter
+  is modeled through its link in the distribution, and that a positive term
+  beside an intercept would not be identified.
+
 # modelterms7 0.123.0
 
 * Every shape of `scs()` takes `value = c(at = a, value = v)`, which fixes

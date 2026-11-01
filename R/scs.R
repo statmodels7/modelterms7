@@ -109,6 +109,17 @@ ScsTerm <- S7::new_class(
 #' Beyond the ends of the basis the smooth is continued by the straight line
 #' with the slope at the end, which preserves the shape.
 #'
+#' # Positive and bounded functions
+#'
+#' The shapes do not include a positive or a bounded function. When a
+#' parameter must be positive, or must lie between two values, the range is
+#' set by the link of that parameter in the distribution, such as
+#' [linkfunctions7::log_link()] or [linkfunctions7::bounded_link()], and [s()]
+#' gives the smooth on the scale of the link. The whole predictor then lies in
+#' the range at every iterate. A positive term beside an intercept would not be
+#' identified, because a constant moved between the intercept and the term
+#' leaves the likelihood unchanged.
+#'
 #' # Inference
 #'
 #' Pointwise intervals from the curvature at the mode cover somewhat less than
