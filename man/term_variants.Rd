@@ -27,7 +27,9 @@ model with each and keeps the best.
 }
 \details{
 The base method returns \code{term} alone. For \code{\link[=scs]{scs()}} with \code{\link[=shape_unimodal]{shape_unimodal()}}
-or \code{\link[=shape_sigmoid]{shape_sigmoid()}} and no location, the pilot's extremum (unimodal) or
+or \code{\link[=shape_sigmoid]{shape_sigmoid()}} and a location given, the versions are the term from
+its two starts, named \code{"start: sides"} and \code{"start: spline"} (see
+\code{\link[=shape_start]{shape_start()}}). With no location, the pilot's extremum (unimodal) or
 steepest point (sigmoid) gives the Greville abscissa \eqn{\xi_{M_0}}
 nearest to it, and the versions are the shape located at the indices
 \eqn{M_0 - 2, \dots, M_0 + 2} that exist, named \code{"M = j"}.

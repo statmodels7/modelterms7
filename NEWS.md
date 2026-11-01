@@ -1,3 +1,16 @@
+# modelterms7 0.126.0
+
+* A unimodal or sigmoid `scs()` with its location given is fitted from two
+  starts, whose better criterion the fitting layer keeps: `term_pilot()`
+  returns the stand-in `s()` and `term_variants()` the term with
+  `"start: sides"` and `"start: spline"`. Away from the mode of the data the
+  first start is nearly flat and left the fit on the flat curve (82 of 960
+  measured fits below the better of the two starts, 0 with both). Not under
+  a numeric `by`.
+* `shape_start()` of a unimodal or sigmoid shape takes `rule = "spline"`:
+  the slopes of a smoothing spline on the Greville segments, with the signs
+  that the shape requires, floored.
+
 # modelterms7 0.125.0
 
 * Under a factor `by` in `scs()`, the declared settings of a shape may be

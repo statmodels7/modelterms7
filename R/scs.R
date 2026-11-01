@@ -695,7 +695,8 @@ S7::method(term_coef_start, ScsTerm) <- function(term, target = NULL, ...) {
     pc <- bp$pieces[[bp$piece_of[l]]]
     rows <- bp$G[, l] != 0
     if (sum(rows) < 2L) next
-    b0 <- tryCatch(shape_start(pc$shape, bp$x[rows], target[rows], bp$xi),
+    b0 <- tryCatch(shape_start(pc$shape, bp$x[rows], target[rows], bp$xi,
+                               rule = term@spec$start_rule),
                    error = function(e) NULL)
     if (is.null(b0)) next
     g <- .shape_gamma(bp$link, b0[setdiff(seq_along(b0), pc$drop_b)], pc$cons, pc$lower)
@@ -745,8 +746,16 @@ S7::method(term_coef_start, ScsTerm) <- function(term, target = NULL, ...) {
   x[which.max(sg * pilot)]
 }
 
+# A located shape whose location is GIVEN is searched too, over its two
+# starts: the stand-in is the same, and term_variants() returns the two
+.scs_two_starts <- function(term) {
+  S7::S7_inherits(term@shape, ShapeLocated) && !.scs_auto_location(term) &&
+    is.null(term@spec$start_rule) &&
+    !(term_is_built(term) && identical(term@build_info$by_kind, "numeric"))
+}
+
 S7::method(term_pilot, ScsTerm) <- function(term, ...) {
-  if (!.scs_auto_location(term)) return(NULL)
+  if (!.scs_auto_location(term) && !.scs_two_starts(term)) return(NULL)
   # an unconstrained smooth on the same basis and with the same `by`, under
   # the term's own label
   args <- list(s, term@var, smoother = term@spec$smoother, label = term@label)
@@ -780,6 +789,21 @@ S7::method(term_pilot, ScsTerm) <- function(term, ...) {
 }
 
 S7::method(term_variants, ScsTerm) <- function(term, pilot = NULL, ...) {
+  # THE TWO STARTS OF A GIVEN LOCATION. Away from the mode of the data the
+  # first start is nearly flat and the fit stays on the flat curve; the
+  # spline's slopes leave it, and neither start dominates, so both are
+  # fitted and the criterion keeps the better (misure_scs M15: 82 fits of
+  # 960 below the better of the two starts with the first alone, 0 with both)
+  if (.scs_two_starts(term)) {
+    out <- lapply(c("sides", "spline"), function(r) {
+      v <- term
+      v@spec$start_rule <- r
+      v@X <- NULL; v@coef_names <- character(0); v@build_info <- list(); v@penalty <- NULL
+      v
+    })
+    names(out) <- c("start: sides", "start: spline")
+    return(out)
+  }
   if (!.scs_auto_location(term)) return(list(term))
   .assert_built(term)
   bp <- term@build_info

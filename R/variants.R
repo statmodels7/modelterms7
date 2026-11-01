@@ -7,8 +7,9 @@ NULL
 #' Returns the unbuilt term with which a fitting layer replaces `term` in a
 #' pilot fit, or `NULL` when the term needs no pilot. A term returns one when
 #' it carries a discrete choice that the data must settle (the index of the
-#' mode of [shape_unimodal()]), which the layer makes with
-#' [term_variants()] from the contribution that the stand-in fits.
+#' mode of [shape_unimodal()], or, with the mode given, which of two starts
+#' to keep), which the layer makes with [term_variants()] from the
+#' contribution that the stand-in fits.
 #'
 #' @param term A term, built or not.
 #' @param ... Passed to methods.
@@ -21,8 +22,8 @@ NULL
 #' term_pilot(s(x))
 #' class(term_pilot(scs(x, shape_unimodal())))[1]
 #'
-#' # A mode given in the shape needs no pilot.
-#' term_pilot(scs(x, shape_unimodal(mode = 0.4)))
+#' # A monotone shape carries no choice and needs no pilot.
+#' term_pilot(scs(x, shape_increasing()))
 #'
 #' @export
 term_pilot <- S7::new_generic("term_pilot", "term",
@@ -41,7 +42,9 @@ S7::method(term_pilot, model_term) <- function(term, ...) NULL
 #'
 #' @details
 #' The base method returns `term` alone. For [scs()] with [shape_unimodal()]
-#' or [shape_sigmoid()] and no location, the pilot's extremum (unimodal) or
+#' or [shape_sigmoid()] and a location given, the versions are the term from
+#' its two starts, named `"start: sides"` and `"start: spline"` (see
+#' [shape_start()]). With no location, the pilot's extremum (unimodal) or
 #' steepest point (sigmoid) gives the Greville abscissa \eqn{\xi_{M_0}}
 #' nearest to it, and the versions are the shape located at the indices
 #' \eqn{M_0 - 2, \dots, M_0 + 2} that exist, named `"M = j"`.

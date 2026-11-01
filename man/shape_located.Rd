@@ -82,7 +82,10 @@ different \eqn{M} are compared by their criterion.
 
 \section{How the location is chosen}{
 With \code{mode} or \code{inflection} given, \eqn{M} is the index of the Greville
-abscissa nearest to it and the model is fitted once. Left at \code{NULL}, the
+abscissa nearest to it, and the model is fitted from two starts (the
+least-squares lines of \code{\link[=shape_start]{shape_start()}} and the slopes of a smoothing
+spline) whose better criterion is kept: away from the mode of the data
+the first start is nearly flat and can leave the fit on the flat curve. Left at \code{NULL}, the
 fitting layer chooses \eqn{M}: a pilot fit with \code{\link[=s]{s()}} in place of the term
 gives the abscissa nearest to its extremum (unimodal) or to its steepest
 point (sigmoid), \eqn{M_0}, and the model is fitted at the indices

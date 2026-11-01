@@ -18,15 +18,16 @@ term_pilot(term, ...)
 Returns the unbuilt term with which a fitting layer replaces \code{term} in a
 pilot fit, or \code{NULL} when the term needs no pilot. A term returns one when
 it carries a discrete choice that the data must settle (the index of the
-mode of \code{\link[=shape_unimodal]{shape_unimodal()}}), which the layer makes with
-\code{\link[=term_variants]{term_variants()}} from the contribution that the stand-in fits.
+mode of \code{\link[=shape_unimodal]{shape_unimodal()}}, or, with the mode given, which of two starts
+to keep), which the layer makes with \code{\link[=term_variants]{term_variants()}} from the
+contribution that the stand-in fits.
 }
 \examples{
 term_pilot(s(x))
 class(term_pilot(scs(x, shape_unimodal())))[1]
 
-# A mode given in the shape needs no pilot.
-term_pilot(scs(x, shape_unimodal(mode = 0.4)))
+# A monotone shape carries no choice and needs no pilot.
+term_pilot(scs(x, shape_increasing()))
 
 }
 \seealso{

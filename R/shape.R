@@ -112,7 +112,10 @@ ShapeSigmoid <- S7::new_class("ShapeSigmoid", parent = ShapeLocated)
 #' # How the location is chosen
 #'
 #' With `mode` or `inflection` given, \eqn{M} is the index of the Greville
-#' abscissa nearest to it and the model is fitted once. Left at `NULL`, the
+#' abscissa nearest to it, and the model is fitted from two starts (the
+#' least-squares lines of [shape_start()] and the slopes of a smoothing
+#' spline) whose better criterion is kept: away from the mode of the data
+#' the first start is nearly flat and can leave the fit on the flat curve. Left at `NULL`, the
 #' fitting layer chooses \eqn{M}: a pilot fit with [s()] in place of the term
 #' gives the abscissa nearest to its extremum (unimodal) or to its steepest
 #' point (sigmoid), \eqn{M_0}, and the model is fitted at the indices
@@ -688,13 +691,24 @@ S7::method(shape_map, ShapeSigmoid) <- function(shape, xi, ...) {
 #' response over the range of the covariate, so that \eqn{g(b_j - \ell_j)} is
 #' finite.
 #'
+#' A unimodal shape starts from the least-squares line on each side of its
+#' location, and a sigmoid from half the least-squares slope at each anchor.
+#' With `rule = "spline"` passed through `...`, both start instead from the
+#' slopes of a smoothing spline ([stats::smooth.spline()]) on the segments
+#' between the Greville abscissae, each given the sign that the shape
+#' requires at its position and floored; for a sigmoid the slopes are made
+#' to grow up to the inflection and shrink after it before they are written
+#' as anchors and increments. [scs()] fits a term whose location is given
+#' from both starts and keeps the better (see [term_variants()]).
+#'
 #' @param shape A [shape_constraint].
 #' @param x The covariate.
 #' @param target A working response on the scale of the linear predictor, of
 #'   the length of `x`, or `NULL`, in which case the start is a flat curve at
 #'   the floor.
 #' @param xi The Greville abscissae of the basis.
-#' @param ... Passed to methods.
+#' @param ... Passed to methods; `rule = "spline"` for the second start of
+#'   a located shape.
 #'
 #' @return A numeric vector of length `length(xi)`, the starting \eqn{b} on
 #'   the natural scale (the level first).
@@ -748,6 +762,18 @@ S7::method(shape_start, ShapeCurvature) <- function(shape, x, target, xi, ...) {
 }
 
 
+# THE SLOPES OF A SMOOTHING SPLINE on the Greville segments, the second
+# start of a located shape (rule = "spline"): where the location is far from
+# the mode of the data, the lines of the first start have the wrong sign on
+# a side, the start is nearly flat, and the flat curve, stationary for every
+# smoothing parameter, holds the fit (misure_scs M15)
+.shape_spline_slopes <- function(x, target, xi) {
+  sp <- tryCatch(stats::smooth.spline(x, target), error = function(e) NULL)
+  if (is.null(sp)) return(NULL)
+  sl <- diff(stats::predict(sp, xi)$y) / diff(xi)
+  if (all(is.finite(sl))) sl else NULL
+}
+
 S7::method(shape_start, ShapeUnimodal) <- function(shape, x, target, xi, ...) {
   xi <- .check_greville(xi); K <- length(xi)
   M <- shape@shape_params$index
@@ -755,6 +781,10 @@ S7::method(shape_start, ShapeUnimodal) <- function(shape, x, target, xi, ...) {
   sg <- shape@shape_params$sign
   fl <- .shape_floor(x, target)
   if (is.null(target)) return(c(0, rep(fl, K - 1L)))
+  if (identical(list(...)$rule, "spline")) {
+    sl <- .shape_spline_slopes(x, target, xi)
+    if (!is.null(sl)) return(c(0, pmax(sg * ifelse(2:K <= M, 1, -1) * sl, fl)))
+  }
   # one least-squares line on each side of the extremum, a floor where a side
   # has too few points or the wrong sign
   xm <- xi[M]
@@ -772,6 +802,27 @@ S7::method(shape_start, ShapeSigmoid) <- function(shape, x, target, xi, ...) {
   sg <- shape@shape_params$sign
   fl <- .shape_floor(x, target)
   if (is.null(target)) return(c(0, rep(fl, K - 1L)))
+  if (identical(list(...)$rule, "spline")) {
+    sl <- .shape_spline_slopes(x, target, xi)
+    M <- shape@shape_params$index
+    if (is.null(M)) M <- (K + 2L) %/% 2L
+    if (!is.null(sl)) {
+      # the slopes of the shape's sign, growing up to the inflection and
+      # shrinking after it, then the two anchors and the increments
+      a <- c(NA, pmax(sg * sl, fl))
+      if (M >= 3L) for (j in 3:M) a[j] <- max(a[j], a[j - 1L])
+      if (M < K - 1L) for (j in (K - 1L):(M + 1L)) a[j] <- max(a[j], a[j + 1L])
+      w <- c(0, 0, (xi[3:K] - xi[1:(K - 2L)]) / 2)
+      b <- numeric(K)
+      b[2L] <- a[2L]
+      if (M >= 3L) for (j in 3:M) b[j] <- max((a[j] - a[j - 1L]) / w[j], fl)
+      if (M < K) {
+        b[K] <- a[K]
+        if (M + 1L <= K - 1L) for (j in (M + 1L):(K - 1L)) b[j] <- max((a[j] - a[j + 1L]) / w[j + 1L], fl)
+      }
+      return(b)
+    }
+  }
   # half the least-squares slope at each anchor and the floor elsewhere: a
   # straight line split between the two ends
   cf <- stats::coef(stats::lm.fit(cbind(1, x), target))

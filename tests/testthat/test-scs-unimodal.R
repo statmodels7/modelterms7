@@ -51,7 +51,39 @@ test_that("mode places the index at the nearest Greville abscissa", {
   tm <- term_build(scs(x, shape_unimodal(mode = 0.37), un_sm), un_d)
   bp <- tm@build_info
   expect_identical(bp$shape@shape_params$index, which.min(abs(bp$xi - 0.37)))
-  expect_null(term_pilot(tm))
+  # the choice left is which of two starts to keep
+  expect_true(S7::S7_inherits(term_pilot(tm), SmoothTerm))
+  v <- term_variants(tm)
+  expect_identical(names(v), c("start: sides", "start: spline"))
+  expect_identical(vapply(v, function(t) t@spec$start_rule, ""), c(`start: sides` = "sides",
+                                                                   `start: spline` = "spline"))
+  # a version carries its start and is not searched again
+  expect_null(term_pilot(v[[2L]]))
+})
+
+test_that("the spline start reads the slopes of the data with the shape's signs", {
+  set.seed(48)
+  x <- runif(300); y <- exp(-((x - 0.3) / 0.15)^2) + rnorm(300, sd = 0.05)
+  xi <- seq(0, 1, length.out = 8)
+  sl <- diff(stats::predict(stats::smooth.spline(x, y), xi)$y) / diff(xi)
+  fl <- .shape_floor(x, y)
+  for (M in c(2L, 3L, 6L)) {
+    b <- shape_start(shape_unimodal(index = M), x, y, xi, rule = "spline")
+    expect_equal(b[-1L], pmax(ifelse(2:8 <= M, 1, -1) * sl, fl))
+  }
+  # the first start is unchanged without the rule
+  expect_identical(shape_start(shape_unimodal(index = 3L), x, y, xi),
+                   shape_start(shape_unimodal(index = 3L), x, y, xi, rule = "sides"))
+  # a sigmoid: positive coordinates whose slopes grow to the inflection and shrink after
+  ys <- stats::plogis((x - 0.6) / 0.08) + rnorm(300, sd = 0.05)
+  for (M in c(2L, 5L, 8L)) {
+    sh <- shape_sigmoid(index = M)
+    b <- shape_start(sh, x, ys, xi, rule = "spline")
+    expect_true(all(b[-1L] > 0))
+    s2 <- diff(drop(shape_map(sh, xi)$A %*% b)) / diff(xi)
+    expect_true(all(diff(s2[seq_len(M - 1L)]) >= -1e-12))
+    if (M < 8L) expect_true(all(diff(s2[M:7]) <= 1e-12))
+  }
 })
 
 test_that("a unimodal shape without a mode has a pilot and five versions", {

@@ -17,7 +17,8 @@ the floor.}
 
 \item{xi}{The Greville abscissae of the basis.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods; \code{rule = "spline"} for the second start of
+a located shape.}
 }
 \value{
 A numeric vector of length \code{length(xi)}, the starting \eqn{b} on
@@ -36,6 +37,16 @@ at the anchored end) and its second derivative. A slope or a curvature of the wr
 bound, is replaced by a floor of one hundredth of the scale of the
 response over the range of the covariate, so that \eqn{g(b_j - \ell_j)} is
 finite.
+
+A unimodal shape starts from the least-squares line on each side of its
+location, and a sigmoid from half the least-squares slope at each anchor.
+With \code{rule = "spline"} passed through \code{...}, both start instead from the
+slopes of a smoothing spline (\code{\link[stats:smooth.spline]{stats::smooth.spline()}}) on the segments
+between the Greville abscissae, each given the sign that the shape
+requires at its position and floored; for a sigmoid the slopes are made
+to grow up to the inflection and shrink after it before they are written
+as anchors and increments. \code{\link[=scs]{scs()}} fits a term whose location is given
+from both starts and keeps the better (see \code{\link[=term_variants]{term_variants()}}).
 }
 \examples{
 set.seed(1)
