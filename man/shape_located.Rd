@@ -11,7 +11,8 @@ shape_unimodal(
   mode = NULL,
   index = NULL,
   valley = FALSE,
-  value = NULL
+  value = NULL,
+  mode_by = c("level", "shared")
 )
 
 shape_sigmoid(
@@ -19,27 +20,36 @@ shape_sigmoid(
   inflection = NULL,
   index = NULL,
   decreasing = FALSE,
-  value = NULL
+  value = NULL,
+  inflection_by = c("level", "shared")
 )
 }
 \arguments{
 \item{link}{A \pkg{linkfunctions7} link onto \eqn{(0, \infty)}.}
 
-\item{mode, inflection}{\code{NULL}, or a single number: the value of the
-covariate at which the mode or the inflection is placed.}
+\item{mode, inflection}{\code{NULL}, a single number (the value of the covariate
+at which the mode or the inflection is placed), or a vector of such
+numbers named by the levels of a factor \code{by}.}
 
-\item{index}{\code{NULL}, or the index \eqn{M} itself, which a fitting layer
-sets on the versions it tries. It takes precedence over \code{mode} and
-\code{inflection}.}
+\item{index}{\code{NULL}, the index \eqn{M} itself, or a vector of indices
+named by level. A fitting layer sets it on the versions it tries. It
+takes precedence over \code{mode} and \code{inflection}.}
 
-\item{valley}{\code{FALSE} for a maximum, \code{TRUE} for a minimum.}
+\item{valley}{\code{FALSE} for a maximum, \code{TRUE} for a minimum, or a logical
+vector named by level.}
 
-\item{value}{\code{NULL}, or two finite numbers \code{c(at = a, value = v)}: the
-smooth is \eqn{v} at \eqn{a}, in place of the centering (see
-\code{\link[=shape_increasing]{shape_increasing()}} for when \eqn{v} changes the fit).}
+\item{value}{\code{NULL}, two finite numbers \code{c(at = a, value = v)}, or a list
+\code{list(at = a, value = v)} whose elements are one number or a vector
+named by level: the smooth is \eqn{v} at \eqn{a}, in place of the
+centering (see \code{\link[=shape_increasing]{shape_increasing()}} for when \eqn{v} changes the fit).}
+
+\item{mode_by, inflection_by}{Under a factor \code{by}, whether a location that
+is not given is chosen for each level (\code{"level"}, the default) or once
+for every level (\code{"shared"}). \code{"shared"} without a factor \code{by} is an
+error.}
 
 \item{decreasing}{\code{FALSE} for an increasing sigmoid, \code{TRUE} for a
-decreasing one.}
+decreasing one, or a logical vector named by level.}
 }
 \value{
 An S7 object of class \code{ShapeUnimodal} or \code{ShapeSigmoid}, both
@@ -80,12 +90,29 @@ point (sigmoid), \eqn{M_0}, and the model is fitted at the indices
 \code{\link[=term_pilot]{term_pilot()}} and \code{\link[=term_variants]{term_variants()}}).
 }
 
+\section{Under a factor \code{by}}{
+With a factor \code{by} in \code{\link[=scs]{scs()}}, \code{mode}, \code{inflection}, \code{index}, \code{valley}
+and \code{decreasing} may be given by level, as a vector named by the levels
+(\code{valley = c(a = FALSE, b = TRUE)} gives a maximum in level \code{a} and a
+minimum in level \code{b}), and the point and the value of \code{value} may be given
+by level in the list form. A location that is not given is chosen by
+level (\code{mode_by} or \code{inflection_by} at \code{"level"}, the default): the
+fitting layer moves the index of one level at a time, from the pilot
+indices of the levels. With \code{"shared"} one index holds for every level,
+and the versions are taken around the median of the levels' pilot
+indices.
+}
+
 \examples{
 shape_unimodal()
 shape_unimodal(mode = 0.4)
 shape_unimodal(valley = TRUE)
 shape_sigmoid(inflection = 0.5)
 shape_sigmoid(decreasing = TRUE)
+
+# Under a factor by with levels a and b: a peak in a, a valley in b, and
+# one location for both.
+shape_unimodal(valley = c(a = FALSE, b = TRUE), mode_by = "shared")
 }
 \seealso{
 \code{\link[=scs]{scs()}}, \code{\link[=shape_increasing]{shape_increasing()}}.

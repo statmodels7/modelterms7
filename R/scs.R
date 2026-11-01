@@ -140,9 +140,15 @@ ScsTerm <- S7::new_class(
 #' fixed by that value instead, and `value = c(at = a, value = 0)` sets the
 #' effect of \eqn{z} to zero at \eqn{a}. The default label is `scs(x):z`.
 #'
-#' A unimodal or sigmoid shape without a location under a factor `by` has
-#' one location per level. [statmodels7::statmod()] searches them one level
-#' at a time from a pilot fit of `s(x, by = g)` ([term_variant_stages()]).
+#' Under a factor `by` the shape may also differ between the levels: its
+#' declared settings (a minimum slope, a location, a peak or a valley, the
+#' point and the value of a value or a slope) may be given by level, and its
+#' estimated ones (a location that is not given, the left slope of a
+#' curvature shape) may be one for every level or one per level, through the
+#' arguments `mode_by`, `inflection_by` and `left_slope_by` of the shape (see
+#' [shape_increasing()] and [shape_unimodal()]). A location chosen by level
+#' is searched by [statmodels7::statmod()] one level at a time from a pilot
+#' fit of `s(x, by = g)` ([term_variant_stages()]).
 #'
 #' # Inference
 #'
@@ -336,7 +342,7 @@ scs <- function(x, shape = shape_increasing(), smoother = basis7::bspline_smooth
   # see (the anchored slope of a combination is in the walk)
   pen <- (if (is.null(m$pen)) m$cons else m$pen) - 1L
   pv <- shape@shape_params$value
-  ps <- shape@shape_params$slope
+  ps <- shape@shape_params[["slope"]]
   .scs_check_point(pv, "value", b, label)
   .scs_check_point(ps, "slope", b, label)
   # A SLOPE AT A POINT ELIMINATES THE FREE SLOPE. f'(a) = d(a)' A_{-1} b_{-1}
@@ -400,9 +406,16 @@ scs <- function(x, shape = shape_increasing(), smoother = basis7::bspline_smooth
   pc
 }
 
+# the coefficient vector from one column per level: the tied coordinate is
+# the mean of the levels' values
+.scs_collapse <- function(bp, Gm) {
+  if (is.null(bp$C)) return(as.vector(Gm))
+  c(mean(Gm[1L, ]), as.vector(Gm[-1L, , drop = FALSE]))
+}
+
 # b(gamma) and its derivatives level by level, one column per level
 .scs_B <- function(bp, coef, order) {
-  Gm <- matrix(coef, bp$nc, bp$m)
+  Gm <- matrix(coef[bp$ix], bp$nc, bp$m)
   out <- vapply(seq_len(bp$m), function(l) {
     pc <- bp$pieces[[bp$piece_of[l]]]
     .shape_b(bp$link, Gm[, l], pc$cons, pc$lower, order)
@@ -420,13 +433,14 @@ scs <- function(x, shape = shape_increasing(), smoother = basis7::bspline_smooth
   drop(out)
 }
 
-# a block whose columns of level l are G[, l] W_l diag(D[, l])
+# a block whose columns of level l are G[, l] W_l diag(D[, l]), collapsed
+# onto the coefficients where a coordinate is tied across the levels
 .scs_block <- function(bp, Ws, G, D) {
   n <- nrow(G)
   X <- do.call(cbind, lapply(seq_len(bp$m), function(l) {
     Ws[[bp$piece_of[l]]] * (G[, l] * rep(D[, l], each = n))
   }))
-  X
+  if (is.null(bp$C)) X else X %*% bp$C
 }
 
 # the designs and fixed parts at new rows, one per piece
@@ -455,56 +469,106 @@ S7::method(term_build, ScsTerm) <- function(term, data, ...) {
   if (identical(kind, "numeric") && isTRUE(term@spec$default_label)) {
     term@label <- paste0(term@label, ":", paste(deparse(term@by), collapse = ""))
   }
-  # THE SHAPE OF EACH LEVEL. A located shape with no location has one index
-  # per level of a factor `by` (term@spec$index_by, set by term_variants());
-  # every other shape is the same for all the levels. Levels with the same
-  # shape share one piece.
+  sp <- term@shape@shape_params
+  named <- .shape_level_names(term@shape)
+  tie <- identical(sp$left_slope_by, "shared")
+  if (!identical(kind, "factor")) {
+    if (length(named)) {
+      stop(sprintf(paste0("'%s' gives settings of its shape by level, which need a",
+                          " factor 'by'."), term@label), call. = FALSE)
+    }
+    if (identical(sp$location_by, "shared") || tie) {
+      stop(sprintf(paste0("'%s' shares a quantity of its shape across the levels",
+                          " (\"shared\" in mode_by,\n  inflection_by or",
+                          " left_slope_by), which needs a factor 'by'."), term@label),
+           call. = FALSE)
+    }
+  } else if (length(setdiff(named, lev))) {
+    stop(sprintf("'%s' names %s in the settings of its shape, which are not levels of '%s'.",
+                 term@label, paste0("'", setdiff(named, lev), "'", collapse = ", "),
+                 paste(deparse(term@by), collapse = "")), call. = FALSE)
+  }
+  # THE SHAPE OF EACH LEVEL: the settings given by level resolved for it and,
+  # for a located shape with no location searched level by level, the index
+  # that term_variants() set (term@spec$index_by). Levels with the same shape
+  # share one piece.
   idx_by <- term@spec$index_by
-  if (identical(kind, "factor") && .scs_auto_location(term) && !is.null(idx_by)) {
-    shapes <- lapply(lev, function(l) {
-      sh <- term@shape
-      sh@shape_params$index <- as.integer(idx_by[[l]])
+  shapes <- if (identical(kind, "factor")) {
+    lapply(lev, function(l) {
+      sh <- .shape_level(term@shape, l)
+      if (.scs_auto_location(term) && !identical(sp$location_by, "shared") &&
+          !is.null(idx_by)) {
+        sh@shape_params$index <- as.integer(idx_by[[l]])
+      }
       .scs_resolve_shape(sh, xi)
     })
-    key <- vapply(shapes, function(sh) sh@shape_params$index, integer(1))
-  } else {
-    shapes <- list(.scs_resolve_shape(term@shape, xi))
-    key <- rep(1L, m)
-  }
+  } else list(.scs_resolve_shape(term@shape, xi))
+  key <- vapply(shapes, function(sh)
+    paste(class(sh)[1L], paste(deparse(sh@shape_params), collapse = "")), "")
   ukey <- unique(key)
   piece_of <- match(key, ukey)
-  keep_level <- identical(kind, "numeric") && is.null(term@shape@shape_params$value)
-  pieces <- lapply(ukey, function(k) {
-    sh <- if (length(shapes) == 1L) shapes[[1L]] else shapes[[match(k, key)]]
-    .scs_piece(sh, b, xi, x, keep_level, term@label)
-  })
+  if (!identical(kind, "factor")) piece_of <- rep(1L, m)
+  keep_level <- identical(kind, "numeric") && is.null(sp$value)
+  if (tie && any(vapply(shapes, function(sh) !is.null(sh@shape_params[["slope"]]), logical(1)))) {
+    stop(sprintf(paste0("'%s' fixes a slope at a point, which removes the left",
+                        " slope that\n  left_slope_by = \"shared\" would tie across",
+                        " the levels."), term@label), call. = FALSE)
+  }
+  pieces <- lapply(ukey, function(k) .scs_piece(shapes[[match(k, key)]], b, xi, x,
+                                                keep_level, term@label))
   nc <- unique(vapply(pieces, function(pc) ncol(pc$A1), integer(1)))
   if (length(nc) != 1L) {
     stop(sprintf("the levels of '%s' have shapes with different numbers of coefficients.",
                  term@label), call. = FALSE)
   }
+  # THE COEFFICIENTS OF EACH LEVEL are column l of matrix(coef[ix], nc, m).
+  # Without a tie they are the levels' blocks one after another; with
+  # left_slope_by = "shared" the first coordinate (the left slope of a
+  # curvature shape) is one coefficient for every level, and the block of
+  # the levels' columns is collapsed onto the coefficients by the 0/1 matrix C.
+  if (tie) {
+    ix <- rbind(1L, matrix(1L + seq_len((nc - 1L) * m), nc - 1L, m))
+    ncoef <- 1L + (nc - 1L) * m
+    C <- matrix(0, nc * m, ncoef)
+    C[cbind(seq_len(nc * m), as.vector(ix))] <- 1
+  } else {
+    ix <- matrix(seq_len(nc * m), nc, m)
+    ncoef <- nc * m
+    C <- NULL
+  }
   bp <- list(basis = b, xi = xi, pieces = pieces, piece_of = piece_of,
-             link = term@shape@link, nc = nc, m = m, ncoef = nc * m,
+             link = term@shape@link, nc = nc, m = m, ncoef = ncoef, ix = ix, C = C,
              n = length(x), var = term@var, x = x, shape = pieces[[1L]]$shape,
              by = term@by, by_kind = kind, by_levels = lev, keep_level = keep_level,
              G = G)
   bp$W <- lapply(pieces, function(pc) .scs_W(bp, pc, x))
   bp$fixed <- lapply(pieces, function(pc) .scs_fixed(bp, pc, x))
-  coef <- unlist(lapply(piece_of, function(k) pieces[[k]]$coef0), use.names = FALSE)
+  G0 <- matrix(unlist(lapply(piece_of, function(k) pieces[[k]]$coef0), use.names = FALSE),
+               nc, m)
+  coef <- .scs_collapse(bp, G0)
   bp$coef0 <- coef
   gn <- if (keep_level) c("const", sprintf("g%d", seq_len(nc - 1L)))
         else sprintf("g%d", seq_len(nc))
-  term@coef_names <- if (identical(kind, "factor"))
-    as.character(t(outer(lev, gn, function(a, g) sprintf("%s.%s.%s", term@label, a, g))))
+  lab <- function(g) as.character(t(outer(lev, g, function(a, h)
+    sprintf("%s.%s.%s", term@label, a, h))))
+  term@coef_names <- if (tie) c(sprintf("%s.%s", term@label, gn[1L]), lab(gn[-1L]))
+  else if (identical(kind, "factor")) lab(gn)
   else sprintf("%s.%s", term@label, gn)
   Ps <- lapply(piece_of, function(k) pieces[[k]]$P)
   bp$penalties <- NULL
   if (identical(term@spec$by_hyper, "level")) {
     # ONE PENALTY PER LEVEL, under its own smoothing parameter, as s() under
-    # by_hyper = "level": the names are checked here, where the levels exist
+    # by_hyper = "level": the names are checked here, where the levels exist.
+    # A tied coordinate sits in every level's entry, and the entries' log
+    # pseudo-determinants add up correctly only if none of them penalizes it.
+    if (tie && any(vapply(Ps, function(P) any(P[1L, ] != 0), logical(1)))) {
+      stop(sprintf(paste0("'%s' ties a penalized left slope across the levels,",
+                          " and by_hyper = \"level\"\n  would penalize it once per",
+                          " level; use by_hyper = \"shared\"."), term@label),
+           call. = FALSE)
+    }
     parts <- lapply(seq_len(m), function(l) {
-      .penalty_entry(lev[l], (l - 1L) * nc + seq_len(nc),
-                     penalties7::quadratic_penalty(Ps[[l]]))
+      .penalty_entry(lev[l], ix[, l], penalties7::quadratic_penalty(Ps[[l]]))
     })
     parts <- .entry_hyper(parts, term@hyper, term@ids, term@label,
                           "this smooth's penalty")
@@ -514,13 +578,16 @@ S7::method(term_build, ScsTerm) <- function(term, data, ...) {
     })))
     bp$penalties <- parts
     term@penalty <- NULL
+  } else if (tie) {
+    S <- crossprod(C, as.matrix(Matrix::bdiag(Ps)) %*% C)
+    term@penalty <- penalties7::quadratic_penalty(S)
   } else if (length(unique(Ps)) == 1L) {
     term@penalty <- penalties7::quadratic_penalty(Ps[[1L]], blocks = m)
   } else {
     term@penalty <- penalties7::quadratic_penalty(as.matrix(Matrix::bdiag(Ps)))
   }
   term@build_info <- bp
-  term@X <- matrix(0, length(x), nc * m)
+  term@X <- matrix(0, length(x), ncoef)
   term_refresh(term, coef)
 }
 
@@ -574,7 +641,7 @@ S7::method(term_block_deriv, ScsTerm) <- function(term, coef = NULL, v, ...) {
     stop(sprintf("'v' must have length %d, the term's coefficients.", bp$ncoef),
          call. = FALSE)
   }
-  .scs_block(bp, bp$W, bp$G, .scs_B(bp, coef, 2L) * matrix(v, bp$nc, bp$m))
+  .scs_block(bp, bp$W, bp$G, .scs_B(bp, coef, 2L) * matrix(v[bp$ix], bp$nc, bp$m))
 }
 
 S7::method(term_block_contract, ScsTerm) <- function(term, coef = NULL, A, ...) {
@@ -587,10 +654,10 @@ S7::method(term_block_contract, ScsTerm) <- function(term, coef = NULL, A, ...) 
                  bp$n, bp$ncoef), call. = FALSE)
   }
   B2 <- .scs_B(bp, coef, 2L)
-  unlist(lapply(seq_len(bp$m), function(l) {
-    cols <- (l - 1L) * bp$nc + seq_len(bp$nc)
-    B2[, l] * colSums(A[, cols, drop = FALSE] * bp$W[[bp$piece_of[l]]] * bp$G[, l])
+  out <- unlist(lapply(seq_len(bp$m), function(l) {
+    B2[, l] * colSums(A[, bp$ix[, l], drop = FALSE] * bp$W[[bp$piece_of[l]]] * bp$G[, l])
   }), use.names = FALSE)
+  if (is.null(bp$C)) out else drop(crossprod(bp$C, out))
 }
 
 S7::method(term_block_deriv2, ScsTerm) <- function(term, coef = NULL, v, u, ...) {
@@ -602,7 +669,7 @@ S7::method(term_block_deriv2, ScsTerm) <- function(term, coef = NULL, v, u, ...)
     stop(sprintf("'v' and 'u' must have length %d, the term's coefficients.",
                  bp$ncoef), call. = FALSE)
   }
-  .scs_block(bp, bp$W, bp$G, .scs_B(bp, coef, 3L) * matrix(v * u, bp$nc, bp$m))
+  .scs_block(bp, bp$W, bp$G, .scs_B(bp, coef, 3L) * matrix((v * u)[bp$ix], bp$nc, bp$m))
 }
 
 # the start from a target: each level of a factor `by` from its own rows; a
@@ -614,7 +681,7 @@ S7::method(term_coef_start, ScsTerm) <- function(term, target = NULL, ...) {
   if (is.null(target)) return(bp$coef0)
   target <- as.numeric(target)
   if (length(target) != bp$n) return(bp$coef0)
-  out <- matrix(bp$coef0, bp$nc, bp$m)
+  out <- matrix(bp$coef0[bp$ix], bp$nc, bp$m)
   if (identical(bp$by_kind, "numeric")) {
     if (bp$keep_level) {
       z <- bp$G[, 1L]
@@ -634,7 +701,7 @@ S7::method(term_coef_start, ScsTerm) <- function(term, target = NULL, ...) {
     g <- .shape_gamma(bp$link, b0[setdiff(seq_along(b0), pc$drop_b)], pc$cons, pc$lower)
     if (all(is.finite(g))) out[, l] <- g
   }
-  as.vector(out)
+  .scs_collapse(bp, out)
 }
 
 # THE INDEX OF A LOCATED SHAPE IS SETTLED AT THE BUILD, where the Greville
@@ -694,14 +761,14 @@ S7::method(term_pilot, ScsTerm) <- function(term, ...) {
   rng <- .shape_index_range(term@shape, K)
   mid <- rng[(length(rng) + 1L) %/% 2L]
   ok <- !is.null(pilot) && length(pilot) == bp$n && any(is.finite(pilot))
-  near <- function(rows, f) {
+  near <- function(rows, f, shape = term@shape) {
     if (!ok || !any(rows)) return(mid)
-    x0 <- .scs_pilot_center(term@shape, bp$x[rows], f[rows])
+    x0 <- .scs_pilot_center(shape, bp$x[rows], f[rows])
     if (is.na(x0)) mid else rng[which.min(abs(bp$xi[rng] - x0))]
   }
   if (identical(bp$by_kind, "factor")) {
     return(stats::setNames(vapply(seq_len(bp$m), function(l) {
-      near(bp$G[, l] != 0, pilot)
+      near(bp$G[, l] != 0, pilot, .shape_level(term@shape, bp$by_levels[l]))
     }, integer(1)), bp$by_levels))
   }
   if (identical(bp$by_kind, "numeric")) {
@@ -723,7 +790,13 @@ S7::method(term_variants, ScsTerm) <- function(term, pilot = NULL, ...) {
     v@X <- NULL; v@coef_names <- character(0); v@build_info <- list(); v@penalty <- NULL
     v
   }
-  if (!identical(bp$by_kind, "factor")) {
+  # ONE LOCATION FOR EVERY LEVEL: the versions around the median of the
+  # levels' pilot indices
+  shared <- identical(term@shape@shape_params$location_by, "shared")
+  if (identical(bp$by_kind, "factor") && shared) {
+    M0 <- as.integer(round(stats::median(M0)))
+  }
+  if (!identical(bp$by_kind, "factor") || shared) {
     Ms <- intersect(M0 + (-2L):2L, rng)
     out <- lapply(Ms, function(M) {
       v <- reset(term)
@@ -758,7 +831,8 @@ S7::method(term_variants, ScsTerm) <- function(term, pilot = NULL, ...) {
 
 S7::method(term_variant_stages, ScsTerm) <- function(term, ...) {
   if (!.scs_auto_location(term) || !term_is_built(term) ||
-      !identical(term@build_info$by_kind, "factor")) return(1L)
+      !identical(term@build_info$by_kind, "factor") ||
+      identical(term@shape@shape_params$location_by, "shared")) return(1L)
   term@build_info$m
 }
 

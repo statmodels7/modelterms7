@@ -9,7 +9,7 @@ un_sm <- basis7::bspline_smooth(k = 10)
 test_that("the constructor checks mode and index", {
   expect_null(shape_unimodal()@shape_params$at)
   expect_identical(shape_unimodal(index = 4)@shape_params$index, 4L)
-  expect_error(shape_unimodal(mode = c(1, 2)), "single finite")
+  expect_error(shape_unimodal(mode = c(1, 2)), "named by the levels")
   expect_error(shape_unimodal(index = 0), "positive whole")
   expect_error(shape_unimodal(index = 2.5), "positive whole")
   expect_error(shape_unimodal(link = linkfunctions7::identity_link()), "onto")

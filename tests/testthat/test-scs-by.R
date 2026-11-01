@@ -150,3 +150,103 @@ test_that("edf() reads a penalty repeated in blocks", {
                  sum(diag(solve(H + S, H))), tolerance = 1e-10)
   }
 })
+
+test_that("a tied left slope is one coefficient for every level", {
+  set.seed(46)
+  for (sh in list(shape_convex(left_slope_by = "shared"),
+                  shape_increasing_convex(left_slope_by = "shared"))) {
+    tm <- term_build(scs(x, sh, by_sm, by = g), by_d)
+    bp <- tm@build_info
+    expect_length(term_coef_names(tm), 1L + 3L * (bp$nc - 1L))
+    expect_identical(term_coef_names(tm)[1:2], c("scs(x).g1", "scs(x).a.g2"))
+    gam <- stats::rnorm(length(term_coef_names(tm)), sd = 0.6)
+    sh0 <- sh; sh0@shape_params$left_slope_by <- "level"
+    untied <- term_build(scs(x, sh0, by_sm, by = g), by_d)
+    expect_equal(term_value(term_refresh(tm, gam)),
+                 term_value(untied, coef = gam[bp$ix]), tolerance = 1e-13)
+    fd <- by_fd(tm, gam)
+    rel <- function(a, b) max(abs(a - b)) / max(abs(b))
+    r <- term_refresh(tm, gam)
+    expect_lt(rel(term_matrix(r), fd$J), 1e-8)
+    expect_lt(rel(term_block_deriv(tm, coef = gam, v = fd$v), fd$D1), 1e-8)
+    expect_lt(rel(term_block_deriv2(tm, coef = gam, v = fd$v, u = fd$u), fd$D2), 1e-8)
+    expect_lt(rel(term_block_contract(tm, coef = gam, A = fd$A), fd$C), 1e-8)
+  }
+  # the penalty is the levels' penalties on the coefficients
+  tm <- term_build(scs(x, shape_increasing_convex(left_slope_by = "shared"), by_sm, by = g), by_d)
+  one <- term_build(scs(x, shape_increasing_convex(), by_sm), by_d)
+  P1 <- as.matrix(penalties7::penalty_hessian(term_penalty(one), numeric(ncol(term_matrix(one))),
+                                              list(lambda = 1)))
+  C <- tm@build_info$C
+  expect_equal(as.matrix(penalties7::penalty_hessian(term_penalty(tm), tm@build_info$coef,
+                                                     list(lambda = 1))),
+               crossprod(C, kronecker(diag(3), P1) %*% C), ignore_attr = TRUE)
+  expect_error(term_build(scs(x, shape_increasing_convex(left_slope_by = "shared"),
+                              by_sm, by = g, by_hyper = "level"), by_d), "once per")
+  expect_length(term_penalties(term_build(scs(x, shape_convex(left_slope_by = "shared"),
+                                              by_sm, by = g, by_hyper = "level"), by_d)), 3L)
+})
+
+test_that("the declared settings of a shape may differ by level", {
+  set.seed(47)
+  lv <- factor(c("a", "b", "c"))
+  at <- c(a = 0.2, b = 0.5, c = 0.8); v <- c(a = 0, b = 1, c = 2)
+  tm <- term_build(scs(x, shape_increasing(value = list(at = at, value = v)), by_sm, by = g),
+                   by_d)
+  gam <- stats::rnorm(length(term_coef_names(tm)))
+  for (l in names(at)) {
+    expect_equal(term_value(tm, coef = gam, newdata = data.frame(x = at[[l]], g = factor(l, levels(lv)))),
+                 v[[l]], tolerance = 1e-13)
+  }
+  ms <- term_build(scs(x, shape_increasing(min_slope = c(a = 0, b = 0.5, c = 1)), by_sm, by = g),
+                   by_d)
+  expect_identical(length(ms@build_info$pieces), 3L)
+  # each level is the term without by built with that level's settings
+  for (l in c("a", "c")) {
+    one <- term_build(scs(x, shape_increasing(min_slope = c(a = 0, b = 0.5, c = 1)[[l]]), by_sm), by_d)
+    k <- ncol(term_matrix(one)); j <- (match(l, c("a", "b", "c")) - 1L) * k + seq_len(k)
+    g2 <- stats::rnorm(3L * k)
+    nd <- data.frame(x = by_d$x, g = factor(l, levels(lv)))
+    expect_equal(term_value(ms, coef = g2, newdata = nd), term_value(one, coef = g2[j], newdata = nd),
+                 tolerance = 1e-13)
+  }
+  um <- term_build(scs(x, shape_unimodal(mode = c(a = 0.3, b = 0.5, c = 0.7),
+                                         valley = c(a = FALSE, b = TRUE, c = FALSE)), by_sm, by = g),
+                   by_d)
+  expect_identical(vapply(um@build_info$pieces, function(pc) pc$shape@shape_params$sign, 1),
+                   c(1, -1, 1))
+  expect_output(print(shape_increasing(min_slope = c(a = 0, b = 0.2))), "min_slope = (a = 0.0, b = 0.2)",
+                fixed = TRUE)
+})
+
+test_that("a location may be one for every level", {
+  tm <- term_build(scs(x, shape_unimodal(mode_by = "shared"), by_sm, by = g), by_d)
+  expect_identical(term_variant_stages(tm), 1L)
+  mo <- c(a = 0.2, b = 0.55, c = 0.8)
+  pil <- -(by_d$x - mo[as.character(by_d$g)])^2
+  v <- term_variants(tm, pilot = pil)
+  expect_true(all(grepl("^M = ", names(v))))
+  b1 <- term_build(v[[1L]], by_d)
+  expect_identical(length(b1@build_info$pieces), 1L)
+  expect_output(print(shape_sigmoid(inflection_by = "shared")), "one location for every level")
+})
+
+test_that("settings by level that cannot be resolved are rejected", {
+  expect_error(term_build(scs(x, shape_increasing(min_slope = c(a = 0, b = 1))), by_d),
+               "need a\n  factor 'by'|need a factor 'by'")
+  expect_error(term_build(scs(x, shape_increasing(min_slope = c(a = 0, b = 1)), by = g), by_d),
+               "no value for the level 'c'")
+  expect_error(term_build(scs(x, shape_increasing(min_slope = c(a = 0, b = 1, c = 0, z = 2)),
+                              by = g), by_d), "'z'")
+  expect_error(term_build(scs(x, shape_unimodal(mode_by = "shared")), by_d), "needs a factor 'by'")
+  expect_error(term_build(scs(x, shape_unimodal(mode_by = "shared"), by = z), by_d),
+               "needs a factor 'by'")
+  expect_error(term_build(scs(x, shape_convex(slope = c(at = 0.5, value = 0),
+                                              left_slope_by = "shared"), by = g), by_d),
+               "removes the left")
+  expect_error(shape_increasing(min_slope = c(0, 1)), "named by the levels")
+  expect_error(shape_unimodal(mode_by = "both"), "\"level\" or \"shared\"")
+  expect_error(shape_increasing(value = list(at = 0)), "'at' and")
+  expect_error(shape_map(shape_increasing(min_slope = c(a = 0, b = 1)), seq(0, 1, length.out = 5)),
+               "values by level")
+})

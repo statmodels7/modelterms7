@@ -1,3 +1,18 @@
+# modelterms7 0.125.0
+
+* Under a factor `by` in `scs()`, the declared settings of a shape may be
+  given by level, as a vector named by the levels: `min_slope`, `mode`,
+  `inflection`, `index`, `valley`, `decreasing`, and the point and the
+  value of `value` and `slope` in the list form
+  `list(at = a, value = c(a = 0, b = 1))`.
+* New arguments for the estimated settings: `mode_by` in
+  `shape_unimodal()` and `inflection_by` in `shape_sigmoid()` choose a
+  location for each level (`"level"`, the default) or one for every level
+  (`"shared"`); `left_slope_by` in the curvature shapes makes the left
+  slope one coefficient for every level. `"shared"` without a factor `by`
+  is an error, and so is a tied penalized slope under
+  `by_hyper = "level"`.
+
 # modelterms7 0.124.1
 
 * `edf()` reads a penalty repeated in blocks (a factor `by` of `s()` or

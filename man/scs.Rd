@@ -138,9 +138,15 @@ formula as well makes it aliased. With a value at a point the level is
 fixed by that value instead, and \code{value = c(at = a, value = 0)} sets the
 effect of \eqn{z} to zero at \eqn{a}. The default label is \code{scs(x):z}.
 
-A unimodal or sigmoid shape without a location under a factor \code{by} has
-one location per level. \code{\link[statmodels7:statmod]{statmodels7::statmod()}} searches them one level
-at a time from a pilot fit of \code{s(x, by = g)} (\code{\link[=term_variant_stages]{term_variant_stages()}}).
+Under a factor \code{by} the shape may also differ between the levels: its
+declared settings (a minimum slope, a location, a peak or a valley, the
+point and the value of a value or a slope) may be given by level, and its
+estimated ones (a location that is not given, the left slope of a
+curvature shape) may be one for every level or one per level, through the
+arguments \code{mode_by}, \code{inflection_by} and \code{left_slope_by} of the shape (see
+\code{\link[=shape_increasing]{shape_increasing()}} and \code{\link[=shape_unimodal]{shape_unimodal()}}). A location chosen by level
+is searched by \code{\link[statmodels7:statmod]{statmodels7::statmod()}} one level at a time from a pilot
+fit of \code{s(x, by = g)} (\code{\link[=term_variant_stages]{term_variant_stages()}}).
 }
 
 \section{Inference}{
