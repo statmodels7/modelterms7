@@ -794,14 +794,21 @@ S7::method(term_variants, ScsTerm) <- function(term, pilot = NULL, ...) {
   # spline's slopes leave it, and neither start dominates, so both are
   # fitted and the criterion keeps the better (misure_scs M15: 82 fits of
   # 960 below the better of the two starts with the first alone, 0 with both)
+  # ... and from two starting smoothing parameters, 1 and 0.01: far from the
+  # mode both starts stay on the flat curve when the search starts at 1
+  # (misure_scs M17: 0.01 better in 69 fits of 960, worse in 11)
   if (.scs_two_starts(term)) {
-    out <- lapply(c("sides", "spline"), function(r) {
+    grid <- expand.grid(rule = c("sides", "spline"), lambda = c(NA, 0.01),
+                        stringsAsFactors = FALSE)
+    out <- lapply(seq_len(nrow(grid)), function(i) {
       v <- term
-      v@spec$start_rule <- r
+      v@spec$start_rule <- grid$rule[i]
+      if (!is.na(grid$lambda[i])) v@spec$lambda_start <- grid$lambda[i]
       v@X <- NULL; v@coef_names <- character(0); v@build_info <- list(); v@penalty <- NULL
       v
     })
-    names(out) <- c("start: sides", "start: spline")
+    names(out) <- ifelse(is.na(grid$lambda), sprintf("start: %s", grid$rule),
+                         sprintf("start: %s, lambda %g", grid$rule, grid$lambda))
     return(out)
   }
   if (!.scs_auto_location(term)) return(list(term))
@@ -878,4 +885,8 @@ S7::method(print, ScsTerm) <- function(x, ...) {
                 x@label))
   }
   invisible(x)
+}
+
+S7::method(term_hyper_start, ScsTerm) <- function(term, ...) {
+  if (is.null(term@spec$lambda_start)) NULL else c(lambda = term@spec$lambda_start)
 }

@@ -107,7 +107,9 @@ reference:
     penalty on the free coefficients.
   contents:
   - scs
+  - scte
   - ScsTerm
+  - ScteTerm
   - shape_constructors
   - shape_constraint
   - shape_map
@@ -116,6 +118,7 @@ reference:
   - term_pilot
   - term_variants
   - term_variant_stages
+  - term_hyper_start
 - title: Nonlinear terms
   desc: >
     A contribution nonlinear in its own parameters, whose block is

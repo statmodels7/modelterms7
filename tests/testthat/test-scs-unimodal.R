@@ -54,9 +54,12 @@ test_that("mode places the index at the nearest Greville abscissa", {
   # the choice left is which of two starts to keep
   expect_true(S7::S7_inherits(term_pilot(tm), SmoothTerm))
   v <- term_variants(tm)
-  expect_identical(names(v), c("start: sides", "start: spline"))
-  expect_identical(vapply(v, function(t) t@spec$start_rule, ""), c(`start: sides` = "sides",
-                                                                   `start: spline` = "spline"))
+  expect_identical(names(v), c("start: sides", "start: spline", "start: sides, lambda 0.01", "start: spline, lambda 0.01"))
+  expect_identical(unname(vapply(v, function(t) t@spec$start_rule, "")),
+                   c("sides", "spline", "sides", "spline"))
+  expect_null(term_hyper_start(v[[1L]]))
+  expect_identical(term_hyper_start(v[[4L]]), c(lambda = 0.01))
+  expect_null(term_hyper_start(s(x)))
   # a version carries its start and is not searched again
   expect_null(term_pilot(v[[2L]]))
 })
