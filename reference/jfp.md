@@ -89,6 +89,27 @@ link and an intercept in the model, \\\sum_t(\hat\mu_t - y_t) = a\tilde
 p\\. On a dispersion or shape parameter the effect is strong: the
 degrees of freedom of a Student t fitted to Gaussian data stay finite.
 
+The matrix \\\tilde I\\ is the expected information as the family gives
+it, without modification, as in the definition of Jeffreys. The
+information of a block's equation generally depends on the other
+parameters of the distribution as well: for a gaussian the information
+on the mean is divided by \\\sigma^2\\, and for a negative binomial it
+depends on \\\theta\\. The prior therefore also acts on the coefficients
+of those parameters, including the parameters that an outer criterion
+such as `reml()` estimates. The shift is of order \\1/n\\. For a
+gaussian with the block in the mean, the penalty equals a constant minus
+\\2a\tilde p\log\sigma\\, so the REML estimate of \\\sigma^2\\ is the
+residual sum of squares divided by \\n - p + 2a\tilde p\\ instead of
+\\n - p\\, and \\n\\\Delta\log\hat\sigma\\ tends to \\-a\tilde p\\. In
+simulations over seven families with the block in the mean, the median
+shift of a dispersion or shape parameter was 0.1 to 0.3 standard errors
+at \\n = 50\\ and 0.02 to 0.06 standard errors at \\n = 1000\\. A block
+in the equation of a parameter other than the mean moves the
+coefficients of the mean only when the information of that parameter
+depends on the mean, as for the \\\theta\\ of a negative binomial or the
+probability of a zero-inflated family, and not for the \\\sigma\\ of a
+gaussian.
+
 A formula is coded with its contrasts, as
 [`linpar()`](https://statmodels7.github.io/modelterms7/reference/linpar.md)
 codes it, and the intercept column is then removed, so `jfp(~ g)` over a

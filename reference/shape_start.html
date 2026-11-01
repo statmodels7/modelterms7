@@ -11,7 +11,7 @@ shapes) fitted by least squares to a working response."><meta property="og:image
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.122.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.127.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,7 +71,8 @@ the floor.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Passed to methods.</p></dd>
+<dd><p>Passed to methods; <code>rule = "spline"</code> for the second start of
+a located shape.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -88,6 +89,15 @@ at the anchored end) and its second derivative. A slope or a curvature of the wr
 bound, is replaced by a floor of one hundredth of the scale of the
 response over the range of the covariate, so that \(g(b_j - \ell_j)\) is
 finite.</p>
+<p>A unimodal shape starts from the least-squares line on each side of its
+location, and a sigmoid from half the least-squares slope at each anchor.
+With <code>rule = "spline"</code> passed through <code>...</code>, both start instead from the
+slopes of a smoothing spline (<code><a href="https://rdrr.io/r/stats/smooth.spline.html" class="external-link">stats::smooth.spline()</a></code>) on the segments
+between the Greville abscissae, each given the sign that the shape
+requires at its position and floored; for a sigmoid the slopes are made
+to grow up to the inflection and shrink after it before they are written
+as anchors and increments. <code><a href="scs.html">scs()</a></code> fits a term whose location is given
+from both starts and keeps the better (see <code><a href="term_variants.html">term_variants()</a></code>).</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

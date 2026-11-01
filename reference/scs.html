@@ -19,7 +19,7 @@ formula of any distribution parameter, like s()."><meta property="og:image" cont
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.122.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.127.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -89,11 +89,15 @@ Only its basis is used.</p></dd>
 
 
 <dt id="arg-by">by<a class="anchor" aria-label="anchor" href="#arg-by"></a></dt>
-<dd><p>Not yet supported; must be <code>NULL</code>.</p></dd>
+<dd><p>An optional factor or numeric variable, given as a bare name or
+an expression in the data, as in <code><a href="s.html">s()</a></code>.</p></dd>
 
 
 <dt id="arg-by-hyper">by_hyper<a class="anchor" aria-label="anchor" href="#arg-by-hyper"></a></dt>
-<dd><p>Not yet used.</p></dd>
+<dd><p>With a factor <code>by</code>, whether the levels share one smoothing
+parameter (<code>"shared"</code>, the default) or each has its own (<code>"level"</code>).
+Under <code>"level"</code> a held value or an <code>id</code> is qualified by the level,
+<code>hyper = c(lambda.a = 2)</code>.</p></dd>
 
 
 <dt id="arg-hyper">hyper<a class="anchor" aria-label="anchor" href="#arg-hyper"></a></dt>
@@ -132,6 +136,15 @@ holds exactly at every iterate of a fit.</p>
 the data on which the term is built, so the smooth averages to zero there.
 The coefficients are therefore \(\gamma_2, \dots, \gamma_K\), named
 <code>&lt;label&gt;.g1</code>, <code>&lt;label&gt;.g2</code>, and so on.</p>
+<p>A shape with a value at a point, <code>value = c(at = a, value = v)</code>, removes
+the level by that value instead: the columns are taken relative to their
+row at \(a\), and the contribution is
+\(f(x) = v + (B(x) - B(a))\,A_{-1}\,b_{-1}(\gamma)\). A convex or concave
+shape with a slope at a point, <code>slope = c(at = a, value = v)</code>, has one
+coefficient fewer, because the slope at the left end is solved from
+\(f'(a) = v\); the line that this slope contributes is a fixed part of
+the contribution. See <code><a href="shape_constructors.html">shape_increasing()</a></code> for when a value other than zero
+changes the fit.</p>
     </div>
     <div class="section level2">
     <h2 id="the-penalty">The penalty<a class="anchor" aria-label="anchor" href="#the-penalty"></a></h2>
@@ -160,6 +173,44 @@ derivatives of the block are diagonal in \(\gamma\).</p>
     <h2 id="prediction-outside-the-data">Prediction outside the data<a class="anchor" aria-label="anchor" href="#prediction-outside-the-data"></a></h2>
     <p>Beyond the ends of the basis the smooth is continued by the straight line
 with the slope at the end, which preserves the shape.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="positive-and-bounded-functions">Positive and bounded functions<a class="anchor" aria-label="anchor" href="#positive-and-bounded-functions"></a></h2>
+    <p>The shapes do not include a positive or a bounded function. When a
+parameter must be positive, or must lie between two values, the range is
+set by the link of that parameter in the distribution, such as
+<code><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">linkfunctions7::log_link()</a></code> or <code><a href="https://statmodels7.github.io/linkfunctions7/reference/bounded_link.html" class="external-link">linkfunctions7::bounded_link()</a></code>, and <code><a href="s.html">s()</a></code>
+gives the smooth on the scale of the link. The whole predictor then lies in
+the range at every iterate. A positive term beside an intercept would not be
+identified, because a constant moved between the intercept and the term
+leaves the likelihood unchanged.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="varying-the-shape-by-another-variable">Varying the shape by another variable<a class="anchor" aria-label="anchor" href="#varying-the-shape-by-another-variable"></a></h2>
+    <p>A factor <code>by</code> gives one constrained curve per level, each with the shape
+of <code>shape</code>: the block of level \(l\) is the block of one curve
+multiplied by the indicator of that level, every level is centered over
+all the rows, as for <code><a href="s.html">s()</a></code>, and the level means come from the factor
+written in the formula. The coefficients are named
+<code>&lt;label&gt;.&lt;level&gt;.g1</code>, <code>&lt;label&gt;.&lt;level&gt;.g2</code>, and so on. A value or a slope
+at a point holds for every level. Under <code>by_hyper = "level"</code> each level
+has its own smoothing parameter.</p>
+<p>A numeric <code>by</code> \(z\) gives a varying-coefficient term
+\(z\,f(x)\), with the shape on the coefficient \(f\). The term is not
+centered: the level of \(f\) is the coefficient of \(z\), a free and
+unpenalized coordinate named <code>&lt;label&gt;.const</code>, so writing \(z\) in the
+formula as well makes it aliased. With a value at a point the level is
+fixed by that value instead, and <code>value = c(at = a, value = 0)</code> sets the
+effect of \(z\) to zero at \(a\). The default label is <code>scs(x):z</code>.</p>
+<p>Under a factor <code>by</code> the shape may also differ between the levels: its
+declared settings (a minimum slope, a location, a peak or a valley, the
+point and the value of a value or a slope) may be given by level, and its
+estimated ones (a location that is not given, the left slope of a
+curvature shape) may be one for every level or one per level, through the
+arguments <code>mode_by</code>, <code>inflection_by</code> and <code>left_slope_by</code> of the shape (see
+<code><a href="shape_constructors.html">shape_increasing()</a></code> and <code><a href="shape_located.html">shape_unimodal()</a></code>). A location chosen by level
+is searched by <code><a href="https://statmodels7.github.io/statmodels7/reference/statmod.html" class="external-link">statmodels7::statmod()</a></code> one level at a time from a pilot
+fit of <code>s(x, by = g)</code> (<code><a href="term_variant_stages.html">term_variant_stages()</a></code>).</p>
     </div>
     <div class="section level2">
     <h2 id="inference">Inference<a class="anchor" aria-label="anchor" href="#inference"></a></h2>

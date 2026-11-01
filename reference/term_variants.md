@@ -26,11 +26,13 @@ term_variants(term, pilot = NULL, ...)
 
 - ...:
 
-  Passed to methods.
+  Passed to methods; `stage` and `current` for a term searched in
+  stages.
 
 ## Value
 
-A non-empty named list of unbuilt terms carrying the label of `term`.
+A named list of unbuilt terms carrying the label of `term`, non-empty at
+the first stage.
 
 ## Details
 
@@ -40,14 +42,31 @@ with
 [`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md)
 or
 [`shape_sigmoid()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md)
-and no location, the pilot's extremum (unimodal) or steepest point
+and a location given, the versions are the term from its two starts,
+named `"start: sides"` and `"start: spline"` (see
+[`shape_start()`](https://statmodels7.github.io/modelterms7/reference/shape_start.md)).
+With no location, the pilot's extremum (unimodal) or steepest point
 (sigmoid) gives the Greville abscissa \\\xi\_{M_0}\\ nearest to it, and
 the versions are the shape located at the indices \\M_0 - 2, \dots,
 M_0 + 2\\ that exist, named `"M = j"`.
 
+A term whose choice has several parts is searched in stages, one part at
+a time
+([`term_variant_stages()`](https://statmodels7.github.io/modelterms7/reference/term_variant_stages.md)).
+The layer then passes `stage = k` and `current`, the version chosen at
+the stage before, through `...`. For
+[`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
+with a factor `by` the parts are the levels: stage \\k\\ moves the index
+of level \\k\\ around the index nearest to the pilot's location on the
+rows of that level, with the other levels at their indices in `current`
+(at the first stage, at their pilot indices), and the versions are named
+`"<level>: M = j"`. The index that `current` already holds for level
+\\k\\ is left out, because the layer fitted it at the stage before.
+
 ## See also
 
-[`term_pilot()`](https://statmodels7.github.io/modelterms7/reference/term_pilot.md).
+[`term_pilot()`](https://statmodels7.github.io/modelterms7/reference/term_pilot.md),
+[`term_variant_stages()`](https://statmodels7.github.io/modelterms7/reference/term_variant_stages.md).
 
 ## Examples
 

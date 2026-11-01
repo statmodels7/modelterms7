@@ -144,6 +144,9 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_block_contract.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_block_deriv.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_block_deriv2.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_block_deriv3.SegTerm.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_block_deriv3.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_block_deriv4.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.GasJoint.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.GasTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_build.LinparTerm.html</loc></url>
@@ -296,6 +299,7 @@
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_value.SegTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_value.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_values.html</loc></url>
+<url><loc>https://statmodels7.github.io/modelterms7/reference/term_variant_stages.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_variants.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_within.RandomTerm.html</loc></url>
 <url><loc>https://statmodels7.github.io/modelterms7/reference/term_within.html</loc></url>

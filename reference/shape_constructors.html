@@ -19,7 +19,7 @@ curve of constant sign of curvature."><meta property="og:image" content="https:/
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.122.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.127.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -57,21 +57,55 @@ curve of constant sign of curvature.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">shape_increasing</span><span class="op">(</span>link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span>, min_slope <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">shape_increasing</span><span class="op">(</span></span>
+<span>  link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  min_slope <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  value <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">shape_decreasing</span><span class="op">(</span>link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span>, min_slope <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
+<span><span class="fu">shape_decreasing</span><span class="op">(</span></span>
+<span>  link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  min_slope <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  value <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">shape_convex</span><span class="op">(</span>link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">shape_convex</span><span class="op">(</span></span>
+<span>  link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  slope <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  left_slope_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level"</span>, <span class="st">"shared"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">shape_concave</span><span class="op">(</span>link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">shape_concave</span><span class="op">(</span></span>
+<span>  link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  slope <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  left_slope_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level"</span>, <span class="st">"shared"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">shape_increasing_convex</span><span class="op">(</span>link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">shape_increasing_convex</span><span class="op">(</span></span>
+<span>  link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  left_slope_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level"</span>, <span class="st">"shared"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">shape_increasing_concave</span><span class="op">(</span>link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">shape_increasing_concave</span><span class="op">(</span></span>
+<span>  link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  left_slope_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level"</span>, <span class="st">"shared"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">shape_decreasing_convex</span><span class="op">(</span>link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu">shape_decreasing_convex</span><span class="op">(</span></span>
+<span>  link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  left_slope_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level"</span>, <span class="st">"shared"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu">shape_decreasing_concave</span><span class="op">(</span>link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">shape_decreasing_concave</span><span class="op">(</span></span>
+<span>  link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  value <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  left_slope_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level"</span>, <span class="st">"shared"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -86,7 +120,27 @@ other shipped choice.</p></dd>
 
 <dt id="arg-min-slope">min_slope<a class="anchor" aria-label="anchor" href="#arg-min-slope"></a></dt>
 <dd><p>A single nonnegative number, the smallest slope in
-absolute value.</p></dd>
+absolute value, or a vector of such numbers named by the levels of a
+factor <code>by</code>.</p></dd>
+
+
+<dt id="arg-value">value<a class="anchor" aria-label="anchor" href="#arg-value"></a></dt>
+<dd><p><code>NULL</code>, two finite numbers <code>c(at = a, value = v)</code>, or a list
+<code>list(at = a, value = v)</code> whose elements are one number or a vector
+named by level: the smooth is \(v\) at \(a\). Unnamed, the first
+number is the point.</p></dd>
+
+
+<dt id="arg-slope">slope<a class="anchor" aria-label="anchor" href="#arg-slope"></a></dt>
+<dd><p><code>NULL</code>, or the same forms as <code>value</code>: the derivative of the
+smooth is \(v\) at \(a\).</p></dd>
+
+
+<dt id="arg-left-slope-by">left_slope_by<a class="anchor" aria-label="anchor" href="#arg-left-slope-by"></a></dt>
+<dd><p>Under a factor <code>by</code>, whether the left slope of a
+curvature shape is a coefficient of each level (<code>"level"</code>, the default)
+or one coefficient for every level (<code>"shared"</code>). <code>"shared"</code> without a
+factor <code>by</code> is an error.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -108,6 +162,37 @@ increasing concave or a decreasing convex one, so that every slope keeps
 its sign. See <a href="shape_constraint.html">shape_constraint</a> for the map.</p>
     </div>
     <div class="section level2">
+    <h2 id="a-value-or-a-slope-at-a-point">A value or a slope at a point<a class="anchor" aria-label="anchor" href="#a-value-or-a-slope-at-a-point"></a></h2>
+    <p>With <code>value = c(at = a, value = v)</code> the smooth satisfies \(f(a) = v\)
+exactly, and this constraint replaces the centering of <code><a href="scs.html">scs()</a></code>. With
+<code>slope = c(at = a, value = v)</code>, which only <code>shape_convex()</code> and
+<code>shape_concave()</code> accept, it satisfies \(f'(a) = v\) exactly: the slope
+at the left end, the one free slope of these two shapes, is then written in
+terms of the second divided differences. The other shapes constrain every
+slope, so a slope at a point cannot be imposed on them by this
+elimination. The point \(a\) must lie in the interval of the basis,
+which the <code>lower</code> and <code>upper</code> arguments of the smoother can widen.</p>
+<p>A value other than zero changes the fit only when no other term of the
+equation absorbs a constant (an intercept, the effects of a factor, an
+uncentered term), as in a formula that starts with <code>0 +</code>. Otherwise the
+fit is the same for every \(v\), and \(v\) only moves the level
+between the intercept and the smooth; with \(v = 0\) the intercept is
+the linear predictor at \(a\).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="under-a-factor-by">Under a factor <code>by</code><a class="anchor" aria-label="anchor" href="#under-a-factor-by"></a></h2>
+    <p>With a factor <code>by</code> in <code><a href="scs.html">scs()</a></code>, <code>min_slope</code> may be a vector named by the
+levels, and the point and the value of <code>value</code> or <code>slope</code> may be given by
+level in the list form, <code>list(at = 0, value = c(a = 0, b = 1))</code>. A
+curvature shape has one left slope per level by default; with
+<code>left_slope_by = "shared"</code> that slope (the free one of <code>shape_convex()</code>
+and <code>shape_concave()</code>, the anchored one of a combination) is one
+coefficient for every level. The anchored slope of a combination is
+penalized, so tying it is not available with <code>by_hyper = "level"</code> in
+<code><a href="scs.html">scs()</a></code>, which would penalize it once per level; a slope at a point
+removes the left slope and cannot be combined with a tie.</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="scs.html">scs()</a></code>, <a href="shape_constraint.html">shape_constraint</a>.</p></div>
     </div>
@@ -122,6 +207,18 @@ its sign. See <a href="shape_constraint.html">shape_constraint</a> for the map.<
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;shape: convex, link = softplus(a=1)&gt;</span>
 <span class="r-in"><span><span class="fu">shape_increasing_concave</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;shape: increasing concave, link = log&gt;</span>
+<span class="r-in"><span><span class="fu">shape_increasing</span><span class="op">(</span>value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>at <span class="op">=</span> <span class="fl">0</span>, value <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;shape: increasing, link = log, f(0) = 0&gt;</span>
+<span class="r-in"><span><span class="fu">shape_convex</span><span class="op">(</span>slope <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>at <span class="op">=</span> <span class="fl">0.5</span>, value <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;shape: convex, link = log, f'(0.5) = 0&gt;</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Settings by level, for a factor by with levels a and b.</span></span></span>
+<span class="r-in"><span><span class="fu">shape_increasing</span><span class="op">(</span>min_slope <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>, b <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;shape: increasing, link = log, min_slope = (a = 0.0, b = 0.2)&gt;</span>
+<span class="r-in"><span><span class="fu">shape_increasing</span><span class="op">(</span>value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>at <span class="op">=</span> <span class="fl">0</span>, value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">0</span>, b <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;shape: increasing, link = log, f(0) = (a = 0, b = 1)&gt;</span>
+<span class="r-in"><span><span class="fu">shape_convex</span><span class="op">(</span>left_slope_by <span class="op">=</span> <span class="st">"shared"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;shape: convex, link = log, one left slope for every level&gt;</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># A link onto the whole real line is rejected.</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/try.html" class="external-link">try</a></span><span class="op">(</span><span class="fu">shape_concave</span><span class="op">(</span>link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/identity_link.html" class="external-link">identity_link</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>

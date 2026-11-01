@@ -54,11 +54,16 @@ scs(
 
 - by:
 
-  Not yet supported; must be `NULL`.
+  An optional factor or numeric variable, given as a bare name or an
+  expression in the data, as in
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md).
 
 - by_hyper:
 
-  Not yet used.
+  With a factor `by`, whether the levels share one smoothing parameter
+  (`"shared"`, the default) or each has its own (`"level"`). Under
+  `"level"` a held value or an `id` is qualified by the level,
+  `hyper = c(lambda.a = 2)`.
 
 - hyper:
 
@@ -103,6 +108,17 @@ centered over the data on which the term is built, so the smooth
 averages to zero there. The coefficients are therefore \\\gamma_2,
 \dots, \gamma_K\\, named `<label>.g1`, `<label>.g2`, and so on.
 
+A shape with a value at a point, `value = c(at = a, value = v)`, removes
+the level by that value instead: the columns are taken relative to their
+row at \\a\\, and the contribution is \\f(x) = v + (B(x) -
+B(a))\\A\_{-1}\\b\_{-1}(\gamma)\\. A convex or concave shape with a
+slope at a point, `slope = c(at = a, value = v)`, has one coefficient
+fewer, because the slope at the left end is solved from \\f'(a) = v\\;
+the line that this slope contributes is a fixed part of the
+contribution. See
+[`shape_increasing()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+for when a value other than zero changes the fit.
+
 ## The penalty
 
 The penalty is the quadratic penalty of first differences of the
@@ -132,6 +148,55 @@ time, the derivatives of the block are diagonal in \\\gamma\\.
 
 Beyond the ends of the basis the smooth is continued by the straight
 line with the slope at the end, which preserves the shape.
+
+## Positive and bounded functions
+
+The shapes do not include a positive or a bounded function. When a
+parameter must be positive, or must lie between two values, the range is
+set by the link of that parameter in the distribution, such as
+[`linkfunctions7::log_link()`](https://statmodels7.github.io/linkfunctions7/reference/log_link.html)
+or
+[`linkfunctions7::bounded_link()`](https://statmodels7.github.io/linkfunctions7/reference/bounded_link.html),
+and [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md)
+gives the smooth on the scale of the link. The whole predictor then lies
+in the range at every iterate. A positive term beside an intercept would
+not be identified, because a constant moved between the intercept and
+the term leaves the likelihood unchanged.
+
+## Varying the shape by another variable
+
+A factor `by` gives one constrained curve per level, each with the shape
+of `shape`: the block of level \\l\\ is the block of one curve
+multiplied by the indicator of that level, every level is centered over
+all the rows, as for
+[`s()`](https://statmodels7.github.io/modelterms7/reference/s.md), and
+the level means come from the factor written in the formula. The
+coefficients are named `<label>.<level>.g1`, `<label>.<level>.g2`, and
+so on. A value or a slope at a point holds for every level. Under
+`by_hyper = "level"` each level has its own smoothing parameter.
+
+A numeric `by` \\z\\ gives a varying-coefficient term \\z\\f(x)\\, with
+the shape on the coefficient \\f\\. The term is not centered: the level
+of \\f\\ is the coefficient of \\z\\, a free and unpenalized coordinate
+named `<label>.const`, so writing \\z\\ in the formula as well makes it
+aliased. With a value at a point the level is fixed by that value
+instead, and `value = c(at = a, value = 0)` sets the effect of \\z\\ to
+zero at \\a\\. The default label is `scs(x):z`.
+
+Under a factor `by` the shape may also differ between the levels: its
+declared settings (a minimum slope, a location, a peak or a valley, the
+point and the value of a value or a slope) may be given by level, and
+its estimated ones (a location that is not given, the left slope of a
+curvature shape) may be one for every level or one per level, through
+the arguments `mode_by`, `inflection_by` and `left_slope_by` of the
+shape (see
+[`shape_increasing()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+and
+[`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md)).
+A location chosen by level is searched by
+[`statmodels7::statmod()`](https://statmodels7.github.io/statmodels7/reference/statmod.html)
+one level at a time from a pilot fit of `s(x, by = g)`
+([`term_variant_stages()`](https://statmodels7.github.io/modelterms7/reference/term_variant_stages.md)).
 
 ## Inference
 

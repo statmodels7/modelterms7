@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.122.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.127.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,46 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.127.0" id="modelterms7-01270">modelterms7 0.127.0<a class="anchor" aria-label="anchor" href="#modelterms7-01270"></a></h2>
+<ul><li>
+<code><a href="../reference/term_block_deriv3.html">term_block_deriv3()</a></code> and <code><a href="../reference/term_block_deriv4.html">term_block_deriv4()</a></code> return the third and fourth derivatives of a recomputed block along a column and three or four directions. <code><a href="../reference/nl.html">nl()</a></code> writes them over the partitions of the predictor’s fourth and fifth derivatives with the link chain; a smoothed <code><a href="../reference/seg.html">seg()</a></code>, <code><a href="../reference/jump.html">jump()</a></code> and <code><a href="../reference/jseg.html">jseg()</a></code> have closed forms, and a sharp break-point returns zeros. The fourth order of a term with a step needs the smoother’s sixth derivative and signals an error. The base method returns zeros.</li>
+<li>The documentation of <code><a href="../reference/jfp.html">jfp()</a></code> describes the effect of the prior on the other parameters of the distribution: the information of the block generally depends on them, so the penalty also moves their coefficients, by an amount of order 1/n.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.126.0" id="modelterms7-01260">modelterms7 0.126.0<a class="anchor" aria-label="anchor" href="#modelterms7-01260"></a></h2>
+<ul><li>A unimodal or sigmoid <code><a href="../reference/scs.html">scs()</a></code> with its location given is fitted from two starts, whose better criterion the fitting layer keeps: <code><a href="../reference/term_pilot.html">term_pilot()</a></code> returns the stand-in <code><a href="../reference/s.html">s()</a></code> and <code><a href="../reference/term_variants.html">term_variants()</a></code> the term with <code>"start: sides"</code> and <code>"start: spline"</code>. Away from the mode of the data the first start is nearly flat and left the fit on the flat curve (82 of 960 measured fits below the better of the two starts, 0 with both). Not under a numeric <code>by</code>.</li>
+<li>
+<code><a href="../reference/shape_start.html">shape_start()</a></code> of a unimodal or sigmoid shape takes <code>rule = "spline"</code>: the slopes of a smoothing spline on the Greville segments, with the signs that the shape requires, floored.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.125.0" id="modelterms7-01250">modelterms7 0.125.0<a class="anchor" aria-label="anchor" href="#modelterms7-01250"></a></h2>
+<ul><li>Under a factor <code>by</code> in <code><a href="../reference/scs.html">scs()</a></code>, the declared settings of a shape may be given by level, as a vector named by the levels: <code>min_slope</code>, <code>mode</code>, <code>inflection</code>, <code>index</code>, <code>valley</code>, <code>decreasing</code>, and the point and the value of <code>value</code> and <code>slope</code> in the list form <code>list(at = a, value = c(a = 0, b = 1))</code>.</li>
+<li>New arguments for the estimated settings: <code>mode_by</code> in <code><a href="../reference/shape_located.html">shape_unimodal()</a></code> and <code>inflection_by</code> in <code><a href="../reference/shape_located.html">shape_sigmoid()</a></code> choose a location for each level (<code>"level"</code>, the default) or one for every level (<code>"shared"</code>); <code>left_slope_by</code> in the curvature shapes makes the left slope one coefficient for every level. <code>"shared"</code> without a factor <code>by</code> is an error, and so is a tied penalized slope under <code>by_hyper = "level"</code>.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.124.1" id="modelterms7-01241">modelterms7 0.124.1<a class="anchor" aria-label="anchor" href="#modelterms7-01241"></a></h2>
+<ul><li>
+<code><a href="../reference/edf.html">edf()</a></code> reads a penalty repeated in blocks (a factor <code>by</code> of <code><a href="../reference/s.html">s()</a></code> or <code><a href="../reference/scs.html">scs()</a></code>), whose Hessian is sparse; it signaled an error.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.124.0" id="modelterms7-01240">modelterms7 0.124.0<a class="anchor" aria-label="anchor" href="#modelterms7-01240"></a></h2>
+<ul><li>
+<code><a href="../reference/scs.html">scs()</a></code> takes <code>by</code>. A factor gives one constrained curve per level, each centered over all the rows as in <code><a href="../reference/s.html">s()</a></code>, with one smoothing parameter for all the levels or, under <code>by_hyper = "level"</code>, one per level. A numeric variable (z) gives the varying-coefficient term (z,f(x)) with the shape on (f); the level of (f) is a free unpenalized coefficient named <code>const</code>, unless a value at a point fixes it. A value or a slope at a point holds for every level.</li>
+<li>A unimodal or sigmoid shape without a location under a factor <code>by</code> has one location per level. <code><a href="../reference/term_pilot.html">term_pilot()</a></code> returns <code><a href="../reference/s.html">s()</a></code> with the same <code>by</code>, and <code><a href="../reference/term_variants.html">term_variants()</a></code> moves the index of one level at a time.</li>
+<li>New generic <code><a href="../reference/term_variant_stages.html">term_variant_stages()</a></code>, the number of stages in which a fitting layer searches the versions of a term (1 by default, the number of levels for the case above).</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.123.1" id="modelterms7-01231">modelterms7 0.123.1<a class="anchor" aria-label="anchor" href="#modelterms7-01231"></a></h2>
+<ul><li>The documentation of <code><a href="../reference/scs.html">scs()</a></code> states that a positive or bounded parameter is modeled through its link in the distribution, and that a positive term beside an intercept would not be identified.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.123.0" id="modelterms7-01230">modelterms7 0.123.0<a class="anchor" aria-label="anchor" href="#modelterms7-01230"></a></h2>
+<ul><li>Every shape of <code><a href="../reference/scs.html">scs()</a></code> takes <code>value = c(at = a, value = v)</code>, which fixes the smooth at (f(a) = v) in place of the centering: the columns of the design are taken relative to their row at (a) and (v) is a fixed part of the contribution. A value other than zero changes the fit only when no other term of the equation absorbs a constant.</li>
+<li>
+<code><a href="../reference/shape_constructors.html">shape_convex()</a></code> and <code><a href="../reference/shape_constructors.html">shape_concave()</a></code> take <code>slope = c(at = a, value = v)</code>, which fixes (f’(a) = v) by solving the free slope at the left end from the second divided differences; the term has one coefficient fewer. The other shapes constrain every slope and do not take <code>slope</code>.</li>
+<li>The point of <code>value</code> or <code>slope</code> must lie in the interval of the basis, which the <code>lower</code> and <code>upper</code> arguments of the smoother widen.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.122.0" id="modelterms7-01220">modelterms7 0.122.0<a class="anchor" aria-label="anchor" href="#modelterms7-01220"></a></h2>
 <ul><li>

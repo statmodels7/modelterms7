@@ -13,7 +13,7 @@ model with each and keeps the best."><meta property="og:image" content="https://
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.122.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.127.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -65,25 +65,38 @@ which <code>term</code> was built, or <code>NULL</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Passed to methods.</p></dd>
+<dd><p>Passed to methods; <code>stage</code> and <code>current</code> for a term searched in
+stages.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A non-empty named list of unbuilt terms carrying the label of
-<code>term</code>.</p>
+    <p>A named list of unbuilt terms carrying the label of <code>term</code>,
+non-empty at the first stage.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The base method returns <code>term</code> alone. For <code><a href="scs.html">scs()</a></code> with <code><a href="shape_located.html">shape_unimodal()</a></code>
-or <code><a href="shape_located.html">shape_sigmoid()</a></code> and no location, the pilot's extremum (unimodal) or
+or <code><a href="shape_located.html">shape_sigmoid()</a></code> and a location given, the versions are the term from
+its two starts, named <code>"start: sides"</code> and <code>"start: spline"</code> (see
+<code><a href="shape_start.html">shape_start()</a></code>). With no location, the pilot's extremum (unimodal) or
 steepest point (sigmoid) gives the Greville abscissa \(\xi_{M_0}\)
 nearest to it, and the versions are the shape located at the indices
 \(M_0 - 2, \dots, M_0 + 2\) that exist, named <code>"M = j"</code>.</p>
+<p>A term whose choice has several parts is searched in stages, one part at
+a time (<code><a href="term_variant_stages.html">term_variant_stages()</a></code>). The layer then passes <code>stage = k</code> and
+<code>current</code>, the version chosen at the stage before, through <code>...</code>. For
+<code><a href="scs.html">scs()</a></code> with a factor <code>by</code> the parts are the levels: stage \(k\) moves
+the index of level \(k\) around the index nearest to the pilot's
+location on the rows of that level, with the other levels at their
+indices in <code>current</code> (at the first stage, at their pilot indices), and
+the versions are named <code>"&lt;level&gt;: M = j"</code>. The index that <code>current</code>
+already holds for level \(k\) is left out, because the layer fitted it
+at the stage before.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
-    <div class="dont-index"><p><code><a href="term_pilot.html">term_pilot()</a></code>.</p></div>
+    <div class="dont-index"><p><code><a href="term_pilot.html">term_pilot()</a></code>, <code><a href="term_variant_stages.html">term_variant_stages()</a></code>.</p></div>
     </div>
 
     <div class="section level2">

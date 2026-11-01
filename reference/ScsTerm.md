@@ -121,7 +121,7 @@ ScsTerm(
 
 - by:
 
-  `NULL`: a `by` variable is not yet supported.
+  The `by` expression, unevaluated, or `NULL`.
 
 - shape:
 
@@ -130,8 +130,9 @@ ScsTerm(
 
 - spec:
 
-  A named list of the settings that the build uses: the `smoother` and
-  `default_label`.
+  A named list of the settings that the build uses: the `smoother`,
+  `default_label`, `by_hyper` and, for a located shape under a factor
+  `by`, `index_by`, the index of each level.
 
 - sparse:
 

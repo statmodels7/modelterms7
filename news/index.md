@@ -1,5 +1,126 @@
 # Changelog
 
+## modelterms7 0.127.0
+
+- [`term_block_deriv3()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv3.md)
+  and
+  [`term_block_deriv4()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv4.md)
+  return the third and fourth derivatives of a recomputed block along a
+  column and three or four directions.
+  [`nl()`](https://statmodels7.github.io/modelterms7/reference/nl.md)
+  writes them over the partitions of the predictor’s fourth and fifth
+  derivatives with the link chain; a smoothed
+  [`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
+  [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md)
+  and
+  [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
+  have closed forms, and a sharp break-point returns zeros. The fourth
+  order of a term with a step needs the smoother’s sixth derivative and
+  signals an error. The base method returns zeros.
+- The documentation of
+  [`jfp()`](https://statmodels7.github.io/modelterms7/reference/jfp.md)
+  describes the effect of the prior on the other parameters of the
+  distribution: the information of the block generally depends on them,
+  so the penalty also moves their coefficients, by an amount of order
+  1/n.
+
+## modelterms7 0.126.0
+
+- A unimodal or sigmoid
+  [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
+  with its location given is fitted from two starts, whose better
+  criterion the fitting layer keeps:
+  [`term_pilot()`](https://statmodels7.github.io/modelterms7/reference/term_pilot.md)
+  returns the stand-in
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) and
+  [`term_variants()`](https://statmodels7.github.io/modelterms7/reference/term_variants.md)
+  the term with `"start: sides"` and `"start: spline"`. Away from the
+  mode of the data the first start is nearly flat and left the fit on
+  the flat curve (82 of 960 measured fits below the better of the two
+  starts, 0 with both). Not under a numeric `by`.
+- [`shape_start()`](https://statmodels7.github.io/modelterms7/reference/shape_start.md)
+  of a unimodal or sigmoid shape takes `rule = "spline"`: the slopes of
+  a smoothing spline on the Greville segments, with the signs that the
+  shape requires, floored.
+
+## modelterms7 0.125.0
+
+- Under a factor `by` in
+  [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md),
+  the declared settings of a shape may be given by level, as a vector
+  named by the levels: `min_slope`, `mode`, `inflection`, `index`,
+  `valley`, `decreasing`, and the point and the value of `value` and
+  `slope` in the list form `list(at = a, value = c(a = 0, b = 1))`.
+- New arguments for the estimated settings: `mode_by` in
+  [`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md)
+  and `inflection_by` in
+  [`shape_sigmoid()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md)
+  choose a location for each level (`"level"`, the default) or one for
+  every level (`"shared"`); `left_slope_by` in the curvature shapes
+  makes the left slope one coefficient for every level. `"shared"`
+  without a factor `by` is an error, and so is a tied penalized slope
+  under `by_hyper = "level"`.
+
+## modelterms7 0.124.1
+
+- [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
+  reads a penalty repeated in blocks (a factor `by` of
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) or
+  [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)),
+  whose Hessian is sparse; it signaled an error.
+
+## modelterms7 0.124.0
+
+- [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
+  takes `by`. A factor gives one constrained curve per level, each
+  centered over all the rows as in
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md),
+  with one smoothing parameter for all the levels or, under
+  `by_hyper = "level"`, one per level. A numeric variable (z) gives the
+  varying-coefficient term (z,f(x)) with the shape on (f); the level
+  of (f) is a free unpenalized coefficient named `const`, unless a value
+  at a point fixes it. A value or a slope at a point holds for every
+  level.
+- A unimodal or sigmoid shape without a location under a factor `by` has
+  one location per level.
+  [`term_pilot()`](https://statmodels7.github.io/modelterms7/reference/term_pilot.md)
+  returns
+  [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) with
+  the same `by`, and
+  [`term_variants()`](https://statmodels7.github.io/modelterms7/reference/term_variants.md)
+  moves the index of one level at a time.
+- New generic
+  [`term_variant_stages()`](https://statmodels7.github.io/modelterms7/reference/term_variant_stages.md),
+  the number of stages in which a fitting layer searches the versions of
+  a term (1 by default, the number of levels for the case above).
+
+## modelterms7 0.123.1
+
+- The documentation of
+  [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
+  states that a positive or bounded parameter is modeled through its
+  link in the distribution, and that a positive term beside an intercept
+  would not be identified.
+
+## modelterms7 0.123.0
+
+- Every shape of
+  [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
+  takes `value = c(at = a, value = v)`, which fixes the smooth at (f(a)
+  = v) in place of the centering: the columns of the design are taken
+  relative to their row at (a) and (v) is a fixed part of the
+  contribution. A value other than zero changes the fit only when no
+  other term of the equation absorbs a constant.
+- [`shape_convex()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  and
+  [`shape_concave()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  take `slope = c(at = a, value = v)`, which fixes (f’(a) = v) by
+  solving the free slope at the left end from the second divided
+  differences; the term has one coefficient fewer. The other shapes
+  constrain every slope and do not take `slope`.
+- The point of `value` or `slope` must lie in the interval of the basis,
+  which the `lower` and `upper` arguments of the smoother widen.
+
 ## modelterms7 0.122.0
 
 - [`shape_sigmoid()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md)

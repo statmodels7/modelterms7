@@ -4,8 +4,9 @@ Returns the unbuilt term with which a fitting layer replaces `term` in a
 pilot fit, or `NULL` when the term needs no pilot. A term returns one
 when it carries a discrete choice that the data must settle (the index
 of the mode of
-[`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md)),
-which the layer makes with
+[`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md),
+or, with the mode given, which of two starts to keep), which the layer
+makes with
 [`term_variants()`](https://statmodels7.github.io/modelterms7/reference/term_variants.md)
 from the contribution that the stand-in fits.
 
@@ -42,7 +43,7 @@ term_pilot(s(x))
 class(term_pilot(scs(x, shape_unimodal())))[1]
 #> [1] "modelterms7::SmoothTerm"
 
-# A mode given in the shape needs no pilot.
-term_pilot(scs(x, shape_unimodal(mode = 0.4)))
+# A monotone shape carries no choice and needs no pilot.
+term_pilot(scs(x, shape_increasing()))
 #> NULL
 ```

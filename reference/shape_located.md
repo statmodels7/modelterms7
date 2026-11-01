@@ -14,14 +14,18 @@ shape_unimodal(
   link = linkfunctions7::log_link(),
   mode = NULL,
   index = NULL,
-  valley = FALSE
+  valley = FALSE,
+  value = NULL,
+  mode_by = c("level", "shared")
 )
 
 shape_sigmoid(
   link = linkfunctions7::log_link(),
   inflection = NULL,
   index = NULL,
-  decreasing = FALSE
+  decreasing = FALSE,
+  value = NULL,
+  inflection_by = c("level", "shared")
 )
 ```
 
@@ -33,21 +37,40 @@ shape_sigmoid(
 
 - mode, inflection:
 
-  `NULL`, or a single number: the value of the covariate at which the
-  mode or the inflection is placed.
+  `NULL`, a single number (the value of the covariate at which the mode
+  or the inflection is placed), or a vector of such numbers named by the
+  levels of a factor `by`.
 
 - index:
 
-  `NULL`, or the index \\M\\ itself, which a fitting layer sets on the
-  versions it tries. It takes precedence over `mode` and `inflection`.
+  `NULL`, the index \\M\\ itself, or a vector of indices named by level.
+  A fitting layer sets it on the versions it tries. It takes precedence
+  over `mode` and `inflection`.
 
 - valley:
 
-  `FALSE` for a maximum, `TRUE` for a minimum.
+  `FALSE` for a maximum, `TRUE` for a minimum, or a logical vector named
+  by level.
+
+- value:
+
+  `NULL`, two finite numbers `c(at = a, value = v)`, or a list
+  `list(at = a, value = v)` whose elements are one number or a vector
+  named by level: the smooth is \\v\\ at \\a\\, in place of the
+  centering (see
+  [`shape_increasing()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  for when \\v\\ changes the fit).
+
+- mode_by, inflection_by:
+
+  Under a factor `by`, whether a location that is not given is chosen
+  for each level (`"level"`, the default) or once for every level
+  (`"shared"`). `"shared"` without a factor `by` is an error.
 
 - decreasing:
 
-  `FALSE` for an increasing sigmoid, `TRUE` for a decreasing one.
+  `FALSE` for an increasing sigmoid, `TRUE` for a decreasing one, or a
+  logical vector named by level.
 
 ## Value
 
@@ -77,8 +100,13 @@ their criterion.
 ## How the location is chosen
 
 With `mode` or `inflection` given, \\M\\ is the index of the Greville
-abscissa nearest to it and the model is fitted once. Left at `NULL`, the
-fitting layer chooses \\M\\: a pilot fit with
+abscissa nearest to it, and the model is fitted from two starts (the
+least-squares lines of
+[`shape_start()`](https://statmodels7.github.io/modelterms7/reference/shape_start.md)
+and the slopes of a smoothing spline) whose better criterion is kept:
+away from the mode of the data the first start is nearly flat and can
+leave the fit on the flat curve. Left at `NULL`, the fitting layer
+chooses \\M\\: a pilot fit with
 [`s()`](https://statmodels7.github.io/modelterms7/reference/s.md) in
 place of the term gives the abscissa nearest to its extremum (unimodal)
 or to its steepest point (sigmoid), \\M_0\\, and the model is fitted at
@@ -87,6 +115,21 @@ decides (see
 [`term_pilot()`](https://statmodels7.github.io/modelterms7/reference/term_pilot.md)
 and
 [`term_variants()`](https://statmodels7.github.io/modelterms7/reference/term_variants.md)).
+
+## Under a factor `by`
+
+With a factor `by` in
+[`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md),
+`mode`, `inflection`, `index`, `valley` and `decreasing` may be given by
+level, as a vector named by the levels
+(`valley = c(a = FALSE, b = TRUE)` gives a maximum in level `a` and a
+minimum in level `b`), and the point and the value of `value` may be
+given by level in the list form. A location that is not given is chosen
+by level (`mode_by` or `inflection_by` at `"level"`, the default): the
+fitting layer moves the index of one level at a time, from the pilot
+indices of the levels. With `"shared"` one index holds for every level,
+and the versions are taken around the median of the levels' pilot
+indices.
 
 ## See also
 
@@ -106,4 +149,9 @@ shape_sigmoid(inflection = 0.5)
 #> <shape: sigmoid, link = log, located at 0.5>
 shape_sigmoid(decreasing = TRUE)
 #> <shape: sigmoid (decreasing), link = log>
+
+# Under a factor by with levels a and b: a peak in a, a valley in b, and
+# one location for both.
+shape_unimodal(valley = c(a = FALSE, b = TRUE), mode_by = "shared")
+#> <shape: unimodal (peak or valley by level), link = log, one location for every level>
 ```

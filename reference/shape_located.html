@@ -15,7 +15,7 @@ inflection and shrinks after it."><meta property="og:image" content="https://sta
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.122.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.127.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -55,14 +55,18 @@ inflection and shrinks after it.</p>
 <span>  link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  mode <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  index <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  valley <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  valley <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  value <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  mode_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level"</span>, <span class="st">"shared"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">shape_sigmoid</span><span class="op">(</span></span>
 <span>  link <span class="op">=</span> <span class="fu">linkfunctions7</span><span class="fu">::</span><span class="fu"><a href="https://statmodels7.github.io/linkfunctions7/reference/log_link.html" class="external-link">log_link</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  inflection <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  index <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  decreasing <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  decreasing <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  value <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  inflection_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"level"</span>, <span class="st">"shared"</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -75,23 +79,39 @@ inflection and shrinks after it.</p>
 
 
 <dt id="arg-mode-inflection">mode, inflection<a class="anchor" aria-label="anchor" href="#arg-mode-inflection"></a></dt>
-<dd><p><code>NULL</code>, or a single number: the value of the
-covariate at which the mode or the inflection is placed.</p></dd>
+<dd><p><code>NULL</code>, a single number (the value of the covariate
+at which the mode or the inflection is placed), or a vector of such
+numbers named by the levels of a factor <code>by</code>.</p></dd>
 
 
 <dt id="arg-index">index<a class="anchor" aria-label="anchor" href="#arg-index"></a></dt>
-<dd><p><code>NULL</code>, or the index \(M\) itself, which a fitting layer
-sets on the versions it tries. It takes precedence over <code>mode</code> and
-<code>inflection</code>.</p></dd>
+<dd><p><code>NULL</code>, the index \(M\) itself, or a vector of indices
+named by level. A fitting layer sets it on the versions it tries. It
+takes precedence over <code>mode</code> and <code>inflection</code>.</p></dd>
 
 
 <dt id="arg-valley">valley<a class="anchor" aria-label="anchor" href="#arg-valley"></a></dt>
-<dd><p><code>FALSE</code> for a maximum, <code>TRUE</code> for a minimum.</p></dd>
+<dd><p><code>FALSE</code> for a maximum, <code>TRUE</code> for a minimum, or a logical
+vector named by level.</p></dd>
+
+
+<dt id="arg-value">value<a class="anchor" aria-label="anchor" href="#arg-value"></a></dt>
+<dd><p><code>NULL</code>, two finite numbers <code>c(at = a, value = v)</code>, or a list
+<code>list(at = a, value = v)</code> whose elements are one number or a vector
+named by level: the smooth is \(v\) at \(a\), in place of the
+centering (see <code><a href="shape_constructors.html">shape_increasing()</a></code> for when \(v\) changes the fit).</p></dd>
+
+
+<dt id="arg-mode-by-inflection-by">mode_by, inflection_by<a class="anchor" aria-label="anchor" href="#arg-mode-by-inflection-by"></a></dt>
+<dd><p>Under a factor <code>by</code>, whether a location that
+is not given is chosen for each level (<code>"level"</code>, the default) or once
+for every level (<code>"shared"</code>). <code>"shared"</code> without a factor <code>by</code> is an
+error.</p></dd>
 
 
 <dt id="arg-decreasing">decreasing<a class="anchor" aria-label="anchor" href="#arg-decreasing"></a></dt>
 <dd><p><code>FALSE</code> for an increasing sigmoid, <code>TRUE</code> for a
-decreasing one.</p></dd>
+decreasing one, or a logical vector named by level.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -119,12 +139,28 @@ different \(M\) are compared by their criterion.</p>
     <div class="section level2">
     <h2 id="how-the-location-is-chosen">How the location is chosen<a class="anchor" aria-label="anchor" href="#how-the-location-is-chosen"></a></h2>
     <p>With <code>mode</code> or <code>inflection</code> given, \(M\) is the index of the Greville
-abscissa nearest to it and the model is fitted once. Left at <code>NULL</code>, the
+abscissa nearest to it, and the model is fitted from two starts (the
+least-squares lines of <code><a href="shape_start.html">shape_start()</a></code> and the slopes of a smoothing
+spline) whose better criterion is kept: away from the mode of the data
+the first start is nearly flat and can leave the fit on the flat curve. Left at <code>NULL</code>, the
 fitting layer chooses \(M\): a pilot fit with <code><a href="s.html">s()</a></code> in place of the term
 gives the abscissa nearest to its extremum (unimodal) or to its steepest
 point (sigmoid), \(M_0\), and the model is fitted at the indices
 \(M_0 - 2, \dots, M_0 + 2\) that exist; the best criterion decides (see
 <code><a href="term_pilot.html">term_pilot()</a></code> and <code><a href="term_variants.html">term_variants()</a></code>).</p>
+    </div>
+    <div class="section level2">
+    <h2 id="under-a-factor-by">Under a factor <code>by</code><a class="anchor" aria-label="anchor" href="#under-a-factor-by"></a></h2>
+    <p>With a factor <code>by</code> in <code><a href="scs.html">scs()</a></code>, <code>mode</code>, <code>inflection</code>, <code>index</code>, <code>valley</code>
+and <code>decreasing</code> may be given by level, as a vector named by the levels
+(<code>valley = c(a = FALSE, b = TRUE)</code> gives a maximum in level <code>a</code> and a
+minimum in level <code>b</code>), and the point and the value of <code>value</code> may be given
+by level in the list form. A location that is not given is chosen by
+level (<code>mode_by</code> or <code>inflection_by</code> at <code>"level"</code>, the default): the
+fitting layer moves the index of one level at a time, from the pilot
+indices of the levels. With <code>"shared"</code> one index holds for every level,
+and the versions are taken around the median of the levels' pilot
+indices.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -143,6 +179,11 @@ point (sigmoid), \(M_0\), and the model is fitted at the indices
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;shape: sigmoid, link = log, located at 0.5&gt;</span>
 <span class="r-in"><span><span class="fu">shape_sigmoid</span><span class="op">(</span>decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> &lt;shape: sigmoid (decreasing), link = log&gt;</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Under a factor by with levels a and b: a peak in a, a valley in b, and</span></span></span>
+<span class="r-in"><span><span class="co"># one location for both.</span></span></span>
+<span class="r-in"><span><span class="fu">shape_unimodal</span><span class="op">(</span>valley <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>a <span class="op">=</span> <span class="cn">FALSE</span>, b <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>, mode_by <span class="op">=</span> <span class="st">"shared"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;shape: unimodal (peak or valley by level), link = log, one location for every level&gt;</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

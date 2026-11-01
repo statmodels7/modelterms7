@@ -19,7 +19,7 @@ for nl()."><meta property="og:image" content="https://statmodels7.github.io/mode
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.122.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.127.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -152,7 +152,7 @@ them. It is empty until <code><a href="term_build.html">term_build()</a></code> 
 
 
 <dt id="arg-by">by<a class="anchor" aria-label="anchor" href="#arg-by"></a></dt>
-<dd><p><code>NULL</code>: a <code>by</code> variable is not yet supported.</p></dd>
+<dd><p>The <code>by</code> expression, unevaluated, or <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-shape">shape<a class="anchor" aria-label="anchor" href="#arg-shape"></a></dt>
@@ -161,7 +161,8 @@ them. It is empty until <code><a href="term_build.html">term_build()</a></code> 
 
 <dt id="arg-spec">spec<a class="anchor" aria-label="anchor" href="#arg-spec"></a></dt>
 <dd><p>A named list of the settings that the build uses: the
-<code>smoother</code> and <code>default_label</code>.</p></dd>
+<code>smoother</code>, <code>default_label</code>, <code>by_hyper</code> and, for a located shape under a
+factor <code>by</code>, <code>index_by</code>, the index of each level.</p></dd>
 
 
 <dt id="arg-sparse">sparse<a class="anchor" aria-label="anchor" href="#arg-sparse"></a></dt>
