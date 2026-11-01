@@ -25,9 +25,13 @@ scs(
 \code{\link[basis7:bspline_smooth]{basis7::bspline_smooth()}} (the default) or \code{\link[basis7:pspline_smooth]{basis7::pspline_smooth()}}.
 Only its basis is used.}
 
-\item{by}{Not yet supported; must be \code{NULL}.}
+\item{by}{An optional factor or numeric variable, given as a bare name or
+an expression in the data, as in \code{\link[=s]{s()}}.}
 
-\item{by_hyper}{Not yet used.}
+\item{by_hyper}{With a factor \code{by}, whether the levels share one smoothing
+parameter (\code{"shared"}, the default) or each has its own (\code{"level"}).
+Under \code{"level"} a held value or an \code{id} is qualified by the level,
+\code{hyper = c(lambda.a = 2)}.}
 
 \item{hyper}{\code{NULL} to estimate the smoothing parameter, or a value at
 which to hold it, as for \code{\link[=s]{s()}}.}
@@ -114,6 +118,29 @@ gives the smooth on the scale of the link. The whole predictor then lies in
 the range at every iterate. A positive term beside an intercept would not be
 identified, because a constant moved between the intercept and the term
 leaves the likelihood unchanged.
+}
+
+\section{Varying the shape by another variable}{
+A factor \code{by} gives one constrained curve per level, each with the shape
+of \code{shape}: the block of level \eqn{l} is the block of one curve
+multiplied by the indicator of that level, every level is centered over
+all the rows, as for \code{\link[=s]{s()}}, and the level means come from the factor
+written in the formula. The coefficients are named
+\verb{<label>.<level>.g1}, \verb{<label>.<level>.g2}, and so on. A value or a slope
+at a point holds for every level. Under \code{by_hyper = "level"} each level
+has its own smoothing parameter.
+
+A numeric \code{by} \eqn{z} gives a varying-coefficient term
+\eqn{z\,f(x)}, with the shape on the coefficient \eqn{f}. The term is not
+centered: the level of \eqn{f} is the coefficient of \eqn{z}, a free and
+unpenalized coordinate named \verb{<label>.const}, so writing \eqn{z} in the
+formula as well makes it aliased. With a value at a point the level is
+fixed by that value instead, and \code{value = c(at = a, value = 0)} sets the
+effect of \eqn{z} to zero at \eqn{a}. The default label is \code{scs(x):z}.
+
+A unimodal or sigmoid shape without a location under a factor \code{by} has
+one location per level. \code{\link[statmodels7:statmod]{statmodels7::statmod()}} searches them one level
+at a time from a pilot fit of \code{s(x, by = g)} (\code{\link[=term_variant_stages]{term_variant_stages()}}).
 }
 
 \section{Inference}{

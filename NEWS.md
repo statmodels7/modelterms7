@@ -1,3 +1,19 @@
+# modelterms7 0.124.0
+
+* `scs()` takes `by`. A factor gives one constrained curve per level, each
+  centered over all the rows as in `s()`, with one smoothing parameter for
+  all the levels or, under `by_hyper = "level"`, one per level. A numeric
+  variable \(z\) gives the varying-coefficient term \(z\,f(x)\) with the
+  shape on \(f\); the level of \(f\) is a free unpenalized coefficient
+  named `const`, unless a value at a point fixes it. A value or a slope at a
+  point holds for every level.
+* A unimodal or sigmoid shape without a location under a factor `by` has
+  one location per level. `term_pilot()` returns `s()` with the same `by`,
+  and `term_variants()` moves the index of one level at a time.
+* New generic `term_variant_stages()`, the number of stages in which a
+  fitting layer searches the versions of a term (1 by default, the number
+  of levels for the case above).
+
 # modelterms7 0.123.1
 
 * The documentation of `scs()` states that a positive or bounded parameter

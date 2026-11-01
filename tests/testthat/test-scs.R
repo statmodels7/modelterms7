@@ -16,7 +16,8 @@ scs_ref_value <- function(tm, g, d) {
   bp <- tm@build_info; sh <- tm@shape
   K <- length(bp$xi); xi <- bp$xi; sg <- sh@shape_params$sign
   b <- numeric(K)
-  b[-1L] <- .shape_b(bp$link, g, bp$cons, bp$lower, 0L)
+  pc <- bp$pieces[[1L]]
+  b[-1L] <- .shape_b(bp$link, g, pc$cons, pc$lower, 0L)
   beta <- numeric(K); beta[1L] <- b[1L]
   if (S7::S7_inherits(sh, ShapeMonotone)) {
     for (j in 2:K) beta[j] <- beta[j - 1L] + (xi[j] - xi[j - 1L]) * sg * b[j]
@@ -227,7 +228,7 @@ test_that("term_coef_start is finite, of the right length and increasing for an 
 test_that("scs() rejects what it cannot fit", {
   expect_error(scs(x, shape = "increasing"), "shape constraint")
   expect_error(scs(x, smoother = basis7::fourier_smooth()), "bspline_smooth")
-  expect_error(scs(x, by = g), "'by' is not yet supported")
+  expect_error(scs(x, by_hyper = "level"), "has no 'by'")
   expect_error(scs(x, sparse = TRUE), "dense")
   expect_error(shape_increasing(link = linkfunctions7::identity_link()), "onto")
   expect_error(shape_decreasing(min_slope = -1), "nonnegative")

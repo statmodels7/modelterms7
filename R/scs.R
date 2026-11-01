@@ -16,10 +16,11 @@ NULL
 #' @inheritParams additive_term
 #' @inheritParams model_term
 #' @param var The covariate expression, unevaluated.
-#' @param by `NULL`: a `by` variable is not yet supported.
+#' @param by The `by` expression, unevaluated, or `NULL`.
 #' @param shape A [shape_constraint].
 #' @param spec A named list of the settings that the build uses: the
-#'   `smoother` and `default_label`.
+#'   `smoother`, `default_label`, `by_hyper` and, for a located shape under a
+#'   factor `by`, `index_by`, the index of each level.
 #' @param sparse `NULL` or `FALSE`.
 #'
 #' @return An S7 object of class `ScsTerm`, inheriting from [additive_term()]
@@ -120,6 +121,29 @@ ScsTerm <- S7::new_class(
 #' identified, because a constant moved between the intercept and the term
 #' leaves the likelihood unchanged.
 #'
+#' # Varying the shape by another variable
+#'
+#' A factor `by` gives one constrained curve per level, each with the shape
+#' of `shape`: the block of level \eqn{l} is the block of one curve
+#' multiplied by the indicator of that level, every level is centered over
+#' all the rows, as for [s()], and the level means come from the factor
+#' written in the formula. The coefficients are named
+#' `<label>.<level>.g1`, `<label>.<level>.g2`, and so on. A value or a slope
+#' at a point holds for every level. Under `by_hyper = "level"` each level
+#' has its own smoothing parameter.
+#'
+#' A numeric `by` \eqn{z} gives a varying-coefficient term
+#' \eqn{z\,f(x)}, with the shape on the coefficient \eqn{f}. The term is not
+#' centered: the level of \eqn{f} is the coefficient of \eqn{z}, a free and
+#' unpenalized coordinate named `<label>.const`, so writing \eqn{z} in the
+#' formula as well makes it aliased. With a value at a point the level is
+#' fixed by that value instead, and `value = c(at = a, value = 0)` sets the
+#' effect of \eqn{z} to zero at \eqn{a}. The default label is `scs(x):z`.
+#'
+#' A unimodal or sigmoid shape without a location under a factor `by` has
+#' one location per level. [statmodels7::statmod()] searches them one level
+#' at a time from a pilot fit of `s(x, by = g)` ([term_variant_stages()]).
+#'
 #' # Inference
 #'
 #' Pointwise intervals from the curvature at the mode cover somewhat less than
@@ -132,8 +156,12 @@ ScsTerm <- S7::new_class(
 #' @param smoother A \pkg{basis7} smoother whose basis is a B-spline:
 #'   [basis7::bspline_smooth()] (the default) or [basis7::pspline_smooth()].
 #'   Only its basis is used.
-#' @param by Not yet supported; must be `NULL`.
-#' @param by_hyper Not yet used.
+#' @param by An optional factor or numeric variable, given as a bare name or
+#'   an expression in the data, as in [s()].
+#' @param by_hyper With a factor `by`, whether the levels share one smoothing
+#'   parameter (`"shared"`, the default) or each has its own (`"level"`).
+#'   Under `"level"` a held value or an `id` is qualified by the level,
+#'   `hyper = c(lambda.a = 2)`.
 #' @param hyper `NULL` to estimate the smoothing parameter, or a value at
 #'   which to hold it, as for [s()].
 #' @param id `NULL`, or a string shared with other terms whose smoothing
@@ -177,9 +205,6 @@ scs <- function(x, shape = shape_increasing(), smoother = basis7::bspline_smooth
                 " shape on the\n  coefficients is a shape of the curve only",
                 " for a B-spline basis."), call. = FALSE)
   }
-  if (!is.null(be)) {
-    stop("'by' is not yet supported for scs(); leave it NULL.", call. = FALSE)
-  }
   if (isTRUE(sparse)) {
     stop("'sparse' must be NULL or FALSE: the block of scs() is dense.",
          call. = FALSE)
@@ -190,10 +215,20 @@ scs <- function(x, shape = shape_increasing(), smoother = basis7::bspline_smooth
       !nzchar(label)) {
     stop("'label' must be a single non-empty character string.", call. = FALSE)
   }
-  ScsTerm(label = label, var = xe, by = NULL, shape = shape, sparse = FALSE,
-          spec = list(smoother = smoother, default_label = default),
-          hyper = smooth_hyper(hyper, "lambda", label),
-          ids = check_ids(id, "lambda", label),
+  per_level <- identical(by_hyper, "level")
+  if (per_level && is.null(be)) {
+    stop(sprintf(paste0("'%s' sets by_hyper = \"level\" and has no 'by'. One",
+                        " smoothing parameter per level\n  needs a factor 'by'."),
+                 label), call. = FALSE)
+  }
+  # one smoothing parameter per level is named after the levels, which only
+  # the build knows, so its names are checked there (as for s())
+  ScsTerm(label = label, var = xe, by = be, shape = shape, sparse = FALSE,
+          spec = list(smoother = smoother, default_label = default,
+                      by_hyper = by_hyper),
+          hyper = if (per_level) as_hyper(hyper, label)
+                  else smooth_hyper(hyper, "lambda", label),
+          ids = check_ids(id, if (per_level) NULL else "lambda", label),
           X = NULL, coef_names = character(0), build_info = list(),
           penalty = NULL)
 }
@@ -218,15 +253,16 @@ scs <- function(x, shape = shape_increasing(), smoother = basis7::bspline_smooth
   W
 }
 
-# the centered design W = X A_{-1} - center: the column means at the build's
-# rows, or the row at the point where a value is fixed
-.scs_W <- function(bp, x) sweep(.scs_raw(bp, x, bp$A1), 2L, bp$center)
+# the centered design of one piece, W = X A_{-1} - center: the column means at
+# the build's rows, or the row at the point where a value is fixed
+.scs_W <- function(bp, pc, x) sweep(.scs_raw(bp, x, pc$A1), 2L, pc$center)
 
-# the part of the contribution that no coefficient moves: the value fixed at
-# a point, and the column a0 of the slope that a slope at a point fixes
-.scs_fixed <- function(bp, x) {
-  out <- rep(bp$offset, length(x))
-  if (!is.null(bp$a0)) out <- out + drop(.scs_raw(bp, x, matrix(bp$a0))) - bp$center0
+# the part of a piece's contribution that no coefficient moves: the value
+# fixed at a point, and the column a0 of the slope that a slope at a point
+# fixes
+.scs_fixed <- function(bp, pc, x) {
+  out <- rep(pc$offset, length(x))
+  if (!is.null(pc$a0)) out <- out + drop(.scs_raw(bp, x, matrix(pc$a0))) - pc$center0
   out
 }
 
@@ -265,12 +301,32 @@ scs <- function(x, shape = shape_increasing(), smoother = basis7::bspline_smooth
   x
 }
 
-S7::method(term_build, ScsTerm) <- function(term, data, ...) {
-  x <- .scs_x(term, data)
-  sm <- term@spec$smoother
-  b <- basis7::smoother_basis(sm, x)
-  xi <- .scs_greville(b)
-  shape <- .scs_resolve_shape(term@shape, xi)
+# THE MULTIPLIERS OF THE LEVELS, one column per level: the indicators of a
+# factor `by`, the variable of a numeric one, a column of ones without `by`.
+# The contribution is sum_l G[, l] f_l(x).
+.scs_G <- function(term, kind, levels, data) {
+  if (identical(kind, "none")) return(matrix(1, nrow(data), 1L))
+  by <- .smooth_by(term@by, data, levels = levels)
+  if (!identical(by$kind, kind)) {
+    stop(sprintf("the 'by' variable of '%s' was %s at the build and is not here.",
+                 term@label, kind), call. = FALSE)
+  }
+  if (anyNA(by$value) || (identical(kind, "numeric") && !all(is.finite(by$value)))) {
+    stop(sprintf("the 'by' variable of '%s' has missing or infinite values.",
+                 term@label), call. = FALSE)
+  }
+  if (identical(kind, "factor")) {
+    outer(as.integer(by$value), seq_along(levels), `==`) * 1
+  } else {
+    matrix(by$value)
+  }
+}
+
+# The map of one shape at the Greville abscissae, with the level removed or,
+# under a numeric `by` without a value at a point, kept: the coordinates, the
+# constrained and penalized ones, and the coordinates of shape_start() that
+# the term does not carry.
+.scs_piece <- function(shape, b, xi, x, keep_level, label) {
   m <- shape_map(shape, xi)
   A1 <- m$A[, -1L, drop = FALSE]
   cons <- m$cons - 1L
@@ -281,8 +337,8 @@ S7::method(term_build, ScsTerm) <- function(term, data, ...) {
   pen <- (if (is.null(m$pen)) m$cons else m$pen) - 1L
   pv <- shape@shape_params$value
   ps <- shape@shape_params$slope
-  .scs_check_point(pv, "value", b, term@label)
-  .scs_check_point(ps, "slope", b, term@label)
+  .scs_check_point(pv, "value", b, label)
+  .scs_check_point(ps, "slope", b, label)
   # A SLOPE AT A POINT ELIMINATES THE FREE SLOPE. f'(a) = d(a)' A_{-1} b_{-1}
   # (the level drops out, the derivative of the basis summing to zero), and
   # the free slope b_2, column 1 of A_{-1}, enters with c_1 = 1; solving for
@@ -293,7 +349,7 @@ S7::method(term_build, ScsTerm) <- function(term, data, ...) {
   if (!is.null(ps)) {
     if (1L %in% cons) {
       stop(sprintf(paste0("the shape of '%s' constrains every slope, so a",
-                          " slope at a point cannot be fixed."), term@label),
+                          " slope at a point cannot be fixed."), label),
            call. = FALSE)
     }
     cc <- drop(basis7::basis_deriv(b, ps$at, order = 1L) %*% A1)
@@ -304,49 +360,183 @@ S7::method(term_build, ScsTerm) <- function(term, data, ...) {
     lower <- lower[-1L]
     drop_b <- 1:2
   }
-  nc <- ncol(A1)
-  bp <- list(basis = b, xi = xi, A1 = A1, a0 = a0, center = numeric(nc),
-             center0 = 0, offset = 0, drop_b = drop_b, cons = cons,
-             lower = lower, link = term@shape@link, ncoef = nc, n = length(x),
-             var = term@var, x = x, shape = shape)
+  # A NUMERIC `by` KEEPS THE LEVEL. The term is z f(x), and the level of f is
+  # the coefficient of z, which no other term carries (s() puts back its
+  # constant column for the same reason): the level is a free coordinate in
+  # front, unpenalized, and the term is not centered.
+  if (keep_level) {
+    A1 <- cbind(m$A[, 1L], A1)
+    cons <- cons + 1L
+    pen <- pen + 1L
+    lower <- c(m$lower[1L], lower)
+    drop_b <- setdiff(drop_b, 1L)
+  }
+  pc <- list(shape = shape, A1 = A1, a0 = a0, cons = cons, lower = lower,
+             pen = pen, drop_b = drop_b, center0 = 0, offset = 0)
   # THE LEVEL IS REMOVED BY CENTERING OVER THE DATA, OR BY A VALUE AT A POINT:
   # f(x) = v + (B(x) - B(a)) A_{-1} b_{-1}, the level entering f(a) with
-  # coefficient 1 because the basis sums to one
+  # coefficient 1 because the basis sums to one. Under a factor `by` every
+  # level is centered over all the rows, as s() does.
   full <- cbind(if (is.null(a0)) NULL else a0, A1)
-  cen <- if (is.null(pv)) colMeans(.scs_raw(bp, x, full))
+  bp <- list(basis = b)
+  cen <- if (keep_level) numeric(ncol(full))
+         else if (is.null(pv)) colMeans(.scs_raw(bp, x, full))
          else drop(.scs_raw(bp, pv$at, full))
   if (!is.null(a0)) {
-    bp$center0 <- cen[1L]
+    pc$center0 <- cen[1L]
     cen <- cen[-1L]
   }
-  bp$center <- cen
-  if (!is.null(pv)) bp$offset <- pv$value
-  bp$W <- .scs_W(bp, x)
-  bp$fixed <- .scs_fixed(bp, x)
-  b0 <- shape_start(shape, x, NULL, xi)[-drop_b]
-  coef <- .shape_gamma(bp$link, b0, cons, lower)
-  bp$coef0 <- coef
-  P <- matrix(0, nc, nc)
+  pc$center <- cen
+  if (!is.null(pv)) pc$offset <- pv$value
+  b0 <- shape_start(shape, x, NULL, xi)
+  pc$coef0 <- .shape_gamma(shape@link, b0[setdiff(seq_along(b0), drop_b)],
+                           cons, lower)
+  P <- matrix(0, ncol(A1), ncol(A1))
   if (length(pen) > 1L) {
     D <- diff(diag(length(pen)))
     P[pen, pen] <- crossprod(D)
   }
-  term@coef_names <- sprintf("%s.g%d", term@label, seq_len(nc))
-  term@penalty <- penalties7::quadratic_penalty(P)
+  pc$P <- P
+  pc
+}
+
+# b(gamma) and its derivatives level by level, one column per level
+.scs_B <- function(bp, coef, order) {
+  Gm <- matrix(coef, bp$nc, bp$m)
+  out <- vapply(seq_len(bp$m), function(l) {
+    pc <- bp$pieces[[bp$piece_of[l]]]
+    .shape_b(bp$link, Gm[, l], pc$cons, pc$lower, order)
+  }, numeric(bp$nc))
+  matrix(out, bp$nc, bp$m)
+}
+
+# the contribution, sum_l G[, l] (W_l b_l + fixed_l)
+.scs_value <- function(bp, Ws, fx, G, B0) {
+  out <- 0
+  for (l in seq_len(bp$m)) {
+    k <- bp$piece_of[l]
+    out <- out + G[, l] * (drop(Ws[[k]] %*% B0[, l]) + fx[[k]])
+  }
+  drop(out)
+}
+
+# a block whose columns of level l are G[, l] W_l diag(D[, l])
+.scs_block <- function(bp, Ws, G, D) {
+  n <- nrow(G)
+  X <- do.call(cbind, lapply(seq_len(bp$m), function(l) {
+    Ws[[bp$piece_of[l]]] * (G[, l] * rep(D[, l], each = n))
+  }))
+  X
+}
+
+# the designs and fixed parts at new rows, one per piece
+.scs_at <- function(term, bp, data) {
+  x <- .scs_x(term, data)
+  list(W = lapply(bp$pieces, function(pc) .scs_W(bp, pc, x)),
+       fixed = lapply(bp$pieces, function(pc) .scs_fixed(bp, pc, x)),
+       G = .scs_G(term, bp$by_kind, bp$by_levels, data), x = x)
+}
+
+S7::method(term_build, ScsTerm) <- function(term, data, ...) {
+  x <- .scs_x(term, data)
+  sm <- term@spec$smoother
+  b <- basis7::smoother_basis(sm, x)
+  xi <- .scs_greville(b)
+  by <- .smooth_by(term@by, data)
+  kind <- if (is.null(by)) "none" else by$kind
+  lev <- if (identical(kind, "factor")) by$levels else NULL
+  if (identical(term@spec$by_hyper, "level") && !identical(kind, "factor")) {
+    stop(sprintf(paste0("'%s' sets by_hyper = \"level\" and has no factor 'by'.",
+                        " One smoothing\n  parameter per level needs levels to have",
+                        " one each."), term@label), call. = FALSE)
+  }
+  G <- .scs_G(term, kind, lev, data)
+  m <- ncol(G)
+  if (identical(kind, "numeric") && isTRUE(term@spec$default_label)) {
+    term@label <- paste0(term@label, ":", paste(deparse(term@by), collapse = ""))
+  }
+  # THE SHAPE OF EACH LEVEL. A located shape with no location has one index
+  # per level of a factor `by` (term@spec$index_by, set by term_variants());
+  # every other shape is the same for all the levels. Levels with the same
+  # shape share one piece.
+  idx_by <- term@spec$index_by
+  if (identical(kind, "factor") && .scs_auto_location(term) && !is.null(idx_by)) {
+    shapes <- lapply(lev, function(l) {
+      sh <- term@shape
+      sh@shape_params$index <- as.integer(idx_by[[l]])
+      .scs_resolve_shape(sh, xi)
+    })
+    key <- vapply(shapes, function(sh) sh@shape_params$index, integer(1))
+  } else {
+    shapes <- list(.scs_resolve_shape(term@shape, xi))
+    key <- rep(1L, m)
+  }
+  ukey <- unique(key)
+  piece_of <- match(key, ukey)
+  keep_level <- identical(kind, "numeric") && is.null(term@shape@shape_params$value)
+  pieces <- lapply(ukey, function(k) {
+    sh <- if (length(shapes) == 1L) shapes[[1L]] else shapes[[match(k, key)]]
+    .scs_piece(sh, b, xi, x, keep_level, term@label)
+  })
+  nc <- unique(vapply(pieces, function(pc) ncol(pc$A1), integer(1)))
+  if (length(nc) != 1L) {
+    stop(sprintf("the levels of '%s' have shapes with different numbers of coefficients.",
+                 term@label), call. = FALSE)
+  }
+  bp <- list(basis = b, xi = xi, pieces = pieces, piece_of = piece_of,
+             link = term@shape@link, nc = nc, m = m, ncoef = nc * m,
+             n = length(x), var = term@var, x = x, shape = pieces[[1L]]$shape,
+             by = term@by, by_kind = kind, by_levels = lev, keep_level = keep_level,
+             G = G)
+  bp$W <- lapply(pieces, function(pc) .scs_W(bp, pc, x))
+  bp$fixed <- lapply(pieces, function(pc) .scs_fixed(bp, pc, x))
+  coef <- unlist(lapply(piece_of, function(k) pieces[[k]]$coef0), use.names = FALSE)
+  bp$coef0 <- coef
+  gn <- if (keep_level) c("const", sprintf("g%d", seq_len(nc - 1L)))
+        else sprintf("g%d", seq_len(nc))
+  term@coef_names <- if (identical(kind, "factor"))
+    as.character(t(outer(lev, gn, function(a, g) sprintf("%s.%s.%s", term@label, a, g))))
+  else sprintf("%s.%s", term@label, gn)
+  Ps <- lapply(piece_of, function(k) pieces[[k]]$P)
+  bp$penalties <- NULL
+  if (identical(term@spec$by_hyper, "level")) {
+    # ONE PENALTY PER LEVEL, under its own smoothing parameter, as s() under
+    # by_hyper = "level": the names are checked here, where the levels exist
+    parts <- lapply(seq_len(m), function(l) {
+      .penalty_entry(lev[l], (l - 1L) * nc + seq_len(nc),
+                     penalties7::quadratic_penalty(Ps[[l]]))
+    })
+    parts <- .entry_hyper(parts, term@hyper, term@ids, term@label,
+                          "this smooth's penalty")
+    term@hyper <- do.call(c, c(list(list()), lapply(parts, function(en) {
+      if (!length(en$fixed) || !nzchar(en$name)) return(en$fixed)
+      stats::setNames(en$fixed, paste0(names(en$fixed), ".", en$name))
+    })))
+    bp$penalties <- parts
+    term@penalty <- NULL
+  } else if (length(unique(Ps)) == 1L) {
+    term@penalty <- penalties7::quadratic_penalty(Ps[[1L]], blocks = m)
+  } else {
+    term@penalty <- penalties7::quadratic_penalty(as.matrix(Matrix::bdiag(Ps)))
+  }
   term@build_info <- bp
-  term@X <- matrix(0, length(x), nc)
+  term@X <- matrix(0, length(x), nc * m)
   term_refresh(term, coef)
+}
+
+S7::method(term_penalties, ScsTerm) <- function(term, ...) {
+  ent <- term@build_info$penalties
+  if (is.null(ent)) return(S7::method(term_penalties, model_term)(term, ...))
+  ent
 }
 
 S7::method(term_refresh, ScsTerm) <- function(term, coef, ...) {
   .assert_built(term)
   bp <- term@build_info
   coef <- .scs_coef(bp, coef)
-  b0 <- .shape_b(bp$link, coef, bp$cons, bp$lower, 0L)
-  b1 <- .shape_b(bp$link, coef, bp$cons, bp$lower, 1L)
   bp$coef <- coef
-  bp$value <- drop(bp$W %*% b0) + bp$fixed
-  X <- bp$W * rep(b1, each = bp$n)
+  bp$value <- .scs_value(bp, bp$W, bp$fixed, bp$G, .scs_B(bp, coef, 0L))
+  X <- .scs_block(bp, bp$W, bp$G, .scs_B(bp, coef, 1L))
   colnames(X) <- term@coef_names
   term@X <- X
   term@build_info <- bp
@@ -358,23 +548,23 @@ S7::method(term_value, ScsTerm) <- function(term, coef = NULL, newdata = NULL, .
   bp <- term@build_info
   if (is.null(coef) && is.null(newdata)) return(bp$value)
   coef <- .scs_coef(bp, coef)
-  b0 <- .shape_b(bp$link, coef, bp$cons, bp$lower, 0L)
-  if (is.null(newdata)) return(drop(bp$W %*% b0) + bp$fixed)
-  x <- .scs_x(term, newdata)
-  drop(.scs_W(bp, x) %*% b0) + .scs_fixed(bp, x)
+  B0 <- .scs_B(bp, coef, 0L)
+  if (is.null(newdata)) return(.scs_value(bp, bp$W, bp$fixed, bp$G, B0))
+  at <- .scs_at(term, bp, newdata)
+  .scs_value(bp, at$W, at$fixed, at$G, B0)
 }
 
 S7::method(term_predict, ScsTerm) <- function(term, newdata, ...) {
   .assert_built(term)
   bp <- term@build_info
-  W <- .scs_W(bp, .scs_x(term, newdata))
-  X <- W * rep(.shape_b(bp$link, bp$coef, bp$cons, bp$lower, 1L), each = nrow(W))
+  at <- .scs_at(term, bp, newdata)
+  X <- .scs_block(bp, at$W, at$G, .scs_B(bp, bp$coef, 1L))
   colnames(X) <- term@coef_names
   X
 }
 
-# X_ij = W_ij b'_j(gamma_j): the derivative in gamma_c touches column c only,
-# so the three contractions are diagonal
+# X_ij = G_il W_ij b'_j(gamma_j) for column j of level l: the derivative in
+# gamma_c touches column c only, so the three contractions are diagonal
 S7::method(term_block_deriv, ScsTerm) <- function(term, coef = NULL, v, ...) {
   .assert_built(term)
   bp <- term@build_info
@@ -384,7 +574,7 @@ S7::method(term_block_deriv, ScsTerm) <- function(term, coef = NULL, v, ...) {
     stop(sprintf("'v' must have length %d, the term's coefficients.", bp$ncoef),
          call. = FALSE)
   }
-  bp$W * rep(.shape_b(bp$link, coef, bp$cons, bp$lower, 2L) * v, each = bp$n)
+  .scs_block(bp, bp$W, bp$G, .scs_B(bp, coef, 2L) * matrix(v, bp$nc, bp$m))
 }
 
 S7::method(term_block_contract, ScsTerm) <- function(term, coef = NULL, A, ...) {
@@ -396,7 +586,11 @@ S7::method(term_block_contract, ScsTerm) <- function(term, coef = NULL, A, ...) 
     stop(sprintf("'A' must be %d by %d, the observations by the term's coefficients.",
                  bp$n, bp$ncoef), call. = FALSE)
   }
-  .shape_b(bp$link, coef, bp$cons, bp$lower, 2L) * colSums(A * bp$W)
+  B2 <- .scs_B(bp, coef, 2L)
+  unlist(lapply(seq_len(bp$m), function(l) {
+    cols <- (l - 1L) * bp$nc + seq_len(bp$nc)
+    B2[, l] * colSums(A[, cols, drop = FALSE] * bp$W[[bp$piece_of[l]]] * bp$G[, l])
+  }), use.names = FALSE)
 }
 
 S7::method(term_block_deriv2, ScsTerm) <- function(term, coef = NULL, v, u, ...) {
@@ -408,19 +602,39 @@ S7::method(term_block_deriv2, ScsTerm) <- function(term, coef = NULL, v, u, ...)
     stop(sprintf("'v' and 'u' must have length %d, the term's coefficients.",
                  bp$ncoef), call. = FALSE)
   }
-  bp$W * rep(.shape_b(bp$link, coef, bp$cons, bp$lower, 3L) * v * u, each = bp$n)
+  .scs_block(bp, bp$W, bp$G, .scs_B(bp, coef, 3L) * matrix(v * u, bp$nc, bp$m))
 }
 
+# the start from a target: each level of a factor `by` from its own rows; a
+# numeric `by` from the constant start, with the level of f at the
+# least-squares coefficient of the target on the variable
 S7::method(term_coef_start, ScsTerm) <- function(term, target = NULL, ...) {
   .assert_built(term)
   bp <- term@build_info
   if (is.null(target)) return(bp$coef0)
-  x <- .scs_x_built(term)
-  b0 <- tryCatch(shape_start(bp$shape, x, as.numeric(target), bp$xi)[-bp$drop_b],
-                 error = function(e) NULL)
-  if (is.null(b0)) return(bp$coef0)
-  g <- .shape_gamma(bp$link, b0, bp$cons, bp$lower)
-  if (!all(is.finite(g))) bp$coef0 else g
+  target <- as.numeric(target)
+  if (length(target) != bp$n) return(bp$coef0)
+  out <- matrix(bp$coef0, bp$nc, bp$m)
+  if (identical(bp$by_kind, "numeric")) {
+    if (bp$keep_level) {
+      z <- bp$G[, 1L]
+      cf <- tryCatch(stats::coef(stats::lm.fit(cbind(1, z), target))[[2L]],
+                     error = function(e) NA_real_)
+      if (is.finite(cf)) out[1L, 1L] <- cf
+    }
+    return(as.vector(out))
+  }
+  for (l in seq_len(bp$m)) {
+    pc <- bp$pieces[[bp$piece_of[l]]]
+    rows <- bp$G[, l] != 0
+    if (sum(rows) < 2L) next
+    b0 <- tryCatch(shape_start(pc$shape, bp$x[rows], target[rows], bp$xi),
+                   error = function(e) NULL)
+    if (is.null(b0)) next
+    g <- .shape_gamma(bp$link, b0[setdiff(seq_along(b0), pc$drop_b)], pc$cons, pc$lower)
+    if (all(is.finite(g))) out[, l] <- g
+  }
+  as.vector(out)
 }
 
 # THE INDEX OF A LOCATED SHAPE IS SETTLED AT THE BUILD, where the Greville
@@ -466,8 +680,36 @@ S7::method(term_coef_start, ScsTerm) <- function(term, target = NULL, ...) {
 
 S7::method(term_pilot, ScsTerm) <- function(term, ...) {
   if (!.scs_auto_location(term)) return(NULL)
-  # an unconstrained smooth on the same basis, under the term's own label
-  eval(as.call(list(s, term@var, smoother = term@spec$smoother, label = term@label)))
+  # an unconstrained smooth on the same basis and with the same `by`, under
+  # the term's own label
+  args <- list(s, term@var, smoother = term@spec$smoother, label = term@label)
+  if (!is.null(term@by)) args$by <- term@by
+  eval(as.call(args))
+}
+
+# THE INDEX NEAREST TO THE PILOT'S LOCATION, level by level. A numeric `by`
+# reads f = pilot / z on the rows where z is not zero, the pilot being z f(x).
+.scs_pilot_index <- function(term, bp, pilot) {
+  K <- length(bp$xi)
+  rng <- .shape_index_range(term@shape, K)
+  mid <- rng[(length(rng) + 1L) %/% 2L]
+  ok <- !is.null(pilot) && length(pilot) == bp$n && any(is.finite(pilot))
+  near <- function(rows, f) {
+    if (!ok || !any(rows)) return(mid)
+    x0 <- .scs_pilot_center(term@shape, bp$x[rows], f[rows])
+    if (is.na(x0)) mid else rng[which.min(abs(bp$xi[rng] - x0))]
+  }
+  if (identical(bp$by_kind, "factor")) {
+    return(stats::setNames(vapply(seq_len(bp$m), function(l) {
+      near(bp$G[, l] != 0, pilot)
+    }, integer(1)), bp$by_levels))
+  }
+  if (identical(bp$by_kind, "numeric")) {
+    z <- bp$G[, 1L]
+    rows <- abs(z) > 1e-8 * max(abs(z))
+    return(near(rows, if (ok) pilot / ifelse(rows, z, 1) else pilot))
+  }
+  near(rep(TRUE, bp$n), pilot)
 }
 
 S7::method(term_variants, ScsTerm) <- function(term, pilot = NULL, ...) {
@@ -476,20 +718,48 @@ S7::method(term_variants, ScsTerm) <- function(term, pilot = NULL, ...) {
   bp <- term@build_info
   K <- length(bp$xi)
   rng <- .shape_index_range(term@shape, K)
-  x0 <- if (is.null(pilot) || length(pilot) != bp$n || !any(is.finite(pilot))) NA_real_
-        else .scs_pilot_center(term@shape, bp$x, pilot)
-  M0 <- if (is.na(x0)) rng[(length(rng) + 1L) %/% 2L] else rng[which.min(abs(bp$xi[rng] - x0))]
-  Ms <- intersect(M0 + (-2L):2L, rng)
-  out <- lapply(Ms, function(M) {
-    v <- term
-    sh <- term@shape
-    sh@shape_params$index <- as.integer(M)
-    v@shape <- sh
+  M0 <- .scs_pilot_index(term, bp, pilot)
+  reset <- function(v) {
     v@X <- NULL; v@coef_names <- character(0); v@build_info <- list(); v@penalty <- NULL
     v
+  }
+  if (!identical(bp$by_kind, "factor")) {
+    Ms <- intersect(M0 + (-2L):2L, rng)
+    out <- lapply(Ms, function(M) {
+      v <- reset(term)
+      sh <- term@shape
+      sh@shape_params$index <- as.integer(M)
+      v@shape <- sh
+      v
+    })
+    names(out) <- sprintf("M = %d", Ms)
+    return(out)
+  }
+  # ONE LEVEL AT A TIME UNDER A FACTOR `by`. Stage k moves the index of
+  # level k around its pilot index, the other levels at the indices of
+  # `current` (the version chosen at the stage before) or, at the first
+  # stage, at their pilot indices. The index that `current` already holds
+  # for level k was fitted at the stage before and is left out.
+  dots <- list(...)
+  stage <- if (is.null(dots$stage)) 1L else as.integer(dots$stage)
+  current <- dots$current
+  idx <- if (!is.null(current) && !is.null(current@spec$index_by))
+    current@spec$index_by else M0
+  Ms <- intersect(M0[stage] + (-2L):2L, rng)
+  if (!is.null(current)) Ms <- setdiff(Ms, idx[stage])
+  out <- lapply(Ms, function(M) {
+    v <- reset(term)
+    v@spec$index_by <- replace(idx, stage, as.integer(M))
+    v
   })
-  names(out) <- sprintf("M = %d", Ms)
+  names(out) <- sprintf("%s: M = %d", bp$by_levels[stage], Ms)
   out
+}
+
+S7::method(term_variant_stages, ScsTerm) <- function(term, ...) {
+  if (!.scs_auto_location(term) || !term_is_built(term) ||
+      !identical(term@build_info$by_kind, "factor")) return(1L)
+  term@build_info$m
 }
 
 # the covariate at the build's rows, recovered from the stored design: the
@@ -498,9 +768,13 @@ S7::method(term_variants, ScsTerm) <- function(term, pilot = NULL, ...) {
 
 S7::method(print, ScsTerm) <- function(x, ...) {
   if (term_is_built(x)) {
-    cat(sprintf("<ScsTerm> '%s' built: %d coefficient%s; shape %s\n",
+    bp <- x@build_info
+    by <- if (identical(bp$by_kind, "factor")) sprintf(", by a factor of %d levels", bp$m)
+          else if (identical(bp$by_kind, "numeric")) ", by a numeric variable"
+          else ""
+    cat(sprintf("<ScsTerm> '%s' built: %d coefficient%s; shape %s%s\n",
                 x@label, ncol(x@X), if (ncol(x@X) == 1L) "" else "s",
-                x@shape@shape_name))
+                x@shape@shape_name, by))
   } else {
     cat(sprintf("<ScsTerm> '%s' (specification; call term_build() with data)\n",
                 x@label))
