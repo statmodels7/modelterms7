@@ -70,13 +70,13 @@ them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{vars}{A list of the two covariate expressions, unevaluated.}
 
-\item{by}{\code{NULL}: a \code{by} variable is not supported.}
+\item{by}{The \code{by} expression, unevaluated, or \code{NULL}.}
 
 \item{shapes}{A list of two elements, each a monotone
 \link{shape_constraint} or \code{NULL} for a free margin.}
 
 \item{spec}{A named list of the settings that the build uses: the
-\code{smoothers} and \code{default_label}.}
+\code{smoothers}, \code{default_label} and \code{by_hyper}.}
 
 \item{sparse}{\code{FALSE}.}
 }

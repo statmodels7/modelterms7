@@ -15,11 +15,11 @@ NULL
 #' @inheritParams additive_term
 #' @inheritParams model_term
 #' @param vars A list of the two covariate expressions, unevaluated.
-#' @param by `NULL`: a `by` variable is not supported.
+#' @param by The `by` expression, unevaluated, or `NULL`.
 #' @param shapes A list of two elements, each a monotone
 #'   [shape_constraint] or `NULL` for a free margin.
 #' @param spec A named list of the settings that the build uses: the
-#'   `smoothers` and `default_label`.
+#'   `smoothers`, `default_label` and `by_hyper`.
 #' @param sparse `FALSE`.
 #'
 #' @return An S7 object of class `ScteTerm`, inheriting from
@@ -89,6 +89,17 @@ ScteTerm <- S7::new_class(
 #' coefficients along its own direction under the smoothing parameter of that
 #' direction.
 #'
+#' # Varying the surface by another variable
+#'
+#' A factor `by` gives one surface per level, each with the shapes of
+#' `shapes`, and the level means come from the factor written in the formula;
+#' the coefficients are named `<label>.<level>.g1`, and so on. Under
+#' `by_hyper = "level"` each level has its own pair of smoothing parameters,
+#' named `lambda1.<level>` and `lambda2.<level>`. A numeric `by` \eqn{w}
+#' gives the varying-coefficient term \eqn{w\,f(x, z)}: the level of
+#' \eqn{f} is then a free and unpenalized coefficient, `<label>.const`, and
+#' the default label is `scte(x, z):w`.
+#'
 #' # Prediction outside the data
 #'
 #' Beyond the interval of a basis the surface is held at its value at the
@@ -103,8 +114,14 @@ ScteTerm <- S7::new_class(
 #'   of two, one per covariate: [basis7::bspline_smooth()] (the default, with
 #'   six basis functions) or [basis7::pspline_smooth()]. Only the bases are
 #'   used.
+#' @param by An optional factor or numeric variable, given as a bare name or
+#'   an expression in the data, as in [s()].
+#' @param by_hyper With a factor `by`, whether the levels share the two
+#'   smoothing parameters (`"shared"`, the default) or each level has its own
+#'   pair (`"level"`).
 #' @param hyper `NULL` to estimate the smoothing parameters, or values at
-#'   which to hold them, named `lambda1` and `lambda2`.
+#'   which to hold them, named `lambda1` and `lambda2` (with the level
+#'   appended under `by_hyper = "level"`, as `lambda1.a`).
 #' @param id `NULL`, or strings shared with other terms whose smoothing
 #'   parameters are the same, named as `hyper`.
 #' @param label The term's label; `NULL` builds `scte(<x>, <z>)` from the
@@ -132,10 +149,13 @@ ScteTerm <- S7::new_class(
 #'
 #' @export
 scte <- function(x, z, shapes = list(shape_increasing(), NULL),
-                 smooths = basis7::bspline_smooth(k = 6), hyper = NULL, id = NULL,
+                 smooths = basis7::bspline_smooth(k = 6), by = NULL,
+                 by_hyper = c("shared", "level"), hyper = NULL, id = NULL,
                  label = NULL) {
   xe <- substitute(x)
   ze <- substitute(z)
+  be <- substitute(by)
+  by_hyper <- match.arg(by_hyper)
   if (!is.list(shapes) || length(shapes) != 2L) {
     stop("'shapes' must be a list of two elements, one per covariate.", call. = FALSE)
   }
@@ -171,10 +191,17 @@ scte <- function(x, z, shapes = list(shape_increasing(), NULL),
   if (!is.character(label) || length(label) != 1L || is.na(label) || !nzchar(label)) {
     stop("'label' must be a single non-empty character string.", call. = FALSE)
   }
+  per_level <- identical(by_hyper, "level")
+  if (per_level && is.null(be)) {
+    stop(sprintf(paste0("'%s' sets by_hyper = \"level\" and has no 'by'. One",
+                        " pair of smoothing parameters per level\n  needs a factor",
+                        " 'by'."), label), call. = FALSE)
+  }
   nms <- c("lambda1", "lambda2")
-  ScteTerm(label = label, vars = list(xe, ze), by = NULL, shapes = shapes, sparse = FALSE,
-           spec = list(smoothers = smooths, default_label = default),
-           hyper = smooth_hyper(hyper, nms, label), ids = check_ids(id, nms, label),
+  ScteTerm(label = label, vars = list(xe, ze), by = be, shapes = shapes, sparse = FALSE,
+           spec = list(smoothers = smooths, default_label = default, by_hyper = by_hyper),
+           hyper = if (per_level) as_hyper(hyper, label) else smooth_hyper(hyper, nms, label),
+           ids = check_ids(id, if (per_level) NULL else nms, label),
            X = NULL, coef_names = character(0), build_info = list(), penalty = NULL)
 }
 
@@ -259,22 +286,73 @@ S7::method(term_build, ScteTerm) <- function(term, data, ...) {
     i <- seq_len(nf)
     if (mx$shaped) Pz[i, i] <- Pz[i, i] + D2 else Px[i, i] <- Px[i, i] + D2
   }
-  cons <- nf + seq_along(cons_b)
+  # THE BY VARIABLE, as for scs(): the multipliers G of the levels, and under
+  # a numeric `by` the level of f put back in front as a free, unpenalized
+  # coordinate, the coefficient of w that no other term carries
+  by <- .smooth_by(term@by, data)
+  kind <- if (is.null(by)) "none" else by$kind
+  lev <- if (identical(kind, "factor")) by$levels else NULL
+  if (identical(term@spec$by_hyper, "level") && !identical(kind, "factor")) {
+    stop(sprintf(paste0("'%s' sets by_hyper = \"level\" and has no factor 'by'."),
+                 term@label), call. = FALSE)
+  }
+  G <- .scs_G(term, kind, lev, data)
+  m <- ncol(G)
+  if (identical(kind, "numeric") && isTRUE(term@spec$default_label)) {
+    term@label <- paste0(term@label, ":", paste(deparse(term@by), collapse = ""))
+  }
+  keep_level <- identical(kind, "numeric")
+  if (keep_level) {
+    M <- cbind(1, M)
+    pad <- function(P) { Q <- matrix(0, p + 1L, p + 1L); Q[-1L, -1L] <- P; Q }
+    Px <- pad(Px); Pz <- pad(Pz)
+    pos[pos > 0L] <- pos[pos > 0L] + 1L
+    nf <- nf + 1L
+    p <- p + 1L
+  }
+  cons <- sort(unique(pos[pos > 0L]))
   bp <- list(mx = mx, mz = mz, M = M, pos = pos, nf = nf,
              pieces = list(list(cons = cons, lower = numeric(p), drop_b = integer(0))),
-             piece_of = 1L, link = linkfunctions7::log_link(), nc = p, m = 1L,
-             ncoef = p, ix = matrix(seq_len(p), p, 1L), C = NULL,
-             n = length(xs[[1L]]), xs = xs, by_kind = "none",
-             G = matrix(1, length(xs[[1L]]), 1L))
+             piece_of = rep(1L, m), link = linkfunctions7::log_link(), nc = p, m = m,
+             ncoef = p * m, ix = matrix(seq_len(p * m), p, m), C = NULL,
+             n = length(xs[[1L]]), xs = xs, by = term@by, by_kind = kind,
+             by_levels = lev, keep_level = keep_level, G = G)
   bp$W <- list(.scte_W(bp, xs))
   bp$fixed <- list(numeric(bp$n))
-  g0 <- c(numeric(nf), rep(log(.shape_floor(xs[[1L]], NULL)), p - nf))
-  bp$coef0 <- g0
-  term@coef_names <- sprintf("%s.g%d", term@label, seq_len(p))
-  term@penalty <- penalties7::additive_penalty(list(Px, Pz))
+  g0 <- numeric(p)
+  g0[cons] <- log(.shape_floor(xs[[1L]], NULL))
+  bp$coef0 <- rep(g0, m)
+  gn <- if (keep_level) c("const", sprintf("g%d", seq_len(p - 1L))) else sprintf("g%d", seq_len(p))
+  term@coef_names <- if (identical(kind, "factor"))
+    as.character(t(outer(lev, gn, function(a, g) sprintf("%s.%s.%s", term@label, a, g))))
+  else sprintf("%s.%s", term@label, gn)
+  bp$penalties <- NULL
+  if (identical(term@spec$by_hyper, "level")) {
+    parts <- lapply(seq_len(m), function(l) {
+      .penalty_entry(lev[l], (l - 1L) * p + seq_len(p),
+                     penalties7::additive_penalty(list(Px, Pz)))
+    })
+    parts <- .entry_hyper(parts, term@hyper, term@ids, term@label,
+                          "this smooth's penalty")
+    term@hyper <- do.call(c, c(list(list()), lapply(parts, function(en) {
+      if (!length(en$fixed) || !nzchar(en$name)) return(en$fixed)
+      stats::setNames(en$fixed, paste0(names(en$fixed), ".", en$name))
+    })))
+    bp$penalties <- parts
+    term@penalty <- NULL
+  } else {
+    term@penalty <- if (m == 1L) penalties7::additive_penalty(list(Px, Pz))
+      else penalties7::additive_penalty(list(kronecker(diag(m), Px), kronecker(diag(m), Pz)))
+  }
   term@build_info <- bp
-  term@X <- matrix(0, bp$n, p)
-  term_refresh(term, g0)
+  term@X <- matrix(0, bp$n, p * m)
+  term_refresh(term, bp$coef0)
+}
+
+S7::method(term_penalties, ScteTerm) <- function(term, ...) {
+  ent <- term@build_info$penalties
+  if (is.null(ent)) return(S7::method(term_penalties, model_term)(term, ...))
+  ent
 }
 
 # THE REFRESH AND THE DERIVATIVES OF THE BLOCK are those of scs(): the
@@ -297,17 +375,19 @@ S7::method(term_value, ScteTerm) <- function(term, coef = NULL, newdata = NULL, 
   bp <- term@build_info
   if (is.null(coef) && is.null(newdata)) return(bp$value)
   coef <- .scs_coef(bp, coef)
-  b <- .shape_b(bp$link, coef, bp$pieces[[1L]]$cons, bp$pieces[[1L]]$lower, 0L)
-  W <- if (is.null(newdata)) bp$W[[1L]] else .scte_W(bp, .scte_vals(term, newdata))
-  drop(W %*% b)
+  B0 <- .scs_B(bp, coef, 0L)
+  if (is.null(newdata)) return(.scs_value(bp, bp$W, bp$fixed, bp$G, B0))
+  W <- .scte_W(bp, .scte_vals(term, newdata))
+  .scs_value(bp, list(W), list(numeric(nrow(W))),
+             .scs_G(term, bp$by_kind, bp$by_levels, newdata), B0)
 }
 
 S7::method(term_predict, ScteTerm) <- function(term, newdata, ...) {
   .assert_built(term)
   bp <- term@build_info
   W <- .scte_W(bp, .scte_vals(term, newdata))
-  X <- W * rep(.shape_b(bp$link, bp$coef, bp$pieces[[1L]]$cons, bp$pieces[[1L]]$lower, 1L),
-               each = nrow(W))
+  X <- .scs_block(bp, list(W), .scs_G(term, bp$by_kind, bp$by_levels, newdata),
+                  .scs_B(bp, bp$coef, 1L))
   colnames(X) <- term@coef_names
   X
 }
@@ -319,22 +399,34 @@ S7::method(term_coef_start, ScteTerm) <- function(term, target = NULL, ...) {
   bp <- term@build_info
   if (is.null(target) || length(target) != bp$n) return(bp$coef0)
   target <- as.numeric(target)
-  cf <- tryCatch(stats::coef(stats::lm.fit(cbind(1, bp$xs[[1L]], bp$xs[[2L]]), target)),
-                 error = function(e) NULL)
-  if (is.null(cf) || !all(is.finite(cf))) return(bp$coef0)
-  fl <- .shape_floor(bp$xs[[1L]], target)
-  sx <- max(if (bp$mx$rev) -cf[[2L]] else cf[[2L]], fl)
-  sz <- max(if (bp$mz$rev) -cf[[3L]] else cf[[3L]], fl)
-  g <- bp$coef0
-  pos <- bp$pos
-  if (bp$mx$shaped && bp$mz$shaped) {
-    g[pos[-1L, 1L]] <- log(sx)
-    g[pos[1L, -1L]] <- log(sz)
-    g[pos[-1L, -1L]] <- log(fl)
-  } else {
-    g[pos[pos > 0L]] <- log(if (bp$mx$shaped) sx else sz)
+  out <- matrix(bp$coef0, bp$nc, bp$m)
+  if (identical(bp$by_kind, "numeric")) {
+    cf <- tryCatch(stats::coef(stats::lm.fit(cbind(1, bp$G[, 1L]), target))[[2L]],
+                   error = function(e) NA_real_)
+    if (is.finite(cf)) out[1L, 1L] <- cf
+    return(as.vector(out))
   }
-  g
+  pos <- bp$pos
+  for (l in seq_len(bp$m)) {
+    rows <- bp$G[, l] != 0
+    if (sum(rows) < 4L) next
+    cf <- tryCatch(stats::coef(stats::lm.fit(cbind(1, bp$xs[[1L]][rows], bp$xs[[2L]][rows]),
+                                             target[rows])), error = function(e) NULL)
+    if (is.null(cf) || !all(is.finite(cf))) next
+    fl <- .shape_floor(bp$xs[[1L]], target)
+    sx <- max(if (bp$mx$rev) -cf[[2L]] else cf[[2L]], fl)
+    sz <- max(if (bp$mz$rev) -cf[[3L]] else cf[[3L]], fl)
+    g <- out[, l]
+    if (bp$mx$shaped && bp$mz$shaped) {
+      g[pos[-1L, 1L]] <- log(sx)
+      g[pos[1L, -1L]] <- log(sz)
+      g[pos[-1L, -1L]] <- log(fl)
+    } else {
+      g[pos[pos > 0L]] <- log(if (bp$mx$shaped) sx else sz)
+    }
+    out[, l] <- g
+  }
+  as.vector(out)
 }
 
 S7::method(print, ScteTerm) <- function(x, ...) {
@@ -344,8 +436,11 @@ S7::method(print, ScteTerm) <- function(x, ...) {
     if (is.null(sh)) sprintf("free in %s", v) else sprintf("%s in %s", sh@shape_name, v)
   }, character(1))
   if (term_is_built(x)) {
-    cat(sprintf("<ScteTerm> '%s' built: %d coefficients; %s\n", x@label, ncol(x@X),
-                paste(desc, collapse = ", ")))
+    bp <- x@build_info
+    by <- if (identical(bp$by_kind, "factor")) sprintf(", by a factor of %d levels", bp$m)
+          else if (identical(bp$by_kind, "numeric")) ", by a numeric variable" else ""
+    cat(sprintf("<ScteTerm> '%s' built: %d coefficients; %s%s\n", x@label, ncol(x@X),
+                paste(desc, collapse = ", "), by))
   } else {
     cat(sprintf("<ScteTerm> '%s' (specification; call term_build() with data); %s\n",
                 x@label, paste(desc, collapse = ", ")))

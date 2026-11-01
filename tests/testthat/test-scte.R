@@ -81,3 +81,36 @@ test_that("scte() rejects what it cannot fit", {
   expect_error(scte(x, z, smooths = basis7::fourier_smooth()), "bspline_smooth")
   expect_error(term_build(scte(x, z), data.frame(x = c(NA, runif(9)), z = runif(10))), "missing")
 })
+
+test_that("scte() takes a factor or a numeric by", {
+  set.seed(55)
+  dd <- data.frame(x = runif(180), z = runif(180), g = gl(3, 60, labels = c("a", "b", "c")),
+                   w = stats::rnorm(180))
+  tf <- term_build(scte(x, z, smooths = st_sm, by = g), dd)
+  one <- term_build(scte(x, z, smooths = st_sm), dd)
+  k <- length(term_coef_names(one))
+  expect_length(term_coef_names(tf), 3L * k)
+  expect_identical(term_coef_names(tf)[1L], "scte(x, z).a.g1")
+  g <- stats::rnorm(3L * k, sd = 0.6)
+  sep <- sapply(1:3, function(l) term_value(one, coef = g[(l - 1L) * k + seq_len(k)]))
+  expect_equal(term_value(term_refresh(tf, g)), sep[cbind(seq_len(180), as.integer(dd$g))],
+               tolerance = 1e-13)
+  tn <- term_build(scte(x, z, shapes = list(st_I, st_I), smooths = st_sm, by = w), dd)
+  expect_identical(tn@label, "scte(x, z):w")
+  expect_identical(term_coef_names(tn)[1:2], c("scte(x, z):w.const", "scte(x, z):w.g1"))
+  gn <- stats::rnorm(length(term_coef_names(tn)), sd = 0.6)
+  f1 <- term_value(tn, coef = gn, newdata = transform(dd, w = 1))
+  expect_equal(term_value(term_refresh(tn, gn)), dd$w * f1, tolerance = 1e-13)
+  # the block and its derivative under a by
+  h <- 1e-5; p <- length(gn)
+  e <- function(j) replace(numeric(p), j, h)
+  J <- sapply(seq_len(p), function(j) (term_value(tn, coef = gn + e(j)) - term_value(tn, coef = gn - e(j))) / (2 * h))
+  expect_lt(max(abs(term_matrix(term_refresh(tn, gn)) - J)) / max(abs(J)), 1e-8)
+  lv <- term_build(scte(x, z, smooths = st_sm, by = g, by_hyper = "level",
+                        hyper = c(lambda2.b = 3)), dd)
+  ent <- term_penalties(lv)
+  expect_identical(vapply(ent, `[[`, "", "name"), c("a", "b", "c"))
+  expect_equal(unlist(ent[[2L]]$fixed), c(lambda2 = 3))
+  expect_error(scte(x, z, by_hyper = "level"), "has no 'by'")
+  expect_error(term_build(scte(x, z, by = w, by_hyper = "level"), dd), "no factor 'by'")
+})

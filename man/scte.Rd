@@ -9,6 +9,8 @@ scte(
   z,
   shapes = list(shape_increasing(), NULL),
   smooths = basis7::bspline_smooth(k = 6),
+  by = NULL,
+  by_hyper = c("shared", "level"),
   hyper = NULL,
   id = NULL,
   label = NULL
@@ -27,8 +29,16 @@ of two, one per covariate: \code{\link[basis7:bspline_smooth]{basis7::bspline_sm
 six basis functions) or \code{\link[basis7:pspline_smooth]{basis7::pspline_smooth()}}. Only the bases are
 used.}
 
+\item{by}{An optional factor or numeric variable, given as a bare name or
+an expression in the data, as in \code{\link[=s]{s()}}.}
+
+\item{by_hyper}{With a factor \code{by}, whether the levels share the two
+smoothing parameters (\code{"shared"}, the default) or each level has its own
+pair (\code{"level"}).}
+
 \item{hyper}{\code{NULL} to estimate the smoothing parameters, or values at
-which to hold them, named \code{lambda1} and \code{lambda2}.}
+which to hold them, named \code{lambda1} and \code{lambda2} (with the level
+appended under \code{by_hyper = "level"}, as \code{lambda1.a}).}
 
 \item{id}{\code{NULL}, or strings shared with other terms whose smoothing
 parameters are the same, named as \code{hyper}.}
@@ -80,6 +90,17 @@ constrained coordinates of \eqn{\gamma} along \eqn{x}, and \code{lambda2} those
 along \eqn{z}; the free row or column has the second differences of its
 coefficients along its own direction under the smoothing parameter of that
 direction.
+}
+
+\section{Varying the surface by another variable}{
+A factor \code{by} gives one surface per level, each with the shapes of
+\code{shapes}, and the level means come from the factor written in the formula;
+the coefficients are named \verb{<label>.<level>.g1}, and so on. Under
+\code{by_hyper = "level"} each level has its own pair of smoothing parameters,
+named \verb{lambda1.<level>} and \verb{lambda2.<level>}. A numeric \code{by} \eqn{w}
+gives the varying-coefficient term \eqn{w\,f(x, z)}: the level of
+\eqn{f} is then a free and unpenalized coefficient, \verb{<label>.const}, and
+the default label is \code{scte(x, z):w}.
 }
 
 \section{Prediction outside the data}{

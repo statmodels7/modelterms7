@@ -1,3 +1,10 @@
+# modelterms7 0.126.3
+
+* `scte()` takes `by` and `by_hyper`. A factor gives one surface per level,
+  with the two smoothing parameters shared or one pair per level; a numeric
+  variable \(w\) gives \(w\,f(x, z)\), the level of \(f\) a free coefficient
+  named `const`.
+
 # modelterms7 0.126.2
 
 * A unimodal or sigmoid `scs()` with its location given is fitted from four
