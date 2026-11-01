@@ -233,6 +233,26 @@ JeffreysTerm <- S7::new_class(
 #' parameter the effect is strong: the degrees of freedom of a Student t
 #' fitted to Gaussian data stay finite.
 #'
+#' The matrix \eqn{\tilde I} is the expected information as the family gives
+#' it, without modification, as in the definition of Jeffreys. The
+#' information of a block's equation generally depends on the other
+#' parameters of the distribution as well: for a gaussian the information on
+#' the mean is divided by \eqn{\sigma^2}, and for a negative binomial it
+#' depends on \eqn{\theta}. The prior therefore also acts on the coefficients
+#' of those parameters, including the parameters that an outer criterion
+#' such as `reml()` estimates. The shift is of order \eqn{1/n}. For a
+#' gaussian with the block in the mean, the penalty equals a constant minus
+#' \eqn{2a\tilde p\log\sigma}, so the REML estimate of \eqn{\sigma^2} is the
+#' residual sum of squares divided by \eqn{n - p + 2a\tilde p} instead of
+#' \eqn{n - p}, and \eqn{n\,\Delta\log\hat\sigma} tends to \eqn{-a\tilde p}.
+#' In simulations over seven families with the block in the mean, the median
+#' shift of a dispersion or shape parameter was 0.1 to 0.3 standard errors at
+#' \eqn{n = 50} and 0.02 to 0.06 standard errors at \eqn{n = 1000}. A block
+#' in the equation of a parameter other than the mean moves the coefficients
+#' of the mean only when the information of that parameter depends on the
+#' mean, as for the \eqn{\theta} of a negative binomial or the probability of
+#' a zero-inflated family, and not for the \eqn{\sigma} of a gaussian.
+#'
 #' A formula is coded with its contrasts, as [linpar()] codes it, and the
 #' intercept column is then removed, so `jfp(~ g)` over a factor of \eqn{k}
 #' levels gives the \eqn{k - 1} contrasts and `jfp(~ 0 + g)` all \eqn{k}
