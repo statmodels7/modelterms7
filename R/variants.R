@@ -119,3 +119,36 @@ term_variant_stages <- S7::new_generic("term_variant_stages", "term",
   function(term, ...) S7::S7_dispatch())
 
 S7::method(term_variant_stages, model_term) <- function(term, ...) 1L
+
+
+#' @title The Starting Hyperparameters That a Term Asks the Outer Search For
+#'
+#' @description
+#' Returns the values at which a fitting layer starts the outer search for
+#' the hyperparameters of `term`, or `NULL` for the layer's own start. A held
+#' value is not a start and always takes precedence.
+#'
+#' @details
+#' The base method returns `NULL`. For [scs()] it returns the smoothing
+#' parameter that a version of [term_variants()] carries: a unimodal or
+#' sigmoid shape with its location given is fitted from two starts of the
+#' coefficients and two starting smoothing parameters, 1 and 0.01, because
+#' far from the mode of the data the fit from a smoothing parameter of 1
+#' stays on the flat curve.
+#'
+#' @param term A term.
+#' @param ... Passed to methods.
+#'
+#' @return `NULL`, or a named numeric vector of starting values on the scale
+#'   of the hyperparameters.
+#'
+#' @seealso [term_variants()].
+#'
+#' @examples
+#' term_hyper_start(s(x))
+#'
+#' @export
+term_hyper_start <- S7::new_generic("term_hyper_start", "term",
+  function(term, ...) S7::S7_dispatch())
+
+S7::method(term_hyper_start, model_term) <- function(term, ...) NULL

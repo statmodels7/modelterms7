@@ -1,3 +1,11 @@
+# modelterms7 0.126.2
+
+* A unimodal or sigmoid `scs()` with its location given is fitted from four
+  versions: the two starts of the coefficients, each with the outer search
+  starting at a smoothing parameter of 1 and of 0.01 (misure_scs M17: 0.01
+  better in 69 fits of 960 and worse in 11). New generic
+  `term_hyper_start()`, the starting hyperparameters that a term names.
+
 # modelterms7 0.126.1
 
 * New term `scte()`, a tensor product smooth of two covariates that is

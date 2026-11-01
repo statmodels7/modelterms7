@@ -253,7 +253,7 @@ test_that("settings by level that cannot be resolved are rejected", {
 
 test_that("a given location under a by has its two starts, except under a numeric by", {
   tm <- term_build(scs(x, shape_unimodal(mode = c(a = 0.3, b = 0.5, c = 0.7)), by_sm, by = g), by_d)
-  expect_identical(names(term_variants(tm)), c("start: sides", "start: spline"))
+  expect_identical(names(term_variants(tm)), c("start: sides", "start: spline", "start: sides, lambda 0.01", "start: spline, lambda 0.01"))
   tz <- term_build(scs(x, shape_unimodal(mode = 0.5), by_sm, by = z), by_d)
   expect_null(term_pilot(tz))
   expect_length(term_variants(tz), 1L)

@@ -118,6 +118,7 @@ reference:
   - term_pilot
   - term_variants
   - term_variant_stages
+  - term_hyper_start
 - title: Nonlinear terms
   desc: >
     A contribution nonlinear in its own parameters, whose block is
