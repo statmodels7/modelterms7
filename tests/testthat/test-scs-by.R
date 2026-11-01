@@ -136,3 +136,17 @@ test_that("a by that cannot be built is rejected", {
   tz <- term_build(scs(x, by = z), by_d)
   expect_error(term_predict(tz, data.frame(x = 0.5, z = "a")), "was numeric")
 })
+
+test_that("edf() reads a penalty repeated in blocks", {
+  set.seed(45)
+  for (t0 in list(scs(x, shape_increasing(), by_sm, by = g),
+                  s(x, smoother = by_sm, by = g))) {
+    tm <- term_build(t0, by_d)
+    k <- length(term_coef_names(tm))
+    A <- matrix(stats::rnorm(k * k), k); H <- crossprod(A) / k + diag(k)
+    cf <- if (S7::S7_inherits(tm, ScsTerm)) tm@build_info$coef else numeric(k)
+    S <- as.matrix(penalties7::penalty_hessian(term_penalty(tm), cf, list(lambda = 0.7)))
+    expect_equal(edf(tm, coef = cf, hessian = H, theta = list(lambda = 0.7)),
+                 sum(diag(solve(H + S, H))), tolerance = 1e-10)
+  }
+})

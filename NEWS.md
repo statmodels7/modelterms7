@@ -1,3 +1,8 @@
+# modelterms7 0.124.1
+
+* `edf()` reads a penalty repeated in blocks (a factor `by` of `s()` or
+  `scs()`), whose Hessian is sparse; it signaled an error.
+
 # modelterms7 0.124.0
 
 * `scs()` takes `by`. A factor gives one constrained curve per level, each
