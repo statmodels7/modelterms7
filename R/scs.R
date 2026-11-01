@@ -71,6 +71,16 @@ ScsTerm <- S7::new_class(
 #' The coefficients are therefore \eqn{\gamma_2, \dots, \gamma_K}, named
 #' `<label>.g1`, `<label>.g2`, and so on.
 #'
+#' A shape with a value at a point, `value = c(at = a, value = v)`, removes
+#' the level by that value instead: the columns are taken relative to their
+#' row at \eqn{a}, and the contribution is
+#' \eqn{f(x) = v + (B(x) - B(a))\,A_{-1}\,b_{-1}(\gamma)}. A convex or concave
+#' shape with a slope at a point, `slope = c(at = a, value = v)`, has one
+#' coefficient fewer, because the slope at the left end is solved from
+#' \eqn{f'(a) = v}; the line that this slope contributes is a fixed part of
+#' the contribution. See [shape_increasing()] for when a value other than zero
+#' changes the fit.
+#'
 #' # The penalty
 #'
 #' The penalty is the quadratic penalty of first differences of the
@@ -183,18 +193,42 @@ scs <- function(x, shape = shape_increasing(), smoother = basis7::bspline_smooth
   vapply(seq_len(b@dimension), function(j) mean(t[(j + 1L):(j + d)]), 0)
 }
 
-# the centered design W = X A_{-1} - colMeans at the build's rows, at any x:
-# inside the basis X A_{-1}; beyond its ends the line with the end slope
-.scs_W <- function(bp, x) {
+# X A at any x, uncentered: inside the basis X A; beyond its ends the line
+# with the end slope
+.scs_raw <- function(bp, x, A) {
   lo <- bp$basis@lower; up <- bp$basis@upper
   xc <- pmin(pmax(x, lo), up)
-  W <- basis7::basis_eval(bp$basis, xc) %*% bp$A1
+  W <- basis7::basis_eval(bp$basis, xc) %*% A
   out <- which(x != xc)
   if (length(out)) {
-    D <- basis7::basis_deriv(bp$basis, xc[out], order = 1L) %*% bp$A1
+    D <- basis7::basis_deriv(bp$basis, xc[out], order = 1L) %*% A
     W[out, ] <- W[out, , drop = FALSE] + (x[out] - xc[out]) * D
   }
-  sweep(W, 2L, bp$center)
+  W
+}
+
+# the centered design W = X A_{-1} - center: the column means at the build's
+# rows, or the row at the point where a value is fixed
+.scs_W <- function(bp, x) sweep(.scs_raw(bp, x, bp$A1), 2L, bp$center)
+
+# the part of the contribution that no coefficient moves: the value fixed at
+# a point, and the column a0 of the slope that a slope at a point fixes
+.scs_fixed <- function(bp, x) {
+  out <- rep(bp$offset, length(x))
+  if (!is.null(bp$a0)) out <- out + drop(.scs_raw(bp, x, matrix(bp$a0))) - bp$center0
+  out
+}
+
+.scs_check_point <- function(p, what, b, label) {
+  if (is.null(p)) return(invisible(NULL))
+  if (p$at < b@lower || p$at > b@upper) {
+    stop(sprintf(paste0(
+      "the point at which '%s' fixes its %s (%s) is outside the interval of the",
+      " basis,\n  [%s, %s]; the arguments 'lower' and 'upper' of the smoother",
+      " widen it."), label, what, format(p$at), format(b@lower), format(b@upper)),
+      call. = FALSE)
+  }
+  invisible(NULL)
 }
 
 .scs_coef <- function(bp, coef) {
@@ -227,33 +261,69 @@ S7::method(term_build, ScsTerm) <- function(term, data, ...) {
   xi <- .scs_greville(b)
   shape <- .scs_resolve_shape(term@shape, xi)
   m <- shape_map(shape, xi)
-  K <- length(xi)
   A1 <- m$A[, -1L, drop = FALSE]
   cons <- m$cons - 1L
   lower <- m$lower[-1L]
-  bp <- list(basis = b, xi = xi, A1 = A1, center = numeric(K - 1L), cons = cons,
-             lower = lower, link = term@shape@link, ncoef = K - 1L, n = length(x),
-             var = term@var, x = x, shape = shape)
-  W <- .scs_W(bp, x)
-  bp$center <- colMeans(W)
-  W <- sweep(W, 2L, bp$center)
-  bp$W <- W
-  b0 <- shape_start(shape, x, NULL, xi)[-1L]
-  coef <- .shape_gamma(bp$link, b0, cons, lower)
-  bp$coef0 <- coef
   # first differences of the coordinates the shape declares penalized; zero
   # on the free slope of a plain curvature shape, which the penalty does not
   # see (the anchored slope of a combination is in the walk)
   pen <- (if (is.null(m$pen)) m$cons else m$pen) - 1L
-  P <- matrix(0, K - 1L, K - 1L)
+  pv <- shape@shape_params$value
+  ps <- shape@shape_params$slope
+  .scs_check_point(pv, "value", b, term@label)
+  .scs_check_point(ps, "slope", b, term@label)
+  # A SLOPE AT A POINT ELIMINATES THE FREE SLOPE. f'(a) = d(a)' A_{-1} b_{-1}
+  # (the level drops out, the derivative of the basis summing to zero), and
+  # the free slope b_2, column 1 of A_{-1}, enters with c_1 = 1; solving for
+  # it leaves the columns A_{-1,j} - A_{-1,1} c_j / c_1 and a fixed column
+  # a0 = A_{-1,1} v / c_1. A shape that constrains b_2 has no such coordinate.
+  a0 <- NULL
+  drop_b <- 1L
+  if (!is.null(ps)) {
+    if (1L %in% cons) {
+      stop(sprintf(paste0("the shape of '%s' constrains every slope, so a",
+                          " slope at a point cannot be fixed."), term@label),
+           call. = FALSE)
+    }
+    cc <- drop(basis7::basis_deriv(b, ps$at, order = 1L) %*% A1)
+    a0 <- A1[, 1L] * ps$value / cc[1L]
+    A1 <- A1[, -1L, drop = FALSE] - outer(A1[, 1L], cc[-1L] / cc[1L])
+    cons <- cons - 1L
+    pen <- pen - 1L
+    lower <- lower[-1L]
+    drop_b <- 1:2
+  }
+  nc <- ncol(A1)
+  bp <- list(basis = b, xi = xi, A1 = A1, a0 = a0, center = numeric(nc),
+             center0 = 0, offset = 0, drop_b = drop_b, cons = cons,
+             lower = lower, link = term@shape@link, ncoef = nc, n = length(x),
+             var = term@var, x = x, shape = shape)
+  # THE LEVEL IS REMOVED BY CENTERING OVER THE DATA, OR BY A VALUE AT A POINT:
+  # f(x) = v + (B(x) - B(a)) A_{-1} b_{-1}, the level entering f(a) with
+  # coefficient 1 because the basis sums to one
+  full <- cbind(if (is.null(a0)) NULL else a0, A1)
+  cen <- if (is.null(pv)) colMeans(.scs_raw(bp, x, full))
+         else drop(.scs_raw(bp, pv$at, full))
+  if (!is.null(a0)) {
+    bp$center0 <- cen[1L]
+    cen <- cen[-1L]
+  }
+  bp$center <- cen
+  if (!is.null(pv)) bp$offset <- pv$value
+  bp$W <- .scs_W(bp, x)
+  bp$fixed <- .scs_fixed(bp, x)
+  b0 <- shape_start(shape, x, NULL, xi)[-drop_b]
+  coef <- .shape_gamma(bp$link, b0, cons, lower)
+  bp$coef0 <- coef
+  P <- matrix(0, nc, nc)
   if (length(pen) > 1L) {
     D <- diff(diag(length(pen)))
     P[pen, pen] <- crossprod(D)
   }
-  term@coef_names <- sprintf("%s.g%d", term@label, seq_len(K - 1L))
+  term@coef_names <- sprintf("%s.g%d", term@label, seq_len(nc))
   term@penalty <- penalties7::quadratic_penalty(P)
   term@build_info <- bp
-  term@X <- matrix(0, length(x), K - 1L)
+  term@X <- matrix(0, length(x), nc)
   term_refresh(term, coef)
 }
 
@@ -264,7 +334,7 @@ S7::method(term_refresh, ScsTerm) <- function(term, coef, ...) {
   b0 <- .shape_b(bp$link, coef, bp$cons, bp$lower, 0L)
   b1 <- .shape_b(bp$link, coef, bp$cons, bp$lower, 1L)
   bp$coef <- coef
-  bp$value <- drop(bp$W %*% b0)
+  bp$value <- drop(bp$W %*% b0) + bp$fixed
   X <- bp$W * rep(b1, each = bp$n)
   colnames(X) <- term@coef_names
   term@X <- X
@@ -277,8 +347,10 @@ S7::method(term_value, ScsTerm) <- function(term, coef = NULL, newdata = NULL, .
   bp <- term@build_info
   if (is.null(coef) && is.null(newdata)) return(bp$value)
   coef <- .scs_coef(bp, coef)
-  W <- if (is.null(newdata)) bp$W else .scs_W(bp, .scs_x(term, newdata))
-  drop(W %*% .shape_b(bp$link, coef, bp$cons, bp$lower, 0L))
+  b0 <- .shape_b(bp$link, coef, bp$cons, bp$lower, 0L)
+  if (is.null(newdata)) return(drop(bp$W %*% b0) + bp$fixed)
+  x <- .scs_x(term, newdata)
+  drop(.scs_W(bp, x) %*% b0) + .scs_fixed(bp, x)
 }
 
 S7::method(term_predict, ScsTerm) <- function(term, newdata, ...) {
@@ -333,7 +405,7 @@ S7::method(term_coef_start, ScsTerm) <- function(term, target = NULL, ...) {
   bp <- term@build_info
   if (is.null(target)) return(bp$coef0)
   x <- .scs_x_built(term)
-  b0 <- tryCatch(shape_start(bp$shape, x, as.numeric(target), bp$xi)[-1L],
+  b0 <- tryCatch(shape_start(bp$shape, x, as.numeric(target), bp$xi)[-bp$drop_b],
                  error = function(e) NULL)
   if (is.null(b0)) return(bp$coef0)
   g <- .shape_gamma(bp$link, b0, bp$cons, bp$lower)

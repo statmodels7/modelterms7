@@ -128,6 +128,9 @@ ShapeSigmoid <- S7::new_class("ShapeSigmoid", parent = ShapeLocated)
 #' @param valley `FALSE` for a maximum, `TRUE` for a minimum.
 #' @param decreasing `FALSE` for an increasing sigmoid, `TRUE` for a
 #'   decreasing one.
+#' @param value `NULL`, or two finite numbers `c(at = a, value = v)`: the
+#'   smooth is \eqn{v} at \eqn{a}, in place of the centering (see
+#'   [shape_increasing()] for when \eqn{v} changes the fit).
 #'
 #' @return An S7 object of class `ShapeUnimodal` or `ShapeSigmoid`, both
 #'   inheriting from `ShapeLocated` and [shape_constraint].
@@ -164,28 +167,45 @@ NULL
   v
 }
 
+# a point constraint: NULL, or two finite numbers, the point and the value,
+# named "at" and "value" in either order or unnamed in that order
+.check_point <- function(p, nm) {
+  if (is.null(p)) return(NULL)
+  nms <- names(p)
+  ok <- is.numeric(p) && length(p) == 2L && all(is.finite(p)) &&
+    (is.null(nms) || setequal(nms, c("at", "value")))
+  if (!ok) {
+    stop(sprintf(paste0("'%s' must be NULL or two finite numbers, such as",
+                        " c(at = 0, value = 0)."), nm), call. = FALSE)
+  }
+  p <- as.numeric(if (is.null(nms)) p else p[c("at", "value")])
+  list(at = p[1L], value = p[2L])
+}
+
 #' @rdname shape_located
 #' @export
 shape_unimodal <- function(link = linkfunctions7::log_link(), mode = NULL,
-                           index = NULL, valley = FALSE) {
+                           index = NULL, valley = FALSE, value = NULL) {
   valley <- .check_flag(valley, "valley")
   ShapeUnimodal(shape_name = if (valley) "unimodal (valley)" else "unimodal",
                 link = .check_shape_link(link),
                 shape_params = list(at = .check_location(mode, "mode"),
                                     index = .check_index(index),
-                                    sign = if (valley) -1 else 1))
+                                    sign = if (valley) -1 else 1,
+                                    value = .check_point(value, "value")))
 }
 
 #' @rdname shape_located
 #' @export
 shape_sigmoid <- function(link = linkfunctions7::log_link(), inflection = NULL,
-                          index = NULL, decreasing = FALSE) {
+                          index = NULL, decreasing = FALSE, value = NULL) {
   decreasing <- .check_flag(decreasing, "decreasing")
   ShapeSigmoid(shape_name = if (decreasing) "sigmoid (decreasing)" else "sigmoid",
                link = .check_shape_link(link),
                shape_params = list(at = .check_location(inflection, "inflection"),
                                    index = .check_index(index),
-                                   sign = if (decreasing) -1 else 1))
+                                   sign = if (decreasing) -1 else 1,
+                                   value = .check_point(value, "value")))
 }
 
 # the indices a location may take: a mode anywhere, an inflection from 2
@@ -216,11 +236,34 @@ shape_sigmoid <- function(link = linkfunctions7::log_link(), inflection = NULL,
 #' increasing concave or a decreasing convex one, so that every slope keeps
 #' its sign. See [shape_constraint] for the map.
 #'
+#' # A value or a slope at a point
+#'
+#' With `value = c(at = a, value = v)` the smooth satisfies \eqn{f(a) = v}
+#' exactly, and this constraint replaces the centering of [scs()]. With
+#' `slope = c(at = a, value = v)`, which only `shape_convex()` and
+#' `shape_concave()` accept, it satisfies \eqn{f'(a) = v} exactly: the slope
+#' at the left end, the one free slope of these two shapes, is then written in
+#' terms of the second divided differences. The other shapes constrain every
+#' slope, so a slope at a point cannot be imposed on them by this
+#' elimination. The point \eqn{a} must lie in the interval of the basis,
+#' which the `lower` and `upper` arguments of the smoother can widen.
+#'
+#' A value other than zero changes the fit only when no other term of the
+#' equation absorbs a constant (an intercept, the effects of a factor, an
+#' uncentered term), as in a formula that starts with `0 +`. Otherwise the
+#' fit is the same for every \eqn{v}, and \eqn{v} only moves the level
+#' between the intercept and the smooth; with \eqn{v = 0} the intercept is
+#' the linear predictor at \eqn{a}.
+#'
 #' @param link A \pkg{linkfunctions7} link onto \eqn{(0, \infty)}, by default
 #'   [linkfunctions7::log_link()]. [linkfunctions7::softplus_link()] is the
 #'   other shipped choice.
 #' @param min_slope A single nonnegative number, the smallest slope in
 #'   absolute value.
+#' @param value `NULL`, or two finite numbers `c(at = a, value = v)`: the
+#'   smooth is \eqn{v} at \eqn{a}. Unnamed, the first number is the point.
+#' @param slope `NULL`, or two finite numbers `c(at = a, value = v)`: the
+#'   derivative of the smooth is \eqn{v} at \eqn{a}.
 #'
 #' @return An S7 object of class `ShapeMonotone` (`shape_increasing()`,
 #'   `shape_decreasing()`) or `ShapeCurvature` (the other six), both
@@ -233,6 +276,8 @@ shape_sigmoid <- function(link = linkfunctions7::log_link(), inflection = NULL,
 #' shape_decreasing(min_slope = 0.1)
 #' shape_convex(link = linkfunctions7::softplus_link())
 #' shape_increasing_concave()
+#' shape_increasing(value = c(at = 0, value = 0))
+#' shape_convex(slope = c(at = 0.5, value = 0))
 #'
 #' # A link onto the whole real line is rejected.
 #' try(shape_concave(link = linkfunctions7::identity_link()))
@@ -262,58 +307,70 @@ NULL
 
 #' @rdname shape_constructors
 #' @export
-shape_increasing <- function(link = linkfunctions7::log_link(), min_slope = 0) {
+shape_increasing <- function(link = linkfunctions7::log_link(), min_slope = 0,
+                             value = NULL) {
   ShapeMonotone(shape_name = "increasing", link = .check_shape_link(link),
-                shape_params = list(sign = 1, min_slope = .check_min_slope(min_slope)))
+                shape_params = list(sign = 1, min_slope = .check_min_slope(min_slope),
+                                    value = .check_point(value, "value")))
 }
 
 #' @rdname shape_constructors
 #' @export
-shape_decreasing <- function(link = linkfunctions7::log_link(), min_slope = 0) {
+shape_decreasing <- function(link = linkfunctions7::log_link(), min_slope = 0,
+                             value = NULL) {
   ShapeMonotone(shape_name = "decreasing", link = .check_shape_link(link),
-                shape_params = list(sign = -1, min_slope = .check_min_slope(min_slope)))
+                shape_params = list(sign = -1, min_slope = .check_min_slope(min_slope),
+                                    value = .check_point(value, "value")))
 }
 
 #' @rdname shape_constructors
 #' @export
-shape_convex <- function(link = linkfunctions7::log_link()) {
+shape_convex <- function(link = linkfunctions7::log_link(), value = NULL,
+                         slope = NULL) {
   ShapeCurvature(shape_name = "convex", link = .check_shape_link(link),
-                 shape_params = list(sign = 1))
+                 shape_params = list(sign = 1, value = .check_point(value, "value"),
+                                     slope = .check_point(slope, "slope")))
 }
 
 #' @rdname shape_constructors
 #' @export
-shape_concave <- function(link = linkfunctions7::log_link()) {
+shape_concave <- function(link = linkfunctions7::log_link(), value = NULL,
+                          slope = NULL) {
   ShapeCurvature(shape_name = "concave", link = .check_shape_link(link),
-                 shape_params = list(sign = -1))
+                 shape_params = list(sign = -1, value = .check_point(value, "value"),
+                                     slope = .check_point(slope, "slope")))
 }
 
 #' @rdname shape_constructors
 #' @export
-shape_increasing_convex <- function(link = linkfunctions7::log_link()) {
+shape_increasing_convex <- function(link = linkfunctions7::log_link(), value = NULL) {
   ShapeCurvature(shape_name = "increasing convex", link = .check_shape_link(link),
-                 shape_params = list(sign = 1, mono = 1))
+                 shape_params = list(sign = 1, mono = 1,
+                                     value = .check_point(value, "value")))
 }
 
 #' @rdname shape_constructors
 #' @export
-shape_increasing_concave <- function(link = linkfunctions7::log_link()) {
+shape_increasing_concave <- function(link = linkfunctions7::log_link(), value = NULL) {
   ShapeCurvature(shape_name = "increasing concave", link = .check_shape_link(link),
-                 shape_params = list(sign = -1, mono = 1))
+                 shape_params = list(sign = -1, mono = 1,
+                                     value = .check_point(value, "value")))
 }
 
 #' @rdname shape_constructors
 #' @export
-shape_decreasing_convex <- function(link = linkfunctions7::log_link()) {
+shape_decreasing_convex <- function(link = linkfunctions7::log_link(), value = NULL) {
   ShapeCurvature(shape_name = "decreasing convex", link = .check_shape_link(link),
-                 shape_params = list(sign = 1, mono = -1))
+                 shape_params = list(sign = 1, mono = -1,
+                                     value = .check_point(value, "value")))
 }
 
 #' @rdname shape_constructors
 #' @export
-shape_decreasing_concave <- function(link = linkfunctions7::log_link()) {
+shape_decreasing_concave <- function(link = linkfunctions7::log_link(), value = NULL) {
   ShapeCurvature(shape_name = "decreasing concave", link = .check_shape_link(link),
-                 shape_params = list(sign = -1, mono = -1))
+                 shape_params = list(sign = -1, mono = -1,
+                                     value = .check_point(value, "value")))
 }
 
 S7::method(print, shape_constraint) <- function(x, ...) {
@@ -322,6 +379,12 @@ S7::method(print, shape_constraint) <- function(x, ...) {
     sprintf(", min_slope = %s", format(p$min_slope)) else ""
   if (!is.null(p$index)) extra <- sprintf("%s, located at index %d", extra, p$index)
   else if (!is.null(p$at)) extra <- sprintf("%s, located at %s", extra, format(p$at))
+  if (!is.null(p$value)) {
+    extra <- sprintf("%s, f(%s) = %s", extra, format(p$value$at), format(p$value$value))
+  }
+  if (!is.null(p$slope)) {
+    extra <- sprintf("%s, f'(%s) = %s", extra, format(p$slope$at), format(p$slope$value))
+  }
   cat(sprintf("<shape: %s, link = %s%s>\n", x@shape_name, x@link@link_name, extra))
   invisible(x)
 }

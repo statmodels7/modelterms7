@@ -1,3 +1,17 @@
+# modelterms7 0.123.0
+
+* Every shape of `scs()` takes `value = c(at = a, value = v)`, which fixes
+  the smooth at \(f(a) = v\) in place of the centering: the columns of the
+  design are taken relative to their row at \(a\) and \(v\) is a fixed part of
+  the contribution. A value other than zero changes the fit only when no
+  other term of the equation absorbs a constant.
+* `shape_convex()` and `shape_concave()` take `slope = c(at = a, value = v)`,
+  which fixes \(f'(a) = v\) by solving the free slope at the left end from
+  the second divided differences; the term has one coefficient fewer. The
+  other shapes constrain every slope and do not take `slope`.
+* The point of `value` or `slope` must lie in the interval of the basis,
+  which the `lower` and `upper` arguments of the smoother widen.
+
 # modelterms7 0.122.0
 
 * `shape_sigmoid()` makes `scs()` monotone with a slope that grows up to an

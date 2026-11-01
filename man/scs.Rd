@@ -65,6 +65,16 @@ The level is removed against the intercept of the model: the first column of
 the data on which the term is built, so the smooth averages to zero there.
 The coefficients are therefore \eqn{\gamma_2, \dots, \gamma_K}, named
 \verb{<label>.g1}, \verb{<label>.g2}, and so on.
+
+A shape with a value at a point, \code{value = c(at = a, value = v)}, removes
+the level by that value instead: the columns are taken relative to their
+row at \eqn{a}, and the contribution is
+\eqn{f(x) = v + (B(x) - B(a))\,A_{-1}\,b_{-1}(\gamma)}. A convex or concave
+shape with a slope at a point, \code{slope = c(at = a, value = v)}, has one
+coefficient fewer, because the slope at the left end is solved from
+\eqn{f'(a) = v}; the line that this slope contributes is a fixed part of
+the contribution. See \code{\link[=shape_increasing]{shape_increasing()}} for when a value other than zero
+changes the fit.
 }
 
 \section{The penalty}{

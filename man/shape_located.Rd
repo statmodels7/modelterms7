@@ -10,14 +10,16 @@ shape_unimodal(
   link = linkfunctions7::log_link(),
   mode = NULL,
   index = NULL,
-  valley = FALSE
+  valley = FALSE,
+  value = NULL
 )
 
 shape_sigmoid(
   link = linkfunctions7::log_link(),
   inflection = NULL,
   index = NULL,
-  decreasing = FALSE
+  decreasing = FALSE,
+  value = NULL
 )
 }
 \arguments{
@@ -31,6 +33,10 @@ sets on the versions it tries. It takes precedence over \code{mode} and
 \code{inflection}.}
 
 \item{valley}{\code{FALSE} for a maximum, \code{TRUE} for a minimum.}
+
+\item{value}{\code{NULL}, or two finite numbers \code{c(at = a, value = v)}: the
+smooth is \eqn{v} at \eqn{a}, in place of the centering (see
+\code{\link[=shape_increasing]{shape_increasing()}} for when \eqn{v} changes the fit).}
 
 \item{decreasing}{\code{FALSE} for an increasing sigmoid, \code{TRUE} for a
 decreasing one.}
