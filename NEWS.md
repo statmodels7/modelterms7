@@ -1,3 +1,12 @@
+# modelterms7 0.126.1
+
+* New term `scte()`, a tensor product smooth of two covariates that is
+  monotone in one of them (`shapes = list(shape_increasing(), NULL)`) or in
+  both, with two smoothing parameters. With shapes on both margins the
+  interaction has a fixed sign (nonnegative for two increasing or two
+  decreasing margins, nonpositive otherwise), as in Pya and Wood (2015).
+  A decreasing margin is the increasing one in the reflected covariate.
+
 # modelterms7 0.126.0
 
 * A unimodal or sigmoid `scs()` with its location given is fitted from two

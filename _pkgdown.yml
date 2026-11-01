@@ -107,7 +107,9 @@ reference:
     penalty on the free coefficients.
   contents:
   - scs
+  - scte
   - ScsTerm
+  - ScteTerm
   - shape_constructors
   - shape_constraint
   - shape_map
