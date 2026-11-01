@@ -1,3 +1,18 @@
+# modelterms7 0.127.0
+
+* `term_block_deriv3()` and `term_block_deriv4()` return the third and
+  fourth derivatives of a recomputed block along a column and three or
+  four directions. `nl()` writes them over the partitions of the
+  predictor's fourth and fifth derivatives with the link chain; a smoothed
+  `seg()`, `jump()` and `jseg()` have closed forms, and a sharp break-point
+  returns zeros. The fourth order of a term with a step needs the
+  smoother's sixth derivative and signals an error. The base method
+  returns zeros.
+* The documentation of `jfp()` describes the effect of the prior on the
+  other parameters of the distribution: the information of the block
+  generally depends on them, so the penalty also moves their coefficients,
+  by an amount of order 1/n.
+
 # modelterms7 0.126.0
 
 * A unimodal or sigmoid `scs()` with its location given is fitted from two
