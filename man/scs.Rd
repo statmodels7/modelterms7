@@ -45,8 +45,9 @@ An unbuilt \link{ScsTerm}.
 \description{
 Constructs a smooth function of one covariate constrained to a shape:
 monotone (\code{\link[=shape_increasing]{shape_increasing()}}, \code{\link[=shape_decreasing]{shape_decreasing()}}), of constant
-curvature (\code{\link[=shape_convex]{shape_convex()}}, \code{\link[=shape_concave]{shape_concave()}}), or both
-(\code{\link[=shape_increasing_convex]{shape_increasing_convex()}} and the other three combinations). The term
+curvature (\code{\link[=shape_convex]{shape_convex()}}, \code{\link[=shape_concave]{shape_concave()}}), both
+(\code{\link[=shape_increasing_convex]{shape_increasing_convex()}} and the other three combinations), or
+unimodal or sigmoid (\code{\link[=shape_unimodal]{shape_unimodal()}}, \code{\link[=shape_sigmoid]{shape_sigmoid()}}). The term
 enters the
 formula of any distribution parameter, like \code{\link[=s]{s()}}.
 }

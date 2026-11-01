@@ -1,3 +1,32 @@
+# modelterms7 0.122.0
+
+* `shape_sigmoid()` makes `scs()` monotone with a slope that grows up to an
+  inflection and shrinks after it (`decreasing = TRUE` for a decreasing
+  curve). The slope at each end is constrained and the second divided
+  differences are summed from each end toward the inflection, so every
+  slope keeps its sign. `inflection =` places the inflection at the Greville
+  abscissa nearest to a value of the covariate; without it a fitting layer
+  chooses it from the steepest point of a pilot fit, through
+  `term_variants()`.
+* `shape_unimodal(valley = TRUE)` falls to a minimum and rises after it.
+* `shape_unimodal()` and `shape_sigmoid()` inherit from `ShapeLocated`; the
+  location they carry is `shape_params$at` (the value) and
+  `shape_params$index` (the Greville index).
+
+# modelterms7 0.121.0
+
+* `shape_unimodal()` makes `scs()` rise to a mode and fall after it. The
+  mode sits at a Greville abscissa of the basis; `mode =` places it at the
+  abscissa nearest to a value of the covariate. The penalty is one random
+  walk on the free coefficients through the mode, whose null space is the
+  same at every mode, so fits at different modes are compared by their
+  criterion.
+* `term_pilot()` and `term_variants()` describe a term that carries a
+  discrete choice: the term that stands in for it in a pilot fit, and the
+  versions to try given the pilot's contribution. For `scs()` with
+  `shape_unimodal()` and no mode, the versions are the modes at the five
+  Greville abscissae around the pilot's maximum.
+
 # modelterms7 0.120.0
 
 * `jfp()` puts a Jeffreys prior |I(beta)|^power on a block of
