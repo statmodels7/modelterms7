@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.128.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.129.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,11 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.129.0" id="modelterms7-01290">modelterms7 0.129.0<a class="anchor" aria-label="anchor" href="#modelterms7-01290"></a></h2>
+<ul><li>
+<code>nl(curvature = )</code> chooses the curvature in the term’s coefficients that a fitting layer uses in its Newton steps: <code>"full"</code> (the second derivative of the log-likelihood), <code>"gauss_newton"</code> (the Gauss-Newton matrix alone) or <code>"auto"</code> (the default: the full curvature until a line search finds no step that decreases the objective, and the Gauss-Newton matrix from that point on). The setting is stored in the term’s <code>spec</code>.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.128.0" id="modelterms7-01280">modelterms7 0.128.0<a class="anchor" aria-label="anchor" href="#modelterms7-01280"></a></h2>
 <ul><li>New term <code><a href="../reference/scte.html">scte()</a></code>, a tensor product smooth of two covariates that is monotone in one of them (<code>shapes = list(shape_increasing(), NULL)</code>) or in both, with two smoothing parameters. With shapes on both margins the interaction has a fixed sign (nonnegative for two increasing or two decreasing margins, nonpositive otherwise), as in Pya and Wood (2015). A decreasing margin is the increasing one in the reflected covariate.</li>

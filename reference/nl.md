@@ -21,6 +21,7 @@ nl(
   hessian = NULL,
   deriv3 = NULL,
   deriv4 = NULL,
+  curvature = c("auto", "full", "gauss_newton"),
   label = "nl"
 )
 ```
@@ -72,6 +73,18 @@ nl(
   of `fn` in its own parameters, each a named list of numeric vectors.
   Each may be supplied independently of the others; see the section on
   supplying the derivatives.
+
+- curvature:
+
+  The curvature in the term's coefficients that a fitting layer uses in
+  its Newton steps. `"full"` is the second derivative of the
+  log-likelihood, which adds to the Gauss-Newton matrix the score times
+  the second derivative of the term; `"gauss_newton"` is the
+  Gauss-Newton matrix alone, which is positive semidefinite but
+  converges linearly where the score at the optimum is not small;
+  `"auto"` (the default) uses the full curvature until a line search
+  finds no step that decreases the objective, and the Gauss-Newton
+  matrix from that point on.
 
 - label:
 
