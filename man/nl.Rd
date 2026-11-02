@@ -16,6 +16,7 @@ nl(
   hessian = NULL,
   deriv3 = NULL,
   deriv4 = NULL,
+  curvature = c("auto", "full", "gauss_newton"),
   label = "nl"
 )
 }
@@ -52,6 +53,16 @@ by \code{\link[=term_build]{term_build()}}.}
 its own parameters, each a named list of numeric vectors. Each may be
 supplied independently of the others; see the section on supplying the
 derivatives.}
+
+\item{curvature}{The curvature in the term's coefficients that a fitting
+layer uses in its Newton steps. \code{"full"} is the second derivative of the
+log-likelihood, which adds to the Gauss-Newton matrix the score times
+the second derivative of the term; \code{"gauss_newton"} is the Gauss-Newton
+matrix alone, which is positive semidefinite but converges linearly where
+the score at the optimum is not small; \code{"auto"} (the default) uses the
+full curvature and the Gauss-Newton matrix at a step where the full
+curvature has no Cholesky factor or its step does not decrease the
+objective after the line search.}
 
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}
