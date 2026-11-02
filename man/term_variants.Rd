@@ -12,11 +12,12 @@ term_variants(term, pilot = NULL, ...)
 \item{pilot}{A numeric vector, the contribution of the pilot at the rows on
 which \code{term} was built, or \code{NULL}.}
 
-\item{...}{Passed to methods.}
+\item{...}{Passed to methods; \code{stage} and \code{current} for a term searched in
+stages.}
 }
 \value{
-A non-empty named list of unbuilt terms carrying the label of
-\code{term}.
+A named list of unbuilt terms carrying the label of \code{term},
+non-empty at the first stage.
 }
 \description{
 Returns the unbuilt versions of \code{term} among which a fitting layer chooses
@@ -26,10 +27,23 @@ model with each and keeps the best.
 }
 \details{
 The base method returns \code{term} alone. For \code{\link[=scs]{scs()}} with \code{\link[=shape_unimodal]{shape_unimodal()}}
-or \code{\link[=shape_sigmoid]{shape_sigmoid()}} and no location, the pilot's extremum (unimodal) or
+or \code{\link[=shape_sigmoid]{shape_sigmoid()}} and a location given, the versions are the term from
+its two starts, named \code{"start: sides"} and \code{"start: spline"} (see
+\code{\link[=shape_start]{shape_start()}}). With no location, the pilot's extremum (unimodal) or
 steepest point (sigmoid) gives the Greville abscissa \eqn{\xi_{M_0}}
 nearest to it, and the versions are the shape located at the indices
 \eqn{M_0 - 2, \dots, M_0 + 2} that exist, named \code{"M = j"}.
+
+A term whose choice has several parts is searched in stages, one part at
+a time (\code{\link[=term_variant_stages]{term_variant_stages()}}). The layer then passes \code{stage = k} and
+\code{current}, the version chosen at the stage before, through \code{...}. For
+\code{\link[=scs]{scs()}} with a factor \code{by} the parts are the levels: stage \eqn{k} moves
+the index of level \eqn{k} around the index nearest to the pilot's
+location on the rows of that level, with the other levels at their
+indices in \code{current} (at the first stage, at their pilot indices), and
+the versions are named \code{"<level>: M = j"}. The index that \code{current}
+already holds for level \eqn{k} is left out, because the layer fitted it
+at the stage before.
 }
 \examples{
 set.seed(1)
@@ -39,5 +53,5 @@ names(term_variants(tm, pilot = -(d$x - 0.3)^2))
 
 }
 \seealso{
-\code{\link[=term_pilot]{term_pilot()}}.
+\code{\link[=term_pilot]{term_pilot()}}, \code{\link[=term_variant_stages]{term_variant_stages()}}.
 }

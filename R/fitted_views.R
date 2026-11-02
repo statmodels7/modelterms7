@@ -207,9 +207,11 @@ S7::method(edf, model_term) <- function(term, coef = NULL, hessian = NULL,
   S <- matrix(0, k, k)
   for (e in soft) {
     i <- e$index
+    # dense, because a penalty repeated in blocks returns a sparse matrix,
+    # which does not assign into a base matrix
     S[i, i] <- S[i, i] +
-      penalties7::penalty_hessian(e$penalty, as.numeric(coef[i]),
-                                  .edf_theta(ent, e, theta))
+      as.matrix(penalties7::penalty_hessian(e$penalty, as.numeric(coef[i]),
+                                            .edf_theta(ent, e, theta)))
   }
   H <- hessian[rest, rest, drop = FALSE]
   count + sum(diag(solve(H + S[rest, rest, drop = FALSE], H)))

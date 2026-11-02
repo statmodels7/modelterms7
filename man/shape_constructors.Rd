@@ -12,21 +12,55 @@
 \alias{shape_decreasing_concave}
 \title{Shape Constraints for a Smooth}
 \usage{
-shape_increasing(link = linkfunctions7::log_link(), min_slope = 0)
+shape_increasing(
+  link = linkfunctions7::log_link(),
+  min_slope = 0,
+  value = NULL
+)
 
-shape_decreasing(link = linkfunctions7::log_link(), min_slope = 0)
+shape_decreasing(
+  link = linkfunctions7::log_link(),
+  min_slope = 0,
+  value = NULL
+)
 
-shape_convex(link = linkfunctions7::log_link())
+shape_convex(
+  link = linkfunctions7::log_link(),
+  value = NULL,
+  slope = NULL,
+  left_slope_by = c("level", "shared")
+)
 
-shape_concave(link = linkfunctions7::log_link())
+shape_concave(
+  link = linkfunctions7::log_link(),
+  value = NULL,
+  slope = NULL,
+  left_slope_by = c("level", "shared")
+)
 
-shape_increasing_convex(link = linkfunctions7::log_link())
+shape_increasing_convex(
+  link = linkfunctions7::log_link(),
+  value = NULL,
+  left_slope_by = c("level", "shared")
+)
 
-shape_increasing_concave(link = linkfunctions7::log_link())
+shape_increasing_concave(
+  link = linkfunctions7::log_link(),
+  value = NULL,
+  left_slope_by = c("level", "shared")
+)
 
-shape_decreasing_convex(link = linkfunctions7::log_link())
+shape_decreasing_convex(
+  link = linkfunctions7::log_link(),
+  value = NULL,
+  left_slope_by = c("level", "shared")
+)
 
-shape_decreasing_concave(link = linkfunctions7::log_link())
+shape_decreasing_concave(
+  link = linkfunctions7::log_link(),
+  value = NULL,
+  left_slope_by = c("level", "shared")
+)
 }
 \arguments{
 \item{link}{A \pkg{linkfunctions7} link onto \eqn{(0, \infty)}, by default
@@ -34,7 +68,21 @@ shape_decreasing_concave(link = linkfunctions7::log_link())
 other shipped choice.}
 
 \item{min_slope}{A single nonnegative number, the smallest slope in
-absolute value.}
+absolute value, or a vector of such numbers named by the levels of a
+factor \code{by}.}
+
+\item{value}{\code{NULL}, two finite numbers \code{c(at = a, value = v)}, or a list
+\code{list(at = a, value = v)} whose elements are one number or a vector
+named by level: the smooth is \eqn{v} at \eqn{a}. Unnamed, the first
+number is the point.}
+
+\item{slope}{\code{NULL}, or the same forms as \code{value}: the derivative of the
+smooth is \eqn{v} at \eqn{a}.}
+
+\item{left_slope_by}{Under a factor \code{by}, whether the left slope of a
+curvature shape is a coefficient of each level (\code{"level"}, the default)
+or one coefficient for every level (\code{"shared"}). \code{"shared"} without a
+factor \code{by} is an error.}
 }
 \value{
 An S7 object of class \code{ShapeMonotone} (\code{shape_increasing()},
@@ -61,11 +109,50 @@ an increasing convex or a decreasing concave curve, the right end for an
 increasing concave or a decreasing convex one, so that every slope keeps
 its sign. See \link{shape_constraint} for the map.
 }
+\section{A value or a slope at a point}{
+With \code{value = c(at = a, value = v)} the smooth satisfies \eqn{f(a) = v}
+exactly, and this constraint replaces the centering of \code{\link[=scs]{scs()}}. With
+\code{slope = c(at = a, value = v)}, which only \code{shape_convex()} and
+\code{shape_concave()} accept, it satisfies \eqn{f'(a) = v} exactly: the slope
+at the left end, the one free slope of these two shapes, is then written in
+terms of the second divided differences. The other shapes constrain every
+slope, so a slope at a point cannot be imposed on them by this
+elimination. The point \eqn{a} must lie in the interval of the basis,
+which the \code{lower} and \code{upper} arguments of the smoother can widen.
+
+A value other than zero changes the fit only when no other term of the
+equation absorbs a constant (an intercept, the effects of a factor, an
+uncentered term), as in a formula that starts with \verb{0 +}. Otherwise the
+fit is the same for every \eqn{v}, and \eqn{v} only moves the level
+between the intercept and the smooth; with \eqn{v = 0} the intercept is
+the linear predictor at \eqn{a}.
+}
+
+\section{Under a factor \code{by}}{
+With a factor \code{by} in \code{\link[=scs]{scs()}}, \code{min_slope} may be a vector named by the
+levels, and the point and the value of \code{value} or \code{slope} may be given by
+level in the list form, \code{list(at = 0, value = c(a = 0, b = 1))}. A
+curvature shape has one left slope per level by default; with
+\code{left_slope_by = "shared"} that slope (the free one of \code{shape_convex()}
+and \code{shape_concave()}, the anchored one of a combination) is one
+coefficient for every level. The anchored slope of a combination is
+penalized, so tying it is not available with \code{by_hyper = "level"} in
+\code{\link[=scs]{scs()}}, which would penalize it once per level; a slope at a point
+removes the left slope and cannot be combined with a tie.
+}
+
 \examples{
 shape_increasing()
 shape_decreasing(min_slope = 0.1)
 shape_convex(link = linkfunctions7::softplus_link())
 shape_increasing_concave()
+shape_increasing(value = c(at = 0, value = 0))
+shape_convex(slope = c(at = 0.5, value = 0))
+
+# Settings by level, for a factor by with levels a and b.
+shape_increasing(min_slope = c(a = 0, b = 0.2))
+shape_increasing(value = list(at = 0, value = c(a = 0, b = 1)))
+shape_convex(left_slope_by = "shared")
 
 # A link onto the whole real line is rejected.
 try(shape_concave(link = linkfunctions7::identity_link()))

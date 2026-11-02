@@ -44,7 +44,7 @@ test_that("shape constructors reject a bad link or minimum slope", {
   expect_error(shape_convex(link = linkfunctions7::logit_link()), "onto \\(0, Inf\\)")
   expect_error(shape_concave(link = "log"), "linkfunctions7 link")
   expect_error(shape_decreasing(min_slope = -0.1), "nonnegative")
-  expect_error(shape_increasing(min_slope = c(0, 1)), "single")
+  expect_error(shape_increasing(min_slope = c(0, 1)), "named by the levels")
   expect_error(shape_increasing(min_slope = NA_real_), "single")
   expect_error(shape_increasing(min_slope = Inf), "single")
 })
