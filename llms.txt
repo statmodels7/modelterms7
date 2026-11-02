@@ -457,8 +457,12 @@ B-spline coefficients, with a penalty on the free coefficients.
 
 - [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
   : Shape-Constrained Smooth of One Covariate
+- [`scte()`](https://statmodels7.github.io/modelterms7/reference/scte.md)
+  : Shape-Constrained Tensor Product Smooth of Two Covariates
 - [`ScsTerm()`](https://statmodels7.github.io/modelterms7/reference/ScsTerm.md)
   : S7 Class for Shape-Constrained Smooth Terms
+- [`ScteTerm()`](https://statmodels7.github.io/modelterms7/reference/ScteTerm.md)
+  : S7 Class for Shape-Constrained Tensor Product Smooths
 - [`shape_increasing()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
   [`shape_decreasing()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
   [`shape_convex()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
@@ -488,6 +492,8 @@ B-spline coefficients, with a penalty on the free coefficients.
   : The Versions of a Term That a Fitting Layer Tries
 - [`term_variant_stages()`](https://statmodels7.github.io/modelterms7/reference/term_variant_stages.md)
   : The Number of Stages in Which a Term's Versions Are Searched
+- [`term_hyper_start()`](https://statmodels7.github.io/modelterms7/reference/term_hyper_start.md)
+  : The Starting Hyperparameters That a Term Asks the Outer Search For
 
 ## Nonlinear terms
 
