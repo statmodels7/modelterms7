@@ -60,9 +60,8 @@ log-likelihood, which adds to the Gauss-Newton matrix the score times
 the second derivative of the term; \code{"gauss_newton"} is the Gauss-Newton
 matrix alone, which is positive semidefinite but converges linearly where
 the score at the optimum is not small; \code{"auto"} (the default) uses the
-full curvature and the Gauss-Newton matrix at a step where the full
-curvature has no Cholesky factor or its step does not decrease the
-objective after the line search.}
+full curvature until a line search finds no step that decreases the
+objective, and the Gauss-Newton matrix from that point on.}
 
 \item{label}{A single non-empty string prefixed to the coefficient
 names.}

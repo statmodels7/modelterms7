@@ -3,9 +3,9 @@
 * `nl(curvature = )` chooses the curvature in the term's coefficients that a
   fitting layer uses in its Newton steps: `"full"` (the second derivative of
   the log-likelihood), `"gauss_newton"` (the Gauss-Newton matrix alone) or
-  `"auto"` (the default: the full curvature, and the Gauss-Newton matrix at a
-  step where the full one has no Cholesky factor or its step does not
-  decrease the objective). The setting is stored in the term's `spec`.
+  `"auto"` (the default: the full curvature until a line search finds no
+  step that decreases the objective, and the Gauss-Newton matrix from that
+  point on). The setting is stored in the term's `spec`.
 
 # modelterms7 0.127.0
 
