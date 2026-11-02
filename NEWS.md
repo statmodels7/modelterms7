@@ -1,4 +1,4 @@
-# modelterms7 (development version)
+# modelterms7 0.129.0
 
 * `nl(curvature = )` chooses the curvature in the term's coefficients that a
   fitting layer uses in its Newton steps: `"full"` (the second derivative of
