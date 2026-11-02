@@ -7,6 +7,24 @@
   step that decreases the objective, and the Gauss-Newton matrix from that
   point on). The setting is stored in the term's `spec`.
 
+# modelterms7 0.128.0
+
+* New term `scte()`, a tensor product smooth of two covariates that is
+  monotone in one of them (`shapes = list(shape_increasing(), NULL)`) or in
+  both, with two smoothing parameters. With shapes on both margins the
+  interaction has a fixed sign (nonnegative for two increasing or two
+  decreasing margins, nonpositive otherwise), as in Pya and Wood (2015).
+  A decreasing margin is the increasing one in the reflected covariate.
+* A unimodal or sigmoid `scs()` with its location given is fitted from four
+  versions: the two starts of the coefficients, each with the outer search
+  starting at a smoothing parameter of 1 and of 0.01 (misure_scs M17: 0.01
+  better in 69 fits of 960 and worse in 11). New generic
+  `term_hyper_start()`, the starting hyperparameters that a term names.
+* `scte()` takes `by` and `by_hyper`. A factor gives one surface per level,
+  with the two smoothing parameters shared or one pair per level; a numeric
+  variable \(w\) gives \(w\,f(x, z)\), the level of \(f\) a free coefficient
+  named `const`.
+
 # modelterms7 0.127.0
 
 * `term_block_deriv3()` and `term_block_deriv4()` return the third and
