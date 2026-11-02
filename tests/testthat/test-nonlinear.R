@@ -472,3 +472,17 @@ test_that("the affine parameters are read off the expression", {
     .nl_affine_params(quote(d0 + (a - d0) / (1 + exp(-(x - e) / b))),
                       c("a", "d0", "e", "b")), c("a", "d0"))
 })
+
+test_that("nl() records the curvature setting", {
+  expect_identical(nl(~ a * exp(-r * x))@spec$curvature, "auto")
+  expect_identical(nl(~ a * exp(-r * x), curvature = "full")@spec$curvature,
+                   "full")
+  expect_identical(nl(~ a * exp(-r * x),
+                      curvature = "gauss")@spec$curvature, "gauss_newton")
+  expect_error(nl(~ a * exp(-r * x), curvature = "exact"), "should be one of")
+  dd <- data.frame(x = seq(0.2, 3, length.out = 20))
+  b <- term_build(nl(~ a * exp(-r * x), curvature = "full",
+                     start = list(a = 2, r = 1.3)), dd)
+  expect_identical(b@spec$curvature, "full")
+  expect_identical(term_refresh(b, c(2, 1.3))@spec$curvature, "full")
+})
