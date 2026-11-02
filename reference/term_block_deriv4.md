@@ -50,6 +50,13 @@ carries the derivative of one inverse link to its size and each
 partition the derivative of \\f\\ to its number of blocks. A parameter
 whose development moves is rejected, as in
 [`term_block_deriv3()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv3.md).
+For
+[`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
+and
+[`scte()`](https://statmodels7.github.io/modelterms7/reference/scte.md)
+the entry is \\G\_{il}W\_{ij}b^{(5)}(\gamma_j)\\v_ju_js_jr_j\\, as in
+[`term_block_deriv3()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv3.md)
+one order more.
 
 ## See also
 

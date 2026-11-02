@@ -15,7 +15,7 @@ the derivative of the outer criterion."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.129.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.130.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,6 +108,11 @@ with \(S(x) = \sum_q f_{p_1q}h'_qx_q\),
 \(P(xy,z) = \sum_{q,r}f_{p_1qr}h''_qx_qy_q\,h'_rz_r\). A parameter whose
 development moves with the coefficients has a design of its own that moves,
 and its third derivative is not written: the method signals an error there.</p>
+<p>For <code><a href="scs.html">scs()</a></code> and <code><a href="scte.html">scte()</a></code> the column \(j\) of level \(l\) is
+\(G_{il}W_{ij}b'(\gamma_j)\), which depends on the coefficient
+\(\gamma_j\) alone, so the entry is
+\(G_{il}W_{ij}b^{(4)}(\gamma_j)\,v_ju_js_j\), with \(b\) the map from
+the coefficients to the basis coefficients.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

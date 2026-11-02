@@ -65,6 +65,15 @@ development moves with the coefficients has a design of its own that
 moves, and its third derivative is not written: the method signals an
 error there.
 
+For
+[`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
+and
+[`scte()`](https://statmodels7.github.io/modelterms7/reference/scte.md)
+the column \\j\\ of level \\l\\ is \\G\_{il}W\_{ij}b'(\gamma_j)\\, which
+depends on the coefficient \\\gamma_j\\ alone, so the entry is
+\\G\_{il}W\_{ij}b^{(4)}(\gamma_j)\\v_ju_js_j\\, with \\b\\ the map from
+the coefficients to the basis coefficients.
+
 ## See also
 
 [`term_block_deriv2()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv2.md),
