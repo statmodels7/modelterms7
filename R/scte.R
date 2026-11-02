@@ -369,6 +369,13 @@ S7::method(term_block_contract, ScteTerm) <- function(term, coef = NULL, A, ...)
 S7::method(term_block_deriv2, ScteTerm) <- function(term, coef = NULL, v, u, ...) {
   S7::method(term_block_deriv2, ScsTerm)(term, coef = coef, v = v, u = u, ...)
 }
+S7::method(term_block_deriv3, ScteTerm) <- function(term, coef = NULL, v, u, s, ...) {
+  S7::method(term_block_deriv3, ScsTerm)(term, coef = coef, v = v, u = u, s = s, ...)
+}
+S7::method(term_block_deriv4, ScteTerm) <- function(term, coef = NULL, v, u, s, r, ...) {
+  S7::method(term_block_deriv4, ScsTerm)(term, coef = coef, v = v, u = u, s = s,
+                                         r = r, ...)
+}
 
 S7::method(term_value, ScteTerm) <- function(term, coef = NULL, newdata = NULL, ...) {
   .assert_built(term)

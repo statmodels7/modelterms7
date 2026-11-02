@@ -38,6 +38,12 @@ NULL
 #' development moves with the coefficients has a design of its own that moves,
 #' and its third derivative is not written: the method signals an error there.
 #'
+#' For [scs()] and [scte()] the column \eqn{j} of level \eqn{l} is
+#' \eqn{G_{il}W_{ij}b'(\gamma_j)}, which depends on the coefficient
+#' \eqn{\gamma_j} alone, so the entry is
+#' \eqn{G_{il}W_{ij}b^{(4)}(\gamma_j)\,v_ju_js_j}, with \eqn{b} the map from
+#' the coefficients to the basis coefficients.
+#'
 #' @param term A built term.
 #' @param coef The coefficients, one per coefficient of the term, or `NULL`
 #'   for the coefficients that the term carries.
@@ -57,6 +63,7 @@ NULL
 #'
 #' @export
 #' @aliases term_block_deriv3.model_term term_block_deriv3.NlTerm
+#'   term_block_deriv3.ScsTerm term_block_deriv3.ScteTerm
 term_block_deriv3 <- S7::new_generic(
   "term_block_deriv3", "term",
   function(term, coef = NULL, v, u, s, ...) S7::S7_dispatch())

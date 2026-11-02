@@ -24,6 +24,13 @@ test_that("the block and its derivatives agree with central differences", {
     expect_lt(rel(term_block_deriv(tm, coef = g, v = v), (M(g + h * v) - M(g - h * v)) / (2 * h)), 1e-8)
     D2 <- (term_block_deriv(tm, coef = g + h * u, v = v) - term_block_deriv(tm, coef = g - h * u, v = v)) / (2 * h)
     expect_lt(rel(term_block_deriv2(tm, coef = g, v = v, u = u), D2), 1e-8)
+    s <- stats::rnorm(p); q <- stats::rnorm(p)
+    D3 <- (term_block_deriv2(tm, coef = g + h * s, v = v, u = u) -
+           term_block_deriv2(tm, coef = g - h * s, v = v, u = u)) / (2 * h)
+    expect_lt(rel(term_block_deriv3(tm, coef = g, v = v, u = u, s = s), D3), 1e-8)
+    D4 <- (term_block_deriv3(tm, coef = g + h * q, v = v, u = u, s = s) -
+           term_block_deriv3(tm, coef = g - h * q, v = v, u = u, s = s)) / (2 * h)
+    expect_lt(rel(term_block_deriv4(tm, coef = g, v = v, u = u, s = s, r = q), D4), 1e-8)
     A <- matrix(stats::rnorm(200 * p), 200)
     ctr <- sapply(seq_len(p), function(k) sum(A * (M(g + e(k)) - M(g - e(k)))) / (2 * h))
     expect_lt(rel(term_block_contract(tm, coef = g, A = A), ctr), 1e-8)

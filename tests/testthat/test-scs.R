@@ -144,6 +144,27 @@ test_that("term_block_deriv2 matches a difference of term_block_deriv", {
   }
 })
 
+test_that("term_block_deriv3 and term_block_deriv4 match differences of the order below", {
+  set.seed(127)
+  h <- 1e-5
+  for (sh in scs_shapes()) {
+    tm <- scs_build(sh); p <- length(term_coef_names(tm))
+    g <- rnorm(p, 0, 0.7); r <- term_refresh(tm, g)
+    v <- rnorm(p); u <- rnorm(p); s <- rnorm(p); q <- rnorm(p)
+    d3 <- (term_block_deriv2(tm, coef = g + h * s, v = v, u = u) -
+           term_block_deriv2(tm, coef = g - h * s, v = v, u = u)) / (2 * h)
+    D3 <- term_block_deriv3(r, v = v, u = u, s = s)
+    expect_equal(dim(D3), c(scs_n, p))
+    expect_lt(max(abs(d3 - D3)) / max(abs(d3)), 1e-8)
+    expect_equal(term_block_deriv3(r, v = s, u = v, s = u), D3, tolerance = 1e-12)
+    d4 <- (term_block_deriv3(tm, coef = g + h * q, v = v, u = u, s = s) -
+           term_block_deriv3(tm, coef = g - h * q, v = v, u = u, s = s)) / (2 * h)
+    D4 <- term_block_deriv4(r, v = v, u = u, s = s, r = q)
+    expect_lt(max(abs(d4 - D4)) / max(abs(d4)), 1e-8)
+    expect_equal(term_block_deriv4(r, v = q, u = s, s = u, r = v), D4, tolerance = 1e-12)
+  }
+})
+
 test_that("the curve has the shape on a fine grid, beyond the data", {
   set.seed(28)
   xg <- seq(-0.4, 1.4, length.out = 4001); dx <- diff(xg[1:2])
@@ -248,6 +269,8 @@ test_that("arguments of the wrong length are rejected", {
   expect_error(term_block_deriv(tm, v = rnorm(p + 1L)), "'v' must have length 7")
   expect_error(term_block_contract(tm, A = matrix(0, scs_n, p + 1L)), "'A' must be")
   expect_error(term_block_contract(tm, A = matrix(0, scs_n - 1L, p)), "'A' must be")
+  expect_error(term_block_deriv3(tm, v = rnorm(p), u = rnorm(p), s = rnorm(p - 1L)),
+               "must have length")
   expect_error(term_block_deriv2(tm, v = rnorm(p), u = rnorm(p - 1L)),
                "must have length 7")
 })

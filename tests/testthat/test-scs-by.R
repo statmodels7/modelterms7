@@ -76,6 +76,13 @@ test_that("the block and its derivatives agree with central differences", {
     expect_lt(rel(term_matrix(r), fd$J), 1e-8)
     expect_lt(rel(term_block_deriv(tm, coef = g, v = fd$v), fd$D1), 1e-8)
     expect_lt(rel(term_block_deriv2(tm, coef = g, v = fd$v, u = fd$u), fd$D2), 1e-8)
+    s <- stats::rnorm(length(g)); q <- stats::rnorm(length(g)); h <- 1e-5
+    D3 <- (term_block_deriv2(tm, coef = g + h * s, v = fd$v, u = fd$u) -
+           term_block_deriv2(tm, coef = g - h * s, v = fd$v, u = fd$u)) / (2 * h)
+    expect_lt(rel(term_block_deriv3(tm, coef = g, v = fd$v, u = fd$u, s = s), D3), 1e-8)
+    D4 <- (term_block_deriv3(tm, coef = g + h * q, v = fd$v, u = fd$u, s = s) -
+           term_block_deriv3(tm, coef = g - h * q, v = fd$v, u = fd$u, s = s)) / (2 * h)
+    expect_lt(rel(term_block_deriv4(tm, coef = g, v = fd$v, u = fd$u, s = s, r = q), D4), 1e-8)
     expect_lt(rel(term_block_contract(tm, coef = g, A = fd$A), fd$C), 1e-8)
     expect_equal(term_predict(r, by_d), term_matrix(r), tolerance = 1e-14,
                  ignore_attr = TRUE)

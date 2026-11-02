@@ -19,7 +19,9 @@ NULL
 #' directions). Each block of a partition carries the derivative of one
 #' inverse link to its size and each partition the derivative of \eqn{f} to
 #' its number of blocks. A parameter whose development moves is rejected, as
-#' in [term_block_deriv3()].
+#' in [term_block_deriv3()]. For [scs()] and [scte()] the entry is
+#' \eqn{G_{il}W_{ij}b^{(5)}(\gamma_j)\,v_ju_js_jr_j}, as in
+#' [term_block_deriv3()] one order more.
 #'
 #' @inheritParams term_block_deriv3
 #' @param v,u,s,r Numeric vectors as long as the term's coefficients.
@@ -38,6 +40,7 @@ NULL
 #'
 #' @export
 #' @aliases term_block_deriv4.model_term term_block_deriv4.NlTerm
+#'   term_block_deriv4.ScsTerm term_block_deriv4.ScteTerm
 term_block_deriv4 <- S7::new_generic(
   "term_block_deriv4", "term",
   function(term, coef = NULL, v, u, s, r, ...) S7::S7_dispatch())

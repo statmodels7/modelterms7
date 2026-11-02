@@ -1,3 +1,11 @@
+# modelterms7 0.130.0
+
+* `term_block_deriv3()` and `term_block_deriv4()` have methods for `scs()`
+  and `scte()`. Column `j` of the block depends on the coefficient
+  `gamma_j` alone, so each order multiplies the directions coordinate by
+  coordinate with the next derivative of the map to the basis
+  coefficients. The base method returned zeros for these terms.
+
 # modelterms7 0.129.0
 
 * `nl(curvature = )` chooses the curvature in the term's coefficients that a

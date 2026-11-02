@@ -1,4 +1,5 @@
 #' @include term_classes.R generics.R nonlinear.R variants.R shape.R
+#' @include block_deriv3.R block_deriv4.R
 NULL
 
 #' @title S7 Class for Shape-Constrained Smooth Terms
@@ -670,6 +671,31 @@ S7::method(term_block_deriv2, ScsTerm) <- function(term, coef = NULL, v, u, ...)
                  bp$ncoef), call. = FALSE)
   }
   .scs_block(bp, bp$W, bp$G, .scs_B(bp, coef, 3L) * matrix((v * u)[bp$ix], bp$nc, bp$m))
+}
+
+# one order more: the k-th derivative of column c is G W_c b^(k+1)(gamma_c),
+# so the contraction along k directions multiplies them coordinate by
+# coordinate
+.scs_block_deriv_k <- function(term, coef, dirs) {
+  .assert_built(term)
+  bp <- term@build_info
+  coef <- .scs_coef(bp, coef)
+  dirs <- lapply(dirs, as.numeric)
+  if (any(lengths(dirs) != bp$ncoef)) {
+    stop(sprintf("'%s' must have length %d, the term's coefficients.",
+                 paste(names(dirs), collapse = "', '"), bp$ncoef), call. = FALSE)
+  }
+  w <- Reduce(`*`, dirs)
+  .scs_block(bp, bp$W, bp$G,
+             .scs_B(bp, coef, length(dirs) + 1L) * matrix(w[bp$ix], bp$nc, bp$m))
+}
+
+S7::method(term_block_deriv3, ScsTerm) <- function(term, coef = NULL, v, u, s, ...) {
+  .scs_block_deriv_k(term, coef, list(v = v, u = u, s = s))
+}
+
+S7::method(term_block_deriv4, ScsTerm) <- function(term, coef = NULL, v, u, s, r, ...) {
+  .scs_block_deriv_k(term, coef, list(v = v, u = u, s = s, r = r))
 }
 
 # the start from a target: each level of a factor `by` from its own rows; a

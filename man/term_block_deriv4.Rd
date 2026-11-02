@@ -4,6 +4,8 @@
 \alias{term_block_deriv4}
 \alias{term_block_deriv4.model_term}
 \alias{term_block_deriv4.NlTerm}
+\alias{term_block_deriv4.ScsTerm}
+\alias{term_block_deriv4.ScteTerm}
 \title{How a Term's Block Moves Along Four Directions}
 \usage{
 term_block_deriv4(term, coef = NULL, v, u, s, r, ...)
@@ -38,7 +40,9 @@ single in three ways, or apart) and one (the fifteen partitions of the four
 directions). Each block of a partition carries the derivative of one
 inverse link to its size and each partition the derivative of \eqn{f} to
 its number of blocks. A parameter whose development moves is rejected, as
-in \code{\link[=term_block_deriv3]{term_block_deriv3()}}.
+in \code{\link[=term_block_deriv3]{term_block_deriv3()}}. For \code{\link[=scs]{scs()}} and \code{\link[=scte]{scte()}} the entry is
+\eqn{G_{il}W_{ij}b^{(5)}(\gamma_j)\,v_ju_js_jr_j}, as in
+\code{\link[=term_block_deriv3]{term_block_deriv3()}} one order more.
 }
 \examples{
 dd <- data.frame(x = seq(0.2, 3, length.out = 20))

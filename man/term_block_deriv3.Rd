@@ -4,6 +4,8 @@
 \alias{term_block_deriv3}
 \alias{term_block_deriv3.model_term}
 \alias{term_block_deriv3.NlTerm}
+\alias{term_block_deriv3.ScsTerm}
+\alias{term_block_deriv3.ScteTerm}
 \title{How a Term's Block Moves Along Three Directions}
 \usage{
 term_block_deriv3(term, coef = NULL, v, u, s, ...)
@@ -56,6 +58,12 @@ with \eqn{S(x) = \sum_q f_{p_1q}h'_qx_q},
 \eqn{P(xy,z) = \sum_{q,r}f_{p_1qr}h''_qx_qy_q\,h'_rz_r}. A parameter whose
 development moves with the coefficients has a design of its own that moves,
 and its third derivative is not written: the method signals an error there.
+
+For \code{\link[=scs]{scs()}} and \code{\link[=scte]{scte()}} the column \eqn{j} of level \eqn{l} is
+\eqn{G_{il}W_{ij}b'(\gamma_j)}, which depends on the coefficient
+\eqn{\gamma_j} alone, so the entry is
+\eqn{G_{il}W_{ij}b^{(4)}(\gamma_j)\,v_ju_js_j}, with \eqn{b} the map from
+the coefficients to the basis coefficients.
 }
 \examples{
 dd <- data.frame(x = seq(0.2, 3, length.out = 20))
