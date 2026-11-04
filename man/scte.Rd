@@ -152,7 +152,12 @@ rest of the model. \code{lambda1} penalizes the first differences of the
 constrained coordinates of \eqn{\gamma} along \eqn{x}, and \code{lambda2} those
 along \eqn{z}; the free row or column has the second differences of its
 coefficients along its own direction under the smoothing parameter of that
-direction.
+direction. Under two monotone shapes the elements constrained in \eqn{x}
+only (the slopes in \eqn{x} at the level of \eqn{z}), in \eqn{z} only, and
+in both (the interaction) are differenced only within their own kind, so
+under a strong penalty the surface tends to \eqn{a x + b z + c\,x z} with
+\eqn{c} of the sign of the interaction, as for \code{\link[=te]{te()}}. Under a curvature
+the differences run through the whole matrix.
 }
 
 \section{Varying the surface by another variable}{

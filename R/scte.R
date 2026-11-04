@@ -140,7 +140,12 @@ ScteTerm <- S7::new_class(
 #' constrained coordinates of \eqn{\gamma} along \eqn{x}, and `lambda2` those
 #' along \eqn{z}; the free row or column has the second differences of its
 #' coefficients along its own direction under the smoothing parameter of that
-#' direction.
+#' direction. Under two monotone shapes the elements constrained in \eqn{x}
+#' only (the slopes in \eqn{x} at the level of \eqn{z}), in \eqn{z} only, and
+#' in both (the interaction) are differenced only within their own kind, so
+#' under a strong penalty the surface tends to \eqn{a x + b z + c\,x z} with
+#' \eqn{c} of the sign of the interaction, as for [te()]. Under a curvature
+#' the differences run through the whole matrix.
 #'
 #' # Varying the surface by another variable
 #'
@@ -549,19 +554,39 @@ S7::method(term_build, ScteTerm) <- function(term, data, ...) {
   nf <- if (is.null(D)) 0L else ncol(D)
   pos[cons_b] <- nf + seq_along(cons_b)
   p <- ncol(M)
-  # first differences of the constrained gamma along each direction
-  diffs <- function(lines) {
+  # first differences of the constrained gamma along each direction.
+  # UNDER TWO MONOTONE SHAPES (Giovanni, 2026-11-04) an element constrained
+  # in x only (a slope in x at the level of z), in z only, or in both (the
+  # interaction) is differenced only against a neighbour of the same kind,
+  # so the three are separate walks and the null space is a x + b z + c xz,
+  # as for te(). Chained through the whole matrix, as in Pya and Wood
+  # (2015), the null space was the single surface with every element
+  # equal, and an additive surface was penalized (misure_scs/libro, W1:
+  # rmse 1.62 of te() on x + 2z chained, 0.93 separate). Under a curvature
+  # the walks stay chained: separate, 3 to 4 fits in 20 did not converge.
+  split <- both && S7::S7_inherits(mx$shape, ShapeMonotone) &&
+    S7::S7_inherits(mz$shape, ShapeMonotone)
+  kind <- matrix(0L, Kx, Kz)
+  for (j in seq_len(Kx)) for (k in seq_len(Kz)) {
+    kind[j, k] <- (j %in% mx$cons) + 2L * (k %in% mz$cons)
+  }
+  diffs <- function(lines, kinds) {
     rows <- list()
-    for (v in lines) {
+    for (i in seq_along(lines)) {
+      v <- lines[[i]]
+      kd <- kinds[[i]][v > 0L]
       v <- v[v > 0L]
       if (length(v) > 1L) for (a in seq_len(length(v) - 1L)) {
+        if (split && kd[a] != kd[a + 1L]) next
         rows[[length(rows) + 1L]] <- replace(numeric(p), v[a:(a + 1L)], c(-1, 1))
       }
     }
     if (length(rows)) crossprod(do.call(rbind, rows)) else matrix(0, p, p)
   }
-  Px <- diffs(lapply(seq_len(Kz), function(k) pos[, k]))
-  Pz <- diffs(lapply(seq_len(Kx), function(j) pos[j, ]))
+  Px <- diffs(lapply(seq_len(Kz), function(k) pos[, k]),
+              lapply(seq_len(Kz), function(k) kind[, k]))
+  Pz <- diffs(lapply(seq_len(Kx), function(j) pos[j, ]),
+              lapply(seq_len(Kx), function(j) kind[j, ]))
   # a free line under one shape has the second differences of its
   # coefficients along its own direction; the few elements free in both
   # directions under two shapes are not penalized

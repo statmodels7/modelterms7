@@ -1,3 +1,13 @@
+# modelterms7 0.136.0
+
+* Under two monotone shapes, `scte()` penalizes the slopes in each covariate
+  and the interaction as three separate random walks, so the null space of
+  the penalty is a x + b z + c xz, as for `te()`. Before, one walk ran
+  through the whole matrix of coefficients, and under a strong penalty the
+  surface tended to a single surface with the ratio of the two slopes fixed
+  by the knots; an additive surface was penalized. Under a curvature the
+  walks are unchanged.
+
 # modelterms7 0.135.0
 
 * The shorthand `gas(by = ~f)` groups the filter by the grouping variable of

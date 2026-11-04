@@ -230,3 +230,29 @@ test_that("scte() takes a factor or a numeric by", {
   expect_error(scte(x, z, by_hyper = "level"), "has no 'by'")
   expect_error(term_build(scte(x, z, by = w, by_hyper = "level"), dd), "no factor 'by'")
 })
+
+test_that("under two monotone shapes the penalty leaves the slopes and the interaction free", {
+  # three walks (slopes in x, slopes in z, interaction): a null space of
+  # dimension 3; under a curvature the walks run through the whole matrix
+  S <- function(tm) {
+    p <- length(term_coef_names(tm))
+    as.matrix(penalties7::penalty_hessian(tm@penalty, numeric(p),
+                                          list(lambda1 = 1, lambda2 = 1)))
+  }
+  nullity <- function(M) sum(eigen(M, symmetric = TRUE, only.values = TRUE)$values < 1e-8)
+  for (sh in list(list(st_I, st_I), list(st_I, st_D), list(st_D, st_D))) {
+    tm <- term_build(scte(x, z, shapes = sh, smooths = st_sm), st_d)
+    expect_identical(nullity(S(tm)), 3L)
+    # the additive surface with equal slopes along each margin is unpenalized
+    K <- 5L
+    pos <- tm@build_info$pos
+    g <- numeric(length(term_coef_names(tm)))
+    g[pos[-1L, 1L]] <- -1; g[pos[1L, -1L]] <- -2; g[pos[-1L, -1L]] <- -3
+    expect_equal(sum(g * (S(tm) %*% g)), 0, tolerance = 1e-12)
+  }
+  # under a curvature the penalty is the one of modelterms7 0.135.0
+  tm <- term_build(scte(x, z, shapes = list(shape_convex(), shape_convex()), smooths = st_sm), st_d)
+  expect_identical(nullity(S(tm)), 4L)
+  tm <- term_build(scte(x, z, shapes = list(st_I, shape_concave()), smooths = st_sm), st_d)
+  expect_identical(nullity(S(tm)), 2L)
+})
