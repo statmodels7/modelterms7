@@ -1,3 +1,11 @@
+# modelterms7 (development version)
+
+* The documentation of `term_block_deriv2()`, `term_block_deriv3()` and
+  `term_block_deriv4()` states that a class whose block moves with its
+  coefficients must implement its own method, since the base method returns
+  zeros, and that statmodels7 recognizes a method of its own by comparing it
+  with the base method.
+
 # modelterms7 0.133.0
 
 * `scte()` takes a value. A shape of one margin may set `value = c(at = a,

@@ -1787,6 +1787,16 @@ S7::method(term_block_contract, NlTerm) <- function(term, coef = NULL, A, ...) {
 #' [lasso()], [enet()], [scad()] and [mcp()], when they have no method of
 #' their own.
 #'
+#' A class whose block moves with its coefficients must implement its own
+#' method of this generic, because the zeros of the base method are wrong
+#' for such a block. statmodels7 reads this generic in the exact derivatives
+#' of an outer criterion and uses those derivatives only for a class with a
+#' method of its own; for any other class it computes them by differences.
+#' It recognizes a method of its own by comparing the method registered for
+#' the class with the base method, so a class that registers the base method
+#' itself under its own name is treated as having a method of its own, and
+#' the zeros enter the derivatives.
+#'
 #' For [nl()] the closed form is one order above the one that
 #' [term_block_deriv()] carries. With \eqn{\theta_p = h_p(z_p)} and
 #' \eqn{z_p = Z_p\beta_{(p)}}, writing \eqn{\tilde v_p = Z_p v_{(p)}} and

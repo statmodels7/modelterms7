@@ -59,6 +59,16 @@ with \eqn{S(x) = \sum_q f_{p_1q}h'_qx_q},
 development moves with the coefficients has a design of its own that moves,
 and its third derivative is not written: the method signals an error there.
 
+A class whose block moves with its coefficients must implement its own
+method of this generic, because the zeros of the base method are wrong
+for such a block. statmodels7 reads this generic in the exact derivatives
+of an outer criterion and uses those derivatives only for a class with a
+method of its own; for any other class it computes them by differences.
+It recognizes a method of its own by comparing the method registered for
+the class with the base method, so a class that registers the base method
+itself under its own name is treated as having a method of its own, and
+the zeros enter the derivatives.
+
 For \code{\link[=scs]{scs()}} and \code{\link[=scte]{scte()}} the column \eqn{j} of level \eqn{l} is
 \eqn{G_{il}W_{ij}b'(\gamma_j)}, which depends on the coefficient
 \eqn{\gamma_j} alone, so the entry is

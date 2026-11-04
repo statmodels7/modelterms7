@@ -43,6 +43,16 @@ its number of blocks. A parameter whose development moves is rejected, as
 in \code{\link[=term_block_deriv3]{term_block_deriv3()}}. For \code{\link[=scs]{scs()}} and \code{\link[=scte]{scte()}} the entry is
 \eqn{G_{il}W_{ij}b^{(5)}(\gamma_j)\,v_ju_js_jr_j}, as in
 \code{\link[=term_block_deriv3]{term_block_deriv3()}} one order more.
+
+A class whose block moves with its coefficients must implement its own
+method of this generic, because the zeros of the base method are wrong
+for such a block. statmodels7 reads this generic in the exact derivatives
+of an outer criterion and uses those derivatives only for a class with a
+method of its own; for any other class it computes them by differences.
+It recognizes a method of its own by comparing the method registered for
+the class with the base method, so a class that registers the base method
+itself under its own name is treated as having a method of its own, and
+the zeros enter the derivatives.
 }
 \examples{
 dd <- data.frame(x = seq(0.2, 3, length.out = 20))
