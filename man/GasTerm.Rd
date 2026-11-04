@@ -25,7 +25,8 @@ GasTerm(
   init = character(0),
   init_value = numeric(0),
   init_source = NULL,
-  n_start = integer(0)
+  n_start = integer(0),
+  shorthand = logical(0)
 )
 }
 \arguments{
@@ -104,6 +105,9 @@ computed \code{init_value}, or \code{NULL} when it is not recorded.}
 \item{n_start}{The number of starting points of the term's own parameters
 that a fitting layer tries, a whole number from 1 to 5, as set by
 \code{\link[=gas]{gas()}}.}
+
+\item{shorthand}{\code{TRUE} when the subformulas came from the shorthand
+\code{by = ~f} of \code{\link[=gas]{gas()}}, \code{FALSE} when they were written per parameter.}
 }
 \value{
 An S7 object of class \code{GasTerm}, inheriting from
@@ -128,7 +132,9 @@ unevaluated; \code{NULL} means one series in row order.
 \code{links} holds the links that the caller overrode, and is empty where the
 defaults stand: the identity on the level, the log on each loading, the
 rhobit on each partial autocorrelation. \code{submodels} holds one right-hand
-side per parameter developed over covariates.
+side per parameter developed over covariates. \code{shorthand} is \code{TRUE} when
+these subformulas came from the shorthand \code{by = ~f} of \code{\link[=gas]{gas()}}, which a
+fitting layer reads to decide whether the level is developed.
 
 \code{scaling} is the power \eqn{d} of the expected information that multiplies
 the score; zero leaves the score as it is.

@@ -24,7 +24,9 @@ NULL
 #' `links` holds the links that the caller overrode, and is empty where the
 #' defaults stand: the identity on the level, the log on each loading, the
 #' rhobit on each partial autocorrelation. `submodels` holds one right-hand
-#' side per parameter developed over covariates.
+#' side per parameter developed over covariates. `shorthand` is `TRUE` when
+#' these subformulas came from the shorthand `by = ~f` of [gas()], which a
+#' fitting layer reads to decide whether the level is developed.
 #'
 #' `scaling` is the power \eqn{d} of the expected information that multiplies
 #' the score; zero leaves the score as it is.
@@ -59,6 +61,8 @@ NULL
 #' @param p_cross A named integer vector with the number of lags of the
 #'   score of each other filtered parameter that the level of this term
 #'   loads, or an empty vector for a term that loads its own score only.
+#' @param shorthand `TRUE` when the subformulas came from the shorthand
+#'   `by = ~f` of [gas()], `FALSE` when they were written per parameter.
 #' @param cross_with The distribution parameters whose scores the level of
 #'   this term loads besides its own, in the order of their loadings. It is
 #'   empty until [gas_joint()] fills it from `p_cross`.
@@ -117,7 +121,8 @@ GasTerm <- S7::new_class(
     init = S7::class_character,
     init_value = S7::class_double,
     init_source = S7::class_any,
-    n_start = S7::class_integer
+    n_start = S7::class_integer,
+    shorthand = S7::class_logical
   )
 )
 
@@ -362,7 +367,29 @@ GasTerm <- S7::new_class(
 #'
 #' `by = ~f` (a formula, where a grouping variable is a bare symbol)
 #' is the shorthand giving the same subformula to every parameter; mixing
-#' it with per-parameter formulas is an error. A structural term, and a
+#' it with per-parameter formulas is an error. If `f` contains [random()]
+#' terms and all of them are over the same grouping variable, the filter is
+#' grouped by that variable, so `gas(by = ~ random(~ 1 | id))` filters each
+#' level of `id` as a series of its own, as `by = id` does. If `f` contains
+#' no random term, the filter is one series. Random terms over two or more
+#' grouping variables are rejected; the subformulas are then written per
+#' parameter and the grouping is named in `by`. The term records in its
+#' property `shorthand` that its subformulas came from `by = ~f`.
+#'
+#' The shorthand treats the level according to the equation that carries
+#' the term. In \pkg{statmodels7}, if the equation has an intercept, that is,
+#' if its unpenalized columns span the constant, the shorthand leaves the
+#' level out: \eqn{\omega} has no development and is held at zero beside the
+#' intercept, as the section on the level beside an intercept describes. A
+#' level for each cluster is then a random intercept in the equation, which
+#' the user writes, as in
+#' `y ~ x + random(~ 1 | id) + gas(by = ~ random(~ 1 | id))`. If the
+#' equation has no such intercept, as in
+#' `y ~ 0 + x + gas(by = ~ random(~ 1 | id))`, the shorthand develops
+#' \eqn{\omega} as well, with a population value and one departure per
+#' group.
+#'
+#' A structural term, and a
 #' term whose block moves with its own coefficients ([seg()], [jump()],
 #' [jseg()] and [nl()]), are rejected inside a subformula.
 #' }
@@ -386,6 +413,20 @@ GasTerm <- S7::new_class(
 #' indicators is therefore for reading a filter at given parameters rather
 #' than for fitting one.
 #'
+#' A departure on \eqn{\omega} and a departure on the level of the equation
+#' give the same means at a fixed persistence, since the level of group
+#' \eqn{g} is \eqn{c_g = \omega_g / (1 - \sum_j \xi_j)}. They differ in the
+#' penalty. A random intercept on \eqn{\omega} with standard deviation
+#' \eqn{s} carries the penalty
+#' \deqn{\frac{1}{2 s^2} \sum_g \omega_g^2 =
+#'   \frac{(1 - \sum_j \xi_j)^2}{2 s^2} \sum_g c_g^2,}
+#' which decreases as the persistence approaches one, so the prior on
+#' \eqn{\omega} pulls the persistence towards one. A random intercept in
+#' the equation, as in `y ~ x + random(~ 1 | id) + gas(by = id)`, penalizes
+#' the levels \eqn{c_g} themselves and is the usual way to give each cluster
+#' its own level. `omega ~ random(~ 1 | id)` places the prior on
+#' \eqn{\omega} instead, and is used when that is the intended model.
+#'
 #' The arguments `deviations` and `penalty` are not accepted and are
 #' rejected by name; the subformula takes their place.
 #' }
@@ -407,9 +448,14 @@ GasTerm <- S7::new_class(
 #'   in the place of `p` or `q` is rejected.
 #' @param by An optional grouping variable, evaluated in the data; each
 #'   group is filtered independently, from its own starting level. A
-#'   formula here is the shorthand that gives the same subformula to every
-#'   parameter of the filter (not to the cross loadings), and the term then
-#'   does not imply any grouping.
+#'   one-sided formula here is the shorthand that gives the same subformula
+#'   to every parameter of the filter (not to the cross loadings). If the
+#'   subformula contains [random()] terms over one grouping variable, the
+#'   filter is grouped by that variable; with no random term it is one
+#'   series, and random terms over more than one grouping variable are
+#'   rejected. Beside an intercept in the equation, \pkg{statmodels7} leaves
+#'   the level out of the shorthand and holds it at zero; see the section on
+#'   a parameter developed with covariates.
 #' @param time An optional ordering variable, evaluated in the data.
 #' @param scaling A single finite number \eqn{d}: the score is multiplied by
 #'   the expected information to the power \eqn{-d}. Defaults to 0, the score
@@ -567,6 +613,7 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
     stop("'n_start' must be a single whole number from 1 to 5.", call. = FALSE)
   }
   by <- substitute(by)
+  shorthand <- FALSE
   base <- .gas_base_params(p, q)
   submodels <- .gas_gather_submodels(list(...), base)
   xs <- names(submodels)[.gas_is_cross_name(names(submodels))]
@@ -589,7 +636,23 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
                  "subformula needs an intercept or a term."), call. = FALSE)
     }
     submodels <- stats::setNames(rep(list(f), length(base)), base)
-    by <- NULL
+    # the random effects of the subformula are per group, so the filter runs
+    # per group as well: a single series through every group would carry
+    # one group's last level into the next group's first observation
+    groups <- .gas_shorthand_groups(f)
+    if (length(groups) > 1L) {
+      stop(sprintf(paste0(
+        "the subformula of 'by = ~f' has random effects over %d grouping ",
+        "variables (%s),\n  and the filter runs per group of one of them. ",
+        "Write the subformulas per parameter\n  and name the grouping in ",
+        "'by', as in\n  gas(kappa1 ~ random(~ 1 | %s), pacf1 ~ ",
+        "random(~ 1 | %s), by = %s)."),
+        length(groups), paste(names(groups), collapse = ", "),
+        names(groups)[2L], names(groups)[2L], names(groups)[1L]),
+        call. = FALSE)
+    }
+    by <- if (length(groups)) groups[[1L]] else NULL
+    shorthand <- TRUE
   }
   if (!is.null(links)) {
     if (!is.list(links) || is.null(names(links)) || anyNA(names(links)) ||
@@ -621,7 +684,37 @@ gas <- function(p = 1, q = 1, ..., by = NULL, time = NULL, scaling = 0,
           cross_with = character(0),
           init = init,
           n_start = as.integer(n_start),
+          shorthand = shorthand,
           build_info = list())
+}
+
+# the grouping variables of the random() terms of a shorthand subformula,
+# keyed by their deparsed expression so that one variable written twice
+# counts once; a term whose formula cannot be read here is left to report
+# its own error when it is built
+.gas_shorthand_groups <- function(f) {
+  tt <- tryCatch(stats::terms(f), error = function(e) NULL)
+  if (is.null(tt)) return(list())
+  env <- environment(f)
+  if (is.null(env)) env <- baseenv()
+  out <- list()
+  for (lb in attr(tt, "term.labels")) {
+    ex <- str2lang(lb)
+    if (!is.call(ex)) next
+    fn <- ex[[1L]]
+    is_random <- identical(fn, as.name("random")) ||
+      (is.call(fn) && length(fn) == 3L &&
+         as.character(fn[[1L]]) %in% c("::", ":::") &&
+         identical(fn[[3L]], as.name("random")))
+    if (!is_random) next
+    g <- tryCatch({
+      mc <- match.call(random, ex)
+      .random_parts(eval(mc$formula, env))$group
+    }, error = function(e) NULL)
+    if (is.null(g)) next
+    out[[deparse1(g)]] <- g
+  }
+  out
 }
 
 # the per-parameter subformulas of `...`: two-sided formulas whose left

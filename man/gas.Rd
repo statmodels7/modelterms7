@@ -39,9 +39,14 @@ in the place of \code{p} or \code{q} is rejected.}
 
 \item{by}{An optional grouping variable, evaluated in the data; each
 group is filtered independently, from its own starting level. A
-formula here is the shorthand that gives the same subformula to every
-parameter of the filter (not to the cross loadings), and the term then
-does not imply any grouping.}
+one-sided formula here is the shorthand that gives the same subformula
+to every parameter of the filter (not to the cross loadings). If the
+subformula contains \code{\link[=random]{random()}} terms over one grouping variable, the
+filter is grouped by that variable; with no random term it is one
+series, and random terms over more than one grouping variable are
+rejected. Beside an intercept in the equation, \pkg{statmodels7} leaves
+the level out of the shorthand and holds it at zero; see the section on
+a parameter developed with covariates.}
 
 \item{time}{An optional ordering variable, evaluated in the data.}
 
@@ -319,7 +324,29 @@ pass and the curvature all run the general recursion.
 
 \code{by = ~f} (a formula, where a grouping variable is a bare symbol)
 is the shorthand giving the same subformula to every parameter; mixing
-it with per-parameter formulas is an error. A structural term, and a
+it with per-parameter formulas is an error. If \code{f} contains \code{\link[=random]{random()}}
+terms and all of them are over the same grouping variable, the filter is
+grouped by that variable, so \code{gas(by = ~ random(~ 1 | id))} filters each
+level of \code{id} as a series of its own, as \code{by = id} does. If \code{f} contains
+no random term, the filter is one series. Random terms over two or more
+grouping variables are rejected; the subformulas are then written per
+parameter and the grouping is named in \code{by}. The term records in its
+property \code{shorthand} that its subformulas came from \code{by = ~f}.
+
+The shorthand treats the level according to the equation that carries
+the term. In \pkg{statmodels7}, if the equation has an intercept, that is,
+if its unpenalized columns span the constant, the shorthand leaves the
+level out: \eqn{\omega} has no development and is held at zero beside the
+intercept, as the section on the level beside an intercept describes. A
+level for each cluster is then a random intercept in the equation, which
+the user writes, as in
+\code{y ~ x + random(~ 1 | id) + gas(by = ~ random(~ 1 | id))}. If the
+equation has no such intercept, as in
+\code{y ~ 0 + x + gas(by = ~ random(~ 1 | id))}, the shorthand develops
+\eqn{\omega} as well, with a population value and one departure per
+group.
+
+A structural term, and a
 term whose block moves with its own coefficients (\code{\link[=seg]{seg()}}, \code{\link[=jump]{jump()}},
 \code{\link[=jseg]{jseg()}} and \code{\link[=nl]{nl()}}), are rejected inside a subformula.
 }
@@ -342,6 +369,20 @@ random effect and it is identified the same way, there by a variance
 component, here by the penalty. An unpenalized development over group
 indicators is therefore for reading a filter at given parameters rather
 than for fitting one.
+
+A departure on \eqn{\omega} and a departure on the level of the equation
+give the same means at a fixed persistence, since the level of group
+\eqn{g} is \eqn{c_g = \omega_g / (1 - \sum_j \xi_j)}. They differ in the
+penalty. A random intercept on \eqn{\omega} with standard deviation
+\eqn{s} carries the penalty
+\deqn{\frac{1}{2 s^2} \sum_g \omega_g^2 =
+  \frac{(1 - \sum_j \xi_j)^2}{2 s^2} \sum_g c_g^2,}
+which decreases as the persistence approaches one, so the prior on
+\eqn{\omega} pulls the persistence towards one. A random intercept in
+the equation, as in \code{y ~ x + random(~ 1 | id) + gas(by = id)}, penalizes
+the levels \eqn{c_g} themselves and is the usual way to give each cluster
+its own level. \code{omega ~ random(~ 1 | id)} places the prior on
+\eqn{\omega} instead, and is used when that is the intended model.
 
 The arguments \code{deviations} and \code{penalty} are not accepted and are
 rejected by name; the subformula takes their place.

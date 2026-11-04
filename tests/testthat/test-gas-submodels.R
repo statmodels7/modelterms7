@@ -21,6 +21,44 @@ test_that("the syntax is validated where it is written", {
   # by as a formula is the shorthand: every parameter gets the subformula
   sh <- gas(p = 1, q = 1, by = ~z)
   expect_identical(names(sh@submodels), c("omega", "kappa1", "pacf1"))
+  # the term records where its subformulas came from, for a fitting layer
+  # that leaves the level out beside an intercept
+  expect_true(sh@shorthand)
+  expect_false(gas(p = 1, q = 1, kappa1 ~ z)@shorthand)
+  # with no random term the shorthand implies no grouping
+  expect_null(sh@by)
+})
+
+test_that("the shorthand groups the filter by its random terms' variable", {
+  # rows shuffled, so that the order within a group comes from `time`
+  set.seed(3)
+  dp <- data.frame(t = rep(1:15, 4), id = factor(rep(1:4, each = 15)),
+                   z = rnorm(60))
+  dp <- dp[sample(nrow(dp)), ]
+  sh <- gas(p = 1, q = 1, by = ~ random(~ 1 | id), time = t)
+  expect_identical(sh@by, quote(id))
+  pp <- gas(p = 1, q = 1, omega ~ random(~ 1 | id),
+            kappa1 ~ random(~ 1 | id), pacf1 ~ random(~ 1 | id),
+            by = id, time = t)
+  b1 <- term_build(sh, dp)
+  b2 <- term_build(pp, dp)
+  expect_identical(b1@build_info$order, b2@build_info$order)
+  expect_length(b1@build_info$order, 4L)
+  for (r in b1@build_info$order) {
+    expect_identical(dp$t[r], 1:15)
+    expect_length(unique(dp$id[r]), 1L)
+  }
+  expect_identical(term_params(b1), term_params(b2))
+  # one variable written in two random terms, or through the namespace,
+  # is one grouping
+  expect_identical(gas(by = ~ random(~ 1 | id) + random(~ z | id))@by,
+                   quote(id))
+  expect_identical(gas(by = ~ z + modelterms7::random(~ 1 | id))@by,
+                   quote(id))
+  # two grouping variables cannot both be the filter's grouping
+  expect_error(gas(p = 1, q = 1,
+                   by = ~ random(~ 1 | id) + random(~ 1 | g)),
+               "kappa1 ~ random")
 })
 
 test_that("a development of ~1 is the scalar filter in other coordinates", {
