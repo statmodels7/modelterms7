@@ -52,9 +52,9 @@ for the method.
 ``` r
 d <- data.frame(x = rnorm(6), g = factor(rep(c("a", "b", "c"), 2)))
 term_within(term_build(random(~ 1 + x | g), d), d[1:2, ])
-#>   (Intercept)          x
-#> 1           1  0.3981059
-#> 2           1 -0.6120264
+#>   (Intercept)           x
+#> 1           1 -0.05612874
+#> 2           1 -0.15579551
 term_within(term_build(linpar(~ x), d), d)
 #> NULL
 ```

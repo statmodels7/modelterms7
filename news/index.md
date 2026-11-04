@@ -1,5 +1,21 @@
 # Changelog
 
+## modelterms7 0.134.0
+
+- [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)
+  takes the trace on the range of the penalized information where that
+  matrix is singular, in place of an error: a direction that neither the
+  data nor the penalty informs counts zero. A shape-constrained term at
+  the vertex of its shape, whose block vanishes, counts the free
+  coordinates of its shape and nothing else.
+- New generic
+  [`term_vertex()`](https://statmodels7.github.io/modelterms7/reference/term_vertex.md),
+  which names the coefficients of the levels of
+  [`scs()`](https://statmodels7.github.io/modelterms7/reference/scs.md)
+  and
+  [`scte()`](https://statmodels7.github.io/modelterms7/reference/scte.md)
+  whose constrained coordinates are all at their bound.
+
 ## modelterms7 0.133.1
 
 - The documentation of

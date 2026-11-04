@@ -481,6 +481,8 @@ B-spline coefficients, with a penalty on the free coefficients.
   : S7 Class for Shape Constraints
 - [`shape_map()`](https://statmodels7.github.io/modelterms7/reference/shape_map.md)
   : The Map of a Shape Constraint
+- [`term_vertex()`](https://statmodels7.github.io/modelterms7/reference/term_vertex.md)
+  : Whether a Shape-Constrained Term Is at the Vertex of Its Shape
 - [`shape_start()`](https://statmodels7.github.io/modelterms7/reference/shape_start.md)
   : The Starting Value of a Shape Constraint
 - [`shape_unimodal()`](https://statmodels7.github.io/modelterms7/reference/shape_located.md)
