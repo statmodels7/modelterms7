@@ -1,4 +1,4 @@
-# modelterms7 (development version)
+# modelterms7 0.133.1
 
 * The documentation of `term_block_deriv2()`, `term_block_deriv3()` and
   `term_block_deriv4()` states that a class whose block moves with its
