@@ -28,7 +28,9 @@ term_vertex(term, coef = NULL, ...)
 ## Value
 
 A character vector of coefficient names, with the attribute `complete`,
-`TRUE` when every level that carries a shape is at the vertex.
+`TRUE` when every level that carries a shape is at the vertex, and for
+[`scte()`](https://statmodels7.github.io/modelterms7/reference/scte.md)
+the attribute `part`.
 
 ## Details
 
@@ -44,6 +46,15 @@ the inner fit stops somewhere on the way to \\-\infty\\ (measured
 between -67 and -320), and a curve whose every constrained slope is that
 small is the curve at the bound to that accuracy. The base method
 returns an empty vector, which is right for a term without a shape.
+
+Under two monotone shapes,
+[`scte()`](https://statmodels7.github.io/modelterms7/reference/scte.md)
+has a part that can reach its bound on its own: the elements constrained
+in both directions, which carry the interaction. When the term is not at
+its vertex and all of them are at their bound, the method returns their
+names with the attribute `part` set to `"interaction"`; the surface is
+then additive on the scale of the link. A vertex of the whole term has
+`part` set to `"term"`.
 
 ## Examples
 

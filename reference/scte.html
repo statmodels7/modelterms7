@@ -13,7 +13,7 @@ formula of any distribution parameter, like te()."><meta property="og:image" con
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.135.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.136.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -211,7 +211,12 @@ rest of the model. <code>lambda1</code> penalizes the first differences of the
 constrained coordinates of \(\gamma\) along \(x\), and <code>lambda2</code> those
 along \(z\); the free row or column has the second differences of its
 coefficients along its own direction under the smoothing parameter of that
-direction.</p>
+direction. Under two monotone shapes the elements constrained in \(x\)
+only (the slopes in \(x\) at the level of \(z\)), in \(z\) only, and
+in both (the interaction) are differenced only within their own kind, so
+under a strong penalty the surface tends to \(a x + b z + c\,x z\) with
+\(c\) of the sign of the interaction, as for <code><a href="te.html">te()</a></code>. Under a curvature
+the differences run through the whole matrix.</p>
     </div>
     <div class="section level2">
     <h2 id="varying-the-surface-by-another-variable">Varying the surface by another variable<a class="anchor" aria-label="anchor" href="#varying-the-surface-by-another-variable"></a></h2>

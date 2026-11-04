@@ -11,7 +11,7 @@ there are none."><meta property="og:image" content="https://statmodels7.github.i
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.135.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.136.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -69,7 +69,7 @@ for the coefficients that the term carries.</p></dd>
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A character vector of coefficient names, with the attribute
 <code>complete</code>, <code>TRUE</code> when every level that carries a shape is at the
-vertex.</p>
+vertex, and for <code><a href="scte.html">scte()</a></code> the attribute <code>part</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -85,6 +85,12 @@ the inner fit stops somewhere on the way to \(-\infty\) (measured
 between -67 and -320), and a curve whose every constrained slope is that
 small is the curve at the bound to that accuracy. The base method returns
 an empty vector, which is right for a term without a shape.</p>
+<p>Under two monotone shapes, <code><a href="scte.html">scte()</a></code> has a part that can reach its bound on
+its own: the elements constrained in both directions, which carry the
+interaction. When the term is not at its vertex and all of them are at
+their bound, the method returns their names with the attribute <code>part</code>
+set to <code>"interaction"</code>; the surface is then additive on the scale of the
+link. A vertex of the whole term has <code>part</code> set to <code>"term"</code>.</p>
     </div>
 
     <div class="section level2">
