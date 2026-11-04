@@ -91,6 +91,28 @@ test_that("every coefficient vector gives the curvature shapes", {
                 15L)
 })
 
+test_that("a minimum slope holds everywhere under random coefficients", {
+  set.seed(56)
+  xg <- seq(0.02, 0.98, length.out = 49); zg <- seq(0.02, 0.98, length.out = 25)
+  for (sh in list(list(shape_increasing(min_slope = 2), NULL),
+                  list(shape_decreasing(min_slope = 1.5), shape_increasing()),
+                  list(shape_increasing(min_slope = 2), shape_decreasing(min_slope = 1)),
+                  list(shape_increasing(min_slope = 2), shape_convex()))) {
+    tm <- term_build(scte(x, z, shapes = sh, smooths = st_sm), st_d)
+    p <- length(term_coef_names(tm))
+    mx <- sh[[1L]]@shape_params$min_slope * sh[[1L]]@shape_params$sign
+    mz <- if (S7::S7_inherits(sh[[2L]], ShapeMonotone)) sh[[2L]]@shape_params$min_slope *
+      sh[[2L]]@shape_params$sign else 0
+    for (r in 1:5) {
+      f <- matrix(term_value(tm, coef = stats::rnorm(p, -1, 1.5), newdata = expand.grid(x = xg, z = zg)),
+                  length(xg), length(zg))
+      expect_true(all(sign(mx) * diff(f) / diff(xg[1:2]) >= abs(mx) * (1 - 1e-8)))
+      if (mz != 0) expect_true(all(sign(mz) * t(diff(t(f))) / diff(zg[1:2]) >= abs(mz) * (1 - 1e-8)))
+    }
+    expect_identical(qr(cbind(1, term_matrix(term_refresh(tm, stats::rnorm(p, -1, 1)))))$rank, p + 1L)
+  }
+})
+
 test_that("a decreasing margin is the increasing one in the reflected covariate", {
   set.seed(54)
   dd <- transform(st_d, xn = -x)
@@ -116,7 +138,10 @@ test_that("scte() names two smoothing parameters and prints its shapes", {
 test_that("scte() rejects what it cannot fit", {
   expect_error(scte(x, z, shapes = list(NULL, NULL)), "te() is the free surface", fixed = TRUE)
   expect_error(scte(x, z, shapes = list(shape_unimodal(), NULL)), "curvature shape")
-  expect_error(scte(x, z, shapes = list(shape_increasing(min_slope = 1), NULL)), "min_slope")
+  expect_error(scte(x, z, shapes = list(shape_increasing(min_slope = c(a = 1, b = 2)), NULL)),
+               "values by level")
+  expect_error(scte(x, z, shapes = list(shape_convex(slope = c(at = 0.5, value = 0)), NULL)),
+               "slope at a point")
   expect_error(scte(x, z, shapes = list(st_I)), "two elements")
   expect_error(scte(x, z, smooths = basis7::fourier_smooth()), "bspline_smooth")
   expect_error(term_build(scte(x, z), data.frame(x = c(NA, runif(9)), z = runif(10))), "missing")

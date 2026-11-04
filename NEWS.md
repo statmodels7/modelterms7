@@ -1,3 +1,11 @@
+# modelterms7 0.132.0
+
+* A monotone shape of `scte()` may set `min_slope`: the derivative of the
+  surface in that covariate is then at least `min_slope` in absolute value
+  for every value of the other covariate. The bound is on the elements of
+  the coefficients that are constrained in that direction and free in the
+  other.
+
 # modelterms7 0.131.0
 
 * `scte()` takes curvature shapes on either margin: `shape_convex()`,

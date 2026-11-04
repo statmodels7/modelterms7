@@ -23,8 +23,10 @@ scte(
 monotone shape (\code{\link[=shape_increasing]{shape_increasing()}}, \code{\link[=shape_decreasing]{shape_decreasing()}}), a curvature
 shape (\code{\link[=shape_convex]{shape_convex()}}, \code{\link[=shape_concave]{shape_concave()}}, \code{\link[=shape_increasing_convex]{shape_increasing_convex()}}
 and the other three combinations) or \code{NULL} for a free margin, and at
-least one is a shape. A shape here takes neither \code{min_slope} nor a value
-or a slope at a point.}
+least one is a shape. A monotone shape may set \code{min_slope}, a single
+value, and then the derivative in its covariate is at least \code{min_slope}
+in absolute value everywhere; a shape here takes neither a value or a
+slope at a point nor values by level.}
 
 \item{smooths}{A \pkg{basis7} smoother whose basis is a B-spline, or a list
 of two, one per covariate: \code{\link[basis7:bspline_smooth]{basis7::bspline_smooth()}} (the default, with
@@ -66,7 +68,11 @@ with a shape writes its direction of \eqn{\Theta} through the map
 \code{\link[=scs]{scs()}} does for one covariate: the coordinates that the shape constrains
 (the increments of a monotone shape, the second differences of a convex or
 concave one) are nonnegative through the inverse of the log link, and the
-others (the level, and the slope of a plain curvature) are free.
+others (the level, and the slope of a plain curvature) are free. A
+minimum slope bounds the elements of \eqn{B} on a coordinate that is
+constrained in that direction and free in the other: the slope of a column
+of \eqn{\Theta} is a convex combination of them, and the elements
+constrained in both directions add to it.
 
 With the shape on \eqn{x} alone, \eqn{\Theta = A_x B}. Every column of
 \eqn{\Theta} has the shape, and since the basis in \eqn{z} is nonnegative

@@ -62,7 +62,11 @@ ScteTerm <- S7::new_class(
 #' [scs()] does for one covariate: the coordinates that the shape constrains
 #' (the increments of a monotone shape, the second differences of a convex or
 #' concave one) are nonnegative through the inverse of the log link, and the
-#' others (the level, and the slope of a plain curvature) are free.
+#' others (the level, and the slope of a plain curvature) are free. A
+#' minimum slope bounds the elements of \eqn{B} on a coordinate that is
+#' constrained in that direction and free in the other: the slope of a column
+#' of \eqn{\Theta} is a convex combination of them, and the elements
+#' constrained in both directions add to it.
 #'
 #' With the shape on \eqn{x} alone, \eqn{\Theta = A_x B}. Every column of
 #' \eqn{\Theta} has the shape, and since the basis in \eqn{z} is nonnegative
@@ -130,8 +134,10 @@ ScteTerm <- S7::new_class(
 #'   monotone shape ([shape_increasing()], [shape_decreasing()]), a curvature
 #'   shape ([shape_convex()], [shape_concave()], [shape_increasing_convex()]
 #'   and the other three combinations) or `NULL` for a free margin, and at
-#'   least one is a shape. A shape here takes neither `min_slope` nor a value
-#'   or a slope at a point.
+#'   least one is a shape. A monotone shape may set `min_slope`, a single
+#'   value, and then the derivative in its covariate is at least `min_slope`
+#'   in absolute value everywhere; a shape here takes neither a value or a
+#'   slope at a point nor values by level.
 #' @param smooths A \pkg{basis7} smoother whose basis is a B-spline, or a list
 #'   of two, one per covariate: [basis7::bspline_smooth()] (the default, with
 #'   six basis functions) or [basis7::pspline_smooth()]. Only the bases are
@@ -193,10 +199,9 @@ scte <- function(x, z, shapes = list(shape_increasing(), NULL),
                   "or NULL."), call. = FALSE)
     }
     p <- sh@shape_params
-    if (length(.shape_level_names(sh)) || any(p$min_slope > 0) || !is.null(p$value) ||
-        !is.null(p[["slope"]])) {
-      stop("a shape of scte() takes neither 'min_slope' nor a value or a slope at a point.",
-           call. = FALSE)
+    if (length(.shape_level_names(sh)) || !is.null(p$value) || !is.null(p[["slope"]])) {
+      stop(paste0("a shape of scte() takes neither a value or a slope at a point nor ",
+                  "values by level."), call. = FALSE)
     }
   }
   if (is.null(shapes[[1L]]) && is.null(shapes[[2L]])) {
@@ -258,7 +263,8 @@ scte <- function(x, z, shapes = list(shape_increasing(), NULL),
   K <- length(xi)
   if (is.null(shape)) {
     return(list(basis = b, K = K, rev = FALSE, xi = xi, A = diag(K), cons = integer(0),
-                free = seq_len(K), sigma = rep(1, K), shaped = FALSE, shape = NULL))
+                free = seq_len(K), sigma = rep(1, K), lower = numeric(K), shaped = FALSE,
+                shape = NULL))
   }
   xr <- if (rev) -rev(xi) else xi
   eff <- .scte_effective(shape, s, rev)
@@ -266,7 +272,8 @@ scte <- function(x, z, shapes = list(shape_increasing(), NULL),
   sigma <- apply(mp$A, 2L, function(a) if (all(a >= 0)) 1 else if (all(a <= 0)) -1 else NA_real_)
   if (anyNA(sigma)) stop("internal: a column of the shape's map has no sign.", call. = FALSE)
   list(basis = b, K = K, rev = rev, xi = xr, A = mp$A, cons = mp$cons,
-       free = setdiff(seq_len(K), mp$cons), sigma = sigma, shaped = TRUE, shape = eff)
+       free = setdiff(seq_len(K), mp$cons), sigma = sigma, lower = mp$lower, shaped = TRUE,
+       shape = eff)
 }
 
 # THE ORIENTATION: the sign of the surface and the reflections of the shaped
@@ -437,8 +444,21 @@ S7::method(term_build, ScteTerm) <- function(term, data, ...) {
     p <- p + 1L
   }
   cons <- sort(unique(pos[pos > 0L]))
+  # A MINIMUM SLOPE bounds the elements on a coordinate constrained in one
+  # direction and free in the other (the level, the hat functions, or every
+  # element under a free margin): the slope of a column of Theta is a convex
+  # combination of them, and the elements constrained in both directions add
+  # to it with their sign
+  lower <- numeric(p)
+  for (j in seq_len(Kx)) for (k in seq_len(Kz)) {
+    if (pos[j, k] == 0L) next
+    cx <- j %in% mx$cons
+    cz <- k %in% mz$cons
+    if (cx && !cz) lower[pos[j, k]] <- mx$lower[j]
+    if (cz && !cx) lower[pos[j, k]] <- mz$lower[k]
+  }
   bp <- list(mx = mx, mz = mz, M = M, pos = pos, nf = nf, s = orient$s, lines = lines,
-             pieces = list(list(cons = cons, lower = numeric(p), drop_b = integer(0))),
+             pieces = list(list(cons = cons, lower = lower, drop_b = integer(0))),
              piece_of = rep(1L, m), link = linkfunctions7::log_link(), nc = p, m = m,
              ncoef = p * m, ix = matrix(seq_len(p * m), p, m), C = NULL,
              n = length(xs[[1L]]), xs = xs, by = term@by, by_kind = kind,
@@ -562,6 +582,14 @@ S7::method(term_coef_start, ScteTerm) <- function(term, target = NULL, ...) {
       g[pos[pos > 0L]] <- log(if (bp$mx$shaped) sx else sz)
     }
     out[, l] <- g
+  }
+  # a slope set above is the coordinate itself; above a minimum slope the
+  # coordinate is the excess
+  lw <- bp$pieces[[1L]]$lower
+  if (any(lw > 0)) {
+    fl <- .shape_floor(bp$xs[[1L]], target)
+    i <- which(lw > 0)
+    out[i, ] <- log(pmax(exp(out[i, , drop = FALSE]) - lw[i], fl))
   }
   as.vector(out)
 }
