@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.130.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.133.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,20 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.133.0" id="modelterms7-01330">modelterms7 0.133.0<a class="anchor" aria-label="anchor" href="#modelterms7-01330"></a></h2>
+<ul><li>
+<code><a href="../reference/scte.html">scte()</a></code> takes a value. A shape of one margin may set <code>value = c(at = a, value = v)</code>, and then the surface equals <code>v</code> along the line at <code>a</code> of that covariate, for every value of the other; with the other margin free the condition is exact, and with a shape on both margins the coefficients that the basis at <code>a</code> touches are zero where the other covariate is constrained, so the surface is flat in it over that band. The new argument <code>point = c(&lt;x&gt; = a, &lt;z&gt; = b, value = v)</code> fixes the value at one point. The term takes one value.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.132.0" id="modelterms7-01320">modelterms7 0.132.0<a class="anchor" aria-label="anchor" href="#modelterms7-01320"></a></h2>
+<ul><li>A monotone shape of <code><a href="../reference/scte.html">scte()</a></code> may set <code>min_slope</code>: the derivative of the surface in that covariate is then at least <code>min_slope</code> in absolute value for every value of the other covariate. The bound is on the elements of the coefficients that are constrained in that direction and free in the other.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.131.0" id="modelterms7-01310">modelterms7 0.131.0<a class="anchor" aria-label="anchor" href="#modelterms7-01310"></a></h2>
+<ul><li>
+<code><a href="../reference/scte.html">scte()</a></code> takes curvature shapes on either margin: <code><a href="../reference/shape_constructors.html">shape_convex()</a></code>, <code><a href="../reference/shape_constructors.html">shape_concave()</a></code> and their four combinations with a monotonicity, alone or with a monotone or curvature shape on the other margin. Every column of the tensor-product coefficients has the shape in the first covariate and every row the shape in the second, so the surface has both shapes for every coefficient vector. A convex margin with a concave one drops the elements constrained in both directions, and the curvature in one covariate then varies only linearly with the other.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.130.0" id="modelterms7-01300">modelterms7 0.130.0<a class="anchor" aria-label="anchor" href="#modelterms7-01300"></a></h2>
 <ul><li>

@@ -1,5 +1,40 @@
 # Changelog
 
+## modelterms7 0.133.0
+
+- [`scte()`](https://statmodels7.github.io/modelterms7/reference/scte.md)
+  takes a value. A shape of one margin may set
+  `value = c(at = a, value = v)`, and then the surface equals `v` along
+  the line at `a` of that covariate, for every value of the other; with
+  the other margin free the condition is exact, and with a shape on both
+  margins the coefficients that the basis at `a` touches are zero where
+  the other covariate is constrained, so the surface is flat in it over
+  that band. The new argument `point = c(<x> = a, <z> = b, value = v)`
+  fixes the value at one point. The term takes one value.
+
+## modelterms7 0.132.0
+
+- A monotone shape of
+  [`scte()`](https://statmodels7.github.io/modelterms7/reference/scte.md)
+  may set `min_slope`: the derivative of the surface in that covariate
+  is then at least `min_slope` in absolute value for every value of the
+  other covariate. The bound is on the elements of the coefficients that
+  are constrained in that direction and free in the other.
+
+## modelterms7 0.131.0
+
+- [`scte()`](https://statmodels7.github.io/modelterms7/reference/scte.md)
+  takes curvature shapes on either margin:
+  [`shape_convex()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md),
+  [`shape_concave()`](https://statmodels7.github.io/modelterms7/reference/shape_constructors.md)
+  and their four combinations with a monotonicity, alone or with a
+  monotone or curvature shape on the other margin. Every column of the
+  tensor-product coefficients has the shape in the first covariate and
+  every row the shape in the second, so the surface has both shapes for
+  every coefficient vector. A convex margin with a concave one drops the
+  elements constrained in both directions, and the curvature in one
+  covariate then varies only linearly with the other.
+
 ## modelterms7 0.130.0
 
 - [`term_block_deriv3()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv3.md)

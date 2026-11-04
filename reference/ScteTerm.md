@@ -2,7 +2,8 @@
 
 `ScteTerm` is the subclass of
 [`additive_term()`](https://statmodels7.github.io/modelterms7/reference/additive_term.md)
-for a smooth of two covariates that is monotone in one or both of them:
+for a smooth of two covariates with a shape (monotone, convex or
+concave, or a combination) in one or both of them:
 [`scte()`](https://statmodels7.github.io/modelterms7/reference/scte.md)
 constructs it. The tensor-product coefficients are written through the
 maps of the margins' shapes, so the contribution is nonlinear in the
@@ -123,7 +124,7 @@ ScteTerm(
 
 - shapes:
 
-  A list of two elements, each a monotone
+  A list of two elements, each a monotone or curvature
   [shape_constraint](https://statmodels7.github.io/modelterms7/reference/shape_constraint.md)
   or `NULL` for a free margin.
 
