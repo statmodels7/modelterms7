@@ -939,6 +939,13 @@ S7::method(term_hyper_start, ScsTerm) <- function(term, ...) {
 #' small is the curve at the bound to that accuracy. The base method returns
 #' an empty vector, which is right for a term without a shape.
 #'
+#' Under two monotone shapes, [scte()] has a part that can reach its bound on
+#' its own: the elements constrained in both directions, which carry the
+#' interaction. When the term is not at its vertex and all of them are at
+#' their bound, the method returns their names with the attribute `part`
+#' set to `"interaction"`; the surface is then additive on the scale of the
+#' link. A vertex of the whole term has `part` set to `"term"`.
+#'
 #' @param term A built term.
 #' @param coef The coefficients, one per coefficient of the term, or `NULL`
 #'   for the coefficients that the term carries.
@@ -946,7 +953,7 @@ S7::method(term_hyper_start, ScsTerm) <- function(term, ...) {
 #'
 #' @return A character vector of coefficient names, with the attribute
 #'   `complete`, `TRUE` when every level that carries a shape is at the
-#'   vertex.
+#'   vertex, and for [scte()] the attribute `part`.
 #'
 #' @examples
 #' set.seed(1)

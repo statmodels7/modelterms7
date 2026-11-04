@@ -566,9 +566,9 @@ S7::method(term_build, ScteTerm) <- function(term, data, ...) {
   # the walks stay chained: separate, 3 to 4 fits in 20 did not converge.
   split <- both && S7::S7_inherits(mx$shape, ShapeMonotone) &&
     S7::S7_inherits(mz$shape, ShapeMonotone)
-  kind <- matrix(0L, Kx, Kz)
+  elkind <- matrix(0L, Kx, Kz)
   for (j in seq_len(Kx)) for (k in seq_len(Kz)) {
-    kind[j, k] <- (j %in% mx$cons) + 2L * (k %in% mz$cons)
+    elkind[j, k] <- (j %in% mx$cons) + 2L * (k %in% mz$cons)
   }
   diffs <- function(lines, kinds) {
     rows <- list()
@@ -584,9 +584,9 @@ S7::method(term_build, ScteTerm) <- function(term, data, ...) {
     if (length(rows)) crossprod(do.call(rbind, rows)) else matrix(0, p, p)
   }
   Px <- diffs(lapply(seq_len(Kz), function(k) pos[, k]),
-              lapply(seq_len(Kz), function(k) kind[, k]))
+              lapply(seq_len(Kz), function(k) elkind[, k]))
   Pz <- diffs(lapply(seq_len(Kx), function(j) pos[j, ]),
-              lapply(seq_len(Kx), function(j) kind[j, ]))
+              lapply(seq_len(Kx), function(j) elkind[j, ]))
   # a free line under one shape has the second differences of its
   # coefficients along its own direction; the few elements free in both
   # directions under two shapes are not penalized
@@ -639,7 +639,8 @@ S7::method(term_build, ScteTerm) <- function(term, data, ...) {
     if (cx && !cz) lower[pos[j, k]] <- mx$lower[j]
     if (cz && !cx) lower[pos[j, k]] <- mz$lower[k]
   }
-  bp <- list(mx = mx, mz = mz, M = M, pos = pos, nf = nf, s = orient$s, lines = lines,
+  bp <- list(mx = mx, mz = mz, M = M, pos = pos, elkind = elkind, split = split,
+             nf = nf, s = orient$s, lines = lines,
              theta0 = theta0, point = point,
              pieces = list(list(cons = cons, lower = lower, drop_b = integer(0))),
              piece_of = rep(1L, m), link = linkfunctions7::log_link(), nc = p, m = m,
@@ -842,4 +843,32 @@ S7::method(print, ScteTerm) <- function(x, ...) {
   invisible(x)
 }
 
-S7::method(term_vertex, ScteTerm) <- function(term, coef = NULL, ...) .shape_vertex(term, coef)
+S7::method(term_vertex, ScteTerm) <- function(term, coef = NULL, ...) {
+  out <- .shape_vertex(term, coef)
+  if (length(out)) {
+    attr(out, "part") <- "term"
+    return(out)
+  }
+  # UNDER TWO MONOTONE SHAPES the interaction is a walk of its own, and when
+  # the surface is additive every element constrained in both directions
+  # goes to its bound as a block (misure_scs/libro, m_int.R: the whole block
+  # or none of it in 30 fits of 30); the elements of one kind only stay
+  # interior. Those coefficients are then named, with the part they make up.
+  bp <- term@build_info
+  if (!isTRUE(bp$split)) return(out)
+  coef <- .scs_coef(bp, coef)
+  inter <- bp$pos[bp$elkind == 3L & bp$pos > 0L]
+  pc <- bp$pieces[[1L]]
+  for (l in seq_len(bp$m)) {
+    i <- bp$ix[, l]
+    d1 <- .shape_b(bp$link, coef[i], pc$cons, pc$lower, 1L)[inter]
+    d0 <- .shape_b(bp$link, bp$coef0[i], pc$cons, pc$lower, 1L)[inter]
+    if (length(inter) && all(abs(d1) <= 1e-10 * max(abs(d0)))) {
+      out <- c(out, term@coef_names[i[inter]])
+    }
+  }
+  out <- unique(out)
+  attr(out, "complete") <- FALSE
+  attr(out, "part") <- "interaction"
+  out
+}

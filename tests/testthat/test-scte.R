@@ -256,3 +256,27 @@ test_that("under two monotone shapes the penalty leaves the slopes and the inter
   tm <- term_build(scte(x, z, shapes = list(st_I, shape_concave()), smooths = st_sm), st_d)
   expect_identical(nullity(S(tm)), 2L)
 })
+
+test_that("term_vertex() names the interaction of two monotone shapes at its bound", {
+  tm <- term_build(scte(x, z, shapes = list(st_I, st_D), smooths = st_sm), st_d)
+  bp <- tm@build_info
+  inter <- bp$pos[bp$elkind == 3L & bp$pos > 0L]
+  g <- numeric(length(term_coef_names(tm)))
+  expect_length(term_vertex(tm, coef = g), 0L)
+  g[inter] <- -300
+  v <- term_vertex(tm, coef = g)
+  expect_identical(attr(v, "part"), "interaction")
+  expect_false(attr(v, "complete"))
+  expect_setequal(v, term_coef_names(tm)[inter])
+  # the surface at that point is additive
+  gr <- expand.grid(x = c(0.1, 0.5, 0.9), z = c(0.1, 0.5, 0.9))
+  F <- matrix(term_value(tm, coef = g, newdata = gr), 3)
+  expect_lt(max(abs(diff(t(diff(F))))), 1e-10)
+  # every constrained coordinate at its bound is the vertex of the term
+  v <- term_vertex(tm, coef = rep(-300, length(g)))
+  expect_identical(attr(v, "part"), "term")
+  # under a curvature there is no separate interaction
+  tc <- term_build(scte(x, z, shapes = list(shape_convex(), shape_convex()), smooths = st_sm), st_d)
+  gc <- numeric(length(term_coef_names(tc)))
+  expect_length(term_vertex(tc, coef = gc), 0L)
+})

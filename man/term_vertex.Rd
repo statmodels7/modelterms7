@@ -20,7 +20,7 @@ for the coefficients that the term carries.}
 \value{
 A character vector of coefficient names, with the attribute
 \code{complete}, \code{TRUE} when every level that carries a shape is at the
-vertex.
+vertex, and for \code{\link[=scte]{scte()}} the attribute \code{part}.
 }
 \description{
 Returns the names of the coefficients of the levels of a term whose
@@ -40,6 +40,13 @@ the inner fit stops somewhere on the way to \eqn{-\infty} (measured
 between -67 and -320), and a curve whose every constrained slope is that
 small is the curve at the bound to that accuracy. The base method returns
 an empty vector, which is right for a term without a shape.
+
+Under two monotone shapes, \code{\link[=scte]{scte()}} has a part that can reach its bound on
+its own: the elements constrained in both directions, which carry the
+interaction. When the term is not at its vertex and all of them are at
+their bound, the method returns their names with the attribute \code{part}
+set to \code{"interaction"}; the surface is then additive on the scale of the
+link. A vertex of the whole term has \code{part} set to \code{"term"}.
 }
 \examples{
 set.seed(1)

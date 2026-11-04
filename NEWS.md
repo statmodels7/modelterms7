@@ -7,6 +7,10 @@
   surface tended to a single surface with the ratio of the two slopes fixed
   by the knots; an additive surface was penalized. Under a curvature the
   walks are unchanged.
+* `term_vertex()` on `scte()` under two monotone shapes names the elements
+  constrained in both directions when all of them are at their bound, with
+  the attribute `part = "interaction"`: the surface is then additive on the
+  scale of the link. A vertex of the whole term has `part = "term"`.
 
 # modelterms7 0.135.0
 
