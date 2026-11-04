@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.134.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.135.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,12 @@
       <small>Source: <a href="https://github.com/statmodels7/modelterms7/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.135.0" id="modelterms7-01350">modelterms7 0.135.0<a class="anchor" aria-label="anchor" href="#modelterms7-01350"></a></h2>
+<ul><li>The shorthand <code>gas(by = ~f)</code> groups the filter by the grouping variable of the <code><a href="../reference/random.html">random()</a></code> terms in <code>f</code>, as <code>by = &lt;variable&gt;</code> does, so each group is filtered as a series of its own. Before, the filter ran as one series through every group. If <code>f</code> contains no random term, the filter is one series as before, and random terms over more than one grouping variable are rejected with a message that gives the spelling per parameter.</li>
+<li>A <code>GasTerm</code> has the property <code>shorthand</code>, which is <code>TRUE</code> when its subformulas came from <code>by = ~f</code>. A fitting layer reads it to leave the level out of the development beside an intercept, as statmodels7 0.244.0 does.</li>
+<li>The page of <code><a href="../reference/gas.html">gas()</a></code> explains that a random intercept on <code>omega</code> penalizes the group levels with a weight that falls as the persistence approaches one, and that a random intercept in the equation is the usual way to give each cluster its own level.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.134.0" id="modelterms7-01340">modelterms7 0.134.0<a class="anchor" aria-label="anchor" href="#modelterms7-01340"></a></h2>
 <ul><li>

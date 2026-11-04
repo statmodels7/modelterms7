@@ -15,7 +15,7 @@ implements term_filter() and has no term_matrix() method at all."><meta property
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.134.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.135.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -72,7 +72,8 @@ implements <code><a href="term_filter.html">term_filter()</a></code> and has no 
 <span>  init <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  init_value <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">numeric</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
 <span>  init_source <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  n_start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
+<span>  n_start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">integer</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span>
+<span>  shorthand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/logical.html" class="external-link">logical</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -197,6 +198,11 @@ computed <code>init_value</code>, or <code>NULL</code> when it is not recorded.<
 that a fitting layer tries, a whole number from 1 to 5, as set by
 <code><a href="gas.html">gas()</a></code>.</p></dd>
 
+
+<dt id="arg-shorthand">shorthand<a class="anchor" aria-label="anchor" href="#arg-shorthand"></a></dt>
+<dd><p><code>TRUE</code> when the subformulas came from the shorthand
+<code>by = ~f</code> of <code><a href="gas.html">gas()</a></code>, <code>FALSE</code> when they were written per parameter.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -214,7 +220,9 @@ unevaluated; <code>NULL</code> means one series in row order.</p>
 <p><code>links</code> holds the links that the caller overrode, and is empty where the
 defaults stand: the identity on the level, the log on each loading, the
 rhobit on each partial autocorrelation. <code>submodels</code> holds one right-hand
-side per parameter developed over covariates.</p>
+side per parameter developed over covariates. <code>shorthand</code> is <code>TRUE</code> when
+these subformulas came from the shorthand <code>by = ~f</code> of <code><a href="gas.html">gas()</a></code>, which a
+fitting layer reads to decide whether the level is developed.</p>
 <p><code>scaling</code> is the power \(d\) of the expected information that multiplies
 the score; zero leaves the score as it is.</p>
 <p>The <code>build_info</code> property is inherited from <code><a href="structural_term.html">structural_term()</a></code> and is not

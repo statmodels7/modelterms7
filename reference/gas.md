@@ -57,10 +57,17 @@ gas(
 - by:
 
   An optional grouping variable, evaluated in the data; each group is
-  filtered independently, from its own starting level. A formula here is
-  the shorthand that gives the same subformula to every parameter of the
-  filter (not to the cross loadings), and the term then does not imply
-  any grouping.
+  filtered independently, from its own starting level. A one-sided
+  formula here is the shorthand that gives the same subformula to every
+  parameter of the filter (not to the cross loadings). If the subformula
+  contains
+  [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
+  terms over one grouping variable, the filter is grouped by that
+  variable; with no random term it is one series, and random terms over
+  more than one grouping variable are rejected. Beside an intercept in
+  the equation, statmodels7 leaves the level out of the shorthand and
+  holds it at zero; see the section on a parameter developed with
+  covariates.
 
 - time:
 
@@ -350,8 +357,30 @@ run the general recursion.
 
 `by = ~f` (a formula, where a grouping variable is a bare symbol) is the
 shorthand giving the same subformula to every parameter; mixing it with
-per-parameter formulas is an error. A structural term, and a term whose
-block moves with its own coefficients
+per-parameter formulas is an error. If `f` contains
+[`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
+terms and all of them are over the same grouping variable, the filter is
+grouped by that variable, so `gas(by = ~ random(~ 1 | id))` filters each
+level of `id` as a series of its own, as `by = id` does. If `f` contains
+no random term, the filter is one series. Random terms over two or more
+grouping variables are rejected; the subformulas are then written per
+parameter and the grouping is named in `by`. The term records in its
+property `shorthand` that its subformulas came from `by = ~f`.
+
+The shorthand treats the level according to the equation that carries
+the term. In statmodels7, if the equation has an intercept, that is, if
+its unpenalized columns span the constant, the shorthand leaves the
+level out: \\\omega\\ has no development and is held at zero beside the
+intercept, as the section on the level beside an intercept describes. A
+level for each cluster is then a random intercept in the equation, which
+the user writes, as in
+`y ~ x + random(~ 1 | id) + gas(by = ~ random(~ 1 | id))`. If the
+equation has no such intercept, as in
+`y ~ 0 + x + gas(by = ~ random(~ 1 | id))`, the shorthand develops
+\\\omega\\ as well, with a population value and one departure per group.
+
+A structural term, and a term whose block moves with its own
+coefficients
 ([`seg()`](https://statmodels7.github.io/modelterms7/reference/seg.md),
 [`jump()`](https://statmodels7.github.io/modelterms7/reference/jump.md),
 [`jseg()`](https://statmodels7.github.io/modelterms7/reference/jseg.md)
@@ -378,6 +407,19 @@ it is identified the same way, there by a variance component, here by
 the penalty. An unpenalized development over group indicators is
 therefore for reading a filter at given parameters rather than for
 fitting one.
+
+A departure on \\\omega\\ and a departure on the level of the equation
+give the same means at a fixed persistence, since the level of group
+\\g\\ is \\c_g = \omega_g / (1 - \sum_j \xi_j)\\. They differ in the
+penalty. A random intercept on \\\omega\\ with standard deviation \\s\\
+carries the penalty \$\$\frac{1}{2 s^2} \sum_g \omega_g^2 = \frac{(1 -
+\sum_j \xi_j)^2}{2 s^2} \sum_g c_g^2,\$\$ which decreases as the
+persistence approaches one, so the prior on \\\omega\\ pulls the
+persistence towards one. A random intercept in the equation, as in
+`y ~ x + random(~ 1 | id) + gas(by = id)`, penalizes the levels \\c_g\\
+themselves and is the usual way to give each cluster its own level.
+`omega ~ random(~ 1 | id)` places the prior on \\\omega\\ instead, and
+is used when that is the intended model.
 
 The arguments `deviations` and `penalty` are not accepted and are
 rejected by name; the subformula takes their place.

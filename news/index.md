@@ -1,5 +1,26 @@
 # Changelog
 
+## modelterms7 0.135.0
+
+- The shorthand `gas(by = ~f)` groups the filter by the grouping
+  variable of the
+  [`random()`](https://statmodels7.github.io/modelterms7/reference/random.md)
+  terms in `f`, as `by = <variable>` does, so each group is filtered as
+  a series of its own. Before, the filter ran as one series through
+  every group. If `f` contains no random term, the filter is one series
+  as before, and random terms over more than one grouping variable are
+  rejected with a message that gives the spelling per parameter.
+- A `GasTerm` has the property `shorthand`, which is `TRUE` when its
+  subformulas came from `by = ~f`. A fitting layer reads it to leave the
+  level out of the development beside an intercept, as statmodels7
+  0.244.0 does.
+- The page of
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md)
+  explains that a random intercept on `omega` penalizes the group levels
+  with a weight that falls as the persistence approaches one, and that a
+  random intercept in the equation is the usual way to give each cluster
+  its own level.
+
 ## modelterms7 0.134.0
 
 - [`edf()`](https://statmodels7.github.io/modelterms7/reference/edf.md)

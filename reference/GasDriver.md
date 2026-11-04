@@ -32,7 +32,8 @@ GasDriver(
   init = character(0),
   init_value = numeric(0),
   init_source = NULL,
-  n_start = integer(0)
+  n_start = integer(0),
+  shorthand = logical(0)
 )
 ```
 
@@ -163,6 +164,12 @@ GasDriver(
   The number of starting points of the term's own parameters that a
   fitting layer tries, a whole number from 1 to 5, as set by
   [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md).
+
+- shorthand:
+
+  `TRUE` when the subformulas came from the shorthand `by = ~f` of
+  [`gas()`](https://statmodels7.github.io/modelterms7/reference/gas.md),
+  `FALSE` when they were written per parameter.
 
 ## Value
 
