@@ -1,3 +1,14 @@
+# modelterms7 0.133.0
+
+* `scte()` takes a value. A shape of one margin may set `value = c(at = a,
+  value = v)`, and then the surface equals `v` along the line at `a` of that
+  covariate, for every value of the other; with the other margin free the
+  condition is exact, and with a shape on both margins the coefficients that
+  the basis at `a` touches are zero where the other covariate is
+  constrained, so the surface is flat in it over that band. The new
+  argument `point = c(<x> = a, <z> = b, value = v)` fixes the value at one
+  point. The term takes one value.
+
 # modelterms7 0.132.0
 
 * A monotone shape of `scte()` may set `min_slope`: the derivative of the

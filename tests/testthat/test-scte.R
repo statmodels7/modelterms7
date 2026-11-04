@@ -113,6 +113,52 @@ test_that("a minimum slope holds everywhere under random coefficients", {
   }
 })
 
+test_that("a value along a line or at a point holds for every coefficient vector", {
+  set.seed(57)
+  sm <- basis7::bspline_smooth(k = 5, lower = 0, upper = 1)
+  gv <- seq(0.02, 0.98, length.out = 25)
+  need <- function(sh) {
+    if (is.null(sh)) return(c(0, 0))
+    p <- sh@shape_params
+    if (S7::S7_inherits(sh, ShapeMonotone)) c(p$sign, 0) else c(if (is.null(p$mono)) 0 else p$mono, p$sign)
+  }
+  cases <- list(
+    list(sh = list(shape_increasing(value = c(at = 0.3, value = 1)), NULL), line = c(1, 0.3, 1)),
+    list(sh = list(NULL, shape_decreasing(value = c(at = 0.7, value = -1))), line = c(2, 0.7, -1)),
+    list(sh = list(shape_increasing(value = c(at = 0, value = 0)), shape_increasing()), line = c(1, 0, 0)),
+    list(sh = list(shape_convex(value = c(at = 0.5, value = 2)), shape_concave()), line = c(1, 0.5, 2)),
+    list(sh = list(shape_increasing(), shape_convex()), point = c(0.2, 0.6, 1)))
+  for (cs in cases) {
+    tm <- term_build(scte(x, z, shapes = cs$sh, smooths = sm, point = cs$point), st_d)
+    p <- length(term_coef_names(tm))
+    nx <- need(cs$sh[[1L]]); nz <- need(cs$sh[[2L]])
+    for (r in 1:5) {
+      g <- stats::rnorm(p, -1, 1.5)
+      f <- matrix(term_value(tm, coef = g, newdata = expand.grid(x = gv, z = gv)), 25, 25)
+      tol <- -1e-10 * max(abs(f))
+      if (nx[1L] != 0) expect_true(all(nx[1L] * diff(f) >= tol))
+      if (nx[2L] != 0) expect_true(all(nx[2L] * diff(f, differences = 2) >= tol))
+      if (nz[1L] != 0) expect_true(all(nz[1L] * t(diff(t(f))) >= tol))
+      if (nz[2L] != 0) expect_true(all(nz[2L] * t(diff(t(f), differences = 2)) >= tol))
+      if (!is.null(cs$line)) {
+        nd <- if (cs$line[1L] == 1) data.frame(x = cs$line[2L], z = gv) else data.frame(x = gv, z = cs$line[2L])
+        expect_equal(term_value(tm, coef = g, newdata = nd), rep(cs$line[3L], 25), tolerance = 1e-12)
+      } else {
+        expect_equal(term_value(tm, coef = g, newdata = data.frame(x = cs$point[1L], z = cs$point[2L])),
+                     cs$point[3L], tolerance = 1e-12)
+      }
+    }
+    expect_identical(qr(cbind(1, term_matrix(term_refresh(tm, stats::rnorm(p, -1, 1)))))$rank, p + 1L)
+  }
+  # the block and its derivatives under a line keep the contracts of the block
+  tm <- term_build(scte(x, z, shapes = list(shape_convex(value = c(at = 0.5, value = 1)), NULL),
+                        smooths = sm), st_d)
+  p <- length(term_coef_names(tm)); g <- stats::rnorm(p, sd = 0.7); h <- 1e-5
+  e <- function(j) replace(numeric(p), j, h)
+  J <- sapply(seq_len(p), function(j) (term_value(tm, coef = g + e(j)) - term_value(tm, coef = g - e(j))) / (2 * h))
+  expect_lt(max(abs(term_matrix(term_refresh(tm, g)) - J)) / max(abs(J)), 1e-8)
+})
+
 test_that("a decreasing margin is the increasing one in the reflected covariate", {
   set.seed(54)
   dd <- transform(st_d, xn = -x)
@@ -142,6 +188,11 @@ test_that("scte() rejects what it cannot fit", {
                "values by level")
   expect_error(scte(x, z, shapes = list(shape_convex(slope = c(at = 0.5, value = 0)), NULL)),
                "slope at a point")
+  expect_error(scte(x, z, shapes = list(shape_increasing(value = c(at = 0.5, value = 0)), NULL),
+                    point = c(0.5, 0.5, 0)), "one value")
+  expect_error(scte(x, z, point = c(a = 0.5, z = 0.5, value = 0)), "named x, z and value")
+  expect_error(term_build(scte(x, z, point = c(2, 0.5, 0), smooths = st_sm), st_d),
+               "outside the interval")
   expect_error(scte(x, z, shapes = list(st_I)), "two elements")
   expect_error(scte(x, z, smooths = basis7::fourier_smooth()), "bspline_smooth")
   expect_error(term_build(scte(x, z), data.frame(x = c(NA, runif(9)), z = runif(10))), "missing")

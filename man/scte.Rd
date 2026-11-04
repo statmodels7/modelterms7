@@ -13,6 +13,7 @@ scte(
   by_hyper = c("shared", "level"),
   hyper = NULL,
   id = NULL,
+  point = NULL,
   label = NULL
 )
 }
@@ -25,8 +26,9 @@ shape (\code{\link[=shape_convex]{shape_convex()}}, \code{\link[=shape_concave]{
 and the other three combinations) or \code{NULL} for a free margin, and at
 least one is a shape. A monotone shape may set \code{min_slope}, a single
 value, and then the derivative in its covariate is at least \code{min_slope}
-in absolute value everywhere; a shape here takes neither a value or a
-slope at a point nor values by level.}
+in absolute value everywhere. A shape may set \code{value}, the value of the
+surface along the line at that value of its covariate (see Details); it
+takes neither a slope at a point nor values by level.}
 
 \item{smooths}{A \pkg{basis7} smoother whose basis is a B-spline, or a list
 of two, one per covariate: \code{\link[basis7:bspline_smooth]{basis7::bspline_smooth()}} (the default, with
@@ -46,6 +48,10 @@ appended under \code{by_hyper = "level"}, as \code{lambda1.a}).}
 
 \item{id}{\code{NULL}, or strings shared with other terms whose smoothing
 parameters are the same, named as \code{hyper}.}
+
+\item{point}{\code{NULL}, or the value of the surface at one point, as
+\verb{c(<x> = a, <z> = b, value = v)} with the covariates as written in the
+call, or unnamed in that order.}
 
 \item{label}{The term's label; \code{NULL} builds \verb{scte(<x>, <z>)} from the
 call.}
@@ -111,6 +117,35 @@ the interaction is free. The construction of two monotone margins is that
 of Pya and Wood (2015).
 }
 
+\section{A value along a line or at a point}{
+The shape of a margin may carry a value, \code{value = c(at = a, value = v)}
+as in \code{\link[=scs]{scs()}}, and then \eqn{f(a, z) = v} for every \eqn{z} (or
+\eqn{f(x, a) = v} for every \eqn{x} when the shape is on \eqn{z}). With
+\eqn{r} the row of the basis of \eqn{x} at \eqn{a} times the map of its
+shape, the condition is \eqn{r B = c} for the coordinates \eqn{c} of the
+constant \eqn{v} in the other margin. In each column of \eqn{B} that has a
+free element, one free element (the level where it enters) is written in
+terms of the others, and the condition is exact. In a column without a free
+element \eqn{c} is zero and every element with \eqn{r_j \ne 0} is zero,
+since all of them have the sign of the shapes. When the other margin is
+free every column has a free element, and the value removes the free
+function of \eqn{z} at \eqn{x = a}. When the other margin has a shape, the
+elements on the coordinates of \eqn{x} that the basis at \eqn{a} touches
+are zero in the columns constrained in \eqn{z}: the surface is flat in
+\eqn{z} over that band, and under two monotone shapes of the same
+direction over the whole side of \eqn{a} towards the start of the basis.
+At an end of the interval the band is the first coefficient alone.
+
+The argument \code{point} fixes the value of the surface at one point,
+\eqn{f(a, b) = v}: the contribution is
+\eqn{v + (W(x, z) - W(a, b))\,b}, the number of coefficients is unchanged,
+and under a numeric \code{by} the level of \eqn{f} is no longer a coefficient.
+With an intercept in the model a value other than zero moves only the
+level that the intercept would carry. The term takes one value: a line or
+a point. A point or a line outside the interval of the basis is an error
+that names its bounds.
+}
+
 \section{The penalty}{
 Two smoothing parameters, \code{lambda1} and \code{lambda2}, are selected with the
 rest of the model. \code{lambda1} penalizes the first differences of the
@@ -149,6 +184,12 @@ scte(x, z, shapes = list(shape_increasing(), shape_increasing()))
 
 # Convex in x, increasing and concave in z.
 scte(x, z, shapes = list(shape_convex(), shape_increasing_concave()))
+
+# Increasing in x with f(0, z) = 0 for every z, and a value at a point.
+scte(x, z, shapes = list(shape_increasing(value = c(at = 0, value = 0)), NULL),
+     smooths = basis7::bspline_smooth(k = 6, lower = 0, upper = 1))
+scte(x, z, shapes = list(shape_increasing(), shape_convex()),
+     point = c(x = 0.5, z = 0.5, value = 1))
 
 }
 \references{

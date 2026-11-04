@@ -104,6 +104,35 @@ ScteTerm <- S7::new_class(
 #' the interaction is free. The construction of two monotone margins is that
 #' of Pya and Wood (2015).
 #'
+#' # A value along a line or at a point
+#'
+#' The shape of a margin may carry a value, `value = c(at = a, value = v)`
+#' as in [scs()], and then \eqn{f(a, z) = v} for every \eqn{z} (or
+#' \eqn{f(x, a) = v} for every \eqn{x} when the shape is on \eqn{z}). With
+#' \eqn{r} the row of the basis of \eqn{x} at \eqn{a} times the map of its
+#' shape, the condition is \eqn{r B = c} for the coordinates \eqn{c} of the
+#' constant \eqn{v} in the other margin. In each column of \eqn{B} that has a
+#' free element, one free element (the level where it enters) is written in
+#' terms of the others, and the condition is exact. In a column without a free
+#' element \eqn{c} is zero and every element with \eqn{r_j \ne 0} is zero,
+#' since all of them have the sign of the shapes. When the other margin is
+#' free every column has a free element, and the value removes the free
+#' function of \eqn{z} at \eqn{x = a}. When the other margin has a shape, the
+#' elements on the coordinates of \eqn{x} that the basis at \eqn{a} touches
+#' are zero in the columns constrained in \eqn{z}: the surface is flat in
+#' \eqn{z} over that band, and under two monotone shapes of the same
+#' direction over the whole side of \eqn{a} towards the start of the basis.
+#' At an end of the interval the band is the first coefficient alone.
+#'
+#' The argument `point` fixes the value of the surface at one point,
+#' \eqn{f(a, b) = v}: the contribution is
+#' \eqn{v + (W(x, z) - W(a, b))\,b}, the number of coefficients is unchanged,
+#' and under a numeric `by` the level of \eqn{f} is no longer a coefficient.
+#' With an intercept in the model a value other than zero moves only the
+#' level that the intercept would carry. The term takes one value: a line or
+#' a point. A point or a line outside the interval of the basis is an error
+#' that names its bounds.
+#'
 #' # The penalty
 #'
 #' Two smoothing parameters, `lambda1` and `lambda2`, are selected with the
@@ -136,8 +165,9 @@ ScteTerm <- S7::new_class(
 #'   and the other three combinations) or `NULL` for a free margin, and at
 #'   least one is a shape. A monotone shape may set `min_slope`, a single
 #'   value, and then the derivative in its covariate is at least `min_slope`
-#'   in absolute value everywhere; a shape here takes neither a value or a
-#'   slope at a point nor values by level.
+#'   in absolute value everywhere. A shape may set `value`, the value of the
+#'   surface along the line at that value of its covariate (see Details); it
+#'   takes neither a slope at a point nor values by level.
 #' @param smooths A \pkg{basis7} smoother whose basis is a B-spline, or a list
 #'   of two, one per covariate: [basis7::bspline_smooth()] (the default, with
 #'   six basis functions) or [basis7::pspline_smooth()]. Only the bases are
@@ -152,6 +182,9 @@ ScteTerm <- S7::new_class(
 #'   appended under `by_hyper = "level"`, as `lambda1.a`).
 #' @param id `NULL`, or strings shared with other terms whose smoothing
 #'   parameters are the same, named as `hyper`.
+#' @param point `NULL`, or the value of the surface at one point, as
+#'   `c(<x> = a, <z> = b, value = v)` with the covariates as written in the
+#'   call, or unnamed in that order.
 #' @param label The term's label; `NULL` builds `scte(<x>, <z>)` from the
 #'   call.
 #'
@@ -178,11 +211,17 @@ ScteTerm <- S7::new_class(
 #' # Convex in x, increasing and concave in z.
 #' scte(x, z, shapes = list(shape_convex(), shape_increasing_concave()))
 #'
+#' # Increasing in x with f(0, z) = 0 for every z, and a value at a point.
+#' scte(x, z, shapes = list(shape_increasing(value = c(at = 0, value = 0)), NULL),
+#'      smooths = basis7::bspline_smooth(k = 6, lower = 0, upper = 1))
+#' scte(x, z, shapes = list(shape_increasing(), shape_convex()),
+#'      point = c(x = 0.5, z = 0.5, value = 1))
+#'
 #' @export
 scte <- function(x, z, shapes = list(shape_increasing(), NULL),
                  smooths = basis7::bspline_smooth(k = 6), by = NULL,
                  by_hyper = c("shared", "level"), hyper = NULL, id = NULL,
-                 label = NULL) {
+                 point = NULL, label = NULL) {
   xe <- substitute(x)
   ze <- substitute(z)
   be <- substitute(by)
@@ -199,10 +238,19 @@ scte <- function(x, z, shapes = list(shape_increasing(), NULL),
                   "or NULL."), call. = FALSE)
     }
     p <- sh@shape_params
-    if (length(.shape_level_names(sh)) || !is.null(p$value) || !is.null(p[["slope"]])) {
-      stop(paste0("a shape of scte() takes neither a value or a slope at a point nor ",
+    if (length(.shape_level_names(sh)) || !is.null(p[["slope"]])) {
+      stop(paste0("a shape of scte() takes neither a slope at a point nor ",
                   "values by level."), call. = FALSE)
     }
+  }
+  nx <- paste(deparse(xe), collapse = "")
+  nz <- paste(deparse(ze), collapse = "")
+  point <- .scte_check_point(point, nx, nz)
+  n_values <- sum(vapply(shapes, function(sh) !is.null(sh) && !is.null(sh@shape_params$value),
+                         logical(1))) + !is.null(point)
+  if (n_values > 1L) {
+    stop(paste0("scte() takes one value: a value in the shape of one margin (a line) ",
+                "or 'point', not both."), call. = FALSE)
   }
   if (is.null(shapes[[1L]]) && is.null(shapes[[2L]])) {
     stop("at least one element of 'shapes' must be a shape; te() is the free surface.",
@@ -216,10 +264,7 @@ scte <- function(x, z, shapes = list(shape_increasing(), NULL),
          call. = FALSE)
   }
   default <- is.null(label)
-  if (default) {
-    label <- sprintf("scte(%s, %s)", paste(deparse(xe), collapse = ""),
-                     paste(deparse(ze), collapse = ""))
-  }
+  if (default) label <- sprintf("scte(%s, %s)", nx, nz)
   if (!is.character(label) || length(label) != 1L || is.na(label) || !nzchar(label)) {
     stop("'label' must be a single non-empty character string.", call. = FALSE)
   }
@@ -231,7 +276,8 @@ scte <- function(x, z, shapes = list(shape_increasing(), NULL),
   }
   nms <- c("lambda1", "lambda2")
   ScteTerm(label = label, vars = list(xe, ze), by = be, shapes = shapes, sparse = FALSE,
-           spec = list(smoothers = smooths, default_label = default, by_hyper = by_hyper),
+           spec = list(smoothers = smooths, default_label = default, by_hyper = by_hyper,
+                       point = point),
            hyper = if (per_level) as_hyper(hyper, label) else smooth_hyper(hyper, nms, label),
            ids = check_ids(id, if (per_level) NULL else nms, label),
            X = NULL, coef_names = character(0), build_info = list(), penalty = NULL)
@@ -333,12 +379,91 @@ scte <- function(x, z, shapes = list(shape_increasing(), NULL),
   out
 }
 
-# the row tensor product, the index of x fastest, as vec(Theta)
-.scte_W <- function(bp, xs) {
+# `point`, as c(<x> = a, <z> = b, value = v) with the covariates as written in
+# the call, or unnamed in that order
+.scte_check_point <- function(point, nx, nz) {
+  if (is.null(point)) return(NULL)
+  if (!is.numeric(point) || length(point) != 3L || anyNA(point) || !all(is.finite(point))) {
+    stop(sprintf("'point' must be three finite numbers, c(%s = , %s = , value = ).", nx, nz),
+         call. = FALSE)
+  }
+  nm <- names(point)
+  if (!is.null(nm)) {
+    if (!setequal(nm, c(nx, nz, "value"))) {
+      stop(sprintf("'point' must be named %s, %s and value.", nx, nz), call. = FALSE)
+    }
+    point <- point[c(nx, nz, "value")]
+  }
+  list(at = unname(point[1:2]), value = unname(point[[3L]]))
+}
+
+.scte_inside <- function(mg, a, label, what) {
+  b <- mg$basis
+  if (a < b@lower || a > b@upper) {
+    stop(sprintf(paste0("the %s of '%s' is at %s, outside the interval of the basis,",
+                        "\n  [%s, %s]; the arguments 'lower' and 'upper' of the smoother",
+                        " widen it."), what, label, format(a), format(b@lower), format(b@upper)),
+         call. = FALSE)
+  }
+}
+
+# the rows of the tensor product, the index of x fastest, as vec(Theta)
+.scte_T <- function(bp, xs) {
   Ex <- .scte_eval(bp$mx, xs[[1L]]); Ez <- .scte_eval(bp$mz, xs[[2L]])
   Kx <- ncol(Ex); Kz <- ncol(Ez)
-  (Ex[, rep(seq_len(Kx), Kz), drop = FALSE] *
-     Ez[, rep(seq_len(Kz), each = Kx), drop = FALSE]) %*% bp$M
+  Ex[, rep(seq_len(Kx), Kz), drop = FALSE] * Ez[, rep(seq_len(Kz), each = Kx), drop = FALSE]
+}
+
+# the map from the coefficients to the contribution at any rows, less its
+# row at a given point
+.scte_W <- function(bp, xs) {
+  W <- .scte_T(bp, xs) %*% bp$M
+  if (!is.null(bp$W0)) W <- W - rep(bp$W0, each = nrow(W))
+  W
+}
+
+# the part of the contribution that no coefficient moves: the value at the
+# point, or the surface that carries the value along a line
+.scte_fixed <- function(bp, xs) {
+  n <- length(xs[[1L]])
+  if (!is.null(bp$point)) return(rep(bp$point$value, n))
+  if (!is.null(bp$theta0)) return(bp$s * drop(.scte_T(bp, xs) %*% bp$theta0))
+  numeric(n)
+}
+
+# A VALUE ALONG A LINE of one margin, f(a, .) = v: with r the row of the
+# margin's basis at a times its map and c the coordinates in the other margin
+# of the constant v, the elements of each line of B across that margin
+# satisfy sum_j r_j B_jk = c_k. Where the line has a free element, one is
+# eliminated (the level when it enters), which leaves the constraint exact;
+# where it has none, c_k is zero and every element with r_j nonzero is zero,
+# since all of them have the sign that the shapes give.
+.scte_line <- function(L, sgn, mg, other, a, v, along_x) {
+  Kx <- nrow(sgn); Kz <- ncol(sgn)
+  r <- drop(.scte_eval(mg, a) %*% mg$A)
+  cc <- solve(other$A, rep(v, other$K))
+  tol <- 1e-12 * max(abs(r))
+  theta0 <- numeric(nrow(L))
+  idx <- function(j, k) (k - 1L) * Kx + j
+  for (q in seq_len(if (along_x) Kz else Kx)) {
+    el <- if (along_x) idx(seq_len(Kx), q) else idx(q, seq_len(Kz))
+    live <- !is.na(sgn[el])
+    free <- which(live & sgn[el] == 0 & abs(r) > tol)
+    if (length(free)) {
+      e <- if (mg$free[1L] %in% free) mg$free[1L] else free[which.max(abs(r[free]))]
+      for (j in which(live)) {
+        if (j != e) L[, el[j]] <- L[, el[j]] - (r[j] / r[e]) * L[, el[e]]
+      }
+      theta0 <- theta0 + L[, el[e]] * cc[q] / r[e]
+      sgn[el[e]] <- NA_real_
+    } else {
+      if (abs(cc[q]) > 1e-12 * max(1, abs(v))) {
+        stop("internal: a line of B with no free element has a nonzero value.", call. = FALSE)
+      }
+      sgn[el[live & abs(r) > tol]] <- NA_real_
+    }
+  }
+  list(L = L, sgn = sgn, theta0 = theta0)
 }
 
 S7::method(term_build, ScteTerm) <- function(term, data, ...) {
@@ -368,6 +493,25 @@ S7::method(term_build, ScteTerm) <- function(term, data, ...) {
     } else if (cx) mz$sigma[k] else if (cz) mx$sigma[j] else 0
   }
   L <- kronecker(mz$A, mx$A)
+  # a value along a line of one margin, and the value at a point
+  theta0 <- NULL
+  has_line <- FALSE
+  for (side in 1:2) {
+    sh <- term@shapes[[side]]
+    if (is.null(sh) || is.null(sh@shape_params$value)) next
+    vv <- sh@shape_params$value
+    mg <- if (side == 1L) mx else mz
+    .scte_inside(mg, vv$at, term@label, "value")
+    ln <- .scte_line(L, sgn, mg, if (side == 1L) mz else mx, vv$at,
+                     orient$s * vv$value, along_x = side == 1L)
+    L <- ln$L; sgn <- ln$sgn; theta0 <- ln$theta0
+    has_line <- TRUE
+  }
+  point <- term@spec$point
+  if (!is.null(point)) {
+    .scte_inside(mx, point$at[1L], term@label, "point")
+    .scte_inside(mz, point$at[2L], term@label, "point")
+  }
   if (both) {
     lines <- list(which(sgn == 0))
   } else if (mx$shaped) {
@@ -375,15 +519,27 @@ S7::method(term_build, ScteTerm) <- function(term, data, ...) {
   } else {
     lines <- lapply(mz$free, function(k) idx(seq_len(Kx), k))
   }
-  # the level line alone (b_11 under two monotone shapes) is the constant
-  lead <- length(lines[[1L]]) > 1L
+  # what a line has eliminated leaves the free lines
+  lines <- lapply(lines, function(el) el[!is.na(sgn[el]) & sgn[el] == 0])
+  # under a line the constant is carried by the value; otherwise the first
+  # free line sums to zero, and alone (b_11 under two monotone shapes) it is
+  # the constant
+  if (has_line) {
+    lines <- lines[lengths(lines) > 0L]
+    if (!length(lines)) lines <- list(integer(0))
+  }
+  lead <- !has_line && length(lines[[1L]]) > 1L
   Ds <- lapply(seq_along(lines), function(i) {
-    if (i == 1L) stats::contr.sum(max(length(lines[[i]]), 2L)) else diag(length(lines[[i]]))
+    if (i == 1L && !has_line) stats::contr.sum(max(length(lines[[i]]), 2L))
+    else diag(length(lines[[i]]))
   })
-  if (!lead) {
+  if (!lead && !has_line) {
     lines <- lines[-1L]
     Ds <- Ds[-1L]
   }
+  keep <- lengths(lines) > 0L
+  lines <- lines[keep]
+  Ds <- Ds[keep]
   free_b <- unlist(lines, use.names = FALSE)
   D <- if (length(Ds)) as.matrix(Matrix::bdiag(Ds)) else NULL
   cons_b <- which(!is.na(sgn) & sgn != 0)
@@ -434,7 +590,8 @@ S7::method(term_build, ScteTerm) <- function(term, data, ...) {
   if (identical(kind, "numeric") && isTRUE(term@spec$default_label)) {
     term@label <- paste0(term@label, ":", paste(deparse(term@by), collapse = ""))
   }
-  keep_level <- identical(kind, "numeric")
+  # the level of f is free under a numeric `by` unless a value fixes it
+  keep_level <- identical(kind, "numeric") && !has_line && is.null(point)
   if (keep_level) {
     M <- cbind(1, M)
     pad <- function(P) { Q <- matrix(0, p + 1L, p + 1L); Q[-1L, -1L] <- P; Q }
@@ -458,13 +615,17 @@ S7::method(term_build, ScteTerm) <- function(term, data, ...) {
     if (cz && !cx) lower[pos[j, k]] <- mz$lower[k]
   }
   bp <- list(mx = mx, mz = mz, M = M, pos = pos, nf = nf, s = orient$s, lines = lines,
+             theta0 = theta0, point = point,
              pieces = list(list(cons = cons, lower = lower, drop_b = integer(0))),
              piece_of = rep(1L, m), link = linkfunctions7::log_link(), nc = p, m = m,
              ncoef = p * m, ix = matrix(seq_len(p * m), p, m), C = NULL,
              n = length(xs[[1L]]), xs = xs, by = term@by, by_kind = kind,
              by_levels = lev, keep_level = keep_level, G = G)
+  if (!is.null(point)) {
+    bp$W0 <- drop(.scte_T(bp, list(point$at[1L], point$at[2L])) %*% bp$M)
+  }
   bp$W <- list(.scte_W(bp, xs))
-  bp$fixed <- list(numeric(bp$n))
+  bp$fixed <- list(.scte_fixed(bp, xs))
   g0 <- numeric(p)
   g0[cons] <- log(.shape_floor(xs[[1L]], NULL))
   bp$coef0 <- rep(g0, m)
@@ -530,8 +691,8 @@ S7::method(term_value, ScteTerm) <- function(term, coef = NULL, newdata = NULL, 
   coef <- .scs_coef(bp, coef)
   B0 <- .scs_B(bp, coef, 0L)
   if (is.null(newdata)) return(.scs_value(bp, bp$W, bp$fixed, bp$G, B0))
-  W <- .scte_W(bp, .scte_vals(term, newdata))
-  .scs_value(bp, list(W), list(numeric(nrow(W))),
+  xs <- .scte_vals(term, newdata)
+  .scs_value(bp, list(.scte_W(bp, xs)), list(.scte_fixed(bp, xs)),
              .scs_G(term, bp$by_kind, bp$by_levels, newdata), B0)
 }
 
