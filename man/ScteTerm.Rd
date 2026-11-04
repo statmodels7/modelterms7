@@ -72,7 +72,7 @@ them. It is empty until \code{\link[=term_build]{term_build()}} fills it.}
 
 \item{by}{The \code{by} expression, unevaluated, or \code{NULL}.}
 
-\item{shapes}{A list of two elements, each a monotone
+\item{shapes}{A list of two elements, each a monotone or curvature
 \link{shape_constraint} or \code{NULL} for a free margin.}
 
 \item{spec}{A named list of the settings that the build uses: the
@@ -86,8 +86,8 @@ An S7 object of class \code{ScteTerm}, inheriting from
 }
 \description{
 \code{ScteTerm} is the subclass of \code{\link[=additive_term]{additive_term()}} for a smooth of two
-covariates that is monotone in one or both of them: \code{\link[=scte]{scte()}} constructs
-it. The tensor-product coefficients are written through the maps of the
+covariates with a shape (monotone, convex or concave, or a combination) in
+one or both of them: \code{\link[=scte]{scte()}} constructs it. The tensor-product coefficients are written through the maps of the
 margins' shapes, so the contribution is nonlinear in the free coefficients
 \eqn{\gamma} and the block is its Jacobian at the current coefficients, as
 for \code{\link[=scs]{scs()}}.

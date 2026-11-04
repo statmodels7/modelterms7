@@ -19,10 +19,12 @@ scte(
 \arguments{
 \item{x, z}{The covariates, bare names or expressions in the data.}
 
-\item{shapes}{A list of two elements, for \code{x} and for \code{z}: each is
-\code{\link[=shape_increasing]{shape_increasing()}}, \code{\link[=shape_decreasing]{shape_decreasing()}} or \code{NULL} for a free margin,
-and at least one is a shape. A shape here takes neither \code{min_slope} nor
-a value or a slope at a point.}
+\item{shapes}{A list of two elements, for \code{x} and for \code{z}: each is a
+monotone shape (\code{\link[=shape_increasing]{shape_increasing()}}, \code{\link[=shape_decreasing]{shape_decreasing()}}), a curvature
+shape (\code{\link[=shape_convex]{shape_convex()}}, \code{\link[=shape_concave]{shape_concave()}}, \code{\link[=shape_increasing_convex]{shape_increasing_convex()}}
+and the other three combinations) or \code{NULL} for a free margin, and at
+least one is a shape. A shape here takes neither \code{min_slope} nor a value
+or a slope at a point.}
 
 \item{smooths}{A \pkg{basis7} smoother whose basis is a B-spline, or a list
 of two, one per covariate: \code{\link[basis7:bspline_smooth]{basis7::bspline_smooth()}} (the default, with
@@ -50,37 +52,57 @@ call.}
 An unbuilt \link{ScteTerm}.
 }
 \description{
-Constructs a smooth function of two covariates that is monotone in one of
-them for every value of the other, or monotone in both. The term enters the
+Constructs a smooth function of two covariates that has a shape in one of
+them for every value of the other, or a shape in each: monotone, convex or
+concave, or monotone and convex or concave together. The term enters the
 formula of any distribution parameter, like \code{\link[=te]{te()}}.
 }
 \section{The construction}{
 Each covariate is expanded in the B-spline basis of its smoother, and the
 surface is \eqn{f(x, z) = B_x(x)^\top \Theta B_z(z)} with \eqn{\Theta} the
 \eqn{K_x \times K_z} matrix of the tensor-product coefficients. A margin
-with a shape writes its direction of \eqn{\Theta} as cumulative sums of
-increments on the Greville abscissae of its basis, as \code{\link[=shape_increasing]{shape_increasing()}}
-does for one covariate, each increment constrained through the inverse of
-the log link. With the shape on \eqn{x} alone,
-\eqn{\Theta = A_x B}: every column of \eqn{\Theta}, a function of \eqn{x}
-at one coefficient of \eqn{z}, is monotone, and the first row of \eqn{B} is
-a free function of \eqn{z} whose coefficients sum to zero, the constant
-being left to the intercept of the model. With shapes on both margins,
-\eqn{\Theta = A_x B A_z^\top} and every element of \eqn{B} except the level
-\eqn{b_{11}} is constrained. A decreasing margin is the increasing one in
-the reflected covariate, which reverses the order of its basis.
+with a shape writes its direction of \eqn{\Theta} through the map
+\eqn{A} of that shape on the Greville abscissae of its basis, as
+\code{\link[=scs]{scs()}} does for one covariate: the coordinates that the shape constrains
+(the increments of a monotone shape, the second differences of a convex or
+concave one) are nonnegative through the inverse of the log link, and the
+others (the level, and the slope of a plain curvature) are free.
+
+With the shape on \eqn{x} alone, \eqn{\Theta = A_x B}. Every column of
+\eqn{\Theta} has the shape, and since the basis in \eqn{z} is nonnegative
+and sums to one, \eqn{f(\cdot, z)} is a convex combination of the columns
+and has the shape for every \eqn{z}. The rows of \eqn{B} on the free
+coordinates of the shape are free functions of \eqn{z}; the coefficients of
+the level row sum to zero, the constant being left to the intercept of the
+model.
+
+With shapes on both margins, \eqn{\Theta = A_x B A_z^\top}. Every column
+of \eqn{\Theta} has the shape in \eqn{x} when an element \eqn{b_{jk}} on a
+coordinate \eqn{j} constrained in \eqn{x} has the sign of column \eqn{k} of
+\eqn{A_z}, and every row has the shape in \eqn{z} when an element on a
+coordinate constrained in \eqn{z} has the sign of its column of
+\eqn{A_x}; the free coordinates of a plain curvature are written as the two
+hat functions of the ends of its interval, which are nonnegative. The
+shapes hold for every coefficient vector. An element constrained in both
+directions must then have both signs; the covariates are reflected (which
+reverses a monotonicity and keeps a curvature) and the surface changes
+sign where this makes the two signs agree, which it does for every pair
+except a convex margin with a concave one. For that pair the elements
+constrained in both directions are zero, and the curvature in one
+covariate varies with the other only linearly. The elements free in both
+directions sum to zero, the constant being left to the intercept.
 }
 
 \section{The interaction under two shapes}{
-With shapes on both margins every increment is constrained, the cross
-increments \eqn{b_{jk}}, \eqn{j, k \ge 2}, included. The surface is then
-monotone in both covariates, and its interaction has a fixed sign: the
-mixed differences of \eqn{\Theta} are nonnegative when both margins are
-increasing or both decreasing, and nonpositive when one is increasing and
-the other decreasing. A surface that is increasing in both covariates with
-a negative interaction, such as \eqn{x + z - xz/2}, is not of this form,
-and the fit is biased for it; with the shape on one margin the interaction
-is free. The construction is that of Pya and Wood (2015).
+With shapes on both margins the cross elements \eqn{b_{jk}} are
+constrained as well, so the interaction has a fixed sign. Under two
+monotone shapes the mixed differences of \eqn{\Theta} are nonnegative when
+both margins are increasing or both decreasing, and nonpositive when one is
+increasing and the other decreasing. A surface that is increasing in both
+covariates with a negative interaction, such as \eqn{x + z - xz/2}, is not
+of this form, and the fit is biased for it; with the shape on one margin
+the interaction is free. The construction of two monotone margins is that
+of Pya and Wood (2015).
 }
 
 \section{The penalty}{
@@ -118,6 +140,9 @@ all(diff(f) >= -1e-12)
 
 # Increasing in both covariates.
 scte(x, z, shapes = list(shape_increasing(), shape_increasing()))
+
+# Convex in x, increasing and concave in z.
+scte(x, z, shapes = list(shape_convex(), shape_increasing_concave()))
 
 }
 \references{

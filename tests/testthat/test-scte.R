@@ -11,7 +11,9 @@ st_I <- shape_increasing(); st_D <- shape_decreasing()
 
 test_that("the block and its derivatives agree with central differences", {
   set.seed(52)
-  for (sh in list(list(st_I, NULL), list(NULL, st_D), list(st_I, st_I), list(st_D, st_I))) {
+  for (sh in list(list(st_I, NULL), list(NULL, st_D), list(st_I, st_I), list(st_D, st_I),
+                  list(shape_convex(), NULL), list(st_I, shape_concave()),
+                  list(shape_convex(), shape_concave()))) {
     tm <- term_build(scte(x, z, shapes = sh, smooths = st_sm), st_d)
     p <- length(term_coef_names(tm)); g <- stats::rnorm(p, sd = 0.7); h <- 1e-5
     e <- function(j) replace(numeric(p), j, h)
@@ -58,6 +60,37 @@ test_that("every coefficient vector gives the shapes and the sign of the interac
   }
 })
 
+test_that("every coefficient vector gives the curvature shapes", {
+  set.seed(55)
+  cx <- shape_convex(); cv <- shape_concave()
+  need <- function(sh) {
+    if (is.null(sh)) return(c(0, 0))
+    p <- sh@shape_params
+    if (S7::S7_inherits(sh, ShapeMonotone)) c(p$sign, 0) else c(if (is.null(p$mono)) 0 else p$mono, p$sign)
+  }
+  for (sh in list(list(cx, NULL), list(NULL, cv), list(shape_increasing_concave(), NULL),
+                  list(cx, cx), list(cv, cv), list(st_I, cv), list(st_D, cx),
+                  list(shape_decreasing_convex(), shape_increasing_concave()), list(cx, cv))) {
+    tm <- term_build(scte(x, z, shapes = sh, smooths = st_sm), st_d)
+    p <- length(term_coef_names(tm))
+    nx <- need(sh[[1L]]); nz <- need(sh[[2L]])
+    for (r in 1:5) {
+      f <- matrix(term_value(tm, coef = stats::rnorm(p, -1, 1.5), newdata = st_grid), 25, 25)
+      tol <- -1e-10 * max(abs(f))
+      if (nx[1L] != 0) expect_true(all(nx[1L] * diff(f) >= tol))
+      if (nx[2L] != 0) expect_true(all(nx[2L] * diff(f, differences = 2) >= tol))
+      if (nz[1L] != 0) expect_true(all(nz[1L] * t(diff(t(f))) >= tol))
+      if (nz[2L] != 0) expect_true(all(nz[2L] * t(diff(t(f), differences = 2)) >= tol))
+    }
+    # the constant is left to the intercept
+    r0 <- term_refresh(tm, stats::rnorm(p, -1, 1))
+    expect_identical(qr(cbind(1, term_matrix(r0)))$rank, p + 1L)
+  }
+  # convex with concave: the 4 x 4 elements constrained in both directions are dropped
+  expect_length(term_coef_names(term_build(scte(x, z, shapes = list(cx, cv), smooths = st_sm), st_d)),
+                15L)
+})
+
 test_that("a decreasing margin is the increasing one in the reflected covariate", {
   set.seed(54)
   dd <- transform(st_d, xn = -x)
@@ -82,7 +115,7 @@ test_that("scte() names two smoothing parameters and prints its shapes", {
 
 test_that("scte() rejects what it cannot fit", {
   expect_error(scte(x, z, shapes = list(NULL, NULL)), "te() is the free surface", fixed = TRUE)
-  expect_error(scte(x, z, shapes = list(shape_convex(), NULL)), "shape_increasing")
+  expect_error(scte(x, z, shapes = list(shape_unimodal(), NULL)), "curvature shape")
   expect_error(scte(x, z, shapes = list(shape_increasing(min_slope = 1), NULL)), "min_slope")
   expect_error(scte(x, z, shapes = list(st_I)), "two elements")
   expect_error(scte(x, z, smooths = basis7::fourier_smooth()), "bspline_smooth")

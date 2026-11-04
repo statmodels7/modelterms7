@@ -1,3 +1,14 @@
+# modelterms7 0.131.0
+
+* `scte()` takes curvature shapes on either margin: `shape_convex()`,
+  `shape_concave()` and their four combinations with a monotonicity, alone
+  or with a monotone or curvature shape on the other margin. Every column
+  of the tensor-product coefficients has the shape in the first covariate
+  and every row the shape in the second, so the surface has both shapes for
+  every coefficient vector. A convex margin with a concave one drops the
+  elements constrained in both directions, and the curvature in one
+  covariate then varies only linearly with the other.
+
 # modelterms7 0.130.0
 
 * `term_block_deriv3()` and `term_block_deriv4()` have methods for `scs()`

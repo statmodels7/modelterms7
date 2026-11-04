@@ -6,8 +6,8 @@ NULL
 #'
 #' @description
 #' `ScteTerm` is the subclass of [additive_term()] for a smooth of two
-#' covariates that is monotone in one or both of them: [scte()] constructs
-#' it. The tensor-product coefficients are written through the maps of the
+#' covariates with a shape (monotone, convex or concave, or a combination) in
+#' one or both of them: [scte()] constructs it. The tensor-product coefficients are written through the maps of the
 #' margins' shapes, so the contribution is nonlinear in the free coefficients
 #' \eqn{\gamma} and the block is its Jacobian at the current coefficients, as
 #' for [scs()].
@@ -16,7 +16,7 @@ NULL
 #' @inheritParams model_term
 #' @param vars A list of the two covariate expressions, unevaluated.
 #' @param by The `by` expression, unevaluated, or `NULL`.
-#' @param shapes A list of two elements, each a monotone
+#' @param shapes A list of two elements, each a monotone or curvature
 #'   [shape_constraint] or `NULL` for a free margin.
 #' @param spec A named list of the settings that the build uses: the
 #'   `smoothers`, `default_label` and `by_hyper`.
@@ -46,8 +46,9 @@ ScteTerm <- S7::new_class(
 #' Shape-Constrained Tensor Product Smooth of Two Covariates
 #'
 #' @description
-#' Constructs a smooth function of two covariates that is monotone in one of
-#' them for every value of the other, or monotone in both. The term enters the
+#' Constructs a smooth function of two covariates that has a shape in one of
+#' them for every value of the other, or a shape in each: monotone, convex or
+#' concave, or monotone and convex or concave together. The term enters the
 #' formula of any distribution parameter, like [te()].
 #'
 #' @details
@@ -56,29 +57,48 @@ ScteTerm <- S7::new_class(
 #' Each covariate is expanded in the B-spline basis of its smoother, and the
 #' surface is \eqn{f(x, z) = B_x(x)^\top \Theta B_z(z)} with \eqn{\Theta} the
 #' \eqn{K_x \times K_z} matrix of the tensor-product coefficients. A margin
-#' with a shape writes its direction of \eqn{\Theta} as cumulative sums of
-#' increments on the Greville abscissae of its basis, as [shape_increasing()]
-#' does for one covariate, each increment constrained through the inverse of
-#' the log link. With the shape on \eqn{x} alone,
-#' \eqn{\Theta = A_x B}: every column of \eqn{\Theta}, a function of \eqn{x}
-#' at one coefficient of \eqn{z}, is monotone, and the first row of \eqn{B} is
-#' a free function of \eqn{z} whose coefficients sum to zero, the constant
-#' being left to the intercept of the model. With shapes on both margins,
-#' \eqn{\Theta = A_x B A_z^\top} and every element of \eqn{B} except the level
-#' \eqn{b_{11}} is constrained. A decreasing margin is the increasing one in
-#' the reflected covariate, which reverses the order of its basis.
+#' with a shape writes its direction of \eqn{\Theta} through the map
+#' \eqn{A} of that shape on the Greville abscissae of its basis, as
+#' [scs()] does for one covariate: the coordinates that the shape constrains
+#' (the increments of a monotone shape, the second differences of a convex or
+#' concave one) are nonnegative through the inverse of the log link, and the
+#' others (the level, and the slope of a plain curvature) are free.
+#'
+#' With the shape on \eqn{x} alone, \eqn{\Theta = A_x B}. Every column of
+#' \eqn{\Theta} has the shape, and since the basis in \eqn{z} is nonnegative
+#' and sums to one, \eqn{f(\cdot, z)} is a convex combination of the columns
+#' and has the shape for every \eqn{z}. The rows of \eqn{B} on the free
+#' coordinates of the shape are free functions of \eqn{z}; the coefficients of
+#' the level row sum to zero, the constant being left to the intercept of the
+#' model.
+#'
+#' With shapes on both margins, \eqn{\Theta = A_x B A_z^\top}. Every column
+#' of \eqn{\Theta} has the shape in \eqn{x} when an element \eqn{b_{jk}} on a
+#' coordinate \eqn{j} constrained in \eqn{x} has the sign of column \eqn{k} of
+#' \eqn{A_z}, and every row has the shape in \eqn{z} when an element on a
+#' coordinate constrained in \eqn{z} has the sign of its column of
+#' \eqn{A_x}; the free coordinates of a plain curvature are written as the two
+#' hat functions of the ends of its interval, which are nonnegative. The
+#' shapes hold for every coefficient vector. An element constrained in both
+#' directions must then have both signs; the covariates are reflected (which
+#' reverses a monotonicity and keeps a curvature) and the surface changes
+#' sign where this makes the two signs agree, which it does for every pair
+#' except a convex margin with a concave one. For that pair the elements
+#' constrained in both directions are zero, and the curvature in one
+#' covariate varies with the other only linearly. The elements free in both
+#' directions sum to zero, the constant being left to the intercept.
 #'
 #' # The interaction under two shapes
 #'
-#' With shapes on both margins every increment is constrained, the cross
-#' increments \eqn{b_{jk}}, \eqn{j, k \ge 2}, included. The surface is then
-#' monotone in both covariates, and its interaction has a fixed sign: the
-#' mixed differences of \eqn{\Theta} are nonnegative when both margins are
-#' increasing or both decreasing, and nonpositive when one is increasing and
-#' the other decreasing. A surface that is increasing in both covariates with
-#' a negative interaction, such as \eqn{x + z - xz/2}, is not of this form,
-#' and the fit is biased for it; with the shape on one margin the interaction
-#' is free. The construction is that of Pya and Wood (2015).
+#' With shapes on both margins the cross elements \eqn{b_{jk}} are
+#' constrained as well, so the interaction has a fixed sign. Under two
+#' monotone shapes the mixed differences of \eqn{\Theta} are nonnegative when
+#' both margins are increasing or both decreasing, and nonpositive when one is
+#' increasing and the other decreasing. A surface that is increasing in both
+#' covariates with a negative interaction, such as \eqn{x + z - xz/2}, is not
+#' of this form, and the fit is biased for it; with the shape on one margin
+#' the interaction is free. The construction of two monotone margins is that
+#' of Pya and Wood (2015).
 #'
 #' # The penalty
 #'
@@ -106,10 +126,12 @@ ScteTerm <- S7::new_class(
 #' boundary, which preserves the shapes.
 #'
 #' @param x,z The covariates, bare names or expressions in the data.
-#' @param shapes A list of two elements, for `x` and for `z`: each is
-#'   [shape_increasing()], [shape_decreasing()] or `NULL` for a free margin,
-#'   and at least one is a shape. A shape here takes neither `min_slope` nor
-#'   a value or a slope at a point.
+#' @param shapes A list of two elements, for `x` and for `z`: each is a
+#'   monotone shape ([shape_increasing()], [shape_decreasing()]), a curvature
+#'   shape ([shape_convex()], [shape_concave()], [shape_increasing_convex()]
+#'   and the other three combinations) or `NULL` for a free margin, and at
+#'   least one is a shape. A shape here takes neither `min_slope` nor a value
+#'   or a slope at a point.
 #' @param smooths A \pkg{basis7} smoother whose basis is a B-spline, or a list
 #'   of two, one per covariate: [basis7::bspline_smooth()] (the default, with
 #'   six basis functions) or [basis7::pspline_smooth()]. Only the bases are
@@ -147,6 +169,9 @@ ScteTerm <- S7::new_class(
 #' # Increasing in both covariates.
 #' scte(x, z, shapes = list(shape_increasing(), shape_increasing()))
 #'
+#' # Convex in x, increasing and concave in z.
+#' scte(x, z, shapes = list(shape_convex(), shape_increasing_concave()))
+#'
 #' @export
 scte <- function(x, z, shapes = list(shape_increasing(), NULL),
                  smooths = basis7::bspline_smooth(k = 6), by = NULL,
@@ -162,13 +187,15 @@ scte <- function(x, z, shapes = list(shape_increasing(), NULL),
   for (k in 1:2) {
     sh <- shapes[[k]]
     if (is.null(sh)) next
-    if (!S7::S7_inherits(sh, ShapeMonotone)) {
-      stop("each element of 'shapes' must be shape_increasing(), shape_decreasing() or NULL.",
-           call. = FALSE)
+    if (!S7::S7_inherits(sh, ShapeMonotone) && !S7::S7_inherits(sh, ShapeCurvature)) {
+      stop(paste0("each element of 'shapes' must be a monotone or a curvature shape ",
+                  "(shape_increasing(), shape_convex(), shape_increasing_concave(), ...) ",
+                  "or NULL."), call. = FALSE)
     }
     p <- sh@shape_params
-    if (length(.shape_level_names(sh)) || any(p$min_slope > 0) || !is.null(p$value)) {
-      stop("a shape of scte() takes neither 'min_slope' nor a value at a point.",
+    if (length(.shape_level_names(sh)) || any(p$min_slope > 0) || !is.null(p$value) ||
+        !is.null(p[["slope"]])) {
+      stop("a shape of scte() takes neither 'min_slope' nor a value or a slope at a point.",
            call. = FALSE)
     }
   }
@@ -205,15 +232,80 @@ scte <- function(x, z, shapes = list(shape_increasing(), NULL),
            X = NULL, coef_names = character(0), build_info = list(), penalty = NULL)
 }
 
-# one margin: its basis, and the Greville abscissae on which its map is
-# written, reflected for a decreasing shape (the basis then read in reverse)
-.scte_margin <- function(sm, v, shape) {
+# the shape that a margin carries once the surface is multiplied by `s` and
+# its covariate reflected under `rev`: a reflection reverses a monotonicity
+# and keeps a curvature, a change of sign reverses both
+.scte_effective <- function(shape, s, rev) {
+  p <- shape@shape_params
+  r <- if (rev) -1 else 1
+  if (S7::S7_inherits(shape, ShapeMonotone)) {
+    shape@shape_params$sign <- p$sign * s * r
+  } else {
+    shape@shape_params$sign <- p$sign * s
+    if (!is.null(p$mono)) shape@shape_params$mono <- p$mono * s * r
+  }
+  shape
+}
+
+# one margin: its basis and the map of its shape on the Greville abscissae,
+# for the surface multiplied by `s` and the covariate reflected under `rev`
+# (the basis then read in reverse); a free margin has the identity. `cons`
+# are the coordinates that the shape constrains, `sigma` the sign of each
+# column of the map
+.scte_margin <- function(sm, v, shape, s = 1, rev = FALSE) {
   b <- basis7::smoother_basis(sm, v)
   xi <- .scs_greville(b)
-  dec <- !is.null(shape) && shape@shape_params$sign < 0
-  xr <- if (dec) -rev(xi) else xi
-  list(basis = b, K = length(xi), rev = dec, xi = xr,
-       A = shape_map(shape_increasing(), xr)$A, shaped = !is.null(shape))
+  K <- length(xi)
+  if (is.null(shape)) {
+    return(list(basis = b, K = K, rev = FALSE, xi = xi, A = diag(K), cons = integer(0),
+                free = seq_len(K), sigma = rep(1, K), shaped = FALSE, shape = NULL))
+  }
+  xr <- if (rev) -rev(xi) else xi
+  eff <- .scte_effective(shape, s, rev)
+  mp <- shape_map(eff, xr)
+  sigma <- apply(mp$A, 2L, function(a) if (all(a >= 0)) 1 else if (all(a <= 0)) -1 else NA_real_)
+  if (anyNA(sigma)) stop("internal: a column of the shape's map has no sign.", call. = FALSE)
+  list(basis = b, K = K, rev = rev, xi = xr, A = mp$A, cons = mp$cons,
+       free = setdiff(seq_len(K), mp$cons), sigma = sigma, shaped = TRUE, shape = eff)
+}
+
+# THE ORIENTATION: the sign of the surface and the reflections of the shaped
+# covariates under which the fewest cross elements of B are dropped (an
+# element constrained in both directions must have the sign of both columns),
+# then the fewest constrained columns of negative sign, then no change of
+# sign, then the fewest reflections. Monotone shapes keep the construction
+# that reflects a decreasing margin.
+.scte_orient <- function(term, xs) {
+  sh <- term@shapes
+  sm <- term@spec$smoothers
+  revs <- function(k) if (is.null(sh[[k]])) FALSE else c(FALSE, TRUE)
+  best <- NULL
+  for (s in c(1, -1)) for (rx in revs(1L)) for (rz in revs(2L)) {
+    mx <- .scte_margin(sm[[1L]], xs[[1L]], sh[[1L]], s, rx)
+    mz <- .scte_margin(sm[[2L]], xs[[2L]], sh[[2L]], s, rz)
+    drop <- sum(outer(mx$sigma[mx$cons], mz$sigma[mz$cons], "!="))
+    neg <- sum(mx$sigma[mx$cons] < 0) + sum(mz$sigma[mz$cons] < 0)
+    key <- c(drop, neg, s < 0, rx + rz)
+    better <- is.null(best) || {
+      d <- key - best$key
+      k <- which(d != 0)
+      length(k) > 0L && d[k[1L]] < 0
+    }
+    if (better) best <- list(key = key, mx = mx, mz = mz, s = s)
+  }
+  best
+}
+
+# the free coordinates of a curvature margin under a second shaped margin,
+# as the two hat functions of its ends: both nonnegative, so that the
+# constraint that the other margin puts on them holds at both ends and in
+# between
+.scte_hats <- function(mg) {
+  if (!mg$shaped || length(mg$free) != 2L) return(mg)
+  t <- (mg$xi - mg$xi[1L]) / (mg$xi[mg$K] - mg$xi[1L])
+  mg$A[, mg$free] <- cbind(1 - t, t)
+  mg$sigma[mg$free] <- 1
+  mg
 }
 
 .scte_eval <- function(mg, v) {
@@ -244,28 +336,54 @@ scte <- function(x, z, shapes = list(shape_increasing(), NULL),
 
 S7::method(term_build, ScteTerm) <- function(term, data, ...) {
   xs <- .scte_vals(term, data)
-  mx <- .scte_margin(term@spec$smoothers[[1L]], xs[[1L]], term@shapes[[1L]])
-  mz <- .scte_margin(term@spec$smoothers[[2L]], xs[[2L]], term@shapes[[2L]])
+  orient <- .scte_orient(term, xs)
+  mx <- orient$mx; mz <- orient$mz
+  both <- mx$shaped && mz$shaped
+  if (both) { mx <- .scte_hats(mx); mz <- .scte_hats(mz) }
   Kx <- mx$K; Kz <- mz$K
   idx <- function(j, k) (k - 1L) * Kx + j
   pos <- matrix(0L, Kx, Kz)
-  # THE COORDINATES: b_11 is the level, left to the intercept. With one shape
-  # the first line of B across the free direction is free, its coefficients
-  # summing to zero (contr.sum) so that the constant is not among them.
-  if (mx$shaped && mz$shaped) {
-    L <- kronecker(mz$A, mx$A)
-    cons_b <- seq_len(Kx * Kz)[-1L]
-    M <- L[, cons_b, drop = FALSE]
-    nf <- 0L
-    D <- NULL
-  } else {
-    L <- if (mx$shaped) kronecker(diag(Kz), mx$A) else kronecker(mz$A, diag(Kx))
-    free_b <- if (mx$shaped) idx(1L, seq_len(Kz)) else idx(seq_len(Kx), 1L)
-    D <- stats::contr.sum(length(free_b))
-    cons_b <- setdiff(seq_len(Kx * Kz), free_b)
-    M <- cbind(L[, free_b, drop = FALSE] %*% D, L[, cons_b, drop = FALSE])
-    nf <- ncol(D)
+  # THE COORDINATES. vec(Theta) = (A_z (x) A_x) vec(B). Every column of
+  # Theta is in the cone of the shape in x when, for each coordinate j that
+  # the shape constrains, row j of B A_z' is nonnegative, which holds where
+  # B_jk has the sign of column k of A_z; every row is in the cone of the
+  # shape in z where B_jk, k constrained, has the sign of column j of A_x.
+  # An element constrained in both directions whose two signs differ is
+  # dropped. The elements free in both directions carry the constant, which
+  # is left to the intercept: under two shapes they sum to zero (the free
+  # columns of a margin sum to one), under one shape the level line does.
+  sgn <- matrix(0, Kx, Kz)
+  for (j in seq_len(Kx)) for (k in seq_len(Kz)) {
+    cx <- j %in% mx$cons
+    cz <- k %in% mz$cons
+    sgn[j, k] <- if (cx && cz) {
+      if (mx$sigma[j] == mz$sigma[k]) mx$sigma[j] else NA_real_
+    } else if (cx) mz$sigma[k] else if (cz) mx$sigma[j] else 0
   }
+  L <- kronecker(mz$A, mx$A)
+  if (both) {
+    lines <- list(which(sgn == 0))
+  } else if (mx$shaped) {
+    lines <- lapply(mx$free, function(j) idx(j, seq_len(Kz)))
+  } else {
+    lines <- lapply(mz$free, function(k) idx(seq_len(Kx), k))
+  }
+  # the level line alone (b_11 under two monotone shapes) is the constant
+  lead <- length(lines[[1L]]) > 1L
+  Ds <- lapply(seq_along(lines), function(i) {
+    if (i == 1L) stats::contr.sum(max(length(lines[[i]]), 2L)) else diag(length(lines[[i]]))
+  })
+  if (!lead) {
+    lines <- lines[-1L]
+    Ds <- Ds[-1L]
+  }
+  free_b <- unlist(lines, use.names = FALSE)
+  D <- if (length(Ds)) as.matrix(Matrix::bdiag(Ds)) else NULL
+  cons_b <- which(!is.na(sgn) & sgn != 0)
+  M <- cbind(if (length(free_b)) L[, free_b, drop = FALSE] %*% D,
+             L[, cons_b, drop = FALSE] %*% diag(sgn[cons_b], length(cons_b)))
+  M <- orient$s * M
+  nf <- if (is.null(D)) 0L else ncol(D)
   pos[cons_b] <- nf + seq_along(cons_b)
   p <- ncol(M)
   # first differences of the constrained gamma along each direction
@@ -281,10 +399,18 @@ S7::method(term_build, ScteTerm) <- function(term, data, ...) {
   }
   Px <- diffs(lapply(seq_len(Kz), function(k) pos[, k]))
   Pz <- diffs(lapply(seq_len(Kx), function(j) pos[j, ]))
-  if (nf > 0L) {
-    D2 <- crossprod(diff(diag(nf + 1L), differences = 2L) %*% D)
-    i <- seq_len(nf)
-    if (mx$shaped) Pz[i, i] <- Pz[i, i] + D2 else Px[i, i] <- Px[i, i] + D2
+  # a free line under one shape has the second differences of its
+  # coefficients along its own direction; the few elements free in both
+  # directions under two shapes are not penalized
+  if (nf > 0L && !both) {
+    at <- 0L
+    for (i in seq_along(lines)) {
+      Di <- Ds[[i]]
+      ii <- at + seq_len(ncol(Di))
+      P2 <- crossprod(diff(diag(nrow(Di)), differences = 2L) %*% Di)
+      if (mx$shaped) Pz[ii, ii] <- Pz[ii, ii] + P2 else Px[ii, ii] <- Px[ii, ii] + P2
+      at <- at + ncol(Di)
+    }
   }
   # THE BY VARIABLE, as for scs(): the multipliers G of the levels, and under
   # a numeric `by` the level of f put back in front as a free, unpenalized
@@ -311,7 +437,7 @@ S7::method(term_build, ScteTerm) <- function(term, data, ...) {
     p <- p + 1L
   }
   cons <- sort(unique(pos[pos > 0L]))
-  bp <- list(mx = mx, mz = mz, M = M, pos = pos, nf = nf,
+  bp <- list(mx = mx, mz = mz, M = M, pos = pos, nf = nf, s = orient$s, lines = lines,
              pieces = list(list(cons = cons, lower = numeric(p), drop_b = integer(0))),
              piece_of = rep(1L, m), link = linkfunctions7::log_link(), nc = p, m = m,
              ncoef = p * m, ix = matrix(seq_len(p * m), p, m), C = NULL,
@@ -421,9 +547,13 @@ S7::method(term_coef_start, ScteTerm) <- function(term, target = NULL, ...) {
                                              target[rows])), error = function(e) NULL)
     if (is.null(cf) || !all(is.finite(cf))) next
     fl <- .shape_floor(bp$xs[[1L]], target)
+    g <- out[, l]
+    if (.scte_curved(bp)) {
+      out[, l] <- .scte_curved_start(bp, g, cf, fl)
+      next
+    }
     sx <- max(if (bp$mx$rev) -cf[[2L]] else cf[[2L]], fl)
     sz <- max(if (bp$mz$rev) -cf[[3L]] else cf[[3L]], fl)
-    g <- out[, l]
     if (bp$mx$shaped && bp$mz$shaped) {
       g[pos[-1L, 1L]] <- log(sx)
       g[pos[1L, -1L]] <- log(sz)
@@ -434,6 +564,49 @@ S7::method(term_coef_start, ScteTerm) <- function(term, target = NULL, ...) {
     out[, l] <- g
   }
   as.vector(out)
+}
+
+.scte_curved <- function(bp) {
+  any(vapply(list(bp$mx, bp$mz), function(mg)
+    mg$shaped && !S7::S7_inherits(mg$shape, ShapeMonotone), logical(1)))
+}
+
+# the start under a curvature: the plane's slope on the coordinates that
+# carry a slope (every constrained coordinate of a monotone margin, the
+# anchor of a monotone curvature, the free slope line of a plain curvature
+# under one shape), each read with the direction in which it moves the
+# surface; the floor on the curvature coordinates
+.scte_curved_start <- function(bp, g, cf, fl) {
+  pos <- bp$pos
+  carries <- function(mg) {
+    if (!mg$shaped) return(integer(0))
+    if (S7::S7_inherits(mg$shape, ShapeMonotone)) return(mg$cons)
+    if (!is.null(mg$shape@shape_params$mono)) return(2L)
+    integer(0)
+  }
+  slope <- function(mg, c0) if (mg$rev) -c0 else c0
+  Kx <- bp$mx$K; Kz <- bp$mz$K
+  for (j in carries(bp$mx)) for (k in setdiff(seq_len(Kz), bp$mz$cons)) {
+    if (pos[j, k] > 0L) {
+      d <- bp$s * bp$mx$sigma[j]
+      g[pos[j, k]] <- log(max(d * slope(bp$mx, cf[[2L]]), fl))
+    }
+  }
+  for (k in carries(bp$mz)) for (j in setdiff(seq_len(Kx), bp$mx$cons)) {
+    if (pos[j, k] > 0L) {
+      d <- bp$s * bp$mz$sigma[k]
+      g[pos[j, k]] <- log(max(d * slope(bp$mz, cf[[3L]]), fl))
+    }
+  }
+  # the free slope line of a plain curvature under one shape
+  one <- xor(bp$mx$shaped, bp$mz$shaped)
+  mg <- if (bp$mx$shaped) bp$mx else bp$mz
+  if (one && length(mg$free) == 2L && length(bp$lines) == 2L) {
+    n1 <- length(bp$lines[[1L]]) - 1L
+    ii <- n1 + seq_along(bp$lines[[2L]])
+    g[ii] <- bp$s * slope(mg, cf[[if (bp$mx$shaped) 2L else 3L]])
+  }
+  g
 }
 
 S7::method(print, ScteTerm) <- function(x, ...) {
