@@ -15,7 +15,7 @@ the derivative of the outer criterion."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.133.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.133.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -108,6 +108,15 @@ with \(S(x) = \sum_q f_{p_1q}h'_qx_q\),
 \(P(xy,z) = \sum_{q,r}f_{p_1qr}h''_qx_qy_q\,h'_rz_r\). A parameter whose
 development moves with the coefficients has a design of its own that moves,
 and its third derivative is not written: the method signals an error there.</p>
+<p>A class whose block moves with its coefficients must implement its own
+method of this generic, because the zeros of the base method are wrong
+for such a block. statmodels7 reads this generic in the exact derivatives
+of an outer criterion and uses those derivatives only for a class with a
+method of its own; for any other class it computes them by differences.
+It recognizes a method of its own by comparing the method registered for
+the class with the base method, so a class that registers the base method
+itself under its own name is treated as having a method of its own, and
+the zeros enter the derivatives.</p>
 <p>For <code><a href="scs.html">scs()</a></code> and <code><a href="scte.html">scte()</a></code> the column \(j\) of level \(l\) is
 \(G_{il}W_{ij}b'(\gamma_j)\), which depends on the coefficient
 \(\gamma_j\) alone, so the entry is

@@ -1,5 +1,17 @@
 # Changelog
 
+## modelterms7 0.133.1
+
+- The documentation of
+  [`term_block_deriv2()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv2.md),
+  [`term_block_deriv3()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv3.md)
+  and
+  [`term_block_deriv4()`](https://statmodels7.github.io/modelterms7/reference/term_block_deriv4.md)
+  states that a class whose block moves with its coefficients must
+  implement its own method, since the base method returns zeros, and
+  that statmodels7 recognizes a method of its own by comparing it with
+  the base method.
+
 ## modelterms7 0.133.0
 
 - [`scte()`](https://statmodels7.github.io/modelterms7/reference/scte.md)

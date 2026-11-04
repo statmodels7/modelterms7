@@ -11,7 +11,7 @@ term_block_deriv3() at the next order."><meta property="og:image" content="https
 
     <a class="navbar-brand me-2" href="../index.html">modelterms7</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.133.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.133.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -89,6 +89,15 @@ its number of blocks. A parameter whose development moves is rejected, as
 in <code><a href="term_block_deriv3.html">term_block_deriv3()</a></code>. For <code><a href="scs.html">scs()</a></code> and <code><a href="scte.html">scte()</a></code> the entry is
 \(G_{il}W_{ij}b^{(5)}(\gamma_j)\,v_ju_js_jr_j\), as in
 <code><a href="term_block_deriv3.html">term_block_deriv3()</a></code> one order more.</p>
+<p>A class whose block moves with its coefficients must implement its own
+method of this generic, because the zeros of the base method are wrong
+for such a block. statmodels7 reads this generic in the exact derivatives
+of an outer criterion and uses those derivatives only for a class with a
+method of its own; for any other class it computes them by differences.
+It recognizes a method of its own by comparing the method registered for
+the class with the base method, so a class that registers the base method
+itself under its own name is treated as having a method of its own, and
+the zeros enter the derivatives.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
