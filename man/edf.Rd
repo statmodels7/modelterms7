@@ -116,6 +116,9 @@ vapply(c(1e-6, 0.25, 10, 1e6),
 all.equal(edf(b, coef = c(0.5, -0.2), hessian = H, theta = list(lambda = 0.25)),
           sum(diag(solve(H + 0.25 * diag(2), H))))
 
+# Where H + S is singular the trace is taken on the range of H + S: a
+# direction that neither the data nor the penalty informs counts zero.
+
 # A lasso counts survivors, and needs no hessian.
 bl <- term_build(lasso(~ x1 + x2 + x3), dd)
 edf(bl, coef = c(1, 0, -2), theta = list(lambda = 1))

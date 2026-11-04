@@ -1,3 +1,13 @@
+# modelterms7 0.134.0
+
+* `edf()` takes the trace on the range of the penalized information where
+  that matrix is singular, in place of an error: a direction that neither
+  the data nor the penalty informs counts zero. A shape-constrained term at
+  the vertex of its shape, whose block vanishes, counts the free
+  coordinates of its shape and nothing else.
+* New generic `term_vertex()`, which names the coefficients of the levels of
+  `scs()` and `scte()` whose constrained coordinates are all at their bound.
+
 # modelterms7 0.133.1
 
 * The documentation of `term_block_deriv2()`, `term_block_deriv3()` and

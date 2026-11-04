@@ -115,6 +115,9 @@ NULL
 #' all.equal(edf(b, coef = c(0.5, -0.2), hessian = H, theta = list(lambda = 0.25)),
 #'           sum(diag(solve(H + 0.25 * diag(2), H))))
 #'
+#' # Where H + S is singular the trace is taken on the range of H + S: a
+#' # direction that neither the data nor the penalty informs counts zero.
+#'
 #' # A lasso counts survivors, and needs no hessian.
 #' bl <- term_build(lasso(~ x1 + x2 + x3), dd)
 #' edf(bl, coef = c(1, 0, -2), theta = list(lambda = 1))
@@ -214,7 +217,23 @@ S7::method(edf, model_term) <- function(term, coef = NULL, hessian = NULL,
                                             .edf_theta(ent, e, theta)))
   }
   H <- hessian[rest, rest, drop = FALSE]
-  count + sum(diag(solve(H + S[rest, rest, drop = FALSE], H)))
+  count + .edf_trace(H + S[rest, rest, drop = FALSE], H)
+}
+
+# tr(M^-1 H) for M = H + S, both positive semidefinite. Where M is singular
+# a direction v with Mv = 0 has v'Hv = 0, hence Hv = 0, and adds nothing to
+# the trace, so the trace on the range of M is the limit: the pseudo-inverse
+# of the symmetric M, with the eigenvalues below 1e-10 of the largest left
+# out. A term at the vertex of a shape's cone, whose block vanishes, counts
+# zero there.
+.edf_trace <- function(M, H) {
+  r <- tryCatch(sum(diag(solve(M, H))), error = function(e) NULL)
+  if (!is.null(r)) return(r)
+  e <- eigen((M + t(M)) / 2, symmetric = TRUE)
+  keep <- e$values > 1e-10 * max(e$values)
+  if (!any(keep)) return(0)
+  V <- e$vectors[, keep, drop = FALSE]
+  sum(diag(crossprod(V, H %*% V)) / e$values[keep])
 }
 
 # --- printing and plotting --------------------------------------------------

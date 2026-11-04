@@ -916,3 +916,76 @@ S7::method(print, ScsTerm) <- function(x, ...) {
 S7::method(term_hyper_start, ScsTerm) <- function(term, ...) {
   if (is.null(term@spec$lambda_start)) NULL else c(lambda = term@spec$lambda_start)
 }
+
+
+#' Whether a Shape-Constrained Term Is at the Vertex of Its Shape
+#'
+#' @description
+#' Returns the names of the coefficients of the levels of a term whose
+#' constrained coordinates are all at their bound, and an empty vector when
+#' there are none.
+#'
+#' @details
+#' Each coordinate that a shape constrains is \eqn{b_j = l_j +
+#' g^{-1}(\gamma_j)}, with \eqn{l_j} its bound (zero, or a minimum slope).
+#' When the data go against the shape every \eqn{b_j} goes to its bound and
+#' every \eqn{\gamma_j} to \eqn{-\infty}: the curve is the one at the bound
+#' (constant, linear for a plain curvature, or of slope `min_slope`) and the
+#' columns of the block on those coordinates vanish. A level is at the vertex
+#' when the derivative \eqn{(g^{-1})'(\gamma_j)} of every constrained
+#' coordinate is below \eqn{10^{-10}} times its value at the default start:
+#' the inner fit stops somewhere on the way to \eqn{-\infty} (measured
+#' between -67 and -320), and a curve whose every constrained slope is that
+#' small is the curve at the bound to that accuracy. The base method returns
+#' an empty vector, which is right for a term without a shape.
+#'
+#' @param term A built term.
+#' @param coef The coefficients, one per coefficient of the term, or `NULL`
+#'   for the coefficients that the term carries.
+#' @param ... Passed to methods.
+#'
+#' @return A character vector of coefficient names, with the attribute
+#'   `complete`, `TRUE` when every level that carries a shape is at the
+#'   vertex.
+#'
+#' @examples
+#' set.seed(1)
+#' dd <- data.frame(x = runif(50))
+#' tm <- term_build(scs(x, shape_increasing()), dd)
+#' term_vertex(tm, coef = rep(-300, length(term_coef_names(tm))))
+#' term_vertex(tm, coef = rep(0, length(term_coef_names(tm))))
+#'
+#' @export
+#' @aliases term_vertex.model_term term_vertex.ScsTerm term_vertex.ScteTerm
+term_vertex <- S7::new_generic("term_vertex", "term",
+  function(term, coef = NULL, ...) S7::S7_dispatch())
+
+S7::method(term_vertex, model_term) <- function(term, coef = NULL, ...) {
+  structure(character(0), complete = FALSE)
+}
+
+.shape_vertex <- function(term, coef) {
+  .assert_built(term)
+  bp <- term@build_info
+  coef <- .scs_coef(bp, coef)
+  out <- character(0)
+  shaped <- 0L
+  at <- 0L
+  for (l in seq_len(bp$m)) {
+    pc <- bp$pieces[[bp$piece_of[l]]]
+    if (!length(pc$cons)) next
+    shaped <- shaped + 1L
+    i <- bp$ix[, l]
+    d1 <- .shape_b(bp$link, coef[i], pc$cons, pc$lower, 1L)[pc$cons]
+    d0 <- .shape_b(bp$link, bp$coef0[i], pc$cons, pc$lower, 1L)[pc$cons]
+    if (all(abs(d1) <= 1e-10 * max(abs(d0)))) {
+      out <- c(out, term@coef_names[i[pc$cons]])
+      at <- at + 1L
+    }
+  }
+  out <- unique(out)
+  attr(out, "complete") <- shaped > 0L && at == shaped
+  out
+}
+
+S7::method(term_vertex, ScsTerm) <- function(term, coef = NULL, ...) .shape_vertex(term, coef)

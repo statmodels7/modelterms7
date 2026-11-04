@@ -274,3 +274,38 @@ test_that("arguments of the wrong length are rejected", {
   expect_error(term_block_deriv2(tm, v = rnorm(p), u = rnorm(p - 1L)),
                "must have length 7")
 })
+
+test_that("a term at the vertex of its shape is named and counts its free coordinates", {
+  set.seed(128)
+  d <- data.frame(x = runif(80))
+  for (sh in list(shape_increasing(), shape_increasing(min_slope = 1), shape_convex())) {
+    tm <- term_build(scs(x, sh), d)
+    p <- length(term_coef_names(tm))
+    cons <- tm@build_info$pieces[[1L]]$cons
+    g <- stats::rnorm(p)
+    g[cons] <- -320
+    expect_setequal(term_vertex(tm, coef = g), term_coef_names(tm)[cons])
+    expect_true(attr(term_vertex(tm, coef = g), "complete"))
+    expect_setequal(term_vertex(tm, coef = replace(g, cons, -67)), term_coef_names(tm)[cons])
+    expect_length(term_vertex(tm, coef = replace(g, cons, -5)), 0L)
+    # the block vanishes on the constrained coordinates, and edf() counts the
+    # free ones (none for a monotone shape, the slope of a plain curvature)
+    r <- term_refresh(tm, g)
+    H <- crossprod(term_matrix(r))
+    e <- edf(r, coef = g, hessian = H, theta = list(lambda = 1))
+    expect_equal(e, p - length(cons), tolerance = 1e-8)
+  }
+  expect_length(term_vertex(term_build(s(x), d)), 0L)
+})
+
+test_that("edf() is unchanged where the penalized information is regular", {
+  set.seed(129)
+  d <- data.frame(x = runif(80))
+  tm <- term_build(scs(x, shape_increasing()), d)
+  g <- stats::rnorm(length(term_coef_names(tm)), -1, 0.5)
+  r <- term_refresh(tm, g)
+  H <- crossprod(term_matrix(r))
+  S <- as.matrix(penalties7::penalty_hessian(r@penalty, g, list(lambda = 0.7)))
+  expect_equal(edf(r, coef = g, hessian = H, theta = list(lambda = 0.7)),
+               sum(diag(solve(H + S, H))), tolerance = 1e-12)
+})

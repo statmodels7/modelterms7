@@ -816,3 +816,5 @@ S7::method(print, ScteTerm) <- function(x, ...) {
   }
   invisible(x)
 }
+
+S7::method(term_vertex, ScteTerm) <- function(term, coef = NULL, ...) .shape_vertex(term, coef)
